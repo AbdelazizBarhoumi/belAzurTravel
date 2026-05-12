@@ -1,6 +1,6 @@
 import type { Lang } from '@/i18n/translations';
 
-type LocalizedText = Record<Lang, string>;
+export type LocalizedText = Record<Lang, string>;
 
 export interface CarItem {
     slug: string;
@@ -11,6 +11,7 @@ export interface CarItem {
     fuel: LocalizedText;
     transmission: LocalizedText;
     image: string;
+    gallery: string[];
     features: string[];
     policy: string[];
 }
@@ -25,6 +26,11 @@ export const carsData: CarItem[] = [
         fuel: { fr: 'Hybride', ar: 'هجين', en: 'Hybrid' },
         transmission: { fr: 'Automatique', ar: 'أوتوماتيك', en: 'Auto' },
         image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=900&h=560&fit=crop',
+        gallery: [
+            'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=1600&h=900&fit=crop',
+            'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1600&h=900&fit=crop',
+            'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600&h=900&fit=crop',
+        ],
         features: ['Premium insurance', 'Unlimited mileage', 'Roadside assistance'],
         policy: ['Driver age 25+', 'Deposit required', 'Fuel must be returned at same level'],
     },
@@ -37,6 +43,11 @@ export const carsData: CarItem[] = [
         fuel: { fr: 'Diesel', ar: 'ديزل', en: 'Diesel' },
         transmission: { fr: 'Automatique', ar: 'أوتوماتيك', en: 'Auto' },
         image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=900&h=560&fit=crop',
+        gallery: [
+            'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=1600&h=900&fit=crop',
+            'https://images.unsplash.com/photo-1550355291-bbee04a92027?w=1600&h=900&fit=crop',
+            'https://images.unsplash.com/photo-1551830820-330a71b99659?w=1600&h=900&fit=crop',
+        ],
         features: ['Child seat available', 'GPS included', 'Airport pickup optional'],
         policy: ['Driver age 25+', 'Cross-border not included', 'Late return fee applies'],
     },
@@ -49,6 +60,11 @@ export const carsData: CarItem[] = [
         fuel: { fr: 'Électrique', ar: 'كهربائي', en: 'Electric' },
         transmission: { fr: 'Automatique', ar: 'أوتوماتيك', en: 'Auto' },
         image: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=900&h=560&fit=crop',
+        gallery: [
+            'https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=1600&h=900&fit=crop',
+            'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=1600&h=900&fit=crop',
+            'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=1600&h=900&fit=crop',
+        ],
         features: ['Fast charging support', 'Premium interior', 'Autopilot assistance'],
         policy: ['Charger cable included', 'Charging costs billed separately', 'City-only use recommended'],
     },

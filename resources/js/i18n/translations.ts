@@ -566,6 +566,15 @@ export const translations: Record<string, TranslationEntry> = {
     'destinationDetail.startingFrom': { fr: 'À partir de', ar: 'ابتداءً من', en: 'Starting from' },
     'destinationDetail.spring': { fr: 'Printemps et début d’été', ar: 'الربيع وبداية الصيف', en: 'Spring and early summer' },
     'destinationDetail.sunny': { fr: 'Climat doux et ensoleillé', ar: 'طقس معتدل ومشمس', en: 'Mild and sunny climate' },
+    'destinationDetail.notFound': { fr: 'Destination introuvable', ar: 'الوجهة غير موجودة', en: 'Destination not found' },
+    'destinationDetail.backToDestinations': { fr: 'Retour aux destinations', ar: 'العودة إلى الوجهات', en: 'Back to destinations' },
+    'destinationDetail.about': { fr: 'À propos de', ar: 'حول', en: 'About' },
+    'destinationDetail.highlights': { fr: 'Points forts', ar: 'أهم المزايا', en: 'Highlights' },
+    'destinationDetail.whereToStay': { fr: 'Où séjourner', ar: 'أين تقيم', en: 'Where to stay' },
+    'destinationDetail.suggestedTours': { fr: 'Circuits suggérés', ar: 'جولات مقترحة', en: 'Suggested tours' },
+    'destinationDetail.language': { fr: 'Langue', ar: 'اللغة', en: 'Language' },
+    'destinationDetail.currency': { fr: 'Monnaie', ar: 'العملة', en: 'Currency' },
+    'destinationDetail.planTrip': { fr: 'Planifier un voyage', ar: 'خطط رحلة', en: 'Plan a trip' },
 
     // Tour Detail Page
     'tourDetail.overview': { fr: 'Aperçu', ar: 'نظرة عامة', en: 'Overview' },
@@ -674,6 +683,15 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Rent Now',
     },
     'cars.perDay': { fr: '/jour', ar: '/يوم', en: '/day' },
+    'carsDetail.backToCars': { fr: 'Toutes les voitures', ar: 'كل السيارات', en: 'All cars' },
+    'carsDetail.notFound': { fr: 'Voiture introuvable', ar: 'السيارة غير موجودة', en: 'Car not found' },
+    'carsDetail.features': { fr: 'Caractéristiques', ar: 'الميزات', en: 'Features' },
+    'carsDetail.policy': { fr: 'Politique de location', ar: 'سياسة الإيجار', en: 'Rental policy' },
+    'carsDetail.specs': { fr: 'Spécifications', ar: 'المواصفات', en: 'Specifications' },
+    'carsDetail.seats': { fr: 'Places', ar: 'المقاعد', en: 'Seats' },
+    'carsDetail.fuel': { fr: 'Carburant', ar: 'الوقود', en: 'Fuel' },
+    'carsDetail.gearbox': { fr: 'Boîte de vitesses', ar: 'ناقل الحركة', en: 'Gearbox' },
+    'carsDetail.summary': { fr: 'Voiture premium avec réservation flexible et assistance complète.', ar: 'سيارة مميزة مع حجز مرن ودعم كامل.', en: 'Premium car with flexible booking and full support.' },
 
     // Events Page
     'events.title': {

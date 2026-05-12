@@ -61,10 +61,10 @@ export default function EventDetail() {
                         animate={{ opacity: 1, y: 0 }}
                         className="grid gap-10 lg:grid-cols-[2fr_1fr]"
                     >
-                        <div>
+                        <div className="flex flex-col">
                             <Gallery images={event.gallery} hotelName={localize(event.title, lang)} />
 
-                            <section className="grid gap-4 md:grid-cols-3">
+                            <section className="mt-8 grid gap-4 md:grid-cols-3">
                                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                                     <div className="text-sm text-muted-foreground">{t('events.detail.when')}</div>
                                     <div className="mt-2 flex items-center gap-2 text-foreground">
@@ -88,7 +88,7 @@ export default function EventDetail() {
                                 </div>
                             </section>
 
-                            <section className="max-w-3xl">
+                            <section className="mt-8 max-w-3xl">
                                 <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
                                     {t('events.detail.aboutTitle')}
                                 </h2>
@@ -97,7 +97,7 @@ export default function EventDetail() {
                                 </p>
                             </section>
 
-                            <section>
+                            <section className="mt-8">
                                 <h2 className="mb-6 font-serif text-2xl font-bold text-foreground">
                                     {t('events.detail.scheduleTitle')}
                                 </h2>
