@@ -13,6 +13,7 @@ export interface FlightItem {
     departure: string;
     arrival: string;
     cabin: string;
+    aircraft: string;
     baggage: string;
     refund: string;
 }
@@ -29,6 +30,7 @@ export const flightsData: FlightItem[] = [
         departure: '09:45',
         arrival: '06:15+1',
         cabin: 'Economy Flex',
+        aircraft: 'Boeing 777-300ER',
         baggage: '1 cabin + 1 checked bag',
         refund: 'Partially refundable',
     },
@@ -43,6 +45,7 @@ export const flightsData: FlightItem[] = [
         departure: '20:30',
         arrival: '09:50+1',
         cabin: 'Economy Standard',
+        aircraft: 'Airbus A350-900',
         baggage: '1 cabin + 1 checked bag',
         refund: 'Non-refundable',
     },
@@ -57,6 +60,7 @@ export const flightsData: FlightItem[] = [
         departure: '11:00',
         arrival: '16:45+1',
         cabin: 'Premium Economy',
+        aircraft: 'Boeing 787-9 Dreamliner',
         baggage: '2 checked bags',
         refund: 'Refundable with fee',
     },

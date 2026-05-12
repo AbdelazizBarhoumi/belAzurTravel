@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Breadcrumb } from '@/components/Breadcrumb';
 import { BlogSection } from '@/components/BlogSection';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -11,7 +11,7 @@ const Blog = () => {
     return (
         <div className="min-h-screen bg-background">
             <Navbar />
-            <div className="pb-16 pt-24">
+            <div className="pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -28,7 +28,7 @@ const Blog = () => {
                     <motion.header
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-12 text-center"
+                        className="mb-6 text-center"
                     >
                         <h1 className="mb-4 font-serif text-4xl font-bold text-foreground md:text-5xl">
                             {t('blog.title')}

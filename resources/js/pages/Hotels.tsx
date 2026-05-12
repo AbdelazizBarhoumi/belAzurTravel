@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { Wifi, Car, Coffee, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { Footer } from '@/components/Footer';
@@ -124,16 +124,41 @@ const AMENITY_ICONS: Record<string, LucideIcon> = {
     breakfast: Coffee,
 };
 
+const MAX_PRICE = Math.max(...HOTELS.map(h => h.price));
+const MIN_PRICE = Math.min(...HOTELS.map(h => h.price));
+
 export default function Hotels() {
-    const { t, lang } = useLanguage();
+    const { t, lang, dir } = useLanguage();
+    const [params] = useSearchParams();
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [selectedStars, setSelectedStars] = useState<number[]>([]);
+    const [priceRange, setPriceRange] = useState<[number, number]>([MIN_PRICE, MAX_PRICE]);
+
+    useEffect(() => {
+        const stars = params.get('stars');
+        if (stars) {
+            const starsNum = parseInt(stars, 10);
+            if (starsNum >= 1 && starsNum <= 5) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
+                setSelectedStars([starsNum]);
+            }
+        }
+    }, [params]);
 
     const filteredHotels =
-        selectedTags.length === 0
+        selectedTags.length === 0 && selectedStars.length === 0 && priceRange[0] === MIN_PRICE && priceRange[1] === MAX_PRICE
             ? HOTELS
-            : HOTELS.filter((hotel) =>
-                  selectedTags.every((tag) => hotel.tags.includes(tag)),
-              );
+            : HOTELS.filter((hotel) => {
+                  const matchesTags =
+                      selectedTags.length === 0 ||
+                      selectedTags.some((tag) => hotel.tags.includes(tag));
+                  const matchesStars =
+                      selectedStars.length === 0 ||
+                      selectedStars.includes(hotel.stars);
+                  const matchesPrice =
+                      hotel.price >= priceRange[0] && hotel.price <= priceRange[1];
+                  return matchesTags && matchesStars && matchesPrice;
+              });
 
     const handleTagToggle = (tagId: string) => {
         setSelectedTags((current) =>
@@ -143,7 +168,19 @@ export default function Hotels() {
         );
     };
 
-    const handleClearAll = () => setSelectedTags([]);
+    const handleStarToggle = (stars: number) => {
+        setSelectedStars((current) =>
+            current.includes(stars)
+                ? current.filter((s) => s !== stars)
+                : [...current, stars],
+        );
+    };
+
+    const handleClearAll = () => {
+        setSelectedTags([]);
+        setSelectedStars([]);
+        setPriceRange([MIN_PRICE, MAX_PRICE]);
+    };
 
     return (
         <div className="min-h-screen bg-background">
@@ -176,70 +213,148 @@ export default function Hotels() {
                         </p>
                     </motion.header>
 
-                    <motion.section
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 }}
-                        className="mb-10 rounded-3xl border border-border bg-card p-6"
-                    >
-                        <div className="mb-4 flex items-center justify-between gap-4">
-                            <h2 className="font-serif text-xl font-bold text-foreground">
-                                {t('hotels.filterByTags')}
-                            </h2>
-                            {selectedTags.length > 0 && (
-                                <button
-                                    type="button"
-                                    onClick={handleClearAll}
-                                    className="text-sm font-medium text-primary hover:underline"
-                                >
-                                    {t('common.viewAll')}
-                                </button>
-                            )}
-                        </div>
+                    {/* Main Layout: Sidebar + Content */}
+                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                        {/* Sidebar Filter Panel */}
+                        <motion.aside
+                            initial={{ opacity: 0, x: dir === 'rtl' ? 100 : -100 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.05 }}
+                            className="w-full md:w-72 flex-shrink-0"
+                        >
+                            <div className="sticky top-24 rounded-3xl border border-border bg-card p-6">
+                                <div className="mb-6 flex items-center justify-between gap-4">
+                                    <h2 className="font-serif text-lg font-bold text-foreground">
+                                        {t('hotels.filterByStars')}
+                                    </h2>
+                                    {(selectedTags.length > 0 || selectedStars.length > 0 || priceRange[0] !== MIN_PRICE || priceRange[1] !== MAX_PRICE) && (
+                                        <button
+                                            type="button"
+                                            onClick={handleClearAll}
+                                            className="text-xs font-medium text-primary hover:underline"
+                                        >
+                                            {t('common.viewAll')}
+                                        </button>
+                                    )}
+                                </div>
 
-                        <TagFilter
-                            tags={HOTEL_TAGS}
-                            selectedTags={selectedTags}
-                            onTagToggle={handleTagToggle}
-                            onClearAll={handleClearAll}
-                        />
-                    </motion.section>
+                                <div className="mb-6 flex flex-wrap gap-2">
+                                    {[5, 4, 3, 2, 1].map((stars) => (
+                                        <button
+                                            key={stars}
+                                            onClick={() => handleStarToggle(stars)}
+                                            className={`flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition-all ${
+                                                selectedStars.includes(stars)
+                                                    ? 'bg-primary text-primary-foreground'
+                                                    : 'border border-border bg-card text-muted-foreground hover:text-foreground'
+                                            }`}
+                                        >
+                                            {'★'.repeat(stars)}
+                                            <span className="text-[10px]">({stars})</span>
+                                        </button>
+                                    ))}
+                                </div>
 
-                    {filteredHotels.length === 0 ? (
-                        <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
-                            {t('hotels.noResults')}
-                        </div>
-                    ) : (
-                        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                            {filteredHotels.map((hotel, index) => (
-                                <motion.article
-                                    key={hotel.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.05 }}
-                                >
-                                    <Link
-                                        to={`/hotels/${hotel.id}`}
-                                        className="group block overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                                    >
-                                        <div className="relative h-56 overflow-hidden">
-                                            <img
-                                                src={hotel.image}
-                                                alt={localize(hotel.name, lang)}
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
-
-                                            <FavoriteButton
-                                                className="absolute left-4 top-4"
-                                                item={{
-                                                    id: hotel.id,
-                                                    type: 'hotel',
-                                                    name: localize(hotel.name, lang),
-                                                    image: hotel.image,
-                                                    price: hotel.price,
-                                                    location: localize(hotel.location, lang),
+                                <div className="border-t border-border py-6">
+                                    <div className="mb-4">
+                                        <h3 className="font-serif text-base font-bold text-foreground">
+                                            {t('hotels.filterByPrice')}
+                                        </h3>
+                                    </div>
+                                    <div className="flex flex-col gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                                {t('hotels.minPrice')}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={MIN_PRICE}
+                                                max={MAX_PRICE}
+                                                value={priceRange[0]}
+                                                onChange={(e) => {
+                                                    const newMin = Math.min(parseInt(e.target.value, 10) || MIN_PRICE, priceRange[1]);
+                                                    setPriceRange([newMin, priceRange[1]]);
                                                 }}
+                                                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                                             />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-muted-foreground mb-1">
+                                                {t('hotels.maxPrice')}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={MIN_PRICE}
+                                                max={MAX_PRICE}
+                                                value={priceRange[1]}
+                                                onChange={(e) => {
+                                                    const newMax = Math.max(parseInt(e.target.value, 10) || MAX_PRICE, priceRange[0]);
+                                                    setPriceRange([priceRange[0], newMax]);
+                                                }}
+                                                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 text-xs text-muted-foreground">
+                                        DT {priceRange[0]} - DT {priceRange[1]}
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-border pt-6">
+                                    <div className="mb-4">
+                                        <h3 className="font-serif text-base font-bold text-foreground">
+                                            {t('hotels.filterByTags')}
+                                        </h3>
+                                    </div>
+
+                                    <TagFilter
+                                        tags={HOTEL_TAGS}
+                                        selectedTags={selectedTags}
+                                        onTagToggle={handleTagToggle}
+                                        onClearAll={handleClearAll}
+                                        locale={lang}
+                                    />
+                                </div>
+                            </div>
+                        </motion.aside>
+
+                        {/* Main Content */}
+                        <div className="flex-1 min-w-0">
+                            {filteredHotels.length === 0 ? (
+                                <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
+                                    {t('hotels.noResults')}
+                                </div>
+                            ) : (
+                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                    {filteredHotels.map((hotel, index) => (
+                                        <motion.article
+                                            key={hotel.id}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.05 }}
+                                        >
+                                            <Link
+                                                to={`/hotels/${hotel.id}`}
+                                                className="group block overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                            >
+                                                <div className="relative h-56 overflow-hidden">
+                                                    <img
+                                                        src={hotel.image}
+                                                        alt={localize(hotel.name, lang)}
+                                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                    />
+
+                                                    <FavoriteButton
+                                                        className="absolute left-4 top-4"
+                                                        item={{
+                                                            id: hotel.id,
+                                                            type: 'hotel',
+                                                            name: localize(hotel.name, lang),
+                                                            image: hotel.image,
+                                                            price: hotel.price,
+                                                            location: localize(hotel.location, lang),
+                                                        }}
+                                                    />
 
                                             <div className="absolute right-4 top-4 rounded-full bg-card/95 px-3 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur">
                                                 {t('hotels.priceFrom')} {hotel.price} DT
@@ -266,20 +381,24 @@ export default function Hotels() {
                                                 </span>
                                             </div>
 
-                                            <div className="mb-4 flex flex-wrap gap-2">
-                                                {hotel.tags.map((tagId) => {
-                                                    const tag = HOTEL_TAGS.find((item) => item.id === tagId);
-                                                    if (!tag) return null;
+                                            <div className="mb-4">
+                                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3">
+                                                    {hotel.tags.map((tagId) => {
+                                                        const tag = HOTEL_TAGS.find((item) => item.id === tagId);
+                                                        if (!tag) return null;
 
-                                                    return (
-                                                        <span
-                                                            key={tagId}
-                                                            className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
-                                                        >
-                                                            {tag.name[lang]}
-                                                        </span>
-                                                    );
-                                                })}
+                                                        return (
+                                                            <div
+                                                                key={tagId}
+                                                                className="flex items-center justify-center rounded-lg bg-muted px-2 py-1"
+                                                            >
+                                                                <span className="text-center text-xs font-medium text-muted-foreground">
+                                                                    {tag.name[lang]}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
 
                                             <div className="flex items-center justify-between gap-4">
@@ -306,6 +425,8 @@ export default function Hotels() {
                             ))}
                         </div>
                     )}
+                        </div>
+                    </div>
                 </div>
             </main>
 

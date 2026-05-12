@@ -35,7 +35,7 @@ type Amenity = {
     icon: typeof Wifi;
 };
 
-type HotelDetailData = {
+export type HotelDetailData = {
     id: string;
     name: LocalizedText;
     city: LocalizedText;
@@ -53,7 +53,7 @@ type HotelDetailData = {
     rooms: Room[];
 };
 
-const HOTEL_DATABASE: HotelDetailData[] = [
+export const HOTEL_DATABASE: HotelDetailData[] = [
     {
         id: 'sunset-paradise',
         name: { fr: 'Sunset Paradise Resort', ar: 'منتجع صن ست بارادايس', en: 'Sunset Paradise Resort' },

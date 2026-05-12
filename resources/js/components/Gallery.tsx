@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface GalleryProps {
     images: string[];
@@ -10,6 +10,21 @@ interface GalleryProps {
 export function Gallery({ images, hotelName }: GalleryProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
+
+    useEffect(() => {
+        if (!lightboxOpen) return undefined;
+
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = previousBodyOverflow;
+            document.documentElement.style.overflow = previousHtmlOverflow;
+        };
+    }, [lightboxOpen]);
 
     const nextImage = () => setSelectedIndex((prev) => (prev + 1) % images.length);
     const prevImage = () => setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
@@ -64,7 +79,7 @@ export function Gallery({ images, hotelName }: GalleryProps) {
                 </motion.button>
 
                 {/* Thumbnails row */}
-                <div className="flex gap-2 overflow-x-auto pb-1">
+                <div className="hidden gap-2 overflow-x-auto pb-1 lg:flex">
                     {images.map((image, index) => {
                         const active = index === selectedIndex;
                         return (
@@ -103,9 +118,10 @@ export function Gallery({ images, hotelName }: GalleryProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-0"
                         onClick={() => setLightboxOpen(false)}
                     >
+                        <div className="relative flex h-full w-full items-center justify-center p-4">
                         <button
                             type="button"
                             onClick={() => setLightboxOpen(false)}
@@ -154,6 +170,7 @@ export function Gallery({ images, hotelName }: GalleryProps) {
                                     <img src={img} alt="" className="h-12 w-16 object-cover" />
                                 </button>
                             ))}
+                        </div>
                         </div>
                     </motion.div>
                 )}

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
@@ -143,10 +144,7 @@ const ClientDashboard = () => {
             >
                 <div className={cn('p-6', isRtl && 'text-right')}>
                     <Link to="/" className={cn('flex items-center gap-2', isRtl && 'justify-end')}>
-                        <Plane className="h-6 w-6 text-primary" />
-                        <span className="font-serif text-xl font-bold text-foreground">
-                            Voyageur
-                        </span>
+                        <BrandLogo imageClassName="h-7 w-auto" />
                     </Link>
                 </div>
 

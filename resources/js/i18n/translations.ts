@@ -25,6 +25,7 @@ const PAYMENTS = tr('Paiements', 'المدفوعات', 'Payments');
 const ITINERARIES = tr('Itinéraires', 'الخطط', 'Itineraries');
 const WISHLIST = tr('Liste de souhaits', 'قائمة الرغبات', 'Wishlist');
 const VIEW_ALL = tr('Tout Voir', 'عرض الكل', 'View All');
+const VIEW_DETAILS = tr('Voir les détails', 'عرض التفاصيل', 'View details');
 const ALL = tr('Tout', 'الكل', 'All');
 const CLIENT = tr('Client', 'العميل', 'Client');
 const ADMIN = tr('Admin', 'مدير', 'Admin');
@@ -54,6 +55,7 @@ export const translations: Record<string, TranslationEntry> = {
     'nav.signin': { fr: 'Connexion', ar: 'تسجيل الدخول', en: 'Sign in' },
     'nav.start': { fr: 'Commencer', ar: 'ابدأ', en: 'Get Started' },
     'nav.favorites': { fr: 'Favoris', ar: 'المفضلة', en: 'Favorites' },
+    'nav.design': { fr: 'Planifier', ar: 'صمم رحلتك', en: 'Design Trip' },
 
     // Categories
     'cat.beach': { fr: 'Plage', ar: 'شاطئ', en: 'Beach' },
@@ -86,13 +88,22 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Where do you want to go?',
     },
     'hero.when': { fr: 'Quand ?', ar: 'متى؟', en: 'When?' },
-    'hero.guests': { fr: 'Voyageurs', ar: 'المسافرون', en: 'Guests' },
+    'hero.guests': { fr: 'BelAzurTravels', ar: 'المسافرون', en: 'Guests' },
     'hero.search': { fr: 'Rechercher', ar: 'بحث', en: 'Search' },
     'hero.description': {
         fr: 'Des voyages artisanaux vers les destinations les plus extraordinaires du monde. Laissez-nous transformer vos rêves de voyage en souvenirs inoubliables.',
         ar: 'رحلات حرفية إلى أكثر الوجهات روعة في العالم. دعنا نحول أحلام رحلتك إلى ذكريات لا تُنسى.',
         en: "Handcrafted journeys to the world's most extraordinary destinations. Let us turn your travel dreams into unforgettable memories.",
     },
+    'hero.searchHint': {
+        fr: 'Commencez par une destination, puis affinez avec vos dates et le nombre de voyageurs.',
+        ar: 'ابدأ بوجهة، ثم حدّد التواريخ وعدد المسافرين لتضييق النتائج.',
+        en: 'Start with a destination, then refine by dates and travelers to narrow the best matches.',
+    },
+
+    // Design Trip page
+    'design.title': { fr: 'Concevez votre voyage', ar: 'صمم رحلتك', en: 'Design your trip' },
+    'design.subtitle': { fr: 'Du vol à l\'hôtel — planifiez tout en une seule fois', ar: 'من الرحلة إلى الفندق - خطط كل شيء دفعة واحدة', en: 'From flights to hotels — plan everything in one shot' },
 
     // Search Widget
     'search.tabs.hotels': { fr: 'Hôtels', ar: 'فنادق', en: 'Hotels' },
@@ -101,8 +112,8 @@ export const translations: Record<string, TranslationEntry> = {
 
     'search.fields.destination': { fr: 'Destination', ar: 'الوجهة', en: 'Destination' },
     'search.fields.dates': { fr: 'Dates', ar: 'التواريخ', en: 'Dates' },
-    'search.fields.guests': { fr: 'Voyageurs', ar: 'المسافرون', en: 'Guests' },
-    'search.fields.travelers': { fr: 'Voyageurs', ar: 'المسافرون', en: 'Travelers' },
+    'search.fields.guests': { fr: 'BelAzurTravels', ar: 'المسافرون', en: 'Guests' },
+    'search.fields.travelers': { fr: 'BelAzurTravels', ar: 'المسافرون', en: 'Travelers' },
     'search.fields.passengers': { fr: 'Passagers', ar: 'الركاب', en: 'Passengers' },
     'search.fields.roomType': { fr: 'Type de chambre', ar: 'نوع الغرفة', en: 'Room type' },
     'search.fields.propertyClass': { fr: 'Catégorie', ar: 'تصنيف العقار', en: 'Property class' },
@@ -168,6 +179,99 @@ export const translations: Record<string, TranslationEntry> = {
         en: "Curated selections of the world's most breathtaking places, handpicked by our travel experts.",
     },
 
+    // Home trust strip
+    'home.trust.eyebrow': { fr: 'Pourquoi nous choisir', ar: 'لماذا تختارنا', en: 'Why choose us' },
+    'home.trust.title': {
+        fr: 'Une expérience qui rassure avant même la réservation',
+        ar: 'تجربة تمنحك الثقة قبل الحجز حتى',
+        en: 'Confidence that starts before you even book',
+    },
+    'home.trust.subtitle': {
+        fr: 'Les visiteurs veulent savoir si l’offre est fiable, simple et accompagnée. Cette section répond immédiatement à cette attente.',
+        ar: 'يريد الزائرون أن يعرفوا ما إذا كانت الخدمة موثوقة وسهلة ومدعومة. هذا القسم يجيب على ذلك فورًا.',
+        en: 'Visitors want to know the service is reliable, simple, and supported. This section answers that immediately.',
+    },
+    'home.trust.securityTitle': { fr: 'Paiement sécurisé', ar: 'دفع آمن', en: 'Secure payments' },
+    'home.trust.securityDescription': {
+        fr: 'Des parcours clairs et des informations transparentes pour éviter toute surprise au moment de réserver.',
+        ar: 'خطوات واضحة ومعلومات شفافة لتجنب المفاجآت عند الحجز.',
+        en: 'Clear flows and transparent details help remove surprises at the point of booking.',
+    },
+    'home.trust.curatedTitle': { fr: 'Sélections expertes', ar: 'اختيارات مدروسة', en: 'Expertly curated options' },
+    'home.trust.curatedDescription': {
+        fr: 'Les destinations, offres et contenus sont présentés pour guider rapidement la décision sans surcharge.',
+        ar: 'تُعرض الوجهات والعروض والمحتوى بطريقة تساعدك على اتخاذ القرار بسرعة دون ازدحام.',
+        en: 'Destinations, offers, and content are presented to guide decisions quickly without overload.',
+    },
+    'home.trust.supportTitle': { fr: 'Support humain', ar: 'دعم بشري', en: 'Human support' },
+    'home.trust.supportDescription': {
+        fr: 'Un conseiller reste disponible si l’utilisateur a besoin d’aide avant de finaliser son choix.',
+        ar: 'يبقى المستشار متاحًا إذا احتاج المستخدم للمساعدة قبل اتخاذ القرار النهائي.',
+        en: 'A travel advisor is available when a user needs help before making the final choice.',
+    },
+
+    // Home steps
+    'home.steps.eyebrow': { fr: 'Comment ça marche', ar: 'كيف يعمل', en: 'How it works' },
+    'home.steps.title': {
+        fr: 'Un parcours simple de l’idée à la réservation',
+        ar: 'رحلة بسيطة من الفكرة إلى الحجز',
+        en: 'A simple journey from idea to booking',
+    },
+    'home.steps.subtitle': {
+        fr: 'Les visiteurs comprennent tout de suite le processus et voient qu’il n’y a pas de complexité cachée.',
+        ar: 'يفهم الزائرون العملية فورًا ويرون أنه لا توجد تعقيدات مخفية.',
+        en: 'Visitors instantly understand the process and see that there is no hidden complexity.',
+    },
+    'home.steps.step1Title': { fr: 'Choisir une direction', ar: 'اختر الوجهة', en: 'Choose a direction' },
+    'home.steps.step1Description': {
+        fr: 'Commencez par une destination, un type de voyage ou un thème pour orienter la recherche.',
+        ar: 'ابدأ بوجهة أو نوع رحلة أو موضوع لتوجيه البحث.',
+        en: 'Start with a destination, trip type, or theme to focus the search.',
+    },
+    'home.steps.step2Title': { fr: 'Ajuster les détails', ar: 'عدّل التفاصيل', en: 'Refine the details' },
+    'home.steps.step2Description': {
+        fr: 'Affinez les dates, le nombre de voyageurs et les préférences pour obtenir des options plus pertinentes.',
+        ar: 'حدد التواريخ وعدد المسافرين والتفضيلات للحصول على خيارات أكثر ملاءمة.',
+        en: 'Refine dates, travelers, and preferences to get more relevant options.',
+    },
+    'home.steps.step3Title': { fr: 'Réserver en confiance', ar: 'احجز بثقة', en: 'Book with confidence' },
+    'home.steps.step3Description': {
+        fr: 'Passez à une demande plus ciblée ou contactez l’équipe pour finaliser le voyage.',
+        ar: 'انتقل إلى طلب أكثر تحديدًا أو تواصل مع الفريق لإكمال الحجز.',
+        en: 'Move into a more focused request or contact the team to finalize the trip.',
+    },
+    'home.steps.cta': { fr: 'Commencer la planification', ar: 'ابدأ التخطيط', en: 'Start planning' },
+
+    // Home CTA
+    'home.cta.eyebrow': { fr: 'Prêt à partir ?', ar: 'هل أنت مستعد للانطلاق؟', en: 'Ready to go?' },
+    'home.cta.title': {
+        fr: 'Transformez l’inspiration en itinéraire concret',
+        ar: 'حوّل الإلهام إلى برنامج سفر واضح',
+        en: 'Turn inspiration into a concrete itinerary',
+    },
+    'home.cta.subtitle': {
+        fr: 'La dernière section doit convertir les hésitants. Elle rappelle l’avantage, clarifie l’action et réduit le risque perçu.',
+        ar: 'يجب أن تحوّل هذه الواجهة المترددين. إنها تذكّر بالفائدة وتوضح الإجراء وتقلل المخاطرة المتصورة.',
+        en: 'The final section should convert hesitant users. It restates the value, clarifies the action, and lowers perceived risk.',
+    },
+    'home.cta.primary': { fr: 'Concevoir mon voyage', ar: 'صمم رحلتي', en: 'Design my trip' },
+    'home.cta.secondary': { fr: 'Parler à un conseiller', ar: 'تحدث إلى مستشار', en: 'Talk to an advisor' },
+    'home.cta.assurance1': {
+        fr: 'Des offres adaptées au budget et aux envies de chaque voyageur.',
+        ar: 'عروض تناسب الميزانية واحتياجات كل مسافر.',
+        en: 'Offers tailored to each traveler’s budget and preferences.',
+    },
+    'home.cta.assurance2': {
+        fr: 'Des suggestions claires pour passer rapidement de l’idée à l’action.',
+        ar: 'اقتراحات واضحة للانتقال بسرعة من الفكرة إلى التنفيذ.',
+        en: 'Clear suggestions help turn an idea into action quickly.',
+    },
+    'home.cta.assurance3': {
+        fr: 'Un accompagnement avant, pendant et après la réservation.',
+        ar: 'مرافقة قبل الحجز وأثناءه وبعده.',
+        en: 'Support before, during, and after booking.',
+    },
+
     // Deals Section
     'deals.save': {
         fr: 'Économiser Plus',
@@ -192,6 +296,23 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'نصنع تجارب سفر استثنائية منذ عام 2010.',
         en: 'Creating extraordinary travel experiences since 2010.',
     },
+    'footer.badgeSecure': { fr: 'Réservation sécurisée', ar: 'حجز آمن', en: 'Secure booking' },
+    'footer.badgePersonalized': { fr: 'Itinéraires personnalisés', ar: 'خطط مخصصة', en: 'Personalized trips' },
+    'footer.badgeSupport': { fr: 'Support humain', ar: 'دعم بشري', en: 'Human support' },
+    'footer.trustEyebrow': { fr: 'Pourquoi nous choisir', ar: 'لماذا تختارنا', en: 'Why travelers choose us' },
+    'footer.trustTitle': { fr: 'Réservez avec confiance', ar: 'احجز بثقة', en: 'Book with confidence' },
+    'footer.trustSubtitle': { fr: 'Des conseils clairs, des prix transparents et une assistance disponible quand votre voyage en a besoin.', ar: 'نصائح واضحة وأسعار شفافة ومساعدة متاحة عندما تحتاجها رحلتك.', en: 'Clear guidance, transparent pricing, and support when your trip needs it most.' },
+    'footer.trustSecureTitle': { fr: 'Paiement et réservation sûrs', ar: 'دفع وحجز آمن', en: 'Safe payment and booking' },
+    'footer.trustSecureDescription': { fr: 'Réservez en toute tranquillité avec des processus simples et une confirmation rapide.', ar: 'احجز براحة مع خطوات بسيطة وتأكيد سريع.', en: 'Book confidently with simple steps and quick confirmation.' },
+    'footer.trustValueTitle': { fr: 'Meilleures offres', ar: 'أفضل العروض', en: 'Best value offers' },
+    'footer.trustValueDescription': { fr: 'Comparez des sélections soignées sans perdre du temps dans des listes interminables.', ar: 'قارن بين اختيارات منتقاة دون إضاعة الوقت في قوائم لا تنتهي.', en: 'Compare curated selections without wasting time in endless lists.' },
+    'footer.trustSupportTitle': { fr: 'Accompagnement expert', ar: 'دعم من خبراء', en: 'Expert support' },
+    'footer.trustSupportDescription': { fr: 'Parlez à une vraie personne pour affiner les dates, la destination ou le budget.', ar: 'تحدث مع شخص حقيقي لتحسين التواريخ أو الوجهة أو الميزانية.', en: 'Talk to a real person to refine dates, destinations, or budget.' },
+    'footer.ctaEyebrow': { fr: 'Besoin d’aide ?', ar: 'تحتاج إلى مساعدة؟', en: 'Need help?' },
+    'footer.ctaTitle': { fr: 'Parlons de votre prochain voyage', ar: 'دعنا نتحدث عن رحلتك القادمة', en: 'Let’s talk about your next trip' },
+    'footer.ctaDescription': { fr: 'Que vous recherchiez une escapade rapide, un séjour premium ou un itinéraire sur mesure, notre équipe peut vous guider.', ar: 'سواء كنت تبحث عن عطلة سريعة أو إقامة فاخرة أو رحلة مصممة خصيصًا، يمكن لفريقنا إرشادك.', en: 'Whether you want a quick getaway, a premium stay, or a tailor-made itinerary, our team can guide you.' },
+    'footer.ctaPrimary': { fr: 'Planifier mon voyage', ar: 'صمم رحلتي', en: 'Plan my trip' },
+    'footer.ctaSecondary': { fr: 'Contacter un expert', ar: 'اتصل بخبير', en: 'Contact an expert' },
     'footer.quick': {
         fr: 'Liens Rapides',
         ar: 'روابط سريعة',
@@ -263,6 +384,7 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'common.home': { fr: 'Accueil', ar: 'الرئيسية', en: 'Home' },
     'common.viewAll': VIEW_ALL,
+    'common.viewDetails': VIEW_DETAILS,
     'common.from': { fr: 'À partir de', ar: 'ابتداءً من', en: 'From' },
     'common.search': { fr: 'Rechercher...', ar: 'بحث...', en: 'Search...' },
     'common.all': ALL,
@@ -412,6 +534,12 @@ export const translations: Record<string, TranslationEntry> = {
     'hotels.reviews': { fr: 'avis', ar: 'تقييمات', en: 'reviews' },
     'hotels.book': BOOK,
     'hotels.filterByTags': { fr: 'Filtrer par catégorie', ar: 'التصفية حسب الفئة', en: 'Filter by category' },
+    'hotels.filterByStars': { fr: 'Filtrer par étoiles', ar: 'التصفية حسب النجوم', en: 'Filter by stars' },
+    'hotels.stars': { fr: 'étoile(s)', ar: 'نجمة', en: 'star(s)' },
+    'hotels.filterByPrice': { fr: 'Filtrer par prix', ar: 'التصفية حسب السعر', en: 'Filter by price' },
+    'hotels.priceRange': { fr: 'Gamme de prix', ar: 'نطاق السعر', en: 'Price range' },
+    'hotels.minPrice': { fr: 'Prix minimum', ar: 'الحد الأدنى للسعر', en: 'Min price' },
+    'hotels.maxPrice': { fr: 'Prix maximum', ar: 'الحد الأقصى للسعر', en: 'Max price' },
     'hotels.showing': { fr: 'Affichage', ar: 'عرض', en: 'Showing' },
     'hotels.results': { fr: 'résultats', ar: 'نتائج', en: 'results' },
     'hotels.priceFrom': { fr: 'À partir de', ar: 'ابتداءً من', en: 'From' },
@@ -421,13 +549,15 @@ export const translations: Record<string, TranslationEntry> = {
     'hotelDetail.startingFrom': { fr: 'À partir de', ar: 'ابتداءً من', en: 'Starting from' },
     'hotelDetail.reserveNow': { fr: 'Réserver maintenant', ar: 'احجز الآن', en: 'Reserve now' },
     'hotelDetail.call': { fr: 'Appeler', ar: 'اتصال', en: 'Call' },
-    'hotelDetail.bookingNote': { fr: 'Réservez rapidement avant que les meilleures chambres ne soient épuisées.', ar: 'احجز بسرعة قبل نفاد أفضل الغرف.', en: 'Book quickly before the best rooms sell out.' },
     'hotelDetail.aboutHotel': { fr: 'À propos de l’hôtel', ar: 'حول الفندق', en: 'About the hotel' },
     'hotelDetail.amenities': { fr: 'Équipements', ar: 'المرافق', en: 'Amenities' },
     'hotelDetail.availableRooms': { fr: 'Chambres disponibles', ar: 'الغرف المتاحة', en: 'Available rooms' },
     'hotelDetail.guests': { fr: 'invités', ar: 'ضيوف', en: 'guests' },
     'hotelDetail.pricePerNight': { fr: 'Prix par nuit', ar: 'السعر لليلة', en: 'Price per night' },
     'hotelDetail.selectRoom': { fr: 'Sélectionner', ar: 'اختر الغرفة', en: 'Select room' },
+    'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
+    'tourDetail.notIncluded': { fr: 'Non inclus', ar: 'غير متضمن', en: 'Not included' },
+    'tourDetail.dayByDay': { fr: 'Itinéraire jour par jour', ar: 'المسار يومياً', en: 'Day-by-day itinerary' },
 
     // Destination Detail Page
     'destinationDetail.overview': { fr: 'Aperçu', ar: 'نظرة عامة', en: 'Overview' },
@@ -487,6 +617,12 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'تطبيق الكود',
         en: 'Apply Code',
     },
+    'promoDetail.expires': { fr: 'Expire le', ar: 'تنتهي في', en: 'Expires' },
+    'promoDetail.termsTitle': { fr: 'Conditions générales', ar: 'الشروط والأحكام', en: 'Terms & conditions' },
+    'promoDetail.startBooking': { fr: 'Commencer une réservation', ar: 'ابدأ الحجز', en: 'Start a booking' },
+    'promoDetail.details': { fr: 'Détails', ar: 'التفاصيل', en: 'Details' },
+    'promoDetail.code': { fr: 'Code promo', ar: 'رمز العرض', en: 'Promo code' },
+    'promoDetail.discount': { fr: 'Réduction', ar: 'الخصم', en: 'Discount' },
 
     // Gallery Page
     'gallery.title': GALLERY,
@@ -499,9 +635,9 @@ export const translations: Record<string, TranslationEntry> = {
     // Team Page
     'team.title': { fr: 'Notre Équipe', ar: 'فريقنا', en: 'Our Team' },
     'team.subtitle': {
-        fr: 'Rencontrez les experts passionnés derrière chaque expérience Voyageur.',
-        ar: 'قابل الخبراء المتحمسين وراء كل تجربة في Voyageur.',
-        en: 'Meet the passionate experts behind every Voyageur experience.',
+        fr: 'Rencontrez les experts passionnés derrière chaque expérience BelAzurTravel.',
+        ar: 'قابل الخبراء المتحمسين وراء كل تجربة في BelAzurTravel.',
+        en: 'Meet the passionate experts behind every BelAzurTravel experience.',
     },
 
     // Flights Page
@@ -518,6 +654,8 @@ export const translations: Record<string, TranslationEntry> = {
     'flights.direct': { fr: 'Direct', ar: 'مباشر', en: 'Direct' },
     'flights.stop': { fr: 'Escale', ar: 'توقف', en: 'Stop' },
     'flights.select': { fr: 'Sélectionner', ar: 'اختر', en: 'Select' },
+    'flightDetail.totalPerPassenger': { fr: 'Total par passager', ar: 'الإجمالي لكل مسافر', en: 'Total per passenger' },
+    'flightDetail.bookFlight': { fr: 'Réserver ce vol', ar: 'احجز هذه الرحلة', en: 'Book this flight' },
 
     // Cars Page
     'cars.title': {
@@ -548,11 +686,42 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'شارك في تجارب مجموعة منسقة حول أشهر الأحداث في العالم.',
         en: "Join curated group experiences around the world's most iconic events.",
     },
-    'events.travelling': { fr: 'voyageant', ar: 'يسافرون', en: 'travelling' },
     'events.reserve': {
-        fr: 'Réserver une Place',
+        fr: 'Réserver une place',
         ar: 'احجز مكانًا',
-        en: 'Reserve a Spot',
+        en: 'Reserve a spot',
+    },
+    'events.detail.backToEvents': {
+        fr: 'Tous les événements',
+        ar: 'كل الفعاليات',
+        en: 'All events',
+    },
+    'events.detail.aboutTitle': {
+        fr: 'À propos de cet événement',
+        ar: 'حول هذه الفعالية',
+        en: 'About this event',
+    },
+    'events.detail.scheduleTitle': {
+        fr: 'Programme',
+        ar: 'البرنامج',
+        en: 'Schedule',
+    },
+    'events.detail.when': { fr: 'Date', ar: 'التاريخ', en: 'Date' },
+    'events.detail.where': { fr: 'Lieu', ar: 'المكان', en: 'Location' },
+    'events.detail.groupSize': {
+        fr: 'Taille du groupe',
+        ar: 'حجم المجموعة',
+        en: 'Group size',
+    },
+    'events.detail.packageFrom': {
+        fr: 'Forfait à partir de',
+        ar: 'الباقة تبدأ من',
+        en: 'Package from',
+    },
+    'events.detail.notFound': {
+        fr: 'Événement introuvable',
+        ar: 'الفعالية غير موجودة',
+        en: 'Event not found',
     },
 
     // Favorites Page
@@ -667,7 +836,7 @@ export const translations: Record<string, TranslationEntry> = {
 
     // Client Dashboard
     'client.welcome': {
-        fr: 'Bienvenue de retour, Voyageur!',
+        fr: 'Bienvenue de retour, BelAzurTravel!',
         ar: 'مرحبًا بعودتك، أيها المسافر!',
         en: 'Welcome back, Traveler!',
     },
@@ -779,6 +948,9 @@ export const translations: Record<string, TranslationEntry> = {
     'label.date': { fr: 'Date', ar: 'التاريخ', en: 'Date' },
     'label.location': { fr: 'Localisation', ar: 'الموقع', en: 'Location' },
     'label.duration': { fr: 'Durée', ar: 'المدة', en: 'Duration' },
+    'label.cabin': { fr: 'Cabine', ar: 'الدرجة', en: 'Cabin' },
+    'label.baggage': { fr: 'Bagages', ar: 'الأمتعة', en: 'Baggage' },
+    'label.aircraft': { fr: 'Avion', ar: 'الطائرة', en: 'Aircraft' },
     'label.maxGroup': { fr: 'Max par groupe', ar: 'الحد الأقصى بالمجموعة', en: 'Max group' },
     'label.departing': { fr: 'Départ', ar: 'المغادرة', en: 'Departing' },
     'label.arriving': { fr: 'Arrivée', ar: 'الوصول', en: 'Arriving' },

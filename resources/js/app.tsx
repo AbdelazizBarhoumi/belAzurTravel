@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ScrollToTop from '@/components/ScrollToTop';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -21,9 +22,11 @@ import ClientDashboard from './pages/ClientDashboard';
 import Contact from './pages/Contact';
 import DealDetail from './pages/DealDetail';
 import Deals from './pages/Deals';
+import DesignTrip from './pages/DesignTrip';
 import DestinationDetail from './pages/DestinationDetail';
 import Destinations from './pages/Destinations';
 import Events from './pages/Events';
+import EventDetail from './pages/EventDetail';
 import Favorites from './pages/Favorites';
 import FlightDetail from './pages/FlightDetail';
 import Flights from './pages/Flights';
@@ -51,6 +54,7 @@ const App = () => (
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
+                        <ScrollToTop />
                         <Routes>
                             <Route path="/" element={<Index />} />
                             <Route path="/login" element={<Login />} />
@@ -103,6 +107,7 @@ const App = () => (
                             <Route path="/flights/:id" element={<FlightDetail />} />
                             <Route path="/promos/:slug" element={<PromoDetail />} />
                             <Route path="/deals" element={<Deals />} />
+                            <Route path="/design-trip" element={<DesignTrip />} />
                             <Route path="/blog" element={<Blog />} />
                             <Route path="/cars" element={<Cars />} />
                             <Route path="/flights" element={<Flights />} />
@@ -111,6 +116,7 @@ const App = () => (
                             <Route path="/legal" element={<Legal />} />
                             <Route path="/gallery" element={<Gallery />} />
                             <Route path="/events" element={<Events />} />
+                            <Route path="/events/:slug" element={<EventDetail />} />
                             <Route path="/contact" element={<Contact />} />
                             <Route path="/favorites" element={<Favorites />} />
                             <Route path="*" element={<NotFound />} />

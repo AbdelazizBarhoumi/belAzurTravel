@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar as CalendarIcon, ChevronDown, MapPin, Minus, Plus, Search, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import type { DateRange } from 'react-day-picker';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -155,6 +156,12 @@ const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
 
 const MotionTabsTrigger = motion(TabsTrigger);
 
+const SEARCH_TARGETS: Record<SearchTab, string> = {
+    hotels: '/hotels',
+    tours: '/tours',
+    flights: '/flights',
+};
+
 function getLocale(lang: string): string {
     if (lang === 'ar') return 'ar-EG';
     if (lang === 'en') return 'en-US';
@@ -289,7 +296,7 @@ function ExtraFieldsByType({ tab, values, onChange }: { tab: SearchTab; values: 
 
 function SearchButton({ label }: { label: string }) {
     return (
-        <Button type="button" size="lg" className="h-12 w-full rounded-2xl bg-primary px-8 text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90 xl:w-auto">
+        <Button type="submit" size="lg" className="h-12 w-full rounded-2xl bg-primary px-8 text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90 xl:w-auto">
             <Search className="h-4 w-4" />
             {label}
         </Button>
@@ -318,6 +325,7 @@ function ActiveSearchForm({ tab, values, onDestinationChange, onDateRangeChange,
 
 export function SearchWidget({ className }: SearchWidgetProps) {
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<SearchTab>('hotels');
     const [formState, setFormState] = useState<Record<SearchTab, SearchFormValues>>(DEFAULT_FORM_STATE);
 
@@ -348,8 +356,39 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         setActiveTab(value as SearchTab);
     };
 
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const values = formState[activeTab];
+        const params = new URLSearchParams();
+
+        if (values.destination.trim()) {
+            params.set('destination', values.destination.trim());
+        }
+
+        if (values.dateRange?.from) {
+            params.set('from', values.dateRange.from.toISOString().slice(0, 10));
+        }
+
+        if (values.dateRange?.to) {
+            params.set('to', values.dateRange.to.toISOString().slice(0, 10));
+        }
+
+        params.set('guests', String(values.guests));
+
+        Object.entries(values.extras).forEach(([key, value]) => {
+            if (value && value !== 'any') {
+                params.set(key, value);
+            }
+        });
+
+        const queryString = params.toString();
+        navigate(queryString ? `${SEARCH_TARGETS[activeTab]}?${queryString}` : SEARCH_TARGETS[activeTab]);
+    };
+
     return (
         <div className={cn('glass rounded-[2rem] p-4 shadow-2xl shadow-black/10 backdrop-blur-xl md:p-5', className)}>
+            <form onSubmit={handleSubmit} className="w-full">
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid h-auto w-full grid-cols-3 rounded-[1.25rem] bg-background/40 p-1 text-foreground/80">
                     {(Object.keys(SEARCH_TABS) as SearchTab[]).map((tab) => (
@@ -395,6 +434,7 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                     </AnimatePresence>
                 </div>
             </Tabs>
+            </form>
         </div>
     );
 }

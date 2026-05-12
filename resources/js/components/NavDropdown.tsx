@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     NavigationMenu,
     NavigationMenuList,
@@ -20,6 +20,8 @@ interface NavDropdownProps {
     href: string;
     items: DropdownItem[];
     isPlusButton?: boolean;
+    isActive?: boolean;
+    hoverOnly?: boolean;
 }
 
 export function NavDropdown({
@@ -27,14 +29,26 @@ export function NavDropdown({
     href,
     items,
     isPlusButton = false,
+    isActive = false,
+    hoverOnly = false,
 }: NavDropdownProps) {
     const { t } = useLanguage();
+    const navigate = useNavigate();
+
+    const handleTriggerClick = () => {
+        if (!hoverOnly && !isPlusButton && href !== '#') {
+            navigate(href);
+        }
+    };
 
     return (
         <NavigationMenu className="relative z-10 shrink-0">
             <NavigationMenuList className="gap-0">
                 <NavigationMenuItem>
-                    <NavigationMenuTrigger className="bg-transparent text-sm font-medium">
+                    <NavigationMenuTrigger 
+                        onClick={hoverOnly ? (e) => e.preventDefault() : handleTriggerClick}
+                        onMouseDown={hoverOnly ? (e) => e.preventDefault() : undefined}
+                        className={`bg-transparent text-sm font-medium transition-colors ${isActive ? 'text-primary' : ''} ${hoverOnly ? 'cursor-default' : 'cursor-pointer'}`}>
                         {isPlusButton ? `+ ${t(labelKey)}` : t(labelKey)}
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>

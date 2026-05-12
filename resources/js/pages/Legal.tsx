@@ -18,9 +18,9 @@ const sections: LegalSection[] = [
             en: 'Company Information',
         },
         body: {
-            fr: 'Voyageur Travel Agency SARL — immatriculée au 123 Travel Street, New York 10001. Licence de voyage #TA-2010-4587. TVA: US-887654321.',
-            ar: 'وكالة Voyageur للسفر — مسجلة في 123 Travel Street، نيويورك 10001. رخصة سفر #TA-2010-4587. ضريبة القيمة المضافة: US-887654321.',
-            en: 'Voyageur Travel Agency SARL — registered at 123 Travel Street, New York 10001. Travel license #TA-2010-4587. VAT: US-887654321.',
+            fr: 'BelAzurTravel Travel Agency SARL — immatriculée au 123 Travel Street, New York 10001. Licence de voyage #TA-2010-4587. TVA: US-887654321.',
+            ar: 'وكالة BelAzurTravel للسفر — مسجلة في 123 Travel Street، نيويورك 10001. رخصة سفر #TA-2010-4587. ضريبة القيمة المضافة: US-887654321.',
+            en: 'BelAzurTravel Travel Agency SARL — registered at 123 Travel Street, New York 10001. Travel license #TA-2010-4587. VAT: US-887654321.',
         },
     },
     {
@@ -66,9 +66,9 @@ const sections: LegalSection[] = [
             en: 'Intellectual Property',
         },
         body: {
-            fr: 'Tout le contenu — textes, images, logos et itinéraires — est la propriété de Voyageur et protégé par les lois internationales sur le droit d’auteur. Toute reproduction nécessite une autorisation écrite.',
-            ar: 'جميع المحتويات — النصوص والصور والشعارات والمسارات — ملك لشركة Voyageur ومحمي بموجب قوانين حقوق النشر الدولية. أي إعادة إنتاج تتطلب إذنًا كتابيًا.',
-            en: 'All content — text, images, logos, and itineraries — is the property of Voyageur and protected by international copyright laws. Any reproduction requires written authorization.',
+            fr: 'Tout le contenu — textes, images, logos et itinéraires — est la propriété de BelAzurTravel et protégé par les lois internationales sur le droit d’auteur. Toute reproduction nécessite une autorisation écrite.',
+            ar: 'جميع المحتويات — النصوص والصور والشعارات والمسارات — ملك لشركة BelAzurTravel ومحمي بموجب قوانين حقوق النشر الدولية. أي إعادة إنتاج تتطلب إذنًا كتابيًا.',
+            en: 'All content — text, images, logos, and itineraries — is the property of BelAzurTravel and protected by international copyright laws. Any reproduction requires written authorization.',
         },
     },
     {
@@ -78,9 +78,9 @@ const sections: LegalSection[] = [
             en: 'Liability',
         },
         body: {
-            fr: "Voyageur agit en tant qu'intermédiaire entre les voyageurs et les prestataires de services. Notre responsabilité est limitée à la valeur des services réservés telle que détaillée dans votre contrat.",
-            ar: 'تعمل Voyageur كوسيط بين المسافرين ومزودي الخدمات. تقتصر مسؤوليتنا على قيمة الخدمات المحجوزة كما هو موضح في عقدك.',
-            en: 'Voyageur acts as an intermediary between travellers and service providers. Our liability is limited to the value of the booked services as detailed in your contract.',
+            fr: "BelAzurTravel agit en tant qu'intermédiaire entre les voyageurs et les prestataires de services. Notre responsabilité est limitée à la valeur des services réservés telle que détaillée dans votre contrat.",
+            ar: 'تعمل BelAzurTravel كوسيط بين المسافرين ومزودي الخدمات. تقتصر مسؤوليتنا على قيمة الخدمات المحجوزة كما هو موضح في عقدك.',
+            en: 'BelAzurTravel acts as an intermediary between travellers and service providers. Our liability is limited to the value of the booked services as detailed in your contract.',
         },
     },
     {

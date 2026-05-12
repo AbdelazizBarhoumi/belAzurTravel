@@ -11,6 +11,7 @@ export interface PromoItem {
     color: string;
     eligibility: string[];
     howToUse: string[];
+    terms: string[];
 }
 
 export const promosData: PromoItem[] = [
@@ -23,6 +24,7 @@ export const promosData: PromoItem[] = [
         color: 'from-primary to-primary/70',
         eligibility: ['Selected Europe routes', 'Travel dates within 6 months', 'Minimum 2 travelers'],
         howToUse: ['Copy promo code', 'Open checkout', 'Apply in promo field'],
+        terms: ['Valid on selected routes only', 'Cannot be combined with other offers', 'Subject to availability and fare rules'],
     },
     {
         code: 'LOVE2026',
@@ -33,6 +35,7 @@ export const promosData: PromoItem[] = [
         color: 'from-secondary to-secondary/70',
         eligibility: ['Couple bookings only', 'Minimum 3 nights', 'Participating resorts only'],
         howToUse: ['Copy code', 'Select honeymoon package', 'Apply at confirmation step'],
+        terms: ['Applies to new bookings only', 'Blackout dates may apply', 'Subject to resort availability'],
     },
     {
         code: 'GROUP10',
@@ -43,5 +46,6 @@ export const promosData: PromoItem[] = [
         color: 'from-primary/80 to-secondary',
         eligibility: ['Minimum group size: 6', 'Single checkout for entire group', 'Valid for tours category'],
         howToUse: ['Assign group leader', 'Collect traveler data', 'Apply code before payment'],
+        terms: ['Valid for group bookings of 6+', 'Not valid with special event fares', 'Promo can be withdrawn without notice'],
     },
 ];

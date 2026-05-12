@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Tag, Calendar } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,7 +15,6 @@ function localize(value: LocalizedText, lang: Lang): string {
 
 const Promos = () => {
     const { t, lang } = useLanguage();
-    const navigate = useNavigate();
 
     return (
         <PageShell
@@ -50,8 +49,8 @@ const Promos = () => {
                             </div>
                         </div>
                         <div className="flex justify-end bg-card p-4">
-                            <Button size="sm" className="bg-primary text-primary-foreground" onClick={() => navigate(`/promos/${p.code}`)}>
-                                {t('promos.applyCode')}
+                            <Button asChild size="sm" className="bg-primary text-primary-foreground">
+                                <Link to={`/promos/${p.code}`}>{t('common.viewDetails')}</Link>
                             </Button>
                         </div>
                     </motion.div>

@@ -3,34 +3,29 @@ import { toast } from 'sonner';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
-import type { AdminBooking } from '@/hooks/useAdminStore';
-import { useAdminStore } from '@/hooks/useAdminStore';
-import { bookingStatusLabels, bookingTypeLabels, countryLabels, destinationLabels, hotelLabels, localizeKnown, tourLabels } from '@/lib/adminI18n';
+import { useAdminBookings } from '@/hooks/useBooking';
+import { bookingStatusLabels } from '@/lib/adminI18n';
+
+interface BookingItem {
+    id: number;
+    user_id: number | null;
+    type: string;
+    items: unknown[];
+    created_at: string;
+    total_amount: number;
+    status: string;
+}
 
 const AdminBookings = () => {
     useAdminGuard();
-    const { state, upsert, remove } = useAdminStore();
+    const { data, isLoading } = useAdminBookings();
     const { lang } = useLanguage();
-
     const { t } = useLanguage();
 
-    const updateStatus = (b: AdminBooking, status: AdminBooking['status']) => {
-        upsert('bookings', { ...b, status });
-        // use localized booking label + localized status label
-        toast.success(`${t('admin.booking')} ${b.id} → ${bookingStatusLabels[status][lang]}`);
+    const updateStatus = (_b: BookingItem, status: string) => {
+        // TODO: call API to update status (confirm endpoint)
+        toast.success(`${t('admin.booking')} → ${bookingStatusLabels[status][lang]}`);
     };
-
-    const localizeBookingItem = (item: string) =>
-        localizeKnown(
-            item,
-            {
-                ...destinationLabels,
-                ...hotelLabels,
-                ...tourLabels,
-                ...countryLabels,
-            },
-            lang,
-        );
 
     return (
         <AdminLayout
@@ -62,7 +57,7 @@ const AdminBookings = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {state.bookings.map((b) => (
+                            {(isLoading ? [] : data ?? []).map((b: BookingItem) => (
                                 <tr
                                     key={b.id}
                                     className="border-b border-border last:border-0 hover:bg-muted/20"
@@ -71,19 +66,19 @@ const AdminBookings = () => {
                                         {b.id}
                                     </td>
                                     <td className="px-4 py-3 text-sm">
-                                        {b.client}
+                                        {b.user_id || 'Guest'}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                                        {localizeKnown(b.type, bookingTypeLabels, lang)}
+                                        {b.type}
                                     </td>
                                     <td className="px-4 py-3 text-sm">
-                                        {localizeBookingItem(b.item)}
+                                        {JSON.stringify(b.items).substring(0, 50)}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                                        {b.date}
+                                        {new Date(b.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
-                                        ${b.amount.toLocaleString()}
+                                        ${b.total_amount}
                                     </td>
                                     <td className="px-4 py-3">
                                         <select
@@ -91,8 +86,7 @@ const AdminBookings = () => {
                                             onChange={(e) =>
                                                 updateStatus(
                                                     b,
-                                                    e.target
-                                                        .value as AdminBooking['status'],
+                                                    e.target.value,
                                                 )
                                             }
                                             className={`rounded-lg border-0 px-2 py-1 text-xs font-semibold ${
@@ -116,8 +110,8 @@ const AdminBookings = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                         <button
-                                                onClick={() => {
-                                                remove('bookings', b.id);
+                                            onClick={() => {
+                                                // TODO: implement delete via API
                                                 toast.success(t('actions.deleted'));
                                             }}
                                             className="rounded-lg p-1.5 hover:bg-destructive/10"

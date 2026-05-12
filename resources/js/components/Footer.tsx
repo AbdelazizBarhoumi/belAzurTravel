@@ -1,5 +1,4 @@
 import {
-    Plane,
     Mail,
     Phone,
     MapPin,
@@ -10,6 +9,8 @@ import {
     Clock,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
+import footerLogo from '@/assets/brand-logo-footer.png';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Footer() {
@@ -33,19 +34,19 @@ export function Footer() {
         { labelKey: 'nav.flights', href: '/flights' },
         { labelKey: 'nav.promos', href: '/promos' },
     ];
-
     return (
         <footer className="bg-foreground text-primary-foreground">
             <div className="container mx-auto px-4 py-16">
                 <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-5">
                     {/* Brand */}
                     <div className="lg:col-span-2">
-                        <div className="mb-4 flex items-center gap-2">
-                            <Plane className="h-6 w-6 text-secondary" />
-                            <span className="font-serif text-xl font-bold">
-                                Voyageur
-                            </span>
-                        </div>
+                        <BrandLogo
+                            className="mb-4 flex items-center gap-2"
+                            imageClassName="h-28 w-auto"
+                            textClassName="font-serif text-xl font-bold text-primary-foreground"
+                            showText={false}
+                            src={footerLogo}
+                        />
                         <p className="mb-6 max-w-sm text-sm leading-relaxed text-primary-foreground/60">
                             {t('footer.tagline')}
                         </p>
@@ -147,7 +148,7 @@ export function Footer() {
                 </div>
 
                 <div className="mt-12 border-t border-primary-foreground/10 pt-8 text-center text-sm text-primary-foreground/40">
-                    © 2026 Voyageur. {t('footer.rights')}
+                    © 2026 BelAzurTravel. {t('footer.rights')}
                 </div>
             </div>
         </footer>

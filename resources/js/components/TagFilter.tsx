@@ -43,7 +43,7 @@ function TagFilter({
 
     return (
         <div className={cn('space-y-4', className)}>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3">
                 {tags.map((tag) => {
                     const isSelected = selectedTags.includes(tag.id);
 
@@ -52,13 +52,13 @@ function TagFilter({
                             key={tag.id}
                             onClick={() => onTagToggle(tag.id)}
                             className={cn(
-                                'rounded-full border px-4 py-2 text-sm font-medium transition-all',
+                                'flex items-center justify-center rounded-lg border px-3 py-2 text-xs font-medium transition-all',
                                 isSelected
                                     ? getTagColor(tag.id)
                                     : 'border-border bg-background text-foreground hover:bg-muted'
                             )}
                         >
-                            {tag.name[locale]}
+                            <span className="text-center">{tag.name[locale]}</span>
                         </button>
                     );
                 })}

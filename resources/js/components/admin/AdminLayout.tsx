@@ -1,5 +1,4 @@
 import {
-    Plane,
     LayoutDashboard,
     MapPin,
     Hotel,
@@ -11,6 +10,7 @@ import {
 } from 'lucide-react';
 import { type ReactNode } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import {
     Sidebar,
@@ -81,20 +81,16 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                         'group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!px-0',
                                     )}
                                 >
-                                    <Plane className="h-5 w-5 text-sidebar-primary" />
-                                    <div
+                                    <BrandLogo
                                         className={cn(
-                                            'grid flex-1 text-sm leading-tight group-data-[collapsible=icon]:hidden',
+                                            'grid flex-1 items-center gap-0 text-sm leading-tight group-data-[collapsible=icon]:hidden',
                                             isRtl ? 'text-right' : 'text-left',
                                         )}
-                                    >
-                                        <span className="truncate font-semibold">
-                                            Voyageur
-                                        </span>
-                                        <span className="truncate text-xs text-sidebar-foreground/60">
-                                            {t('admin.panel')}
-                                        </span>
-                                    </div>
+                                        imageClassName="h-5 w-auto"
+                                        textClassName="truncate font-semibold"
+                                        subtitle={t('admin.panel')}
+                                        subtitleClassName="truncate text-xs text-sidebar-foreground/60"
+                                    />
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>

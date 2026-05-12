@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { Plane, Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { BrandLogo } from '@/components/BrandLogo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -49,10 +50,7 @@ const Register = () => {
                     className="w-full max-w-md"
                 >
                     <Link to="/" className="mb-10 flex items-center gap-2">
-                        <Plane className="h-6 w-6 text-primary" />
-                        <span className="font-serif text-xl font-bold text-foreground">
-                            Voyageur
-                        </span>
+                        <BrandLogo imageClassName="h-7 w-auto" />
                     </Link>
 
                     <div className="mb-6 flex justify-end">

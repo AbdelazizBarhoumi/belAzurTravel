@@ -53,58 +53,81 @@ const deals = [
 export function DealsSection() {
     const { t, lang } = useLanguage();
     return (
-        <section className="bg-muted py-24">
-            <div className="container mx-auto px-4">
+       <section className="bg-muted py-24">
+    <div className="container mx-auto px-4">
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 text-center"
+        >
+            <p className="mb-3 text-sm font-medium uppercase tracking-widest text-secondary">
+                {t('deals.save')}
+            </p>
+
+            <h2 className="mb-4 font-serif text-4xl font-bold text-foreground md:text-5xl">
+                {t('deals.title')}
+            </h2>
+
+            <p className="mx-auto max-w-xl text-muted-foreground">
+                {t('deals.subtitle')}
+            </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {deals.map((deal, i) => (
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    key={deal.slug}
+                    initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="mb-16 text-center"
+                    transition={{ delay: i * 0.1 }}
+                    className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-2 hover:border-primary/30 hover:shadow-2xl"
                 >
-                    <p className="mb-3 text-sm font-medium uppercase tracking-widest text-secondary">
-                        {t('deals.save')}
-                    </p>
-                    <h2 className="mb-4 font-serif text-4xl font-bold text-foreground md:text-5xl">
-                        {t('deals.title')}
-                    </h2>
-                    <p className="mx-auto max-w-xl text-muted-foreground">
-                        {t('deals.subtitle')}
-                    </p>
-                </motion.div>
+                    {/* Top Accent */}
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary to-secondary" />
 
-                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-                    {deals.map((deal, i) => (
-                        <motion.div
-                            key={deal.slug}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: i * 0.15 }}
-                            className="card-elevated rounded-2xl bg-card p-8"
-                        >
+                    <div className="flex h-full flex-col">
+                        {/* Header */}
+                        <div className="mb-6 flex items-center justify-between">
                             <div
-                                className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${deal.color} mb-6`}
+                                className={`flex h-14 w-14 items-center justify-center rounded-2xl ${deal.color}`}
                             >
-                                <deal.icon className="h-6 w-6" />
+                                <deal.icon className="h-7 w-7" />
                             </div>
-                            <span className="mb-4 inline-block rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
+
+                            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                                 {localize(deal.discount, lang)}
                             </span>
-                            <h3 className="mb-3 font-serif text-xl font-bold text-foreground">
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1">
+                            <h3 className="mb-3 font-serif text-2xl font-bold text-foreground transition-colors group-hover:text-primary">
                                 {localize(deal.title, lang)}
                             </h3>
-                            <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
+
+                            <p className="text-sm leading-relaxed text-muted-foreground">
                                 {localize(deal.description, lang)}
                             </p>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="mt-8">
                             <Link to={`/deals/${deal.slug}`}>
-                                <Button variant="outline" className="w-full">
+                                <Button
+                                    variant="ghost"
+                                    className="w-full rounded-xl border border-border bg-background transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+                                >
                                     {t('deals.viewDeal')}
                                 </Button>
                             </Link>
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-        </section>
+                        </div>
+                    </div>
+                </motion.div>
+            ))}
+        </div>
+    </div>
+</section>
     );
 }

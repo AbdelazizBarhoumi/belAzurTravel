@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Plane, User, Heart, ChevronDown } from 'lucide-react';
+import { Menu, X, User, Heart, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { BrandLogo } from '@/components/BrandLogo';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { NavDropdown } from '@/components/NavDropdown';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,9 @@ export function Navbar() {
     const { t } = useLanguage();
     const { favorites } = useFavorites();
 
+    const isActiveSection = (path: string) =>
+        location.pathname === path || location.pathname.startsWith(`${path}/`);
+
     const destDropdown: DropdownGroup = {
         labelKey: 'nav.destinations',
         href: '/destinations',
@@ -37,11 +41,9 @@ export function Navbar() {
         labelKey: 'nav.hotels',
         href: '/hotels',
         items: [
-            { labelKey: 'cat.luxury', href: '/hotels?cat=Luxury' },
-            { labelKey: 'cat.boutique', href: '/hotels?cat=Boutique' },
-            { labelKey: 'cat.resorts', href: '/hotels?cat=Resorts' },
-            { labelKey: 'cat.budget', href: '/hotels?cat=Budget' },
-            { labelKey: 'cat.family', href: '/hotels?cat=Family' },
+            { labelKey: 'search.options.fiveStar', href: '/hotels?stars=5' },
+            { labelKey: 'search.options.fourStar', href: '/hotels?stars=4' },
+            { labelKey: 'search.options.threeStar', href: '/hotels?stars=3' },
         ],
     };
 
@@ -59,6 +61,7 @@ export function Navbar() {
     };
 
     const simpleLinks = [
+        { labelKey: 'nav.design', href: '/design-trip' },
         { labelKey: 'nav.tours', href: '/tours' },
         { labelKey: 'nav.deals', href: '/deals' },
         { labelKey: 'nav.gallery', href: '/gallery' },
@@ -70,12 +73,15 @@ export function Navbar() {
         <header
             className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${isHome ? 'glass' : 'bg-card shadow-sm'}`}
         >
+            <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg"
+            >
+                Skip to main content
+            </a>
             <div className="container mx-auto flex h-16 items-center justify-between px-4">
                 <Link to="/" className="flex shrink-0 items-center gap-2">
-                    <Plane className="h-6 w-6 text-primary" />
-                    <span className="font-serif text-xl font-bold text-foreground">
-                        Voyageur
-                    </span>
+                    <BrandLogo imageClassName="h-7 w-auto" />
                 </Link>
 
                 {/* Desktop nav */}
@@ -84,18 +90,21 @@ export function Navbar() {
                         labelKey="nav.destinations"
                         href="/destinations"
                         items={destDropdown.items}
+                        isActive={isActiveSection('/destinations')}
                     />
                     <NavDropdown
                         labelKey="nav.hotels"
                         href="/hotels"
                         items={hotelDropdown.items}
+                        isActive={isActiveSection('/hotels')}
                     />
 
                     {simpleLinks.map((l) => (
                         <Link
                             key={l.href}
                             to={l.href}
-                            className="inline-flex h-10 items-center px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                            aria-current={isActiveSection(l.href) ? 'page' : undefined}
+                            className={`inline-flex h-10 items-center px-3 text-sm font-medium transition-colors hover:text-primary ${isActiveSection(l.href) ? 'text-primary' : 'text-muted-foreground'}`}
                         >
                             {t(l.labelKey)}
                         </Link>
@@ -106,6 +115,7 @@ export function Navbar() {
                         href="#"
                         items={moreDropdown.items}
                         isPlusButton={true}
+                        hoverOnly={true}
                     />
                 </div>
 
@@ -130,18 +140,21 @@ export function Navbar() {
                             <User className="h-4 w-4" /> {t('nav.signin')}
                         </Button>
                     </Link>
-                    <Link to="/register">
+                    <Link to="/design-trip">
                         <Button
                             size="sm"
                             className="bg-primary text-primary-foreground hover:bg-primary/90"
                         >
-                            {t('nav.start')}
+                            {t('nav.design')}
                         </Button>
                     </Link>
                 </div>
 
                 {/* Mobile toggle */}
                 <button
+                    aria-label={open ? 'Close menu' : 'Open menu'}
+                    aria-expanded={open}
+                    aria-controls="mobile-navigation"
                     className="text-foreground lg:hidden"
                     onClick={() => setOpen(!open)}
                 >
@@ -157,6 +170,7 @@ export function Navbar() {
             <AnimatePresence>
                 {open && (
                     <motion.div
+                        id="mobile-navigation"
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -230,7 +244,11 @@ export function Navbar() {
                                         className="gap-1.5"
                                     >
                                         <Heart className="h-4 w-4" />{' '}
-                                        {favorites.length}
+                                        {favorites.length > 0 && (
+                                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-foreground">
+                                                {favorites.length}
+                                            </span>
+                                        )}
                                     </Button>
                                 </Link>
                             </div>
@@ -247,13 +265,9 @@ export function Navbar() {
                                         {t('nav.signin')}
                                     </Button>
                                 </Link>
-                                <Link
-                                    to="/register"
-                                    className="flex-1"
-                                    onClick={() => setOpen(false)}
-                                >
+                                <Link to="/design-trip" className="flex-1" onClick={() => setOpen(false)}>
                                     <Button className="w-full bg-primary text-primary-foreground">
-                                        {t('nav.start')}
+                                        {t('nav.design')}
                                     </Button>
                                 </Link>
                             </div>

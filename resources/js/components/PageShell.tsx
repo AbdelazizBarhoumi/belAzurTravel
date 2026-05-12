@@ -24,7 +24,7 @@ export function PageShell({ titleKey, subtitleKey, children, breadcrumbs }: Prop
     return (
         <div className="min-h-screen bg-background">
             <Navbar />
-            <div className="pb-16 pt-24">
+            <main id="main-content" className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     {breadcrumbs && (
                         <motion.div
@@ -49,7 +49,7 @@ export function PageShell({ titleKey, subtitleKey, children, breadcrumbs }: Prop
                     </motion.div>
                     {children}
                 </div>
-            </div>
+            </main>
             <Footer />
         </div>
     );

@@ -36,6 +36,15 @@ export function HeroSection() {
                     {t('hero.kicker')}
                 </motion.p>
 
+                <motion.p
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="mx-auto mb-4 max-w-3xl text-lg font-medium text-primary-foreground/90 md:text-xl"
+                >
+                    {t('hero.subtitle')}
+                </motion.p>
+
                 {/* Heading */}
                 <motion.h1
                     initial={{ opacity: 0, y: 30 }}
@@ -56,7 +65,7 @@ export function HeroSection() {
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
+                    transition={{ delay: 0.5 }}
                     className="mx-auto mb-10 max-w-2xl text-base text-primary-foreground/80 md:text-xl"
                 >
                     {t('hero.description')}
@@ -66,11 +75,20 @@ export function HeroSection() {
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
+                    transition={{ delay: 0.7 }}
                     className="mx-auto max-w-5xl"
                 >
                     <SearchWidget />
                 </motion.div>
+
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.9 }}
+                    className="mx-auto mt-6 max-w-2xl text-sm text-primary-foreground/70"
+                >
+                    {t('hero.searchHint')}
+                </motion.p>
             </div>
         </section>
     );

@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Tag, CheckCircle2, ClipboardCopy } from 'lucide-react';
-import { useParams, Navigate } from 'react-router-dom';
+import { Calendar, Check, Copy, Tag, CheckCircle2 } from 'lucide-react';
+import { useParams, Navigate, Link } from 'react-router-dom';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { StickyBookingCard } from '@/components/StickyBookingCard';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { promosData } from '@/data/promos.data';
 import type { Lang } from '@/i18n/translations';
@@ -15,6 +16,7 @@ function localize(value: LocalizedText, lang: Lang): string { return value[lang]
 export default function PromoDetail() {
     const { slug } = useParams<{ slug: string }>();
     const { t, lang } = useLanguage();
+    const [copied, setCopied] = useState(false);
     const promo = promosData.find((item) => item.code === slug);
 
     if (!promo) return <Navigate to="/promos" replace />;
@@ -22,58 +24,64 @@ export default function PromoDetail() {
     const copyCode = async () => {
         try {
             await navigator.clipboard.writeText(promo.code);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1500);
         } catch (error) {
             console.error('Failed to copy promo code', error);
         }
     };
+
+    const promoTitle = localize(promo.title, lang);
+    const promoDescription = localize(promo.description, lang);
+    const promoDiscount = localize(promo.discount, lang);
+    const promoExpires = localize(promo.expires, lang);
 
     return (
         <div className="min-h-screen bg-background">
             <Navbar />
             <main className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
-                    <div className="mb-8"><Breadcrumb items={[{ label: t('common.home'), href: '/' }, { label: t('nav.promos'), href: '/promos' }, { label: promo.code, active: true }]} /></div>
+                    <div className="mb-8">
+                        <Breadcrumb items={[{ label: t('common.home'), href: '/' }, { label: t('nav.promos'), href: '/promos' }, { label: promoTitle, active: true }]} />
+                    </div>
 
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid gap-10 lg:grid-cols-[2fr_1fr]">
                         <div className="space-y-8">
-                            <section className={`overflow-hidden rounded-3xl bg-gradient-to-br ${promo.color} p-8 text-primary-foreground shadow-sm`}>
-                                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-card/20 px-3 py-1 text-xs font-semibold backdrop-blur"><Tag className="h-3.5 w-3.5" /> {localize(promo.discount, lang)}</div>
-                                <h1 className="font-serif text-4xl font-bold">{localize(promo.title, lang)}</h1>
-                                <p className="mt-4 max-w-2xl text-primary-foreground/85">{localize(promo.description, lang)}</p>
-                            </section>
-
-                            <section className="grid gap-4 md:grid-cols-3">
-                                <div className="rounded-2xl border border-border bg-card p-5"><div className="text-sm text-muted-foreground">Promo code</div><div className="mt-2 font-mono text-lg font-bold">{promo.code}</div></div>
-                                <div className="rounded-2xl border border-border bg-card p-5"><div className="text-sm text-muted-foreground">Expires</div><div className="mt-2 font-semibold">{localize(promo.expires, lang)}</div></div>
-                                <div className="rounded-2xl border border-border bg-card p-5"><div className="text-sm text-muted-foreground">Action</div><button onClick={copyCode} className="mt-2 inline-flex items-center gap-2 font-semibold text-primary"><ClipboardCopy className="h-4 w-4" /> Copy code</button></div>
-                            </section>
-
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`bg-gradient-to-br ${promo.color} rounded-3xl p-10 text-primary-foreground mb-8 card-elevated`}>
+                                <Tag className="h-10 w-10 opacity-80 mb-4" />
+                                <h1 className="font-serif text-4xl font-bold mb-2">{promoTitle}</h1>
+                                <p className="text-primary-foreground/80 mb-6 max-w-2xl">{promoDescription}</p>
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <span className="px-4 py-2 rounded-full bg-card/20 backdrop-blur text-sm font-bold">{promoDiscount}</span>
+                                    <button onClick={copyCode} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card/20 backdrop-blur font-mono font-bold hover:bg-card/30 transition-colors">
+                                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                        {promo.code}
+                                    </button>
+                                    <span className="text-sm flex items-center gap-1 opacity-80"><Calendar className="h-4 w-4" /> {t('promoDetail.expires')} {promoExpires}</span>
+                                </div>
+                            </motion.div>
                             <section className="rounded-2xl border border-border bg-card p-6">
                                 <h3 className="mb-4 font-serif text-xl font-bold">Eligibility</h3>
                                 <ul className="space-y-2 text-sm text-foreground">
                                     {promo.eligibility.map((item) => <li key={item} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-secondary" /> {item}</li>)}
                                 </ul>
                             </section>
-
-                            <section className="rounded-2xl border border-border bg-card p-6">
-                                <h3 className="mb-4 font-serif text-xl font-bold">How to use</h3>
-                                <ol className="list-inside list-decimal space-y-2 text-foreground">
-                                    {promo.howToUse.map((item) => <li key={item}>{item}</li>)}
-                                </ol>
+                            <section className="bg-card border border-border rounded-2xl p-6">
+                                <h2 className="font-serif text-xl font-bold text-foreground mb-4">{t('promoDetail.termsTitle')}</h2>
+                                <ul className="space-y-2">
+                                    {promo.terms.map((term) => (
+                                        <li key={term} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                            <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                                            {term}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <Button asChild className="mt-6 bg-primary text-primary-foreground">
+                                    <Link to="/destinations">{t('promoDetail.startBooking')}</Link>
+                                </Button>
                             </section>
-                        </div>
 
-                        <aside className="lg:pt-6">
-                            <StickyBookingCard
-                                minPrice={0}
-                                currency=""
-                                type={promo.discount[lang]}
-                                rating={4.8}
-                                reviews={24}
-                                onBook={() => window.alert('Proceed to promo checkout flow')}
-                                onWhatsApp={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Promo code: ${promo.code}`)}`, '_blank')}
-                            />
-                        </aside>
+                        </div>
                     </motion.div>
                 </div>
             </main>
