@@ -90,7 +90,9 @@ export function StickyBookingCard({
             return;
         }
 
-        const messageParts = [title, displayLocation, description].filter(Boolean);
+        const messageParts = [title, displayLocation, description].filter(
+            Boolean,
+        );
         if (messageParts.length > 0) {
             const message = encodeURIComponent(messageParts.join(' - '));
             window.open(`https://wa.me/?text=${message}`, '_blank');
@@ -101,28 +103,41 @@ export function StickyBookingCard({
     };
 
     const displayPrice = price ?? minPrice ?? 0;
-    const displayLocation = Array.isArray(location) ? location.join(', ') : location;
+    const displayLocation = Array.isArray(location)
+        ? location.join(', ')
+        : location;
     const computedDetails: DetailItem[] = details ?? [
-        ...(duration ? [{
-            label: t('label.duration'),
-            value: duration,
-            icon: Clock,
-        }] : []),
-        ...(maxGroup !== undefined ? [{
-            label: t('label.maxGroup'),
-            value: `${maxGroup} ${t('common.travelers')}`,
-            icon: Users,
-        }] : []),
+        ...(duration
+            ? [
+                  {
+                      label: t('label.duration'),
+                      value: duration,
+                      icon: Clock,
+                  },
+              ]
+            : []),
+        ...(maxGroup !== undefined
+            ? [
+                  {
+                      label: t('label.maxGroup'),
+                      value: `${maxGroup} ${t('common.travelers')}`,
+                      icon: Users,
+                  },
+              ]
+            : []),
     ];
     const displayPriceLabel = priceLabel ?? t('common.from');
-    const displayPrimaryButtonLabel = primaryButtonLabel ?? t('hotelDetail.reserveNow');
-    const displaySecondaryButtonLabel = secondaryButtonLabel ?? t('common.whatsapp');
-    const displayTertiaryButtonLabel = tertiaryButtonLabel ?? t('hotelDetail.call');
+    const displayPrimaryButtonLabel =
+        primaryButtonLabel ?? t('hotelDetail.reserveNow');
+    const displaySecondaryButtonLabel =
+        secondaryButtonLabel ?? t('common.whatsapp');
+    const displayTertiaryButtonLabel =
+        tertiaryButtonLabel ?? t('hotelDetail.call');
 
     return (
-        <div className="sticky top-24 self-start bg-card rounded-3xl p-6 card-elevated h-fit border border-border">
+        <div className="card-elevated sticky top-24 h-fit self-start rounded-3xl border border-border bg-card p-6">
             {badge && (
-                <span className="text-xs text-secondary font-semibold uppercase tracking-wider">
+                <span className="text-xs font-semibold uppercase tracking-wider text-secondary">
                     {badge}
                 </span>
             )}
@@ -135,7 +150,11 @@ export function StickyBookingCard({
                                 <MapPin className="h-3 w-3" /> {displayLocation}
                             </p>
                         )}
-                        {title && <h1 className="font-serif text-3xl font-bold text-foreground">{title}</h1>}
+                        {title && (
+                            <h1 className="font-serif text-3xl font-bold text-foreground">
+                                {title}
+                            </h1>
+                        )}
                     </div>
 
                     {favoriteItem && <FavoriteButton item={favoriteItem} />}
@@ -147,13 +166,23 @@ export function StickyBookingCard({
                     <Star className="h-4 w-4 fill-current text-secondary" />
                     <span className="font-bold text-foreground">{rating}</span>
                     {reviews !== undefined && (
-                        <span className="text-sm text-muted-foreground">· {reviews} {t('hotels.reviews')}</span>
+                        <span className="text-sm text-muted-foreground">
+                            · {reviews} {t('hotels.reviews')}
+                        </span>
                     )}
-                    {ratingMeta && <span className="text-sm text-muted-foreground">· {ratingMeta}</span>}
+                    {ratingMeta && (
+                        <span className="text-sm text-muted-foreground">
+                            · {ratingMeta}
+                        </span>
+                    )}
                 </div>
             )}
 
-            {description && <p className="mb-6 text-sm text-muted-foreground">{description}</p>}
+            {description && (
+                <p className="mb-6 text-sm text-muted-foreground">
+                    {description}
+                </p>
+            )}
 
             {computedDetails.length > 0 && (
                 <div className="space-y-3 border-y border-border py-6 text-sm">
@@ -163,10 +192,19 @@ export function StickyBookingCard({
                                 const Icon = item.icon;
 
                                 return (
-                                    <div key={`${item.label}-${item.value}`} className="text-center">
-                                        {Icon && <Icon className="mx-auto mb-1 h-5 w-5 text-primary" />}
-                                        <p className="text-xs text-muted-foreground">{item.label}</p>
-                                        <p className="font-bold text-foreground text-xs">{item.value}</p>
+                                    <div
+                                        key={`${item.label}-${item.value}`}
+                                        className="text-center"
+                                    >
+                                        {Icon && (
+                                            <Icon className="mx-auto mb-1 h-5 w-5 text-primary" />
+                                        )}
+                                        <p className="text-xs text-muted-foreground">
+                                            {item.label}
+                                        </p>
+                                        <p className="text-xs font-bold text-foreground">
+                                            {item.value}
+                                        </p>
                                     </div>
                                 );
                             })}
@@ -177,12 +215,19 @@ export function StickyBookingCard({
                                 const Icon = item.icon;
 
                                 return (
-                                    <div key={`${item.label}-${item.value}`} className="flex justify-between gap-4">
+                                    <div
+                                        key={`${item.label}-${item.value}`}
+                                        className="flex justify-between gap-4"
+                                    >
                                         <span className="flex items-center gap-2 text-muted-foreground">
-                                            {Icon && <Icon className="h-4 w-4 text-primary" />}
+                                            {Icon && (
+                                                <Icon className="h-4 w-4 text-primary" />
+                                            )}
                                             {item.label}
                                         </span>
-                                        <span className="text-right font-medium text-foreground">{item.value}</span>
+                                        <span className="text-right font-medium text-foreground">
+                                            {item.value}
+                                        </span>
                                     </div>
                                 );
                             })}
@@ -198,13 +243,18 @@ export function StickyBookingCard({
 
                 <div className="flex items-baseline gap-1">
                     <span className="font-serif text-4xl font-bold leading-none text-secondary">
-                        {currency}{displayPrice.toLocaleString()}
+                        {currency}
+                        {displayPrice.toLocaleString()}
                     </span>
-                    {priceSuffix && <span className="text-sm text-muted-foreground">{priceSuffix}</span>}
+                    {priceSuffix && (
+                        <span className="text-sm text-muted-foreground">
+                            {priceSuffix}
+                        </span>
+                    )}
                 </div>
 
                 {type && (
-                    <span className="mt-3 inline-block px-2 py-1 rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                    <span className="mt-3 inline-block rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
                         {type}
                     </span>
                 )}
@@ -237,7 +287,6 @@ export function StickyBookingCard({
                     </Button>
                 </div>
             </div>
-
         </div>
     );
 }

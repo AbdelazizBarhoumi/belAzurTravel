@@ -38,7 +38,7 @@ const posts = [
     {
         slug: 'budget-travel-europe',
         title: {
-            fr: "Guide Ultime du Voyage Économique en Europe",
+            fr: 'Guide Ultime du Voyage Économique en Europe',
             ar: 'الدليل الشامل للسفر برخص في أوروبا',
             en: 'The Ultimate Guide to Budget Travel in Europe',
         },
@@ -87,11 +87,14 @@ export default function BlogPostDetail() {
 
     if (!post) return <Navigate to="/blog" replace />;
 
-    const formattedDate = new Intl.DateTimeFormat(lang === 'ar' ? 'ar-EG' : lang === 'fr' ? 'fr-FR' : 'en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    }).format(new Date(post.date));
+    const formattedDate = new Intl.DateTimeFormat(
+        lang === 'ar' ? 'ar-EG' : lang === 'fr' ? 'fr-FR' : 'en-US',
+        {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        },
+    ).format(new Date(post.date));
 
     return (
         <div className="min-h-screen bg-background">
@@ -107,14 +110,31 @@ export default function BlogPostDetail() {
                         ]}
                     />
 
-                    <motion.article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 rounded-3xl border border-border bg-card p-6">
-                        <img src={post.image} alt={localize(post.title, lang)} className="mb-6 w-full rounded-xl object-cover" />
+                    <motion.article
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-8 rounded-3xl border border-border bg-card p-6"
+                    >
+                        <img
+                            src={post.image}
+                            alt={localize(post.title, lang)}
+                            className="mb-6 w-full rounded-xl object-cover"
+                        />
                         <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
-                            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{localize(post.category, lang)}</span>
-                            <div className="flex items-center gap-1"><Calendar className="h-4 w-4" />{formattedDate}</div>
+                            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                {localize(post.category, lang)}
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {formattedDate}
+                            </div>
                         </div>
-                        <h1 className="mb-4 font-serif text-3xl font-bold text-foreground">{localize(post.title, lang)}</h1>
-                        <div className="prose max-w-none text-foreground">{localize(post.content, lang)}</div>
+                        <h1 className="mb-4 font-serif text-3xl font-bold text-foreground">
+                            {localize(post.title, lang)}
+                        </h1>
+                        <div className="prose max-w-none text-foreground">
+                            {localize(post.content, lang)}
+                        </div>
                     </motion.article>
                 </div>
             </main>

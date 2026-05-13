@@ -18,7 +18,12 @@ interface Props {
     breadcrumbs?: BreadcrumbItem[];
 }
 
-export function PageShell({ titleKey, subtitleKey, children, breadcrumbs }: Props) {
+export function PageShell({
+    titleKey,
+    subtitleKey,
+    children,
+    breadcrumbs,
+}: Props) {
     const { t } = useLanguage();
 
     return (

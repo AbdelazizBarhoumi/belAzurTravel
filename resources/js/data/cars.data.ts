@@ -20,7 +20,11 @@ export interface CarItem {
 export const carsData: CarItem[] = [
     {
         slug: 'mercedes-e-class',
-        name: { fr: 'Mercedes Classe E', ar: 'مرسيدس الفئة E', en: 'Mercedes E-Class' },
+        name: {
+            fr: 'Mercedes Classe E',
+            ar: 'مرسيدس الفئة E',
+            en: 'Mercedes E-Class',
+        },
         category: { fr: 'Luxe', ar: 'فاخر', en: 'Luxury' },
         price: 120,
         seats: 5,
@@ -38,14 +42,38 @@ export const carsData: CarItem[] = [
             en: 'Refined executive saloon with class-leading comfort and tech.',
         },
         features: [
-            { fr: 'Assurance premium', ar: 'تأمين مميز', en: 'Premium insurance' },
-            { fr: 'Kilométrage illimité', ar: 'أميال غير محدودة', en: 'Unlimited mileage' },
-            { fr: 'Assistance routière', ar: 'مساعدة على الطريق', en: 'Roadside assistance' },
+            {
+                fr: 'Assurance premium',
+                ar: 'تأمين مميز',
+                en: 'Premium insurance',
+            },
+            {
+                fr: 'Kilométrage illimité',
+                ar: 'أميال غير محدودة',
+                en: 'Unlimited mileage',
+            },
+            {
+                fr: 'Assistance routière',
+                ar: 'مساعدة على الطريق',
+                en: 'Roadside assistance',
+            },
         ],
         policy: [
-            { fr: 'Conducteur âgé de 25 ans ou plus', ar: 'عمر السائق 25+ سنة', en: 'Driver age 25+' },
-            { fr: 'Caution requise', ar: 'مطلوب تأمين/وديعة', en: 'Deposit required' },
-            { fr: 'Le carburant doit être rendu au même niveau', ar: 'يجب إعادة الوقود بنفس المستوى', en: 'Fuel must be returned at same level' },
+            {
+                fr: 'Conducteur âgé de 25 ans ou plus',
+                ar: 'عمر السائق 25+ سنة',
+                en: 'Driver age 25+',
+            },
+            {
+                fr: 'Caution requise',
+                ar: 'مطلوب تأمين/وديعة',
+                en: 'Deposit required',
+            },
+            {
+                fr: 'Le carburant doit être rendu au même niveau',
+                ar: 'يجب إعادة الوقود بنفس المستوى',
+                en: 'Fuel must be returned at same level',
+            },
         ],
     },
     {
@@ -68,14 +96,34 @@ export const carsData: CarItem[] = [
             en: 'Spacious 7-seater for family trips with all-wheel drive.',
         },
         features: [
-            { fr: 'Siège enfant disponible', ar: 'مقعد أطفال متاح', en: 'Child seat available' },
+            {
+                fr: 'Siège enfant disponible',
+                ar: 'مقعد أطفال متاح',
+                en: 'Child seat available',
+            },
             { fr: 'GPS inclus', ar: 'GPS مشمول', en: 'GPS included' },
-            { fr: 'Prise en charge aéroport en option', ar: 'استقبال من المطار اختياري', en: 'Airport pickup optional' },
+            {
+                fr: 'Prise en charge aéroport en option',
+                ar: 'استقبال من المطار اختياري',
+                en: 'Airport pickup optional',
+            },
         ],
         policy: [
-            { fr: 'Conducteur âgé de 25 ans ou plus', ar: 'عمر السائق 25+ سنة', en: 'Driver age 25+' },
-            { fr: 'Voyage transfrontalier non inclus', ar: 'السفر عبر الحدود غير مشمول', en: 'Cross-border not included' },
-            { fr: 'Des frais de retard s’appliquent', ar: 'تُطبق رسوم التأخير', en: 'Late return fee applies' },
+            {
+                fr: 'Conducteur âgé de 25 ans ou plus',
+                ar: 'عمر السائق 25+ سنة',
+                en: 'Driver age 25+',
+            },
+            {
+                fr: 'Voyage transfrontalier non inclus',
+                ar: 'السفر عبر الحدود غير مشمول',
+                en: 'Cross-border not included',
+            },
+            {
+                fr: 'Des frais de retard s’appliquent',
+                ar: 'تُطبق رسوم التأخير',
+                en: 'Late return fee applies',
+            },
         ],
     },
     {
@@ -98,14 +146,38 @@ export const carsData: CarItem[] = [
             en: 'Silent, instant-torque EV with Autopilot.',
         },
         features: [
-            { fr: 'Charge rapide prise en charge', ar: 'يدعم الشحن السريع', en: 'Fast charging support' },
-            { fr: 'Intérieur premium', ar: 'مقصورة داخلية فاخرة', en: 'Premium interior' },
-            { fr: 'Assistance Autopilot', ar: 'مساعدة Autopilot', en: 'Autopilot assistance' },
+            {
+                fr: 'Charge rapide prise en charge',
+                ar: 'يدعم الشحن السريع',
+                en: 'Fast charging support',
+            },
+            {
+                fr: 'Intérieur premium',
+                ar: 'مقصورة داخلية فاخرة',
+                en: 'Premium interior',
+            },
+            {
+                fr: 'Assistance Autopilot',
+                ar: 'مساعدة Autopilot',
+                en: 'Autopilot assistance',
+            },
         ],
         policy: [
-            { fr: 'Câble de recharge inclus', ar: 'كابل الشحن مشمول', en: 'Charger cable included' },
-            { fr: 'Les coûts de recharge sont facturés séparément', ar: 'تُحتسب تكاليف الشحن بشكل منفصل', en: 'Charging costs billed separately' },
-            { fr: 'Utilisation en ville recommandée', ar: 'مُوصى بالاستخدام داخل المدينة', en: 'City-only use recommended' },
+            {
+                fr: 'Câble de recharge inclus',
+                ar: 'كابل الشحن مشمول',
+                en: 'Charger cable included',
+            },
+            {
+                fr: 'Les coûts de recharge sont facturés séparément',
+                ar: 'تُحتسب تكاليف الشحن بشكل منفصل',
+                en: 'Charging costs billed separately',
+            },
+            {
+                fr: 'Utilisation en ville recommandée',
+                ar: 'مُوصى بالاستخدام داخل المدينة',
+                en: 'City-only use recommended',
+            },
         ],
     },
 ];

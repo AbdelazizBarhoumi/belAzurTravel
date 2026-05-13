@@ -18,7 +18,13 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useAdminStore } from '@/hooks/useAdminStore';
-import { bookingStatusLabels, destinationLabels, hotelLabels, localizeKnown, tourLabels } from '@/lib/adminI18n';
+import {
+    bookingStatusLabels,
+    destinationLabels,
+    hotelLabels,
+    localizeKnown,
+    tourLabels,
+} from '@/lib/adminI18n';
 
 const COLORS = [
     'hsl(var(--primary))',
@@ -164,7 +170,15 @@ const AdminReports = () => {
                                     </span>
                                     <div className="flex-1">
                                         <p className="text-sm font-medium">
-                                            {localizeKnown(item, { ...destinationLabels, ...hotelLabels, ...tourLabels }, lang)}
+                                            {localizeKnown(
+                                                item,
+                                                {
+                                                    ...destinationLabels,
+                                                    ...hotelLabels,
+                                                    ...tourLabels,
+                                                },
+                                                lang,
+                                            )}
                                         </p>
                                         <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
                                             <div

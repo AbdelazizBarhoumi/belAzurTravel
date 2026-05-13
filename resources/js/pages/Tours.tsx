@@ -1,91 +1,80 @@
 import { motion } from 'framer-motion';
 import { Clock, Users, MapPin, Star } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { Footer } from '@/components/Footer';
+import { ListFilterBar } from '@/components/ListFilterBar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
-import type { Lang } from '@/i18n/translations';
+import { localizeText } from '@/data/catalog';
+import { useTours } from '@/hooks/useCatalog';
+import { matchesSearchText } from '@/lib/listFilters';
 
-type LocalizedText = Record<Lang, string>;
-
-function localize(value: LocalizedText, lang: Lang): string {
-    return value[lang];
-}
-
-const tours = [
-    {
-        slug: 'greek-island-hopping',
-        name: { fr: 'Îles Grecques en Liberté', ar: 'جولة الجزر اليونانية', en: 'Greek Island Hopping' },
-        location: { fr: 'Grèce', ar: 'اليونان', en: 'Greece' },
-        duration: { fr: '7 jours', ar: '7 أيام', en: '7 Days' },
-        maxGroup: 12,
-        price: 2499,
-        rating: 4.9,
-        image: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=600&h=400&fit=crop',
-        description: { fr: 'Explorez les magnifiques îles des Cyclades avec des visites guidées et du temps libre.', ar: 'استكشف الجزر السيكلادية الرائعة مع الجولات الموجهة والوقت الحر.', en: 'Explore the stunning Cycladic islands with guided tours and free time.' },
-    },
-    {
-        slug: 'bali-cultural-immersion',
-        name: { fr: 'Immersion Culturelle à Bali', ar: 'انغمس في ثقافة بالي', en: 'Bali Cultural Immersion' },
-        location: { fr: 'Indonésie', ar: 'إندونيسيا', en: 'Indonesia' },
-        duration: { fr: '10 jours', ar: '10 أيام', en: '10 Days' },
-        maxGroup: 8,
-        price: 1899,
-        rating: 4.8,
-        image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=400&fit=crop',
-        description: { fr: 'Temples, rizières et cérémonies traditionnelles au cœur de Bali.', ar: 'المعابد والحقول الأرزية والطقوس التقليدية في قلب بالي.', en: 'Temples, rice fields, and traditional ceremonies in the heart of Bali.' },
-    },
-    {
-        slug: 'paris-art-gastronomy',
-        name: { fr: 'Paris: Art et Gastronomie', ar: 'باريس: الفن والطعام', en: 'Parisian Art & Gastronomy' },
-        location: { fr: 'France', ar: 'فرنسا', en: 'France' },
-        duration: { fr: '5 jours', ar: '5 أيام', en: '5 Days' },
-        maxGroup: 10,
-        price: 3200,
-        rating: 4.9,
-        image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&h=400&fit=crop',
-        description: { fr: 'Visites privées de musées, cours de cuisine et dégustations de vin.', ar: 'جولات خاصة بالمتاحف وفصول الطبخ وتذوق النبيذ.', en: 'Private museum tours, cooking classes, and wine tastings.' },
-    },
-    {
-        slug: 'desert-safari-adventure',
-        name: { fr: 'Aventure Safari du Désert', ar: 'مغامرة السفاري في الصحراء', en: 'Desert Safari Adventure' },
-        location: { fr: 'Émirats Arabes Unis', ar: 'الإمارات العربية المتحدة', en: 'UAE' },
-        duration: { fr: '3 jours', ar: '3 أيام', en: '3 Days' },
-        maxGroup: 15,
-        price: 899,
-        rating: 4.7,
-        image: 'https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=600&h=400&fit=crop',
-        description: { fr: 'Pilotage sur les dunes, balades à dos de chameau et camping sous les étoiles.', ar: 'القيادة في الكثبان والركوب على الإبل والتخييم تحت النجوم.', en: 'Dune bashing, camel rides, and starlit desert camping.' },
-    },
-    {
-        slug: 'japan-heritage-trail',
-        name: { fr: 'Sentier du Patrimoine Japonais', ar: 'درب التراث الياباني', en: 'Japan Heritage Trail' },
-        location: { fr: 'Japon', ar: 'اليابان', en: 'Japan' },
-        duration: { fr: '12 jours', ar: '12 يومًا', en: '12 Days' },
-        maxGroup: 10,
-        price: 4500,
-        rating: 5.0,
-        image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&h=400&fit=crop',
-        description: { fr: 'Du néon de Tokyo aux jardins zen de Kyoto et au-delà.', ar: 'من أضواء طوكيو إلى حدائق كيوتو الزن وما بعدها.', en: "From Tokyo's neon to Kyoto's zen gardens and beyond." },
-    },
-    {
-        slug: 'northern-lights-quest',
-        name: { fr: 'Quête des Aurores Boréales', ar: 'البحث عن الأضواء الشمالية', en: 'Northern Lights Quest' },
-        location: { fr: 'Islande', ar: 'أيسلندا', en: 'Iceland' },
-        duration: { fr: '6 jours', ar: '6 أيام', en: '6 Days' },
-        maxGroup: 8,
-        price: 3800,
-        rating: 4.9,
-        image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=600&h=400&fit=crop',
-        description: { fr: 'Pourchassez l\'aurore boréale avec des guides experts et sources chaudes.', ar: 'اصطد الأضواء الشمالية مع أدلاء خبراء والينابيع الساخنة.', en: 'Chase the aurora borealis with expert guides and hot springs.' },
-    },
-];
+const ALL = 'all';
 
 const Tours = () => {
     const { t, lang } = useLanguage();
+    const { data: tours = [] } = useTours();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedLocation, setSelectedLocation] = useState(ALL);
+    const [selectedDuration, setSelectedDuration] = useState(ALL);
+
+    const locationOptions = useMemo(
+        () =>
+            Array.from(
+                new Set(tours.map((tour) => localizeText(tour.location, lang))),
+            ),
+        [tours, lang],
+    );
+    const durationOptions = useMemo(
+        () =>
+            Array.from(
+                new Set(tours.map((tour) => localizeText(tour.duration, lang))),
+            ),
+        [tours, lang],
+    );
+
+    const filteredTours = useMemo(
+        () =>
+            tours.filter((tour) => {
+                const matchesSearch = matchesSearchText(searchQuery, [
+                    localizeText(tour.name, lang),
+                    localizeText(tour.location, lang),
+                    localizeText(tour.duration, lang),
+                    localizeText(tour.description, lang),
+                ]);
+                const matchesLocation =
+                    selectedLocation === ALL ||
+                    localizeText(tour.location, lang) === selectedLocation;
+                const matchesDuration =
+                    selectedDuration === ALL ||
+                    localizeText(tour.duration, lang) === selectedDuration;
+
+                return matchesSearch && matchesLocation && matchesDuration;
+            }),
+        [tours, lang, searchQuery, selectedLocation, selectedDuration],
+    );
+
+    const hasActiveFilters =
+        searchQuery.trim().length > 0 ||
+        selectedLocation !== ALL ||
+        selectedDuration !== ALL;
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setSelectedLocation(ALL);
+        setSelectedDuration(ALL);
+    };
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
@@ -119,96 +108,202 @@ const Tours = () => {
                         </p>
                     </motion.div>
 
+                    <ListFilterBar
+                        searchValue={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        resultCount={filteredTours.length}
+                        hasActiveFilters={hasActiveFilters}
+                        onClearFilters={clearFilters}
+                        searchPlaceholder={t('common.search')}
+                    >
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+                            <label className="grid gap-2 text-sm">
+                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('tours.filterByLocation')}
+                                </span>
+                                <Select
+                                    value={selectedLocation}
+                                    onValueChange={setSelectedLocation}
+                                >
+                                    <SelectTrigger
+                                        aria-label={t('tours.filterByLocation')}
+                                        className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
+                                    >
+                                        <SelectValue
+                                            placeholder={t('common.all')}
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={ALL}>
+                                            {t('common.all')}
+                                        </SelectItem>
+                                        {locationOptions.map((option) => (
+                                            <SelectItem
+                                                key={option}
+                                                value={option}
+                                            >
+                                                {option}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </label>
+
+                            <label className="grid gap-2 text-sm">
+                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('tours.filterByDuration')}
+                                </span>
+                                <Select
+                                    value={selectedDuration}
+                                    onValueChange={setSelectedDuration}
+                                >
+                                    <SelectTrigger
+                                        aria-label={t('tours.filterByDuration')}
+                                        className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
+                                    >
+                                        <SelectValue
+                                            placeholder={t('common.all')}
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={ALL}>
+                                            {t('common.all')}
+                                        </SelectItem>
+                                        {durationOptions.map((option) => (
+                                            <SelectItem
+                                                key={option}
+                                                value={option}
+                                            >
+                                                {option}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </label>
+                        </div>
+                    </ListFilterBar>
+
                     {/* Grid */}
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {tours.map((tour, i) => (
-                            <Link key={localize(tour.name, lang)} to={`/tours/${tour.slug}`} className="group block">
-                            <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.1 }}
-                                className="cursor-pointer"
-                            >
-                                <div className="card-elevated flex flex-col overflow-hidden rounded-2xl bg-card md:flex-row">
-                                    {/* Image */}
-                                    <div className="relative h-48 shrink-0 overflow-hidden md:h-auto md:w-64">
-                                        <img
-                                            src={tour.image}
-                                            alt={localize(tour.name, lang)}
-                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                            loading="lazy"
-                                        />
+                        {filteredTours.length === 0 ? (
+                            <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground md:col-span-2">
+                                {t('common.noResults')}
+                            </div>
+                        ) : (
+                            filteredTours.map((tour, i) => (
+                                <Link
+                                    key={localizeText(tour.name, lang)}
+                                    to={`/tours/${tour.slug}`}
+                                    className="group block"
+                                >
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className="cursor-pointer"
+                                    >
+                                        <div className="card-elevated flex flex-col overflow-hidden rounded-2xl bg-card md:flex-row">
+                                            {/* Image */}
+                                            <div className="relative h-48 shrink-0 overflow-hidden md:h-auto md:w-64">
+                                                <img
+                                                    src={tour.image}
+                                                    alt={localizeText(
+                                                        tour.name,
+                                                        lang,
+                                                    )}
+                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                    loading="lazy"
+                                                />
 
-                                        <FavoriteButton
-                                            className="absolute right-3 top-3"
-                                            item={{
-                                                id: `tour-${localize(tour.name, lang)}`,
-                                                type: 'tour',
-                                                name: localize(tour.name, lang),
-                                                image: tour.image,
-                                                price: tour.price,
-                                                location: localize(tour.location, lang),
-                                            }}
-                                        />
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="flex flex-1 flex-col justify-between p-6">
-                                        <div>
-                                            <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                                                <span className="flex items-center gap-1">
-                                                    <MapPin className="h-3 w-3" />{' '}
-                                                    {localize(tour.location, lang)}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Clock className="h-3 w-3" />{' '}
-                                                    {localize(tour.duration, lang)}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Users className="h-3 w-3" />{' '}
-                                                    {t('tours.max')}{' '}
-                                                    {tour.maxGroup}
-                                                </span>
+                                                <FavoriteButton
+                                                    className="absolute right-3 top-3"
+                                                    item={{
+                                                        id: `tour-${localizeText(tour.name, lang)}`,
+                                                        type: 'tour',
+                                                        name: localizeText(
+                                                            tour.name,
+                                                            lang,
+                                                        ),
+                                                        image: tour.image,
+                                                        price: tour.price,
+                                                        location: localizeText(
+                                                            tour.location,
+                                                            lang,
+                                                        ),
+                                                    }}
+                                                />
                                             </div>
 
-                                            <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
-                                                {localize(tour.name, lang)}
-                                            </h3>
+                                            {/* Content */}
+                                            <div className="flex flex-1 flex-col justify-between p-6">
+                                                <div>
+                                                    <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                                        <span className="flex items-center gap-1">
+                                                            <MapPin className="h-3 w-3" />{' '}
+                                                            {localizeText(
+                                                                tour.location,
+                                                                lang,
+                                                            )}
+                                                        </span>
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" />{' '}
+                                                            {localizeText(
+                                                                tour.duration,
+                                                                lang,
+                                                            )}
+                                                        </span>
+                                                        <span className="flex items-center gap-1">
+                                                            <Users className="h-3 w-3" />{' '}
+                                                            {t('tours.max')}{' '}
+                                                            {tour.maxGroup}
+                                                        </span>
+                                                    </div>
 
-                                            <p className="mb-4 text-sm text-muted-foreground">
-                                                {localize(tour.description, lang)}
-                                            </p>
-                                        </div>
+                                                    <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
+                                                        {localizeText(
+                                                            tour.name,
+                                                            lang,
+                                                        )}
+                                                    </h3>
 
-                                        {/* Footer */}
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="mb-1 flex items-center gap-1 text-secondary">
-                                                    <Star className="h-3.5 w-3.5 fill-current" />
-                                                    <span className="text-xs font-bold">
-                                                        {tour.rating}
-                                                    </span>
+                                                    <p className="mb-4 text-sm text-muted-foreground">
+                                                        {localizeText(
+                                                            tour.description,
+                                                            lang,
+                                                        )}
+                                                    </p>
                                                 </div>
 
-                                                <span className="text-lg font-bold text-primary">
-                                                    $
-                                                    {tour.price.toLocaleString()}
-                                                </span>
+                                                {/* Footer */}
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <div className="mb-1 flex items-center gap-1 text-secondary">
+                                                            <Star className="h-3.5 w-3.5 fill-current" />
+                                                            <span className="text-xs font-bold">
+                                                                {tour.rating}
+                                                            </span>
+                                                        </div>
 
-                                                <span className="ml-1 text-xs text-muted-foreground">
-                                                    {t('tours.person')}
-                                                </span>
+                                                        <span className="text-lg font-bold text-primary">
+                                                            $
+                                                            {tour.price.toLocaleString()}
+                                                        </span>
+
+                                                        <span className="ml-1 text-xs text-muted-foreground">
+                                                            {t('tours.person')}
+                                                        </span>
+                                                    </div>
+
+                                                    <Button className="text-primary-foreground">
+                                                        {t('tours.bookTour')}
+                                                    </Button>
+                                                </div>
                                             </div>
-
-                                            <Button className="text-primary-foreground">
-                                                {t('tours.bookTour')}
-                                            </Button>
                                         </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                            </Link>
-                        ))}
+                                    </motion.div>
+                                </Link>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

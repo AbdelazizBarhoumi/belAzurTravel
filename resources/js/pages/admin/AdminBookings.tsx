@@ -24,7 +24,9 @@ const AdminBookings = () => {
 
     const updateStatus = (_b: BookingItem, status: string) => {
         // TODO: call API to update status (confirm endpoint)
-        toast.success(`${t('admin.booking')} → ${bookingStatusLabels[status][lang]}`);
+        toast.success(
+            `${t('admin.booking')} → ${bookingStatusLabels[status][lang]}`,
+        );
     };
 
     return (
@@ -57,70 +59,88 @@ const AdminBookings = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {(isLoading ? [] : data ?? []).map((b: BookingItem) => (
-                                <tr
-                                    key={b.id}
-                                    className="border-b border-border last:border-0 hover:bg-muted/20"
-                                >
-                                    <td className="px-4 py-3 text-sm font-medium">
-                                        {b.id}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm">
-                                        {b.user_id || 'Guest'}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                                        {b.type}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm">
-                                        {JSON.stringify(b.items).substring(0, 50)}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                                        {new Date(b.created_at).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm font-semibold">
-                                        ${b.total_amount}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <select
-                                            value={b.status}
-                                            onChange={(e) =>
-                                                updateStatus(
-                                                    b,
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className={`rounded-lg border-0 px-2 py-1 text-xs font-semibold ${
-                                                b.status === 'Confirmed'
-                                                    ? 'bg-primary/10 text-primary'
-                                                    : b.status === 'Pending'
-                                                      ? 'bg-secondary/10 text-secondary'
-                                                      : 'bg-destructive/10 text-destructive'
-                                            }`}
-                                        >
-                                            <option value="Pending">
-                                                {bookingStatusLabels.Pending[lang]}
-                                            </option>
-                                            <option value="Confirmed">
-                                                {bookingStatusLabels.Confirmed[lang]}
-                                            </option>
-                                            <option value="Cancelled">
-                                                {bookingStatusLabels.Cancelled[lang]}
-                                            </option>
-                                        </select>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <button
-                                            onClick={() => {
-                                                // TODO: implement delete via API
-                                                toast.success(t('actions.deleted'));
-                                            }}
-                                            className="rounded-lg p-1.5 hover:bg-destructive/10"
-                                        >
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {(isLoading ? [] : (data ?? [])).map(
+                                (b: BookingItem) => (
+                                    <tr
+                                        key={b.id}
+                                        className="border-b border-border last:border-0 hover:bg-muted/20"
+                                    >
+                                        <td className="px-4 py-3 text-sm font-medium">
+                                            {b.id}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">
+                                            {b.user_id || 'Guest'}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                                            {b.type}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">
+                                            {JSON.stringify(b.items).substring(
+                                                0,
+                                                50,
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                                            {new Date(
+                                                b.created_at,
+                                            ).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm font-semibold">
+                                            ${b.total_amount}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <select
+                                                value={b.status}
+                                                onChange={(e) =>
+                                                    updateStatus(
+                                                        b,
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className={`rounded-lg border-0 px-2 py-1 text-xs font-semibold ${
+                                                    b.status === 'Confirmed'
+                                                        ? 'bg-primary/10 text-primary'
+                                                        : b.status === 'Pending'
+                                                          ? 'bg-secondary/10 text-secondary'
+                                                          : 'bg-destructive/10 text-destructive'
+                                                }`}
+                                            >
+                                                <option value="Pending">
+                                                    {
+                                                        bookingStatusLabels
+                                                            .Pending[lang]
+                                                    }
+                                                </option>
+                                                <option value="Confirmed">
+                                                    {
+                                                        bookingStatusLabels
+                                                            .Confirmed[lang]
+                                                    }
+                                                </option>
+                                                <option value="Cancelled">
+                                                    {
+                                                        bookingStatusLabels
+                                                            .Cancelled[lang]
+                                                    }
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <button
+                                                onClick={() => {
+                                                    // TODO: implement delete via API
+                                                    toast.success(
+                                                        t('actions.deleted'),
+                                                    );
+                                                }}
+                                                className="rounded-lg p-1.5 hover:bg-destructive/10"
+                                            >
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ),
+                            )}
                         </tbody>
                     </table>
                 </div>

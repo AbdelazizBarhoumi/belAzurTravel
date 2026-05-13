@@ -41,9 +41,7 @@ export function HeroSection() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                     className="mx-auto mb-4 max-w-3xl text-lg font-medium text-primary-foreground/90 md:text-xl"
-                >
-                    {t('hero.subtitle')}
-                </motion.p>
+                ></motion.p>
 
                 {/* Heading */}
                 <motion.h1
@@ -54,7 +52,6 @@ export function HeroSection() {
                 >
                     {t('hero.title1')}
                     <br />
-
                     <span className="italic text-secondary">
                         {t('hero.title2')}
                     </span>{' '}
@@ -86,9 +83,7 @@ export function HeroSection() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.9 }}
                     className="mx-auto mt-6 max-w-2xl text-sm text-primary-foreground/70"
-                >
-                    {t('hero.searchHint')}
-                </motion.p>
+                ></motion.p>
             </div>
         </section>
     );

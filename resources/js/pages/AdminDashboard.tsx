@@ -20,7 +20,13 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useAdminStore } from '@/hooks/useAdminStore';
-import { bookingStatusLabels, destinationLabels, hotelLabels, localizeKnown, tourLabels } from '@/lib/adminI18n';
+import {
+    bookingStatusLabels,
+    destinationLabels,
+    hotelLabels,
+    localizeKnown,
+    tourLabels,
+} from '@/lib/adminI18n';
 
 const AdminDashboard = () => {
     useAdminGuard();
@@ -200,7 +206,11 @@ const AdminDashboard = () => {
                                                           : 'bg-destructive/10 text-destructive'
                                                 }`}
                                             >
-                                                {bookingStatusLabels[b.status][lang]}
+                                                {
+                                                    bookingStatusLabels[
+                                                        b.status
+                                                    ][lang]
+                                                }
                                             </span>
                                         </td>
                                     </tr>

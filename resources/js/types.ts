@@ -9,4 +9,4 @@ export interface NavItem {
     isActive?: boolean;
 }
 
-export type { };
+export type {};

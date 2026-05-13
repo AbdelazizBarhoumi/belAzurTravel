@@ -38,7 +38,9 @@ function TagFilter({
     locale = 'en',
 }: TagFilterProps) {
     const getTagColor = (tagId: string) => {
-        return tagColorMap[tagId] || 'bg-muted text-muted-foreground border-border';
+        return (
+            tagColorMap[tagId] || 'bg-muted text-muted-foreground border-border'
+        );
     };
 
     return (
@@ -55,10 +57,12 @@ function TagFilter({
                                 'flex items-center justify-center rounded-lg border px-3 py-2 text-xs font-medium transition-all',
                                 isSelected
                                     ? getTagColor(tag.id)
-                                    : 'border-border bg-background text-foreground hover:bg-muted'
+                                    : 'border-border bg-background text-foreground hover:bg-muted',
                             )}
                         >
-                            <span className="text-center">{tag.name[locale]}</span>
+                            <span className="text-center">
+                                {tag.name[locale]}
+                            </span>
                         </button>
                     );
                 })}

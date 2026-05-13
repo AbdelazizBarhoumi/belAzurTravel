@@ -1,4 +1,5 @@
 import defaultBrandLogo from '@/assets/brand-logo.png';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface BrandLogoProps {
     className?: string;
@@ -18,26 +19,30 @@ export function BrandLogo({
     imageClassName = 'h-12 w-auto',
     textClassName = 'font-serif text-xl font-bold text-foreground',
     subtitleClassName = 'text-xs text-muted-foreground',
-    label = 'BelAzurTravel',
+    label,
     subtitle,
     showText = true,
     textTag = 'span',
     src,
 }: BrandLogoProps) {
+    const { settings } = useSiteSettings();
     const TextTag = textTag;
+    const company = label ?? settings.companyName ?? 'BelAzurTravel';
 
     return (
         <div className={className}>
             <img
                 src={src ?? defaultBrandLogo}
-                alt="BelAzurTravel logo"
+                alt={`${company} logo`}
                 className={imageClassName}
                 loading="eager"
             />
             {showText && (
                 <div className="flex flex-col leading-tight">
-                    <TextTag className={textClassName}>{label}</TextTag>
-                    {subtitle && <span className={subtitleClassName}>{subtitle}</span>}
+                    <TextTag className={textClassName}>{company}</TextTag>
+                    {subtitle && (
+                        <span className={subtitleClassName}>{subtitle}</span>
+                    )}
                 </div>
             )}
         </div>

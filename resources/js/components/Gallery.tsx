@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GalleryProps {
     images: string[];
@@ -8,6 +9,8 @@ interface GalleryProps {
 }
 
 export function Gallery({ images, hotelName }: GalleryProps) {
+    const { dir } = useLanguage();
+    const isRtl = dir === 'rtl';
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -26,8 +29,10 @@ export function Gallery({ images, hotelName }: GalleryProps) {
         };
     }, [lightboxOpen]);
 
-    const nextImage = () => setSelectedIndex((prev) => (prev + 1) % images.length);
-    const prevImage = () => setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
+    const nextImage = () =>
+        setSelectedIndex((prev) => (prev + 1) % images.length);
+    const prevImage = () =>
+        setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
 
     const openLightbox = (index: number) => {
         setSelectedIndex(index);
@@ -72,17 +77,41 @@ export function Gallery({ images, hotelName }: GalleryProps) {
 
                     <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/60"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (isRtl) {
+                                nextImage();
+                            } else {
+                                prevImage();
+                            }
+                        }}
+                        aria-label={isRtl ? 'Next image' : 'Previous image'}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition-opacity hover:bg-black/60 group-hover:opacity-100"
                     >
-                        <ChevronLeft className="h-4 w-4" />
+                        {isRtl ? (
+                            <ChevronRight className="h-4 w-4" />
+                        ) : (
+                            <ChevronLeft className="h-4 w-4" />
+                        )}
                     </button>
                     <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/60"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (isRtl) {
+                                prevImage();
+                            } else {
+                                nextImage();
+                            }
+                        }}
+                        aria-label={isRtl ? 'Previous image' : 'Next image'}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition-opacity hover:bg-black/60 group-hover:opacity-100"
                     >
-                        <ChevronRight className="h-4 w-4" />
+                        {isRtl ? (
+                            <ChevronLeft className="h-4 w-4" />
+                        ) : (
+                            <ChevronRight className="h-4 w-4" />
+                        )}
                     </button>
                 </motion.div>
 
@@ -130,55 +159,92 @@ export function Gallery({ images, hotelName }: GalleryProps) {
                         onClick={() => setLightboxOpen(false)}
                     >
                         <div className="relative flex h-full w-full items-center justify-center p-4">
-                        <button
-                            type="button"
-                            onClick={() => setLightboxOpen(false)}
-                            className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
-                        >
-                            <X className="h-6 w-6" />
-                        </button>
+                            <button
+                                type="button"
+                                onClick={() => setLightboxOpen(false)}
+                                className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                            >
+                                <X className="h-6 w-6" />
+                            </button>
 
-                        <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
-                        >
-                            <ChevronLeft className="h-6 w-6" />
-                        </button>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isRtl) {
+                                        nextImage();
+                                    } else {
+                                        prevImage();
+                                    }
+                                }}
+                                aria-label={
+                                    isRtl ? 'Next image' : 'Previous image'
+                                }
+                                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
+                            >
+                                {isRtl ? (
+                                    <ChevronRight className="h-6 w-6" />
+                                ) : (
+                                    <ChevronLeft className="h-6 w-6" />
+                                )}
+                            </button>
 
-                        <motion.img
-                            key={selectedIndex}
-                            src={images[selectedIndex]}
-                            alt={`${hotelName} gallery ${selectedIndex + 1}`}
-                            initial={{ opacity: 0, scale: 0.92 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.92 }}
-                            className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                            <motion.img
+                                key={selectedIndex}
+                                src={images[selectedIndex]}
+                                alt={`${hotelName} gallery ${selectedIndex + 1}`}
+                                initial={{ opacity: 0, scale: 0.92 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.92 }}
+                                className="max-h-[85vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            />
 
-                        <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
-                        >
-                            <ChevronRight className="h-6 w-6" />
-                        </button>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isRtl) {
+                                        prevImage();
+                                    } else {
+                                        nextImage();
+                                    }
+                                }}
+                                aria-label={
+                                    isRtl ? 'Previous image' : 'Next image'
+                                }
+                                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
+                            >
+                                {isRtl ? (
+                                    <ChevronLeft className="h-6 w-6" />
+                                ) : (
+                                    <ChevronRight className="h-6 w-6" />
+                                )}
+                            </button>
 
-                        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 overflow-x-auto rounded-2xl bg-black/40 p-2 backdrop-blur-sm">
-                            {images.map((img, i) => (
-                                <button
-                                    key={i}
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); setSelectedIndex(i); }}
-                                    className={`shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
-                                        i === selectedIndex ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'
-                                    }`}
-                                >
-                                    <img src={img} alt="" className="h-12 w-16 object-cover" />
-                                </button>
-                            ))}
-                        </div>
+                            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 overflow-x-auto rounded-2xl bg-black/40 p-2 backdrop-blur-sm">
+                                {images.map((img, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedIndex(i);
+                                        }}
+                                        className={`shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                                            i === selectedIndex
+                                                ? 'border-primary'
+                                                : 'border-transparent opacity-60 hover:opacity-100'
+                                        }`}
+                                    >
+                                        <img
+                                            src={img}
+                                            alt=""
+                                            className="h-12 w-16 object-cover"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </motion.div>
                 )}

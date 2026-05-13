@@ -6,7 +6,6 @@ import {
     NavigationMenuTrigger,
     NavigationMenuContent,
     NavigationMenuLink,
-    NavigationMenuViewport,
 } from '@/components/ui/navigation-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -32,7 +31,8 @@ export function NavDropdown({
     isActive = false,
     hoverOnly = false,
 }: NavDropdownProps) {
-    const { t } = useLanguage();
+    const { t, dir } = useLanguage();
+    const isRtl = dir === 'rtl';
     const navigate = useNavigate();
 
     const handleTriggerClick = () => {
@@ -45,14 +45,27 @@ export function NavDropdown({
         <NavigationMenu className="relative z-10 shrink-0">
             <NavigationMenuList className="gap-0">
                 <NavigationMenuItem>
-                    <NavigationMenuTrigger 
-                        onClick={hoverOnly ? (e) => e.preventDefault() : handleTriggerClick}
-                        onMouseDown={hoverOnly ? (e) => e.preventDefault() : undefined}
-                        className={`bg-transparent text-sm font-medium transition-colors ${isActive ? 'text-primary' : ''} ${hoverOnly ? 'cursor-default' : 'cursor-pointer'}`}>
+                    <NavigationMenuTrigger
+                        onClick={
+                            hoverOnly
+                                ? (e) => e.preventDefault()
+                                : handleTriggerClick
+                        }
+                        onMouseDown={
+                            hoverOnly ? (e) => e.preventDefault() : undefined
+                        }
+                        className={`bg-transparent text-sm font-medium transition-colors ${isActive ? 'text-primary' : ''} ${hoverOnly ? 'cursor-default' : 'cursor-pointer'} ${isRtl ? 'text-right' : 'text-left'}`}
+                    >
                         {isPlusButton ? `+ ${t(labelKey)}` : t(labelKey)}
                     </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                        <ul className="grid w-48 gap-1 bg-card p-2">
+                    <NavigationMenuContent
+                        className={
+                            isRtl ? 'right-0 text-right' : 'left-0 text-left'
+                        }
+                    >
+                        <ul
+                            className={`grid w-48 gap-1 bg-card p-2 ${isRtl ? 'text-right' : 'text-left'}`}
+                        >
                             {!isPlusButton && (
                                 <li>
                                     <NavigationMenuLink asChild>
@@ -60,7 +73,9 @@ export function NavDropdown({
                                             to={href}
                                             className="block rounded-md px-3 py-2 text-sm font-semibold text-primary hover:bg-muted"
                                         >
-                                            {t('common.all')} →
+                                            {isRtl
+                                                ? `← ${t('common.all')}`
+                                                : `${t('common.all')} →`}
                                         </Link>
                                     </NavigationMenuLink>
                                 </li>
@@ -81,7 +96,6 @@ export function NavDropdown({
                     </NavigationMenuContent>
                 </NavigationMenuItem>
             </NavigationMenuList>
-            <NavigationMenuViewport />
         </NavigationMenu>
     );
 }

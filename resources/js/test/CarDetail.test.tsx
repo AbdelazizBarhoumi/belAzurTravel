@@ -1,18 +1,26 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
+import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import CarDetail from '@/pages/CarDetail';
 
+const queryClient = new QueryClient();
+
 function renderCarDetail(path = '/cars/mercedes-e-class') {
     return render(
-        <LanguageProvider>
-            <MemoryRouter initialEntries={[path]}>
-                <Routes>
-                    <Route path="/cars/:slug" element={<CarDetail />} />
-                </Routes>
-            </MemoryRouter>
-        </LanguageProvider>,
+        <QueryClientProvider client={queryClient}>
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter initialEntries={[path]}>
+                        <Routes>
+                            <Route path="/cars/:slug" element={<CarDetail />} />
+                        </Routes>
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>
+        </QueryClientProvider>,
     );
 }
 
@@ -28,16 +36,23 @@ describe('CarDetail page', () => {
     it('renders the car gallery, specs and booking CTA', () => {
         renderCarDetail();
 
-        expect(screen.getByRole('heading', { name: /Mercedes E-Class/i })).toBeInTheDocument();
+        expect(
+            screen.getAllByRole('heading', { name: /Mercedes E-Class/i })
+                .length,
+        ).toBeGreaterThan(0);
         expect(screen.getByText(/Features/i)).toBeInTheDocument();
         expect(screen.getByText(/Rental policy/i)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /Reserve now/i })).toBeInTheDocument();
+        expect(
+            screen.getAllByRole('button', { name: /Rent now/i }).length,
+        ).toBeGreaterThan(0);
     });
 
     it('shows a fallback message for unknown cars', () => {
         renderCarDetail('/cars/unknown-car');
 
         expect(screen.getByText(/Car not found/i)).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /All cars/i })).toBeInTheDocument();
+        expect(
+            screen.getByRole('link', { name: /All cars/i }),
+        ).toBeInTheDocument();
     });
 });

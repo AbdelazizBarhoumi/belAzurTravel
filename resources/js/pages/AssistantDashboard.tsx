@@ -152,7 +152,12 @@ const AssistantDashboard = () => {
     const isRtl = dir === 'rtl';
 
     return (
-        <div className={cn('flex min-h-screen bg-background', isRtl && 'lg:flex-row-reverse')}>
+        <div
+            className={cn(
+                'flex min-h-screen bg-background',
+                isRtl && 'lg:flex-row-reverse',
+            )}
+        >
             <aside
                 className={cn(
                     'hidden w-64 flex-col bg-card lg:flex',
@@ -160,7 +165,13 @@ const AssistantDashboard = () => {
                 )}
             >
                 <div className={cn('p-6', isRtl && 'text-right')}>
-                    <Link to="/" className={cn('flex items-center gap-2', isRtl && 'justify-end')}>
+                    <Link
+                        to="/"
+                        className={cn(
+                            'flex items-center gap-2',
+                            isRtl && 'justify-end',
+                        )}
+                    >
                         <BrandLogo imageClassName="h-7 w-auto" />
                     </Link>
                     <span className="mt-1 block text-xs text-muted-foreground">
@@ -178,13 +189,15 @@ const AssistantDashboard = () => {
                                 isRtl && 'text-right',
                                 activeTab === link.labelKey
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             )}
                         >
                             <link.icon className="h-4 w-4" />
                             {t(link.labelKey)}
                             {link.labelKey === 'assistant.inquiries' && (
-                                <span className={`${dir === 'rtl' ? 'mr-auto' : 'ml-auto'} rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground`}>
+                                <span
+                                    className={`${dir === 'rtl' ? 'mr-auto' : 'ml-auto'} rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground`}
+                                >
                                     3
                                 </span>
                             )}

@@ -59,14 +59,20 @@ export interface AdminState {
 
 const STORAGE_KEY = 'voyageur_admin_state';
 
-type LocalizedAdminDestination = Omit<AdminDestination, 'name' | 'country' | 'category' | 'description'> & {
+type LocalizedAdminDestination = Omit<
+    AdminDestination,
+    'name' | 'country' | 'category' | 'description'
+> & {
     name: LocalizedText;
     country: LocalizedText;
     category: LocalizedText;
     description: LocalizedText;
 };
 
-type LocalizedAdminHotel = Omit<AdminHotel, 'name' | 'location' | 'category'> & {
+type LocalizedAdminHotel = Omit<
+    AdminHotel,
+    'name' | 'location' | 'category'
+> & {
     name: LocalizedText;
     location: LocalizedText;
     category: LocalizedText;
@@ -78,7 +84,10 @@ type LocalizedAdminTour = Omit<AdminTour, 'name' | 'location' | 'duration'> & {
     duration: LocalizedText;
 };
 
-type LocalizedAdminBooking = Omit<AdminBooking, 'client' | 'type' | 'item' | 'status'> & {
+type LocalizedAdminBooking = Omit<
+    AdminBooking,
+    'client' | 'type' | 'item' | 'status'
+> & {
     client: LocalizedText;
     type: LocalizedText;
     item: LocalizedText;
@@ -174,7 +183,11 @@ const seedData = {
         {
             id: 'd4',
             name: { fr: 'Dubaï', ar: 'دبي', en: 'Dubai' },
-            country: { fr: 'Émirats Arabes Unis', ar: 'الإمارات العربية المتحدة', en: 'UAE' },
+            country: {
+                fr: 'Émirats Arabes Unis',
+                ar: 'الإمارات العربية المتحدة',
+                en: 'UAE',
+            },
             category: { fr: 'Luxe', ar: 'فاخر', en: 'Luxury' },
             price: 1199,
             rating: 4.7,
@@ -189,8 +202,16 @@ const seedData = {
     hotels: [
         {
             id: 'h1',
-            name: { fr: 'Sunset Paradise Resort', ar: 'منتجع صن ست بارادايس', en: 'Sunset Paradise Resort' },
-            location: { fr: 'Santorin, Grèce', ar: 'سانتوريني، اليونان', en: 'Santorini, Greece' },
+            name: {
+                fr: 'Sunset Paradise Resort',
+                ar: 'منتجع صن ست بارادايس',
+                en: 'Sunset Paradise Resort',
+            },
+            location: {
+                fr: 'Santorin, Grèce',
+                ar: 'سانتوريني، اليونان',
+                en: 'Santorini, Greece',
+            },
             category: { fr: 'Complexes', ar: 'منتجعات', en: 'Resorts' },
             price: 320,
             rating: 4.9,
@@ -198,8 +219,16 @@ const seedData = {
         },
         {
             id: 'h2',
-            name: { fr: 'Le Grand Parisien', ar: 'لو غراند باريسيان', en: 'Le Grand Parisien' },
-            location: { fr: 'Paris, France', ar: 'باريس، فرنسا', en: 'Paris, France' },
+            name: {
+                fr: 'Le Grand Parisien',
+                ar: 'لو غراند باريسيان',
+                en: 'Le Grand Parisien',
+            },
+            location: {
+                fr: 'Paris, France',
+                ar: 'باريس، فرنسا',
+                en: 'Paris, France',
+            },
             category: { fr: 'Luxe', ar: 'فاخر', en: 'Luxury' },
             price: 450,
             rating: 4.9,
@@ -207,8 +236,16 @@ const seedData = {
         },
         {
             id: 'h3',
-            name: { fr: 'Marina Bay Suites', ar: 'فندق مارينا باي سويتس', en: 'Marina Bay Suites' },
-            location: { fr: 'Dubaï, Émirats Arabes Unis', ar: 'دبي، الإمارات العربية المتحدة', en: 'Dubai, UAE' },
+            name: {
+                fr: 'Marina Bay Suites',
+                ar: 'فندق مارينا باي سويتس',
+                en: 'Marina Bay Suites',
+            },
+            location: {
+                fr: 'Dubaï, Émirats Arabes Unis',
+                ar: 'دبي، الإمارات العربية المتحدة',
+                en: 'Dubai, UAE',
+            },
             category: { fr: 'Boutique', ar: 'بوتيك', en: 'Boutique' },
             price: 280,
             rating: 4.7,
@@ -218,7 +255,11 @@ const seedData = {
     tours: [
         {
             id: 't1',
-            name: { fr: 'Îles Grecques en Liberté', ar: 'جولة الجزر اليونانية', en: 'Greek Island Hopping' },
+            name: {
+                fr: 'Îles Grecques en Liberté',
+                ar: 'جولة الجزر اليونانية',
+                en: 'Greek Island Hopping',
+            },
             location: { fr: 'Grèce', ar: 'اليونان', en: 'Greece' },
             duration: { fr: '7 Jours', ar: '7 أيام', en: '7 Days' },
             price: 2499,
@@ -227,7 +268,11 @@ const seedData = {
         },
         {
             id: 't2',
-            name: { fr: 'Immersion Culturelle à Bali', ar: 'انغمس في ثقافة بالي', en: 'Bali Cultural Immersion' },
+            name: {
+                fr: 'Immersion Culturelle à Bali',
+                ar: 'انغمس في ثقافة بالي',
+                en: 'Bali Cultural Immersion',
+            },
             location: { fr: 'Indonésie', ar: 'إندونيسيا', en: 'Indonesia' },
             duration: { fr: '10 Jours', ar: '10 أيام', en: '10 Days' },
             price: 1899,
@@ -238,7 +283,11 @@ const seedData = {
     bookings: [
         {
             id: 'B001',
-            client: { fr: 'Sarah Johnson', ar: 'سارة جونسون', en: 'Sarah Johnson' },
+            client: {
+                fr: 'Sarah Johnson',
+                ar: 'سارة جونسون',
+                en: 'Sarah Johnson',
+            },
             type: { fr: 'Destination', ar: 'وجهة', en: 'Destination' },
             item: { fr: 'Santorin', ar: 'سانتوريني', en: 'Santorini' },
             date: '2026-02-20',
@@ -249,7 +298,11 @@ const seedData = {
             id: 'B002',
             client: { fr: 'Mike Chen', ar: 'مايك تشين', en: 'Mike Chen' },
             type: { fr: 'Hôtel', ar: 'فندق', en: 'Hotel' },
-            item: { fr: 'Marina Bay Suites', ar: 'فندق مارينا باي سويتس', en: 'Marina Bay Suites' },
+            item: {
+                fr: 'Marina Bay Suites',
+                ar: 'فندق مارينا باي سويتس',
+                en: 'Marina Bay Suites',
+            },
             date: '2026-02-19',
             amount: 1890,
             status: { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
@@ -258,14 +311,22 @@ const seedData = {
             id: 'B003',
             client: { fr: 'Emma Davis', ar: 'إيما ديفيس', en: 'Emma Davis' },
             type: { fr: 'Circuit', ar: 'جولة', en: 'Tour' },
-            item: { fr: 'Immersion Culturelle à Bali', ar: 'انغمس في ثقافة بالي', en: 'Bali Cultural Immersion' },
+            item: {
+                fr: 'Immersion Culturelle à Bali',
+                ar: 'انغمس في ثقافة بالي',
+                en: 'Bali Cultural Immersion',
+            },
             date: '2026-02-18',
             amount: 3200,
             status: { fr: 'Confirmé', ar: 'مؤكد', en: 'Confirmed' },
         },
         {
             id: 'B004',
-            client: { fr: 'James Wilson', ar: 'جيمس ويلسون', en: 'James Wilson' },
+            client: {
+                fr: 'James Wilson',
+                ar: 'جيمس ويلسون',
+                en: 'James Wilson',
+            },
             type: { fr: 'Destination', ar: 'وجهة', en: 'Destination' },
             item: { fr: 'Dubaï', ar: 'دبي', en: 'Dubai' },
             date: '2026-02-17',
@@ -276,7 +337,11 @@ const seedData = {
             id: 'B005',
             client: { fr: 'Lisa Brown', ar: 'ليزا براون', en: 'Lisa Brown' },
             type: { fr: 'Hôtel', ar: 'فندق', en: 'Hotel' },
-            item: { fr: 'Le Grand Parisien', ar: 'لو غراند باريسيان', en: 'Le Grand Parisien' },
+            item: {
+                fr: 'Le Grand Parisien',
+                ar: 'لو غراند باريسيان',
+                en: 'Le Grand Parisien',
+            },
             date: '2026-02-16',
             amount: 1599,
             status: { fr: 'Confirmé', ar: 'مؤكد', en: 'Confirmed' },

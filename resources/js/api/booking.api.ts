@@ -33,13 +33,19 @@ export async function getAdminBookings() {
 }
 
 export async function confirmBooking(id: number) {
-    const res = await fetch(`/api/admin/bookings/${id}/confirm`, { method: 'POST', credentials: 'include' });
+    const res = await fetch(`/api/admin/bookings/${id}/confirm`, {
+        method: 'POST',
+        credentials: 'include',
+    });
     if (!res.ok) throw new Error('Failed to confirm');
     return res.json();
 }
 
 export async function cancelBooking(id: number) {
-    const res = await fetch(`/api/bookings/${id}/cancel`, { method: 'POST', credentials: 'include' });
+    const res = await fetch(`/api/bookings/${id}/cancel`, {
+        method: 'POST',
+        credentials: 'include',
+    });
     if (!res.ok) throw new Error('Failed to cancel');
     return res.json();
 }

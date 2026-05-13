@@ -19,14 +19,14 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
                     {item.href ? (
                         <Link
                             to={item.href}
-                            className="hover:text-foreground transition-colors"
+                            className="transition-colors hover:text-foreground"
                         >
                             {item.label}
                         </Link>
                     ) : (
                         <span
                             className={
-                                item.active ? 'text-foreground font-medium' : ''
+                                item.active ? 'font-medium text-foreground' : ''
                             }
                         >
                             {item.label}

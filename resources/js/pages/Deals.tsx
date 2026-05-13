@@ -1,32 +1,60 @@
 import { motion } from 'framer-motion';
-import { CalendarClock, Search, Tag } from 'lucide-react';
+import { CalendarClock, Tag } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
+import { ListFilterBar } from '@/components/ListFilterBar';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { localizeText } from '@/data/catalog';
 import { dealsData } from '@/data/deals.data';
-import type { Lang } from '@/i18n/translations';
+import { matchesSearchText } from '@/lib/listFilters';
 
-type LocalizedText = Record<Lang, string>;
-
-function localize(value: LocalizedText, lang: Lang): string {
-    return value[lang];
-}
+const ALL = 'all';
 
 export default function Deals() {
     const { t, lang } = useLanguage();
-    const [search, setSearch] = useState('');
+    const [activeCategory, setActiveCategory] = useState<'all' | string>('all');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const filtered = useMemo(() => {
-        const q = search.trim().toLowerCase();
-        if (!q) return dealsData;
-        return dealsData.filter((deal) =>
-            `${localize(deal.title, lang)} ${localize(deal.description, lang)} ${localize(deal.discount, lang)}`.toLowerCase().includes(q)
-        );
-    }, [search, lang]);
+    const categories = useMemo(
+        () => [
+            { value: 'all', label: t('common.all') },
+            ...Array.from(
+                new Set(dealsData.map((deal) => deal.category[lang])),
+            ).map((label) => ({ value: label, label })),
+        ],
+        [lang, t],
+    );
+
+    const filteredDeals = useMemo(
+        () =>
+            dealsData.filter((deal) => {
+                const matchesSearch = matchesSearchText(searchQuery, [
+                    localizeText(deal.title, lang),
+                    localizeText(deal.description, lang),
+                    localizeText(deal.discount, lang),
+                    localizeText(deal.expires, lang),
+                    localizeText(deal.category, lang),
+                ]);
+                const matchesCategory =
+                    activeCategory === ALL ||
+                    deal.category[lang] === activeCategory;
+
+                return matchesSearch && matchesCategory;
+            }),
+        [activeCategory, lang, searchQuery],
+    );
+
+    const hasActiveFilters =
+        searchQuery.trim().length > 0 || activeCategory !== ALL;
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setActiveCategory(ALL);
+    };
 
     return (
         <div className="min-h-screen bg-background">
@@ -58,57 +86,86 @@ export default function Deals() {
                         </p>
                     </motion.div>
 
-                    <div className="mb-8 rounded-2xl border border-border bg-card p-4">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <input
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder={t('deals.searchPlaceholder')}
-                                className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-3 text-sm"
-                            />
+                    <ListFilterBar
+                        searchValue={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        resultCount={filteredDeals.length}
+                        hasActiveFilters={hasActiveFilters}
+                        onClearFilters={clearFilters}
+                        searchPlaceholder={t('common.search')}
+                    >
+                        <div className="flex flex-wrap gap-2">
+                            {categories.map((category) => (
+                                <button
+                                    key={category.value}
+                                    type="button"
+                                    onClick={() =>
+                                        setActiveCategory(category.value)
+                                    }
+                                    className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${activeCategory === category.value ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}
+                                >
+                                    {category.label}
+                                </button>
+                            ))}
                         </div>
-                    </div>
+                    </ListFilterBar>
 
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                        {filtered.map((deal, i) => (
-                            <motion.article
-                                key={deal.slug}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.06 }}
-                                className="rounded-2xl border border-border bg-card p-6 shadow-sm"
-                            >
-                                <div className="mb-4 flex items-center justify-between">
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                        <Tag className="h-3 w-3" /> {localize(deal.discount, lang)}
-                                    </span>
-                                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                                        <CalendarClock className="h-3.5 w-3.5" /> {localize(deal.expires, lang)}
-                                    </span>
-                                </div>
+                        {filteredDeals.length === 0 ? (
+                            <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground md:col-span-3">
+                                {t('common.noResults')}
+                            </div>
+                        ) : (
+                            filteredDeals.map((deal, i) => (
+                                <motion.article
+                                    key={deal.slug}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.06 }}
+                                    className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+                                >
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                            <Tag className="h-3 w-3" />{' '}
+                                            {localizeText(deal.discount, lang)}
+                                        </span>
+                                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                            <CalendarClock className="h-3.5 w-3.5" />{' '}
+                                            {localizeText(deal.expires, lang)}
+                                        </span>
+                                    </div>
 
-                                <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
-                                    {localize(deal.title, lang)}
-                                </h3>
-                                <p className="mb-6 text-sm text-muted-foreground">
-                                    {localize(deal.description, lang)}
-                                </p>
+                                    <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
+                                        {localizeText(deal.title, lang)}
+                                    </h3>
+                                    <p className="mb-6 text-sm text-muted-foreground">
+                                        {localizeText(deal.description, lang)}
+                                    </p>
 
-                                <div className="flex gap-2">
-                                    <Link to={`/deals/${deal.slug}`} className="flex-1">
-                                        <Button variant="outline" className="w-full">
-                                            {t('deals.viewDeal')}
-                                        </Button>
-                                    </Link>
-                                    <Link to={`/deals/${deal.slug}`} className="flex-1">
-                                        <Button className="w-full">
-                                            {t('common.bookNow')}
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </motion.article>
-                        ))}
+                                    <div className="flex gap-2">
+                                        <Link
+                                            to={`/deals/${deal.slug}`}
+                                            className="flex-1"
+                                        >
+                                            <Button
+                                                variant="outline"
+                                                className="w-full"
+                                            >
+                                                {t('deals.viewDeal')}
+                                            </Button>
+                                        </Link>
+                                        <Link
+                                            to={`/deals/${deal.slug}`}
+                                            className="flex-1"
+                                        >
+                                            <Button className="w-full">
+                                                {t('common.bookNow')}
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </motion.article>
+                            ))
+                        )}
                     </div>
                 </div>
             </main>

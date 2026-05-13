@@ -12,28 +12,13 @@ import { Link } from 'react-router-dom';
 import footerLogo from '@/assets/brand-logo-footer.png';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { footerQuickLinks, footerSupportLinks } from '@/data/catalog';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 export function Footer() {
     const { t } = useLanguage();
+    const { settings } = useSiteSettings();
 
-    const quickLinks = [
-        { labelKey: 'nav.destinations', href: '/destinations' },
-        { labelKey: 'nav.hotels', href: '/hotels' },
-        { labelKey: 'nav.tours', href: '/tours' },
-        { labelKey: 'nav.deals', href: '/deals' },
-        { labelKey: 'nav.contact', href: '/contact' },
-        { labelKey: 'nav.gallery', href: '/gallery' },
-        { labelKey: 'nav.events', href: '/events' },
-        { labelKey: 'nav.blog', href: '/blog' },
-    ];
-
-    const supportLinks = [
-        { labelKey: 'nav.team', href: '/team' },
-        { labelKey: 'nav.legal', href: '/legal' },
-        { labelKey: 'nav.cars', href: '/cars' },
-        { labelKey: 'nav.flights', href: '/flights' },
-        { labelKey: 'nav.promos', href: '/promos' },
-    ];
     return (
         <footer className="bg-foreground text-primary-foreground">
             <div className="container mx-auto px-4 py-16">
@@ -71,7 +56,7 @@ export function Footer() {
                             {t('footer.quick')}
                         </h4>
                         <div className="flex flex-col gap-2">
-                            {quickLinks.map((l) => (
+                            {footerQuickLinks.map((l) => (
                                 <Link
                                     key={l.href}
                                     to={l.href}
@@ -89,7 +74,7 @@ export function Footer() {
                             {t('footer.support')}
                         </h4>
                         <div className="flex flex-col gap-2">
-                            {supportLinks.map((l) => (
+                            {footerSupportLinks.map((l) => (
                                 <Link
                                     key={l.href}
                                     to={l.href}
@@ -109,15 +94,15 @@ export function Footer() {
                         <div className="mb-6 flex flex-col gap-3 text-sm text-primary-foreground/60">
                             <div className="flex items-center gap-3">
                                 <Mail className="h-4 w-4 shrink-0 text-secondary" />{' '}
-                                hello@voyageur.com
+                                {settings.email}
                             </div>
                             <div className="flex items-center gap-3">
                                 <Phone className="h-4 w-4 shrink-0 text-secondary" />{' '}
-                                +1 (555) 123-4567
+                                {settings.phone}
                             </div>
                             <div className="flex items-start gap-3">
                                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />{' '}
-                                123 Travel St, NY 10001
+                                {settings.address}
                             </div>
                         </div>
                         <h4 className="mb-3 flex items-center gap-2 font-serif font-bold">
@@ -148,7 +133,8 @@ export function Footer() {
                 </div>
 
                 <div className="mt-12 border-t border-primary-foreground/10 pt-8 text-center text-sm text-primary-foreground/40">
-                    © 2026 BelAzurTravel. {t('footer.rights')}
+                    © {settings.year ?? new Date().getFullYear()}{' '}
+                    {settings.companyName}. {t('footer.rights')}
                 </div>
             </div>
         </footer>

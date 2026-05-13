@@ -8,6 +8,12 @@ import { NavDropdown } from '@/components/NavDropdown';
 import { Button } from '@/components/ui/button';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+    navbarDestinationLinks,
+    navbarHotelLinks,
+    navbarMoreLinks,
+    navbarSimpleLinks,
+} from '@/data/catalog';
 
 interface DropdownGroup {
     labelKey: string;
@@ -28,46 +34,19 @@ export function Navbar() {
     const destDropdown: DropdownGroup = {
         labelKey: 'nav.destinations',
         href: '/destinations',
-        items: [
-            { labelKey: 'cat.beach', href: '/destinations?cat=Beach' },
-            { labelKey: 'cat.city', href: '/destinations?cat=City' },
-            { labelKey: 'cat.nature', href: '/destinations?cat=Nature' },
-            { labelKey: 'cat.luxury', href: '/destinations?cat=Luxury' },
-            { labelKey: 'cat.adventure', href: '/destinations?cat=Adventure' },
-        ],
+        items: navbarDestinationLinks,
     };
-
     const hotelDropdown: DropdownGroup = {
         labelKey: 'nav.hotels',
         href: '/hotels',
-        items: [
-            { labelKey: 'search.options.fiveStar', href: '/hotels?stars=5' },
-            { labelKey: 'search.options.fourStar', href: '/hotels?stars=4' },
-            { labelKey: 'search.options.threeStar', href: '/hotels?stars=3' },
-        ],
+        items: navbarHotelLinks,
     };
-
     const moreDropdown: DropdownGroup = {
         labelKey: 'nav.more',
         href: '#',
-        items: [
-            { labelKey: 'nav.cars', href: '/cars' },
-            { labelKey: 'nav.flights', href: '/flights' },
-            { labelKey: 'nav.promos', href: '/promos' },
-            { labelKey: 'nav.team', href: '/team' },
-            { labelKey: 'nav.contact', href: '/contact' },
-            { labelKey: 'nav.legal', href: '/legal' },
-        ],
+        items: navbarMoreLinks,
     };
-
-    const simpleLinks = [
-        { labelKey: 'nav.design', href: '/design-trip' },
-        { labelKey: 'nav.tours', href: '/tours' },
-        { labelKey: 'nav.deals', href: '/deals' },
-        { labelKey: 'nav.gallery', href: '/gallery' },
-        { labelKey: 'nav.events', href: '/events' },
-        { labelKey: 'nav.blog', href: '/blog' },
-    ];
+    const simpleLinks = navbarSimpleLinks;
 
     return (
         <header
@@ -103,7 +82,9 @@ export function Navbar() {
                         <Link
                             key={l.href}
                             to={l.href}
-                            aria-current={isActiveSection(l.href) ? 'page' : undefined}
+                            aria-current={
+                                isActiveSection(l.href) ? 'page' : undefined
+                            }
                             className={`inline-flex h-10 items-center px-3 text-sm font-medium transition-colors hover:text-primary ${isActiveSection(l.href) ? 'text-primary' : 'text-muted-foreground'}`}
                         >
                             {t(l.labelKey)}
@@ -265,7 +246,11 @@ export function Navbar() {
                                         {t('nav.signin')}
                                     </Button>
                                 </Link>
-                                <Link to="/design-trip" className="flex-1" onClick={() => setOpen(false)}>
+                                <Link
+                                    to="/design-trip"
+                                    className="flex-1"
+                                    onClick={() => setOpen(false)}
+                                >
                                     <Button className="w-full bg-primary text-primary-foreground">
                                         {t('nav.design')}
                                     </Button>

@@ -1,64 +1,33 @@
 import { motion } from 'framer-motion';
-import {
-    Facebook,
-    Instagram,
-    Linkedin,
-    Mail,
-    MapPin,
-    MessageCircle,
-    Phone,
-    Twitter,
-    Youtube,
-} from 'lucide-react';
+import { MapPin, Mail } from 'lucide-react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-interface ContactMethod {
-    label: string;
-    value: string;
-    href: string;
-    icon: typeof Phone;
-}
-
-interface SocialLink {
-    label: string;
-    href: string;
-    icon: typeof Facebook;
-}
+import {
+    contactMethods as catalogContactMethods,
+    socialLinks as catalogSocialLinks,
+} from '@/data/catalog';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 export default function Contact() {
     const { t } = useLanguage();
-
-    const contactMethods: ContactMethod[] = [
-        {
-            label: t('contact.calls'),
-            value: '+1 (555) 123-4567',
-            href: 'tel:+15551234567',
-            icon: Phone,
-        },
-        {
-            label: t('contact.whatsapp'),
-            value: '+1 (555) 123-4567',
-            href: 'https://wa.me/15551234567',
-            icon: MessageCircle,
-        },
-        {
-            label: t('contact.email'),
-            value: 'hello@voyageur.com',
-            href: 'mailto:hello@voyageur.com',
-            icon: Mail,
-        },
-    ];
-
-    const socialLinks: SocialLink[] = [
-        { label: 'Facebook', href: 'https://facebook.com', icon: Facebook },
-        { label: 'Instagram', href: 'https://instagram.com', icon: Instagram },
-        { label: 'Twitter', href: 'https://x.com', icon: Twitter },
-        { label: 'LinkedIn', href: 'https://linkedin.com', icon: Linkedin },
-        { label: 'YouTube', href: 'https://youtube.com', icon: Youtube },
-    ];
+    const { settings } = useSiteSettings();
+    const contactMethods = catalogContactMethods.map((m) => ({
+        ...m,
+        // if site settings defines email/phone, prefer it for the corresponding keys
+        value:
+            m.labelKey === 'contact.email'
+                ? settings.email
+                : m.labelKey === 'contact.whatsapp'
+                  ? settings.phone
+                  : m.value,
+        href:
+            m.labelKey === 'contact.email'
+                ? `mailto:${settings.email}`
+                : m.href,
+    }));
+    const socialLinks = catalogSocialLinks;
 
     return (
         <div className="min-h-screen bg-background">
@@ -113,7 +82,7 @@ export default function Contact() {
                                     const Icon = method.icon;
                                     return (
                                         <a
-                                            key={method.label}
+                                            key={method.labelKey}
                                             href={method.href}
                                             className="group rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
                                         >
@@ -121,7 +90,7 @@ export default function Contact() {
                                                 <Icon className="h-5 w-5" />
                                             </div>
                                             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                                                {method.label}
+                                                {t(method.labelKey)}
                                             </p>
                                             <p className="mt-2 text-base font-medium text-foreground">
                                                 {method.value}
@@ -143,7 +112,7 @@ export default function Contact() {
                                         <MapPin className="h-5 w-5" />
                                     </div>
                                     <div>
-                                        <h2 className="text-2xl font-serif font-bold text-foreground">
+                                        <h2 className="font-serif text-2xl font-bold text-foreground">
                                             {t('contact.locationTitle')}
                                         </h2>
                                         <p className="text-sm text-muted-foreground">
@@ -155,7 +124,7 @@ export default function Contact() {
                                 <div className="overflow-hidden rounded-2xl border border-border/60 bg-muted/30">
                                     <iframe
                                         title={t('contact.mapTitle')}
-                                        src="https://www.google.com/maps?q=123%20Travel%20St%2C%20NY%2010001&output=embed"
+                                        src={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}&output=embed`}
                                         className="h-[360px] w-full"
                                         loading="lazy"
                                         referrerPolicy="no-referrer-when-downgrade"
@@ -163,9 +132,9 @@ export default function Contact() {
                                 </div>
 
                                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                                    <span>123 Travel St, NY 10001</span>
+                                    <span>{settings.address}</span>
                                     <a
-                                        href="https://www.google.com/maps?q=123+Travel+St,+NY+10001"
+                                        href={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="font-medium text-primary hover:underline"
@@ -184,7 +153,7 @@ export default function Contact() {
                                 transition={{ duration: 0.35, delay: 0.1 }}
                                 className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm"
                             >
-                                <h2 className="text-2xl font-serif font-bold text-foreground">
+                                <h2 className="font-serif text-2xl font-bold text-foreground">
                                     {t('contact.socialTitle')}
                                 </h2>
                                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -217,18 +186,18 @@ export default function Contact() {
                                 transition={{ duration: 0.35, delay: 0.15 }}
                                 className="rounded-3xl border border-border/60 bg-gradient-to-br from-primary to-secondary p-6 text-primary-foreground shadow-lg"
                             >
-                                <h2 className="text-2xl font-serif font-bold">
+                                <h2 className="font-serif text-2xl font-bold">
                                     {t('contact.ctaTitle')}
                                 </h2>
                                 <p className="mt-3 text-sm leading-6 text-primary-foreground/80">
                                     {t('contact.ctaDescription')}
                                 </p>
                                 <a
-                                    href="mailto:hello@voyageur.com"
+                                    href={`mailto:${settings.email}`}
                                     className="mt-6 inline-flex items-center gap-2 rounded-full bg-background px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5"
                                 >
                                     <Mail className="h-4 w-4" />
-                                    hello@voyageur.com
+                                    {settings.email}
                                 </a>
                             </motion.div>
                         </div>

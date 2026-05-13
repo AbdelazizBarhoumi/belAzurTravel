@@ -6,20 +6,17 @@ import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { StickyBookingCard } from '@/components/StickyBookingCard';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { flightsData } from '@/data/flights.data';
-import type { Lang } from '@/i18n/translations';
-
-type LocalizedText = Record<Lang, string>;
-function localize(value: LocalizedText, lang: Lang): string { return value[lang]; }
+import { localizeText } from '@/data/catalog';
+import { useFlightById } from '@/hooks/useCatalog';
 
 export default function FlightDetail() {
     const { id } = useParams<{ id: string }>();
     const { t, lang, dir } = useLanguage();
-    const flight = flightsData.find((item) => item.id === id);
+    const { data: flight } = useFlightById(id);
 
     if (!flight) return <Navigate to="/flights" replace />;
 
-    const routeLabel = `${flight.from} → ${localize(flight.to, lang)}`;
+    const routeLabel = `${flight.from} → ${localizeText(flight.to, lang)}`;
     const DirectionIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
     return (
@@ -28,69 +25,178 @@ export default function FlightDetail() {
             <main className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <div className="mb-8">
-                        <Breadcrumb items={[{ label: t('common.home'), href: '/' }, { label: t('flights.title'), href: '/flights' }, { label: routeLabel, active: true }]} />
+                        <Breadcrumb
+                            items={[
+                                { label: t('common.home'), href: '/' },
+                                { label: t('flights.title'), href: '/flights' },
+                                { label: routeLabel, active: true },
+                            ]}
+                        />
                     </div>
 
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid gap-10 lg:grid-cols-[2fr_1fr]">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="grid gap-10 lg:grid-cols-[2fr_1fr]"
+                    >
                         <div>
-                            <section className="bg-card rounded-3xl p-8 card-elevated mb-8 border border-border">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                            <section className="card-elevated mb-8 rounded-3xl border border-border bg-card p-8">
+                                <div className="mb-8 flex items-center gap-4">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
                                         <Plane className="h-6 w-6 text-primary" />
                                     </div>
                                     <div>
-                                        <h1 className="font-serif text-3xl font-bold text-foreground">{localize(flight.airline, lang)}</h1>
-                                        <p className="text-sm text-muted-foreground">{localize(flight.stops, lang)} · {localize(flight.aircraft, lang)}</p>
+                                        <h1 className="font-serif text-3xl font-bold text-foreground">
+                                            {localizeText(flight.airline, lang)}
+                                        </h1>
+                                        <p className="text-sm text-muted-foreground">
+                                            {localizeText(flight.stops, lang)} ·{' '}
+                                            {localizeText(
+                                                flight.aircraft,
+                                                lang,
+                                            )}
+                                        </p>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 items-center gap-4 py-6 border-y border-border">
+                                <div className="grid grid-cols-3 items-center gap-4 border-y border-border py-6">
                                     <div className="text-center">
-                                        <p className="text-3xl font-bold text-foreground">{flight.departure}</p>
-                                        <p className="text-sm text-muted-foreground mt-1">{flight.from}</p>
+                                        <p className="text-3xl font-bold text-foreground">
+                                            {flight.departure}
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            {flight.from}
+                                        </p>
                                     </div>
                                     <div className="flex flex-col items-center text-muted-foreground">
-                                        <Clock className="h-4 w-4 mb-1" />
-                                        <span className="text-sm font-medium">{localize(flight.duration, lang)}</span>
-                                        <DirectionIcon className="h-4 w-4 mt-1" />
+                                        <Clock className="mb-1 h-4 w-4" />
+                                        <span className="text-sm font-medium">
+                                            {localizeText(
+                                                flight.duration,
+                                                lang,
+                                            )}
+                                        </span>
+                                        <DirectionIcon className="mt-1 h-4 w-4" />
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-3xl font-bold text-foreground">{flight.arrival}</p>
-                                        <p className="text-sm text-muted-foreground mt-1">{localize(flight.to, lang)}</p>
+                                        <p className="text-3xl font-bold text-foreground">
+                                            {flight.arrival}
+                                        </p>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            {localizeText(flight.to, lang)}
+                                        </p>
                                     </div>
                                 </div>
 
-                                <div className="grid sm:grid-cols-3 gap-4 mt-6 text-sm">
-                                    <div className="p-4 rounded-xl bg-muted/40">
-                                        <p className="text-xs text-muted-foreground mb-1">{t('label.cabin')}</p>
-                                        <p className="font-bold text-foreground">{localize(flight.cabin, lang)}</p>
+                                <div className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
+                                    <div className="rounded-xl bg-muted/40 p-4">
+                                        <p className="mb-1 text-xs text-muted-foreground">
+                                            {t('label.cabin')}
+                                        </p>
+                                        <p className="font-bold text-foreground">
+                                            {localizeText(flight.cabin, lang)}
+                                        </p>
                                     </div>
-                                    <div className="p-4 rounded-xl bg-muted/40">
-                                        <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Briefcase className="h-3 w-3" /> {t('label.baggage')}</p>
-                                        <p className="font-bold text-foreground">{localize(flight.baggage, lang)}</p>
+                                    <div className="rounded-xl bg-muted/40 p-4">
+                                        <p className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
+                                            <Briefcase className="h-3 w-3" />{' '}
+                                            {t('label.baggage')}
+                                        </p>
+                                        <p className="font-bold text-foreground">
+                                            {localizeText(flight.baggage, lang)}
+                                        </p>
                                     </div>
-                                    <div className="p-4 rounded-xl bg-muted/40">
-                                        <p className="text-xs text-muted-foreground mb-1">{t('label.aircraft')}</p>
-                                        <p className="font-bold text-foreground">{localize(flight.aircraft, lang)}</p>
+                                    <div className="rounded-xl bg-muted/40 p-4">
+                                        <p className="mb-1 text-xs text-muted-foreground">
+                                            {t('label.aircraft')}
+                                        </p>
+                                        <p className="font-bold text-foreground">
+                                            {localizeText(
+                                                flight.aircraft,
+                                                lang,
+                                            )}
+                                        </p>
                                     </div>
                                 </div>
                             </section>
+
+                            <div className="mb-8 lg:hidden">
+                                <StickyBookingCard
+                                    price={flight.price}
+                                    currency="$"
+                                    title={routeLabel}
+                                    description={`${localizeText(flight.airline, lang)} · ${localizeText(flight.stops, lang)}`}
+                                    details={[
+                                        {
+                                            label: t('label.cabin'),
+                                            value: localizeText(
+                                                flight.cabin,
+                                                lang,
+                                            ),
+                                        },
+                                        {
+                                            label: t('label.baggage'),
+                                            value: localizeText(
+                                                flight.baggage,
+                                                lang,
+                                            ),
+                                        },
+                                        {
+                                            label: t('label.aircraft'),
+                                            value: localizeText(
+                                                flight.aircraft,
+                                                lang,
+                                            ),
+                                        },
+                                    ]}
+                                    priceLabel={t(
+                                        'flightDetail.totalPerPassenger',
+                                    )}
+                                    primaryButtonLabel={t(
+                                        'flightDetail.bookFlight',
+                                    )}
+                                    onBook={() =>
+                                        window.alert(
+                                            t('flightDetail.bookingFlow'),
+                                        )
+                                    }
+                                />
+                            </div>
                         </div>
 
-                        <aside className="lg:pt-6">
+                        <aside className="hidden lg:block lg:pt-6">
                             <StickyBookingCard
                                 price={flight.price}
                                 currency="$"
                                 title={routeLabel}
-                                description={`${localize(flight.airline, lang)} · ${localize(flight.stops, lang)}`}
+                                description={`${localizeText(flight.airline, lang)} · ${localizeText(flight.stops, lang)}`}
                                 details={[
-                                    { label: t('label.cabin'), value: localize(flight.cabin, lang) },
-                                    { label: t('label.baggage'), value: localize(flight.baggage, lang) },
-                                    { label: t('label.aircraft'), value: localize(flight.aircraft, lang) },
+                                    {
+                                        label: t('label.cabin'),
+                                        value: localizeText(flight.cabin, lang),
+                                    },
+                                    {
+                                        label: t('label.baggage'),
+                                        value: localizeText(
+                                            flight.baggage,
+                                            lang,
+                                        ),
+                                    },
+                                    {
+                                        label: t('label.aircraft'),
+                                        value: localizeText(
+                                            flight.aircraft,
+                                            lang,
+                                        ),
+                                    },
                                 ]}
                                 priceLabel={t('flightDetail.totalPerPassenger')}
-                                primaryButtonLabel={t('flightDetail.bookFlight')}
-                                onBook={() => window.alert(t('flightDetail.bookingFlow'))}
+                                primaryButtonLabel={t(
+                                    'flightDetail.bookFlight',
+                                )}
+                                onBook={() =>
+                                    window.alert(t('flightDetail.bookingFlow'))
+                                }
                             />
                         </aside>
                     </motion.div>

@@ -20,6 +20,10 @@ export default defineConfig({
             '@': path.resolve(__dirname, 'resources/js'),
         },
     },
+    test: {
+        environment: 'jsdom',
+        setupFiles: ['resources/js/test/setup.ts'],
+    },
     server: {
         watch: {
             usePolling: true,

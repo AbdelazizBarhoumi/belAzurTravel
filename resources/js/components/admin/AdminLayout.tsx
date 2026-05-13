@@ -73,7 +73,11 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                 <SidebarHeader className="border-b border-sidebar-border/60">
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton size="lg" asChild tooltip={t('admin.home')}>
+                            <SidebarMenuButton
+                                size="lg"
+                                asChild
+                                tooltip={t('admin.home')}
+                            >
                                 <Link
                                     to="/"
                                     className={cn(
@@ -117,7 +121,12 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                             isActive={active}
                                             tooltip={label}
                                         >
-                                            <Link to={link.to} aria-current={active ? 'page' : undefined}>
+                                            <Link
+                                                to={link.to}
+                                                aria-current={
+                                                    active ? 'page' : undefined
+                                                }
+                                            >
                                                 <link.icon className="h-4 w-4" />
                                                 <span>{label}</span>
                                             </Link>
@@ -132,7 +141,10 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                 <SidebarFooter className="border-t border-sidebar-border/60">
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={t('admin.signOut')}>
+                            <SidebarMenuButton
+                                asChild
+                                tooltip={t('admin.signOut')}
+                            >
                                 <button
                                     type="button"
                                     onClick={handleLogout}
@@ -148,7 +160,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
             </Sidebar>
 
             <SidebarInset className="min-w-0 overflow-x-hidden">
-                <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card/95 px-4 backdrop-blur transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 supports-[backdrop-filter]:bg-card/80 md:px-6">
+                <header className="group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border bg-card/95 px-4 backdrop-blur transition-[width,height] ease-linear supports-[backdrop-filter]:bg-card/80 md:px-6">
                     <div className="flex min-w-0 items-center gap-2">
                         <SidebarTrigger className="text-muted-foreground hover:bg-muted hover:text-foreground" />
 

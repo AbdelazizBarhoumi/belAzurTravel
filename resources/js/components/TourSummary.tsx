@@ -10,11 +10,22 @@ interface TourSummaryProps {
     rating?: number;
 }
 
-export function TourSummary({ title, type, locations, durationDays, durationNights, rating }: TourSummaryProps) {
+export function TourSummary({
+    title,
+    type,
+    locations,
+    durationDays,
+    durationNights,
+    rating,
+}: TourSummaryProps) {
     return (
         <header className="space-y-4">
             <div className="flex items-center gap-3">
-                {type && <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{type}</span>}
+                {type && (
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                        {type}
+                    </span>
+                )}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" />
                     <span>{locations.join(' • ')}</span>
@@ -27,12 +38,16 @@ export function TourSummary({ title, type, locations, durationDays, durationNigh
                 )}
             </div>
 
-            <h1 className="font-serif text-4xl font-bold text-foreground">{title}</h1>
+            <h1 className="font-serif text-4xl font-bold text-foreground">
+                {title}
+            </h1>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    <span>{durationDays} days • {durationNights} nights</span>
+                    <span>
+                        {durationDays} days • {durationNights} nights
+                    </span>
                 </div>
             </div>
         </header>

@@ -43,8 +43,7 @@ export function StarRating({
                     disabled={!interactive}
                     className={cn(
                         'transition-all',
-                        interactive &&
-                            'cursor-pointer hover:scale-110'
+                        interactive && 'cursor-pointer hover:scale-110',
                     )}
                     aria-label={`Rate ${star} stars`}
                 >
@@ -52,9 +51,7 @@ export function StarRating({
                         className={cn(
                             sizeMap[size],
                             'text-secondary',
-                            star <= rating
-                                ? 'fill-current'
-                                : 'text-muted'
+                            star <= rating ? 'fill-current' : 'text-muted',
                         )}
                     />
                 </button>

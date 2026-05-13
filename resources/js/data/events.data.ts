@@ -25,10 +25,26 @@ export interface EventItem {
 export const eventsData: EventItem[] = [
     {
         slug: 'cherry-blossom-festival',
-        title: { fr: 'Festival des Cerisiers', ar: 'مهرجان أزهار الكرز', en: 'Cherry Blossom Festival' },
-        location: { fr: 'Tokyo, Japon', ar: 'طوكيو، اليابان', en: 'Tokyo, Japan' },
-        date: { fr: '5 – 12 avril 2026', ar: '5 – 12 أبريل 2026', en: 'April 5 – 12, 2026' },
-        attendees: { fr: '32 participants', ar: '32 مشاركًا', en: '32 participants' },
+        title: {
+            fr: 'Festival des Cerisiers',
+            ar: 'مهرجان أزهار الكرز',
+            en: 'Cherry Blossom Festival',
+        },
+        location: {
+            fr: 'Tokyo, Japon',
+            ar: 'طوكيو، اليابان',
+            en: 'Tokyo, Japan',
+        },
+        date: {
+            fr: '5 – 12 avril 2026',
+            ar: '5 – 12 أبريل 2026',
+            en: 'April 5 – 12, 2026',
+        },
+        attendees: {
+            fr: '32 participants',
+            ar: '32 مشاركًا',
+            en: '32 participants',
+        },
         image: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1600&h=900&fit=crop',
         gallery: [
             'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1600&h=900&fit=crop',
@@ -49,7 +65,11 @@ export const eventsData: EventItem[] = [
         schedule: [
             {
                 day: { fr: 'Jour 1', ar: 'اليوم 1', en: 'Day 1' },
-                activity: { fr: 'Arrivée et promenade au parc Ueno', ar: 'الوصول والتنزه في حديقة أوينو', en: 'Arrival and Ueno Park stroll' },
+                activity: {
+                    fr: 'Arrivée et promenade au parc Ueno',
+                    ar: 'الوصول والتنزه في حديقة أوينو',
+                    en: 'Arrival and Ueno Park stroll',
+                },
                 details: {
                     fr: 'Installation à l’hôtel, accueil du groupe et première promenade sous les cerisiers en fleurs.',
                     ar: 'الاستقرار في الفندق، ترحيب بالمجموعة وأول نزهة تحت أزهار الكرز.',
@@ -58,7 +78,11 @@ export const eventsData: EventItem[] = [
             },
             {
                 day: { fr: 'Jour 2', ar: 'اليوم 2', en: 'Day 2' },
-                activity: { fr: 'Temple Senso-ji et croisière sur la Sumida', ar: 'معبد سينسو-جي ورحلة في نهر سوميدا', en: 'Senso-ji Temple and Sumida cruise' },
+                activity: {
+                    fr: 'Temple Senso-ji et croisière sur la Sumida',
+                    ar: 'معبد سينسو-جي ورحلة في نهر سوميدا',
+                    en: 'Senso-ji Temple and Sumida cruise',
+                },
                 details: {
                     fr: 'Visite guidée du quartier d’Asakusa suivie d’une croisière pour admirer Tokyo depuis l’eau.',
                     ar: 'جولة إرشادية في حي أساكوسا تتبعها رحلة مائية لمشاهدة طوكيو من النهر.',
@@ -67,7 +91,11 @@ export const eventsData: EventItem[] = [
             },
             {
                 day: { fr: 'Jour 3', ar: 'اليوم 3', en: 'Day 3' },
-                activity: { fr: 'Atelier cuisine et dîner saisonnier', ar: 'ورشة طهي وعشاء موسمي', en: 'Cooking workshop and seasonal dinner' },
+                activity: {
+                    fr: 'Atelier cuisine et dîner saisonnier',
+                    ar: 'ورشة طهي وعشاء موسمي',
+                    en: 'Cooking workshop and seasonal dinner',
+                },
                 details: {
                     fr: 'Préparez des spécialités japonaises avec un chef local puis savourez un dîner au sakura bar.',
                     ar: 'أعد أطباقًا يابانية مع طاهٍ محلي ثم استمتع بعشاء في أجواء الساكورا.',
@@ -79,9 +107,21 @@ export const eventsData: EventItem[] = [
     {
         slug: 'la-tomatina',
         title: { fr: 'La Tomatina', ar: 'لا توماتينا', en: 'La Tomatina' },
-        location: { fr: 'Buñol, Espagne', ar: 'بنيول، إسبانيا', en: 'Buñol, Spain' },
-        date: { fr: '26 août 2026', ar: '26 أغسطس 2026', en: 'August 26, 2026' },
-        attendees: { fr: '18 participants', ar: '18 مشاركًا', en: '18 participants' },
+        location: {
+            fr: 'Buñol, Espagne',
+            ar: 'بنيول، إسبانيا',
+            en: 'Buñol, Spain',
+        },
+        date: {
+            fr: '26 août 2026',
+            ar: '26 أغسطس 2026',
+            en: 'August 26, 2026',
+        },
+        attendees: {
+            fr: '18 participants',
+            ar: '18 مشاركًا',
+            en: '18 participants',
+        },
         image: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1600&h=900&fit=crop',
         gallery: [
             'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1600&h=900&fit=crop',
@@ -102,7 +142,11 @@ export const eventsData: EventItem[] = [
         schedule: [
             {
                 day: { fr: 'Jour 1', ar: 'اليوم 1', en: 'Day 1' },
-                activity: { fr: 'Arrivée à Valence', ar: 'الوصول إلى فالنسيا', en: 'Arrival in Valencia' },
+                activity: {
+                    fr: 'Arrivée à Valence',
+                    ar: 'الوصول إلى فالنسيا',
+                    en: 'Arrival in Valencia',
+                },
                 details: {
                     fr: 'Accueil du groupe, installation et dîner de bienvenue avec cuisine locale.',
                     ar: 'استقبال المجموعة والاستقرار وعشاء ترحيبي مع المطبخ المحلي.',
@@ -111,7 +155,11 @@ export const eventsData: EventItem[] = [
             },
             {
                 day: { fr: 'Jour 2', ar: 'اليوم 2', en: 'Day 2' },
-                activity: { fr: 'Visite de Buñol', ar: 'جولة في بنيول', en: 'Buñol village tour' },
+                activity: {
+                    fr: 'Visite de Buñol',
+                    ar: 'جولة في بنيول',
+                    en: 'Buñol village tour',
+                },
                 details: {
                     fr: 'Découverte du village, briefing sur l’événement et après-midi libre.',
                     ar: 'استكشاف القرية، إحاطة عن الفعالية، وبعدها فترة حرة في المساء.',
@@ -120,7 +168,11 @@ export const eventsData: EventItem[] = [
             },
             {
                 day: { fr: 'Jour 3', ar: 'اليوم 3', en: 'Day 3' },
-                activity: { fr: 'La Tomatina', ar: 'لا توماتينا', en: 'La Tomatina' },
+                activity: {
+                    fr: 'La Tomatina',
+                    ar: 'لا توماتينا',
+                    en: 'La Tomatina',
+                },
                 details: {
                     fr: 'Préparez-vous pour la bataille de tomates la plus célèbre au monde, avec assistance de l’équipe locale.',
                     ar: 'استعد لمعركة الطماطم الأشهر في العالم مع دعم من الفريق المحلي.',
@@ -131,10 +183,26 @@ export const eventsData: EventItem[] = [
     },
     {
         slug: 'northern-lights-retreat',
-        title: { fr: 'Retraite Aurores Boréales', ar: 'منتجع الشفق القطبي', en: 'Northern Lights Retreat' },
-        location: { fr: 'Tromsø, Norvège', ar: 'ترومسو، النرويج', en: 'Tromsø, Norway' },
-        date: { fr: '15 – 22 fév. 2026', ar: '15 – 22 فبراير 2026', en: 'Feb 15 – 22, 2026' },
-        attendees: { fr: '12 participants', ar: '12 مشاركًا', en: '12 participants' },
+        title: {
+            fr: 'Retraite Aurores Boréales',
+            ar: 'منتجع الشفق القطبي',
+            en: 'Northern Lights Retreat',
+        },
+        location: {
+            fr: 'Tromsø, Norvège',
+            ar: 'ترومسو، النرويج',
+            en: 'Tromsø, Norway',
+        },
+        date: {
+            fr: '15 – 22 fév. 2026',
+            ar: '15 – 22 فبراير 2026',
+            en: 'Feb 15 – 22, 2026',
+        },
+        attendees: {
+            fr: '12 participants',
+            ar: '12 مشاركًا',
+            en: '12 participants',
+        },
         image: 'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=1600&h=900&fit=crop',
         gallery: [
             'https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=1600&h=900&fit=crop',
@@ -155,7 +223,11 @@ export const eventsData: EventItem[] = [
         schedule: [
             {
                 day: { fr: 'Jour 1', ar: 'اليوم 1', en: 'Day 1' },
-                activity: { fr: 'Arrivée à Tromsø', ar: 'الوصول إلى ترومسو', en: 'Arrival in Tromsø' },
+                activity: {
+                    fr: 'Arrivée à Tromsø',
+                    ar: 'الوصول إلى ترومسو',
+                    en: 'Arrival in Tromsø',
+                },
                 details: {
                     fr: 'Transfert à l’hôtel, introduction au groupe et dîner chaleureux.',
                     ar: 'انتقال إلى الفندق، تعريف بالمجموعة، وعشاء دافئ.',
@@ -164,7 +236,11 @@ export const eventsData: EventItem[] = [
             },
             {
                 day: { fr: 'Jour 2', ar: 'اليوم 2', en: 'Day 2' },
-                activity: { fr: 'Safari aurore boréale', ar: 'رحلة الشفق القطبي', en: 'Aurora safari' },
+                activity: {
+                    fr: 'Safari aurore boréale',
+                    ar: 'رحلة الشفق القطبي',
+                    en: 'Aurora safari',
+                },
                 details: {
                     fr: 'Partez à la recherche des aurores avec un guide expert et des arrêts photo panoramiques.',
                     ar: 'انطلق للبحث عن الأضواء الشمالية مع مرشد خبير وتوقفات تصوير بانورامية.',
@@ -173,7 +249,11 @@ export const eventsData: EventItem[] = [
             },
             {
                 day: { fr: 'Jour 3', ar: 'اليوم 3', en: 'Day 3' },
-                activity: { fr: 'Traîneau à chiens et culture samie', ar: 'زلاجات الكلاب وثقافة السامي', en: 'Husky sledding and Sami culture' },
+                activity: {
+                    fr: 'Traîneau à chiens et culture samie',
+                    ar: 'زلاجات الكلاب وثقافة السامي',
+                    en: 'Husky sledding and Sami culture',
+                },
                 details: {
                     fr: 'Vivez une balade en traîneau puis découvrez les traditions et récits samis autour d’un feu.',
                     ar: 'استمتع برحلة زلاجات ثم تعرّف إلى التقاليد والقصص السامية حول النار.',
@@ -184,10 +264,26 @@ export const eventsData: EventItem[] = [
     },
     {
         slug: 'venice-carnival',
-        title: { fr: 'Carnaval de Venise', ar: 'كرنفال البندقية', en: 'Carnival of Venice' },
-        location: { fr: 'Venise, Italie', ar: 'البندقية، إيطاليا', en: 'Venice, Italy' },
-        date: { fr: '8 – 17 fév. 2026', ar: '8 – 17 فبراير 2026', en: 'Feb 8 – 17, 2026' },
-        attendees: { fr: '24 participants', ar: '24 مشاركًا', en: '24 participants' },
+        title: {
+            fr: 'Carnaval de Venise',
+            ar: 'كرنفال البندقية',
+            en: 'Carnival of Venice',
+        },
+        location: {
+            fr: 'Venise, Italie',
+            ar: 'البندقية، إيطاليا',
+            en: 'Venice, Italy',
+        },
+        date: {
+            fr: '8 – 17 fév. 2026',
+            ar: '8 – 17 فبراير 2026',
+            en: 'Feb 8 – 17, 2026',
+        },
+        attendees: {
+            fr: '24 participants',
+            ar: '24 مشاركًا',
+            en: '24 participants',
+        },
         image: 'https://images.unsplash.com/photo-1495904786722-d2b5a19a8535?w=1600&h=900&fit=crop',
         gallery: [
             'https://images.unsplash.com/photo-1495904786722-d2b5a19a8535?w=1600&h=900&fit=crop',
@@ -208,7 +304,11 @@ export const eventsData: EventItem[] = [
         schedule: [
             {
                 day: { fr: 'Jour 1', ar: 'اليوم 1', en: 'Day 1' },
-                activity: { fr: 'Arrivée et promenade dans Venise', ar: 'الوصول والتنزه في البندقية', en: 'Arrival and Venice walk' },
+                activity: {
+                    fr: 'Arrivée et promenade dans Venise',
+                    ar: 'الوصول والتنزه في البندقية',
+                    en: 'Arrival and Venice walk',
+                },
                 details: {
                     fr: 'Installation à l’hôtel et première balade sur les canaux illuminés.',
                     ar: 'الاستقرار في الفندق وأول جولة بين القنوات المضيئة.',
@@ -217,7 +317,11 @@ export const eventsData: EventItem[] = [
             },
             {
                 day: { fr: 'Jour 2', ar: 'اليوم 2', en: 'Day 2' },
-                activity: { fr: 'Atelier masques vénitiens', ar: 'ورشة الأقنعة الفينيسية', en: 'Venetian mask workshop' },
+                activity: {
+                    fr: 'Atelier masques vénitiens',
+                    ar: 'ورشة الأقنعة الفينيسية',
+                    en: 'Venetian mask workshop',
+                },
                 details: {
                     fr: 'Créez votre propre masque avant un dîner raffiné dans un palais historique.',
                     ar: 'اصنع قناعك الخاص قبل عشاء فاخر في قصر تاريخي.',
@@ -226,7 +330,11 @@ export const eventsData: EventItem[] = [
             },
             {
                 day: { fr: 'Jour 3', ar: 'اليوم 3', en: 'Day 3' },
-                activity: { fr: 'Bal du carnaval et gondoles', ar: 'احتفال الكرنفال والجندول', en: 'Carnival ball and gondolas' },
+                activity: {
+                    fr: 'Bal du carnaval et gondoles',
+                    ar: 'احتفال الكرنفال والجندول',
+                    en: 'Carnival ball and gondolas',
+                },
                 details: {
                     fr: 'Profitez d’un bal masqué puis d’une balade en gondole au coucher du soleil.',
                     ar: 'استمتع بحفل تنكري ثم جولة بالجندول عند الغروب.',

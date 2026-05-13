@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BlogSection } from '@/components/BlogSection';
+import { BlogListing } from '@/components/BlogListing';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
@@ -39,9 +39,7 @@ const Blog = () => {
                     </motion.header>
                 </div>
             </div>
-            <div>
-                <BlogSection />
-            </div>
+            <BlogListing pageSize={6} />
             <Footer />
         </div>
     );

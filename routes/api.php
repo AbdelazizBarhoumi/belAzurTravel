@@ -4,6 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController;
 
 // Public (browsing) endpoints — guests may view booking details (read-only)
+use App\Http\Controllers\Api\SiteSettingsController;
+
+Route::get('/site-settings', [SiteSettingsController::class, 'show']);
+Route::middleware(['auth:sanctum', 'can:admin'])->put('/site-settings', [SiteSettingsController::class, 'update']);
+
 Route::get('/bookings/{id}', [BookingController::class, 'show']);
 
 // Authenticated endpoints (booking creation, cancellation for owner)

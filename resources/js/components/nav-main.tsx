@@ -66,7 +66,11 @@ function NavMainItem({ item }: NavMainItemProps) {
     const Chevron = dir === 'rtl' ? ChevronLeft : ChevronRight;
 
     return (
-        <Collapsible asChild defaultOpen={item.isActive} className="group/collapsible">
+        <Collapsible
+            asChild
+            defaultOpen={item.isActive}
+            className="group/collapsible"
+        >
             <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                     <SidebarMenuButton
@@ -75,7 +79,9 @@ function NavMainItem({ item }: NavMainItemProps) {
                     >
                         {Icon && <Icon className="h-4 w-4" />}
                         <span>{item.title}</span>
-                        <Chevron className={`ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:${chevronRotation}`} />
+                        <Chevron
+                            className={`ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:${chevronRotation}`}
+                        />
                     </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>

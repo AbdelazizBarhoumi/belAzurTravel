@@ -10,6 +10,7 @@ import AdminBookings from './pages/admin/AdminBookings';
 import AdminDestinations from './pages/admin/AdminDestinations';
 import AdminHotels from './pages/admin/AdminHotels';
 import AdminReports from './pages/admin/AdminReports';
+import AdminSiteSettings from './pages/admin/AdminSiteSettings';
 import AdminTours from './pages/admin/AdminTours';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminDashboard from './pages/AdminDashboard';
@@ -94,6 +95,10 @@ const App = () => (
                                 element={<AdminReports />}
                             />
                             <Route
+                                path="/admin/site-settings"
+                                element={<AdminSiteSettings />}
+                            />
+                            <Route
                                 path="/assistant"
                                 element={<AssistantDashboard />}
                             />
@@ -101,18 +106,42 @@ const App = () => (
                                 path="/destinations"
                                 element={<Destinations />}
                             />
-                            <Route path="/destinations/:slug" element={<DestinationDetail />} />
+                            <Route
+                                path="/destinations/:slug"
+                                element={<DestinationDetail />}
+                            />
                             <Route path="/hotels" element={<Hotels />} />
-                            <Route path="/hotels/:id" element={<HotelDetail />} />
+                            <Route
+                                path="/hotels/:id"
+                                element={<HotelDetail />}
+                            />
                             <Route path="/tours" element={<Tours />} />
-                            <Route path="/tours/:slug" element={<TourDetail />} />
-                            <Route path="/deals/:slug" element={<DealDetail />} />
-                            <Route path="/blog/:slug" element={<BlogPostDetail />} />
+                            <Route
+                                path="/tours/:slug"
+                                element={<TourDetail />}
+                            />
+                            <Route
+                                path="/deals/:slug"
+                                element={<DealDetail />}
+                            />
+                            <Route
+                                path="/blog/:slug"
+                                element={<BlogPostDetail />}
+                            />
                             <Route path="/cars/:slug" element={<CarDetail />} />
-                            <Route path="/flights/:id" element={<FlightDetail />} />
-                            <Route path="/promos/:slug" element={<PromoDetail />} />
+                            <Route
+                                path="/flights/:id"
+                                element={<FlightDetail />}
+                            />
+                            <Route
+                                path="/promos/:slug"
+                                element={<PromoDetail />}
+                            />
                             <Route path="/deals" element={<Deals />} />
-                            <Route path="/design-trip" element={<DesignTrip />} />
+                            <Route
+                                path="/design-trip"
+                                element={<DesignTrip />}
+                            />
                             <Route path="/blog" element={<Blog />} />
                             <Route path="/cars" element={<Cars />} />
                             <Route path="/flights" element={<Flights />} />
@@ -121,7 +150,10 @@ const App = () => (
                             <Route path="/legal" element={<Legal />} />
                             <Route path="/gallery" element={<Gallery />} />
                             <Route path="/events" element={<Events />} />
-                            <Route path="/events/:slug" element={<EventDetail />} />
+                            <Route
+                                path="/events/:slug"
+                                element={<EventDetail />}
+                            />
                             <Route path="/contact" element={<Contact />} />
                             <Route path="/favorites" element={<Favorites />} />
                             <Route path="*" element={<NotFound />} />

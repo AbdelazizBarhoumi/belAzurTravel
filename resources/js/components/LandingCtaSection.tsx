@@ -1,5 +1,10 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, MessageSquareMore, Sparkles, ShieldCheck } from 'lucide-react';
+import {
+    ArrowRight,
+    MessageSquareMore,
+    Sparkles,
+    ShieldCheck,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,14 +45,25 @@ export function LandingCtaSection() {
                             </p>
 
                             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                                <Button asChild size="lg" className="rounded-full bg-background text-foreground hover:bg-background/90">
+                                <Button
+                                    asChild
+                                    size="lg"
+                                    className="rounded-full bg-background text-foreground hover:bg-background/90"
+                                >
                                     <Link to="/design-trip">
                                         {t('home.cta.primary')}
                                         <ArrowRight className="h-4 w-4" />
                                     </Link>
                                 </Button>
-                                <Button asChild size="lg" variant="outline" className="rounded-full border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
-                                    <Link to="/contact">{t('home.cta.secondary')}</Link>
+                                <Button
+                                    asChild
+                                    size="lg"
+                                    variant="outline"
+                                    className="rounded-full border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                                >
+                                    <Link to="/contact">
+                                        {t('home.cta.secondary')}
+                                    </Link>
                                 </Button>
                             </div>
                         </div>
@@ -57,7 +73,10 @@ export function LandingCtaSection() {
                                 const Icon = item.icon;
 
                                 return (
-                                    <div key={item.textKey} className="flex items-center gap-4 rounded-2xl border border-primary-foreground/10 bg-background/5 p-4">
+                                    <div
+                                        key={item.textKey}
+                                        className="flex items-center gap-4 rounded-2xl border border-primary-foreground/10 bg-background/5 p-4"
+                                    >
                                         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-secondary/15 text-secondary">
                                             <Icon className="h-5 w-5" />
                                         </div>

@@ -83,15 +83,27 @@ const AdminTours = () => {
                                     <td className="px-4 py-3">
                                         <img
                                             src={d.image}
-                                            alt={localizeKnown(d.name, tourLabels, lang)}
+                                            alt={localizeKnown(
+                                                d.name,
+                                                tourLabels,
+                                                lang,
+                                            )}
                                             className="h-12 w-12 rounded-lg object-cover"
                                         />
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
-                                        {localizeKnown(d.name, tourLabels, lang)}
+                                        {localizeKnown(
+                                            d.name,
+                                            tourLabels,
+                                            lang,
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                                        {localizeKnown(d.location, countryLabels, lang)}
+                                        {localizeKnown(
+                                            d.location,
+                                            countryLabels,
+                                            lang,
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm">
                                         {d.duration}
@@ -114,9 +126,11 @@ const AdminTours = () => {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                    onClick={() => {
+                                                onClick={() => {
                                                     remove('tours', d.id);
-                                                    toast.success(t('actions.deleted'));
+                                                    toast.success(
+                                                        t('actions.deleted'),
+                                                    );
                                                 }}
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >

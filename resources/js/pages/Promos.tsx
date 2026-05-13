@@ -1,20 +1,61 @@
 import { motion } from 'framer-motion';
 import { Tag, Calendar } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ListFilterBar } from '@/components/ListFilterBar';
 import { PageShell } from '@/components/PageShell';
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { promosData } from '@/data/promos.data';
-import type { Lang } from '@/i18n/translations';
+import { localizeText } from '@/data/catalog';
+import { usePromos } from '@/hooks/useCatalog';
+import { matchesSearchText } from '@/lib/listFilters';
 
-type LocalizedText = Record<Lang, string>;
+const ALL = 'all';
 
-function localize(value: LocalizedText, lang: Lang): string {
-    return value[lang];
+function getPromoType(discount: string): 'perk' | 'percentage' {
+    return discount.includes('%') ? 'percentage' : 'perk';
 }
 
 const Promos = () => {
     const { t, lang } = useLanguage();
+    const { data: promos = [] } = usePromos();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedType, setSelectedType] = useState(ALL);
+
+    const filteredPromos = useMemo(
+        () =>
+            promos.filter((promo) => {
+                const matchesSearch = matchesSearchText(searchQuery, [
+                    promo.code,
+                    localizeText(promo.title, lang),
+                    localizeText(promo.description, lang),
+                    localizeText(promo.discount, lang),
+                    localizeText(promo.expires, lang),
+                ]);
+                const matchesType =
+                    selectedType === ALL ||
+                    getPromoType(localizeText(promo.discount, lang)) ===
+                        selectedType;
+
+                return matchesSearch && matchesType;
+            }),
+        [lang, promos, searchQuery, selectedType],
+    );
+
+    const hasActiveFilters =
+        searchQuery.trim().length > 0 || selectedType !== ALL;
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setSelectedType(ALL);
+    };
 
     return (
         <PageShell
@@ -25,36 +66,98 @@ const Promos = () => {
                 { label: t('nav.promos'), active: true },
             ]}
         >
+            <ListFilterBar
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                resultCount={filteredPromos.length}
+                hasActiveFilters={hasActiveFilters}
+                onClearFilters={clearFilters}
+                searchPlaceholder={t('common.search')}
+            >
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+                    <label className="grid gap-2 text-sm">
+                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                            {t('promos.filterByType')}
+                        </span>
+                        <Select
+                            value={selectedType}
+                            onValueChange={setSelectedType}
+                        >
+                            <SelectTrigger
+                                aria-label={t('promos.filterByType')}
+                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
+                            >
+                                <SelectValue placeholder={t('common.all')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={ALL}>
+                                    {t('common.all')}
+                                </SelectItem>
+                                <SelectItem value="percentage">
+                                    {t('promos.typePercentage')}
+                                </SelectItem>
+                                <SelectItem value="perk">
+                                    {t('promos.typePerk')}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </label>
+                </div>
+            </ListFilterBar>
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {promosData.map((p, i) => (
-                    <motion.div
-                        key={p.code}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="card-elevated overflow-hidden rounded-2xl"
-                    >
-                        <div className={`bg-gradient-to-br ${p.color} p-8 text-primary-foreground`}>
-                            <div className="mb-4 flex items-start justify-between">
-                                <Tag className="h-8 w-8 opacity-80" />
-                                <span className="rounded-full bg-card/20 px-3 py-1 text-xs font-bold backdrop-blur">
-                                    {localize(p.discount, lang)}
-                                </span>
+                {filteredPromos.length === 0 ? (
+                    <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground md:col-span-2">
+                        {t('common.noResults')}
+                    </div>
+                ) : (
+                    filteredPromos.map((p, i) => (
+                        <motion.div
+                            key={p.code}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: i * 0.1 }}
+                            className="card-elevated overflow-hidden rounded-2xl"
+                        >
+                            <div
+                                className={`bg-gradient-to-br ${p.color} p-8 text-primary-foreground`}
+                            >
+                                <div className="mb-4 flex items-start justify-between">
+                                    <Tag className="h-8 w-8 opacity-80" />
+                                    <span className="rounded-full bg-card/20 px-3 py-1 text-xs font-bold backdrop-blur">
+                                        {localizeText(p.discount, lang)}
+                                    </span>
+                                </div>
+                                <h3 className="mb-2 font-serif text-2xl font-bold">
+                                    {localizeText(p.title, lang)}
+                                </h3>
+                                <p className="mb-6 text-sm text-primary-foreground/80">
+                                    {localizeText(p.description, lang)}
+                                </p>
+                                <div className="flex items-center justify-between">
+                                    <code className="rounded-lg bg-card/20 px-3 py-1.5 font-mono text-sm font-bold backdrop-blur">
+                                        {p.code}
+                                    </code>
+                                    <span className="flex items-center gap-1 text-xs opacity-80">
+                                        <Calendar className="h-3 w-3" />{' '}
+                                        {localizeText(p.expires, lang)}
+                                    </span>
+                                </div>
                             </div>
-                            <h3 className="mb-2 font-serif text-2xl font-bold">{localize(p.title, lang)}</h3>
-                            <p className="mb-6 text-sm text-primary-foreground/80">{localize(p.description, lang)}</p>
-                            <div className="flex items-center justify-between">
-                                <code className="rounded-lg bg-card/20 px-3 py-1.5 font-mono text-sm font-bold backdrop-blur">{p.code}</code>
-                                <span className="flex items-center gap-1 text-xs opacity-80"><Calendar className="h-3 w-3" /> {localize(p.expires, lang)}</span>
+                            <div className="flex justify-end bg-card p-4">
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    className="bg-primary text-primary-foreground"
+                                >
+                                    <Link to={`/promos/${p.code}`}>
+                                        {t('common.viewDetails')}
+                                    </Link>
+                                </Button>
                             </div>
-                        </div>
-                        <div className="flex justify-end bg-card p-4">
-                            <Button asChild size="sm" className="bg-primary text-primary-foreground">
-                                <Link to={`/promos/${p.code}`}>{t('common.viewDetails')}</Link>
-                            </Button>
-                        </div>
-                    </motion.div>
-                ))}
+                        </motion.div>
+                    ))
+                )}
             </div>
         </PageShell>
     );

@@ -9,7 +9,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { AdminHotel } from '@/hooks/useAdminStore';
 import { useAdminStore, generateId } from '@/hooks/useAdminStore';
-import { categoryLabels, countryLabels, hotelLabels, localizeKnown } from '@/lib/adminI18n';
+import {
+    categoryLabels,
+    countryLabels,
+    hotelLabels,
+    localizeKnown,
+} from '@/lib/adminI18n';
 
 const fields: FieldDef[] = [
     { key: 'name', label: 'Name' },
@@ -36,7 +41,9 @@ const AdminHotels = () => {
 
     const handleSave = (values: AdminHotel) => {
         upsert('hotels', { ...values, id: editing?.id || generateId() });
-        toast.success(editing ? t('admin.hotelUpdated') : t('admin.hotelAdded'));
+        toast.success(
+            editing ? t('admin.hotelUpdated') : t('admin.hotelAdded'),
+        );
         setEditing(null);
     };
 
@@ -88,19 +95,35 @@ const AdminHotels = () => {
                                     <td className="px-4 py-3">
                                         <img
                                             src={d.image}
-                                            alt={localizeKnown(d.name, hotelLabels, lang)}
+                                            alt={localizeKnown(
+                                                d.name,
+                                                hotelLabels,
+                                                lang,
+                                            )}
                                             className="h-12 w-12 rounded-lg object-cover"
                                         />
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
-                                        {localizeKnown(d.name, hotelLabels, lang)}
+                                        {localizeKnown(
+                                            d.name,
+                                            hotelLabels,
+                                            lang,
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                                        {localizeKnown(d.location, countryLabels, lang)}
+                                        {localizeKnown(
+                                            d.location,
+                                            countryLabels,
+                                            lang,
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className="rounded-full bg-muted px-2 py-1 text-xs">
-                                            {localizeKnown(d.category, categoryLabels, lang)}
+                                            {localizeKnown(
+                                                d.category,
+                                                categoryLabels,
+                                                lang,
+                                            )}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
@@ -121,9 +144,11 @@ const AdminHotels = () => {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                    onClick={() => {
+                                                onClick={() => {
                                                     remove('hotels', d.id);
-                                                    toast.success(t('actions.deleted'));
+                                                    toast.success(
+                                                        t('actions.deleted'),
+                                                    );
                                                 }}
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >

@@ -135,7 +135,12 @@ const ClientDashboard = () => {
     const isRtl = dir === 'rtl';
 
     return (
-        <div className={cn('flex min-h-screen bg-background', isRtl && 'lg:flex-row-reverse')}>
+        <div
+            className={cn(
+                'flex min-h-screen bg-background',
+                isRtl && 'lg:flex-row-reverse',
+            )}
+        >
             <aside
                 className={cn(
                     'hidden w-64 flex-col bg-card lg:flex',
@@ -143,7 +148,13 @@ const ClientDashboard = () => {
                 )}
             >
                 <div className={cn('p-6', isRtl && 'text-right')}>
-                    <Link to="/" className={cn('flex items-center gap-2', isRtl && 'justify-end')}>
+                    <Link
+                        to="/"
+                        className={cn(
+                            'flex items-center gap-2',
+                            isRtl && 'justify-end',
+                        )}
+                    >
                         <BrandLogo imageClassName="h-7 w-auto" />
                     </Link>
                 </div>
@@ -158,7 +169,7 @@ const ClientDashboard = () => {
                                 isRtl && 'text-right',
                                 activeTab === link.labelKey
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                             )}
                         >
                             <link.icon className="h-4 w-4" />
@@ -302,7 +313,11 @@ const ClientDashboard = () => {
                                             {booking.price}
                                         </span>
                                         <Button variant="ghost" size="sm">
-                                            {dir === 'rtl' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                            {dir === 'rtl' ? (
+                                                <ChevronLeft className="h-4 w-4" />
+                                            ) : (
+                                                <ChevronRight className="h-4 w-4" />
+                                            )}
                                         </Button>
                                     </div>
                                 </motion.div>

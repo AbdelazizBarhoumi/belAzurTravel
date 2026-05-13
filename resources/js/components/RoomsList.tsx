@@ -26,10 +26,7 @@ const FEATURE_ICONS: Record<string, typeof Wifi> = {
     tv: Tv,
 };
 
-export function RoomsList({
-    rooms,
-    onBookRoom,
-}: RoomsListProps) {
+export function RoomsList({ rooms, onBookRoom }: RoomsListProps) {
     const { t } = useLanguage();
 
     return (

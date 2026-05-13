@@ -15,7 +15,9 @@ const AdminUsers = () => {
 
     const toggleActive = (u: AdminUser) => {
         upsert('users', { ...u, active: !u.active });
-        toast.success(`${u.name} ${t(u.active ? 'admin.deactivated' : 'admin.activated')}`);
+        toast.success(
+            `${u.name} ${t(u.active ? 'admin.deactivated' : 'admin.activated')}`,
+        );
     };
 
     return (
@@ -81,9 +83,11 @@ const AdminUsers = () => {
                                                     : 'Activate'}
                                             </Button>
                                             <button
-                                                    onClick={() => {
+                                                onClick={() => {
                                                     remove('users', u.id);
-                                                    toast.success(t('actions.deleted'));
+                                                    toast.success(
+                                                        t('actions.deleted'),
+                                                    );
                                                 }}
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
