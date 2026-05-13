@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Check, ChevronLeft, Fuel, Settings2, Users } from 'lucide-react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Check, Fuel, Settings2, Users } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
 import { Gallery } from '@/components/Gallery';
@@ -58,13 +58,6 @@ export default function CarDetail() {
 						/>
 					</div>
 
-					<Link
-						to="/cars"
-						className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
-					>
-						<ChevronLeft className="h-4 w-4" /> {t('carsDetail.backToCars')}
-					</Link>
-
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
@@ -73,39 +66,15 @@ export default function CarDetail() {
 						<div className="flex flex-col">
 							<Gallery images={gallery} hotelName={localize(car.name, lang)} />
 
-							<section className="mt-8 grid gap-4 md:grid-cols-3">
-								<div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-									<div className="text-sm text-muted-foreground">{t('carsDetail.seats')}</div>
-									<div className="mt-2 flex items-center gap-2 text-foreground">
-										<Users className="h-4 w-4 text-primary" />
-										{car.seats}
-									</div>
-								</div>
-								<div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-									<div className="text-sm text-muted-foreground">{t('carsDetail.fuel')}</div>
-									<div className="mt-2 flex items-center gap-2 text-foreground">
-										<Fuel className="h-4 w-4 text-primary" />
-										{localize(car.fuel, lang)}
-									</div>
-								</div>
-								<div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-									<div className="text-sm text-muted-foreground">{t('carsDetail.gearbox')}</div>
-									<div className="mt-2 flex items-center gap-2 text-foreground">
-										<Settings2 className="h-4 w-4 text-primary" />
-										{localize(car.transmission, lang)}
-									</div>
-								</div>
-							</section>
-
 							<section className="mt-8 max-w-3xl">
 								<h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
 									{t('carsDetail.features')}
 								</h2>
 								<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 									{car.features.map((feature) => (
-										<div key={feature} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
+										<div key={String(feature.en)} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
 											<Check className="h-4 w-4 shrink-0 text-primary" />
-											<span className="text-sm text-foreground">{feature}</span>
+											<span className="text-sm text-foreground">{String(localize(feature, lang))}</span>
 										</div>
 									))}
 								</div>
@@ -117,9 +86,9 @@ export default function CarDetail() {
 								</h2>
 								<ul className="space-y-3">
 									{car.policy.map((rule) => (
-										<li key={rule} className="flex items-start gap-2 text-sm text-muted-foreground">
+										<li key={String(rule.en)} className="flex items-start gap-2 text-sm text-muted-foreground">
 											<span className="mt-1 h-2 w-2 rounded-full bg-primary" />
-											<span>{rule}</span>
+											<span>{String(localize(rule, lang))}</span>
 										</li>
 									))}
 								</ul>
@@ -130,12 +99,19 @@ export default function CarDetail() {
 							<StickyBookingCard
 								price={car.price}
 								currency="$"
+								priceLabel={t('common.from')}
+								priceSuffix={t('cars.perDay')}
+								badge={localize(car.category, lang)}
 								title={localize(car.name, lang)}
-								location={localize(car.category, lang)}
-								description={t('carsDetail.summary')}
-								type={localize(car.category, lang)}
+								description={localize(car.description, lang)}
+								detailsLayout="grid3"
+								details={[
+									{ label: t('carsDetail.seats'), value: car.seats, icon: Users },
+									{ label: t('carsDetail.fuel'), value: localize(car.fuel, lang), icon: Fuel },
+									{ label: t('carsDetail.gearbox'), value: localize(car.transmission, lang), icon: Settings2 },
+								]}
+								primaryButtonLabel={t('cars.rentNow')}
 								onBook={() => window.open('/contact', '_self')}
-								onWhatsApp={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${localize(car.name, lang)} - ${localize(car.category, lang)}`)}`, '_blank')}
 							/>
 						</aside>
 					</motion.div>

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import FlightDetail from '@/pages/FlightDetail';
 

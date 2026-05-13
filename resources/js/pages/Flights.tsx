@@ -52,7 +52,7 @@ const Flights = () => {
                             </div>
                             <div className="flex flex-col items-center text-muted-foreground">
                                 <Clock className="mb-1 h-3 w-3" />
-                                <span className="text-xs">{f.duration}</span>
+                                <span className="text-xs">{localize(f.duration, lang)}</span>
                                 {dir === 'rtl' ? <ArrowLeft className="mt-1 h-3 w-3" /> : <ArrowRight className="mt-1 h-3 w-3" />}
                             </div>
                             <div className="text-center">

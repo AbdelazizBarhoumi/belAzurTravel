@@ -4,7 +4,6 @@ import { useParams, Navigate } from 'react-router-dom';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { Button } from '@/components/ui/button';
 import { StickyBookingCard } from '@/components/StickyBookingCard';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { flightsData } from '@/data/flights.data';
@@ -41,7 +40,7 @@ export default function FlightDetail() {
                                     </div>
                                     <div>
                                         <h1 className="font-serif text-3xl font-bold text-foreground">{localize(flight.airline, lang)}</h1>
-                                        <p className="text-sm text-muted-foreground">{localize(flight.stops, lang)} · {flight.aircraft}</p>
+                                        <p className="text-sm text-muted-foreground">{localize(flight.stops, lang)} · {localize(flight.aircraft, lang)}</p>
                                     </div>
                                 </div>
 
@@ -52,7 +51,7 @@ export default function FlightDetail() {
                                     </div>
                                     <div className="flex flex-col items-center text-muted-foreground">
                                         <Clock className="h-4 w-4 mb-1" />
-                                        <span className="text-sm font-medium">{flight.duration}</span>
+                                        <span className="text-sm font-medium">{localize(flight.duration, lang)}</span>
                                         <DirectionIcon className="h-4 w-4 mt-1" />
                                     </div>
                                     <div className="text-center">
@@ -64,15 +63,15 @@ export default function FlightDetail() {
                                 <div className="grid sm:grid-cols-3 gap-4 mt-6 text-sm">
                                     <div className="p-4 rounded-xl bg-muted/40">
                                         <p className="text-xs text-muted-foreground mb-1">{t('label.cabin')}</p>
-                                        <p className="font-bold text-foreground">{flight.cabin}</p>
+                                        <p className="font-bold text-foreground">{localize(flight.cabin, lang)}</p>
                                     </div>
                                     <div className="p-4 rounded-xl bg-muted/40">
                                         <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1"><Briefcase className="h-3 w-3" /> {t('label.baggage')}</p>
-                                        <p className="font-bold text-foreground">{flight.baggage}</p>
+                                        <p className="font-bold text-foreground">{localize(flight.baggage, lang)}</p>
                                     </div>
                                     <div className="p-4 rounded-xl bg-muted/40">
                                         <p className="text-xs text-muted-foreground mb-1">{t('label.aircraft')}</p>
-                                        <p className="font-bold text-foreground">{flight.aircraft}</p>
+                                        <p className="font-bold text-foreground">{localize(flight.aircraft, lang)}</p>
                                     </div>
                                 </div>
                             </section>
@@ -83,12 +82,15 @@ export default function FlightDetail() {
                                 price={flight.price}
                                 currency="$"
                                 title={routeLabel}
-                                duration={`${flight.duration} • ${localize(flight.stops, lang)}`}
-                                type={flight.cabin}
-                                rating={4.8}
-                                reviews={128}
-                                onBook={() => window.alert('Proceed to flight booking flow')}
-                                onWhatsApp={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Flight booking request: ${routeLabel}`)}`, '_blank')}
+                                description={`${localize(flight.airline, lang)} · ${localize(flight.stops, lang)}`}
+                                details={[
+                                    { label: t('label.cabin'), value: localize(flight.cabin, lang) },
+                                    { label: t('label.baggage'), value: localize(flight.baggage, lang) },
+                                    { label: t('label.aircraft'), value: localize(flight.aircraft, lang) },
+                                ]}
+                                priceLabel={t('flightDetail.totalPerPassenger')}
+                                primaryButtonLabel={t('flightDetail.bookFlight')}
+                                onBook={() => window.alert(t('flightDetail.bookingFlow'))}
                             />
                         </aside>
                     </motion.div>

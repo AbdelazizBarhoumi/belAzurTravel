@@ -8,18 +8,25 @@ import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { dealsData } from '@/data/deals.data';
+import type { Lang } from '@/i18n/translations';
+
+type LocalizedText = Record<Lang, string>;
+
+function localize(value: LocalizedText, lang: Lang): string {
+    return value[lang];
+}
 
 export default function Deals() {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const [search, setSearch] = useState('');
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
         if (!q) return dealsData;
         return dealsData.filter((deal) =>
-            `${deal.title} ${deal.description} ${deal.discount}`.toLowerCase().includes(q)
+            `${localize(deal.title, lang)} ${localize(deal.description, lang)} ${localize(deal.discount, lang)}`.toLowerCase().includes(q)
         );
-    }, [search]);
+    }, [search, lang]);
 
     return (
         <div className="min-h-screen bg-background">
@@ -57,7 +64,7 @@ export default function Deals() {
                             <input
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search offers..."
+                                placeholder={t('deals.searchPlaceholder')}
                                 className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-3 text-sm"
                             />
                         </div>
@@ -74,18 +81,18 @@ export default function Deals() {
                             >
                                 <div className="mb-4 flex items-center justify-between">
                                     <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                        <Tag className="h-3 w-3" /> {deal.discount}
+                                        <Tag className="h-3 w-3" /> {localize(deal.discount, lang)}
                                     </span>
                                     <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                                        <CalendarClock className="h-3.5 w-3.5" /> {deal.expires}
+                                        <CalendarClock className="h-3.5 w-3.5" /> {localize(deal.expires, lang)}
                                     </span>
                                 </div>
 
                                 <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
-                                    {deal.title}
+                                    {localize(deal.title, lang)}
                                 </h3>
                                 <p className="mb-6 text-sm text-muted-foreground">
-                                    {deal.description}
+                                    {localize(deal.description, lang)}
                                 </p>
 
                                 <div className="flex gap-2">

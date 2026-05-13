@@ -25,8 +25,8 @@ import Deals from './pages/Deals';
 import DesignTrip from './pages/DesignTrip';
 import DestinationDetail from './pages/DestinationDetail';
 import Destinations from './pages/Destinations';
-import Events from './pages/Events';
 import EventDetail from './pages/EventDetail';
+import Events from './pages/Events';
 import Favorites from './pages/Favorites';
 import FlightDetail from './pages/FlightDetail';
 import Flights from './pages/Flights';
@@ -53,7 +53,12 @@ const App = () => (
                 <TooltipProvider>
                     <Toaster />
                     <Sonner />
-                    <BrowserRouter>
+                    <BrowserRouter
+                        future={{
+                            v7_startTransition: true,
+                            v7_relativeSplatPath: true,
+                        }}
+                    >
                         <ScrollToTop />
                         <Routes>
                             <Route path="/" element={<Index />} />

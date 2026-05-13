@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, ChevronLeft } from 'lucide-react';
+import { Calendar, MapPin, Users } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
@@ -64,30 +64,6 @@ export default function EventDetail() {
                         <div className="flex flex-col">
                             <Gallery images={event.gallery} hotelName={localize(event.title, lang)} />
 
-                            <section className="mt-8 grid gap-4 md:grid-cols-3">
-                                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                                    <div className="text-sm text-muted-foreground">{t('events.detail.when')}</div>
-                                    <div className="mt-2 flex items-center gap-2 text-foreground">
-                                        <Calendar className="h-4 w-4 text-primary" />
-                                        {localize(event.date, lang)}
-                                    </div>
-                                </div>
-                                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                                    <div className="text-sm text-muted-foreground">{t('events.detail.where')}</div>
-                                    <div className="mt-2 flex items-center gap-2 text-foreground">
-                                        <MapPin className="h-4 w-4 text-primary" />
-                                        {localize(event.location, lang)}
-                                    </div>
-                                </div>
-                                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                                    <div className="text-sm text-muted-foreground">{t('events.detail.groupSize')}</div>
-                                    <div className="mt-2 flex items-center gap-2 text-foreground">
-                                        <Users className="h-4 w-4 text-primary" />
-                                        {localize(event.attendees, lang)}
-                                    </div>
-                                </div>
-                            </section>
-
                             <section className="mt-8 max-w-3xl">
                                 <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
                                     {t('events.detail.aboutTitle')}
@@ -125,15 +101,26 @@ export default function EventDetail() {
                                 price={event.price}
                                 currency="$"
                                 title={localize(event.title, lang)}
-                                location={localize(event.location, lang)}
-                                description={localize(event.description, lang)}
-                                duration={localize(event.date, lang)}
-                                maxGroup={Number.parseInt(localize(event.attendees, lang), 10) || undefined}
-                                type={t('nav.events')}
-                                rating={4.8}
-                                reviews={32}
+                                details={[
+                                    {
+                                        label: t('events.detail.when'),
+                                        value: localize(event.date, lang),
+                                        icon: Calendar,
+                                    },
+                                    {
+                                        label: t('events.detail.where'),
+                                        value: localize(event.location, lang),
+                                        icon: MapPin,
+                                    },
+                                    {
+                                        label: t('events.detail.groupSize'),
+                                        value: localize(event.attendees, lang),
+                                        icon: Users,
+                                    },
+                                ]}
+                                priceLabel="Package from"
+                                primaryButtonLabel="Reserve a spot"
                                 onBook={() => window.open('/contact', '_self')}
-                                onWhatsApp={() => window.open(`https://wa.me/?text=${encodeURIComponent(`${localize(event.title, lang)} - ${localize(event.location, lang)}`)}`, '_blank')}
                             />
                         </aside>
                     </motion.div>

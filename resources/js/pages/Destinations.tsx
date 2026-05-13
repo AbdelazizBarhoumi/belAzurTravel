@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ChevronDown, Search, MapPin, Star } from 'lucide-react';
+import { Search, MapPin, Star } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';

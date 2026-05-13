@@ -1,22 +1,46 @@
+import type { LucideIcon } from 'lucide-react';
 import { MapPin, MessageCircle, Phone, Star, Clock, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/FavoriteButton';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { Button } from '@/components/ui/button';
 import type { FavoriteItem } from '@/contexts/FavoritesContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+type DetailItem = {
+    label: string;
+    value: string | number;
+    icon?: LucideIcon;
+};
 
 interface StickyBookingCardProps {
-    // Support both hotels (minPrice) and tours (price per person)
-    price?: number; // per person
-    minPrice?: number; // fallback for hotels
+    // Price model
+    price?: number;
+    minPrice?: number;
     currency?: string;
+    priceLabel?: string;
+    priceSuffix?: string;
+
+    // Header/content
+    badge?: string;
     title?: string;
     location?: string | string[];
     description?: string;
+
+    // Ratings/meta
+    rating?: number;
+    reviews?: number;
+    ratingMeta?: string;
+    details?: DetailItem[];
+    detailsLayout?: 'rows' | 'grid3';
+
+    // Backward compatible props
     duration?: string;
     maxGroup?: number;
     type?: string;
-    rating?: number;
-    reviews?: number;
+
+    // Actions
+    primaryButtonLabel?: string;
+    secondaryButtonLabel?: string;
+    tertiaryButtonLabel?: string;
     phoneNumber?: string;
     favoriteItem?: FavoriteItem;
     onBook: () => void;
@@ -27,14 +51,23 @@ export function StickyBookingCard({
     price,
     minPrice,
     currency = '$',
+    priceLabel,
+    priceSuffix,
+    badge,
     title,
     location,
     description,
+    details,
+    detailsLayout = 'rows',
     duration,
     maxGroup,
     type,
     rating,
     reviews,
+    ratingMeta,
+    primaryButtonLabel,
+    secondaryButtonLabel,
+    tertiaryButtonLabel,
     phoneNumber,
     favoriteItem,
     onBook,
@@ -43,14 +76,57 @@ export function StickyBookingCard({
     const { t } = useLanguage();
 
     const handleCall = () => {
-        if (phoneNumber) window.open(`tel:${phoneNumber}`);
+        if (phoneNumber) {
+            window.open(`tel:${phoneNumber}`);
+            return;
+        }
+
+        window.open('/contact', '_self');
+    };
+
+    const handleWhatsApp = () => {
+        if (onWhatsApp) {
+            onWhatsApp();
+            return;
+        }
+
+        const messageParts = [title, displayLocation, description].filter(Boolean);
+        if (messageParts.length > 0) {
+            const message = encodeURIComponent(messageParts.join(' - '));
+            window.open(`https://wa.me/?text=${message}`, '_blank');
+            return;
+        }
+
+        window.open('/contact', '_self');
     };
 
     const displayPrice = price ?? minPrice ?? 0;
     const displayLocation = Array.isArray(location) ? location.join(', ') : location;
+    const computedDetails: DetailItem[] = details ?? [
+        ...(duration ? [{
+            label: t('label.duration'),
+            value: duration,
+            icon: Clock,
+        }] : []),
+        ...(maxGroup !== undefined ? [{
+            label: t('label.maxGroup'),
+            value: `${maxGroup} ${t('common.travelers')}`,
+            icon: Users,
+        }] : []),
+    ];
+    const displayPriceLabel = priceLabel ?? t('common.from');
+    const displayPrimaryButtonLabel = primaryButtonLabel ?? t('hotelDetail.reserveNow');
+    const displaySecondaryButtonLabel = secondaryButtonLabel ?? t('common.whatsapp');
+    const displayTertiaryButtonLabel = tertiaryButtonLabel ?? t('hotelDetail.call');
 
     return (
         <div className="sticky top-24 self-start bg-card rounded-3xl p-6 card-elevated h-fit border border-border">
+            {badge && (
+                <span className="text-xs text-secondary font-semibold uppercase tracking-wider">
+                    {badge}
+                </span>
+            )}
+
             {(title || displayLocation || favoriteItem) && (
                 <div className="mb-3 flex items-start justify-between gap-4">
                     <div>
@@ -71,51 +147,60 @@ export function StickyBookingCard({
                     <Star className="h-4 w-4 fill-current text-secondary" />
                     <span className="font-bold text-foreground">{rating}</span>
                     {reviews !== undefined && (
-                        <span className="text-sm text-muted-foreground">({reviews} {t('hotels.reviews')})</span>
+                        <span className="text-sm text-muted-foreground">· {reviews} {t('hotels.reviews')}</span>
                     )}
+                    {ratingMeta && <span className="text-sm text-muted-foreground">· {ratingMeta}</span>}
                 </div>
             )}
 
             {description && <p className="mb-6 text-sm text-muted-foreground">{description}</p>}
 
-            {(duration || maxGroup !== undefined) && (
-                <div className="space-y-3 border-t border-border pt-4 text-sm">
-                    <div className="space-y-3 pb-4 border-b border-border">
-                        {duration && (
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground flex items-center gap-2">
-                                    <Clock className="h-4 w-4 text-primary" />
-                                    {t('tourDetail.duration') || 'Duration'}
-                                </span>
-                                <span className="font-medium text-foreground">{duration}</span>
-                            </div>
-                        )}
+            {computedDetails.length > 0 && (
+                <div className="space-y-3 border-y border-border py-6 text-sm">
+                    {detailsLayout === 'grid3' ? (
+                        <div className="grid grid-cols-3 gap-3">
+                            {computedDetails.map((item) => {
+                                const Icon = item.icon;
 
-                        {maxGroup !== undefined && (
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground flex items-center gap-2">
-                                    <Users className="h-4 w-4 text-primary" />
-                                    {t('tourDetail.group') || 'Max group'}
-                                </span>
-                                <span className="font-medium text-foreground">{maxGroup} travelers</span>
-                            </div>
-                        )}
-                    </div>
+                                return (
+                                    <div key={`${item.label}-${item.value}`} className="text-center">
+                                        {Icon && <Icon className="mx-auto mb-1 h-5 w-5 text-primary" />}
+                                        <p className="text-xs text-muted-foreground">{item.label}</p>
+                                        <p className="font-bold text-foreground text-xs">{item.value}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {computedDetails.map((item) => {
+                                const Icon = item.icon;
+
+                                return (
+                                    <div key={`${item.label}-${item.value}`} className="flex justify-between gap-4">
+                                        <span className="flex items-center gap-2 text-muted-foreground">
+                                            {Icon && <Icon className="h-4 w-4 text-primary" />}
+                                            {item.label}
+                                        </span>
+                                        <span className="text-right font-medium text-foreground">{item.value}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             )}
 
             <div className="mb-5">
                 <p className="mb-1 mt-4 text-xs text-muted-foreground">
-                    {t('hotelDetail.startingFrom')}
+                    {displayPriceLabel}
                 </p>
 
                 <div className="flex items-baseline gap-1">
                     <span className="font-serif text-4xl font-bold leading-none text-secondary">
                         {currency}{displayPrice.toLocaleString()}
                     </span>
-                    <span className="text-sm text-muted-foreground">
-                        {t('tours.person')}
-                    </span>
+                    {priceSuffix && <span className="text-sm text-muted-foreground">{priceSuffix}</span>}
                 </div>
 
                 {type && (
@@ -127,18 +212,30 @@ export function StickyBookingCard({
 
             <div className="space-y-3">
                 <Button onClick={onBook} size="lg" className="w-full">
-                    {t('hotelDetail.reserveNow')}
+                    {displayPrimaryButtonLabel}
                 </Button>
 
-                <Button onClick={onWhatsApp} variant="outline" size="lg" className="w-full gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    WhatsApp
-                </Button>
+                <div className="flex gap-3">
+                    <Button
+                        onClick={handleWhatsApp}
+                        variant="outline"
+                        size="lg"
+                        className="flex-1 gap-2"
+                    >
+                        <MessageCircle className="h-4 w-4" />
+                        {displaySecondaryButtonLabel}
+                    </Button>
 
-                <Button onClick={handleCall} variant="ghost" size="lg" className="w-full gap-2">
-                    <Phone className="h-4 w-4" />
-                    {t('hotelDetail.call')}
-                </Button>
+                    <Button
+                        onClick={handleCall}
+                        variant="ghost"
+                        size="lg"
+                        className="flex-1 gap-2"
+                    >
+                        <Phone className="h-4 w-4" />
+                        {displayTertiaryButtonLabel}
+                    </Button>
+                </div>
             </div>
 
         </div>

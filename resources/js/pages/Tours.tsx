@@ -20,7 +20,7 @@ const tours = [
         slug: 'greek-island-hopping',
         name: { fr: 'Îles Grecques en Liberté', ar: 'جولة الجزر اليونانية', en: 'Greek Island Hopping' },
         location: { fr: 'Grèce', ar: 'اليونان', en: 'Greece' },
-        duration: '7 Days',
+        duration: { fr: '7 jours', ar: '7 أيام', en: '7 Days' },
         maxGroup: 12,
         price: 2499,
         rating: 4.9,
@@ -31,7 +31,7 @@ const tours = [
         slug: 'bali-cultural-immersion',
         name: { fr: 'Immersion Culturelle à Bali', ar: 'انغمس في ثقافة بالي', en: 'Bali Cultural Immersion' },
         location: { fr: 'Indonésie', ar: 'إندونيسيا', en: 'Indonesia' },
-        duration: '10 Days',
+        duration: { fr: '10 jours', ar: '10 أيام', en: '10 Days' },
         maxGroup: 8,
         price: 1899,
         rating: 4.8,
@@ -42,7 +42,7 @@ const tours = [
         slug: 'paris-art-gastronomy',
         name: { fr: 'Paris: Art et Gastronomie', ar: 'باريس: الفن والطعام', en: 'Parisian Art & Gastronomy' },
         location: { fr: 'France', ar: 'فرنسا', en: 'France' },
-        duration: '5 Days',
+        duration: { fr: '5 jours', ar: '5 أيام', en: '5 Days' },
         maxGroup: 10,
         price: 3200,
         rating: 4.9,
@@ -53,7 +53,7 @@ const tours = [
         slug: 'desert-safari-adventure',
         name: { fr: 'Aventure Safari du Désert', ar: 'مغامرة السفاري في الصحراء', en: 'Desert Safari Adventure' },
         location: { fr: 'Émirats Arabes Unis', ar: 'الإمارات العربية المتحدة', en: 'UAE' },
-        duration: '3 Days',
+        duration: { fr: '3 jours', ar: '3 أيام', en: '3 Days' },
         maxGroup: 15,
         price: 899,
         rating: 4.7,
@@ -64,7 +64,7 @@ const tours = [
         slug: 'japan-heritage-trail',
         name: { fr: 'Sentier du Patrimoine Japonais', ar: 'درب التراث الياباني', en: 'Japan Heritage Trail' },
         location: { fr: 'Japon', ar: 'اليابان', en: 'Japan' },
-        duration: '12 Days',
+        duration: { fr: '12 jours', ar: '12 يومًا', en: '12 Days' },
         maxGroup: 10,
         price: 4500,
         rating: 5.0,
@@ -75,7 +75,7 @@ const tours = [
         slug: 'northern-lights-quest',
         name: { fr: 'Quête des Aurores Boréales', ar: 'البحث عن الأضواء الشمالية', en: 'Northern Lights Quest' },
         location: { fr: 'Islande', ar: 'أيسلندا', en: 'Iceland' },
-        duration: '6 Days',
+        duration: { fr: '6 jours', ar: '6 أيام', en: '6 Days' },
         maxGroup: 8,
         price: 3800,
         rating: 4.9,
@@ -162,7 +162,7 @@ const Tours = () => {
                                                 </span>
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="h-3 w-3" />{' '}
-                                                    {tour.duration}
+                                                    {localize(tour.duration, lang)}
                                                 </span>
                                                 <span className="flex items-center gap-1">
                                                     <Users className="h-3 w-3" />{' '}

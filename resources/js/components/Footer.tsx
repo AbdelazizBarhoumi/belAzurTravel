@@ -9,8 +9,8 @@ import {
     Clock,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { BrandLogo } from '@/components/BrandLogo';
 import footerLogo from '@/assets/brand-logo-footer.png';
+import { BrandLogo } from '@/components/BrandLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Footer() {

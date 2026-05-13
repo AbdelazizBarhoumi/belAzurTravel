@@ -1,17 +1,18 @@
-import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 import {
   MapPin, Hotel, Plane, Car, Train, Ship, Utensils, Camera, Mountain,
   Waves, Sparkles, Heart, Sun, Snowflake, Users, Calendar, Wallet,
   Check, ChevronRight, ChevronLeft, Compass, Music, BookOpen
 } from "lucide-react";
-type Option = { id: string; label: string; icon: any; desc?: string };
+import type { LucideIcon } from 'lucide-react';
+import { useState, useMemo } from "react";
+import { toast } from "sonner";
+import { Footer } from "@/components/Footer";
+import { Navbar } from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+type Option = { id: string; label: string; icon: LucideIcon; desc?: string };
 const destinations: Option[] = [
   { id: "santorini", label: "Santorini", icon: Waves, desc: "Greece" },
   { id: "bali", label: "Bali", icon: Sun, desc: "Indonesia" },
@@ -78,7 +79,7 @@ const DesignTrip = () => {
       return { ...d, [key]: arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id] };
     });
   };
-  const set = (key: keyof typeof data, val: any) => setData((d) => ({ ...d, [key]: val }));
+  const set = (key: keyof typeof data, val: string | string[] | number) => setData((d) => ({ ...d, [key]: val }));
   const progress = ((step + 1) / steps.length) * 100;
   const current = steps[step];
   const canNext = useMemo(() => {

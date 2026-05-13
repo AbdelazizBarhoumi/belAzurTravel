@@ -154,7 +154,7 @@ const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
     },
 };
 
-const MotionTabsTrigger = motion(TabsTrigger);
+const MotionTabsTrigger = motion.create(TabsTrigger);
 
 const SEARCH_TARGETS: Record<SearchTab, string> = {
     hotels: '/hotels',

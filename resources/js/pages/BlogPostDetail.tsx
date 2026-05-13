@@ -26,7 +26,7 @@ const posts = [
             ar: 'اكتشف الوجهات الأقل شهرة التي تقدم تجارب لا تصدق بعيدًا عن حشود السياح.',
             en: 'Discover lesser-known destinations that offer incredible experiences without the tourist crowds.',
         },
-        date: 'Feb 15, 2026',
+        date: '2026-02-15',
         category: { fr: 'Aventure', ar: 'مغامرة', en: 'Adventure' },
         image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=700&fit=crop',
         content: {
@@ -47,7 +47,7 @@ const posts = [
             ar: 'كيفية استكشاف أجمل مدن أوروبا دون تجاوز ميزانيتك. نصائح من المسافرين المتمرسين.',
             en: "How to explore Europe's most iconic cities without breaking the bank. Tips from seasoned travelers.",
         },
-        date: 'Feb 10, 2026',
+        date: '2026-02-10',
         category: { fr: 'Conseils', ar: 'نصائح', en: 'Tips' },
         image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=1200&h=700&fit=crop',
         content: {
@@ -68,7 +68,7 @@ const posts = [
             ar: 'الحركة المتنامية نحو السياحة الواعية بيئيًا وكيف يمكنك إحداث فرق.',
             en: 'The growing movement towards eco-conscious tourism and how you can make a difference.',
         },
-        date: 'Feb 5, 2026',
+        date: '2026-02-05',
         category: { fr: 'Durabilité', ar: 'الاستدامة', en: 'Sustainability' },
         image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&h=700&fit=crop',
         content: {
@@ -86,6 +86,12 @@ export default function BlogPostDetail() {
     const post = posts.find((p) => p.slug === slug);
 
     if (!post) return <Navigate to="/blog" replace />;
+
+    const formattedDate = new Intl.DateTimeFormat(lang === 'ar' ? 'ar-EG' : lang === 'fr' ? 'fr-FR' : 'en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    }).format(new Date(post.date));
 
     return (
         <div className="min-h-screen bg-background">
@@ -105,7 +111,7 @@ export default function BlogPostDetail() {
                         <img src={post.image} alt={localize(post.title, lang)} className="mb-6 w-full rounded-xl object-cover" />
                         <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
                             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{localize(post.category, lang)}</span>
-                            <div className="flex items-center gap-1"><Calendar className="h-4 w-4" />{post.date}</div>
+                            <div className="flex items-center gap-1"><Calendar className="h-4 w-4" />{formattedDate}</div>
                         </div>
                         <h1 className="mb-4 font-serif text-3xl font-bold text-foreground">{localize(post.title, lang)}</h1>
                         <div className="prose max-w-none text-foreground">{localize(post.content, lang)}</div>

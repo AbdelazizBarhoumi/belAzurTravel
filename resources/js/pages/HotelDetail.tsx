@@ -20,18 +20,18 @@ function localize(value: LocalizedText, lang: Lang): string {
 
 type Room = {
     id: string;
-    name: string;
-    description: string;
+    name: LocalizedText;
+    description: LocalizedText;
     pricePerNight: number;
     capacity: number;
     size: number;
-    features: string[];
+    features: LocalizedText[];
     images: string[];
 };
 
 type Amenity = {
     id: string;
-    name: string;
+    name: LocalizedText;
     icon: typeof Wifi;
 };
 
@@ -76,42 +76,57 @@ export const HOTEL_DATABASE: HotelDetailData[] = [
             'https://images.unsplash.com/photo-1537359387622-ef9e36b62a61?w=800&h=600&fit=crop',
         ],
         amenities: [
-            { id: '1', name: 'WiFi', icon: Wifi },
-            { id: '2', name: 'Parking', icon: Car },
-            { id: '3', name: 'Breakfast', icon: Coffee },
-            { id: '4', name: 'Gym', icon: Dumbbell },
-            { id: '5', name: 'Restaurant', icon: Utensils },
-            { id: '6', name: 'Pool', icon: Droplet },
+            { id: '1', name: { fr: 'Wi‑Fi', ar: 'واي فاي', en: 'WiFi' }, icon: Wifi },
+            { id: '2', name: { fr: 'Parking', ar: 'موقف سيارات', en: 'Parking' }, icon: Car },
+            { id: '3', name: { fr: 'Petit-déjeuner', ar: 'إفطار', en: 'Breakfast' }, icon: Coffee },
+            { id: '4', name: { fr: 'Salle de sport', ar: 'نادي رياضي', en: 'Gym' }, icon: Dumbbell },
+            { id: '5', name: { fr: 'Restaurant', ar: 'مطعم', en: 'Restaurant' }, icon: Utensils },
+            { id: '6', name: { fr: 'Piscine', ar: 'مسبح', en: 'Pool' }, icon: Droplet },
         ],
         rooms: [
             {
                 id: 'deluxe-1',
-                name: 'Deluxe Ocean View',
-                description: 'Spacious room with private balcony overlooking the Aegean Sea',
+                name: { fr: 'Deluxe Vue Mer', ar: 'ديلوكس بإطلالة على البحر', en: 'Deluxe Ocean View' },
+                description: { fr: 'Chambre spacieuse avec balcon privé donnant sur la mer Égée', ar: 'غرفة واسعة مع شرفة خاصة تطل على بحر إيجه', en: 'Spacious room with private balcony overlooking the Aegean Sea' },
                 pricePerNight: 320,
                 capacity: 2,
                 size: 45,
-                features: ['wifi', 'ac', 'bathroom', 'tv'],
+                features: [
+                    { fr: 'Wi‑Fi', ar: 'واي فاي', en: 'wifi' },
+                    { fr: 'Climatisation', ar: 'تكييف', en: 'ac' },
+                    { fr: 'Salle de bains privée', ar: 'حمام خاص', en: 'bathroom' },
+                    { fr: 'Télévision', ar: 'تلفاز', en: 'tv' },
+                ],
                 images: ['https://images.unsplash.com/photo-1631049307038-da0ec36d9c46?w=600&h=400&fit=crop'],
             },
             {
                 id: 'suite-1',
-                name: 'Sunset Suite',
-                description: 'Luxury suite with direct caldera views and Jacuzzi bath',
+                name: { fr: 'Suite Sunset', ar: 'جناح الغروب', en: 'Sunset Suite' },
+                description: { fr: 'Suite de luxe avec vue directe sur la caldeira et baignoire jacuzzi', ar: 'جناح فاخر مع إطلالة مباشرة على الكالديرا وحوض جاكوزي', en: 'Luxury suite with direct caldera views and Jacuzzi bath' },
                 pricePerNight: 520,
                 capacity: 2,
                 size: 65,
-                features: ['wifi', 'ac', 'bathroom', 'tv'],
+                features: [
+                    { fr: 'Wi‑Fi', ar: 'واي فاي', en: 'wifi' },
+                    { fr: 'Climatisation', ar: 'تكييف', en: 'ac' },
+                    { fr: 'Salle de bains privée', ar: 'حمام خاص', en: 'bathroom' },
+                    { fr: 'Télévision', ar: 'تلفاز', en: 'tv' },
+                ],
                 images: ['https://images.unsplash.com/photo-1618588507045-cf1ee4dba957?w=600&h=400&fit=crop'],
             },
             {
                 id: 'family-1',
-                name: 'Family Bungalow',
-                description: 'Two-bedroom bungalow perfect for families with private garden',
+                name: { fr: 'Bungalow Familial', ar: 'بنغل عائلي', en: 'Family Bungalow' },
+                description: { fr: 'Bungalow à deux chambres parfait pour les familles avec jardin privé', ar: 'بنغل بغرفتي نوم مثالي للعائلات مع حديقة خاصة', en: 'Two-bedroom bungalow perfect for families with private garden' },
                 pricePerNight: 420,
                 capacity: 4,
                 size: 85,
-                features: ['wifi', 'ac', 'bathroom', 'tv'],
+                features: [
+                    { fr: 'Wi‑Fi', ar: 'واي فاي', en: 'wifi' },
+                    { fr: 'Climatisation', ar: 'تكييف', en: 'ac' },
+                    { fr: 'Salle de bains privée', ar: 'حمام خاص', en: 'bathroom' },
+                    { fr: 'Télévision', ar: 'تلفاز', en: 'tv' },
+                ],
                 images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&h=400&fit=crop'],
             },
         ],
@@ -136,30 +151,40 @@ export const HOTEL_DATABASE: HotelDetailData[] = [
             'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=600&fit=crop',
         ],
         amenities: [
-            { id: '1', name: 'WiFi', icon: Wifi },
-            { id: '3', name: 'Breakfast', icon: Coffee },
-            { id: '4', name: 'Yoga Classes', icon: Dumbbell },
-            { id: '5', name: 'Restaurant', icon: Utensils },
+            { id: '1', name: { fr: 'Wi‑Fi', ar: 'واي فاي', en: 'WiFi' }, icon: Wifi },
+            { id: '3', name: { fr: 'Petit-déjeuner', ar: 'إفطار', en: 'Breakfast' }, icon: Coffee },
+            { id: '4', name: { fr: 'Cours de yoga', ar: 'حصص يوغا', en: 'Yoga Classes' }, icon: Dumbbell },
+            { id: '5', name: { fr: 'Restaurant', ar: 'مطعم', en: 'Restaurant' }, icon: Utensils },
         ],
         rooms: [
             {
                 id: 'garden-1',
-                name: 'Garden Bungalow',
-                description: 'Cozy bungalow with garden access and traditional design',
+                name: { fr: 'Bungalow Jardin', ar: 'بنغل الحديقة', en: 'Garden Bungalow' },
+                description: { fr: 'Bungalow confortable avec accès au jardin et design traditionnel', ar: 'بنغل مريح مع وصول إلى الحديقة وتصميم تقليدي', en: 'Cozy bungalow with garden access and traditional design' },
                 pricePerNight: 180,
                 capacity: 2,
                 size: 35,
-                features: ['wifi', 'ac', 'bathroom', 'tv'],
+                features: [
+                    { fr: 'Wi‑Fi', ar: 'واي فاي', en: 'wifi' },
+                    { fr: 'Climatisation', ar: 'تكييف', en: 'ac' },
+                    { fr: 'Salle de bains privée', ar: 'حمام خاص', en: 'bathroom' },
+                    { fr: 'Télévision', ar: 'تلفاز', en: 'tv' },
+                ],
                 images: ['https://images.unsplash.com/photo-1631049307038-da0ec36d9c46?w=600&h=400&fit=crop'],
             },
             {
                 id: 'villa-1',
-                name: 'Jungle Villa',
-                description: 'Private villa with open-air shower and rice field views',
+                name: { fr: 'Villa Jungle', ar: 'فيلا الغابة', en: 'Jungle Villa' },
+                description: { fr: 'Villa privée avec douche à ciel ouvert et vue sur les rizières', ar: 'فيلا خاصة مع دش مفتوح وإطلالات على حقول الأرز', en: 'Private villa with open-air shower and rice field views' },
                 pricePerNight: 350,
                 capacity: 2,
                 size: 50,
-                features: ['wifi', 'ac', 'bathroom', 'tv'],
+                features: [
+                    { fr: 'Wi‑Fi', ar: 'واي فاي', en: 'wifi' },
+                    { fr: 'Climatisation', ar: 'تكييف', en: 'ac' },
+                    { fr: 'Salle de bains privée', ar: 'حمام خاص', en: 'bathroom' },
+                    { fr: 'Télévision', ar: 'تلفاز', en: 'tv' },
+                ],
                 images: ['https://images.unsplash.com/photo-1618588507045-cf1ee4dba957?w=600&h=400&fit=crop'],
             },
         ],
@@ -177,17 +202,20 @@ export default function HotelDetail() {
     }
 
     const minPrice = Math.min(...hotel.rooms.map((r) => r.pricePerNight));
+    const rooms = hotel.rooms.map((room) => ({
+        ...room,
+        name: localize(room.name, lang),
+        description: localize(room.description, lang),
+        features: room.features.map((feature) => localize(feature, lang)),
+    }));
+    const amenities = hotel.amenities.map((amenity) => ({
+        ...amenity,
+        name: localize(amenity.name, lang),
+    }));
 
     const handleReserve = () => {
         const roomsElement = document.getElementById('rooms-list');
         roomsElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-
-    const handleWhatsApp = () => {
-        const message = encodeURIComponent(
-            `Hello, I want to reserve:\nHotel: ${localize(hotel.name, lang)}\nLocation: ${localize(hotel.location, lang)}\nPlease share available rooms and dates.`
-        );
-        window.open(`https://wa.me/${hotel.whatsapp}?text=${message}`, '_blank');
     };
 
     const handleBookRoom = (roomId: string) => {
@@ -250,7 +278,7 @@ export default function HotelDetail() {
                             stars={hotel.stars}
                             rating={hotel.rating}
                             reviews={hotel.reviews}
-                            location={hotel.address}
+                            location={localize(hotel.location, lang)}
                             city={localize(hotel.city, lang)}
                             country={localize(hotel.country, lang)}
                         />
@@ -262,7 +290,7 @@ export default function HotelDetail() {
                             >
                                 <HotelInfo
                                     description={localize(hotel.description, lang)}
-                                    amenities={hotel.amenities}
+                                    amenities={amenities}
                                 />
                             </motion.div>
 
@@ -274,7 +302,7 @@ export default function HotelDetail() {
                                 transition={{ delay: 0.3 }}
                             >
                                 <RoomsList
-                                    rooms={hotel.rooms}
+                                    rooms={rooms}
                                     onBookRoom={handleBookRoom}
                                 />
                             </motion.div>
@@ -284,11 +312,24 @@ export default function HotelDetail() {
                         <div className="lg:col-span-1 self-start sticky top-20">
                             <StickyBookingCard
                                 minPrice={minPrice}
+                                currency="$"
+                                priceLabel="From"
+                                priceSuffix="/night"
+                                title={localize(hotel.name, lang)}
+                                location={localize(hotel.location, lang)}
+                                description={localize(hotel.description, lang)}
                                 rating={hotel.rating}
                                 reviews={hotel.reviews}
-                                phoneNumber={hotel.phone}
+                                favoriteItem={{
+                                    id: `hotel-${hotel.id}`,
+                                    type: 'hotel',
+                                    name: localize(hotel.name, lang),
+                                    image: hotel.images[0] ?? '',
+                                    price: minPrice,
+                                    location: localize(hotel.location, lang),
+                                }}
+                                primaryButtonLabel="Book now"
                                 onBook={handleReserve}
-                                onWhatsApp={handleWhatsApp}
                             />
                         </div>
                     </div>

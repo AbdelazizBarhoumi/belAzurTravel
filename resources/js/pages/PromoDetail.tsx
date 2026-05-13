@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Check, Copy, Tag, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { Footer } from '@/components/Footer';
@@ -61,18 +61,18 @@ export default function PromoDetail() {
                                 </div>
                             </motion.div>
                             <section className="rounded-2xl border border-border bg-card p-6">
-                                <h3 className="mb-4 font-serif text-xl font-bold">Eligibility</h3>
+                                <h3 className="mb-4 font-serif text-xl font-bold">{t('promoDetail.eligibility')}</h3>
                                 <ul className="space-y-2 text-sm text-foreground">
-                                    {promo.eligibility.map((item) => <li key={item} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-secondary" /> {item}</li>)}
+                                    {promo.eligibility.map((item) => <li key={item.en} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-secondary" /> {localize(item, lang)}</li>)}
                                 </ul>
                             </section>
                             <section className="bg-card border border-border rounded-2xl p-6">
                                 <h2 className="font-serif text-xl font-bold text-foreground mb-4">{t('promoDetail.termsTitle')}</h2>
                                 <ul className="space-y-2">
                                     {promo.terms.map((term) => (
-                                        <li key={term} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                        <li key={term.en} className="flex items-start gap-2 text-sm text-muted-foreground">
                                             <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                            {term}
+                                            {localize(term, lang)}
                                         </li>
                                     ))}
                                 </ul>

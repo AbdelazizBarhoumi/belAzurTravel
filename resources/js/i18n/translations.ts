@@ -288,6 +288,7 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'استفد من عروضنا المحدودة الوقت واجعل إجازتك الحلم حقيقة.',
         en: 'Take advantage of our limited-time offers and make your dream vacation a reality.',
     },
+    'deals.searchPlaceholder': { fr: 'Rechercher des offres...', ar: 'ابحث عن العروض...', en: 'Search offers...' },
     'deals.viewDeal': { fr: "Voir l'Offre", ar: 'شاهد العرض', en: 'View Deal' },
 
     // Footer
@@ -386,6 +387,9 @@ export const translations: Record<string, TranslationEntry> = {
     'common.viewAll': VIEW_ALL,
     'common.viewDetails': VIEW_DETAILS,
     'common.from': { fr: 'À partir de', ar: 'ابتداءً من', en: 'From' },
+    'common.whatsapp': { fr: 'WhatsApp', ar: 'واتساب', en: 'WhatsApp' },
+    'common.call': { fr: 'Appeler', ar: 'اتصال', en: 'Call' },
+    'common.travelers': { fr: 'voyageurs', ar: 'مسافرون', en: 'travelers' },
     'common.search': { fr: 'Rechercher...', ar: 'بحث...', en: 'Search...' },
     'common.all': ALL,
     'common.addedFav': {
@@ -629,9 +633,26 @@ export const translations: Record<string, TranslationEntry> = {
     'promoDetail.expires': { fr: 'Expire le', ar: 'تنتهي في', en: 'Expires' },
     'promoDetail.termsTitle': { fr: 'Conditions générales', ar: 'الشروط والأحكام', en: 'Terms & conditions' },
     'promoDetail.startBooking': { fr: 'Commencer une réservation', ar: 'ابدأ الحجز', en: 'Start a booking' },
+    'promoDetail.eligibility': { fr: 'Éligibilité', ar: 'الأهلية', en: 'Eligibility' },
     'promoDetail.details': { fr: 'Détails', ar: 'التفاصيل', en: 'Details' },
     'promoDetail.code': { fr: 'Code promo', ar: 'رمز العرض', en: 'Promo code' },
     'promoDetail.discount': { fr: 'Réduction', ar: 'الخصم', en: 'Discount' },
+
+    // Deal Detail Page
+    'dealDetail.expires': { fr: 'Expire le', ar: 'تنتهي في', en: 'Expires' },
+    'dealDetail.category': { fr: 'Catégorie', ar: 'الفئة', en: 'Category' },
+    'dealDetail.type': { fr: 'Type d’offre', ar: 'نوع العرض', en: 'Deal type' },
+    'dealDetail.specialOffer': { fr: 'Offre spéciale', ar: 'عرض خاص', en: 'Special offer' },
+    'dealDetail.highlights': { fr: 'Points forts', ar: 'أهم المزايا', en: 'Highlights' },
+    'dealDetail.terms': { fr: 'Conditions générales', ar: 'الشروط والأحكام', en: 'Terms & conditions' },
+    'dealDetail.flow': { fr: 'Parcours de réservation', ar: 'مسار الحجز', en: 'Deal flow' },
+    'dealDetail.step1': { fr: 'Explorer les détails de l’offre', ar: 'استكشف تفاصيل العرض', en: 'Explore the offer details' },
+    'dealDetail.step2': { fr: 'Choisir la destination ou le forfait', ar: 'اختر الوجهة أو الباقة', en: 'Pick the destination or package' },
+    'dealDetail.step3': { fr: 'Passer à une réservation sécurisée', ar: 'تابع إلى حجز آمن', en: 'Proceed to secure booking' },
+    'dealDetail.stepDesc': { fr: 'Étape {n} du processus de réservation.', ar: 'الخطوة {n} من عملية الحجز.', en: 'Step {n} of the booking process.' },
+    'dealDetail.offer': { fr: 'Offre', ar: 'العرض', en: 'Offer' },
+    'dealDetail.inquiry': { fr: 'Demande d’offre', ar: 'استفسار عن العرض', en: 'Deal inquiry' },
+    'dealDetail.book': { fr: 'Réserver cette offre', ar: 'احجز هذا العرض', en: 'Book this deal' },
 
     // Gallery Page
     'gallery.title': GALLERY,
@@ -665,6 +686,7 @@ export const translations: Record<string, TranslationEntry> = {
     'flights.select': { fr: 'Sélectionner', ar: 'اختر', en: 'Select' },
     'flightDetail.totalPerPassenger': { fr: 'Total par passager', ar: 'الإجمالي لكل مسافر', en: 'Total per passenger' },
     'flightDetail.bookFlight': { fr: 'Réserver ce vol', ar: 'احجز هذه الرحلة', en: 'Book this flight' },
+    'flightDetail.bookingFlow': { fr: 'Passer à la réservation du vol', ar: 'الانتقال إلى حجز الرحلة', en: 'Proceed to flight booking flow' },
 
     // Cars Page
     'cars.title': {

@@ -38,11 +38,19 @@ export function Gallery({ images, hotelName }: GalleryProps) {
         <>
             <div className="flex flex-col gap-3">
                 {/* Main image */}
-                <motion.button
-                    type="button"
+                <motion.div
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open image ${selectedIndex + 1} of ${images.length}`}
                     onClick={() => openLightbox(selectedIndex)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openLightbox(selectedIndex);
+                        }
+                    }}
                     whileHover={{ y: -2 }}
-                    className="group relative w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+                    className="group relative w-full overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
                 >
                     <AnimatePresence mode="wait">
                         <motion.img
@@ -76,7 +84,7 @@ export function Gallery({ images, hotelName }: GalleryProps) {
                     >
                         <ChevronRight className="h-4 w-4" />
                     </button>
-                </motion.button>
+                </motion.div>
 
                 {/* Thumbnails row */}
                 <div className="hidden gap-2 overflow-x-auto pb-1 lg:flex">
