@@ -158,7 +158,7 @@ export default function DestinationDetail() {
                     {destination.about && (
                         <section className="mt-8 max-w-3xl">
                             <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
-                                {t('destinationDetail.about')}{' '}
+                                {t('destinationDetail.about')} {' '}
                                 {localize(destination.name, lang)}
                             </h2>
                             <p className="leading-relaxed text-muted-foreground">
@@ -301,7 +301,7 @@ export default function DestinationDetail() {
                                         {localize(tour.name, lang)}
                                     </h3>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {localize(tour.duration, lang)} ·{' '}
+                                        {localize(tour.duration, lang)} · {' '}
                                         {t('destinationDetail.startingFrom')} $
                                         {tour.price.toLocaleString()}
                                     </p>

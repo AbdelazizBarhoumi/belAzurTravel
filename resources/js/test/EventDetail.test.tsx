@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import EventDetail from '@/pages/EventDetail';
+import EventDetail from '@/pages/events/show';
 
 function renderEventDetail(path = '/events/cherry-blossom-festival') {
     const queryClient = new QueryClient();

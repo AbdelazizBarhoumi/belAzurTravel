@@ -11,7 +11,6 @@ export {
     footerQuickLinks,
     footerSupportLinks,
     galleryPhotos,
-    hotelDetailDatabase,
     landingAssurances,
     landingTrustCards,
     legalSections,

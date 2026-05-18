@@ -18,6 +18,7 @@ const copy = (en: string, fr: string, ar: string) => ({ en, fr, ar });
 type HotelFormValues = AdminRow & {
     amenities?: string;
     gallery?: string;
+    rooms?: string;
     imagePath?: string;
     imageFile?: File | null;
     galleryFiles?: File[];
@@ -73,6 +74,26 @@ function parseAmenities(value: unknown) {
         }));
 }
 
+function serializeRooms(rooms: unknown): string {
+    if (!Array.isArray(rooms)) return '';
+
+    return JSON.stringify(rooms, null, 2);
+}
+
+function parseRooms(value: unknown) {
+    if (typeof value !== 'string') return [];
+
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+        const parsed = JSON.parse(trimmed);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
 const AdminHotels = () => {
     useAdminGuard();
 
@@ -110,6 +131,7 @@ const AdminHotels = () => {
               galleryFiles: [] as File[],
               galleryPaths: [] as string[],
               amenities: serializeAmenities(editing.amenities),
+                            rooms: serializeRooms(editing.rooms),
           } as HotelFormValues)
         : null;
 
@@ -243,19 +265,37 @@ const AdminHotels = () => {
                             Each line becomes an amenity and is mirrored across all languages for now.
                         </p>
                     </div>
+
+                    <div className="space-y-2">
+                        <label htmlFor="hotel-rooms" className="text-xs font-semibold text-muted-foreground">
+                            Rooms (JSON)
+                        </label>
+                        <textarea
+                            id="hotel-rooms"
+                            value={asText(values.rooms)}
+                            onChange={(event) => setField('rooms', event.target.value)}
+                            rows={12}
+                            className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            placeholder='[{"id":"deluxe-1","name":{"en":"Deluxe Ocean View","fr":"...","ar":"..."},"description":{"en":"...","fr":"...","ar":"..."},"pricePerNight":320,"capacity":2,"size":45,"features":[{"en":"Wi-Fi","fr":"Wi-Fi","ar":"واي فاي"}],"images":["/storage/..."]}]'
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Paste a JSON array of room objects so admins can manage the room list from the dashboard.
+                        </p>
+                    </div>
                 </div>
             ),
         },
     ];
 
     const handleSave = (values: HotelFormValues) => {
-        const { imageFile, imagePath, galleryFiles, gallery, amenities, ...rest } = values;
+        const { imageFile, imagePath, galleryFiles, gallery, amenities, rooms, ...rest } = values;
 
         const payload = {
             ...rest,
             id: editing?.id || '',
             image: imageFile ?? imagePath?.trim() ?? asText(editing?.image),
             amenities: parseAmenities(amenities),
+            rooms: parseRooms(rooms),
             gallery: asText(gallery),
             ...(galleryFiles && galleryFiles.length > 0 ? { gallery_files: galleryFiles } : {}),
         } as unknown as HotelFormValues;

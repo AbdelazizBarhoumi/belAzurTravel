@@ -14,7 +14,7 @@ import {
 import { apiFetch } from '@/api/http';
 import type { Lang } from '@/i18n/translations';
 
-type HotelDetailLookupData = {
+export type HotelDetailLookupData = {
     id: string;
     name: Record<string, string>;
     city?: Record<string, string>;

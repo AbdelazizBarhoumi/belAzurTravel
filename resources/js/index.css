@@ -45,6 +45,10 @@
         --sidebar-border: 200 20% 20%;
         --sidebar-ring: 38 90% 55%;
 
+        /* Scrollbar tokens (default to sidebar background colors) */
+        --scrollbar-thumb: hsl(var(--sidebar-background) / 0.6);
+        --scrollbar-track: transparent;
+
         /* Custom tokens */
         --hero-overlay: linear-gradient(
             135deg,
@@ -85,12 +89,17 @@
         --sidebar-accent-foreground: 40 30% 97%;
         --sidebar-border: 200 20% 15%;
         --sidebar-ring: 38 85% 50%;
+        --scrollbar-thumb: hsl(var(--sidebar-background) / 0.5);
+        --scrollbar-track: transparent;
     }
 }
 
 @layer base {
     * {
         @apply border-border;
+        /* Default scrollbar styling (Firefox + modern browsers) */
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        scrollbar-width: thin;
     }
     body {
         @apply bg-background font-sans text-foreground;
@@ -106,6 +115,30 @@
 }
 
 @layer utilities {
+    /* Scrollbar utilities */
+    .scrollbar {
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        scrollbar-width: thin;
+    }
+    .scrollbar::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+    .scrollbar::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+    }
+    .scrollbar::-webkit-scrollbar-thumb {
+        background-color: var(--scrollbar-thumb);
+        border-radius: 9999px;
+        border: 3px solid transparent; /* gives padding look */
+        background-clip: padding-box;
+    }
+
+    /* Accent variant uses sidebar primary color */
+    .scrollbar-accent {
+        --scrollbar-thumb: hsl(var(--sidebar-primary) / 0.6);
+    }
+
     .text-gradient {
         @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
     }

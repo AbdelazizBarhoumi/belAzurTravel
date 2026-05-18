@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import * as hooks from '@/hooks/usePublicData';
-import BlogPostDetail from '@/pages/BlogPostDetail';
+import BlogPostDetail from '@/pages/blog/show';
 
 vi.mock('@/hooks/usePublicData', () => ({
     useBlogPostBySlug: vi.fn(),

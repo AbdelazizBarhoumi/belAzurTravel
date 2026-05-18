@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import PromoDetail from '@/pages/PromoDetail';
+import PromoDetail from '@/pages/promos/show';
 
 function renderPromoDetail() {
     const queryClient = new QueryClient();

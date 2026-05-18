@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BlogListing } from '@/components/sections/blog/BlogListing';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import Cars from '@/pages/Cars';
-import Flights from '@/pages/Flights';
-import Promos from '@/pages/Promos';
+import Cars from '@/pages/cars';
+import Flights from '@/pages/flights';
+import Promos from '@/pages/promos';
 
 function renderWithProviders(ui: ReactElement) {
     const queryClient = new QueryClient();

@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
+import { RouteLoader } from '@/components/layout/RouteLoader';
 import { NavRouteGuard } from '@/components/nav/NavRouteGuard';
 import { RoleGuard } from '@/components/ui/RoleGuard';
 import ScrollToTop from '@/components/ui/ScrollToTop';
@@ -11,6 +13,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { traceRoute } from '@/lib/routeTrace';
+import AdminDashboard from './pages/admin';
 import AdminBlog from './pages/admin/AdminBlog';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminCars from './pages/admin/AdminCars';
@@ -25,39 +29,38 @@ import AdminReports from './pages/admin/AdminReports';
 import AdminSiteSettings from './pages/admin/AdminSiteSettings';
 import AdminTours from './pages/admin/AdminTours';
 import AdminUsers from './pages/admin/AdminUsers';
-import AdminDashboard from './pages/AdminDashboard';
-import AssistantDashboard from './pages/AssistantDashboard';
-import Blog from './pages/Blog';
-import BlogPostDetail from './pages/BlogPostDetail';
-import CarDetail from './pages/CarDetail';
-import Cars from './pages/Cars';
-import ClientDashboard from './pages/ClientDashboard';
-import Contact from './pages/Contact';
-import DealDetail from './pages/DealDetail';
-import Deals from './pages/Deals';
-import DesignTrip from './pages/DesignTrip';
-import DestinationDetail from './pages/DestinationDetail';
-import Destinations from './pages/Destinations';
-import EventDetail from './pages/EventDetail';
-import Events from './pages/Events';
-import Favorites from './pages/Favorites';
-import FlightDetail from './pages/FlightDetail';
-import Flights from './pages/Flights';
-import Gallery from './pages/Gallery';
-import HotelDetail from './pages/HotelDetail';
-import Hotels from './pages/Hotels';
-import Index from './pages/Index';
-import Legal from './pages/Legal';
-import Login from './pages/Login';
-import NotFound from './pages/NotFound';
-import NotificationsPage from './pages/NotificationsPage';
-import PromoDetail from './pages/PromoDetail';
-import Promos from './pages/Promos';
-import Register from './pages/Register';
-import Team from './pages/Team';
-import TourDetail from './pages/TourDetail';
-import Tours from './pages/Tours';
-import Unauthorized from './pages/Unauthorized';
+import Blog from './pages/blog';
+import BlogPostDetail from './pages/blog/show';
+import Cars from './pages/cars';
+import CarDetail from './pages/cars/show';
+import AssistantDashboard from './pages/dashboards/assistant';
+import ClientDashboard from './pages/dashboards/Client';
+import Deals from './pages/deals';
+import DealDetail from './pages/deals/show';
+import DesignTrip from './pages/design-trip';
+import Destinations from './pages/destinations';
+import DestinationDetail from './pages/destinations/show';
+import Events from './pages/events';
+import EventDetail from './pages/events/show';
+import Flights from './pages/flights';
+import FlightDetail from './pages/flights/show';
+import Contact from './pages/general/Contact';
+import Favorites from './pages/general/Favorites';
+import Gallery from './pages/general/Gallery';
+import Index from './pages/general/Index';
+import Legal from './pages/general/Legal';
+import Login from './pages/general/Login';
+import NotFound from './pages/general/NotFound';
+import NotificationsPage from './pages/general/NotificationsPage';
+import Register from './pages/general/Register';
+import Team from './pages/general/Team';
+import Unauthorized from './pages/general/Unauthorized';
+import Hotels from './pages/hotels';
+import HotelDetail from './pages/hotels/show';
+import Promos from './pages/promos';
+import PromoDetail from './pages/promos/show';
+import Tours from './pages/tours';
+import TourDetail from './pages/tours/show';
 
 const queryClient = new QueryClient();
 
@@ -80,6 +83,19 @@ const clientGuard = (element: JSX.Element) => (
  */
 const LayoutWrapper = () => {
     const location = useLocation();
+
+    traceRoute('LayoutWrapper.render', {
+        locationKey: location.key,
+        pathname: location.pathname,
+    });
+
+    useEffect(() => {
+        traceRoute('LayoutWrapper.useEffect.pathChanged', {
+            locationKey: location.key,
+            pathname: location.pathname,
+        });
+    }, [location.key, location.pathname]);
+
     const isAdminRoute = location.pathname.startsWith('/admin');
     const isAssistantRoute = location.pathname.startsWith('/assistant');
     const isClientRoute = location.pathname.startsWith('/client');
@@ -473,6 +489,7 @@ const App = () => (
                             v7_relativeSplatPath: true,
                         }}
                     >
+                        <RouteLoader />
                         <LayoutWrapper />
                     </BrowserRouter>
                 </TooltipProvider>

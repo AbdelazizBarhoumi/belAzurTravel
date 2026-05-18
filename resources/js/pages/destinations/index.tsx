@@ -140,7 +140,7 @@ const Destinations = () => {
                                         className="h-11 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:bg-muted data-[state=open]:bg-muted"
                                     >
                                         <span className="flex items-center gap-2">
-                                            {t('dest.sortBy')}:{' '}
+                                            {t('dest.sortBy')}: {' '}
                                             {t(
                                                 SORT_OPTIONS.find(
                                                     (opt) =>
@@ -238,14 +238,14 @@ const Destinations = () => {
                                         <div className="p-5">
                                             <div className="mb-2 flex items-center justify-between">
                                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                    <MapPin className="h-3 w-3" />{' '}
+                                                    <MapPin className="h-3 w-3" /> {' '}
                                                     {localizeText(
                                                         dest.country,
                                                         lang,
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-1 text-xs font-bold text-secondary">
-                                                    <Star className="h-3 w-3 fill-current" />{' '}
+                                                    <Star className="h-3 w-3 fill-current" /> {' '}
                                                     {dest.rating}
                                                 </div>
                                             </div>

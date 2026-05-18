@@ -87,7 +87,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                 side={isRtl ? 'right' : 'left'}
                 collapsible="icon"
                 variant="inset"
-                className="border-sidebar-border/60 group-data-[side=left]:border-r group-data-[side=right]:border-l"
+                className=" group-data-[side=right]:border-l"
             >
                 <SidebarHeader className="border-b border-sidebar-border/60">
                     <SidebarMenu>

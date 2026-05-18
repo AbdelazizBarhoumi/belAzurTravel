@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import Contact from '@/pages/Contact';
+import Contact from '@/pages/general/Contact';
 
 describe('Contact page', () => {
     it('shows the main contact methods and location', () => {

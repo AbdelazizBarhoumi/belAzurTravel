@@ -3,7 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import TourDetail from '@/pages/TourDetail';
+import TourDetail from '@/pages/tours/show';
 
 vi.mock('@/hooks/usePublicData', () => ({
     useTourDetailsBySlug: () => ({

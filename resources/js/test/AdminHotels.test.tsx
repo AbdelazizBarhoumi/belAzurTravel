@@ -63,5 +63,6 @@ describe('AdminHotels', () => {
         expect(screen.getByLabelText('Gallery images')).toBeInTheDocument();
         expect(screen.getByLabelText('Gallery URLs (one per line)')).toBeInTheDocument();
         expect(screen.getByLabelText('Amenities (one per line)')).toBeInTheDocument();
+        expect(screen.getByLabelText('Rooms (JSON)')).toBeInTheDocument();
     });
 });

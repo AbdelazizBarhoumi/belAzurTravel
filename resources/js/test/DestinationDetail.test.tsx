@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import DestinationDetail from '@/pages/DestinationDetail';
+import DestinationDetail from '@/pages/destinations/show';
 
 const queryClient = new QueryClient();
 
