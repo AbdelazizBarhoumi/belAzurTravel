@@ -1,20 +1,43 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import {
+    deleteAdminUser,
+    listAdminUsers,
+    toggleAdminUser,
+} from '@/api/admin.api';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { AdminUser } from '@/hooks/useAdminStore';
-import { useAdminStore } from '@/hooks/useAdminStore';
 
 const AdminUsers = () => {
     useAdminGuard();
-    const { state, upsert, remove } = useAdminStore();
+    const queryClient = useQueryClient();
+    const [pendingDelete, setPendingDelete] = useState<AdminUser | null>(null);
+    const { data: users = [] } = useQuery({
+        queryKey: ['admin', 'users'],
+        queryFn: listAdminUsers,
+    });
+    const toggleMutation = useMutation({
+        mutationFn: (id: string) => toggleAdminUser(id),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin'] }),
+    });
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => deleteAdminUser(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin'] });
+            toast.success(t('actions.deleted'));
+        },
+    });
 
     const { t } = useLanguage();
 
     const toggleActive = (u: AdminUser) => {
-        upsert('users', { ...u, active: !u.active });
+        toggleMutation.mutate(u.id);
         toast.success(
             `${u.name} ${t(u.active ? 'admin.deactivated' : 'admin.activated')}`,
         );
@@ -45,7 +68,7 @@ const AdminUsers = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {state.users.map((u) => (
+                            {users.map((u) => (
                                 <tr
                                     key={u.id}
                                     className="border-b border-border last:border-0 hover:bg-muted/20"
@@ -83,12 +106,7 @@ const AdminUsers = () => {
                                                     : 'Activate'}
                                             </Button>
                                             <button
-                                                onClick={() => {
-                                                    remove('users', u.id);
-                                                    toast.success(
-                                                        t('actions.deleted'),
-                                                    );
-                                                }}
+                                                onClick={() => setPendingDelete(u)}
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -101,6 +119,28 @@ const AdminUsers = () => {
                     </table>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={!!pendingDelete}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setPendingDelete(null);
+                    }
+                }}
+                title={t('admin.deleteItemTitle')}
+                description={
+                    pendingDelete
+                        ? `${t('admin.deleteItemPrompt')} “${pendingDelete.name}”? ${t('admin.deleteItemWarning')}`
+                        : t('admin.deleteItemFallback')
+                }
+                confirmText={t('actions.delete')}
+                cancelText={t('actions.cancel')}
+                onConfirm={() => {
+                    if (!pendingDelete) return;
+                    deleteMutation.mutate(pendingDelete.id);
+                    setPendingDelete(null);
+                }}
+            />
         </AdminLayout>
     );
 };

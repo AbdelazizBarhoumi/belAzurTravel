@@ -3,9 +3,9 @@ import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { BrandLogo } from '@/components/BrandLogo';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Register = () => {
@@ -27,7 +27,7 @@ const Register = () => {
             {/* Left - Image */}
             <div className="relative hidden h-64 w-1/2 overflow-hidden lg:block lg:h-full">
                 <img
-                    src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&h=1600&fit=crop"
+                    src="/images/destination-paris.jpg"
                     alt="Travel landscape"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
@@ -143,3 +143,4 @@ const Register = () => {
 };
 
 export default Register;
+

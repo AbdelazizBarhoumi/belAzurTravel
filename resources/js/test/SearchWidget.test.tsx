@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
-import { SearchWidget } from '@/components/SearchWidget';
+import { SearchWidget } from '@/components/ui/SearchWidget';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 
 function renderSearchWidget() {

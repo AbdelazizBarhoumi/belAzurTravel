@@ -19,6 +19,11 @@ return new class extends Migration
             $table->string('whatsapp')->nullable();
             $table->string('address')->nullable();
             $table->integer('year')->nullable();
+            $table->json('social_links')->nullable();
+            $table->json('legal_sections')->nullable();
+            $table->json('footer_links')->nullable();
+            $table->json('hours')->nullable();
+            $table->json('content')->nullable();
         });
     }
 

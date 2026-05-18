@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\LoginResponse;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
     }
 
     /**
@@ -26,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
     {
         //model strict
         Model::shouldBeStrict();
+        Gate::define('admin', fn ($user): bool => $user->role === 'admin' && $user->active);
+        Gate::define('assistant', fn ($user): bool => in_array($user->role, ['assistant', 'admin'], true) && $user->active);
         $this->configureDefaults();
     }
 

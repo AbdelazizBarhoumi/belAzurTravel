@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { csrfToken } from '@/api/http';
 import type { Lang } from '@/i18n/translations';
 import { t as translate } from '@/i18n/translations';
 
@@ -31,7 +32,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('lang', lang);
     }, [lang, dir]);
 
-    const setLang = (l: Lang) => setLangState(l);
+    const setLang = (l: Lang) => {
+        setLangState(l);
+        void fetch('/api/user/language', {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+            body: JSON.stringify({ language: l }),
+        }).catch(() => undefined);
+    };
     const t = (key: string) => translate(key, lang);
 
     return (

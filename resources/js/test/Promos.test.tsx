@@ -6,9 +6,8 @@ import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import Promos from '@/pages/Promos';
 
-const queryClient = new QueryClient();
-
 function renderPromos() {
+    const queryClient = new QueryClient();
     return render(
         <QueryClientProvider client={queryClient}>
             <LanguageProvider>
@@ -31,8 +30,11 @@ describe('Promos page', () => {
         localStorage.removeItem('lang');
     });
 
-    it('shows a translated view details CTA', () => {
+    it('shows a translated view details CTA', async () => {
         renderPromos();
+
+        // wait for promos to render
+        await screen.findByText(/SPRING30/i);
 
         expect(
             screen.getAllByRole('link', { name: /View details/i }).length,

@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { Linkedin, Twitter, Mail } from 'lucide-react';
-import { PageShell } from '@/components/PageShell';
+import { PageShell } from '@/components/layout/PageShell';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { teamMembers } from '@/data/catalog';
+import { teamMembers } from '@/data';
 import { localizeKnown, teamBioLabels, teamRoleLabels } from '@/lib/adminI18n';
 
 const Team = () => {

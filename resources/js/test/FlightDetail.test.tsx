@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
@@ -6,16 +7,19 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import FlightDetail from '@/pages/FlightDetail';
 
 function renderFlightDetail() {
+    const queryClient = new QueryClient();
     return render(
-        <LanguageProvider>
-            <FavoritesProvider>
-                <MemoryRouter initialEntries={['/flights/emirates-nyc-dxb']}>
-                    <Routes>
-                        <Route path="/flights/:id" element={<FlightDetail />} />
-                    </Routes>
-                </MemoryRouter>
-            </FavoritesProvider>
-        </LanguageProvider>,
+        <QueryClientProvider client={queryClient}>
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter initialEntries={['/flights/emirates-nyc-dxb']}>
+                        <Routes>
+                            <Route path="/flights/:id" element={<FlightDetail />} />
+                        </Routes>
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>
+        </QueryClientProvider>,
     );
 }
 

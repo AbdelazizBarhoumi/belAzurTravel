@@ -1081,7 +1081,6 @@ export const translations: Record<string, TranslationEntry> = {
 
     // Deal Detail Page
     'dealDetail.expires': { fr: 'Expire le', ar: 'تنتهي في', en: 'Expires' },
-    'dealDetail.category': { fr: 'Catégorie', ar: 'الفئة', en: 'Category' },
     'dealDetail.type': { fr: 'Type d’offre', ar: 'نوع العرض', en: 'Deal type' },
     'dealDetail.specialOffer': {
         fr: 'Offre spéciale',
@@ -1386,6 +1385,257 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.overview': { fr: "Vue d'ensemble", ar: 'نظرة عامة', en: 'Overview' },
     'admin.destinations': DESTINATIONS,
+    'admin.destinationsSubtitle': {
+        fr: 'Ajouter, modifier et gérer les destinations',
+        ar: 'إضافة الوجهات وتعديلها وإدارتها',
+        en: 'Add, edit and manage destinations',
+    },
+    'admin.destinationAddTitle': {
+        fr: 'Ajouter une destination',
+        ar: 'إضافة وجهة',
+        en: 'Add destination',
+    },
+    'admin.destinationEditTitle': {
+        fr: 'Modifier la destination',
+        ar: 'تعديل الوجهة',
+        en: 'Edit destination',
+    },
+    'admin.deleteDestinationTitle': {
+        fr: 'Supprimer la destination ?',
+        ar: 'حذف الوجهة؟',
+        en: 'Delete destination?',
+    },
+    'admin.deleteDestinationPrompt': {
+        fr: 'Êtes-vous sûr de vouloir supprimer',
+        ar: 'هل أنت متأكد أنك تريد حذف',
+        en: 'Are you sure you want to delete',
+    },
+    'admin.deleteDestinationWarning': {
+        fr: 'Cette action est irréversible.',
+        ar: 'لا يمكن التراجع عن هذا الإجراء.',
+        en: 'This action cannot be undone.',
+    },
+    'admin.deleteDestinationFallback': {
+        fr: 'Êtes-vous sûr de vouloir supprimer cette destination ? Cette action est irréversible.',
+        ar: 'هل أنت متأكد أنك تريد حذف هذه الوجهة؟ لا يمكن التراجع عن هذا الإجراء.',
+        en: 'Are you sure you want to delete this destination? This action cannot be undone.',
+    },
+    'admin.deleteItemTitle': {
+        fr: 'Supprimer cet élément ?',
+        ar: 'حذف هذا العنصر؟',
+        en: 'Delete this item?',
+    },
+    'admin.deleteItemPrompt': {
+        fr: 'Êtes-vous sûr de vouloir supprimer',
+        ar: 'هل أنت متأكد أنك تريد حذف',
+        en: 'Are you sure you want to delete',
+    },
+    'admin.deleteItemWarning': {
+        fr: 'Cette action est irréversible.',
+        ar: 'لا يمكن التراجع عن هذا الإجراء.',
+        en: 'This action cannot be undone.',
+    },
+    'admin.deleteItemFallback': {
+        fr: 'Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.',
+        ar: 'هل أنت متأكد أنك تريد حذف هذا العنصر؟ لا يمكن التراجع عن هذا الإجراء.',
+        en: 'Are you sure you want to delete this item? This action cannot be undone.',
+    },
+    'admin.destinationForm.coreInformation': {
+        fr: 'Informations principales',
+        ar: 'المعلومات الأساسية',
+        en: 'Core information',
+    },
+    'admin.destinationForm.coreInformationHint': {
+        fr: 'Renseignez les informations de base de la destination.',
+        ar: 'أدخل المعلومات الأساسية الخاصة بالوجهة.',
+        en: 'Fill in the destination’s core details.',
+    },
+    'admin.destinationForm.helper': {
+        fr: 'Tous les champs sont visibles en même temps, avec un aperçu de l’image en direct.',
+        ar: 'كل الحقول ظاهرة في نفس الوقت مع معاينة مباشرة للصورة.',
+        en: 'All fields are visible at once, with a live image preview.',
+    },
+    'admin.destinationForm.localizedContent': {
+        fr: 'Contenu localisé',
+        ar: 'المحتوى المترجم',
+        en: 'Localized content',
+    },
+    'admin.destinationForm.mediaAndHighlights': {
+        fr: 'Média et points forts',
+        ar: 'الوسائط وأبرز النقاط',
+        en: 'Media and highlights',
+    },
+    'admin.destinationForm.mediaAndHighlightsHint': {
+        fr: 'Ajoutez une image, des points forts et des images de galerie.',
+        ar: 'أضف صورة وأبرز النقاط وصور المعرض.',
+        en: 'Add the main image, highlights, and gallery images.',
+    },
+    'admin.destinationForm.destinationFacts': {
+        fr: 'Faits sur la destination',
+        ar: 'حقائق عن الوجهة',
+        en: 'Destination facts',
+    },
+    'admin.destinationForm.destinationFactsHint': {
+        fr: 'Ajoutez les repères pratiques et les informations utiles.',
+        ar: 'أضف النقاط العملية والمعلومات المفيدة.',
+        en: 'Add practical details and useful information.',
+    },
+    'admin.destinationForm.name': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
+    'admin.destinationForm.country': {
+        fr: 'Pays',
+        ar: 'البلد',
+        en: 'Country',
+    },
+    'admin.destinationForm.category': {
+        fr: 'Catégorie',
+        ar: 'الفئة',
+        en: 'Category',
+    },
+    'admin.destinationForm.price': { fr: 'Prix (USD)', ar: 'السعر (USD)', en: 'Price (USD)' },
+    'admin.destinationForm.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
+    'admin.destinationForm.description': {
+        fr: 'Description',
+        ar: 'الوصف',
+        en: 'Description',
+    },
+    'admin.destinationForm.about': {
+        fr: 'À propos',
+        ar: 'حول الوجهة',
+        en: 'About section',
+    },
+    'admin.destinationForm.image': {
+        fr: 'Image principale',
+        ar: 'الصورة الرئيسية',
+        en: 'Main image',
+    },
+    'admin.destinationForm.imagePreviewAlt': {
+        fr: 'Aperçu de l’image de la destination',
+        ar: 'معاينة صورة الوجهة',
+        en: 'Destination image preview',
+    },
+    'admin.destinationForm.imagePlaceholder': {
+        fr: 'Collez une URL ou un chemin d’image',
+        ar: 'الصق رابطًا أو مسار صورة',
+        en: 'Paste an image URL or path',
+    },
+    'admin.destinationForm.imageHelper': {
+        fr: 'Utilisez une URL publique ou un chemin local existant.',
+        ar: 'استخدم رابطًا عامًا أو مسارًا محليًا موجودًا.',
+        en: 'Use a public URL or an existing local path.',
+    },
+    'admin.destinationForm.highlights': {
+        fr: 'Points forts',
+        ar: 'أبرز النقاط',
+        en: 'Highlights',
+    },
+    'admin.destinationForm.highlightsPlaceholder': {
+        fr: 'Un point fort par ligne',
+        ar: 'نقطة بارزة في كل سطر',
+        en: 'One highlight per line',
+    },
+    'admin.destinationForm.gallery': {
+        fr: 'Galerie',
+        ar: 'معرض الصور',
+        en: 'Gallery',
+    },
+    'admin.destinationForm.galleryPlaceholder': {
+        fr: 'Une URL ou un chemin par ligne',
+        ar: 'رابط أو مسار لكل سطر',
+        en: 'One image URL or path per line',
+    },
+    'admin.destinationForm.galleryUploadHint': {
+        fr: 'Ajoutez une ou plusieurs images directement depuis votre appareil.',
+        ar: 'أضف صورة واحدة أو أكثر مباشرة من جهازك.',
+        en: 'Add one or more images directly from your device.',
+    },
+    'admin.destinationForm.galleryEmpty': {
+        fr: 'Aucune image de galerie pour le moment.',
+        ar: 'لا توجد صور في المعرض حتى الآن.',
+        en: 'No gallery images yet.',
+    },
+    'admin.destinationForm.bestTime': {
+        fr: 'Meilleure période pour visiter',
+        ar: 'أفضل وقت للزيارة',
+        en: 'Best time to visit',
+    },
+    'admin.destinationForm.language': {
+        fr: 'Langue',
+        ar: 'اللغة',
+        en: 'Language',
+    },
+    'admin.destinationForm.bestTimePlaceholder': {
+        fr: 'Par exemple : avril à juin',
+        ar: 'مثل: من أبريل إلى يونيو',
+        en: 'For example: April to June',
+    },
+    'admin.destinationForm.currency': {
+        fr: 'Devise',
+        ar: 'العملة',
+        en: 'Currency',
+    },
+    'admin.destinationForm.languagePlaceholder': {
+        fr: 'Par exemple : français, anglais',
+        ar: 'مثل: الفرنسية، الإنجليزية',
+        en: 'For example: French, English',
+    },
+    'admin.destinationForm.weather': {
+        fr: 'Météo',
+        ar: 'الطقس',
+        en: 'Weather',
+    },
+    'admin.destinationForm.currencyPlaceholder': {
+        fr: 'Par exemple : EUR, USD',
+        ar: 'مثل: EUR، USD',
+        en: 'For example: EUR, USD',
+    },
+    'admin.destinationTable.image': {
+        fr: 'Image',
+        ar: 'الصورة',
+        en: 'Image',
+    },
+    'admin.destinationForm.weatherPlaceholder': {
+        fr: 'Par exemple : tropical',
+        ar: 'مثل: استوائي',
+        en: 'For example: tropical',
+    },
+    'admin.destinationForm.namePlaceholder': {
+        fr: 'Nom de la destination',
+        ar: 'اسم الوجهة',
+        en: 'Destination name',
+    },
+    'admin.destinationForm.countryPlaceholder': {
+        fr: 'Pays ou région',
+        ar: 'البلد أو المنطقة',
+        en: 'Country or region',
+    },
+    'admin.destinationForm.descriptionPlaceholder': {
+        fr: 'Décrivez la destination en quelques phrases',
+        ar: 'صف الوجهة في بضع جمل',
+        en: 'Describe the destination in a few sentences',
+    },
+    'admin.destinationForm.aboutPlaceholder': {
+        fr: 'Informations complémentaires, conseils ou contexte',
+        ar: 'معلومات إضافية أو نصائح أو سياق',
+        en: 'Extra details, tips, or context',
+    },
+    'admin.destinationTable.name': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
+    'admin.destinationTable.country': {
+        fr: 'Pays',
+        ar: 'البلد',
+        en: 'Country',
+    },
+    'admin.destinationTable.category': {
+        fr: 'Catégorie',
+        ar: 'الفئة',
+        en: 'Category',
+    },
+    'admin.destinationTable.price': { fr: 'Prix', ar: 'السعر', en: 'Price' },
+    'admin.destinationTable.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
+    'admin.destinationTable.actions': {
+        fr: 'Actions',
+        ar: 'الإجراءات',
+        en: 'Actions',
+    },
     'admin.hotels': HOTELS,
     'admin.tours': TOURS,
     'admin.bookings': { fr: 'Réservations', ar: 'الحجوزات', en: 'Bookings' },
@@ -1545,7 +1795,6 @@ export const translations: Record<string, TranslationEntry> = {
     'label.price': { fr: 'Prix', ar: 'السعر', en: 'Price' },
     'label.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
     'label.reviews': { fr: 'avis', ar: 'تقييمات', en: 'reviews' },
-    'label.category': { fr: 'Catégorie', ar: 'الفئة', en: 'Category' },
     'label.date': { fr: 'Date', ar: 'التاريخ', en: 'Date' },
     'label.location': { fr: 'Localisation', ar: 'الموقع', en: 'Location' },
     'label.duration': { fr: 'Durée', ar: 'المدة', en: 'Duration' },
@@ -1573,6 +1822,65 @@ translations['actions.deleted'] = {
     fr: 'Supprimé',
     ar: 'تم الحذف',
     en: 'Deleted',
+};
+translations['actions.saved'] = {
+    fr: 'Enregistré',
+    ar: 'تم الحفظ',
+    en: 'Saved',
+};
+translations['actions.added'] = {
+    fr: 'Ajouté',
+    ar: 'تمت الإضافة',
+    en: 'Added',
+};
+translations['actions.add'] = {
+    fr: 'Ajouter',
+    ar: 'إضافة',
+    en: 'Add',
+};
+translations['actions.edit'] = {
+    fr: 'Modifier',
+    ar: 'تعديل',
+    en: 'Edit',
+};
+translations['actions.delete'] = {
+    fr: 'Supprimer',
+    ar: 'حذف',
+    en: 'Delete',
+};
+translations['actions.cancel'] = {
+    fr: 'Annuler',
+    ar: 'إلغاء',
+    en: 'Cancel',
+};
+translations['actions.save'] = {
+    fr: 'Enregistrer',
+    ar: 'حفظ',
+    en: 'Save',
+};
+translations['admin.actions'] = {
+    fr: 'Actions',
+    ar: 'الإجراءات',
+    en: 'Actions',
+};
+translations['admin.cars'] = { fr: 'Voitures', ar: 'السيارات', en: 'Cars' };
+translations['admin.flights'] = { fr: 'Vols', ar: 'الرحلات', en: 'Flights' };
+translations['admin.events'] = {
+    fr: 'Événements',
+    ar: 'الفعاليات',
+    en: 'Events',
+};
+translations['admin.deals'] = { fr: 'Offres', ar: 'العروض', en: 'Deals' };
+translations['admin.promos'] = {
+    fr: 'Promos',
+    ar: 'العروض الترويجية',
+    en: 'Promos',
+};
+translations['admin.blog'] = { fr: 'Blog', ar: 'المدونة', en: 'Blog' };
+translations['admin.siteSettings'] = {
+    fr: 'Paramètres du site',
+    ar: 'إعدادات الموقع',
+    en: 'Site Settings',
 };
 translations['admin.activated'] = { fr: 'activé', ar: 'مفعل', en: 'activated' };
 translations['admin.deactivated'] = {
@@ -1615,6 +1923,63 @@ translations['admin.booking'] = {
     ar: 'الحجز',
     en: 'Booking',
 };
+translations['admin.email'] = {
+    fr: 'Email',
+    ar: 'البريد الإلكتروني',
+    en: 'Email',
+};
+translations['admin.active'] = { fr: 'Actif', ar: 'نشط', en: 'Active' };
+translations['admin.inactive'] = {
+    fr: 'Inactif',
+    ar: 'غير نشط',
+    en: 'Inactive',
+};
+translations['label.guests'] = {
+    fr: 'Voyageurs',
+    ar: 'المسافرون',
+    en: 'Guests',
+};
+translations['common.guest'] = { fr: 'Invité', ar: 'ضيف', en: 'Guest' };
+translations['favorites.add'] = {
+    fr: 'Ajouter aux favoris',
+    ar: 'إضافة إلى المفضلة',
+    en: 'Add to favorites',
+};
+translations['favorites.remove'] = {
+    fr: 'Retirer des favoris',
+    ar: 'إزالة من المفضلة',
+    en: 'Remove from favorites',
+};
+translations['assistant.replySent'] = {
+    fr: 'Réponse envoyée',
+    ar: 'تم إرسال الرد',
+    en: 'Reply sent',
+};
+translations['assistant.typeReply'] = {
+    fr: 'Écrivez votre réponse...',
+    ar: 'اكتب ردك...',
+    en: 'Type your reply...',
+};
+translations['assistant.resolve'] = {
+    fr: 'Marquer résolu',
+    ar: 'تحديد كمحلول',
+    en: 'Mark resolved',
+};
+translations['assistant.availability'] = {
+    fr: 'Disponibilité',
+    ar: 'التوفر',
+    en: 'Availability',
+};
+translations['assistant.available'] = {
+    fr: 'Disponible',
+    ar: 'متاح',
+    en: 'Available',
+};
+translations['assistant.unavailable'] = {
+    fr: 'Indisponible',
+    ar: 'غير متاح',
+    en: 'Unavailable',
+};
 translations['auth.welcomeAdmin'] = {
     fr: 'Bienvenue, Admin!',
     ar: 'مرحبًا، المسؤول!',
@@ -1624,6 +1989,66 @@ translations['auth.welcomeAssistant'] = {
     fr: 'Bienvenue, Assistant!',
     ar: 'مرحبًا، المساعد!',
     en: 'Welcome back, Assistant!',
+};
+translations['auth.unauthorizedTitle'] = {
+    fr: 'Acces refuse',
+    ar: 'غير مصرح',
+    en: 'Unauthorized',
+};
+translations['auth.unauthorizedDesc'] = {
+    fr: "Vous n'avez pas les droits necessaires pour ouvrir cette page.",
+    ar: 'ليست لديك الصلاحية لفتح هذه الصفحة.',
+    en: 'You do not have permission to open this page.',
+};
+translations['notifications.title'] = {
+    fr: 'Notifications',
+    ar: 'الإشعارات',
+    en: 'Notifications',
+};
+translations['notifications.markAllRead'] = {
+    fr: 'Tout lu',
+    ar: 'تحديد الكل كمقروء',
+    en: 'Mark all read',
+};
+translations['notifications.viewAll'] = {
+    fr: 'Voir tout',
+    ar: 'عرض الكل',
+    en: 'View all',
+};
+translations['notifications.empty'] = {
+    fr: 'Aucune notification',
+    ar: 'لا توجد إشعارات',
+    en: 'No notifications',
+};
+translations['actions.back'] = {
+    fr: 'Retour',
+    ar: 'رجوع',
+    en: 'Back',
+};
+translations['client.noBookings'] = {
+    fr: 'Aucune reservation pour le moment.',
+    ar: 'لا توجد حجوزات حاليا.',
+    en: 'No bookings yet.',
+};
+translations['client.noPayments'] = {
+    fr: 'Aucun paiement pour le moment.',
+    ar: 'لا توجد مدفوعات حاليا.',
+    en: 'No payments yet.',
+};
+translations['client.support'] = {
+    fr: 'Support',
+    ar: 'الدعم',
+    en: 'Support',
+};
+translations['client.supportSubject'] = {
+    fr: 'Sujet',
+    ar: 'الموضوع',
+    en: 'Subject',
+};
+translations['client.supportMessage'] = {
+    fr: 'Votre message',
+    ar: 'رسالتك',
+    en: 'Your message',
 };
 
 export function t(key: string, lang: Lang): string {

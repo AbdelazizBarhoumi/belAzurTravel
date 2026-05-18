@@ -27,8 +27,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -200,7 +199,6 @@ const DesignTrip = () => {
     };
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
             {/* Hero */}
             <section className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 pb-12 pt-28">
                 <div className="container mx-auto max-w-3xl px-4 text-center">
@@ -525,7 +523,6 @@ const DesignTrip = () => {
                     </div>
                 </div>
             </section>
-            <Footer />
         </div>
     );
 };

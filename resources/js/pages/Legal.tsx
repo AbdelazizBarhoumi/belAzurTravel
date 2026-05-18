@@ -1,14 +1,16 @@
-import { PageShell } from '@/components/PageShell';
+import { PageShell } from '@/components/layout/PageShell';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { legalSections } from '@/data/catalog';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const Legal = () => {
     const { lang, t } = useLanguage();
+    const { settings } = useSiteSettings();
+    const legalSections = settings.legalSections;
 
     return (
         <PageShell
-            titleKey="legal.title"
-            subtitleKey="legal.subtitle"
+            title={t('legal.title')}
+            subtitle={t('legal.subtitle')}
             breadcrumbs={[
                 {
                     label: t('common.home'),

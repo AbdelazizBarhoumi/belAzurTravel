@@ -23,5 +23,24 @@ export function useSiteSettings() {
         };
     }, []);
 
+    // Refresh when other parts of the app update site settings
+    useEffect(() => {
+        const handle = () => {
+            fetchSiteSettings()
+                .then((s) => setSettings(s))
+                .catch(() => {})
+                .finally(() => setLoading(false));
+        };
+        window.addEventListener(
+            'site-settings-updated',
+            handle as EventListener,
+        );
+        return () =>
+            window.removeEventListener(
+                'site-settings-updated',
+                handle as EventListener,
+            );
+    }, []);
+
     return { settings, loading } as const;
 }

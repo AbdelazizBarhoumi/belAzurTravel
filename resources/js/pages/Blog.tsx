@@ -1,8 +1,6 @@
 import { motion } from 'framer-motion';
-import { BlogListing } from '@/components/BlogListing';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
+import { Breadcrumb } from '@/components/nav/Breadcrumb';
+import { BlogListing } from '@/components/sections/blog/BlogListing';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Blog = () => {
@@ -10,7 +8,6 @@ const Blog = () => {
 
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
             <div className="pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div
@@ -40,7 +37,6 @@ const Blog = () => {
                 </div>
             </div>
             <BlogListing pageSize={6} />
-            <Footer />
         </div>
     );
 };

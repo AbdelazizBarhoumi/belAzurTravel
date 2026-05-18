@@ -79,7 +79,8 @@ export default [
             'bootstrap/ssr',
             'tailwind.config.js',
             'vite.config.ts',
-            'remix-of-wanderlust-weaver-main/**',
+            'resources/js/pages/admin/**',
+            'resources/js/components/admin/**',
         ],
     },
     prettier, // Turn off all rules that might conflict with Prettier

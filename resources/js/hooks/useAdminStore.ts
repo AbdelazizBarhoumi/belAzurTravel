@@ -1,102 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
-import type { Lang } from '@/i18n/translations';
-
-type LocalizedText = Record<Lang, string>;
-
-export interface AdminDestination {
-    id: string;
-    name: string;
-    country: string;
-    category: string;
-    price: number;
-    rating: number;
-    image: string;
-    description: string;
-}
-export interface AdminHotel {
-    id: string;
-    name: string;
-    location: string;
-    category: string;
-    price: number;
-    rating: number;
-    image: string;
-}
-export interface AdminTour {
-    id: string;
-    name: string;
-    location: string;
-    duration: string;
-    price: number;
-    rating: number;
-    image: string;
-}
-export interface AdminBooking {
-    id: string;
-    client: string;
-    type: string;
-    item: string;
-    date: string;
-    amount: number;
-    status: 'Pending' | 'Confirmed' | 'Cancelled';
-}
-export interface AdminUser {
-    id: string;
-    name: string;
-    email: string;
-    role: 'client' | 'admin' | 'assistant';
-    active: boolean;
-    joined: string;
-}
-
-export interface AdminState {
-    destinations: AdminDestination[];
-    hotels: AdminHotel[];
-    tours: AdminTour[];
-    bookings: AdminBooking[];
-    users: AdminUser[];
-}
+import type {
+    AdminBooking,
+    AdminUser,
+    AdminState,
+    LocalizedAdminDestination,
+    LocalizedAdminHotel,
+    LocalizedAdminTour,
+    LocalizedAdminBooking,
+} from '@/types/admin';
+import { pickLocalized } from '@/types/admin/common';
 
 const STORAGE_KEY = 'voyageur_admin_state';
-
-type LocalizedAdminDestination = Omit<
-    AdminDestination,
-    'name' | 'country' | 'category' | 'description'
-> & {
-    name: LocalizedText;
-    country: LocalizedText;
-    category: LocalizedText;
-    description: LocalizedText;
-};
-
-type LocalizedAdminHotel = Omit<
-    AdminHotel,
-    'name' | 'location' | 'category'
-> & {
-    name: LocalizedText;
-    location: LocalizedText;
-    category: LocalizedText;
-};
-
-type LocalizedAdminTour = Omit<AdminTour, 'name' | 'location' | 'duration'> & {
-    name: LocalizedText;
-    location: LocalizedText;
-    duration: LocalizedText;
-};
-
-type LocalizedAdminBooking = Omit<
-    AdminBooking,
-    'client' | 'type' | 'item' | 'status'
-> & {
-    client: LocalizedText;
-    type: LocalizedText;
-    item: LocalizedText;
-    status: LocalizedText;
-};
-
-function pick(value: LocalizedText, lang: Lang = 'en'): string {
-    return value[lang];
-}
 
 function hydrateSeed(seedData: {
     destinations: LocalizedAdminDestination[];
@@ -108,29 +22,29 @@ function hydrateSeed(seedData: {
     return {
         destinations: seedData.destinations.map((d) => ({
             ...d,
-            name: pick(d.name),
-            country: pick(d.country),
-            category: pick(d.category),
-            description: pick(d.description),
+            name: pickLocalized(d.name),
+            country: pickLocalized(d.country),
+            category: pickLocalized(d.category),
+            description: pickLocalized(d.description),
         })),
         hotels: seedData.hotels.map((h) => ({
             ...h,
-            name: pick(h.name),
-            location: pick(h.location),
-            category: pick(h.category),
+            name: pickLocalized(h.name),
+            location: pickLocalized(h.location),
+            category: pickLocalized(h.category),
         })),
         tours: seedData.tours.map((t) => ({
             ...t,
-            name: pick(t.name),
-            location: pick(t.location),
-            duration: pick(t.duration),
+            name: pickLocalized(t.name),
+            location: pickLocalized(t.location),
+            duration: pickLocalized(t.duration),
         })),
         bookings: seedData.bookings.map((b) => ({
             ...b,
-            client: pick(b.client),
-            type: pick(b.type),
-            item: pick(b.item),
-            status: pick(b.status) as AdminBooking['status'],
+            client: pickLocalized(b.client),
+            type: pickLocalized(b.type),
+            item: pickLocalized(b.item),
+            status: pickLocalized(b.status) as AdminBooking['status'],
         })),
         users: seedData.users,
     };
@@ -145,7 +59,7 @@ const seedData = {
             category: { fr: 'Plage', ar: 'شاطئ', en: 'Beach' },
             price: 1299,
             rating: 4.9,
-            image: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&h=400&fit=crop',
+            image: '/images/destination-bali.jpg',
             description: {
                 fr: 'Bâtiments blanchis à la chaux emblématiques surplombant la mer Égée.',
                 ar: 'مبانٍ بيضاء أيقونية تطل على بحر إيجه.',
@@ -159,7 +73,7 @@ const seedData = {
             category: { fr: 'Nature', ar: 'طبيعة', en: 'Nature' },
             price: 899,
             rating: 4.8,
-            image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=400&fit=crop',
+            image: '/images/destination-paris.jpg',
             description: {
                 fr: 'Rizières luxuriantes, temples et paradis tropical.',
                 ar: 'مدرجات أرز خضراء ومعابد وجنة استوائية.',
@@ -173,7 +87,7 @@ const seedData = {
             category: { fr: 'Ville', ar: 'مدينة', en: 'City' },
             price: 1499,
             rating: 4.9,
-            image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&h=400&fit=crop',
+            image: '/images/destination-dubai.jpg',
             description: {
                 fr: 'La Ville Lumière.',
                 ar: 'مدينة النور.',
@@ -191,7 +105,7 @@ const seedData = {
             category: { fr: 'Luxe', ar: 'فاخر', en: 'Luxury' },
             price: 1199,
             rating: 4.7,
-            image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&h=400&fit=crop',
+            image: '/images/hero-travel.jpg',
             description: {
                 fr: 'Une silhouette futuriste et des aventures dans le désert.',
                 ar: 'أفق مستقبلي ومغامرات صحراوية.',
@@ -215,7 +129,7 @@ const seedData = {
             category: { fr: 'Complexes', ar: 'منتجعات', en: 'Resorts' },
             price: 320,
             rating: 4.9,
-            image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&h=400&fit=crop',
+            image: '/images/destination-santorini.jpg',
         },
         {
             id: 'h2',
@@ -232,7 +146,7 @@ const seedData = {
             category: { fr: 'Luxe', ar: 'فاخر', en: 'Luxury' },
             price: 450,
             rating: 4.9,
-            image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=600&h=400&fit=crop',
+            image: '/images/destination-bali.jpg',
         },
         {
             id: 'h3',
@@ -249,7 +163,7 @@ const seedData = {
             category: { fr: 'Boutique', ar: 'بوتيك', en: 'Boutique' },
             price: 280,
             rating: 4.7,
-            image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&h=400&fit=crop',
+            image: '/images/destination-paris.jpg',
         },
     ],
     tours: [
@@ -264,7 +178,7 @@ const seedData = {
             duration: { fr: '7 Jours', ar: '7 أيام', en: '7 Days' },
             price: 2499,
             rating: 4.9,
-            image: 'https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=600&h=400&fit=crop',
+            image: '/images/destination-dubai.jpg',
         },
         {
             id: 't2',
@@ -277,7 +191,7 @@ const seedData = {
             duration: { fr: '10 Jours', ar: '10 أيام', en: '10 Days' },
             price: 1899,
             rating: 4.8,
-            image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=400&fit=crop',
+            image: '/images/hero-travel.jpg',
         },
     ],
     bookings: [
@@ -460,3 +374,14 @@ export function useAdminStore() {
 export function generateId() {
     return Math.random().toString(36).slice(2, 9);
 }
+
+// Re-export types for backward compatibility
+export type {
+    AdminDestination,
+    AdminHotel,
+    AdminTour,
+    AdminBooking,
+    AdminUser,
+    AdminState,
+} from '@/types/admin';
+

@@ -2,12 +2,10 @@ import { motion } from 'framer-motion';
 import { Clock, Users, MapPin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { FavoriteButton } from '@/components/FavoriteButton';
-import { Footer } from '@/components/Footer';
-import { ListFilterBar } from '@/components/ListFilterBar';
-import { Navbar } from '@/components/Navbar';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import {
     Select,
     SelectContent,
@@ -16,8 +14,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { localizeText } from '@/data/catalog';
-import { useTours } from '@/hooks/useCatalog';
+import { localizeText } from '@/data';
+import { useTours } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
@@ -78,8 +76,6 @@ const Tours = () => {
 
     return (
         <div className="flex min-h-screen flex-col bg-background">
-            <Navbar />
-
             <div className="flex-1 pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div
@@ -194,17 +190,17 @@ const Tours = () => {
                                 <Link
                                     key={localizeText(tour.name, lang)}
                                     to={`/tours/${tour.slug}`}
-                                    className="group block"
+                                    className="group block h-full"
                                 >
                                     <motion.div
                                         initial={{ opacity: 0, y: 30 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.1 }}
-                                        className="cursor-pointer"
+                                        className="h-full cursor-pointer"
                                     >
-                                        <div className="card-elevated flex flex-col overflow-hidden rounded-2xl bg-card md:flex-row">
+                                        <div className="card-elevated flex h-52 flex-col overflow-hidden rounded-2xl bg-card md:h-52 md:flex-row">
                                             {/* Image */}
-                                            <div className="relative h-48 shrink-0 overflow-hidden md:h-auto md:w-64">
+                                            <div className="relative h-52 shrink-0 overflow-hidden md:h-full md:w-64">
                                                 <img
                                                     src={tour.image}
                                                     alt={localizeText(
@@ -307,8 +303,6 @@ const Tours = () => {
                     </div>
                 </div>
             </div>
-
-            <Footer />
         </div>
     );
 };

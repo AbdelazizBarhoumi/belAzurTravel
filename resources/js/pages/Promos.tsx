@@ -2,8 +2,8 @@ import { motion } from 'framer-motion';
 import { Tag, Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ListFilterBar } from '@/components/ListFilterBar';
-import { PageShell } from '@/components/PageShell';
+import { PageShell } from '@/components/layout/PageShell';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -13,11 +13,35 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { localizeText } from '@/data/catalog';
-import { usePromos } from '@/hooks/useCatalog';
+import { localizeText } from '@/data';
+import { usePromos } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
+
+const PROMO_GRADIENT_CLASS_PATTERN =
+    /^(from|via|to)-(primary|secondary)(\/\d{1,3})?$/;
+
+function getPromoGradient(color?: string): string {
+    const normalizedColor = color?.trim().replace(/\s+/g, ' ') ?? '';
+
+    if (!normalizedColor) {
+        return 'from-primary to-secondary';
+    }
+
+    const gradientClasses = normalizedColor.split(' ');
+    const hasValidLength =
+        gradientClasses.length >= 2 && gradientClasses.length <= 3;
+    const hasOnlyAllowedClasses = gradientClasses.every((gradientClass) =>
+        PROMO_GRADIENT_CLASS_PATTERN.test(gradientClass),
+    );
+
+    if (!hasValidLength || !hasOnlyAllowedClasses) {
+        return 'from-primary to-secondary';
+    }
+
+    return normalizedColor;
+}
 
 function getPromoType(discount: string): 'perk' | 'percentage' {
     return discount.includes('%') ? 'percentage' : 'perk';
@@ -120,7 +144,7 @@ const Promos = () => {
                             className="card-elevated overflow-hidden rounded-2xl"
                         >
                             <div
-                                className={`bg-gradient-to-br ${p.color} p-8 text-primary-foreground`}
+                                className={`bg-gradient-to-br ${getPromoGradient(p.color)} p-8 text-primary-foreground`}
                             >
                                 <div className="mb-4 flex items-start justify-between">
                                     <Tag className="h-8 w-8 opacity-80" />

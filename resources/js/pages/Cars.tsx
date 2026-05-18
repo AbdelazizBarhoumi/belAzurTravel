@@ -2,8 +2,8 @@ import { motion } from 'framer-motion';
 import { Users, Fuel, Settings2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ListFilterBar } from '@/components/ListFilterBar';
-import { PageShell } from '@/components/PageShell';
+import { PageShell } from '@/components/layout/PageShell';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -13,8 +13,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { localizeText } from '@/data/catalog';
-import { useCars } from '@/hooks/useCatalog';
+import { localizeText } from '@/data';
+import { useCars } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
@@ -68,11 +68,15 @@ const Cars = () => {
                     localizeText(car.fuel, lang),
                     localizeText(car.transmission, lang),
                     localizeText(car.description, lang),
-                    car.features
-                        .map((feature) => localizeText(feature, lang))
+                    (car.features ?? [])
+                        .map((feature: unknown) =>
+                            localizeText(feature as never, lang),
+                        )
                         .join(' '),
-                    car.policy
-                        .map((rule) => localizeText(rule, lang))
+                    (car.policy ?? [])
+                        .map((rule: unknown) =>
+                            localizeText(rule as never, lang),
+                        )
                         .join(' '),
                 ]);
                 const matchesCategory =

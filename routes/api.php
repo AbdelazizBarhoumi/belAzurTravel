@@ -2,23 +2,166 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\AuthUserController;
+use App\Http\Controllers\Api\AdminDestinationController;
+use App\Http\Controllers\Api\AdminHotelController;
+use App\Http\Controllers\Api\AdminTourController;
+use App\Http\Controllers\Api\AdminCarController;
+use App\Http\Controllers\Api\AdminFlightController;
+use App\Http\Controllers\Api\AdminEventController;
+use App\Http\Controllers\Api\AdminDealController;
+use App\Http\Controllers\Api\AdminPromoController;
+use App\Http\Controllers\Api\AdminBlogPostController;
+use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\AssistantController;
+use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\DestinationController;
+use App\Http\Controllers\Api\HotelController;
+use App\Http\Controllers\Api\TourController;
+use App\Http\Controllers\Api\CarController;
+use App\Http\Controllers\Api\FlightController;
+use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\DealController;
+use App\Http\Controllers\Api\PromoController;
+use App\Http\Controllers\Api\BlogPostController;
+use App\Http\Controllers\Api\NotificationController;
 
 // Public (browsing) endpoints — guests may view booking details (read-only)
 use App\Http\Controllers\Api\SiteSettingsController;
+use App\Http\Controllers\Api\GalleryController;
 
 Route::get('/site-settings', [SiteSettingsController::class, 'show']);
-Route::middleware(['auth:sanctum', 'can:admin'])->put('/site-settings', [SiteSettingsController::class, 'update']);
+Route::middleware(['auth', 'role:admin'])->put('/site-settings', [SiteSettingsController::class, 'update']);
 
-Route::get('/bookings/{id}', [BookingController::class, 'show']);
+Route::get('/gallery', [GalleryController::class, 'index'])
+    ->middleware(['check-nav-page:gallery']);
+
+// Per-entity public pages — protected by nav settings
+Route::get('destinations', [DestinationController::class, 'index'])->middleware(['check-nav-page:destinations']);
+Route::get('destinations/{slug}', [DestinationController::class, 'show'])->middleware(['check-nav-page:destinations']);
+
+Route::get('hotels', [HotelController::class, 'index'])->middleware(['check-nav-page:hotels']);
+Route::get('hotels/{slug}', [HotelController::class, 'show'])->middleware(['check-nav-page:hotels']);
+
+Route::get('tours', [TourController::class, 'index'])->middleware(['check-nav-page:tours']);
+Route::get('tours/{slug}', [TourController::class, 'show'])->middleware(['check-nav-page:tours']);
+
+Route::get('cars', [CarController::class, 'index'])->middleware(['check-nav-page:cars']);
+Route::get('cars/{slug}', [CarController::class, 'show'])->middleware(['check-nav-page:cars']);
+
+Route::get('flights', [FlightController::class, 'index'])->middleware(['check-nav-page:flights']);
+Route::get('flights/{code}', [FlightController::class, 'show'])->middleware(['check-nav-page:flights']);
+
+Route::get('events', [EventController::class, 'index'])->middleware(['check-nav-page:events']);
+Route::get('events/{slug}', [EventController::class, 'show'])->middleware(['check-nav-page:events']);
+
+Route::get('deals', [DealController::class, 'index'])->middleware(['check-nav-page:deals']);
+Route::get('deals/{slug}', [DealController::class, 'show'])->middleware(['check-nav-page:deals']);
+
+Route::get('promos', [PromoController::class, 'index'])->middleware(['check-nav-page:promos']);
+Route::get('promos/{code}', [PromoController::class, 'show'])->middleware(['check-nav-page:promos']);
+
+Route::get('blog-posts', [BlogPostController::class, 'index'])->middleware(['check-nav-page:blog-posts']);
+Route::get('blog-posts/{slug}', [BlogPostController::class, 'show'])->middleware(['check-nav-page:blog-posts']);
 
 // Authenticated endpoints (booking creation, cancellation for owner)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth')->group(function () {
+    Route::get('/auth/user', [AuthUserController::class, 'show']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+
     Route::post('/bookings', [BookingController::class, 'store']);
+    Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
+    Route::get('/client/dashboard', [ClientController::class, 'dashboard']);
+    Route::get('/client/bookings', [ClientController::class, 'bookings']);
+    Route::get('/client/payments', [ClientController::class, 'payments']);
+    Route::get('/client/support', [ClientController::class, 'support']);
+    Route::post('/client/support', [ClientController::class, 'createSupport']);
+    Route::patch('/user/language', [ClientController::class, 'updateLanguage']);
+
+    Route::middleware('role:assistant,admin')->group(function () {
+        Route::get('/assistant/summary', [AssistantController::class, 'summary']);
+        Route::get('/assistant/inquiries', [AssistantController::class, 'inquiries']);
+        Route::put('/assistant/inquiries/{inquiry}', [AssistantController::class, 'updateInquiry']);
+        Route::post('/assistant/inquiries/{inquiry}/reply', [AssistantController::class, 'reply']);
+        Route::get('/assistant/bookings', [AssistantController::class, 'bookings']);
+        Route::post('/assistant/bookings/{booking}/confirm', [AssistantController::class, 'confirmBooking']);
+        Route::post('/assistant/bookings/{booking}/cancel', [AssistantController::class, 'cancelBooking']);
+        Route::get('/assistant/clients', [AssistantController::class, 'clients']);
+        Route::put('/assistant/status', [AssistantController::class, 'status']);
+    });
 
     // Admin endpoints
-    Route::middleware('can:admin')->group(function () {
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/gallery', [GalleryController::class, 'index']);
+        Route::post('/admin/gallery', [GalleryController::class, 'store']);
+        Route::put('/admin/gallery/{galleryImage}', [GalleryController::class, 'update']);
+        Route::delete('/admin/gallery/{galleryImage}', [GalleryController::class, 'destroy']);
+
+        // Per-entity admin controllers (per-entity admin)
+        Route::get('/admin/destinations', [AdminDestinationController::class, 'index']);
+        Route::post('/admin/destinations', [AdminDestinationController::class, 'store']);
+        Route::get('/admin/destinations/{id}', [AdminDestinationController::class, 'show']);
+        Route::put('/admin/destinations/{id}', [AdminDestinationController::class, 'update']);
+        Route::delete('/admin/destinations/{id}', [AdminDestinationController::class, 'destroy']);
+
+        Route::get('/admin/hotels', [AdminHotelController::class, 'index']);
+        Route::post('/admin/hotels', [AdminHotelController::class, 'store']);
+        Route::get('/admin/hotels/{id}', [AdminHotelController::class, 'show']);
+        Route::put('/admin/hotels/{id}', [AdminHotelController::class, 'update']);
+        Route::delete('/admin/hotels/{id}', [AdminHotelController::class, 'destroy']);
+
+        Route::get('/admin/tours', [AdminTourController::class, 'index']);
+        Route::post('/admin/tours', [AdminTourController::class, 'store']);
+        Route::get('/admin/tours/{id}', [AdminTourController::class, 'show']);
+        Route::put('/admin/tours/{id}', [AdminTourController::class, 'update']);
+        Route::delete('/admin/tours/{id}', [AdminTourController::class, 'destroy']);
+
+        Route::get('/admin/cars', [AdminCarController::class, 'index']);
+        Route::post('/admin/cars', [AdminCarController::class, 'store']);
+        Route::get('/admin/cars/{id}', [AdminCarController::class, 'show']);
+        Route::put('/admin/cars/{id}', [AdminCarController::class, 'update']);
+        Route::delete('/admin/cars/{id}', [AdminCarController::class, 'destroy']);
+
+        Route::get('/admin/flights', [AdminFlightController::class, 'index']);
+        Route::post('/admin/flights', [AdminFlightController::class, 'store']);
+        Route::get('/admin/flights/{id}', [AdminFlightController::class, 'show']);
+        Route::put('/admin/flights/{id}', [AdminFlightController::class, 'update']);
+        Route::delete('/admin/flights/{id}', [AdminFlightController::class, 'destroy']);
+
+        Route::get('/admin/events', [AdminEventController::class, 'index']);
+        Route::post('/admin/events', [AdminEventController::class, 'store']);
+        Route::get('/admin/events/{id}', [AdminEventController::class, 'show']);
+        Route::put('/admin/events/{id}', [AdminEventController::class, 'update']);
+        Route::delete('/admin/events/{id}', [AdminEventController::class, 'destroy']);
+
+        Route::get('/admin/deals', [AdminDealController::class, 'index']);
+        Route::post('/admin/deals', [AdminDealController::class, 'store']);
+        Route::get('/admin/deals/{id}', [AdminDealController::class, 'show']);
+        Route::put('/admin/deals/{id}', [AdminDealController::class, 'update']);
+        Route::delete('/admin/deals/{id}', [AdminDealController::class, 'destroy']);
+
+        Route::get('/admin/promos', [AdminPromoController::class, 'index']);
+        Route::post('/admin/promos', [AdminPromoController::class, 'store']);
+        Route::get('/admin/promos/{id}', [AdminPromoController::class, 'show']);
+        Route::put('/admin/promos/{id}', [AdminPromoController::class, 'update']);
+        Route::delete('/admin/promos/{id}', [AdminPromoController::class, 'destroy']);
+
+        Route::get('/admin/blog-posts', [AdminBlogPostController::class, 'index']);
+        Route::post('/admin/blog-posts', [AdminBlogPostController::class, 'store']);
+        Route::get('/admin/blog-posts/{id}', [AdminBlogPostController::class, 'show']);
+        Route::put('/admin/blog-posts/{id}', [AdminBlogPostController::class, 'update']);
+        Route::delete('/admin/blog-posts/{id}', [AdminBlogPostController::class, 'destroy']);
+        Route::get('/admin/users', [AdminUserController::class, 'index']);
+        Route::put('/admin/users/{user}', [AdminUserController::class, 'update']);
+        Route::post('/admin/users/{user}/toggle-active', [AdminUserController::class, 'toggleActive']);
+        Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
         Route::get('/admin/bookings', [BookingController::class, 'index']);
         Route::post('/admin/bookings/{id}/confirm', [BookingController::class, 'confirm']);
+        Route::post('/admin/bookings/{id}/cancel', [BookingController::class, 'adminCancel']);
     });
 });
+

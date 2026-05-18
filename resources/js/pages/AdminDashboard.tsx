@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
     TrendingUp,
@@ -16,27 +17,33 @@ import {
     CartesianGrid,
 } from 'recharts';
 
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { listAdminEntities, listAdminUsers } from '@/api/admin.api';
+import { getAdminBookings, type AdminBookingRow } from '@/api/booking.api';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
-import { useAdminStore } from '@/hooks/useAdminStore';
-import {
-    bookingStatusLabels,
-    destinationLabels,
-    hotelLabels,
-    localizeKnown,
-    tourLabels,
-} from '@/lib/adminI18n';
+import { bookingStatusLabels } from '@/lib/adminI18n';
 
 const AdminDashboard = () => {
     useAdminGuard();
 
-    const { state } = useAdminStore();
     const { t, lang } = useLanguage();
+    const { data: bookings = [] } = useQuery<AdminBookingRow[]>({
+        queryKey: ['admin-bookings'],
+        queryFn: getAdminBookings,
+    });
+    const { data: destinations = [] } = useQuery({
+        queryKey: ['admin', 'destinations'],
+        queryFn: () => listAdminEntities('destinations'),
+    });
+    const { data: users = [] } = useQuery({
+        queryKey: ['admin', 'users'],
+        queryFn: listAdminUsers,
+    });
 
-    const totalRevenue = state.bookings
+    const totalRevenue = bookings
         .filter((b) => b.status !== 'Cancelled')
-        .reduce((sum, b) => sum + b.amount, 0);
+        .reduce((sum, b) => sum + b.total_amount, 0);
 
     const stats = [
         {
@@ -48,21 +55,21 @@ const AdminDashboard = () => {
         },
         {
             labelKey: 'admin.totalBookings',
-            value: state.bookings.length,
+            value: bookings.length,
             change: '+8.2%',
             icon: Calendar,
             color: 'text-secondary',
         },
         {
             labelKey: 'admin.activeUsers',
-            value: state.users.filter((u) => u.active).length,
+            value: users.filter((u) => u.active).length,
             change: '+5.1%',
             icon: UserCheck,
             color: 'text-primary',
         },
         {
             labelKey: 'admin.destinationsStat',
-            value: state.destinations.length,
+            value: destinations.length,
             change: '+3.4%',
             icon: Globe,
             color: 'text-secondary',
@@ -168,7 +175,7 @@ const AdminDashboard = () => {
                             </thead>
 
                             <tbody>
-                                {state.bookings.slice(0, 6).map((b) => (
+                                {bookings.slice(0, 6).map((b) => (
                                     <tr
                                         key={b.id}
                                         className="border-b border-border last:border-0 hover:bg-muted/20"
@@ -177,24 +184,23 @@ const AdminDashboard = () => {
                                             {b.id}
                                         </td>
                                         <td className="px-6 py-4 text-sm">
-                                            {b.client}
+                                            {b.client?.name ??
+                                                b.user_id ??
+                                                'Guest'}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-muted-foreground">
-                                            {localizeKnown(
-                                                b.item,
-                                                {
-                                                    ...destinationLabels,
-                                                    ...hotelLabels,
-                                                    ...tourLabels,
-                                                },
-                                                lang,
+                                            {JSON.stringify(b.items).substring(
+                                                0,
+                                                50,
                                             )}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-muted-foreground">
-                                            {b.date}
+                                            {new Date(
+                                                b.created_at,
+                                            ).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm font-semibold">
-                                            ${b.amount.toLocaleString()}
+                                            ${b.total_amount.toLocaleString()}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span

@@ -1,36 +1,101 @@
 import { motion } from 'framer-motion';
-import { MapPin, Mail } from 'lucide-react';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
+import { Link2, MapPin, Mail } from 'lucide-react';
+import { Footer } from '@/components/layout/Footer';
+import { Navbar } from '@/components/layout/Navbar';
+import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
-    contactMethods as catalogContactMethods,
-    socialLinks as catalogSocialLinks,
-} from '@/data/catalog';
+    contactMethods as contactMethodDefs,
+    socialLinks as socialLinkDefs,
+} from '@/data';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 export default function Contact() {
-    const { t } = useLanguage();
+    const { lang, t } = useLanguage();
     const { settings } = useSiteSettings();
-    const contactMethods = catalogContactMethods.map((m) => ({
-        ...m,
-        // if site settings defines email/phone, prefer it for the corresponding keys
-        value:
-            m.labelKey === 'contact.email'
-                ? settings.email
-                : m.labelKey === 'contact.whatsapp'
-                  ? settings.phone
-                  : m.value,
-        href:
-            m.labelKey === 'contact.email'
-                ? `mailto:${settings.email}`
-                : m.href,
-    }));
-    const socialLinks = catalogSocialLinks;
+
+    const resolveLocalizedText = (
+        value: Record<string, string> | undefined,
+        fallback: string,
+    ) => value?.[lang] ?? value?.en ?? value?.fr ?? value?.ar ?? fallback;
+
+    const contactContent = settings.content?.contact;
+    const contactTitle = resolveLocalizedText(
+        contactContent?.title,
+        t('contact.title'),
+    );
+    const contactDescription = resolveLocalizedText(
+        contactContent?.description,
+        t('contact.description'),
+    );
+    const contactKicker = resolveLocalizedText(
+        contactContent?.kicker,
+        t('contact.kicker'),
+    );
+    const contactLocationTitle = resolveLocalizedText(
+        contactContent?.locationTitle,
+        t('contact.locationTitle'),
+    );
+    const contactLocationSubtitle = resolveLocalizedText(
+        contactContent?.locationSubtitle,
+        t('contact.locationSubtitle'),
+    );
+    const contactSocialTitle = resolveLocalizedText(
+        contactContent?.socialTitle,
+        t('contact.socialTitle'),
+    );
+    const contactSocialDescription = resolveLocalizedText(
+        contactContent?.socialDescription,
+        t('contact.socialDescription'),
+    );
+    const contactCtaTitle = resolveLocalizedText(
+        contactContent?.ctaTitle,
+        t('contact.ctaTitle'),
+    );
+    const contactCtaDescription = resolveLocalizedText(
+        contactContent?.ctaDescription,
+        t('contact.ctaDescription'),
+    );
+    const companyHours = settings.hours.length > 0 ? settings.hours : [];
+    const companySocials = settings.socialLinks;
+    const mapQuery = settings.plusCode || settings.address || '';
+
+    // Always show all 3 contact method cards, but ONLY with data from settings
+    const contactMethods = [
+        {
+            labelKey: 'contact.calls',
+            value: settings.phone || '',
+            href: settings.phone
+                ? `tel:${settings.phone.replace(/\D/g, '')}`
+                : '#',
+            icon: contactMethodDefs.find((m) => m.labelKey === 'contact.calls')?.icon,
+        },
+        {
+            labelKey: 'contact.email',
+            value: settings.email || '',
+            href: settings.email ? `mailto:${settings.email}` : '#',
+            icon: contactMethodDefs.find((m) => m.labelKey === 'contact.email')?.icon,
+        },
+        {
+            labelKey: 'contact.whatsapp',
+            value: settings.whatsapp || settings.phone || '',
+            href:
+                settings.whatsapp || settings.phone
+                    ? `https://wa.me/${(settings.whatsapp || settings.phone).replace(/\D/g, '')}`
+                    : '#',
+            icon: contactMethodDefs.find((m) => m.labelKey === 'contact.whatsapp')?.icon,
+        },
+    ];
+
+    const getSocialIcon = (label: string) => {
+        const link = socialLinkDefs.find(
+            (c) => c.label.toLowerCase() === label.toLowerCase(),
+        );
+        return link?.icon || Link2;
+    };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background">
             <Navbar />
             <main className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
@@ -47,8 +112,8 @@ export default function Contact() {
                         />
                     </motion.div>
                 </div>
-                <section className="border-b border-border/40 bg-gradient-to-b from-primary/10 to-background pt-5">
-                    <div className="container mx-auto px-4 py-16 md:py-20">
+                <section className="border-b border-border/40 pt-5">
+                    <div className="container mx-auto px-4">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -56,13 +121,13 @@ export default function Contact() {
                             className="mx-auto max-w-3xl text-center"
                         >
                             <p className="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-                                {t('contact.kicker')}
+                                {contactKicker}
                             </p>
                             <h1 className="font-serif text-4xl font-bold text-foreground md:text-6xl">
-                                {t('contact.title')}
+                                {contactTitle}
                             </h1>
                             <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                                {t('contact.description')}
+                                {contactDescription}
                             </p>
                         </motion.div>
                     </div>
@@ -87,13 +152,15 @@ export default function Contact() {
                                             className="group rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
                                         >
                                             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                                                <Icon className="h-5 w-5" />
+                                                {Icon && (
+                                                    <Icon className="h-5 w-5" />
+                                                )}
                                             </div>
                                             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                                                 {t(method.labelKey)}
                                             </p>
                                             <p className="mt-2 text-base font-medium text-foreground">
-                                                {method.value}
+                                                {method.value || '—'}
                                             </p>
                                         </a>
                                     );
@@ -113,35 +180,44 @@ export default function Contact() {
                                     </div>
                                     <div>
                                         <h2 className="font-serif text-2xl font-bold text-foreground">
-                                            {t('contact.locationTitle')}
+                                            {contactLocationTitle}
                                         </h2>
-                                        <p className="text-sm text-muted-foreground">
-                                            {t('contact.locationSubtitle')}
-                                        </p>
+                                        {contactLocationSubtitle && (
+                                            <p className="text-sm text-muted-foreground">
+                                                {contactLocationSubtitle}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div className="overflow-hidden rounded-2xl border border-border/60 bg-muted/30">
-                                    <iframe
-                                        title={t('contact.mapTitle')}
-                                        src={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}&output=embed`}
-                                        className="h-[360px] w-full"
-                                        loading="lazy"
-                                        referrerPolicy="no-referrer-when-downgrade"
-                                    />
-                                </div>
+                                {mapQuery && (
+                                    <>
+                                        <div className="overflow-hidden rounded-2xl border border-border/60 bg-muted/30">
+                                            <iframe
+                                                title={t('contact.mapTitle')}
+                                                src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
+                                                className="h-[360px] w-full"
+                                                loading="lazy"
+                                                referrerPolicy="no-referrer-when-downgrade"
+                                            />
+                                        </div>
 
-                                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                                    <span>{settings.address}</span>
-                                    <a
-                                        href={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="font-medium text-primary hover:underline"
-                                    >
-                                        {t('contact.openMap')}
-                                    </a>
-                                </div>
+                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+                                            <span>
+                                                {settings.plusCode ||
+                                                    settings.address}
+                                            </span>
+                                            <a
+                                                href={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="font-medium text-primary hover:underline"
+                                            >
+                                                {t('contact.openMap')}
+                                            </a>
+                                        </div>
+                                    </>
+                                )}
                             </motion.div>
                         </div>
 
@@ -150,33 +226,70 @@ export default function Contact() {
                                 initial={{ opacity: 0, y: 24 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: '-80px' }}
+                                transition={{ duration: 0.35, delay: 0.06 }}
+                                className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm"
+                            >
+                                <h2 className="font-serif text-2xl font-bold text-foreground">
+                                    {settings.companyName ||
+                                        t('admin.siteSettings')}
+                                </h2>
+                                {settings.address && (
+                                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                        {settings.address}
+                                    </p>
+                                )}
+                                {companyHours.length > 0 && (
+                                    <div className="mt-5 space-y-2 text-sm text-muted-foreground">
+                                        {companyHours.map((row, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="flex justify-between gap-3"
+                                            >
+                                                <span>{row.dayKey}</span>
+                                                <span className="text-foreground">
+                                                    {row.value}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 24 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: '-80px' }}
                                 transition={{ duration: 0.35, delay: 0.1 }}
                                 className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm"
                             >
                                 <h2 className="font-serif text-2xl font-bold text-foreground">
-                                    {t('contact.socialTitle')}
+                                    {contactSocialTitle}
                                 </h2>
                                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                                    {t('contact.socialDescription')}
+                                    {contactSocialDescription}
                                 </p>
 
-                                <div className="mt-6 grid grid-cols-2 gap-3">
-                                    {socialLinks.map((social) => {
-                                        const Icon = social.icon;
-                                        return (
-                                            <a
-                                                key={social.label}
-                                                href={social.href}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="flex items-center gap-3 rounded-2xl border border-border/60 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-                                            >
-                                                <Icon className="h-4 w-4" />
-                                                <span>{social.label}</span>
-                                            </a>
-                                        );
-                                    })}
-                                </div>
+                                {companySocials.length > 0 && (
+                                    <div className="mt-6 grid grid-cols-2 gap-3">
+                                        {companySocials.map((social) => {
+                                            const Icon = getSocialIcon(
+                                                social.label,
+                                            );
+                                            return (
+                                                <a
+                                                    key={social.label}
+                                                    href={social.href}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-center gap-3 rounded-2xl border border-border/60 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                                                >
+                                                    <Icon className="h-4 w-4" />
+                                                    <span>{social.label}</span>
+                                                </a>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </motion.div>
 
                             <motion.div
@@ -187,18 +300,24 @@ export default function Contact() {
                                 className="rounded-3xl border border-border/60 bg-gradient-to-br from-primary to-secondary p-6 text-primary-foreground shadow-lg"
                             >
                                 <h2 className="font-serif text-2xl font-bold">
-                                    {t('contact.ctaTitle')}
+                                    {contactCtaTitle}
                                 </h2>
                                 <p className="mt-3 text-sm leading-6 text-primary-foreground/80">
-                                    {t('contact.ctaDescription')}
+                                    {contactCtaDescription}
                                 </p>
-                                <a
-                                    href={`mailto:${settings.email}`}
-                                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-background px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5"
-                                >
-                                    <Mail className="h-4 w-4" />
-                                    {settings.email}
-                                </a>
+                                {settings.email ? (
+                                    <a
+                                        href={`mailto:${settings.email}`}
+                                        className="mt-6 inline-flex items-center gap-2 rounded-full bg-background px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5"
+                                    >
+                                        <Mail className="h-4 w-4" />
+                                        {settings.email}
+                                    </a>
+                                ) : (
+                                    <p className="mt-6 text-sm text-primary-foreground/60">
+                                        —
+                                    </p>
+                                )}
                             </motion.div>
                         </div>
                     </div>
@@ -208,3 +327,4 @@ export default function Contact() {
         </div>
     );
 }
+

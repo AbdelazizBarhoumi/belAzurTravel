@@ -13,18 +13,12 @@ import {
     Tooltip,
     Legend,
 } from 'recharts';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
-import { useAdminStore } from '@/hooks/useAdminStore';
-import {
-    bookingStatusLabels,
-    destinationLabels,
-    hotelLabels,
-    localizeKnown,
-    tourLabels,
-} from '@/lib/adminI18n';
+import { useAdminBookings } from '@/hooks/useBooking';
+import { bookingStatusLabels } from '@/lib/adminI18n';
 
 const COLORS = [
     'hsl(var(--primary))',
@@ -34,19 +28,15 @@ const COLORS = [
 
 const AdminReports = () => {
     useAdminGuard();
-    const { state } = useAdminStore();
     const { lang } = useLanguage();
+    const { data: bookings = [] } = useAdminBookings();
 
-    const totalRevenue = state.bookings
+    const totalRevenue = bookings
         .filter((b) => b.status !== 'Cancelled')
-        .reduce((s, b) => s + b.amount, 0);
-    const confirmed = state.bookings.filter(
-        (b) => b.status === 'Confirmed',
-    ).length;
-    const pending = state.bookings.filter((b) => b.status === 'Pending').length;
-    const cancelled = state.bookings.filter(
-        (b) => b.status === 'Cancelled',
-    ).length;
+        .reduce((s, b) => s + b.total_amount, 0);
+    const confirmed = bookings.filter((b) => b.status === 'Confirmed').length;
+    const pending = bookings.filter((b) => b.status === 'Pending').length;
+    const cancelled = bookings.filter((b) => b.status === 'Cancelled').length;
 
     const pieData = [
         { name: bookingStatusLabels.Confirmed[lang], value: confirmed },
@@ -55,8 +45,14 @@ const AdminReports = () => {
     ];
 
     const topItems = Object.entries(
-        state.bookings.reduce<Record<string, number>>((acc, b) => {
-            acc[b.item] = (acc[b.item] || 0) + b.amount;
+        bookings.reduce<Record<string, number>>((acc, b) => {
+            const firstItem = b.items?.[0] as
+                | { slug?: string; id?: string }
+                | undefined;
+            const item = String(
+                firstItem?.slug ?? firstItem?.id ?? b.type ?? 'booking',
+            );
+            acc[item] = (acc[item] || 0) + b.total_amount;
             return acc;
         }, {}),
     )
@@ -65,11 +61,21 @@ const AdminReports = () => {
 
     const exportCSV = () => {
         const header = 'ID,Client,Type,Item,Date,Amount,Status';
-        const rows = state.bookings.map((b) =>
-            [b.id, b.client, b.type, b.item, b.date, b.amount, b.status].join(
-                ',',
-            ),
-        );
+        const rows = bookings.map((b) => {
+            const firstItem = b.items?.[0] as
+                | { slug?: string; id?: string }
+                | undefined;
+
+            return [
+                b.id,
+                b.client?.name ?? '',
+                b.type,
+                String(firstItem?.slug ?? firstItem?.id ?? ''),
+                b.created_at,
+                b.total_amount,
+                b.status,
+            ].join(',');
+        });
         const csv = [header, ...rows].join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
@@ -88,7 +94,7 @@ const AdminReports = () => {
         },
         {
             label: 'Total Bookings',
-            value: state.bookings.length,
+            value: bookings.length,
             icon: Calendar,
         },
         { label: 'Confirmed', value: confirmed, icon: CheckCircle2 },
@@ -170,15 +176,7 @@ const AdminReports = () => {
                                     </span>
                                     <div className="flex-1">
                                         <p className="text-sm font-medium">
-                                            {localizeKnown(
-                                                item,
-                                                {
-                                                    ...destinationLabels,
-                                                    ...hotelLabels,
-                                                    ...tourLabels,
-                                                },
-                                                lang,
-                                            )}
+                                            {item}
                                         </p>
                                         <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
                                             <div

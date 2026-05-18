@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import * as api from '@/api/booking.api';
 
+export { api };
+
 export function useAdminBookings() {
     return useQuery({
         queryKey: ['admin-bookings'],

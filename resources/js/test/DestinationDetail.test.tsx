@@ -36,23 +36,20 @@ describe('DestinationDetail page', () => {
         localStorage.removeItem('lang');
     });
 
-    it('renders destination details, highlights and related content', () => {
+    it('renders destination details, highlights and related content', async () => {
         renderDestinationDetail();
 
-        expect(
-            screen.getAllByRole('heading', { name: /Santorini/i }).length,
-        ).toBeGreaterThan(0);
-        expect(screen.getByText(/Highlights/i)).toBeInTheDocument();
-        expect(screen.getByText(/Where to stay/i)).toBeInTheDocument();
-        expect(screen.getByText(/Suggested tours/i)).toBeInTheDocument();
+        const headings = await screen.findAllByRole('heading', { name: /Santorini/i });
+        expect(headings.length).toBeGreaterThan(0);
+        expect(await screen.findByText(/Highlights/i)).toBeInTheDocument();
+        expect(await screen.findByText(/Where to stay/i)).toBeInTheDocument();
+        expect(await screen.findByText(/Suggested tours/i)).toBeInTheDocument();
     });
 
-    it('shows a fallback message for unknown destinations', () => {
+    it('shows a fallback message for unknown destinations', async () => {
         renderDestinationDetail('/destinations/unknown');
 
-        expect(screen.getByText(/Destination not found/i)).toBeInTheDocument();
-        expect(
-            screen.getByRole('link', { name: /Back to destinations/i }),
-        ).toBeInTheDocument();
+        expect(await screen.findByText(/Destination not found/i)).toBeInTheDocument();
+        expect(await screen.findByRole('link', { name: /Back to destinations/i })).toBeInTheDocument();
     });
 });

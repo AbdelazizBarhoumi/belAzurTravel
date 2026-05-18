@@ -1,36 +1,69 @@
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { BrandLogo } from '@/components/BrandLogo';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { csrfToken } from '@/api/http';
+import type { AuthUser } from '@/auth';
+import { redirectAfterLogin, storeAuthUser, storedRole } from '@/auth';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPass, setShowPass] = useState(false);
-    const [role, setRole] = useState<'client' | 'admin' | 'assistant'>(
-        'client',
-    );
     const navigate = useNavigate();
     const { t } = useLanguage();
 
-    const handleLogin = (e: React.FormEvent) => {
+    useEffect(() => {
+        // If already authenticated, redirect to dashboard
+        const role = storedRole();
+        if (role) {
+            navigate(redirectAfterLogin(role), { replace: true });
+        }
+    }, [navigate]);
+
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        localStorage.setItem('role', role);
-        localStorage.setItem('userEmail', email);
-        if (role === 'admin') {
-            toast.success(t('auth.welcomeAdmin'));
-            navigate('/admin');
-        } else if (role === 'assistant') {
-            toast.success(t('auth.welcomeAssistant'));
-            navigate('/assistant');
-        } else {
-            toast.success(t('auth.welcomeBack'));
-            navigate('/dashboard');
+        try {
+            const res = await fetch('/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify({ email, password, remember: true }),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                console.error('Login error:', res.status, errorData);
+                throw new Error('Login failed');
+            }
+
+            const data = (await res.json()) as { user: AuthUser };
+            const user = data.user;
+            console.log('Login response:', user);
+            storeAuthUser(user);
+
+            if (user.role === 'admin') {
+                toast.success(t('auth.welcomeAdmin'));
+            } else if (user.role === 'assistant') {
+                toast.success(t('auth.welcomeAssistant'));
+            } else {
+                toast.success(t('auth.welcomeBack'));
+            }
+
+            console.log('Navigating to:', redirectAfterLogin(user.role));
+            navigate(redirectAfterLogin(user.role), { replace: true });
+        } catch (error) {
+            console.error('Login catch:', error);
+            toast.error('Invalid email or password');
         }
     };
 
@@ -57,25 +90,6 @@ const Login = () => {
                     <p className="mb-8 text-muted-foreground">
                         {t('auth.signInDesc')}
                     </p>
-
-                    {/* Role selector */}
-                    <div className="mb-6 flex gap-2 rounded-xl bg-muted p-1">
-                        {(['client', 'admin', 'assistant'] as const).map(
-                            (r) => (
-                                <button
-                                    key={r}
-                                    onClick={() => setRole(r)}
-                                    className={`flex-1 rounded-lg py-2 text-sm font-medium capitalize transition-all ${
-                                        role === r
-                                            ? 'bg-primary text-primary-foreground shadow-sm'
-                                            : 'text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    {t(`auth.${r}`)}
-                                </button>
-                            ),
-                        )}
-                    </div>
 
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="relative">
@@ -151,7 +165,7 @@ const Login = () => {
             {/* Right - Image */}
             <div className="relative hidden h-64 w-1/2 overflow-hidden lg:block lg:h-full">
                 <img
-                    src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&h=1600&fit=crop"
+                    src="/images/destination-bali.jpg"
                     alt="Beach"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
@@ -170,3 +184,4 @@ const Login = () => {
 };
 
 export default Login;
+

@@ -6,9 +6,8 @@ import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import PromoDetail from '@/pages/PromoDetail';
 
-const queryClient = new QueryClient();
-
 function renderPromoDetail() {
+    const queryClient = new QueryClient();
     return render(
         <QueryClientProvider client={queryClient}>
             <LanguageProvider>
@@ -36,18 +35,19 @@ describe('PromoDetail page', () => {
         localStorage.removeItem('lang');
     });
 
-    it('renders the promo banner, terms and booking CTA', () => {
+    it('renders the promo banner, terms and booking CTA', async () => {
         renderPromoDetail();
 
         expect(
-            screen.getByRole('heading', { name: /Spring Flash Sale/i }),
+            await screen.findByRole('heading', { name: /Spring Flash Sale/i }),
         ).toBeInTheDocument();
-        expect(screen.getByText(/30% OFF/i)).toBeInTheDocument();
+        expect(await screen.findByText(/30% OFF/i)).toBeInTheDocument();
+            // seeded description for SPRING30
+            expect(
+                await screen.findByText(/On all European destinations booked this month\./i),
+            ).toBeInTheDocument();
         expect(
-            screen.getByText(/Valid on selected routes only/i),
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole('link', { name: /Start a booking/i }),
+            await screen.findByRole('link', { name: /Start a booking/i }),
         ).toBeInTheDocument();
     });
 });

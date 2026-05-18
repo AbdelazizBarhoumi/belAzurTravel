@@ -6,6 +6,7 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <meta name="description" content="BelAzur Travel">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta property="og:title" content="{{ config('app.name', 'Laravel') }}">
         <meta property="og:description" content="BelAzur Travel">
         <meta property="og:type" content="website">

@@ -1,13 +1,12 @@
 import { motion } from 'framer-motion';
 import { Search, MapPin, Star } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { FavoriteButton } from '@/components/FavoriteButton';
-import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
+import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
+import CardMedia from '@/components/ui/CardMedia';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -18,8 +17,8 @@ import {
     NavigationMenuViewport,
 } from '@/components/ui/navigation-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { localizeText } from '@/data/catalog';
-import { useDestinations } from '@/hooks/useCatalog';
+import { localizeText } from '@/data';
+import { useDestinations } from '@/hooks/usePublicData';
 
 const categories = [
     { value: 'all', labelKey: 'common.all' },
@@ -41,20 +40,15 @@ const Destinations = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    const initialCategory =
+        new URLSearchParams(params.toString()).get('cat')?.toLowerCase() ||
+        'all';
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [sortBy, setSortBy] = useState<
         'featured' | 'price-asc' | 'price-desc' | 'rating'
     >('featured');
     const { t, lang } = useLanguage();
     const { data: allDestinations = [] } = useDestinations();
-
-    useEffect(() => {
-        const cat = params.get('cat');
-        if (cat) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setSelectedCategory(cat.toLowerCase());
-        }
-    }, [params]);
 
     const filtered = allDestinations
         .filter((d) => {
@@ -83,7 +77,6 @@ const Destinations = () => {
 
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
             <div className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div
@@ -219,34 +212,29 @@ const Destinations = () => {
                                     className="cursor-pointer"
                                 >
                                     <div className="card-elevated overflow-hidden rounded-2xl bg-card">
-                                        <div className="relative h-56 overflow-hidden">
-                                            <img
-                                                src={dest.image}
-                                                alt={localizeText(
+                                        <CardMedia
+                                            src={dest.image}
+                                            alt={localizeText(dest.name, lang)}
+                                            wrapperClass="relative h-56"
+                                            imgClass="transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                        <FavoriteButton
+                                            className="absolute right-3 top-3"
+                                            item={{
+                                                id: `dest-${localizeText(dest.name, lang)}`,
+                                                type: 'destination',
+                                                name: localizeText(
                                                     dest.name,
                                                     lang,
-                                                )}
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                loading="lazy"
-                                            />
-                                            <FavoriteButton
-                                                className="absolute right-3 top-3"
-                                                item={{
-                                                    id: `dest-${localizeText(dest.name, lang)}`,
-                                                    type: 'destination',
-                                                    name: localizeText(
-                                                        dest.name,
-                                                        lang,
-                                                    ),
-                                                    image: dest.image,
-                                                    price: dest.price,
-                                                    location: localizeText(
-                                                        dest.country,
-                                                        lang,
-                                                    ),
-                                                }}
-                                            />
-                                        </div>
+                                                ),
+                                                image: dest.image,
+                                                price: dest.price,
+                                                location: localizeText(
+                                                    dest.country,
+                                                    lang,
+                                                ),
+                                            }}
+                                        />
                                         <div className="p-5">
                                             <div className="mb-2 flex items-center justify-between">
                                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -296,7 +284,6 @@ const Destinations = () => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </div>
     );
 };

@@ -2,14 +2,12 @@ import { motion } from 'framer-motion';
 import { CalendarClock, Tag } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { Footer } from '@/components/Footer';
-import { ListFilterBar } from '@/components/ListFilterBar';
-import { Navbar } from '@/components/Navbar';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { localizeText } from '@/data/catalog';
-import { dealsData } from '@/data/deals.data';
+import { localizeText } from '@/data';
+import { useDeals } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
@@ -18,20 +16,21 @@ export default function Deals() {
     const { t, lang } = useLanguage();
     const [activeCategory, setActiveCategory] = useState<'all' | string>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const { data: deals = [] } = useDeals();
 
     const categories = useMemo(
         () => [
             { value: 'all', label: t('common.all') },
             ...Array.from(
-                new Set(dealsData.map((deal) => deal.category[lang])),
+                new Set(deals.map((deal) => deal.category[lang])),
             ).map((label) => ({ value: label, label })),
         ],
-        [lang, t],
+        [deals, lang, t],
     );
 
     const filteredDeals = useMemo(
         () =>
-            dealsData.filter((deal) => {
+            deals.filter((deal) => {
                 const matchesSearch = matchesSearchText(searchQuery, [
                     localizeText(deal.title, lang),
                     localizeText(deal.description, lang),
@@ -45,7 +44,7 @@ export default function Deals() {
 
                 return matchesSearch && matchesCategory;
             }),
-        [activeCategory, lang, searchQuery],
+        [activeCategory, deals, lang, searchQuery],
     );
 
     const hasActiveFilters =
@@ -58,7 +57,6 @@ export default function Deals() {
 
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
             <main className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div
@@ -169,7 +167,6 @@ export default function Deals() {
                     </div>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

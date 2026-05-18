@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
@@ -6,6 +7,11 @@ export default {
   content: [
     "./resources/js/**/*.{ts,tsx}",
     "./resources/views/**/*.blade.php",
+  ],
+  safelist: [
+    {
+      pattern: /^(from|via|to)-(primary|secondary)(\/\d{1,3})?$/,
+    },
   ],
   prefix: "",
   theme: {
@@ -105,5 +111,18 @@ export default {
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [
+    tailwindcssAnimate,
+    plugin(function ({ addComponents }) {
+      addComponents({
+        ".scrollbar-hide": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+          "&::-webkit-scrollbar": {
+            "display": "none",
+          },
+        },
+      });
+    }),
+  ],
 } satisfies Config;

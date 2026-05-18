@@ -1,18 +1,20 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Briefcase, Clock, Plane } from 'lucide-react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
-import { StickyBookingCard } from '@/components/StickyBookingCard';
+import { StickyBookingCard } from '@/components/cards/StickyBookingCard';
+import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { localizeText } from '@/data/catalog';
-import { useFlightById } from '@/hooks/useCatalog';
+import { localizeText } from '@/data';
+import { useFlightById } from '@/hooks/usePublicData';
 
 export default function FlightDetail() {
     const { id } = useParams<{ id: string }>();
     const { t, lang, dir } = useLanguage();
-    const { data: flight } = useFlightById(id);
+    const { data: flight, isLoading } = useFlightById(id);
+
+    if (isLoading) {
+        return null;
+    }
 
     if (!flight) return <Navigate to="/flights" replace />;
 
@@ -21,7 +23,6 @@ export default function FlightDetail() {
 
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
             <main className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <div className="mb-8">
@@ -202,7 +203,6 @@ export default function FlightDetail() {
                     </motion.div>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

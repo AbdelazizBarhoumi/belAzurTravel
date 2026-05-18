@@ -1,9 +1,10 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
-import { useAdminBookings } from '@/hooks/useBooking';
+import { api, useAdminBookings } from '@/hooks/useBooking';
 import { bookingStatusLabels } from '@/lib/adminI18n';
 
 interface BookingItem {
@@ -19,11 +20,21 @@ interface BookingItem {
 const AdminBookings = () => {
     useAdminGuard();
     const { data, isLoading } = useAdminBookings();
+    const queryClient = useQueryClient();
+    const statusMutation = useMutation({
+        mutationFn: ({ id, status }: { id: number; status: string }) => {
+            if (status === 'Confirmed') return api.confirmBooking(id);
+            if (status === 'Cancelled') return api.adminCancelBooking(id);
+            return Promise.resolve();
+        },
+        onSuccess: () =>
+            queryClient.invalidateQueries({ queryKey: ['admin-bookings'] }),
+    });
     const { lang } = useLanguage();
     const { t } = useLanguage();
 
     const updateStatus = (_b: BookingItem, status: string) => {
-        // TODO: call API to update status (confirm endpoint)
+        statusMutation.mutate({ id: _b.id, status });
         toast.success(
             `${t('admin.booking')} → ${bookingStatusLabels[status][lang]}`,
         );

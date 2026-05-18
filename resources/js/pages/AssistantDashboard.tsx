@@ -1,3 +1,4 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     MessageSquare,
     Calendar,
@@ -10,132 +11,55 @@ import {
     AlertCircle,
     User,
 } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { BrandLogo } from '@/components/BrandLogo';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { apiFetch } from '@/api/http';
+import { logout } from '@/auth';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
 import { cn } from '@/lib/utils';
 
 type LocalizedText = Record<Lang, string>;
 
+type Inquiry = {
+    id: number;
+    client: { name: string; email: string };
+    subject: LocalizedText;
+    message: LocalizedText;
+    status: 'new' | 'in-progress' | 'resolved';
+    priority: 'high' | 'medium' | 'low';
+    replies: Array<{ author: string; message: string; created_at: string }>;
+    created_at: string;
+};
+
+type AssistantBooking = {
+    id: number;
+    client: { name?: string; email?: string };
+    type: string;
+    items: Array<{ slug?: string; qty?: number }>;
+    start_date?: string;
+    end_date?: string;
+    total_amount: number;
+    status: 'Pending' | 'Confirmed' | 'Cancelled';
+    created_at: string;
+};
+
+type AssistantClient = {
+    id: number;
+    name: string;
+    email: string;
+    active: boolean;
+    joined: string;
+    bookings: number;
+};
+
 function localize(value: LocalizedText, lang: Lang): string {
-    return value[lang];
+    return value[lang] || value.en || value.fr || value.ar || '';
 }
-
-const inquiries = [
-    {
-        id: 1,
-        client: 'Sarah Johnson',
-        subject: {
-            fr: 'Demande de surclassement pour la réservation à Santorin',
-            ar: 'طلب ترقية الغرفة لحجز سانتوريني',
-            en: 'Room upgrade request for Santorini booking',
-        },
-        time: '2h ago',
-        status: 'new',
-        priority: 'high',
-    },
-    {
-        id: 2,
-        client: 'Mike Chen',
-        subject: {
-            fr: 'Demande de changement de vol pour le voyage à Bali',
-            ar: 'استفسار تغيير رحلة لرحلة بالي',
-            en: 'Flight change inquiry for Bali trip',
-        },
-        time: '4h ago',
-        status: 'in-progress',
-        priority: 'medium',
-    },
-    {
-        id: 3,
-        client: 'Emma Davis',
-        subject: {
-            fr: 'Demande d’annulation et de remboursement',
-            ar: 'طلب إلغاء واسترداد',
-            en: 'Cancel and refund request',
-        },
-        time: '6h ago',
-        status: 'new',
-        priority: 'high',
-    },
-    {
-        id: 4,
-        client: 'James Wilson',
-        subject: {
-            fr: 'Assistance visa nécessaire pour Dubaï',
-            ar: 'مساعدة في التأشيرة مطلوبة لدبي',
-            en: 'Visa assistance needed for Dubai',
-        },
-        time: '1d ago',
-        status: 'resolved',
-        priority: 'low',
-    },
-    {
-        id: 5,
-        client: 'Lisa Brown',
-        subject: {
-            fr: 'Exigences alimentaires particulières pour le circuit',
-            ar: 'متطلبات غذائية خاصة للجولة',
-            en: 'Special dietary requirements for tour',
-        },
-        time: '1d ago',
-        status: 'in-progress',
-        priority: 'medium',
-    },
-];
-
-const bookingRequests = [
-    {
-        id: 'BR-001',
-        client: 'Alex Turner',
-        destination: { fr: 'Maldives', ar: 'جزر المالديف', en: 'Maldives' },
-        dates: {
-            fr: '1 avr. - 8 avr. 2026',
-            ar: '1 أبريل - 8 أبريل 2026',
-            en: 'Apr 1-8, 2026',
-        },
-        guests: 2,
-        status: 'pending',
-        statusLabel: {
-            fr: 'En attente de validation',
-            ar: 'بانتظار المراجعة',
-            en: 'Pending Review',
-        },
-    },
-    {
-        id: 'BR-002',
-        client: 'Nina Patel',
-        destination: { fr: 'Tokyo', ar: 'طوكيو', en: 'Tokyo' },
-        dates: {
-            fr: '20 mars - 27 mars 2026',
-            ar: '20 مارس - 27 مارس 2026',
-            en: 'Mar 20-27, 2026',
-        },
-        guests: 4,
-        status: 'pending',
-        statusLabel: {
-            fr: 'En attente de validation',
-            ar: 'بانتظار المراجعة',
-            en: 'Pending Review',
-        },
-    },
-    {
-        id: 'BR-003',
-        client: 'Tom Hardy',
-        destination: { fr: 'Islande', ar: 'آيسلندا', en: 'Iceland' },
-        dates: {
-            fr: '5 mai - 12 mai 2026',
-            ar: '5 مايو - 12 مايو 2026',
-            en: 'May 5-12, 2026',
-        },
-        guests: 2,
-        status: 'approved',
-        statusLabel: { fr: 'Approuvé', ar: 'تمت الموافقة', en: 'Approved' },
-    },
-];
 
 const sidebarLinks = [
     { icon: MessageSquare, labelKey: 'assistant.inquiries', active: true },
@@ -146,10 +70,114 @@ const sidebarLinks = [
 
 const AssistantDashboard = () => {
     const [activeTab, setActiveTab] = useState('assistant.inquiries');
-    const [selectedInquiry, setSelectedInquiry] = useState(inquiries[0]);
+    const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(
+        null,
+    );
     const [reply, setReply] = useState('');
+    const [available, setAvailable] = useState(true);
     const { lang, t, dir } = useLanguage();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const isRtl = dir === 'rtl';
+
+    useEffect(() => {
+        const role = localStorage.getItem('role');
+        if (role !== 'assistant' && role !== 'admin') {
+            navigate('/login');
+        }
+    }, [navigate]);
+
+    const handleLogout = async () => {
+        await logout();
+        navigate('/login', { replace: true });
+    };
+
+    const { data: summary } = useQuery({
+        queryKey: ['assistant', 'summary'],
+        queryFn: () =>
+            apiFetch<{
+                newInquiries: number;
+                pendingBookings: number;
+                activeClients: number;
+                resolvedToday: number;
+            }>('/api/assistant/summary'),
+    });
+    const { data: inquiries = [] } = useQuery({
+        queryKey: ['assistant', 'inquiries'],
+        queryFn: () => apiFetch<Inquiry[]>('/api/assistant/inquiries'),
+    });
+    const { data: bookingRequests = [] } = useQuery({
+        queryKey: ['assistant', 'bookings'],
+        queryFn: () => apiFetch<AssistantBooking[]>('/api/assistant/bookings'),
+    });
+    const { data: clients = [] } = useQuery({
+        queryKey: ['assistant', 'clients'],
+        queryFn: () => apiFetch<AssistantClient[]>('/api/assistant/clients'),
+    });
+
+    useEffect(() => {
+        if (!selectedInquiry && inquiries.length > 0) {
+            // Defer setting selected inquiry to avoid synchronous setState inside effect
+            const id = setTimeout(() => setSelectedInquiry(inquiries[0]), 0);
+            return () => clearTimeout(id);
+        }
+    }, [inquiries, selectedInquiry]);
+
+    const updateInquiry = useMutation({
+        mutationFn: (input: { id: number; status: Inquiry['status'] }) =>
+            apiFetch<Inquiry>(`/api/assistant/inquiries/${input.id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ status: input.status }),
+            }),
+        onSuccess: (inquiry) => {
+            setSelectedInquiry(inquiry);
+            queryClient.invalidateQueries({ queryKey: ['assistant'] });
+        },
+    });
+
+    const sendReply = useMutation({
+        mutationFn: () =>
+            apiFetch<Inquiry>(
+                `/api/assistant/inquiries/${selectedInquiry?.id}/reply`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ message: reply }),
+                },
+            ),
+        onSuccess: (inquiry) => {
+            setReply('');
+            setSelectedInquiry(inquiry);
+            toast.success(t('assistant.replySent'));
+            queryClient.invalidateQueries({ queryKey: ['assistant'] });
+        },
+    });
+
+    const bookingAction = useMutation({
+        mutationFn: (input: { id: number; action: 'confirm' | 'cancel' }) =>
+            apiFetch(`/api/assistant/bookings/${input.id}/${input.action}`, {
+                method: 'POST',
+            }),
+        onSuccess: () => {
+            toast.success(t('actions.saved'));
+            queryClient.invalidateQueries({ queryKey: ['assistant'] });
+        },
+    });
+
+    const statusMutation = useMutation({
+        mutationFn: (next: boolean) =>
+            apiFetch('/api/assistant/status', {
+                method: 'PUT',
+                body: JSON.stringify({ available: next }),
+            }),
+        onSuccess: (_, next) => {
+            setAvailable(next);
+            toast.success(t('actions.saved'));
+        },
+    });
+
+    const newCount =
+        summary?.newInquiries ??
+        inquiries.filter((inq) => inq.status === 'new').length;
 
     return (
         <div
@@ -198,7 +226,7 @@ const AssistantDashboard = () => {
                                 <span
                                     className={`${dir === 'rtl' ? 'mr-auto' : 'ml-auto'} rounded-full bg-destructive px-2 py-0.5 text-xs font-bold text-destructive-foreground`}
                                 >
-                                    3
+                                    {newCount}
                                 </span>
                             )}
                         </button>
@@ -206,29 +234,32 @@ const AssistantDashboard = () => {
                 </nav>
 
                 <div className="border-t border-border p-4">
-                    <Link to="/">
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                'w-full gap-2 text-muted-foreground',
-                                isRtl ? 'justify-end' : 'justify-start',
-                            )}
-                        >
-                            <LogOut className="h-4 w-4" />{' '}
-                            {t('assistant.signOut')}
-                        </Button>
-                    </Link>
+                    <Button
+                        onClick={handleLogout}
+                        variant="ghost"
+                        className={cn(
+                            'w-full gap-2 text-muted-foreground',
+                            isRtl ? 'justify-end' : 'justify-start',
+                        )}
+                    >
+                        <LogOut className="h-4 w-4" /> {t('assistant.signOut')}
+                    </Button>
                 </div>
             </aside>
 
             <main className="flex-1 overflow-auto">
                 <header className="border-b border-border bg-card px-6 py-4">
-                    <h1 className="font-serif text-2xl font-bold text-foreground">
-                        {t('assistant.dashboard')}
-                    </h1>
-                    <p className="text-sm text-muted-foreground">
-                        {t('assistant.manage')}
-                    </p>
+                    <div className="flex items-center justify-between gap-4">
+                        <div>
+                            <h1 className="font-serif text-2xl font-bold text-foreground">
+                                {t('assistant.dashboard')}
+                            </h1>
+                            <p className="text-sm text-muted-foreground">
+                                {t('assistant.manage')}
+                            </p>
+                        </div>
+                        <NotificationBell feedPath="/assistant/notifications" />
+                    </div>
                 </header>
 
                 {activeTab === 'assistant.inquiries' && (
@@ -249,17 +280,19 @@ const AssistantDashboard = () => {
                                         key={inq.id}
                                         onClick={() => setSelectedInquiry(inq)}
                                         className={`mb-2 w-full rounded-xl p-4 text-left transition-all ${
-                                            selectedInquiry.id === inq.id
+                                            selectedInquiry?.id === inq.id
                                                 ? 'border border-primary/20 bg-primary/5'
                                                 : 'hover:bg-muted'
                                         }`}
                                     >
                                         <div className="mb-1 flex items-center justify-between">
                                             <span className="text-sm font-semibold text-foreground">
-                                                {inq.client}
+                                                {inq.client.name}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
-                                                {inq.time}
+                                                {new Date(
+                                                    inq.created_at,
+                                                ).toLocaleString()}
                                             </span>
                                         </div>
                                         <p className="truncate text-sm text-muted-foreground">
@@ -304,13 +337,15 @@ const AssistantDashboard = () => {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-foreground">
-                                            {selectedInquiry.client}
+                                            {selectedInquiry?.client.name}
                                         </h3>
                                         <p className="text-sm text-muted-foreground">
-                                            {localize(
-                                                selectedInquiry.subject,
-                                                lang,
-                                            )}
+                                            {selectedInquiry
+                                                ? localize(
+                                                      selectedInquiry.subject,
+                                                      lang,
+                                                  )
+                                                : ''}
                                         </p>
                                     </div>
                                 </div>
@@ -319,15 +354,37 @@ const AssistantDashboard = () => {
                             <div className="flex-1 overflow-auto p-6">
                                 <div className="mb-4 max-w-lg rounded-2xl bg-muted p-4">
                                     <p className="text-sm text-foreground">
-                                        {localize(
-                                            selectedInquiry.subject,
-                                            lang,
-                                        )}
+                                        {selectedInquiry
+                                            ? localize(
+                                                  selectedInquiry.message,
+                                                  lang,
+                                              )
+                                            : ''}
                                     </p>
                                     <p className="mt-2 text-xs text-muted-foreground">
-                                        {selectedInquiry.time}
+                                        {selectedInquiry
+                                            ? new Date(
+                                                  selectedInquiry.created_at,
+                                              ).toLocaleString()
+                                            : ''}
                                     </p>
                                 </div>
+                                {selectedInquiry?.replies.map((item) => (
+                                    <div
+                                        key={`${item.author}-${item.created_at}`}
+                                        className="mb-4 ml-auto max-w-lg rounded-2xl bg-primary p-4 text-primary-foreground"
+                                    >
+                                        <p className="text-sm">
+                                            {item.message}
+                                        </p>
+                                        <p className="mt-2 text-xs opacity-70">
+                                            {item.author} ·{' '}
+                                            {new Date(
+                                                item.created_at,
+                                            ).toLocaleString()}
+                                        </p>
+                                    </div>
+                                ))}
                             </div>
 
                             <div className="border-t border-border p-4">
@@ -337,13 +394,33 @@ const AssistantDashboard = () => {
                                         onChange={(e) =>
                                             setReply(e.target.value)
                                         }
-                                        placeholder="Type your reply..."
+                                        placeholder={t('assistant.typeReply')}
                                         className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                                     />
-                                    <Button className="gap-2 rounded-xl bg-primary px-6 text-primary-foreground">
+                                    <Button
+                                        className="gap-2 rounded-xl bg-primary px-6 text-primary-foreground"
+                                        disabled={
+                                            !reply.trim() || !selectedInquiry
+                                        }
+                                        onClick={() => sendReply.mutate()}
+                                    >
                                         <Send className="h-4 w-4" />{' '}
                                         {t('assistant.send')}
                                     </Button>
+                                    {selectedInquiry?.status !== 'resolved' && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={() =>
+                                                selectedInquiry &&
+                                                updateInquiry.mutate({
+                                                    id: selectedInquiry.id,
+                                                    status: 'resolved',
+                                                })
+                                            }
+                                        >
+                                            {t('assistant.resolve')}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -375,13 +452,13 @@ const AssistantDashboard = () => {
                                                 {t('admin.date')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                                Guests
+                                                {t('label.guests')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
                                                 {t('admin.status')}
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                                Actions
+                                                {t('admin.actions')}
                                             </th>
                                         </tr>
                                     </thead>
@@ -392,42 +469,65 @@ const AssistantDashboard = () => {
                                                 className="border-b border-border transition-colors last:border-0 hover:bg-muted/20"
                                             >
                                                 <td className="px-6 py-4 text-sm font-medium text-foreground">
-                                                    {br.id}
+                                                    BR-{br.id}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-foreground">
-                                                    {br.client}
+                                                    {br.client.name ??
+                                                        t('common.guest')}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-muted-foreground">
-                                                    {localize(
-                                                        br.destination,
-                                                        lang,
-                                                    )}
+                                                    {br.type}:{' '}
+                                                    {br.items
+                                                        .map(
+                                                            (item) => item.slug,
+                                                        )
+                                                        .join(', ')}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-muted-foreground">
-                                                    {localize(br.dates, lang)}
+                                                    {[
+                                                        br.start_date,
+                                                        br.end_date,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' - ') ||
+                                                        new Date(
+                                                            br.created_at,
+                                                        ).toLocaleDateString()}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-muted-foreground">
-                                                    {br.guests}
+                                                    $
+                                                    {Number(
+                                                        br.total_amount,
+                                                    ).toLocaleString()}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span
                                                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
                                                             br.status ===
-                                                            'approved'
+                                                            'Confirmed'
                                                                 ? 'bg-primary/10 text-primary'
                                                                 : 'bg-secondary/10 text-secondary'
                                                         }`}
                                                     >
-                                                        {localize(
-                                                            br.statusLabel,
-                                                            lang,
-                                                        )}
+                                                        {br.status}
                                                     </span>
                                                 </td>
                                                 <td className="flex gap-2 px-6 py-4">
                                                     <Button
                                                         size="sm"
                                                         className="gap-1 bg-primary text-xs text-primary-foreground"
+                                                        disabled={
+                                                            br.status ===
+                                                            'Confirmed'
+                                                        }
+                                                        onClick={() =>
+                                                            bookingAction.mutate(
+                                                                {
+                                                                    id: br.id,
+                                                                    action: 'confirm',
+                                                                },
+                                                            )
+                                                        }
                                                     >
                                                         <CheckCircle className="h-3 w-3" />{' '}
                                                         {t('assistant.approve')}
@@ -436,6 +536,18 @@ const AssistantDashboard = () => {
                                                         size="sm"
                                                         variant="outline"
                                                         className="gap-1 text-xs"
+                                                        disabled={
+                                                            br.status ===
+                                                            'Cancelled'
+                                                        }
+                                                        onClick={() =>
+                                                            bookingAction.mutate(
+                                                                {
+                                                                    id: br.id,
+                                                                    action: 'cancel',
+                                                                },
+                                                            )
+                                                        }
                                                     >
                                                         <AlertCircle className="h-3 w-3" />{' '}
                                                         {t('assistant.reject')}
@@ -457,10 +569,49 @@ const AssistantDashboard = () => {
                             <h3 className="mb-2 font-serif text-lg font-bold text-foreground">
                                 {t('assistant.clientManagement')}
                             </h3>
-                            <p className="text-sm text-muted-foreground">
-                                View and manage client profiles and their
-                                booking history.
-                            </p>
+                            <div className="mt-6 overflow-x-auto text-left">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-border">
+                                            <th className="px-4 py-2 text-xs uppercase text-muted-foreground">
+                                                {t('admin.client')}
+                                            </th>
+                                            <th className="px-4 py-2 text-xs uppercase text-muted-foreground">
+                                                {t('admin.email')}
+                                            </th>
+                                            <th className="px-4 py-2 text-xs uppercase text-muted-foreground">
+                                                {t('admin.bookings')}
+                                            </th>
+                                            <th className="px-4 py-2 text-xs uppercase text-muted-foreground">
+                                                {t('admin.status')}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {clients.map((client) => (
+                                            <tr
+                                                key={client.id}
+                                                className="border-b border-border"
+                                            >
+                                                <td className="px-4 py-3 text-sm font-medium">
+                                                    {client.name}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-muted-foreground">
+                                                    {client.email}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm">
+                                                    {client.bookings}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm">
+                                                    {client.active
+                                                        ? t('admin.active')
+                                                        : t('admin.inactive')}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -472,10 +623,21 @@ const AssistantDashboard = () => {
                             <h3 className="mb-2 font-serif text-lg font-bold text-foreground">
                                 {t('assistant.settingsTitle')}
                             </h3>
-                            <p className="text-sm text-muted-foreground">
-                                Configure your notification preferences and
-                                availability status.
-                            </p>
+                            <div className="mt-6 flex items-center justify-center gap-3">
+                                <span className="text-sm text-muted-foreground">
+                                    {t('assistant.availability')}
+                                </span>
+                                <Button
+                                    variant={available ? 'default' : 'outline'}
+                                    onClick={() =>
+                                        statusMutation.mutate(!available)
+                                    }
+                                >
+                                    {available
+                                        ? t('assistant.available')
+                                        : t('assistant.unavailable')}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 )}

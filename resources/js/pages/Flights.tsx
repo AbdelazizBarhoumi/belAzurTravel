@@ -2,8 +2,8 @@ import { motion } from 'framer-motion';
 import { Plane, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ListFilterBar } from '@/components/ListFilterBar';
-import { PageShell } from '@/components/PageShell';
+import { PageShell } from '@/components/layout/PageShell';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -13,8 +13,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { localizeText } from '@/data/catalog';
-import { useFlights } from '@/hooks/useCatalog';
+import { localizeText } from '@/data';
+import { useFlights } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';

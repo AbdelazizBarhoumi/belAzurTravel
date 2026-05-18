@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Heart, Trash2, MapPin } from 'lucide-react';
-import { PageShell } from '@/components/PageShell';
+import { PageShell } from '@/components/layout/PageShell';
 import { Button } from '@/components/ui/button';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';

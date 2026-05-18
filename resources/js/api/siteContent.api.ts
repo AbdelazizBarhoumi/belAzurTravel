@@ -88,11 +88,13 @@ export interface DealCard {
 }
 
 export interface SimpleLinkItem {
+    id?: string;
     labelKey: string;
     href: string;
 }
 
 export interface NavDropdownItem {
+    id?: string;
     labelKey: string;
     href: string;
 }
@@ -161,12 +163,12 @@ export const hotelDetailDatabase: HotelDetailData[] = [
             en: "A luxury resort overlooking the caldera, with spectacular sunsets. The property offers an unforgettable experience in one of the world's most beautiful destinations.",
         },
         images: [
-            'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1551632786-de41eccbe38b?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1512207736139-6ea3b122658f?w=800&h=600&fit=crop',
-            'https://images.unsplash.com/photo-1537359387622-ef9e36b62a61?w=800&h=600&fit=crop',
+            '/images/destination-santorini.jpg',
+            '/images/destination-bali.jpg',
+            '/images/destination-paris.jpg',
+            '/images/destination-dubai.jpg',
+            '/images/hero-travel.jpg',
+            '/images/destination-santorini.jpg',
         ],
         amenities: [
             {
@@ -226,9 +228,7 @@ export const hotelDetailDatabase: HotelDetailData[] = [
                     },
                     { fr: 'Télévision', ar: 'تلفاز', en: 'tv' },
                 ],
-                images: [
-                    'https://images.unsplash.com/photo-1631049307038-da0ec36d9c46?w=600&h=400&fit=crop',
-                ],
+                images: ['/images/destination-bali.jpg'],
             },
             {
                 id: 'suite-1',
@@ -255,9 +255,7 @@ export const hotelDetailDatabase: HotelDetailData[] = [
                     },
                     { fr: 'Télévision', ar: 'تلفاز', en: 'tv' },
                 ],
-                images: [
-                    'https://images.unsplash.com/photo-1618588507045-cf1ee4dba957?w=600&h=400&fit=crop',
-                ],
+                images: ['/images/destination-paris.jpg'],
             },
             {
                 id: 'family-1',
@@ -284,9 +282,7 @@ export const hotelDetailDatabase: HotelDetailData[] = [
                     },
                     { fr: 'Télévision', ar: 'تلفاز', en: 'tv' },
                 ],
-                images: [
-                    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&h=400&fit=crop',
-                ],
+                images: ['/images/destination-dubai.jpg'],
             },
         ],
     },
@@ -336,7 +332,7 @@ export const blogPosts: BlogPost[] = [
         },
         date: 'Feb 15, 2026',
         category: { fr: 'Aventure', ar: 'مغامرة', en: 'Adventure' },
-        image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop',
+        image: '/images/hero-travel.jpg',
     },
     {
         slug: 'budget-travel-europe',
@@ -352,7 +348,7 @@ export const blogPosts: BlogPost[] = [
         },
         date: 'Feb 10, 2026',
         category: { fr: 'Conseils', ar: 'نصائح', en: 'Tips' },
-        image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=600&h=400&fit=crop',
+        image: '/images/destination-santorini.jpg',
     },
     {
         slug: 'sustainable-travel-2026',
@@ -368,7 +364,7 @@ export const blogPosts: BlogPost[] = [
         },
         date: 'Feb 5, 2026',
         category: { fr: 'Durabilité', ar: 'الاستدامة', en: 'Sustainability' },
-        image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600&h=400&fit=crop',
+        image: '/images/destination-bali.jpg',
     },
 ];
 
@@ -435,54 +431,82 @@ export const dealsSectionData: DealCard[] = [
 ];
 
 export const footerQuickLinks: SimpleLinkItem[] = [
-    { labelKey: 'nav.destinations', href: '/destinations' },
-    { labelKey: 'nav.hotels', href: '/hotels' },
-    { labelKey: 'nav.tours', href: '/tours' },
-    { labelKey: 'nav.deals', href: '/deals' },
-    { labelKey: 'nav.contact', href: '/contact' },
-    { labelKey: 'nav.gallery', href: '/gallery' },
-    { labelKey: 'nav.events', href: '/events' },
-    { labelKey: 'nav.blog', href: '/blog' },
+    {
+        id: 'nav-destinations',
+        labelKey: 'nav.destinations',
+        href: '/destinations',
+    },
+    { id: 'nav-hotels', labelKey: 'nav.hotels', href: '/hotels' },
+    { id: 'nav-tours', labelKey: 'nav.tours', href: '/tours' },
+    { id: 'nav-deals', labelKey: 'nav.deals', href: '/deals' },
+    { id: 'nav-contact', labelKey: 'nav.contact', href: '/contact' },
+    { id: 'nav-gallery', labelKey: 'nav.gallery', href: '/gallery' },
+    { id: 'nav-events', labelKey: 'nav.events', href: '/events' },
+    { id: 'nav-blog', labelKey: 'nav.blog', href: '/blog' },
 ];
 
 export const footerSupportLinks: SimpleLinkItem[] = [
-    { labelKey: 'nav.team', href: '/team' },
-    { labelKey: 'nav.legal', href: '/legal' },
-    { labelKey: 'nav.cars', href: '/cars' },
-    { labelKey: 'nav.flights', href: '/flights' },
-    { labelKey: 'nav.promos', href: '/promos' },
+    { id: 'nav-team', labelKey: 'nav.team', href: '/team' },
+    { id: 'nav-legal', labelKey: 'nav.legal', href: '/legal' },
+    { id: 'nav-cars', labelKey: 'nav.cars', href: '/cars' },
+    { id: 'nav-flights', labelKey: 'nav.flights', href: '/flights' },
+    { id: 'nav-promos', labelKey: 'nav.promos', href: '/promos' },
 ];
 
 export const navbarDestinationLinks: NavDropdownItem[] = [
-    { labelKey: 'cat.beach', href: '/destinations?cat=Beach' },
-    { labelKey: 'cat.city', href: '/destinations?cat=City' },
-    { labelKey: 'cat.nature', href: '/destinations?cat=Nature' },
-    { labelKey: 'cat.luxury', href: '/destinations?cat=Luxury' },
-    { labelKey: 'cat.adventure', href: '/destinations?cat=Adventure' },
+    { id: 'cat-beach', labelKey: 'cat.beach', href: '/destinations?cat=Beach' },
+    { id: 'cat-city', labelKey: 'cat.city', href: '/destinations?cat=City' },
+    {
+        id: 'cat-nature',
+        labelKey: 'cat.nature',
+        href: '/destinations?cat=Nature',
+    },
+    {
+        id: 'cat-luxury',
+        labelKey: 'cat.luxury',
+        href: '/destinations?cat=Luxury',
+    },
+    {
+        id: 'cat-adventure',
+        labelKey: 'cat.adventure',
+        href: '/destinations?cat=Adventure',
+    },
 ];
 
 export const navbarHotelLinks: NavDropdownItem[] = [
-    { labelKey: 'search.options.fiveStar', href: '/hotels?stars=5' },
-    { labelKey: 'search.options.fourStar', href: '/hotels?stars=4' },
-    { labelKey: 'search.options.threeStar', href: '/hotels?stars=3' },
+    {
+        id: 'hotel-5',
+        labelKey: 'search.options.fiveStar',
+        href: '/hotels?stars=5',
+    },
+    {
+        id: 'hotel-4',
+        labelKey: 'search.options.fourStar',
+        href: '/hotels?stars=4',
+    },
+    {
+        id: 'hotel-3',
+        labelKey: 'search.options.threeStar',
+        href: '/hotels?stars=3',
+    },
 ];
 
 export const navbarMoreLinks: NavDropdownItem[] = [
-    { labelKey: 'nav.cars', href: '/cars' },
-    { labelKey: 'nav.flights', href: '/flights' },
-    { labelKey: 'nav.promos', href: '/promos' },
-    { labelKey: 'nav.team', href: '/team' },
-    { labelKey: 'nav.contact', href: '/contact' },
-    { labelKey: 'nav.legal', href: '/legal' },
+    { id: 'more-cars', labelKey: 'nav.cars', href: '/cars' },
+    { id: 'more-flights', labelKey: 'nav.flights', href: '/flights' },
+    { id: 'more-promos', labelKey: 'nav.promos', href: '/promos' },
+    { id: 'more-team', labelKey: 'nav.team', href: '/team' },
+    { id: 'more-contact', labelKey: 'nav.contact', href: '/contact' },
+    { id: 'more-legal', labelKey: 'nav.legal', href: '/legal' },
 ];
 
 export const navbarSimpleLinks: SimpleLinkItem[] = [
-    { labelKey: 'nav.design', href: '/design-trip' },
-    { labelKey: 'nav.tours', href: '/tours' },
-    { labelKey: 'nav.deals', href: '/deals' },
-    { labelKey: 'nav.gallery', href: '/gallery' },
-    { labelKey: 'nav.events', href: '/events' },
-    { labelKey: 'nav.blog', href: '/blog' },
+    { id: 'simple-design', labelKey: 'nav.design', href: '/design-trip' },
+    { id: 'simple-tours', labelKey: 'nav.tours', href: '/tours' },
+    { id: 'simple-deals', labelKey: 'nav.deals', href: '/deals' },
+    { id: 'simple-gallery', labelKey: 'nav.gallery', href: '/gallery' },
+    { id: 'simple-events', labelKey: 'nav.events', href: '/events' },
+    { id: 'simple-blog', labelKey: 'nav.blog', href: '/blog' },
 ];
 
 export const designTripDestinations: OptionItem[] = [
@@ -578,27 +602,27 @@ export const galleryPhotos: string[] = [
     destBali,
     destParis,
     destDubai,
-    'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&h=900&fit=crop',
-    'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=1600&h=900&fit=crop',
+    '/images/destination-paris.jpg',
+    '/images/destination-dubai.jpg',
 ];
 
 export const teamMembers: TeamMember[] = [
     {
         name: 'Amina',
         role: 'Travel Advisor',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=600&fit=crop',
+        image: '/images/hero-travel.jpg',
         bio: 'Designs tailor-made escapes with a focus on luxury and comfort.',
     },
     {
         name: 'Youssef',
         role: 'Operations Lead',
-        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=600&fit=crop',
+        image: '/images/destination-santorini.jpg',
         bio: 'Coordinates logistics so every trip runs smoothly.',
     },
     {
         name: 'Sara',
         role: 'Destination Specialist',
-        image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop',
+        image: '/images/destination-bali.jpg',
         bio: 'Knows hidden gems, local culture, and the best places to stay.',
     },
 ];
@@ -638,3 +662,4 @@ export const landingTrustCards: Array<{
     { icon: Phone, titleKey: 'trust.card2', descriptionKey: 'trust.card2desc' },
     { icon: Phone, titleKey: 'trust.card3', descriptionKey: 'trust.card3desc' },
 ];
+

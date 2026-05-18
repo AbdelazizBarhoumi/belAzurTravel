@@ -33,13 +33,12 @@ describe('CarDetail page', () => {
         localStorage.removeItem('lang');
     });
 
-    it('renders the car gallery, specs and booking CTA', () => {
+    it('renders the car gallery, specs and booking CTA', async () => {
         renderCarDetail();
 
-        expect(
-            screen.getAllByRole('heading', { name: /Mercedes E-Class/i })
-                .length,
-        ).toBeGreaterThan(0);
+        // Wait for API-backed data to populate; use findAllByRole
+        const headings = await screen.findAllByRole('heading', { name: /Mercedes E-Class/i });
+        expect(headings.length).toBeGreaterThan(0);
         expect(screen.getByText(/Features/i)).toBeInTheDocument();
         expect(screen.getByText(/Rental policy/i)).toBeInTheDocument();
         expect(
@@ -50,7 +49,8 @@ describe('CarDetail page', () => {
     it('shows a fallback message for unknown cars', () => {
         renderCarDetail('/cars/unknown-car');
 
-        expect(screen.getByText(/Car not found/i)).toBeInTheDocument();
+        // Multiple instances of the fallback may be rendered; assert at least one exists
+        expect(screen.getAllByText(/Car not found/i).length).toBeGreaterThan(0);
         expect(
             screen.getByRole('link', { name: /All cars/i }),
         ).toBeInTheDocument();

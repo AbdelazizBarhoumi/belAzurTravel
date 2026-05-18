@@ -14,6 +14,20 @@ class SiteSetting extends Model
         'phone',
         'whatsapp',
         'address',
+        'plus_code',
         'year',
+        'social_links',
+        'legal_sections',
+        'footer_links',
+        'hours',
+        'content',
+    ];
+
+    protected $casts = [
+        'social_links' => 'array',
+        'legal_sections' => 'array',
+        'footer_links' => 'array',
+        'hours' => 'array',
+        'content' => 'array',
     ];
 }
