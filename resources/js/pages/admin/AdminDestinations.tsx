@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -7,13 +7,17 @@ import {
     listAdminEntities,
     saveAdminEntity,
 } from '@/api/admin.api';
+import { fetchCategories } from '@/api/categories.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
+import LangBadge from '@/components/forms/LangBadge';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
+import { CategoryManager } from '@/components/admin/CategoryManager';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type { AdminDestination } from '@/hooks/useAdminStore';
 import {
     categoryLabels,
@@ -28,6 +32,12 @@ type DestinationFormValues = AdminDestination & {
     galleryPaths?: string[];
     galleryFiles?: File[];
 };
+
+type DestinationLang = 'en' | 'fr' | 'ar';
+
+function localizedKey(base: string, lang: DestinationLang): string {
+    return `${base}_${lang}`;
+}
 
 function asText(value: unknown): string {
     return typeof value === 'string' ? value : '';
@@ -53,11 +63,19 @@ const AdminDestinations = () => {
 
     const queryClient = useQueryClient();
     const { t, lang } = useLanguage();
+    const { settings: siteSettings } = useSiteSettings();
     const [open, setOpen] = useState(false);
+    const [catManagerOpen, setCatManagerOpen] = useState(false);
     const [editing, setEditing] = useState<AdminDestination | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminDestination | null>(
         null,
     );
+
+    const isCodeEnabled =
+        siteSettings?.config?.navigation?.enabled_dropdowns?.includes(
+            'destinations',
+        );
+
     const dialogInitial: DestinationFormValues | null = editing
         ? ({
               ...editing,
@@ -71,6 +89,11 @@ const AdminDestinations = () => {
     const { data: destinations = [] } = useQuery({
         queryKey: ['admin', 'destinations'],
         queryFn: () => listAdminEntities<AdminDestination>('destinations'),
+    });
+
+    const { data: dbCategories = [] } = useQuery({
+        queryKey: ['admin', 'categories', 'destinations'],
+        queryFn: () => fetchCategories('destinations'),
     });
 
     const saveMutation = useMutation({
@@ -125,17 +148,38 @@ const AdminDestinations = () => {
             title={t('admin.destinations')}
             subtitle={t('admin.destinationsSubtitle')}
             actions={
-                <Button
-                    onClick={() => {
-                        setEditing(null);
-                        setOpen(true);
-                    }}
-                    className="gap-2 bg-primary text-primary-foreground"
-                >
-                    <Plus className="h-4 w-4" /> {t('actions.add')}
-                </Button>
+                <div className="flex gap-2">
+                    {isCodeEnabled && (
+                        <Button
+                            variant="outline"
+                            onClick={() => setCatManagerOpen(true)}
+                            className="gap-2"
+                        >
+                            <Settings className="h-4 w-4" /> Manage Categories
+                        </Button>
+                    )}
+                    <Button
+                        onClick={() => {
+                            setEditing(null);
+                            setOpen(true);
+                        }}
+                        className="gap-2 bg-primary text-primary-foreground"
+                    >
+                        <Plus className="h-4 w-4" /> {t('actions.add')}
+                    </Button>
+                </div>
             }
         >
+            <CategoryManager
+                type="destinations"
+                isOpen={catManagerOpen}
+                onClose={() => {
+                    setCatManagerOpen(false);
+                    queryClient.invalidateQueries({
+                        queryKey: ['admin', 'categories', 'destinations'],
+                    });
+                }}
+            />
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -192,11 +236,21 @@ const AdminDestinations = () => {
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className="rounded-full bg-muted px-2 py-1 text-xs">
-                                            {localizeKnown(
-                                                destination.category,
-                                                categoryLabels,
-                                                lang,
-                                            )}
+                                            {typeof destination.category ===
+                                                'object' &&
+                                            destination.category !== null
+                                                ? (destination.category as any)[
+                                                      lang
+                                                  ] ||
+                                                  (destination.category as any)
+                                                      .en
+                                                : localizeKnown(
+                                                      String(
+                                                          destination.category,
+                                                      ),
+                                                      categoryLabels,
+                                                      lang,
+                                                  )}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
@@ -268,46 +322,181 @@ const AdminDestinations = () => {
                             'admin.destinationForm.coreInformationHint',
                         ),
                         columns: 2,
-                        fields: [
-                            {
-                                key: 'name_en',
-                                label: t('admin.destinationForm.name'),
-                                type: 'text',
-                                required: true,
-                            },
-                            {
-                                key: 'country_en',
-                                label: t('admin.destinationForm.country'),
-                                type: 'text',
-                                required: true,
-                            },
-                            {
-                                key: 'category_en',
-                                label: t('admin.destinationForm.category'),
-                                type: 'select',
-                                options: Object.keys(categoryLabels).map(
-                                    (k) => ({
-                                        label:
-                                            categoryLabels[
-                                                k as keyof typeof categoryLabels
-                                            ].en ?? String(k),
-                                        value: String(k),
-                                    }),
-                                ),
-                                required: true,
-                            },
-                            {
-                                key: 'price',
-                                label: t('admin.destinationForm.price'),
-                                type: 'number',
-                                required: true,
-                            },
-                            {
-                                key: 'rating',
-                                label: t('admin.destinationForm.rating'),
-                                type: 'number',
-                            },
-                        ],
+                        render: ({ values, setField, activeLang }) => (
+                            <div className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {[
+                                        {
+                                            key: 'name',
+                                            label: t(
+                                                'admin.destinationForm.name',
+                                            ),
+                                            type: 'text' as const,
+                                            required: true,
+                                        },
+                                        {
+                                            key: 'country',
+                                            label: t(
+                                                'admin.destinationForm.country',
+                                            ),
+                                            type: 'text' as const,
+                                            required: true,
+                                        },
+                                        {
+                                            key: 'category',
+                                            label: t(
+                                                'admin.destinationForm.category',
+                                            ),
+                                            type: 'select' as const,
+                                            options:
+                                                dbCategories.length > 0
+                                                    ? dbCategories.map((c) => ({
+                                                          label:
+                                                              c.name[
+                                                                  activeLang
+                                                              ] || c.name.en,
+                                                          value: c.key,
+                                                      }))
+                                                    : Object.keys(
+                                                          categoryLabels,
+                                                      ).map((k) => ({
+                                                          label:
+                                                              categoryLabels[
+                                                                  k as keyof typeof categoryLabels
+                                                              ][activeLang] ??
+                                                              String(k),
+                                                          value: String(k),
+                                                      })),
+                                            required: true,
+                                        },
+                                    ].map((field) => {
+                                        const key = localizedKey(
+                                            field.key,
+                                            activeLang,
+                                        );
+
+                                        return (
+                                            <div
+                                                key={key}
+                                                className="space-y-2"
+                                            >
+                                                <label
+                                                    htmlFor={key}
+                                                    className="text-xs font-semibold text-muted-foreground"
+                                                >
+                                                    {field.label}
+                                                    <LangBadge
+                                                        lang={activeLang}
+                                                    />
+                                                </label>
+                                                {field.type === 'select' ? (
+                                                    <select
+                                                        id={key}
+                                                        value={String(
+                                                            values[key] ?? '',
+                                                        )}
+                                                        onChange={(event) =>
+                                                            setField(
+                                                                key,
+                                                                event.target
+                                                                    .value,
+                                                            )
+                                                        }
+                                                        required={
+                                                            field.required
+                                                        }
+                                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                    >
+                                                        <option value="">
+                                                            {t(
+                                                                'actions.select',
+                                                            )}
+                                                        </option>
+                                                        {field.options?.map(
+                                                            (option) => (
+                                                                <option
+                                                                    key={
+                                                                        option.value
+                                                                    }
+                                                                    value={
+                                                                        option.value
+                                                                    }
+                                                                >
+                                                                    {
+                                                                        option.label
+                                                                    }
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </select>
+                                                ) : (
+                                                    <input
+                                                        id={key}
+                                                        value={String(
+                                                            values[key] ?? '',
+                                                        )}
+                                                        onChange={(event) =>
+                                                            setField(
+                                                                key,
+                                                                event.target
+                                                                    .value,
+                                                            )
+                                                        }
+                                                        required={
+                                                            field.required
+                                                        }
+                                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                    />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor="destination-price"
+                                            className="text-xs font-semibold text-muted-foreground"
+                                        >
+                                            {t('admin.destinationForm.price')}
+                                        </label>
+                                        <input
+                                            id="destination-price"
+                                            type="number"
+                                            value={String(values.price ?? '')}
+                                            onChange={(event) =>
+                                                setField(
+                                                    'price',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            required
+                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor="destination-rating"
+                                            className="text-xs font-semibold text-muted-foreground"
+                                        >
+                                            {t('admin.destinationForm.rating')}
+                                        </label>
+                                        <input
+                                            id="destination-rating"
+                                            type="number"
+                                            value={String(values.rating ?? '')}
+                                            onChange={(event) =>
+                                                setField(
+                                                    'rating',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ),
                     },
                     {
                         title: t('admin.destinationForm.mediaAndHighlights'),
@@ -352,32 +541,62 @@ const AdminDestinations = () => {
                     {
                         title: t('admin.destinationForm.destinationFacts'),
                         columns: 4,
-                        fields: [
-                            {
-                                key: 'bestTime_en',
-                                label: t('admin.destinationForm.bestTime'),
-                                type: 'text',
-                            },
-                            {
-                                key: 'language_en',
-                                label: t('admin.destinationForm.language'),
-                                type: 'text',
-                            },
-                            {
-                                key: 'currency_en',
-                                label: t('admin.destinationForm.currency'),
-                                type: 'text',
-                            },
-                            {
-                                key: 'weather_en',
-                                label: t('admin.destinationForm.weather'),
-                                type: 'text',
-                            },
-                        ],
                         gridSpan: 2,
+                        render: ({ values, setField, activeLang }) => (
+                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                                {[
+                                    'bestTime',
+                                    'language',
+                                    'currency',
+                                    'weather',
+                                ].map((key) => {
+                                    const fieldKey = localizedKey(
+                                        key,
+                                        activeLang,
+                                    );
+                                    const label = t(
+                                        `admin.destinationForm.${key}`,
+                                    );
+
+                                    return (
+                                        <div
+                                            key={fieldKey}
+                                            className="space-y-2"
+                                        >
+                                            <label
+                                                htmlFor={fieldKey}
+                                                className="text-xs font-semibold text-muted-foreground"
+                                            >
+                                                {label}
+                                                <LangBadge lang={activeLang} />
+                                            </label>
+                                            <input
+                                                id={fieldKey}
+                                                value={String(
+                                                    values[fieldKey] ?? '',
+                                                )}
+                                                onChange={(event) =>
+                                                    setField(
+                                                        fieldKey,
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ),
                     },
                 ]}
                 onSubmit={(values) => {
+                    const gallery = Array.isArray(values.galleryPaths)
+                        ? (values.galleryPaths as string[]).join('\n')
+                        : typeof values.gallery === 'string'
+                          ? values.gallery
+                          : '';
+
                     const item = {
                         ...values,
                         id: editing?.id ?? '',
@@ -400,9 +619,7 @@ const AdminDestinations = () => {
                                 ? values.imageFile
                                 : (values.imagePath ?? values.image ?? ''),
                         highlights: values.highlights ?? '',
-                        gallery: Array.isArray(values.galleryPaths)
-                            ? (values.galleryPaths as string[]).join('\n')
-                            : (values.gallery ?? ''),
+                        gallery,
                         gallery_files: values.galleryFiles ?? undefined,
                     } as unknown as AdminDestination;
 

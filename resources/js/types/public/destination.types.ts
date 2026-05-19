@@ -64,6 +64,8 @@ export interface TourItem {
     maxGroup: number;
     price: number;
     rating: number;
+    // optional category key used by the API
+    category_key?: string;
     image: string;
     description: LocalizedText;
 }

@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { Car, Coffee, Droplet, Dumbbell, Utensils, Wifi } from 'lucide-react';
 import { Navigate, useParams } from 'react-router-dom';
 import { HotelInfo } from '@/components/cards/HotelInfo';
-import { HotelSummary } from '@/components/cards/HotelSummary';
 import { StickyBookingCard } from '@/components/cards/StickyBookingCard';
 import { PageShell } from '@/components/layout/PageShell';
 import { RoomsList } from '@/components/lists/RoomsList';
@@ -112,8 +111,8 @@ export default function HotelDetail() {
     const title = localizeText(detail.name, lang);
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
-    const city = detail.city ? localizeText(detail.city, lang) : '';
-    const country = detail.country
+    const _city = detail.city ? localizeText(detail.city, lang) : '';
+    const _country = detail.country
         ? localizeText(detail.country, lang)
         : location;
     const whatsapp = detail.whatsapp ?? '';
@@ -150,7 +149,18 @@ export default function HotelDetail() {
                 className="grid gap-10 lg:grid-cols-[2fr_1fr]"
             >
                 <div className="space-y-8">
-                    <Gallery images={gallery} hotelName={title} />
+                    <Gallery
+                        images={gallery}
+                        hotelName={title}
+                        favoriteItem={{
+                            id: `hotel-${detail.id}`,
+                            type: 'hotel',
+                            name: title,
+                            image: gallery[0] ?? '',
+                            price: minPrice,
+                            location,
+                        }}
+                    />
 
                     <div className="lg:hidden">
                         <StickyBookingCard
@@ -163,30 +173,12 @@ export default function HotelDetail() {
                             description={description}
                             rating={detail.rating}
                             reviews={detail.reviews}
-                            favoriteItem={{
-                                id: `hotel-${detail.id}`,
-                                type: 'hotel',
-                                name: title,
-                                image: gallery[0] ?? '',
-                                price: minPrice,
-                                location,
-                            }}
                             primaryButtonLabel={
                                 t('hotelDetail.reserveNow') || 'Book now'
                             }
                             onBook={handleReserve}
                         />
                     </div>
-
-                    <HotelSummary
-                        name={title}
-                        stars={detail.stars}
-                        rating={detail.rating}
-                        reviews={detail.reviews}
-                        location={location}
-                        city={city}
-                        country={country}
-                    />
 
                     <HotelInfo
                         description={description}
@@ -214,14 +206,6 @@ export default function HotelDetail() {
                         description={description}
                         rating={detail.rating}
                         reviews={detail.reviews}
-                        favoriteItem={{
-                            id: `hotel-${detail.id}`,
-                            type: 'hotel',
-                            name: title,
-                            image: gallery[0] ?? '',
-                            price: minPrice,
-                            location,
-                        }}
                         primaryButtonLabel={
                             t('hotelDetail.reserveNow') || 'Book now'
                         }

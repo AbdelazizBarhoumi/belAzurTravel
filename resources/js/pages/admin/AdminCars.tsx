@@ -1,3 +1,10 @@
+function LangBadge({ lang }: { lang: Lang }) {
+    return (
+        <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {lang}
+        </span>
+    );
+}
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -27,15 +34,16 @@ const copy = (en: string, fr: string, ar: string): Copy => ({ en, fr, ar });
 
 function localizedFields(base: string, label: Copy, type?: FieldDef['type']) {
     return [
-        { key: `${base}_en`, label: `${label.en} (EN)`, type, required: true },
-        { key: `${base}_fr`, label: `${label.fr} (FR)`, type, required: true },
-        { key: `${base}_ar`, label: `${label.ar} (AR)`, type, required: true },
+        { key: `${base}_en`, label: label.en, type, required: true },
+        { key: `${base}_fr`, label: label.fr, type, required: true },
+        { key: `${base}_ar`, label: label.ar, type, required: true },
     ];
 }
 
 const name = copy('Name', 'Nom', 'الاسم');
 const category = copy('Category', 'Catégorie', 'الفئة');
 const price = copy('Price', 'Prix', 'السعر');
+const seats = copy('Seats', 'Places', 'المقاعد');
 const description = copy('Description', 'Description', 'الوصف');
 const image = copy(
     'Server image path',
@@ -126,6 +134,14 @@ export default function AdminCars() {
         : null;
 
     function handleSave(values: Record<string, unknown>) {
+        const gallery = Array.isArray(values.galleryPaths)
+            ? values.galleryPaths
+                  .filter((item): item is string => typeof item === 'string')
+                  .join('\n')
+            : typeof values.gallery === 'string'
+              ? values.gallery
+              : '';
+
         const payload: Record<string, unknown> = {
             ...values,
             id: editing?.id ?? '',
@@ -135,13 +151,7 @@ export default function AdminCars() {
                     : ((values.imagePath as string | undefined) ??
                       (values.image as string | undefined) ??
                       ''),
-            gallery: Array.isArray(values.galleryPaths)
-                ? values.galleryPaths
-                      .filter(
-                          (item): item is string => typeof item === 'string',
-                      )
-                      .join('\n')
-                : '',
+            gallery,
         };
 
         if (
@@ -187,8 +197,8 @@ export default function AdminCars() {
                                     htmlFor={localizedKey}
                                     className="text-xs font-semibold text-muted-foreground"
                                 >
-                                    {field.label[activeLang]} (
-                                    {activeLang.toUpperCase()})
+                                    {field.label.en}
+                                    <LangBadge lang={activeLang} />
                                 </label>
                                 <input
                                     id={localizedKey}
@@ -211,7 +221,7 @@ export default function AdminCars() {
                             htmlFor="car-price"
                             className="text-xs font-semibold text-muted-foreground"
                         >
-                            {price[lang]}
+                            {price.en}
                         </label>
                         <input
                             id="car-price"
@@ -229,7 +239,7 @@ export default function AdminCars() {
                             htmlFor="car-seats"
                             className="text-xs font-semibold text-muted-foreground"
                         >
-                            Seats
+                            {seats.en}
                         </label>
                         <input
                             id="car-seats"
@@ -247,8 +257,8 @@ export default function AdminCars() {
                             htmlFor={`car-description-${activeLang}`}
                             className="text-xs font-semibold text-muted-foreground"
                         >
-                            {description[activeLang]} (
-                            {activeLang.toUpperCase()})
+                            {description.en}
+                            <LangBadge lang={activeLang} />
                         </label>
                         <textarea
                             id={`car-description-${activeLang}`}
@@ -291,12 +301,18 @@ export default function AdminCars() {
                     'Driver age 25+\nFull tank required\nInsurance included',
             },
         ],
-        render: ({ values, setField }) => (
+        render: ({ values, setField, activeLang }) => (
             <EntityMediaInputs
                 values={values}
                 setField={setField}
-                imageLabel={image[lang]}
-                galleryLabel="Gallery"
+                imageLabel={image[activeLang]}
+                galleryLabel={
+                    activeLang === 'ar'
+                        ? 'المعرض'
+                        : activeLang === 'fr'
+                          ? 'Galerie'
+                          : 'Gallery'
+                }
                 showImage
                 showGallery
             />

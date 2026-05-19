@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Users, Fuel, Settings2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
@@ -14,27 +14,41 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useCars } from '@/hooks/usePublicData';
+import { useCars, useCategories } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
 
-const Cars = () => {
+export default function Cars() {
+    const location = useLocation();
+    return <CarsContent key={location.search} />;
+}
+
+function CarsContent() {
     const { t, lang } = useLanguage();
+    const [params] = useSearchParams();
+    const initialSearch = params.get('q') || '';
+    const initialCategory = params.get('type')?.toLowerCase() || ALL;
+
     const { data: cars = [] } = useCars();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState(ALL);
+    const { data: dynamicCategories = [] } = useCategories('cars');
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [selectedFuel, setSelectedFuel] = useState(ALL);
     const [selectedTransmission, setSelectedTransmission] = useState(ALL);
     const [selectedSeats, setSelectedSeats] = useState(ALL);
 
     const categoryOptions = useMemo(
-        () =>
-            Array.from(
-                new Set(cars.map((car) => localizeText(car.category, lang))),
-            ),
-        [cars, lang],
+        () => [
+            { value: ALL, label: t('common.all') },
+            ...dynamicCategories.map((c) => ({
+                value: c.key,
+                label: c.name[lang] || c.name.en,
+            })),
+        ],
+        [dynamicCategories, lang, t],
     );
+
     const fuelOptions = useMemo(
         () =>
             Array.from(
@@ -81,7 +95,7 @@ const Cars = () => {
                 ]);
                 const matchesCategory =
                     selectedCategory === ALL ||
-                    localizeText(car.category, lang) === selectedCategory;
+                    car.category_key === selectedCategory;
                 const matchesFuel =
                     selectedFuel === ALL ||
                     localizeText(car.fuel, lang) === selectedFuel;
@@ -129,6 +143,7 @@ const Cars = () => {
 
     return (
         <PageShell
+            key={params.toString()}
             titleKey="cars.title"
             subtitleKey="cars.subtitle"
             breadcrumbs={[
@@ -160,12 +175,12 @@ const Cars = () => {
                                 <SelectValue placeholder={t('common.all')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value={ALL}>
-                                    {t('common.all')}
-                                </SelectItem>
                                 {categoryOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                        {option}
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -324,6 +339,4 @@ const Cars = () => {
             </div>
         </PageShell>
     );
-};
-
-export default Cars;
+}

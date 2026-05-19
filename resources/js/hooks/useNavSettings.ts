@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { apiFetch } from '@/api/http';
 import { useSiteSettingsContext } from '@/contexts/SiteSettingsContext';
 import type { NavSettings } from '@/lib/nav-config';
 import { DEFAULT_NAV_SETTINGS } from '@/lib/nav-config';
 
 export function useNavSettings() {
-    const { settings: siteSettings, loading, setSettings } =
-        useSiteSettingsContext();
+    const {
+        settings: siteSettings,
+        loading,
+        setSettings,
+    } = useSiteSettingsContext();
 
     const settings = useMemo(
         () => siteSettings.content?.nav?.settings ?? DEFAULT_NAV_SETTINGS,
@@ -33,33 +36,36 @@ export function useNavSettings() {
     }, [setSettings, settings]);
 
     // Save settings to Laravel API
-    const update = useCallback(async (next: NavSettings) => {
-        try {
-            setSettings((prev) => ({
-                ...prev,
-                content: {
-                    ...(prev.content ?? {}),
-                    nav: {
-                        ...(prev.content?.nav ?? {}),
-                        settings: next,
-                    },
-                },
-            }));
-            await apiFetch('/api/site-settings', {
-                method: 'PUT',
-                body: JSON.stringify({
+    const update = useCallback(
+        async (next: NavSettings) => {
+            try {
+                setSettings((prev) => ({
+                    ...prev,
                     content: {
+                        ...(prev.content ?? {}),
                         nav: {
+                            ...(prev.content?.nav ?? {}),
                             settings: next,
                         },
                     },
-                }),
-            });
-        } catch (err) {
-            console.error('Failed to save nav settings:', err);
-            throw err;
-        }
-    }, []);
+                }));
+                await apiFetch('/api/site-settings', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        content: {
+                            nav: {
+                                settings: next,
+                            },
+                        },
+                    }),
+                });
+            } catch (err) {
+                console.error('Failed to save nav settings:', err);
+                throw err;
+            }
+        },
+        [setSettings],
+    );
 
     // Reset to defaults
     const reset = useCallback(async () => {
@@ -88,7 +94,7 @@ export function useNavSettings() {
             console.error('Failed to reset nav settings:', err);
             throw err;
         }
-    }, []);
+    }, [setSettings]);
 
     return { settings, loading, update, reset };
 }

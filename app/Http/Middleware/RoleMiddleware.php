@@ -12,7 +12,16 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        if (! $user || ! $user->active || ! in_array($user->role, $roles, true)) {
+        if (! $user || ! $user->active) {
+            abort(response()->json(['error' => 'Unauthenticated'], 401));
+        }
+
+        // Admin can access everything
+        if ($user->role === 'admin') {
+            return $next($request);
+        }
+
+        if (! in_array($user->role, $roles, true)) {
             abort(response()->json(['error' => 'Forbidden'], 403));
         }
 

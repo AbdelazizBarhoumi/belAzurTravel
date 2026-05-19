@@ -84,9 +84,13 @@ describe('AdminTours', () => {
         });
 
         await waitFor(() => {
-            expect(screen.getByDisplayValue('Greek Island Hopping')).toBeInTheDocument();
+            expect(
+                screen.getByDisplayValue('Greek Island Hopping'),
+            ).toBeInTheDocument();
             expect(screen.getByDisplayValue('Greece')).toBeInTheDocument();
-            expect(screen.getByDisplayValue('A scenic island tour.')).toBeInTheDocument();
+            expect(
+                screen.getByDisplayValue('A scenic island tour.'),
+            ).toBeInTheDocument();
             expect(screen.getByDisplayValue('2499')).toBeInTheDocument();
         });
 
@@ -105,8 +109,14 @@ describe('AdminTours', () => {
         });
 
         await waitFor(() => {
-            expect((screen.getByLabelText('Main image') as HTMLInputElement).files?.length).toBe(1);
-            expect((screen.getByLabelText('Gallery') as HTMLInputElement).files?.length).toBe(1);
+            expect(
+                (screen.getByLabelText('Main image') as HTMLInputElement).files
+                    ?.length,
+            ).toBe(1);
+            expect(
+                (screen.getByLabelText('Gallery') as HTMLInputElement).files
+                    ?.length,
+            ).toBe(1);
         });
 
         fireEvent.click(screen.getByRole('button', { name: /save/i }));

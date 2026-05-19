@@ -117,19 +117,19 @@ const AdminBookings = () => {
                                                 }`}
                                             >
                                                 <option value="Pending">
-                                                    {bookingStatusLabels.Pending?.[
-                                                        lang
-                                                    ] ?? 'Pending'}
+                                                    {bookingStatusLabels
+                                                        .Pending?.[lang] ??
+                                                        'Pending'}
                                                 </option>
                                                 <option value="Confirmed">
-                                                    {bookingStatusLabels.Confirmed?.[
-                                                        lang
-                                                    ] ?? 'Confirmed'}
+                                                    {bookingStatusLabels
+                                                        .Confirmed?.[lang] ??
+                                                        'Confirmed'}
                                                 </option>
                                                 <option value="Cancelled">
-                                                    {bookingStatusLabels.Cancelled?.[
-                                                        lang
-                                                    ] ?? 'Cancelled'}
+                                                    {bookingStatusLabels
+                                                        .Cancelled?.[lang] ??
+                                                        'Cancelled'}
                                                 </option>
                                             </select>
                                         </td>

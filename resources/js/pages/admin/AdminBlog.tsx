@@ -10,6 +10,7 @@ import {
 } from '@/api/admin.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
+import LangBadge from '@/components/forms/LangBadge';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -209,141 +210,146 @@ export default function AdminBlog() {
                 sections={[
                     {
                         title: 'Core information',
-                        columns: 2,
-                        fields: [
-                            {
-                                key: 'title_en',
-                                label: 'Title (EN)',
-                                type: 'text',
-                                required: true,
-                            },
-                            {
-                                key: 'title_fr',
-                                label: 'Title (FR)',
-                                type: 'text',
-                                required: true,
-                            },
-                            {
-                                key: 'title_ar',
-                                label: 'Title (AR)',
-                                type: 'text',
-                                required: true,
-                            },
-                            { key: 'date', label: 'Date', type: 'text' },
-                            {
-                                key: 'category_en',
-                                label: 'Category (EN)',
-                                type: 'text',
-                            },
-                            {
-                                key: 'category_fr',
-                                label: 'Category (FR)',
-                                type: 'text',
-                            },
-                            {
-                                key: 'category_ar',
-                                label: 'Category (AR)',
-                                type: 'text',
-                            },
-                        ],
-                        render: ({ values, setField }) => (
-                            <div className="md:col-span-2">
-                                <EntityMediaInputs
-                                    values={values}
-                                    setField={setField}
-                                    imageLabel="Main image"
-                                    showGallery={false}
-                                />
+                        description:
+                            'Edit the current language for title and category.',
+                        render: ({ values, setField, activeLang }) => (
+                            <div className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {[
+                                        { key: 'title', label: 'Title' },
+                                        { key: 'category', label: 'Category' },
+                                    ].map((field) => {
+                                        const fieldKey = `${field.key}_${activeLang}`;
+
+                                        return (
+                                            <div
+                                                key={fieldKey}
+                                                className="space-y-2"
+                                            >
+                                                <label
+                                                    htmlFor={fieldKey}
+                                                    className="text-xs font-semibold text-muted-foreground"
+                                                >
+                                                    {field.label}
+                                                    <LangBadge
+                                                        lang={activeLang}
+                                                    />
+                                                </label>
+                                                <input
+                                                    id={fieldKey}
+                                                    value={String(
+                                                        values[fieldKey] ?? '',
+                                                    )}
+                                                    onChange={(event) =>
+                                                        setField(
+                                                            fieldKey,
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                />
+                                            </div>
+                                        );
+                                    })}
+
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor="blog-date"
+                                            className="text-xs font-semibold text-muted-foreground"
+                                        >
+                                            Date
+                                        </label>
+                                        <input
+                                            id="blog-date"
+                                            value={String(values.date ?? '')}
+                                            onChange={(event) =>
+                                                setField(
+                                                    'date',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <EntityMediaInputs
+                                            values={values}
+                                            setField={setField}
+                                            imageLabel="Main image"
+                                            showGallery={false}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         ),
                     },
                     {
                         title: 'Summary and body',
-                        columns: 3,
-                        render: ({ values, setField }) => {
+                        description:
+                            'Edit the excerpt and full article body for the active language only.',
+                        render: ({ values, setField, activeLang }) => {
                             const content = (values.content as any) || {
                                 body: { en: '', fr: '', ar: '' },
                                 sections: [],
                             };
 
-                            const updateBody = (lang: string, next: string) => {
+                            const updateBody = (next: string) => {
                                 setField('content', {
                                     ...content,
-                                    body: { ...content.body, [lang]: next },
+                                    body: {
+                                        ...content.body,
+                                        [activeLang]: next,
+                                    },
                                 });
                             };
 
                             return (
-                                <div className="space-y-4 md:col-span-2">
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor={`excerpt_${activeLang}`}
+                                            className="text-xs font-semibold text-muted-foreground"
+                                        >
+                                            Excerpt
+                                            <LangBadge lang={activeLang} />
+                                        </label>
                                         <textarea
+                                            id={`excerpt_${activeLang}`}
                                             value={String(
-                                                values.excerpt_en ?? '',
+                                                values[
+                                                    `excerpt_${activeLang}`
+                                                ] ?? '',
                                             )}
-                                            onChange={(e) =>
+                                            onChange={(event) =>
                                                 setField(
-                                                    'excerpt_en',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                        />
-                                        <textarea
-                                            value={String(
-                                                values.excerpt_fr ?? '',
-                                            )}
-                                            onChange={(e) =>
-                                                setField(
-                                                    'excerpt_fr',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                        />
-                                        <textarea
-                                            value={String(
-                                                values.excerpt_ar ?? '',
-                                            )}
-                                            onChange={(e) =>
-                                                setField(
-                                                    'excerpt_ar',
-                                                    e.target.value,
+                                                    `excerpt_${activeLang}`,
+                                                    event.target.value,
                                                 )
                                             }
                                             className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                                         />
                                     </div>
 
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor={`content_body_${activeLang}`}
+                                            className="text-xs font-semibold text-muted-foreground"
+                                        >
+                                            Body
+                                            <LangBadge lang={activeLang} />
+                                        </label>
                                         <textarea
+                                            id={`content_body_${activeLang}`}
                                             value={String(
-                                                content.body.en ?? '',
+                                                content.body?.[activeLang] ??
+                                                    '',
                                             )}
-                                            onChange={(e) =>
-                                                updateBody('en', e.target.value)
+                                            onChange={(event) =>
+                                                updateBody(event.target.value)
                                             }
-                                            className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                            placeholder="Write the full article body in English..."
-                                        />
-                                        <textarea
-                                            value={String(
-                                                content.body.fr ?? '',
-                                            )}
-                                            onChange={(e) =>
-                                                updateBody('fr', e.target.value)
-                                            }
-                                            className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                            placeholder="Rédigez le corps complet de l'article en français..."
-                                        />
-                                        <textarea
-                                            value={String(
-                                                content.body.ar ?? '',
-                                            )}
-                                            onChange={(e) =>
-                                                updateBody('ar', e.target.value)
-                                            }
-                                            className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                            placeholder="اكتب نص المقال الكامل بالعربية..."
+                                            className="min-h-32 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            placeholder={`Write the full article body in ${activeLang.toUpperCase()}...`}
                                         />
                                     </div>
                                 </div>
@@ -352,7 +358,9 @@ export default function AdminBlog() {
                     },
                     {
                         title: 'Content sections',
-                        render: ({ values, setField }) => {
+                        description:
+                            'Manage section headings and bodies for the active language.',
+                        render: ({ values, setField, activeLang }) => {
                             const content = (values.content as any) || {
                                 body: { en: '', fr: '', ar: '' },
                                 sections: [],
@@ -387,7 +395,6 @@ export default function AdminBlog() {
                             const updateSection = (
                                 index: number,
                                 part: 'heading' | 'body',
-                                lang: string,
                                 next: string,
                             ) => {
                                 const sections = (content.sections || []).map(
@@ -397,7 +404,7 @@ export default function AdminBlog() {
                                                   ...s,
                                                   [part]: {
                                                       ...(s[part] || {}),
-                                                      [lang]: next,
+                                                      [activeLang]: next,
                                                   },
                                               }
                                             : s,
@@ -496,53 +503,30 @@ export default function AdminBlog() {
                                                             </div>
                                                         </div>
 
-                                                        <div className="grid gap-4 md:grid-cols-3">
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-semibold text-muted-foreground">
+                                                                Section heading
+                                                                <LangBadge
+                                                                    lang={
+                                                                        activeLang
+                                                                    }
+                                                                />
+                                                            </label>
                                                             <input
-                                                                value={
+                                                                value={String(
                                                                     section
-                                                                        .heading
-                                                                        .en
-                                                                }
-                                                                onChange={(e) =>
+                                                                        .heading?.[
+                                                                        activeLang
+                                                                    ] ?? '',
+                                                                )}
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
                                                                     updateSection(
                                                                         index,
                                                                         'heading',
-                                                                        'en',
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                                            />
-                                                            <input
-                                                                value={
-                                                                    section
-                                                                        .heading
-                                                                        .fr
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateSection(
-                                                                        index,
-                                                                        'heading',
-                                                                        'fr',
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                                            />
-                                                            <input
-                                                                value={
-                                                                    section
-                                                                        .heading
-                                                                        .ar
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateSection(
-                                                                        index,
-                                                                        'heading',
-                                                                        'ar',
-                                                                        e.target
+                                                                        event
+                                                                            .target
                                                                             .value,
                                                                     )
                                                                 }
@@ -550,50 +534,30 @@ export default function AdminBlog() {
                                                             />
                                                         </div>
 
-                                                        <div className="grid gap-4 md:grid-cols-3">
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-semibold text-muted-foreground">
+                                                                Section body
+                                                                <LangBadge
+                                                                    lang={
+                                                                        activeLang
+                                                                    }
+                                                                />
+                                                            </label>
                                                             <textarea
-                                                                value={
-                                                                    section.body
-                                                                        .en
-                                                                }
-                                                                onChange={(e) =>
+                                                                value={String(
+                                                                    section
+                                                                        .body?.[
+                                                                        activeLang
+                                                                    ] ?? '',
+                                                                )}
+                                                                onChange={(
+                                                                    event,
+                                                                ) =>
                                                                     updateSection(
                                                                         index,
                                                                         'body',
-                                                                        'en',
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                                            />
-                                                            <textarea
-                                                                value={
-                                                                    section.body
-                                                                        .fr
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateSection(
-                                                                        index,
-                                                                        'body',
-                                                                        'fr',
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                                            />
-                                                            <textarea
-                                                                value={
-                                                                    section.body
-                                                                        .ar
-                                                                }
-                                                                onChange={(e) =>
-                                                                    updateSection(
-                                                                        index,
-                                                                        'body',
-                                                                        'ar',
-                                                                        e.target
+                                                                        event
+                                                                            .target
                                                                             .value,
                                                                     )
                                                                 }

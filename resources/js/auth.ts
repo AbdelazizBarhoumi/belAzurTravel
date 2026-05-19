@@ -33,6 +33,11 @@ export function clearAuthUser(): void {
  */
 export async function logout(): Promise<void> {
     try {
+        const csrfToken =
+            document
+                .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+                ?.getAttribute('content') ?? '';
+
         // Call server to destroy session
         await fetch('/logout', {
             method: 'POST',
@@ -40,6 +45,7 @@ export async function logout(): Promise<void> {
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
             },
         });
     } catch (error) {

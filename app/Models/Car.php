@@ -9,6 +9,6 @@ class Car extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['slug', 'name', 'category', 'price', 'seats', 'fuel', 'transmission', 'image', 'details'];
+    protected $fillable = ['slug', 'name', 'category_key', 'category', 'price', 'seats', 'fuel', 'transmission', 'image', 'details'];
     protected $casts = ['name' => 'array', 'category' => 'array', 'fuel' => 'array', 'transmission' => 'array', 'details' => 'array', 'price' => 'integer', 'seats' => 'integer'];
 }

@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
 import { LogOut } from 'lucide-react';
+import { logout } from '@/auth';
 import {
     SidebarMenu,
     SidebarMenuButton,
@@ -7,14 +7,17 @@ import {
 } from '@/components/ui/sidebar';
 
 export function NavUser() {
+    const handleLogout = async () => {
+        await logout();
+        window.location.href = '/login';
+    };
+
     return (
         <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Sign Out">
-                    <Link href="/logout" method="post" as="button">
-                        <LogOut className="h-4 w-4" />
-                        <span>Sign Out</span>
-                    </Link>
+                <SidebarMenuButton onClick={handleLogout} tooltip="Sign Out">
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>

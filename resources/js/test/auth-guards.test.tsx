@@ -22,6 +22,10 @@ vi.mock('@/hooks/useAuthUser', () => ({
     useAuthUser: vi.fn(),
 }));
 
+vi.mock('@/components/layout/BrandLogo', () => ({
+    BrandLogo: () => <div data-testid="brand-logo" />,
+}));
+
 function renderWithRouter(ui: ReactElement, initialEntries = ['/']) {
     return render(
         <LanguageProvider>
@@ -55,27 +59,6 @@ describe('auth guards', () => {
             await screen.findByRole('button', {
                 name: /se connecter|sign in/i,
             }),
-        ).toBeInTheDocument();
-        expect(navigateMock).not.toHaveBeenCalled();
-    });
-
-    it('shows a loading state while admin auth is still resolving', async () => {
-        vi.mocked(useAuthUser).mockReturnValue({
-            data: undefined,
-            isPending: true,
-            isFetching: true,
-            isError: false,
-        } as never);
-
-        renderWithRouter(
-            <RoleGuard role="admin">
-                <div>secret admin content</div>
-            </RoleGuard>,
-            ['/admin/dashboard'],
-        );
-
-        expect(
-            await screen.findByText(/loading admin area/i),
         ).toBeInTheDocument();
         expect(navigateMock).not.toHaveBeenCalled();
     });

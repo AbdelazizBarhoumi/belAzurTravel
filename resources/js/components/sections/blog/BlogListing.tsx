@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import CardMedia from '@/components/ui/CardMedia';
 import {
@@ -13,7 +14,7 @@ import {
     PaginationPrevious,
 } from '@/components/ui/pagination';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useBlogPosts } from '@/hooks/usePublicData';
+import { useBlogPosts, useCategories } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 import { matchesSearchText } from '@/lib/listFilters';
 
@@ -29,19 +30,25 @@ interface BlogListingProps {
 
 export function BlogListing({ pageSize = 6 }: BlogListingProps) {
     const { t, lang } = useLanguage();
+    const [params] = useSearchParams();
+    const initialSearch = params.get('q') || '';
+    const initialCategory = params.get('cat')?.toLowerCase() || 'all';
+
     const { data: posts = [] } = useBlogPosts();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    const { data: dynamicCategories = [] } = useCategories('blog');
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [currentPage, setCurrentPage] = useState(1);
 
     const categories = useMemo(
         () => [
-            'all',
-            ...Array.from(
-                new Set(posts.map((post) => localize(post.category, lang))),
-            ),
+            { value: 'all', label: t('common.all') },
+            ...dynamicCategories.map((c) => ({
+                value: c.key,
+                label: c.name[lang] || c.name.en,
+            })),
         ],
-        [posts, lang],
+        [dynamicCategories, lang, t],
     );
 
     const filteredPosts = useMemo(
@@ -54,7 +61,7 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
                 ]);
                 const matchesCategory =
                     selectedCategory === 'all' ||
-                    localize(post.category, lang) === selectedCategory;
+                    post.category_key === selectedCategory;
 
                 return matchesSearch && matchesCategory;
             }),
@@ -85,7 +92,7 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
     };
 
     return (
-        <section className="bg-background py-12">
+        <section key={params.toString()} className="bg-background py-12">
             <div className="container mx-auto px-4">
                 <ListFilterBar
                     searchValue={searchQuery}
@@ -99,14 +106,14 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
                     <div className="flex flex-wrap gap-2">
                         {categories.map((category) => (
                             <button
-                                key={category}
+                                key={category.value}
                                 type="button"
-                                onClick={() => handleCategoryChange(category)}
-                                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedCategory === category ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}
+                                onClick={() =>
+                                    handleCategoryChange(category.value)
+                                }
+                                className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedCategory === category.value ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}
                             >
-                                {category === 'all'
-                                    ? t('common.all')
-                                    : category}
+                                {category.label}
                             </button>
                         ))}
                     </div>

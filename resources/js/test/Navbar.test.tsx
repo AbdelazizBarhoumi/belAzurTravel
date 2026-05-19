@@ -2,9 +2,38 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type * as SiteSettingsApi from '@/api/siteSettings.api';
+import type * as PublicDataHooks from '@/hooks/usePublicData';
 import { Navbar } from '@/components/layout/Navbar';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+
+const categoriesByType: Record<string, Array<{ key: string; name: Record<string, string> }>> = {
+    destinations: [
+        { key: 'beach', name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' } },
+        { key: 'city', name: { en: 'City', fr: 'Ville', ar: 'مدينة' } },
+    ],
+    hotels: [{ key: 'luxury', name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' } }],
+    tours: [{ key: 'adventure', name: { en: 'Adventure', fr: 'Aventure', ar: 'مغامرة' } }],
+    cars: [{ key: 'suv', name: { en: 'SUV', fr: 'SUV', ar: 'دفع رباعي' } }],
+    events: [{ key: 'festival', name: { en: 'Festival', fr: 'Festival', ar: 'مهرجان' } }],
+    deals: [{ key: 'summer', name: { en: 'Summer', fr: 'Été', ar: 'صيف' } }],
+    blog: [{ key: 'tips', name: { en: 'Tips', fr: 'Conseils', ar: 'نصائح' } }],
+};
+
+vi.mock('@/hooks/usePublicData', async () => {
+    const actual = await vi.importActual<typeof PublicDataHooks>(
+        '@/hooks/usePublicData',
+    );
+
+    return {
+        ...actual,
+        useCategories: (type?: string) => ({
+            data: categoriesByType[type ?? ''] ?? [],
+            isLoading: false,
+            isFetched: true,
+        }),
+    };
+});
 
 // Mock the site settings API module
 vi.mock('@/api/siteSettings.api', async () => {
@@ -87,6 +116,22 @@ describe('Navbar', () => {
             document.querySelector('a[href="/promos"]') ||
                 document.querySelector('a[href="/deals"]'),
         ).toBeTruthy();
+    });
+
+    it('renders live categories inside dropdown menus', async () => {
+        render(
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter>
+                        <Navbar />
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>,
+        );
+
+        await waitFor(() => expect(screen.getByText('Beach')).toBeTruthy());
+        expect(screen.getByText('City')).toBeTruthy();
+        expect(screen.getByText('Luxury')).toBeTruthy();
     });
 
     it('hides a disabled nav entry', async () => {

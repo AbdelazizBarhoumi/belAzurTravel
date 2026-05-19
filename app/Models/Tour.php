@@ -13,6 +13,8 @@ class Tour extends Model
         'slug',
         'name',
         'location',
+        'category_key',
+        'category',
         'duration',
         'duration_days',
         'duration_nights',
@@ -31,6 +33,7 @@ class Tour extends Model
     protected $casts = [
         'name' => 'array',
         'location' => 'array',
+        'category' => 'array',
         'duration' => 'array',
         'description' => 'array',
         'details' => 'array',

@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\SupportInquiry;
 use App\Models\User;
 use App\Notifications\BookingStatusNotification;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -78,8 +79,8 @@ class AssistantController extends Controller
             'client' => $booking->client,
             'type' => $booking->type,
             'items' => $booking->items ?? [],
-            'start_date' => $booking->start_date?->toDateString(),
-            'end_date' => $booking->end_date?->toDateString(),
+            'start_date' => $this->dateString($booking->start_date),
+            'end_date' => $this->dateString($booking->end_date),
             'total_amount' => $booking->total_amount,
             'status' => $booking->status,
             'created_at' => $booking->created_at?->toJSON(),
@@ -102,23 +103,9 @@ class AssistantController extends Controller
         );
         $user = User::query()->find($booking->user_id);
         if ($user) {
-            $user->notify(new BookingStatusNotification($booking->refresh()));
-            try {
-                $notif = $user->notifications()->latest()->first();
-                if ($notif) {
-                    Redis::publish("notifications:user:{$user->id}", json_encode([
-                        'notification' => [
-                            'id' => $notif->id,
-                            'type' => $notif->data['type'] ?? class_basename($notif->type),
-                            'data' => $notif->data,
-                            'read_at' => $notif->read_at?->toJSON(),
-                            'created_at' => $notif->created_at?->toJSON(),
-                        ],
-                    ]));
-                }
-            } catch (\Throwable $e) {
-                // ignore
-            }
+            $notification = new BookingStatusNotification($booking->refresh());
+            $user->notify($notification);
+            $this->publishNotification($user, $notification);
         }
         Cache::forget('assistant.summary');
 
@@ -130,23 +117,9 @@ class AssistantController extends Controller
         $booking->update(['status' => 'Cancelled', 'cancelled_at' => now()]);
         $user = User::query()->find($booking->user_id);
         if ($user) {
-            $user->notify(new BookingStatusNotification($booking->refresh()));
-            try {
-                $notif = $user->notifications()->latest()->first();
-                if ($notif) {
-                    Redis::publish("notifications:user:{$user->id}", json_encode([
-                        'notification' => [
-                            'id' => $notif->id,
-                            'type' => $notif->data['type'] ?? class_basename($notif->type),
-                            'data' => $notif->data,
-                            'read_at' => $notif->read_at?->toJSON(),
-                            'created_at' => $notif->created_at?->toJSON(),
-                        ],
-                    ]));
-                }
-            } catch (\Throwable $e) {
-                // ignore
-            }
+            $notification = new BookingStatusNotification($booking->refresh());
+            $user->notify($notification);
+            $this->publishNotification($user, $notification);
         }
         Cache::forget('assistant.summary');
 
@@ -160,7 +133,7 @@ class AssistantController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'active' => $user->active,
-            'joined' => $user->created_at?->toDateString(),
+            'joined' => $this->dateString($user->created_at),
             'bookings' => Booking::query()->where('user_id', $user->id)->count(),
         ]));
     }
@@ -188,5 +161,36 @@ class AssistantController extends Controller
             'replies' => $inquiry->replies ?? [],
             'created_at' => $inquiry->created_at?->toJSON(),
         ];
+    }
+
+    private function dateString(mixed $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        return Carbon::parse($value)->toDateString();
+    }
+
+    private function publishNotification(User $user, object $notification): void
+    {
+        try {
+            if (! method_exists($notification, 'toDatabase')) {
+                return;
+            }
+
+            $data = $notification->toDatabase($user);
+            Redis::publish("notifications:user:{$user->id}", json_encode([
+                'notification' => [
+                    'id' => (string) ($data['id'] ?? $user->id.'-'.now()->timestamp),
+                    'type' => $data['type'] ?? class_basename($notification::class),
+                    'data' => $data,
+                    'read_at' => null,
+                    'created_at' => now()->toJSON(),
+                ],
+            ]));
+        } catch (\Throwable $e) {
+            // ignore
+        }
     }
 }

@@ -100,6 +100,85 @@ function SortableHeaderRow({
     );
 }
 
+function SortableFooterPage({
+    pageKey,
+    label,
+    onRemove,
+    onMove,
+    isFirst,
+    isLast,
+}: {
+    pageKey: string;
+    label: string;
+    onRemove: () => void;
+    onMove: (dir: number) => void;
+    isFirst: boolean;
+    isLast: boolean;
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id: pageKey });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className="flex items-center justify-between rounded-md border bg-muted/20 p-2"
+        >
+            <div className="flex items-center gap-2">
+                <button
+                    {...attributes}
+                    {...listeners}
+                    className="cursor-grab touch-none text-muted-foreground hover:text-foreground active:cursor-grabbing"
+                    aria-label="Drag to reorder"
+                >
+                    <GripVertical className="h-4 w-4" />
+                </button>
+                <span className="text-sm font-medium">{label}</span>
+            </div>
+            <div className="flex items-center gap-1">
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={() => onMove(-1)}
+                    disabled={isFirst}
+                >
+                    <ArrowUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={() => onMove(1)}
+                    disabled={isLast}
+                >
+                    <ArrowDown className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    onClick={onRemove}
+                >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+            </div>
+        </div>
+    );
+}
+
 export default function AdminSiteSettings() {
     const { settings, loading, reset } = useNavSettings();
     const { settings: siteSettings, loading: siteSettingsLoading } =
@@ -121,7 +200,47 @@ export default function AdminSiteSettings() {
     // Keep draft in sync when settings are loaded/changed externally
     // (e.g., after initial fetch or when reset is applied)
     useEffect(() => {
-        setDraft(settings);
+        // We ensure all AVAILABLE_PAGES have an entry in the header.
+        // If a new page was added to nav-config.ts, it should appear in the admin.
+        const headerEntries = settings.header || [];
+        const currentKeys = headerEntries.map((h) => h.pageKey);
+        const missingPages = AVAILABLE_PAGES.filter(
+            (p) => !currentKeys.includes(p.key),
+        );
+
+        // Normalize: remove footer keys that are disabled in nav
+        let normalizedSettings = settings;
+        if (settings.footer && settings.header) {
+            const enabledKeys = settings.header
+                .filter((h) => h.enabled)
+                .map((h) => h.pageKey);
+            normalizedSettings = {
+                ...settings,
+                footer: settings.footer.map((col) => ({
+                    ...col,
+                    pageKeys: col.pageKeys.filter((k) =>
+                        enabledKeys.includes(k),
+                    ),
+                })),
+            };
+        }
+
+        if (missingPages.length > 0) {
+            const newEntries: HeaderEntry[] = missingPages.map((p) => ({
+                pageKey: p.key,
+                enabled: false,
+                isDropdown: false,
+                linkSelf: true,
+                placement: 'more',
+                items: [],
+            }));
+            setDraft({
+                ...normalizedSettings,
+                header: [...headerEntries, ...newEntries],
+            });
+        } else {
+            setDraft(normalizedSettings);
+        }
     }, [settings]);
 
     useEffect(() => {
@@ -143,11 +262,23 @@ export default function AdminSiteSettings() {
     const { t } = useLanguage();
 
     const setHeader = (idx: number, patch: Partial<HeaderEntry>) => {
+        const nextHeader = draft.header.map((h, i) =>
+            i === idx ? { ...h, ...patch } : h,
+        );
+
+        let nextFooter = draft.footer;
+        if (patch.enabled === false) {
+            const pageKey = draft.header[idx].pageKey;
+            nextFooter = draft.footer.map((col) => ({
+                ...col,
+                pageKeys: col.pageKeys.filter((k) => k !== pageKey),
+            }));
+        }
+
         setDraft({
             ...draft,
-            header: draft.header.map((h, i) =>
-                i === idx ? { ...h, ...patch } : h,
-            ),
+            header: nextHeader,
+            footer: nextFooter,
         });
     };
 
@@ -192,6 +323,31 @@ export default function AdminSiteSettings() {
         });
     };
 
+    const handleFooterDragEnd = (colIdx: number, event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            const col = draft.footer[colIdx];
+            const oldIndex = col.pageKeys.indexOf(active.id as string);
+            const newIndex = col.pageKeys.indexOf(over.id as string);
+
+            setDraft((prev) => ({
+                ...prev,
+                footer: prev.footer.map((c, i) =>
+                    i === colIdx
+                        ? {
+                              ...c,
+                              pageKeys: arrayMove(
+                                  c.pageKeys,
+                                  oldIndex,
+                                  newIndex,
+                              ),
+                          }
+                        : c,
+                ),
+            }));
+        }
+    };
+
     const moveBy = (idx: number, delta: number) => {
         const newIdx = idx + delta;
         if (newIdx < 0 || newIdx >= draft.header.length) return;
@@ -208,6 +364,25 @@ export default function AdminSiteSettings() {
             ...draft,
             footer: draft.footer.map((c, i) =>
                 i === colIdx ? { ...c, pageKeys } : c,
+            ),
+        });
+    };
+
+    const moveFooterPage = (colIdx: number, pageIdx: number, dir: number) => {
+        const col = draft.footer[colIdx];
+        const nextIdx = pageIdx + dir;
+        if (nextIdx < 0 || nextIdx >= col.pageKeys.length) return;
+
+        const nextKeys = [...col.pageKeys];
+        [nextKeys[pageIdx], nextKeys[nextIdx]] = [
+            nextKeys[nextIdx],
+            nextKeys[pageIdx],
+        ];
+
+        setDraft({
+            ...draft,
+            footer: draft.footer.map((c, i) =>
+                i === colIdx ? { ...c, pageKeys: nextKeys } : c,
             ),
         });
     };
@@ -269,7 +444,15 @@ export default function AdminSiteSettings() {
         // Client-side validation: ensure dropdown items have en/fr/ar labels
         const errors: Record<string, string> = {};
         for (const [hIdx, entry] of draft.header.entries()) {
-            if (entry.isDropdown && Array.isArray(entry.items)) {
+            const isCodeEnabled =
+                siteSettings?.config?.navigation?.enabled_dropdowns?.includes(
+                    entry.pageKey,
+                );
+            if (
+                isCodeEnabled &&
+                entry.isDropdown &&
+                Array.isArray(entry.items)
+            ) {
                 for (const [iIdx, item] of entry.items.entries()) {
                     const label = (item as any).label;
                     const key = `${hIdx}-${iIdx}`;
@@ -381,15 +564,17 @@ export default function AdminSiteSettings() {
 
     return (
         <AdminLayout
-            title="Site Settings"
-            subtitle="Manage navigation, footer, and company contact details."
+            title={t('admin.siteSettings')}
+            subtitle={t('nav.settings')}
             actions={
                 <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleReset}>
-                        <RotateCcw className="mr-1 h-4 w-4" /> Reset
+                        <RotateCcw className="mr-1 h-4 w-4" />{' '}
+                        {t('admin.settings.reset')}
                     </Button>
                     <Button size="sm" onClick={save}>
-                        <Save className="mr-1 h-4 w-4" /> Save
+                        <Save className="mr-1 h-4 w-4" />{' '}
+                        {t('admin.settings.save')}
                     </Button>
                 </div>
             }
@@ -397,18 +582,19 @@ export default function AdminSiteSettings() {
             <div className="space-y-8">
                 <section>
                     <h2 className="mb-3 font-serif text-xl font-bold">
-                        Company & contact
+                        {t('admin.settings.companyContact')}
                     </h2>
                     <p className="mb-4 text-sm text-muted-foreground">
-                        Keep your brand identity and customer contact info
-                        aligned with the active navigation config.
+                        {t('admin.settings.brandIdentity')}
                     </p>
 
                     <div className="grid gap-4 lg:grid-cols-2">
                         <Card className="space-y-3 p-4">
-                            <h3 className="font-medium">Company info</h3>
+                            <h3 className="font-medium">
+                                {t('admin.settings.companyInfo')}
+                            </h3>
                             <div className="space-y-2">
-                                <Label>Company name</Label>
+                                <Label>{t('admin.settings.companyName')}</Label>
                                 <Input
                                     value={companyName}
                                     onChange={(e) =>
@@ -418,7 +604,7 @@ export default function AdminSiteSettings() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Address</Label>
+                                <Label>{t('admin.settings.address')}</Label>
                                 <Input
                                     value={address}
                                     onChange={(e) => setAddress(e.target.value)}
@@ -426,7 +612,7 @@ export default function AdminSiteSettings() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Plus Code for map</Label>
+                                <Label>{t('admin.settings.plusCode')}</Label>
                                 <Input
                                     value={plusCode}
                                     onChange={(e) =>
@@ -435,13 +621,11 @@ export default function AdminSiteSettings() {
                                     placeholder="8FVC9G8F+5V"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                    Add the Google Maps Plus Code here so the
-                                    contact map points to the exact location.
-                                    You can copy it from Google Maps.
+                                    {t('admin.destinationForm.imageHelper')}
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <Label>Year</Label>
+                                <Label>{t('admin.settings.year')}</Label>
                                 <Input
                                     type="number"
                                     value={year}
@@ -455,9 +639,11 @@ export default function AdminSiteSettings() {
                         </Card>
 
                         <Card className="space-y-3 p-4">
-                            <h3 className="font-medium">Contact details</h3>
+                            <h3 className="font-medium">
+                                {t('admin.settings.contactDetails')}
+                            </h3>
                             <div className="space-y-2">
-                                <Label>Email</Label>
+                                <Label>{t('admin.settings.email')}</Label>
                                 <Input
                                     type="email"
                                     value={email}
@@ -466,7 +652,7 @@ export default function AdminSiteSettings() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Phone</Label>
+                                <Label>{t('admin.settings.phone')}</Label>
                                 <Input
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
@@ -474,7 +660,7 @@ export default function AdminSiteSettings() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>WhatsApp</Label>
+                                <Label>{t('admin.settings.whatsapp')}</Label>
                                 <Input
                                     value={whatsapp}
                                     onChange={(e) =>
@@ -489,14 +675,16 @@ export default function AdminSiteSettings() {
                     <div className="mt-4 grid gap-4 lg:grid-cols-2">
                         <Card className="space-y-3 p-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="font-medium">Social media</h3>
+                                <h3 className="font-medium">
+                                    {t('admin.settings.socialMedia')}
+                                </h3>
                                 <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={addSocial}
                                 >
-                                    <Plus className="mr-1 h-3.5 w-3.5" /> Add
-                                    link
+                                    <Plus className="mr-1 h-3.5 w-3.5" />{' '}
+                                    {t('admin.settings.addLink')}
                                 </Button>
                             </div>
                             {socialLinks.length === 0 && (
@@ -549,14 +737,16 @@ export default function AdminSiteSettings() {
 
                         <Card className="space-y-3 p-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="font-medium">Business hours</h3>
+                                <h3 className="font-medium">
+                                    {t('admin.settings.businessHours')}
+                                </h3>
                                 <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={addHour}
                                 >
-                                    <Plus className="mr-1 h-3.5 w-3.5" /> Add
-                                    row
+                                    <Plus className="mr-1 h-3.5 w-3.5" />{' '}
+                                    {t('admin.settings.addRow')}
                                 </Button>
                             </div>
                             {hours.length === 0 && (
@@ -571,7 +761,9 @@ export default function AdminSiteSettings() {
                                     className="grid grid-cols-1 items-end gap-2 rounded-md bg-muted/40 p-2 md:grid-cols-12"
                                 >
                                     <div className="md:col-span-4">
-                                        <Label className="text-xs">Day</Label>
+                                        <Label className="text-xs">
+                                            {t('admin.settings.day')}
+                                        </Label>
                                         <Input
                                             value={entry.dayKey}
                                             onChange={(e) =>
@@ -583,7 +775,9 @@ export default function AdminSiteSettings() {
                                         />
                                     </div>
                                     <div className="md:col-span-7">
-                                        <Label className="text-xs">Hours</Label>
+                                        <Label className="text-xs">
+                                            {t('admin.settings.hours')}
+                                        </Label>
                                         <Input
                                             value={entry.value}
                                             onChange={(e) =>
@@ -610,16 +804,16 @@ export default function AdminSiteSettings() {
                 </section>
 
                 <section>
-                    <h2 className="mb-2 font-serif text-xl font-bold">
-                        Header links
-                    </h2>
-                    <p className="mb-4 text-sm text-muted-foreground">
-                        Drag rows to reorder. Use placement to send items into
-                        the global <strong>"+ More"</strong> dropdown instead of
-                        showing them as standalone buttons. For dropdowns,
-                        choose whether clicking the trigger itself navigates to
-                        the page, or only opens the menu on hover.
-                    </p>
+                    <div className="mb-3 flex items-center justify-between">
+                        <div>
+                            <h2 className="font-serif text-xl font-bold">
+                                {t('admin.settings.headerLinks')}
+                            </h2>
+                            <p className="text-sm text-muted-foreground">
+                                {t('admin.settings.reorder')}
+                            </p>
+                        </div>
+                    </div>
 
                     <DndContext
                         sensors={sensors}
@@ -634,6 +828,12 @@ export default function AdminSiteSettings() {
                                 {draft.header.map((entry, idx) => {
                                     const page = getPage(entry.pageKey);
                                     if (!page) return null;
+
+                                    const isCodeEnabled =
+                                        siteSettings?.config?.navigation?.enabled_dropdowns?.includes(
+                                            entry.pageKey,
+                                        );
+
                                     return (
                                         <SortableHeaderRow
                                             key={entry.pageKey}
@@ -707,37 +907,14 @@ export default function AdminSiteSettings() {
                                                                     </SelectContent>
                                                                 </Select>
                                                             </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <Label className="text-xs">
-                                                                    Dropdown
-                                                                </Label>
-                                                                <Switch
-                                                                    checked={
-                                                                        entry.isDropdown
-                                                                    }
-                                                                    onCheckedChange={(
-                                                                        v,
-                                                                    ) =>
-                                                                        setHeader(
-                                                                            idx,
-                                                                            {
-                                                                                isDropdown:
-                                                                                    v,
-                                                                            },
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </div>
-                                                            {entry.isDropdown && (
+                                                            {isCodeEnabled && (
                                                                 <div className="flex items-center gap-2">
                                                                     <Label className="text-xs">
-                                                                        Trigger
-                                                                        links to
-                                                                        page
+                                                                        Dropdown
                                                                     </Label>
                                                                     <Switch
                                                                         checked={
-                                                                            entry.linkSelf
+                                                                            entry.isDropdown
                                                                         }
                                                                         onCheckedChange={(
                                                                             v,
@@ -745,7 +922,7 @@ export default function AdminSiteSettings() {
                                                                             setHeader(
                                                                                 idx,
                                                                                 {
-                                                                                    linkSelf:
+                                                                                    isDropdown:
                                                                                         v,
                                                                                 },
                                                                             )
@@ -753,6 +930,33 @@ export default function AdminSiteSettings() {
                                                                     />
                                                                 </div>
                                                             )}
+                                                            {isCodeEnabled &&
+                                                                entry.isDropdown && (
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Label className="text-xs">
+                                                                            Trigger
+                                                                            links
+                                                                            to
+                                                                            page
+                                                                        </Label>
+                                                                        <Switch
+                                                                            checked={
+                                                                                entry.linkSelf
+                                                                            }
+                                                                            onCheckedChange={(
+                                                                                v,
+                                                                            ) =>
+                                                                                setHeader(
+                                                                                    idx,
+                                                                                    {
+                                                                                        linkSelf:
+                                                                                            v,
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                )}
                                                             <div className="flex">
                                                                 <Button
                                                                     size="icon"
@@ -786,8 +990,10 @@ export default function AdminSiteSettings() {
                                                 </div>
 
                                                 {entry.enabled &&
+                                                    isCodeEnabled &&
                                                     entry.isDropdown && (
                                                         <div className="space-y-2 border-t pt-4">
+                                                            {' '}
                                                             <div className="flex items-center justify-between">
                                                                 <Label className="text-sm font-medium">
                                                                     Dropdown
@@ -1032,6 +1238,10 @@ export default function AdminSiteSettings() {
 
                                                                                         )
                                                                                     </SelectItem>
+                                                                                    <SelectItem value="categories">
+                                                                                        Dynamic
+                                                                                        Categories
+                                                                                    </SelectItem>
                                                                                     <SelectItem value="search">
                                                                                         Search
                                                                                         keyword
@@ -1041,36 +1251,41 @@ export default function AdminSiteSettings() {
                                                                             </Select>
                                                                         </div>
                                                                         <div className="md:col-span-4">
-                                                                            <Label className="text-xs">
-                                                                                {item.mode ===
-                                                                                'filter'
-                                                                                    ? 'Filter value'
-                                                                                    : 'Search word'}
-                                                                            </Label>
-                                                                            <Input
-                                                                                value={
-                                                                                    item.value
-                                                                                }
-                                                                                placeholder={
-                                                                                    item.mode ===
-                                                                                    'filter'
-                                                                                        ? 'e.g. Beach'
-                                                                                        : 'e.g. paradise'
-                                                                                }
-                                                                                onChange={(
-                                                                                    e,
-                                                                                ) =>
-                                                                                    updateItem(
-                                                                                        idx,
-                                                                                        iIdx,
-                                                                                        {
-                                                                                            value: e
-                                                                                                .target
-                                                                                                .value,
-                                                                                        },
-                                                                                    )
-                                                                                }
-                                                                            />
+                                                                            {item.mode !==
+                                                                                'categories' && (
+                                                                                <>
+                                                                                    <Label className="text-xs">
+                                                                                        {item.mode ===
+                                                                                        'filter'
+                                                                                            ? 'Filter value'
+                                                                                            : 'Search word'}
+                                                                                    </Label>
+                                                                                    <Input
+                                                                                        value={
+                                                                                            item.value
+                                                                                        }
+                                                                                        placeholder={
+                                                                                            item.mode ===
+                                                                                            'filter'
+                                                                                                ? 'e.g. Beach'
+                                                                                                : 'e.g. paradise'
+                                                                                        }
+                                                                                        onChange={(
+                                                                                            e,
+                                                                                        ) =>
+                                                                                            updateItem(
+                                                                                                idx,
+                                                                                                iIdx,
+                                                                                                {
+                                                                                                    value: e
+                                                                                                        .target
+                                                                                                        .value,
+                                                                                                },
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </>
+                                                                            )}
                                                                         </div>
                                                                         <div className="md:col-span-1">
                                                                             <Button
@@ -1102,7 +1317,7 @@ export default function AdminSiteSettings() {
 
                 <section>
                     <h2 className="mb-3 font-serif text-xl font-bold">
-                        Footer columns
+                        {t('admin.settings.footerColumns')}
                     </h2>
                     <p className="mb-4 text-sm text-muted-foreground">
                         For each footer column, check which pages appear under
@@ -1112,7 +1327,7 @@ export default function AdminSiteSettings() {
                         {draft.footer.map((col, colIdx) => (
                             <Card key={colIdx} className="p-4">
                                 <Label className="text-xs font-medium">
-                                    Column title
+                                    {t('admin.settings.columnTitle')}
                                 </Label>
                                 <div className="mb-2 grid grid-cols-1 gap-2">
                                     <Input
@@ -1162,26 +1377,109 @@ export default function AdminSiteSettings() {
                                         />
                                     </div>
                                 </div>
-                                <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
-                                    {AVAILABLE_PAGES.map((p) => (
-                                        <label
-                                            key={p.key}
-                                            className="flex cursor-pointer items-center gap-2 text-sm transition-colors hover:text-primary"
+                                <div className="space-y-2">
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={(e) =>
+                                            handleFooterDragEnd(colIdx, e)
+                                        }
+                                    >
+                                        <SortableContext
+                                            items={col.pageKeys}
+                                            strategy={
+                                                verticalListSortingStrategy
+                                            }
                                         >
-                                            <Checkbox
-                                                checked={col.pageKeys.includes(
-                                                    p.key,
+                                            <div className="space-y-2">
+                                                {col.pageKeys.map(
+                                                    (key, pIdx) => {
+                                                        const page =
+                                                            getPage(key);
+                                                        return (
+                                                            <SortableFooterPage
+                                                                key={key}
+                                                                pageKey={key}
+                                                                label={
+                                                                    t(
+                                                                        'nav.' +
+                                                                            page?.key,
+                                                                    ) ??
+                                                                    page?.label ??
+                                                                    ''
+                                                                }
+                                                                onRemove={() =>
+                                                                    toggleFooterPage(
+                                                                        colIdx,
+                                                                        key,
+                                                                    )
+                                                                }
+                                                                onMove={(dir) =>
+                                                                    moveFooterPage(
+                                                                        colIdx,
+                                                                        pIdx,
+                                                                        dir,
+                                                                    )
+                                                                }
+                                                                isFirst={
+                                                                    pIdx === 0
+                                                                }
+                                                                isLast={
+                                                                    pIdx ===
+                                                                    col.pageKeys
+                                                                        .length -
+                                                                        1
+                                                                }
+                                                            />
+                                                        );
+                                                    },
                                                 )}
-                                                onCheckedChange={() =>
-                                                    toggleFooterPage(
-                                                        colIdx,
-                                                        p.key,
-                                                    )
-                                                }
-                                            />
-                                            <span>{p.label}</span>
-                                        </label>
-                                    ))}
+                                            </div>
+                                        </SortableContext>
+                                    </DndContext>
+
+                                    <Select
+                                        value=""
+                                        onValueChange={(val) =>
+                                            toggleFooterPage(colIdx, val)
+                                        }
+                                    >
+                                        <SelectTrigger className="mt-2 h-8 w-full text-xs">
+                                            <div className="flex items-center gap-2">
+                                                <Plus className="h-3 w-3" />
+                                                Add Page
+                                            </div>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {AVAILABLE_PAGES.filter((p) => {
+                                                // 1. Must be enabled in nav
+                                                const navEntry =
+                                                    draft.header.find(
+                                                        (h) =>
+                                                            h.pageKey === p.key,
+                                                    );
+                                                if (!navEntry?.enabled)
+                                                    return false;
+
+                                                // 2. Must not be in any column
+                                                const inAnyCol =
+                                                    draft.footer.some((c) =>
+                                                        c.pageKeys.includes(
+                                                            p.key,
+                                                        ),
+                                                    );
+                                                return !inAnyCol;
+                                            }).map((p) => (
+                                                <SelectItem
+                                                    key={p.key}
+                                                    value={p.key}
+                                                >
+                                                    {t('nav.' + p.key) ??
+                                                        p.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </Card>
                         ))}

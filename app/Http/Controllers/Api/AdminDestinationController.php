@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Destination;
 use App\Models\GalleryImage;
+use App\Concerns\HandlesAdminCategories;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ use Illuminate\Support\Str;
 
 class AdminDestinationController extends Controller
 {
-    public function index(): JsonResponse
+    use HandlesAdminCategories;public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.destinations', now()->addMinutes(5), function () {
             return Destination::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
@@ -143,8 +144,7 @@ class AdminDestinationController extends Controller
             'slug' => $slug,
             'name' => $name,
             'country' => $localized('country'),
-            'category_key' => Str::slug($data['category_en'] ?? $data['category'] ?? 'other'),
-            'category' => $localized('category', 'Other'),
+            ...$this->getCategoryData($request, 'destinations'),
             'price' => (int) ($data['price'] ?? 0),
             'rating' => (float) ($data['rating'] ?? 0),
             'image' => $image,

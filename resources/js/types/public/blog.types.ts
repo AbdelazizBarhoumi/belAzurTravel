@@ -8,6 +8,8 @@ export interface BlogPostItem {
     title: LocalizedText;
     excerpt: LocalizedText;
     date: string;
+    // category key (optional) for filtering
+    category_key?: string;
     category: LocalizedText;
     image: string;
     content: BlogContentValue;

@@ -1,15 +1,19 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import type { FavoriteItem } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GalleryProps {
     images: string[];
     hotelName: string;
+    favoriteItem?: FavoriteItem;
 }
 
-export function Gallery({ images, hotelName }: GalleryProps) {
+export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
     const { dir } = useLanguage();
+
     const isRtl = dir === 'rtl';
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -70,6 +74,13 @@ export function Gallery({ images, hotelName }: GalleryProps) {
                             loading="eager"
                         />
                     </AnimatePresence>
+
+                    {favoriteItem && (
+                        <FavoriteButton
+                            item={favoriteItem}
+                            className="absolute right-4 top-4 z-10"
+                        />
+                    )}
 
                     <div className="absolute bottom-3 left-3 rounded-full bg-card/95 px-2.5 py-1 text-xs font-medium text-foreground shadow-md backdrop-blur-sm">
                         {selectedIndex + 1} / {images.length}

@@ -117,15 +117,30 @@ function DayByDayAndIncludes({
                 <h2 className="mb-6 font-serif text-2xl font-bold text-foreground">
                     {t('tourDetail.dayByDay') || 'Day-by-day itinerary'}
                 </h2>
-                <ol className="relative ml-3 max-w-3xl space-y-6 border-l-2 border-border">
+                <ol
+                    className={`relative max-w-3xl space-y-6 border-border ${
+                        lang === 'ar' ? 'mr-3 border-r-2' : 'ml-3 border-l-2'
+                    }`}
+                >
+                    {' '}
                     {itinerary.map(
                         (d: {
                             day: number;
                             title: LocalizedText | string;
                             details?: LocalizedText | string;
                         }) => (
-                            <li key={d.day} className="ml-6">
-                                <div className="absolute -left-[14px] flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                            <li
+                                key={d.day}
+                                className={lang === 'ar' ? 'mr-6' : 'ml-6'}
+                            >
+                                {' '}
+                                <div
+                                    className={`absolute flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground ${
+                                        lang === 'ar'
+                                            ? '-right-[14px]'
+                                            : '-left-[14px]'
+                                    }`}
+                                >
                                     {d.day}
                                 </div>
                                 <h3 className="font-serif text-lg font-bold text-foreground">
@@ -243,6 +258,20 @@ export default function TourDetail() {
                                         ? localize(tour.name, lang)
                                         : tour.name
                                 }
+                                favoriteItem={{
+                                    id: `tour-${tour.slug}`,
+                                    type: 'tour',
+                                    name:
+                                        typeof tour.name === 'object'
+                                            ? localize(tour.name, lang)
+                                            : tour.name,
+                                    image: tour.image,
+                                    price: tour.price,
+                                    location: localizeLocation(
+                                        tour.location,
+                                        lang,
+                                    ),
+                                }}
                             />
                         </div>
                     </motion.div>
@@ -267,18 +296,6 @@ export default function TourDetail() {
                             duration={`${tour.durationDays} ${t('common.days')} / ${tour.durationNights} ${t('common.nights')}`}
                             maxGroup={tour.maxGroup}
                             rating={tour.rating}
-                            favoriteItem={{
-                                id: `tour-${tour.slug}`,
-                                type: 'tour',
-                                name:
-                                    typeof tour.name === 'object'
-                                        ? localize(tour.name, lang)
-                                        : tour.name,
-                                image: tour.image,
-                                price: tour.price,
-
-                                location: localizeLocation(tour.location, lang),
-                            }}
                             primaryButtonLabel={t('tours.bookTour')}
                             onBook={() => {
                                 // simple reservation flow: scroll to booking or open modal
@@ -310,17 +327,6 @@ export default function TourDetail() {
                         duration={`${tour.durationDays} ${t('common.days')} / ${tour.durationNights} ${t('common.nights')}`}
                         maxGroup={tour.maxGroup}
                         rating={tour.rating}
-                        favoriteItem={{
-                            id: `tour-${tour.slug}`,
-                            type: 'tour',
-                            name:
-                                typeof tour.name === 'object'
-                                    ? localize(tour.name, lang)
-                                    : tour.name,
-                            image: tour.image,
-                            price: tour.price,
-                            location: localizeLocation(tour.location, lang),
-                        }}
                         primaryButtonLabel={t('tours.bookTour')}
                         onBook={() => {
                             // simple reservation flow: scroll to booking or open modal

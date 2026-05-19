@@ -73,18 +73,29 @@ describe('Admin blog editor', () => {
         });
 
         await waitFor(() => {
-            expect(screen.getByDisplayValue('Spring Updates')).toBeInTheDocument();
-            expect(screen.getByDisplayValue('Mises à jour du printemps')).toBeInTheDocument();
-            expect(screen.getByDisplayValue('تحديثات الربيع')).toBeInTheDocument();
+            expect(
+                screen.getByDisplayValue('Spring Updates'),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByDisplayValue('Mises à jour du printemps'),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByDisplayValue('تحديثات الربيع'),
+            ).toBeInTheDocument();
         });
 
-        const imageFile = new File(['blog-image'], 'blog.jpg', { type: 'image/jpeg' });
+        const imageFile = new File(['blog-image'], 'blog.jpg', {
+            type: 'image/jpeg',
+        });
         fireEvent.change(screen.getByLabelText('Main image'), {
             target: { files: [imageFile] },
         });
 
         await waitFor(() => {
-            expect((screen.getByLabelText('Main image') as HTMLInputElement).files?.length).toBe(1);
+            expect(
+                (screen.getByLabelText('Main image') as HTMLInputElement).files
+                    ?.length,
+            ).toBe(1);
         });
 
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
@@ -93,7 +104,8 @@ describe('Admin blog editor', () => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();
         });
 
-        const [entityType, payload] = vi.mocked(adminApi.saveAdminEntity).mock.calls[0] ?? [];
+        const [entityType, payload] =
+            vi.mocked(adminApi.saveAdminEntity).mock.calls[0] ?? [];
         expect(entityType).toBe('blog-posts');
         expect(payload).toEqual(
             expect.objectContaining({

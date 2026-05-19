@@ -10,6 +10,8 @@ export interface EventItem {
     location: LocalizedText;
     attendees: LocalizedText;
     description: LocalizedText;
+    // optional category key used by the API for filtering
+    category_key?: string;
     about?: LocalizedText;
     image?: string;
     gallery?: string[];

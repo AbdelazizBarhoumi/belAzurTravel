@@ -1,8 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { MapPin, MessageCircle, Phone, Star, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FavoriteButton } from '@/components/ui/FavoriteButton';
-import type { FavoriteItem } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 type DetailItem = {
@@ -42,7 +40,6 @@ interface StickyBookingCardProps {
     secondaryButtonLabel?: string;
     tertiaryButtonLabel?: string;
     phoneNumber?: string;
-    favoriteItem?: FavoriteItem;
     onBook: () => void;
     onWhatsApp?: () => void;
 }
@@ -69,7 +66,6 @@ export function StickyBookingCard({
     secondaryButtonLabel,
     tertiaryButtonLabel,
     phoneNumber,
-    favoriteItem,
     onBook,
     onWhatsApp,
 }: StickyBookingCardProps) {
@@ -139,7 +135,7 @@ export function StickyBookingCard({
                 </span>
             )}
 
-            {(title || displayLocation || favoriteItem) && (
+            {(title || displayLocation) && (
                 <div className="mb-3 flex items-start justify-between gap-4">
                     <div>
                         {displayLocation && (
@@ -153,8 +149,6 @@ export function StickyBookingCard({
                             </h1>
                         )}
                     </div>
-
-                    {favoriteItem && <FavoriteButton item={favoriteItem} />}
                 </div>
             )}
 

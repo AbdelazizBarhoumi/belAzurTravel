@@ -68,6 +68,14 @@ export default function DestinationDetail() {
                     <Gallery
                         images={destination.gallery ?? []}
                         hotelName={localize(destination.name, lang)}
+                        favoriteItem={{
+                            id: `dest-${destination.slug}`,
+                            type: 'destination',
+                            name: localize(destination.name, lang),
+                            image: destination.image,
+                            price: destination.price,
+                            location: localize(destination.country, lang),
+                        }}
                     />
 
                     <div className="mt-8 lg:hidden">
@@ -141,14 +149,6 @@ export default function DestinationDetail() {
                             badge={localize(destination.category!, lang)}
                             priceLabel={t('destinationDetail.startingFrom')}
                             rating={destination.rating}
-                            favoriteItem={{
-                                id: `dest-${destination.slug}`,
-                                type: 'destination',
-                                name: localize(destination.name, lang),
-                                image: destination.image,
-                                price: destination.price,
-                                location: localize(destination.country, lang),
-                            }}
                             primaryButtonLabel={t('destinationDetail.planTrip')}
                             onBook={() =>
                                 window.open(
@@ -228,14 +228,6 @@ export default function DestinationDetail() {
                         badge={localize(destination.category!, lang)}
                         priceLabel={t('destinationDetail.startingFrom')}
                         rating={destination.rating}
-                        favoriteItem={{
-                            id: `dest-${destination.slug}`,
-                            type: 'destination',
-                            name: localize(destination.name, lang),
-                            image: destination.image,
-                            price: destination.price,
-                            location: localize(destination.country, lang),
-                        }}
                         primaryButtonLabel={t('destinationDetail.planTrip')}
                         onBook={() =>
                             window.open(

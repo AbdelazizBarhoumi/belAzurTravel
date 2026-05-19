@@ -1,0 +1,251 @@
+import { useState, useEffect, ReactNode } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+
+export interface FieldDef {
+    key: string;
+    label: string;
+    type?:
+        | 'text'
+        | 'number'
+        | 'textarea'
+        | 'select'
+        | 'i18n'
+        | 'i18n-textarea'
+        | 'image';
+    options?: string[];
+}
+
+function ImageField({
+    value,
+    onChange,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+}) {
+    const handleFile = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = () => onChange(String(reader.result));
+        reader.readAsDataURL(file);
+    };
+    return (
+        <div className="space-y-2">
+            {value && (
+                <img
+                    src={value}
+                    alt=""
+                    className="h-40 w-full rounded-lg border border-border object-cover"
+                />
+            )}
+            <div className="flex gap-2">
+                <input
+                    type="text"
+                    placeholder="https://image-url..."
+                    value={value || ''}
+                    onChange={(e) => onChange(e.target.value)}
+                    className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+                <label className="cursor-pointer rounded-lg border border-border bg-muted px-3 py-2 text-sm hover:bg-muted/80">
+                    Upload
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                            e.target.files?.[0] && handleFile(e.target.files[0])
+                        }
+                    />
+                </label>
+            </div>
+        </div>
+    );
+}
+
+interface Props<T> {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    fields: FieldDef[];
+    initial?: T | null;
+    onSubmit: (values: T) => void;
+}
+
+function I18nInput({
+    value,
+    onChange,
+    multiline,
+}: {
+    value: any;
+    onChange: (v: any) => void;
+    multiline?: boolean;
+}) {
+    const obj =
+        typeof value === 'object' && value !== null
+            ? value
+            : { fr: value || '', ar: '' };
+    const Input = multiline ? 'textarea' : 'input';
+    return (
+        <div className="grid grid-cols-2 gap-2">
+            {(['fr', 'ar'] as const).map((l) => (
+                <div key={l} className="space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        {l}
+                    </span>
+                    <Input
+                        type="text"
+                        dir={l === 'ar' ? 'rtl' : 'ltr'}
+                        value={obj[l] ?? ''}
+                        onChange={(e: any) =>
+                            onChange({ ...obj, [l]: e.target.value })
+                        }
+                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${multiline ? 'min-h-20' : ''}`}
+                    />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+export function EntityFormDialog<T extends Record<string, any>>({
+    open,
+    onOpenChange,
+    title,
+    fields,
+    initial,
+    onSubmit,
+}: Props<T>) {
+    const [values, setValues] = useState<Record<string, any>>({});
+
+    useEffect(() => {
+        if (open) {
+            const init: Record<string, any> = {};
+            fields.forEach((f) => {
+                if (f.type === 'i18n' || f.type === 'i18n-textarea') {
+                    const v = (initial as any)?.[f.key];
+                    init[f.key] =
+                        typeof v === 'object' && v !== null
+                            ? v
+                            : { fr: v || '', ar: '' };
+                } else {
+                    init[f.key] =
+                        (initial as any)?.[f.key] ??
+                        (f.type === 'number' ? 0 : '');
+                }
+            });
+            setValues(init);
+        }
+    }, [open, initial, fields]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSubmit(values as T);
+        onOpenChange(false);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {fields.map((f) => (
+                        <div key={f.key}>
+                            <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                                {f.label}
+                            </label>
+                            {f.type === 'i18n' || f.type === 'i18n-textarea' ? (
+                                <I18nInput
+                                    value={values[f.key]}
+                                    onChange={(v) =>
+                                        setValues({ ...values, [f.key]: v })
+                                    }
+                                    multiline={f.type === 'i18n-textarea'}
+                                />
+                            ) : f.type === 'image' ? (
+                                <ImageField
+                                    value={values[f.key] ?? ''}
+                                    onChange={(v) =>
+                                        setValues({ ...values, [f.key]: v })
+                                    }
+                                />
+                            ) : f.type === 'textarea' ? (
+                                <textarea
+                                    value={values[f.key] ?? ''}
+                                    onChange={(e) =>
+                                        setValues({
+                                            ...values,
+                                            [f.key]: e.target.value,
+                                        })
+                                    }
+                                    className="min-h-20 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                />
+                            ) : f.type === 'select' ? (
+                                <select
+                                    value={values[f.key] ?? ''}
+                                    onChange={(e) =>
+                                        setValues({
+                                            ...values,
+                                            [f.key]: e.target.value,
+                                        })
+                                    }
+                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="">Select...</option>
+                                    {f.options?.map((o) => (
+                                        <option key={o} value={o}>
+                                            {o}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input
+                                    type={
+                                        f.type === 'number' ? 'number' : 'text'
+                                    }
+                                    step={
+                                        f.type === 'number' ? 'any' : undefined
+                                    }
+                                    value={values[f.key] ?? ''}
+                                    onChange={(e) =>
+                                        setValues({
+                                            ...values,
+                                            [f.key]:
+                                                f.type === 'number'
+                                                    ? parseFloat(
+                                                          e.target.value,
+                                                      ) || 0
+                                                    : e.target.value,
+                                        })
+                                    }
+                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                />
+                            )}
+                        </div>
+                    ))}
+                    <DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            className="bg-primary text-primary-foreground"
+                        >
+                            Save
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}

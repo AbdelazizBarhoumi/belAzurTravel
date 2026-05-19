@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import EntityMediaInputs from '@/components/forms/EntityMediaInputs';
+import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
@@ -27,9 +28,9 @@ const copy = (en: string, fr: string, ar: string): Copy => ({ en, fr, ar });
 
 function localizedFields(base: string, label: Copy, type?: FieldDef['type']) {
     return [
-        { key: `${base}_en`, label: `${label.en} (EN)`, type, required: true },
-        { key: `${base}_fr`, label: `${label.fr} (FR)`, type, required: true },
-        { key: `${base}_ar`, label: `${label.ar} (AR)`, type, required: true },
+        { key: `${base}_en`, label: label.en, type, required: true },
+        { key: `${base}_fr`, label: label.fr, type, required: true },
+        { key: `${base}_ar`, label: label.ar, type, required: true },
     ];
 }
 
@@ -170,7 +171,7 @@ export default function AdminEvents() {
                                     {k.replace(/^[a-z]/, (s) =>
                                         s.toUpperCase(),
                                     )}{' '}
-                                    ({activeLang.toUpperCase()})
+                                    <LangBadge lang={activeLang} />
                                 </label>
                                 <input
                                     id={`${k}_${activeLang}`}

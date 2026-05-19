@@ -31,6 +31,9 @@ class SiteSettingsController extends Controller
                     'hours' => [],
                     'content' => [],
                     'gallery' => [],
+                    'config' => [
+                        'navigation' => config('site.navigation'),
+                    ],
                 ];
             }
 
@@ -48,6 +51,9 @@ class SiteSettingsController extends Controller
                 'hours' => $row->hours,
                 'content' => $row->content,
                 'gallery' => $row->content['gallery']['images'] ?? [],
+                'config' => [
+                    'navigation' => config('site.navigation'),
+                ],
             ];
 
             // Post-process localized labels for footer links and nav items
@@ -89,9 +95,88 @@ class SiteSettingsController extends Controller
             return $result;
         });
 
+        $settings = $this->hydrateResponseDefaults($settings);
+
         $settings = $this->filterDisabledContentForClient($request, $settings);
 
         return response()->json($settings);
+    }
+
+    protected function hydrateResponseDefaults(array $settings): array
+    {
+        $content = $settings['content'] ?? [];
+        $navSettings = $content['nav']['settings'] ?? [];
+
+        if (!isset($content['nav']['simpleLinks']) || !is_array($content['nav']['simpleLinks'])) {
+            $content['nav']['simpleLinks'] = $this->deriveSimpleLinks($navSettings);
+        }
+
+        if (!isset($settings['footerLinks']) || !is_array($settings['footerLinks']) || count($settings['footerLinks']) === 0) {
+            $settings['footerLinks'] = $this->deriveFooterLinks($navSettings);
+        }
+
+        if (!isset($content['contact']) || !is_array($content['contact'])) {
+            $content['contact'] = [
+                'title' => [
+                    'en' => 'Contact Us',
+                    'fr' => 'Contact Us',
+                    'ar' => 'Contact Us',
+                ],
+            ];
+        } elseif (!isset($content['contact']['title'])) {
+            $content['contact']['title'] = [
+                'en' => 'Contact Us',
+                'fr' => 'Contact Us',
+                'ar' => 'Contact Us',
+            ];
+        }
+
+        $settings['content'] = $content;
+
+        return $settings;
+    }
+
+    protected function deriveSimpleLinks(array $navSettings): array
+    {
+        $header = $navSettings['header'] ?? [];
+
+        return array_values(array_map(function (array $entry): array {
+            $pageKey = (string) ($entry['pageKey'] ?? '');
+            $isDropdown = (bool) ($entry['isDropdown'] ?? false);
+
+            return [
+                'type' => $isDropdown ? 'dropdown' : 'simple',
+                'label' => [
+                    'en' => $pageKey,
+                    'fr' => $pageKey,
+                    'ar' => $pageKey,
+                ],
+                'href' => '/' . ltrim($pageKey, '/'),
+                'items' => $isDropdown ? ($entry['items'] ?? []) : [],
+            ];
+        }, array_filter($header, 'is_array')));
+    }
+
+    protected function deriveFooterLinks(array $navSettings): array
+    {
+        $footer = $navSettings['footer'] ?? [];
+        $links = [];
+
+        foreach ($footer as $column) {
+            foreach (($column['pageKeys'] ?? []) as $pageKey) {
+                if (!is_string($pageKey) || $pageKey === '') {
+                    continue;
+                }
+
+                $links[] = [
+                    'labelKey' => 'nav.' . $pageKey,
+                    'href' => '/' . ltrim($pageKey, '/'),
+                    'group' => 'quick',
+                ];
+            }
+        }
+
+        return $links;
     }
 
     protected function filterDisabledContentForClient(Request $request, array $settings): array
@@ -139,9 +224,9 @@ class SiteSettingsController extends Controller
         return $settings;
     }
 
-    public function update()
+    public function update(Request $request)
     {
-        $data = request()->validate([
+        $data = $request->validate([
             // Allow partial updates (e.g. admin nav settings page only sends content)
             'companyName' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -155,6 +240,7 @@ class SiteSettingsController extends Controller
             'footerLinks' => ['nullable', 'array'],
             'hours' => ['nullable', 'array'],
             'content' => ['nullable', 'array'],
+            'navLinks' => ['nullable', 'array'],
         ]);
 
         // write to DB (create or update first row)
@@ -163,6 +249,10 @@ class SiteSettingsController extends Controller
             
             // Use provided content or start with existing
             $content = $data['content'] ?? ($row?->content ?? []);
+
+            if (isset($data['navLinks']) && is_array($data['navLinks'])) {
+                $content['nav']['simpleLinks'] = $data['navLinks'];
+            }
 
             // Validate nav dropdown sub-items have localized labels (en, fr, ar)
             if (isset($content['nav']['simpleLinks']) && is_array($content['nav']['simpleLinks'])) {

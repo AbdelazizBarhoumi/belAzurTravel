@@ -14,11 +14,12 @@ export async function apiFetch<T>(
 ): Promise<T> {
     // Debug counter to help trace repeated requests during troubleshooting
     // (temporary — remove after debugging loop sources)
-    // eslint-disable-next-line no-var
-    if (!(globalThis as any).__httpRequestCounter) {
-        (globalThis as any).__httpRequestCounter = 0;
+
+    const g = globalThis as unknown as { __httpRequestCounter?: number };
+    if (!g.__httpRequestCounter) {
+        g.__httpRequestCounter = 0;
     }
-    const reqId = ++(globalThis as any).__httpRequestCounter;
+    const reqId = ++g.__httpRequestCounter;
     // Support running tests in Node where relative URLs need a full origin.
     // In browser, window.location.origin will be present; in Node (Vitest) it may not.
     const isRelative = url.startsWith('/');
@@ -52,7 +53,11 @@ export async function apiFetch<T>(
         console.debug('[apiFetch] GET', finalUrl);
     }
 
-    console.debug(`[apiFetch #${reqId}]`, finalUrl, options && { method: options.method });
+    console.debug(
+        `[apiFetch #${reqId}]`,
+        finalUrl,
+        options && { method: options.method },
+    );
     const start = Date.now();
     const res = await fetch(finalUrl, {
         credentials: 'include',
@@ -90,7 +95,7 @@ export async function apiFetch<T>(
             // (e.g. RoleGuard) navigate appropriately.
             try {
                 clearAuthUser();
-            } catch (e) {
+            } catch {
                 // swallow errors from clearing state to avoid masking
                 // the original authentication failure
             }
@@ -102,5 +107,5 @@ export async function apiFetch<T>(
         throw new Error(err.message || 'Request failed');
     }
 
-    return res.json();
+    return res.json() as Promise<T>;
 }

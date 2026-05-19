@@ -31,9 +31,13 @@ use App\Http\Controllers\Api\NotificationStreamController;
 use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\GalleryController;
 
+use App\Http\Controllers\Api\AdminCategoryController;
+
 Route::get('/site-settings', [SiteSettingsController::class, 'show']);
 Route::middleware(['auth', 'role:admin'])->put('/site-settings', [SiteSettingsController::class, 'update']);
+Route::get('/auth/user', [AuthUserController::class, 'show']);
 
+Route::get('/categories', [AdminCategoryController::class, 'index']);
 Route::get('/gallery', [GalleryController::class, 'index'])
     ->middleware(['check-nav-page:gallery']);
 
@@ -67,12 +71,13 @@ Route::get('blog-posts/{slug}', [BlogPostController::class, 'show'])->middleware
 
 // Authenticated endpoints (booking creation, cancellation for owner)
 Route::middleware('auth')->group(function () {
-    Route::get('/auth/user', [AuthUserController::class, 'show']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/stream', [NotificationStreamController::class, 'stream']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::delete('/notifications/clear-all', [NotificationController::class, 'destroyAll']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
@@ -164,6 +169,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/bookings', [BookingController::class, 'index']);
         Route::post('/admin/bookings/{id}/confirm', [BookingController::class, 'confirm']);
         Route::post('/admin/bookings/{id}/cancel', [BookingController::class, 'adminCancel']);
+
+        Route::get('/admin/categories', [AdminCategoryController::class, 'index']);
+        Route::post('/admin/categories', [AdminCategoryController::class, 'store']);
+        Route::put('/admin/categories/{category}', [AdminCategoryController::class, 'update']);
+        Route::delete('/admin/categories/{category}', [AdminCategoryController::class, 'destroy']);
     });
 });
 

@@ -7,6 +7,8 @@ export interface PageDef {
     href: string;
     /** Query param a dropdown item with mode="filter" should use on this page */
     filterParam?: string;
+    /** Whether this page can ever have a dropdown (overridden by config/site.php if provided) */
+    canHaveDropdown?: boolean;
 }
 
 export const AVAILABLE_PAGES: PageDef[] = [
@@ -15,25 +17,70 @@ export const AVAILABLE_PAGES: PageDef[] = [
         label: 'Destinations',
         href: '/destinations',
         filterParam: 'cat',
+        canHaveDropdown: true,
     },
-    { key: 'hotels', label: 'Hotels', href: '/hotels', filterParam: 'cat' },
-    { key: 'tours', label: 'Tours', href: '/tours', filterParam: 'cat' },
-    { key: 'deals', label: 'Deals', href: '/deals', filterParam: 'cat' },
-    { key: 'gallery', label: 'Gallery', href: '/gallery', filterParam: 'cat' },
-    { key: 'events', label: 'Events', href: '/events', filterParam: 'cat' },
-    { key: 'blog', label: 'Blog', href: '/blog', filterParam: 'cat' },
-    { key: 'cars', label: 'Cars', href: '/cars', filterParam: 'type' },
+    {
+        key: 'hotels',
+        label: 'Hotels',
+        href: '/hotels',
+        filterParam: 'cat',
+        canHaveDropdown: true,
+    },
+    {
+        key: 'tours',
+        label: 'Tours',
+        href: '/tours',
+        filterParam: 'cat',
+        canHaveDropdown: true,
+    },
+    {
+        key: 'deals',
+        label: 'Deals',
+        href: '/deals',
+        filterParam: 'cat',
+        canHaveDropdown: true,
+    },
+    {
+        key: 'gallery',
+        label: 'Gallery',
+        href: '/gallery',
+        filterParam: 'cat',
+        canHaveDropdown: true,
+    },
+    {
+        key: 'events',
+        label: 'Events',
+        href: '/events',
+        filterParam: 'cat',
+        canHaveDropdown: true,
+    },
+    {
+        key: 'blog',
+        label: 'Blog',
+        href: '/blog',
+        filterParam: 'cat',
+        canHaveDropdown: true,
+    },
+    {
+        key: 'cars',
+        label: 'Cars',
+        href: '/cars',
+        filterParam: 'type',
+        canHaveDropdown: true,
+    },
     {
         key: 'flights',
         label: 'Flights',
         href: '/flights',
         filterParam: 'airline',
+        canHaveDropdown: true,
     },
-    { key: 'promos', label: 'Promos', href: '/promos' },
+    { key: 'promos', label: 'Promos', href: '/promos', filterParam: 'type' },
     { key: 'team', label: 'Team', href: '/team' },
     { key: 'legal', label: 'Legal', href: '/legal' },
     { key: 'favorites', label: 'Favorites', href: '/favorites' },
     { key: 'design-trip', label: 'Design Trip', href: '/design-trip' },
+    { key: 'contact', label: 'Contact', href: '/contact' },
 ];
 
 export function getPage(key: string): PageDef | undefined {
@@ -44,7 +91,7 @@ export function getFooterPage(key: string): PageDef | undefined {
     return AVAILABLE_PAGES.find((p) => p.key === key);
 }
 
-export type DropdownItemMode = 'filter' | 'search';
+export type DropdownItemMode = 'filter' | 'search' | 'categories';
 
 export interface DropdownItemConfig {
     label: string | Record<string, string>;
@@ -83,7 +130,7 @@ export const DEFAULT_FOOTER_COLUMNS: {
         defaultKeys: ['destinations', 'hotels', 'tours', 'deals'],
     },
     { title: 'Discover', defaultKeys: ['gallery', 'events', 'blog'] },
-    { title: 'Support', defaultKeys: ['team', 'legal', 'promos'] },
+    { title: 'Support', defaultKeys: ['team', 'legal', 'promos', 'contact'] },
 ];
 
 export const DEFAULT_NAV_SETTINGS: NavSettings = {
@@ -100,33 +147,31 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'promos',
             'team',
             'legal',
+            'contact',
         ].includes(p.key),
-        isDropdown: p.key === 'destinations' || p.key === 'hotels',
+        isDropdown: ['destinations', 'hotels'].includes(p.key),
         linkSelf: true,
-        placement: ['cars', 'flights', 'promos', 'team', 'legal'].includes(
-            p.key,
-        )
+        placement: [
+            'cars',
+            'flights',
+            'promos',
+            'team',
+            'legal',
+            'contact',
+        ].includes(p.key)
             ? 'more'
             : 'top',
-        items:
-            p.key === 'destinations'
-                ? [
-                      { label: 'Beach', mode: 'filter', value: 'Beach' },
-                      { label: 'City', mode: 'filter', value: 'City' },
-                      { label: 'Nature', mode: 'filter', value: 'Nature' },
-                      { label: 'Luxury', mode: 'filter', value: 'Luxury' },
-                  ]
-                : p.key === 'hotels'
-                  ? [
-                        { label: 'Luxury', mode: 'filter', value: 'Luxury' },
-                        {
-                            label: 'Boutique',
-                            mode: 'filter',
-                            value: 'Boutique',
-                        },
-                        { label: 'Resorts', mode: 'filter', value: 'Resorts' },
-                    ]
-                  : [],
+        items: [
+            'destinations',
+            'hotels',
+            'tours',
+            'deals',
+            'blog',
+            'cars',
+            'events',
+        ].includes(p.key)
+            ? [{ label: 'Categories', mode: 'categories', value: '' }]
+            : [],
     })),
     footer: DEFAULT_FOOTER_COLUMNS.map((c) => ({
         title: c.title,

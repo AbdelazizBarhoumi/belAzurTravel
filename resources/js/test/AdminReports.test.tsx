@@ -13,7 +13,13 @@ vi.mock('@/hooks/useBooking', () => ({
 }));
 
 vi.mock('@/components/layout/AdminLayout', () => ({
-    AdminLayout: ({ children, title }: { children: React.ReactNode; title: string }) => (
+    AdminLayout: ({
+        children,
+        title,
+    }: {
+        children: React.ReactNode;
+        title: string;
+    }) => (
         <div>
             <h1>{title}</h1>
             {children}
@@ -25,7 +31,9 @@ vi.mock('recharts', () => ({
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
         <div>{children}</div>
     ),
-    PieChart: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    PieChart: ({ children }: { children: React.ReactNode }) => (
+        <div>{children}</div>
+    ),
     Pie: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     Cell: () => null,
     Tooltip: () => null,
@@ -43,11 +51,7 @@ describe('AdminReports', () => {
         );
 
         expect(screen.getByText('Reports')).toBeInTheDocument();
-        expect(
-            screen.getByText(/Bookings by Status/i),
-        ).toBeInTheDocument();
-        expect(
-            screen.getByText(/Top Items by Revenue/i),
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Bookings by Status/i)).toBeInTheDocument();
+        expect(screen.getByText(/Top Items by Revenue/i)).toBeInTheDocument();
     });
 });

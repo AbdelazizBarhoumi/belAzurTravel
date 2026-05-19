@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             ['Emma Davis', 'emma@example.com', 'client', true],
             ['James Wilson', 'james@example.com', 'client', false],
             ['Lisa Brown', 'lisa@example.com', 'client', true],
-            ['Anna Admin', 'admin@voyageur.com', 'admin', true],
+            ['Anna Admin', 'admin@example.com', 'admin', true],
             ['Liam Helper', 'liam@voyageur.com', 'assistant', true],
             ['Test User', 'test@example.com', 'client', true],
         ] as [$name, $email, $role, $active]) {

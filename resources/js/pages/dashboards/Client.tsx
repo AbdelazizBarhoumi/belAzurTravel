@@ -12,8 +12,9 @@ import {
     Heart,
     Clock,
     Star,
+    Bell,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     cancelBooking,
@@ -24,6 +25,7 @@ import {
 } from '@/api/booking.api';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -38,12 +40,21 @@ function localize(value: LocalizedText, lang: Lang): string {
 }
 
 const sidebarLinks = [
-    { icon: MapPin, labelKey: 'dashboard.myBookings', active: true },
+    { icon: MapPin, labelKey: 'dashboard.myBookings', to: '/client/dashboard' },
+    {
+        icon: Bell,
+        labelKey: 'notifications.title',
+        to: '/client/notifications',
+    },
     { icon: Heart, labelKey: 'dashboard.wishlist' },
     { icon: Calendar, labelKey: 'dashboard.itineraries' },
-    { icon: CreditCard, labelKey: 'dashboard.payments' },
-    { icon: User, labelKey: 'dashboard.profile' },
-    { icon: Settings, labelKey: 'dashboard.settings' },
+    {
+        icon: CreditCard,
+        labelKey: 'dashboard.payments',
+        to: '/client/payments',
+    },
+    { icon: User, labelKey: 'dashboard.profile', to: '/client/profile' },
+    { icon: Settings, labelKey: 'dashboard.settings', to: '/client/support' },
 ];
 
 const ClientDashboard = () => {
@@ -54,7 +65,7 @@ const ClientDashboard = () => {
         if (pathname.includes('/support') || pathname.includes('/profile')) {
             return 'dashboard.settings';
         }
-        if (pathname.includes('/notifications')) return 'dashboard.itineraries';
+        if (pathname.includes('/notifications')) return 'notifications.title';
         return 'dashboard.myBookings';
     });
     const [supportSubject, setSupportSubject] = useState('');
@@ -70,7 +81,9 @@ const ClientDashboard = () => {
     const { data: dashboard } = useQuery({
         queryKey: ['client', 'dashboard'],
         queryFn: getClientDashboard,
-        refetchInterval: 30_000,
+        staleTime: 5 * 60 * 1000,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
     });
     const { data: recommendations = [] } = useDestinations();
     const { data: payments = [] } = useQuery({
@@ -97,6 +110,24 @@ const ClientDashboard = () => {
     });
     const bookings = dashboard?.bookings ?? [];
 
+    useEffect(() => {
+        // Defer setState to avoid synchronous state updates inside effect
+        // which can trigger cascading renders during navigation.
+        setTimeout(() => {
+            if (pathname.includes('/payments'))
+                setActiveTab('dashboard.payments');
+            else if (
+                pathname.includes('/support') ||
+                pathname.includes('/profile')
+            )
+                setActiveTab('dashboard.settings');
+            else if (pathname.includes('/notifications'))
+                setActiveTab('notifications.title');
+            else if (pathname.includes('/dashboard'))
+                setActiveTab('dashboard.myBookings');
+        }, 0);
+    }, [pathname]);
+
     const formatBookingTitle = (booking: ClientBookingRow) =>
         [
             booking.type,
@@ -109,11 +140,6 @@ const ClientDashboard = () => {
         ]
             .filter(Boolean)
             .join(' / ');
-
-    const localizedNotification = (data: Record<string, unknown>) => {
-        const value = data[lang] ?? data.en ?? data.fr ?? data.ar;
-        return typeof value === 'string' ? value : '';
-    };
 
     return (
         <div
@@ -141,22 +167,40 @@ const ClientDashboard = () => {
                 </div>
 
                 <nav className="flex-1 space-y-1 px-4">
-                    {sidebarLinks.map((link) => (
-                        <button
-                            key={link.labelKey}
-                            onClick={() => setActiveTab(link.labelKey)}
-                            className={cn(
-                                'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all',
-                                isRtl && 'text-right',
-                                activeTab === link.labelKey
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                            )}
-                        >
-                            <link.icon className="h-4 w-4" />
-                            {t(link.labelKey)}
-                        </button>
-                    ))}
+                    {sidebarLinks.map((link) => {
+                        const active = activeTab === link.labelKey;
+                        const className = cn(
+                            'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all',
+                            isRtl && 'text-right',
+                            active
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                        );
+
+                        if (link.to) {
+                            return (
+                                <Link
+                                    key={link.labelKey}
+                                    to={link.to}
+                                    className={className}
+                                >
+                                    <link.icon className="h-4 w-4" />
+                                    {t(link.labelKey)}
+                                </Link>
+                            );
+                        }
+
+                        return (
+                            <button
+                                key={link.labelKey}
+                                onClick={() => setActiveTab(link.labelKey)}
+                                className={className}
+                            >
+                                <link.icon className="h-4 w-4" />
+                                {t(link.labelKey)}
+                            </button>
+                        );
+                    })}
                 </nav>
 
                 <div className="border-t border-border p-4">
@@ -413,31 +457,14 @@ const ClientDashboard = () => {
                         </div>
                     )}
 
-                    {activeTab === 'dashboard.itineraries' && (
+                    {activeTab === 'notifications.title' && (
                         <div className="rounded-2xl border border-border bg-card p-6">
-                            <h2 className="font-serif text-xl font-bold text-foreground">
-                                {t('notifications.title')}
-                            </h2>
-                            <div className="mt-4 space-y-3">
-                                {(dashboard?.notifications ?? []).map(
-                                    (notification) => (
-                                        <div
-                                            key={notification.id}
-                                            className="rounded-xl bg-muted p-4 text-sm text-foreground"
-                                        >
-                                            {localizedNotification(
-                                                notification.data,
-                                            )}
-                                        </div>
-                                    ),
+                            <NotificationCenter
+                                panelLabel={t(
+                                    'notifications.yourNotifications',
                                 )}
-                                {(dashboard?.notifications ?? []).length ===
-                                    0 && (
-                                    <p className="text-muted-foreground">
-                                        {t('notifications.empty')}
-                                    </p>
-                                )}
-                            </div>
+                                showTitle={false}
+                            />
                         </div>
                     )}
 

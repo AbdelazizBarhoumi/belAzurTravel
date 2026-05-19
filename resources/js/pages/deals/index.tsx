@@ -1,31 +1,39 @@
 import { motion } from 'framer-motion';
 import { CalendarClock, Tag } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useDeals } from '@/hooks/usePublicData';
+import { useDeals, useCategories } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
 
 export default function Deals() {
     const { t, lang } = useLanguage();
-    const [activeCategory, setActiveCategory] = useState<'all' | string>('all');
-    const [searchQuery, setSearchQuery] = useState('');
+    const [params] = useSearchParams();
+    const initialSearch = params.get('q') || '';
+    const initialCategory = params.get('cat')?.toLowerCase() || ALL;
+
     const { data: deals = [] } = useDeals();
+    const { data: dynamicCategories = [] } = useCategories('deals');
+    const [activeCategory, setActiveCategory] = useState<'all' | string>(
+        initialCategory,
+    );
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
 
     const categories = useMemo(
         () => [
             { value: 'all', label: t('common.all') },
-            ...Array.from(
-                new Set(deals.map((deal) => deal.category[lang])),
-            ).map((label) => ({ value: label, label })),
+            ...dynamicCategories.map((c) => ({
+                value: c.key,
+                label: c.name[lang] || c.name.en,
+            })),
         ],
-        [deals, lang, t],
+        [dynamicCategories, lang, t],
     );
 
     const filteredDeals = useMemo(
@@ -40,7 +48,7 @@ export default function Deals() {
                 ]);
                 const matchesCategory =
                     activeCategory === ALL ||
-                    deal.category[lang] === activeCategory;
+                    deal.category_key === activeCategory;
                 return matchesSearch && matchesCategory;
             }),
         [activeCategory, deals, lang, searchQuery],
@@ -55,7 +63,7 @@ export default function Deals() {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div key={params.toString()} className="min-h-screen bg-background">
             <main className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div

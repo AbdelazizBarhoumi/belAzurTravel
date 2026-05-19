@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiFetch } from '@/api/http';
-import { LanguageProvider } from '@/contexts/LanguageContext';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 vi.mock('@/api/http', () => ({
     apiFetch: vi.fn(),

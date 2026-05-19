@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
     Collapsible,
     CollapsibleContent,
@@ -53,7 +53,7 @@ function NavMainItem({ item }: NavMainItemProps) {
                     tooltip={item.title}
                     className="relative"
                 >
-                    <Link href={item.href} prefetch>
+                    <Link to={item.href}>
                         {Icon && <Icon className="h-4 w-4" />}
                         <span>{item.title}</span>
                     </Link>
@@ -92,7 +92,7 @@ function NavMainItem({ item }: NavMainItemProps) {
                                     asChild
                                     isActive={subItem.isActive}
                                 >
-                                    <Link href={subItem.href} prefetch>
+                                    <Link to={subItem.href}>
                                         <span>{subItem.title}</span>
                                     </Link>
                                 </SidebarMenuSubButton>

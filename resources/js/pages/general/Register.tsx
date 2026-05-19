@@ -16,10 +16,47 @@ const Register = () => {
     const navigate = useNavigate();
     const { t } = useLanguage();
 
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        toast.success(t('register.success'));
-        navigate('/dashboard');
+        try {
+            const res = await fetch('/register', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN':
+                        (
+                            document.querySelector(
+                                'meta[name="csrf-token"]',
+                            ) as HTMLMetaElement
+                        )?.content || '',
+                },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password,
+                    password_confirmation: password, // Fortify usually requires this
+                }),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                console.error('Registration error:', res.status, errorData);
+                throw new Error(errorData.message || 'Registration failed');
+            }
+
+            toast.success(t('register.success'));
+            // After registration, Fortify typically logs the user in automatically
+            // Redirect to dashboard
+            navigate('/dashboard');
+        } catch (error: unknown) {
+            console.error('Registration catch:', error);
+            const msg =
+                (error as { message?: string })?.message ||
+                'Registration failed. Please check your details.';
+            toast.error(msg);
+        }
     };
 
     return (

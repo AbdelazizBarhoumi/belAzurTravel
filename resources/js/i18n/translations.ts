@@ -788,13 +788,29 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'تم إنشاء الحساب بنجاح!',
         en: 'Account created successfully!',
     },
-
-    // Destinations Page
     'dest.title': {
-        fr: 'Explorez les Destinations',
-        ar: 'استكشف الوجهات',
-        en: 'Explore Destinations',
+        fr: 'Destinations de Rêve',
+        ar: 'وجهات الأحلام',
+        en: 'Dream Destinations',
     },
+    'dest.sort.featured': { fr: 'Mis en avant', ar: 'مميز', en: 'Featured' },
+    'dest.sortBy': {
+        fr: 'Trier par',
+        ar: 'ترتيب حسب',
+        en: 'Sort by',
+    },
+    'dest.sort.priceAsc': {
+        fr: 'Prix croissant',
+        ar: 'السعر: من الأقل للأعلى',
+        en: 'Price: Low to High',
+    },
+    'dest.sort.priceDesc': {
+        fr: 'Prix décroissant',
+        ar: 'السعر: من الأعلى للأقل',
+        en: 'Price: High to Low',
+    },
+    'dest.sort.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
+
     'dest.subtitle': {
         fr: 'Trouvez votre destination idéale dans notre collection sélectionnée de destinations de classe mondiale.',
         ar: 'ابحث عن وجهتك المثالية من مجموعتنا المنتقاة من الوجهات العالمية.',
@@ -2016,20 +2032,120 @@ translations['notifications.title'] = {
     ar: 'الإشعارات',
     en: 'Notifications',
 };
+translations['notifications.adminPanel'] = {
+    fr: 'Notifications Admin',
+    ar: 'إشعارات المسؤول',
+    en: 'Admin notifications',
+};
+translations['notifications.assistantPanel'] = {
+    fr: 'Notifications Assistant',
+    ar: 'إشعارات المساعد',
+    en: 'Assistant notifications',
+};
+translations['notifications.yourNotifications'] = {
+    fr: 'Vos notifications',
+    ar: 'إشعاراتك',
+    en: 'Your notifications',
+};
+translations['notifications.unread'] = {
+    fr: 'non lue(s)',
+    ar: 'غير مقروءة',
+    en: 'unread',
+};
+translations['notifications.allCaughtUp'] = {
+    fr: 'tout est à jour',
+    ar: 'كل شيء محدث',
+    en: 'all caught up',
+};
 translations['notifications.markAllRead'] = {
-    fr: 'Tout lu',
+    fr: 'Tout marquer comme lu',
     ar: 'تحديد الكل كمقروء',
     en: 'Mark all read',
+};
+translations['notifications.clear'] = {
+    fr: 'Effacer',
+    ar: 'مسح',
+    en: 'Clear',
+};
+translations['notifications.empty'] = {
+    fr: 'Aucune notification à afficher',
+    ar: 'لا توجد إشعارات لعرضها',
+    en: 'No notifications to show',
+};
+translations['notifications.markAsRead'] = {
+    fr: 'Marquer comme lu',
+    ar: 'تحديد كمقروء',
+    en: 'Mark as read',
 };
 translations['notifications.viewAll'] = {
     fr: 'Voir tout',
     ar: 'عرض الكل',
     en: 'View all',
 };
-translations['notifications.empty'] = {
-    fr: 'Aucune notification',
-    ar: 'لا توجد إشعارات',
-    en: 'No notifications',
+translations['notifications.filter.all'] = {
+    fr: 'Tout',
+    ar: 'الكل',
+    en: 'All',
+};
+translations['notifications.filter.unread'] = {
+    fr: 'Non lues',
+    ar: 'غير المقروءة',
+    en: 'Unread',
+};
+translations['notifications.type.booking'] = {
+    fr: 'Réservation',
+    ar: 'حجز',
+    en: 'Booking',
+};
+translations['notifications.type.payment'] = {
+    fr: 'Paiement',
+    ar: 'دفع',
+    en: 'Payment',
+};
+translations['notifications.type.deal'] = {
+    fr: 'Offre',
+    ar: 'عرض',
+    en: 'Deal',
+};
+translations['notifications.type.alert'] = {
+    fr: 'Alerte',
+    ar: 'تنبيه',
+    en: 'Alert',
+};
+translations['notifications.type.flight'] = {
+    fr: 'Vol',
+    ar: 'رحلة',
+    en: 'Flight',
+};
+translations['notifications.type.hotel'] = {
+    fr: 'Hôtel',
+    ar: 'فندق',
+    en: 'Hotel',
+};
+translations['notifications.type.user'] = {
+    fr: 'Utilisateur',
+    ar: 'مستخدم',
+    en: 'User',
+};
+translations['notifications.type.system'] = {
+    fr: 'Système',
+    ar: 'نظام',
+    en: 'System',
+};
+translations['notifications.type.inquiry'] = {
+    fr: 'Demande',
+    ar: 'استفسار',
+    en: 'Inquiry',
+};
+translations['notifications.type.revenue'] = {
+    fr: 'Revenu',
+    ar: 'دخل',
+    en: 'Revenue',
+};
+translations['notifications.type.review'] = {
+    fr: 'Avis',
+    ar: 'تقييم',
+    en: 'Review',
 };
 translations['actions.back'] = {
     fr: 'Retour',
@@ -2051,10 +2167,142 @@ translations['client.support'] = {
     ar: 'الدعم',
     en: 'Support',
 };
-translations['client.supportSubject'] = {
-    fr: 'Sujet',
-    ar: 'الموضوع',
-    en: 'Subject',
+translations['admin.settings.reset'] = {
+    fr: 'Réinitialiser',
+    ar: 'إعادة تعيين',
+    en: 'Reset',
+};
+translations['admin.settings.save'] = {
+    fr: 'Enregistrer',
+    ar: 'حفظ',
+    en: 'Save',
+};
+translations['admin.settings.companyContact'] = {
+    fr: 'Entreprise & contact',
+    ar: 'الشركة والتواصل',
+    en: 'Company & contact',
+};
+translations['admin.settings.brandIdentity'] = {
+    fr: 'Gardez votre identité de marque...',
+    ar: 'حافظ على هوية علامتك التجارية...',
+    en: 'Keep your brand identity...',
+};
+translations['admin.settings.companyInfo'] = {
+    fr: 'Infos entreprise',
+    ar: 'معلومات الشركة',
+    en: 'Company info',
+};
+translations['admin.settings.companyName'] = {
+    fr: 'Nom entreprise',
+    ar: 'اسم الشركة',
+    en: 'Company name',
+};
+translations['admin.settings.address'] = {
+    fr: 'Adresse',
+    ar: 'العنوان',
+    en: 'Address',
+};
+translations['admin.settings.plusCode'] = {
+    fr: 'Plus Code (map)',
+    ar: 'رمز الخريطة',
+    en: 'Plus Code for map',
+};
+translations['admin.settings.year'] = { fr: 'Année', ar: 'السنة', en: 'Year' };
+translations['admin.settings.contactDetails'] = {
+    fr: 'Détails de contact',
+    ar: 'تفاصيل الاتصال',
+    en: 'Contact details',
+};
+translations['admin.settings.email'] = {
+    fr: 'E-mail',
+    ar: 'البريد الإلكتروني',
+    en: 'Email',
+};
+translations['admin.settings.phone'] = {
+    fr: 'Téléphone',
+    ar: 'الهاتف',
+    en: 'Phone',
+};
+translations['admin.settings.whatsapp'] = {
+    fr: 'WhatsApp',
+    ar: 'واتساب',
+    en: 'WhatsApp',
+};
+translations['admin.settings.socialMedia'] = {
+    fr: 'Réseaux sociaux',
+    ar: 'وسائل التواصل',
+    en: 'Social media',
+};
+translations['admin.settings.addLink'] = {
+    fr: 'Ajouter un lien',
+    ar: 'إضافة رابط',
+    en: 'Add link',
+};
+translations['admin.settings.businessHours'] = {
+    fr: 'Heures d’ouverture',
+    ar: 'ساعات العمل',
+    en: 'Business hours',
+};
+translations['admin.settings.addRow'] = {
+    fr: 'Ajouter une ligne',
+    ar: 'إضافة صف',
+    en: 'Add row',
+};
+translations['admin.settings.day'] = { fr: 'Jour', ar: 'اليوم', en: 'Day' };
+translations['admin.settings.hours'] = {
+    fr: 'Heures',
+    ar: 'الساعات',
+    en: 'Hours',
+};
+translations['admin.settings.headerLinks'] = {
+    fr: 'Liens d’en-tête',
+    ar: 'روابط الترويسة',
+    en: 'Header links',
+};
+translations['admin.settings.reorder'] = {
+    fr: 'Glissez les lignes pour réordonner',
+    ar: 'اسحب الصفوف لإعادة الترتيب',
+    en: 'Drag rows to reorder...',
+};
+translations['admin.settings.placement'] = {
+    fr: 'Emplacement',
+    ar: 'الموقع',
+    en: 'Placement',
+};
+translations['admin.settings.dropdown'] = {
+    fr: 'Menu déroulant',
+    ar: 'قائمة منسدلة',
+    en: 'Dropdown',
+};
+translations['admin.settings.triggerLinks'] = {
+    fr: 'Déclencher des liens vers la page',
+    ar: 'تفعيل الروابط للصفحة',
+    en: 'Trigger links to page',
+};
+translations['admin.settings.addItem'] = {
+    fr: 'Ajouter un élément',
+    ar: 'إضافة عنصر',
+    en: 'Add item',
+};
+translations['admin.settings.footerColumns'] = {
+    fr: 'Colonnes de pied de page',
+    ar: 'أعمدة التذييل',
+    en: 'Footer columns',
+};
+translations['admin.settings.columnTitle'] = {
+    fr: 'Titre de colonne',
+    ar: 'عنوان العمود',
+    en: 'Column title',
+};
+translations['admin.settings.topBar'] = {
+    fr: 'Barre du haut',
+    ar: 'الشريط العلوي',
+    en: 'Top bar',
+};
+translations['admin.settings.more'] = {
+    fr: '+ Plus',
+    ar: '+ المزيد',
+    en: '+ More',
 };
 translations['client.supportMessage'] = {
     fr: 'Votre message',

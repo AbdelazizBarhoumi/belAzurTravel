@@ -16,6 +16,7 @@ import {
 } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
@@ -26,9 +27,9 @@ const copy = (en: string, fr: string, ar: string): Copy => ({ en, fr, ar });
 
 function localizedFields(base: string, label: Copy, type?: FieldDef['type']) {
     return [
-        { key: `${base}_en`, label: `${label.en} (EN)`, type, required: true },
-        { key: `${base}_fr`, label: `${label.fr} (FR)`, type, required: true },
-        { key: `${base}_ar`, label: `${label.ar} (AR)`, type, required: true },
+        { key: `${base}_en`, label: label.en, type, required: true },
+        { key: `${base}_fr`, label: label.fr, type, required: true },
+        { key: `${base}_ar`, label: label.ar, type, required: true },
     ];
 }
 
@@ -128,19 +129,19 @@ export default function AdminDeals() {
                         {[
                             {
                                 key: `title_${activeLang}`,
-                                label: `Title (${activeLang.toUpperCase()})`,
+                                label: 'Title',
                             },
                             {
                                 key: `discount_${activeLang}`,
-                                label: `Discount (${activeLang.toUpperCase()})`,
+                                label: 'Discount',
                             },
                             {
                                 key: `expires_${activeLang}`,
-                                label: `Expires (${activeLang.toUpperCase()})`,
+                                label: 'Expires',
                             },
                             {
                                 key: `category_${activeLang}`,
-                                label: `Category (${activeLang.toUpperCase()})`,
+                                label: 'Category',
                             },
                         ].map((f) => (
                             <div key={f.key} className="space-y-2">
@@ -149,6 +150,7 @@ export default function AdminDeals() {
                                     className="text-xs font-semibold text-muted-foreground"
                                 >
                                     {f.label}
+                                    <LangBadge lang={activeLang} />
                                 </label>
                                 <input
                                     id={f.key}

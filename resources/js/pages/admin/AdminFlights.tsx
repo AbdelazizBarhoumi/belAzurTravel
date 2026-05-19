@@ -16,6 +16,7 @@ import {
 } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
@@ -103,7 +104,7 @@ export default function AdminFlights() {
                                         className="text-xs font-semibold text-muted-foreground"
                                     >
                                         {displayName} (
-                                        {activeLang.toUpperCase()})
+                                        <LangBadge lang={activeLang} />
                                     </label>
                                     <input
                                         id={fieldKey}
@@ -195,7 +196,7 @@ export default function AdminFlights() {
                                     {String(key).replace(/^[a-z]/, (s) =>
                                         s.toUpperCase(),
                                     )}{' '}
-                                    ({activeLang.toUpperCase()})
+                                    <LangBadge lang={activeLang} />
                                 </label>
                                 <input
                                     id={fieldKey}

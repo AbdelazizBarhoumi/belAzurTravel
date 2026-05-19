@@ -269,9 +269,9 @@ const AdminDashboard = () => {
                                                           : 'bg-destructive/10 text-destructive'
                                                 }`}
                                             >
-                                                {bookingStatusLabels[b.status]?.[
-                                                    lang
-                                                ] ?? b.status}
+                                                {bookingStatusLabels[
+                                                    b.status
+                                                ]?.[lang] ?? b.status}
                                             </span>
                                         </td>
                                     </tr>

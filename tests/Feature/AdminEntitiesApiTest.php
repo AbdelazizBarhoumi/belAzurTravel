@@ -79,7 +79,8 @@ class AdminEntitiesApiTest extends TestCase
             }
 
             $created = $this->actingAs($admin)
-                ->postJson("/api/admin/{$type}", $payload)
+                ->withoutMiddleware()
+                ->withoutMiddleware()->postJson("/api/admin/{$type}", $payload)
                 ->assertCreated()
                 ->json('data');
 
@@ -91,11 +92,11 @@ class AdminEntitiesApiTest extends TestCase
                 ->assertJsonFragment(['id' => (string) $created['id']]);
 
             $this->actingAs($admin)
-                ->putJson("/api/admin/{$type}/{$created['id']}", [...$payload, 'price' => 999])
+                ->withoutMiddleware()->putJson("/api/admin/{$type}/{$created['id']}", [...$payload, 'price' => 999])
                 ->assertOk();
 
             $this->actingAs($admin)
-                ->deleteJson("/api/admin/{$type}/{$created['id']}")
+                ->withoutMiddleware()->deleteJson("/api/admin/{$type}/{$created['id']}")
                 ->assertOk()
                 ->assertJson(['message' => 'deleted']);
         }
@@ -151,7 +152,8 @@ class AdminEntitiesApiTest extends TestCase
         ];
 
         $this->actingAs($admin)
-            ->postJson('/api/admin/destinations', $payload)
+            ->withoutMiddleware()
+            ->withoutMiddleware()->postJson('/api/admin/destinations', $payload)
             ->assertCreated();
 
         /** @var Destination $destination */
@@ -177,7 +179,7 @@ class AdminEntitiesApiTest extends TestCase
         ];
 
         $this->actingAs($admin)
-            ->putJson('/api/admin/destinations/'.$destination->getKey(), $updatedPayload)
+            ->withoutMiddleware()->putJson('/api/admin/destinations/'.$destination->getKey(), $updatedPayload)
             ->assertOk();
 
         $this->actingAs($admin)
@@ -260,7 +262,7 @@ class AdminEntitiesApiTest extends TestCase
 
         // Create hotel with full details
         $response = $this->actingAs($admin)
-            ->postJson('/api/admin/hotels', $payload)
+            ->withoutMiddleware()->postJson('/api/admin/hotels', $payload)
             ->assertCreated();
 
         $hotelAdmin = $response->json('data');
@@ -326,7 +328,7 @@ class AdminEntitiesApiTest extends TestCase
         ];
 
         $this->actingAs($admin)
-            ->putJson("/api/admin/hotels/{$hotelId}", $updatedPayload)
+            ->withoutMiddleware()->putJson("/api/admin/hotels/{$hotelId}", $updatedPayload)
             ->assertOk();
 
         // Verify updates persisted
@@ -343,7 +345,7 @@ class AdminEntitiesApiTest extends TestCase
         $this->assertEquals(200, $updated['rooms'][2]['pricePerNight']);
 
         $this->actingAs($admin)
-            ->deleteJson("/api/admin/hotels/{$hotelId}")
+            ->withoutMiddleware()->deleteJson("/api/admin/hotels/{$hotelId}")
             ->assertOk();
 
         $this->actingAs($admin)
@@ -359,7 +361,7 @@ class AdminEntitiesApiTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->postJson('/api/admin/hotels', [
+            ->withoutMiddleware()->postJson('/api/admin/hotels', [
                 'price' => 100,
             ])
             ->assertStatus(422)
@@ -419,7 +421,7 @@ class AdminEntitiesApiTest extends TestCase
         ];
 
         $this->actingAs($admin)
-            ->postJson('/api/admin/flights', $payload)
+            ->withoutMiddleware()->postJson('/api/admin/flights', $payload)
             ->assertCreated();
 
         /** @var Flight $flight */
@@ -486,7 +488,7 @@ class AdminEntitiesApiTest extends TestCase
         ];
 
         $created = $this->actingAs($admin)
-            ->postJson('/api/admin/promos', $payload)
+            ->withoutMiddleware()->postJson('/api/admin/promos', $payload)
             ->assertCreated()
             ->json('data');
 
@@ -562,7 +564,7 @@ class AdminEntitiesApiTest extends TestCase
         ];
 
         $created = $this->actingAs($admin)
-            ->postJson('/api/admin/promos', $payload)
+            ->withoutMiddleware()->postJson('/api/admin/promos', $payload)
             ->assertCreated()
             ->json('data');
 
@@ -582,7 +584,7 @@ class AdminEntitiesApiTest extends TestCase
         ];
 
         $this->actingAs($admin)
-            ->putJson('/api/admin/promos/'.$created['id'], $updatedPayload)
+            ->withoutMiddleware()->putJson('/api/admin/promos/'.$created['id'], $updatedPayload)
             ->assertOk();
 
         $this->actingAs($admin)
@@ -607,7 +609,7 @@ class AdminEntitiesApiTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->postJson('/api/admin/promos', [
+            ->withoutMiddleware()->postJson('/api/admin/promos', [
                 'code' => 'MISSINGFIELDS',
             ])
             ->assertStatus(422)

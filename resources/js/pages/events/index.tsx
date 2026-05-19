@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
@@ -14,16 +14,38 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useEvents } from '@/hooks/usePublicData';
+import { useEvents, useCategories } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
 
-const Events = () => {
+export default function Events() {
+    const location = useLocation();
+    return <EventsContent key={location.search} />;
+}
+
+function EventsContent() {
     const { t, lang } = useLanguage();
+    const [params] = useSearchParams();
+    const initialSearch = params.get('q') || '';
+    const initialCategory = params.get('cat')?.toLowerCase() || ALL;
+
     const { data: events = [] } = useEvents();
-    const [searchQuery, setSearchQuery] = useState('');
+    const { data: dynamicCategories = [] } = useCategories('events');
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedLocation, setSelectedLocation] = useState(ALL);
+    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+
+    const categories = useMemo(
+        () => [
+            { value: ALL, label: t('common.all') },
+            ...dynamicCategories.map((c) => ({
+                value: c.key,
+                label: c.name[lang] || c.name.en,
+            })),
+        ],
+        [dynamicCategories, lang, t],
+    );
 
     const locationOptions = useMemo(
         () =>
@@ -49,21 +71,28 @@ const Events = () => {
                 const matchesLocation =
                     selectedLocation === ALL ||
                     localizeText(event.location, lang) === selectedLocation;
-                return matchesSearch && matchesLocation;
+                const matchesCategory =
+                    selectedCategory === ALL ||
+                    event.category_key === selectedCategory;
+                return matchesSearch && matchesLocation && matchesCategory;
             }),
-        [events, lang, searchQuery, selectedLocation],
+        [events, lang, searchQuery, selectedLocation, selectedCategory],
     );
 
     const hasActiveFilters =
-        searchQuery.trim().length > 0 || selectedLocation !== ALL;
+        searchQuery.trim().length > 0 ||
+        selectedLocation !== ALL ||
+        selectedCategory !== ALL;
 
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedLocation(ALL);
+        setSelectedCategory(ALL);
     };
 
     return (
         <PageShell
+            key={params.toString()}
             titleKey="events.title"
             subtitleKey="events.subtitle"
             breadcrumbs={[
@@ -79,6 +108,18 @@ const Events = () => {
                 onClearFilters={clearFilters}
                 searchPlaceholder={t('common.search')}
             >
+                <div className="mb-6 flex flex-wrap gap-2">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.value}
+                            type="button"
+                            onClick={() => setSelectedCategory(cat.value)}
+                            className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedCategory === cat.value ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}
+                        >
+                            {cat.label}
+                        </button>
+                    ))}
+                </div>
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
                     <label className="grid gap-2 text-sm">
                         <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
@@ -167,6 +208,4 @@ const Events = () => {
             </div>
         </PageShell>
     );
-};
-
-export default Events;
+}

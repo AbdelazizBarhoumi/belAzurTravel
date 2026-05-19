@@ -13,6 +13,7 @@ import type { FieldDef, SectionDef } from '@/components/forms/EntityFormDialog';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { AdminTour } from '@/hooks/useAdminStore';
@@ -148,7 +149,7 @@ const AdminTours = () => {
                                     {k.replace(/^[a-z]/, (s) =>
                                         s.toUpperCase(),
                                     )}{' '}
-                                    ({activeLang.toUpperCase()})
+                                    <LangBadge lang={activeLang} />
                                 </label>
                                 <input
                                     id={`${k}_${activeLang}`}

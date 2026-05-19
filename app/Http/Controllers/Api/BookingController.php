@@ -13,10 +13,10 @@ use App\Models\Tour;
 use App\Models\User;
 use App\Notifications\BookingActivityNotification;
 use App\Notifications\BookingStatusNotification;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Redis;
 
 class BookingController extends Controller
@@ -26,11 +26,11 @@ class BookingController extends Controller
         return response()->json(Booking::query()->latest()->get()->map(fn (Booking $booking) => $this->payload($booking)));
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
 
-        $user = request()->user();
+        $user = $request->user();
         abort_unless(
             $user && ($booking->user_id === $user->id || $user->role === 'admin' || $user->role === 'assistant'),
             403
@@ -91,7 +91,7 @@ class BookingController extends Controller
         abort_if(
             $request->user()->role === 'client'
             && $booking->start_date
-            && now()->gte($booking->start_date->copy()->subDay()),
+            && now()->gte(Carbon::parse($booking->start_date)->subDay()),
             422,
             'Cancellation is closed within 24 hours of travel.'
         );
@@ -153,31 +153,15 @@ class BookingController extends Controller
 
     private function notifyOperations(Booking $booking, string $type): void
     {
-        $recipients = User::query()
+        User::query()
             ->where('active', true)
             ->whereIn('role', ['admin', 'assistant'])
-            ->get();
-
-        foreach ($recipients as $recipient) {
-            $recipient->notify(new BookingActivityNotification($booking, $type));
-
-            try {
-                $notif = $recipient->notifications()->latest()->first();
-                if ($notif) {
-                    Redis::publish("notifications:user:{$recipient->id}", json_encode([
-                        'notification' => [
-                            'id' => $notif->id,
-                            'type' => $notif->data['type'] ?? class_basename($notif->type),
-                            'data' => $notif->data,
-                            'read_at' => $notif->read_at?->toJSON(),
-                            'created_at' => $notif->created_at?->toJSON(),
-                        ],
-                    ]));
-                }
-            } catch (\Throwable $e) {
-                // swallow publishing errors to avoid breaking request
-            }
-        }
+            ->get()
+            ->each(function (User $recipient) use ($booking, $type): void {
+                $notification = new BookingActivityNotification($booking, $type);
+            $recipient->notify($notification);
+            $this->publishNotification($recipient, $notification);
+            });
     }
 
     private function notifyClient(Booking $booking): void
@@ -188,23 +172,31 @@ class BookingController extends Controller
 
         $user = User::query()->find($booking->user_id);
         if ($user) {
-            $user->notify(new BookingStatusNotification($booking));
-            try {
-                $notif = $user->notifications()->latest()->first();
-                if ($notif) {
-                    Redis::publish("notifications:user:{$user->id}", json_encode([
-                        'notification' => [
-                            'id' => $notif->id,
-                            'type' => $notif->data['type'] ?? class_basename($notif->type),
-                            'data' => $notif->data,
-                            'read_at' => $notif->read_at?->toJSON(),
-                            'created_at' => $notif->created_at?->toJSON(),
-                        ],
-                    ]));
-                }
-            } catch (\Throwable $e) {
-                // ignore
+            $notification = new BookingStatusNotification($booking);
+            $user->notify($notification);
+            $this->publishNotification($user, $notification);
+        }
+    }
+
+    private function publishNotification(User $user, object $notification): void
+    {
+        try {
+            if (! method_exists($notification, 'toDatabase')) {
+                return;
             }
+
+            $data = $notification->toDatabase($user);
+            Redis::publish("notifications:user:{$user->id}", json_encode([
+                'notification' => [
+                    'id' => (string) ($data['id'] ?? $user->id.'-'.now()->timestamp),
+                    'type' => $data['type'] ?? class_basename($notification::class),
+                    'data' => $data,
+                    'read_at' => null,
+                    'created_at' => now()->toJSON(),
+                ],
+            ]));
+        } catch (\Throwable $e) {
+            // ignore publish errors to avoid breaking request
         }
     }
 
@@ -233,8 +225,8 @@ class BookingController extends Controller
             'item_slug' => $booking->item_slug,
             'item_id' => $booking->item_id,
             'items' => $booking->items ?? [],
-            'start_date' => $booking->start_date?->toDateString(),
-            'end_date' => $booking->end_date?->toDateString(),
+            'start_date' => $this->dateString($booking->start_date),
+            'end_date' => $this->dateString($booking->end_date),
             'client' => $booking->client,
             'travelers' => $booking->travelers,
             'promo_code' => $booking->promo_code,
@@ -246,7 +238,16 @@ class BookingController extends Controller
             'confirmed_at' => $booking->confirmed_at?->toJSON(),
             'cancelled_at' => $booking->cancelled_at?->toJSON(),
             'can_cancel' => $booking->status !== 'Cancelled'
-                && (! $booking->start_date || now()->lt($booking->start_date->copy()->subDay())),
+                && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay())),
         ];
+    }
+
+    private function dateString(mixed $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        return Carbon::parse($value)->toDateString();
     }
 }

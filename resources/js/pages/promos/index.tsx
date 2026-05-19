@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Tag, Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
@@ -47,11 +47,14 @@ function getPromoType(discount: string): 'perk' | 'percentage' {
     return discount.includes('%') ? 'percentage' : 'perk';
 }
 
-const Promos = () => {
+function PromosContent() {
     const { t, lang } = useLanguage();
+    const [params] = useSearchParams();
     const { data: promos = [] } = usePromos();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedType, setSelectedType] = useState(ALL);
+    const initialSearch = params.get('q') || '';
+    const initialType = params.get('type') || ALL;
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [selectedType, setSelectedType] = useState(initialType);
 
     const filteredPromos = useMemo(
         () =>
@@ -184,6 +187,9 @@ const Promos = () => {
             </div>
         </PageShell>
     );
-};
+}
 
-export default Promos;
+export default function Promos() {
+    const location = useLocation();
+    return <PromosContent key={location.search} />;
+}

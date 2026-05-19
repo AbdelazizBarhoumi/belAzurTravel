@@ -6,6 +6,8 @@ import type { LocalizedText } from '../common';
 export interface CarItem {
     slug: string;
     name: LocalizedText;
+    // key of the category (e.g. "suv", "sedan") when provided by the API
+    category_key?: string;
     category: LocalizedText;
     fuel: LocalizedText;
     transmission: LocalizedText;

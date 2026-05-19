@@ -12,12 +12,20 @@ class AuthUserController extends Controller
     {
         $user = $request->user();
 
+        if ($user === null) {
+            return response()->json([
+                'user' => null,
+            ]);
+        }
+
         return response()->json([
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'role' => $user->role,
-            'preferred_language' => $user->preferred_language,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'preferred_language' => $user->preferred_language,
+            ],
         ]);
     }
 }

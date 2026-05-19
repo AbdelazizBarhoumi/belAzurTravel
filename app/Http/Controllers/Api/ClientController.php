@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\SupportInquiry;
 use App\Models\User;
 use App\Notifications\SupportInquiryNotification;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -110,26 +111,29 @@ class ClientController extends Controller
             'priority' => 'medium',
         ]);
 
-        $recipients = User::query()->where('active', true)->whereIn('role', ['admin', 'assistant'])->get();
-        foreach ($recipients as $recipient) {
-            $recipient->notify(new SupportInquiryNotification($inquiry));
-            try {
-                $notif = $recipient->notifications()->latest()->first();
-                if ($notif) {
+        User::query()
+            ->where('active', true)
+            ->whereIn('role', ['admin', 'assistant'])
+            ->get()
+            ->each(function (User $recipient) use ($inquiry): void {
+                $notification = new SupportInquiryNotification($inquiry);
+                $recipient->notify($notification);
+
+                try {
+                    $data = $notification->toDatabase($recipient);
                     Redis::publish("notifications:user:{$recipient->id}", json_encode([
                         'notification' => [
-                            'id' => $notif->id,
-                            'type' => $notif->data['type'] ?? class_basename($notif->type),
-                            'data' => $notif->data,
-                            'read_at' => $notif->read_at?->toJSON(),
-                            'created_at' => $notif->created_at?->toJSON(),
+                            'id' => (string) ($data['id'] ?? $recipient->id.'-'.now()->timestamp),
+                            'type' => $data['type'] ?? class_basename($notification::class),
+                            'data' => $data,
+                            'read_at' => null,
+                            'created_at' => now()->toJSON(),
                         ],
                     ]));
+                } catch (\Throwable $e) {
+                    // ignore publish errors
                 }
-            } catch (\Throwable $e) {
-                // ignore publish errors
-            }
-        }
+            });
 
         return response()->json(['id' => $inquiry->id], 201);
     }
@@ -153,7 +157,7 @@ class ClientController extends Controller
     private function bookingPayload(Booking $booking): array
     {
         $canCancel = $booking->status !== 'Cancelled'
-            && (! $booking->start_date || now()->lt($booking->start_date->copy()->subDay()));
+            && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay()));
 
         return [
             'id' => $booking->id,
@@ -161,8 +165,8 @@ class ClientController extends Controller
             'item_slug' => $booking->item_slug,
             'item_id' => $booking->item_id,
             'items' => $booking->items ?? [],
-            'start_date' => $booking->start_date?->toDateString(),
-            'end_date' => $booking->end_date?->toDateString(),
+            'start_date' => $this->dateString($booking->start_date),
+            'end_date' => $this->dateString($booking->end_date),
             'client' => $booking->client,
             'total_amount' => $booking->total_amount,
             'status' => $booking->status,
@@ -170,5 +174,14 @@ class ClientController extends Controller
             'cancel_reason' => $canCancel ? null : 'Cancellation is closed within 24 hours of travel.',
             'created_at' => $booking->created_at?->toJSON(),
         ];
+    }
+
+    private function dateString(mixed $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        return Carbon::parse($value)->toDateString();
     }
 }

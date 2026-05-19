@@ -54,6 +54,11 @@ export interface SiteSettings {
     hours: Array<{ dayKey: string; value: string }>;
     content: SiteSettingsContent;
     gallery?: string[];
+    config?: {
+        navigation?: {
+            enabled_dropdowns?: string[];
+        };
+    };
 }
 
 export const defaultSiteSettings: SiteSettings = {
@@ -70,6 +75,11 @@ export const defaultSiteSettings: SiteSettings = {
     hours: [],
     content: {},
     gallery: [],
+    config: {
+        navigation: {
+            enabled_dropdowns: [],
+        },
+    },
 };
 
 const SITE_SETTINGS_TTL_MS = 60_000;
@@ -79,7 +89,8 @@ let inFlightSiteSettingsRequest: Promise<SiteSettings> | null = null;
 
 function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
     return {
-        companyName: (json.companyName as string) ?? defaultSiteSettings.companyName,
+        companyName:
+            (json.companyName as string) ?? defaultSiteSettings.companyName,
         email: (json.email as string) ?? defaultSiteSettings.email,
         phone: (json.phone as string) ?? defaultSiteSettings.phone,
         whatsapp: (json.whatsapp as string) ?? defaultSiteSettings.whatsapp,
@@ -87,11 +98,17 @@ function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
         plusCode: (json.plusCode as string) ?? defaultSiteSettings.plusCode,
         year: (json.year as number) ?? defaultSiteSettings.year,
         socialLinks: (json.socialLinks as SiteSettings['socialLinks']) ?? [],
-        legalSections: (json.legalSections as SiteSettings['legalSections']) ?? [],
+        legalSections:
+            (json.legalSections as SiteSettings['legalSections']) ?? [],
         footerLinks: (json.footerLinks as SiteSettings['footerLinks']) ?? [],
         hours: (json.hours as SiteSettings['hours']) ?? [],
         content: (json.content as SiteSettings['content']) ?? {},
-        gallery: (json.gallery as SiteSettings['gallery']) ?? defaultSiteSettings.gallery,
+        gallery:
+            (json.gallery as SiteSettings['gallery']) ??
+            defaultSiteSettings.gallery,
+        config:
+            (json.config as SiteSettings['config']) ??
+            defaultSiteSettings.config,
     };
 }
 

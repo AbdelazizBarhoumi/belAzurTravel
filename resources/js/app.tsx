@@ -66,9 +66,11 @@ import TourDetail from './pages/tours/show';
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // Defensive defaults to prevent accidental request storms
-            // from remounts/focus changes while still keeping data fresh.
-            staleTime: 30_000,
+            // Conservative defaults to avoid accidental request storms.
+            // Individual screens can opt into shorter stale times if needed.
+            staleTime: 5 * 60 * 1000,
+            gcTime: 10 * 60 * 1000,
+            refetchOnMount: false,
             refetchOnWindowFocus: false,
             refetchOnReconnect: false,
             retry: 1,
@@ -169,88 +171,88 @@ const LayoutWrapper = () => {
                     />
                     <Route
                         path="/client/notifications"
-                        element={clientGuard(<NotificationsPage />)}
+                        element={clientGuard(<ClientDashboard />)}
                     />
                     <Route
                         path="/admin"
-                        element={<AdminDashboard />}
+                        element={adminGuard(<AdminDashboard />)}
                     />
                     <Route
                         path="/admin/dashboard"
-                        element={<AdminDashboard />}
+                        element={adminGuard(<AdminDashboard />)}
                     />
                     <Route
                         path="/admin/destinations"
-                        element={<AdminDestinations />}
+                        element={adminGuard(<AdminDestinations />)}
                     />
                     <Route
                         path="/admin/hotels"
-                        element={<AdminHotels />}
+                        element={adminGuard(<AdminHotels />)}
                     />
                     <Route
                         path="/admin/tours"
-                        element={<AdminTours />}
+                        element={adminGuard(<AdminTours />)}
                     />
                     {/* Tour creation/editing handled inline in AdminTours via EntityFormDialog */}
                     <Route
                         path="/admin/bookings"
-                        element={<AdminBookings />}
+                        element={adminGuard(<AdminBookings />)}
                     />
                     <Route
                         path="/admin/cars"
-                        element={<AdminCars />}
+                        element={adminGuard(<AdminCars />)}
                     />
                     <Route
                         path="/admin/flights"
-                        element={<AdminFlights />}
+                        element={adminGuard(<AdminFlights />)}
                     />
                     <Route
                         path="/admin/events"
-                        element={<AdminEvents />}
+                        element={adminGuard(<AdminEvents />)}
                     />
                     <Route
                         path="/admin/deals"
-                        element={<AdminDeals />}
+                        element={adminGuard(<AdminDeals />)}
                     />
                     <Route
                         path="/admin/promos"
-                        element={<AdminPromos />}
+                        element={adminGuard(<AdminPromos />)}
                     />
                     <Route
                         path="/admin/blog"
-                        element={<AdminBlog />}
+                        element={adminGuard(<AdminBlog />)}
                     />
                     <Route
                         path="/admin/gallery"
-                        element={<AdminGallery />}
+                        element={adminGuard(<AdminGallery />)}
                     />
                     <Route
                         path="/admin/users"
-                        element={<AdminUsers />}
+                        element={adminGuard(<AdminUsers />)}
                     />
                     <Route
                         path="/admin/reports"
-                        element={<AdminReports />}
+                        element={adminGuard(<AdminReports />)}
                     />
                     <Route
                         path="/admin/clients"
-                        element={<AdminUsers />}
+                        element={adminGuard(<AdminUsers />)}
                     />
                     <Route
                         path="/admin/clients/:id"
-                        element={<AdminUsers />}
+                        element={adminGuard(<AdminUsers />)}
                     />
                     <Route
                         path="/admin/assistants"
-                        element={<AdminUsers />}
+                        element={adminGuard(<AdminUsers />)}
                     />
                     <Route
                         path="/admin/site-settings"
-                        element={<AdminSiteSettings />}
+                        element={adminGuard(<AdminSiteSettings />)}
                     />
                     <Route
                         path="/admin/notifications"
-                        element={<NotificationsPage />}
+                        element={adminGuard(<NotificationsPage />)}
                     />
                     <Route
                         path="/assistant"
@@ -277,8 +279,16 @@ const LayoutWrapper = () => {
                         element={assistantGuard(<AssistantDashboard />)}
                     />
                     <Route
+                        path="/assistant/clients"
+                        element={assistantGuard(<AssistantDashboard />)}
+                    />
+                    <Route
+                        path="/assistant/settings"
+                        element={assistantGuard(<AssistantDashboard />)}
+                    />
+                    <Route
                         path="/assistant/notifications"
-                        element={assistantGuard(<NotificationsPage />)}
+                        element={assistantGuard(<AssistantDashboard />)}
                     />
                     <Route
                         path="/destinations"

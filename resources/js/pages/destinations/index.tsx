@@ -18,16 +18,7 @@ import {
 } from '@/components/ui/navigation-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useDestinations } from '@/hooks/usePublicData';
-
-const categories = [
-    { value: 'all', labelKey: 'common.all' },
-    { value: 'beach', labelKey: 'cat.beach' },
-    { value: 'city', labelKey: 'cat.city' },
-    { value: 'nature', labelKey: 'cat.nature' },
-    { value: 'luxury', labelKey: 'cat.luxury' },
-    { value: 'adventure', labelKey: 'cat.adventure' },
-] as const;
+import { useDestinations, useCategories } from '@/hooks/usePublicData';
 
 const SORT_OPTIONS = [
     { value: 'featured', labelKey: 'dest.sort.featured' },
@@ -39,16 +30,25 @@ const SORT_OPTIONS = [
 const Destinations = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
-    const [searchQuery, setSearchQuery] = useState('');
-    const initialCategory =
-        new URLSearchParams(params.toString()).get('cat')?.toLowerCase() ||
-        'all';
+    const initialSearch = params.get('q') || '';
+    const initialCategory = params.get('cat')?.toLowerCase() || 'all';
+
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [sortBy, setSortBy] = useState<
         'featured' | 'price-asc' | 'price-desc' | 'rating'
     >('featured');
     const { t, lang } = useLanguage();
     const { data: allDestinations = [] } = useDestinations();
+    const { data: dynamicCategories = [] } = useCategories('destinations');
+
+    const categories = [
+        { value: 'all', label: t('common.all') },
+        ...dynamicCategories.map((c) => ({
+            value: c.key,
+            label: c.name[lang] || c.name.en,
+        })),
+    ];
 
     const filtered = allDestinations
         .filter((d) => {
@@ -76,7 +76,7 @@ const Destinations = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div key={params.toString()} className="min-h-screen bg-background">
             <div className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div
@@ -128,7 +128,7 @@ const Destinations = () => {
                                             : 'border border-border bg-card text-muted-foreground hover:text-foreground'
                                     }`}
                                 >
-                                    {t(cat.labelKey)}
+                                    {cat.label}
                                 </button>
                             ))}
                         </div>

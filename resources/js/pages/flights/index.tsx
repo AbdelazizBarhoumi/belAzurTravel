@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Plane, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
@@ -19,12 +19,15 @@ import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
 
-const Flights = () => {
+function FlightsContent() {
     const { t, dir, lang } = useLanguage();
     const navigate = useNavigate();
+    const [params] = useSearchParams();
     const { data: flights = [] } = useFlights();
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedAirline, setSelectedAirline] = useState(ALL);
+    const initialSearch = params.get('q') || '';
+    const initialAirline = params.get('airline') || ALL;
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [selectedAirline, setSelectedAirline] = useState(initialAirline);
     const [selectedStops, setSelectedStops] = useState(ALL);
     const [selectedCabin, setSelectedCabin] = useState(ALL);
 
@@ -291,6 +294,9 @@ const Flights = () => {
             </div>
         </PageShell>
     );
-};
+}
 
-export default Flights;
+export default function Flights() {
+    const location = useLocation();
+    return <FlightsContent key={location.search} />;
+}

@@ -10,13 +10,15 @@ import {
     CheckCircle,
     AlertCircle,
     User,
+    Bell,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -62,14 +64,55 @@ function localize(value: LocalizedText, lang: Lang): string {
 }
 
 const sidebarLinks = [
-    { icon: MessageSquare, labelKey: 'assistant.inquiries', active: true },
-    { icon: Calendar, labelKey: 'assistant.bookingRequests' },
-    { icon: Users, labelKey: 'assistant.clients' },
-    { icon: Settings, labelKey: 'assistant.settings' },
+    {
+        icon: MessageSquare,
+        labelKey: 'assistant.inquiries',
+        to: '/assistant/messages',
+    },
+    {
+        icon: Calendar,
+        labelKey: 'assistant.bookingRequests',
+        to: '/assistant/bookings',
+    },
+    {
+        icon: Bell,
+        labelKey: 'notifications.title',
+        to: '/assistant/notifications',
+    },
+    { icon: Users, labelKey: 'assistant.clients', to: '/assistant/clients' },
+    {
+        icon: Settings,
+        labelKey: 'assistant.settings',
+        to: '/assistant/settings',
+    },
 ];
 
 const AssistantDashboard = () => {
-    const [activeTab, setActiveTab] = useState('assistant.inquiries');
+    const { pathname } = useLocation();
+    const [activeTab, setActiveTab] = useState(() => {
+        if (pathname.includes('/notifications')) return 'notifications.title';
+        if (pathname.includes('/bookings')) return 'assistant.bookingRequests';
+        if (pathname.includes('/messages')) return 'assistant.inquiries';
+        if (pathname.includes('/clients')) return 'assistant.clients';
+        if (pathname.includes('/settings')) return 'assistant.settings';
+        return 'assistant.inquiries';
+    });
+
+    useEffect(() => {
+        const syncTab = () => {
+            if (pathname.includes('/notifications'))
+                setActiveTab('notifications.title');
+            else if (pathname.includes('/bookings'))
+                setActiveTab('assistant.bookingRequests');
+            else if (pathname.includes('/messages'))
+                setActiveTab('assistant.inquiries');
+            else if (pathname.includes('/clients'))
+                setActiveTab('assistant.clients');
+            else if (pathname.includes('/settings'))
+                setActiveTab('assistant.settings');
+        };
+        syncTab();
+    }, [pathname]);
     const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(
         null,
     );
@@ -205,9 +248,9 @@ const AssistantDashboard = () => {
 
                 <nav className="flex-1 space-y-1 px-4">
                     {sidebarLinks.map((link) => (
-                        <button
+                        <Link
                             key={link.labelKey}
-                            onClick={() => setActiveTab(link.labelKey)}
+                            to={link.to}
                             className={cn(
                                 'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all',
                                 isRtl && 'text-right',
@@ -225,7 +268,7 @@ const AssistantDashboard = () => {
                                     {newCount}
                                 </span>
                             )}
-                        </button>
+                        </Link>
                     ))}
                 </nav>
 
@@ -554,6 +597,17 @@ const AssistantDashboard = () => {
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'notifications.title' && (
+                    <div className="p-6">
+                        <div className="rounded-2xl border border-border bg-card p-6">
+                            <NotificationCenter
+                                panelLabel={t('notifications.assistantPanel')}
+                                showTitle={false}
+                            />
                         </div>
                     </div>
                 )}

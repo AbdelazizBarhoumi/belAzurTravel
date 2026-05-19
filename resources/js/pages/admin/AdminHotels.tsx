@@ -14,6 +14,7 @@ import {
     type SectionDef,
 } from '@/components/forms/EntityFormDialog';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
+import LangBadge from '@/components/forms/LangBadge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -48,9 +49,9 @@ function localizedFields(
     type?: 'text' | 'number' | 'textarea',
 ) {
     return [
-        { key: `${base}_en`, label: `${label.en} (EN)`, type, required: true },
-        { key: `${base}_fr`, label: `${label.fr} (FR)`, type, required: true },
-        { key: `${base}_ar`, label: `${label.ar} (AR)`, type, required: true },
+        { key: `${base}_en`, label: label.en, type, required: true },
+        { key: `${base}_fr`, label: label.fr, type, required: true },
+        { key: `${base}_ar`, label: label.ar, type, required: true },
     ];
 }
 
@@ -175,8 +176,8 @@ const AdminHotels = () => {
                                         htmlFor={localizedKey}
                                         className="text-xs font-semibold text-muted-foreground"
                                     >
-                                        {field.label} (
-                                        {activeLang.toUpperCase()})
+                                        {field.label}
+                                        <LangBadge lang={activeLang} />
                                     </label>
                                     <input
                                         id={localizedKey}
@@ -202,7 +203,8 @@ const AdminHotels = () => {
                                 htmlFor={`description_${activeLang}`}
                                 className="text-xs font-semibold text-muted-foreground"
                             >
-                                Description ({activeLang.toUpperCase()})
+                                Description
+                                <LangBadge lang={activeLang} />
                             </label>
                             <textarea
                                 id={`description_${activeLang}`}

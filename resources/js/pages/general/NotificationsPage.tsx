@@ -1,70 +1,70 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '@/api/http';
-import { Button } from '@/components/ui/button';
-import type { AppNotification } from '@/components/ui/NotificationBell';
-import { useLanguage } from '@/contexts/LanguageContext';
-import type { Lang } from '@/i18n/translations';
+import { ArrowLeft } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
-function message(data: Record<string, unknown>, lang: Lang): string {
-    const value = data[lang] ?? data.en ?? data.fr ?? data.ar;
-    return typeof value === 'string' ? value : '';
-}
+import { Link } from 'react-router-dom';
+import { AdminLayout } from '@/components/layout/AdminLayout';
+import { BrandLogo } from '@/components/layout/BrandLogo';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 export default function NotificationsPage() {
-    const { lang, t } = useLanguage();
-    const queryClient = useQueryClient();
-    const { data: notifications = [] } = useQuery({
-        queryKey: ['notifications', 'all'],
-        queryFn: () => apiFetch<AppNotification[]>('/api/notifications'),
-    });
+    const { t, dir } = useLanguage();
+    const { pathname } = useLocation();
 
-    const markRead = useMutation({
-        mutationFn: (id: string) =>
-            apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH' }),
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ['notifications'] }),
-    });
+    const role: 'admin' | 'assistant' | 'client' = pathname.startsWith('/admin')
+        ? 'admin'
+        : pathname.startsWith('/assistant')
+          ? 'assistant'
+          : 'client';
+
+    const isRtl = dir === 'rtl';
+
+    if (role === 'admin') {
+        return (
+            <AdminLayout
+                title={t('notifications.title')}
+                subtitle={t('notifications.adminPanel')}
+            >
+                <NotificationCenter
+                    panelLabel={t('notifications.adminPanel')}
+                    showTitle={false}
+                />
+            </AdminLayout>
+        );
+    }
+
+    // Default for Client (and fallback for Assistant if not using tab)
+    const backTo = role === 'assistant' ? '/assistant' : '/dashboard';
+    const backLabel =
+        role === 'assistant' ? t('assistant.panel') : t('nav.dashboard');
+    const panelLabel =
+        role === 'assistant'
+            ? t('notifications.assistantPanel')
+            : t('notifications.yourNotifications');
 
     return (
-        <main className="min-h-screen bg-background p-6">
-            <div className="mx-auto max-w-3xl">
-                <h1 className="font-serif text-3xl font-bold text-foreground">
-                    {t('notifications.title')}
-                </h1>
-                <div className="mt-6 overflow-hidden rounded-lg border border-border bg-card">
-                    {notifications.map((notification) => (
-                        <button
-                            key={notification.id}
-                            type="button"
-                            onClick={() => markRead.mutate(notification.id)}
-                            className="block w-full border-b border-border p-4 text-left last:border-0 hover:bg-muted"
-                        >
-                            <p className="font-medium text-foreground">
-                                {message(notification.data, lang)}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                                {notification.created_at
-                                    ? new Date(
-                                          notification.created_at,
-                                      ).toLocaleString()
-                                    : ''}
-                            </p>
-                        </button>
-                    ))}
-                    {notifications.length === 0 && (
-                        <p className="p-8 text-center text-muted-foreground">
-                            {t('notifications.empty')}
-                        </p>
-                    )}
+        <div className="min-h-screen bg-background" dir={dir}>
+            <header className="border-b border-border bg-card">
+                <div className="container mx-auto flex items-center justify-between px-4 py-4">
+                    <Link to="/" className="flex items-center gap-2">
+                        <BrandLogo imageClassName="h-7 w-auto" />
+                    </Link>
+                    <Link to={backTo}>
+                        <Button variant="ghost" size="sm" className="gap-2">
+                            <ArrowLeft
+                                className={cn('h-4 w-4', isRtl && 'rotate-180')}
+                            />{' '}
+                            {backLabel}
+                        </Button>
+                    </Link>
                 </div>
-                <Button
-                    className="mt-6"
-                    variant="outline"
-                    onClick={() => history.back()}
-                >
-                    {t('actions.back')}
-                </Button>
-            </div>
-        </main>
+            </header>
+
+            <main className="container mx-auto max-w-3xl px-4 py-8">
+                <NotificationCenter panelLabel={panelLabel} />
+            </main>
+        </div>
     );
 }

@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion';
-import { Heart, Trash2, MapPin } from 'lucide-react';
+import { Heart, MapPin } from 'lucide-react';
 import { PageShell } from '@/components/layout/PageShell';
 import { Button } from '@/components/ui/button';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Favorites = () => {
-    const { favorites, remove } = useFavorites();
+    const { favorites } = useFavorites();
     const { t } = useLanguage();
 
     return (
@@ -33,14 +34,18 @@ const Favorites = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.05 }}
-                            className="card-elevated overflow-hidden rounded-2xl bg-card"
+                            className="card-elevated group relative overflow-hidden rounded-2xl bg-card"
                         >
                             <div className="h-48 overflow-hidden">
                                 <img
                                     src={f.image}
                                     alt={f.name}
-                                    className="h-full w-full object-cover"
+                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                     loading="lazy"
+                                />
+                                <FavoriteButton
+                                    item={f}
+                                    className="absolute right-3 top-3"
                                 />
                             </div>
                             <div className="p-5">
@@ -64,21 +69,12 @@ const Favorites = () => {
                                     ) : (
                                         <span />
                                     )}
-                                    <div className="flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            className="bg-primary text-xs text-primary-foreground"
-                                        >
-                                            {t('common.book')}
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => remove(f.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                                    <Button
+                                        size="sm"
+                                        className="bg-primary text-xs text-primary-foreground"
+                                    >
+                                        {t('common.book')}
+                                    </Button>
                                 </div>
                             </div>
                         </motion.div>

@@ -1,314 +1,252 @@
-import { Trash2, Plus, Image as ImageIcon, Save } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import type { GalleryImage } from '@/api/gallery.api';
+import { useState, useMemo } from 'react';
+import { Plus, Edit, Trash2, Search, LayoutGrid, List } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AdminLayout } from '@/components/admin/AdminLayout';
 import {
-    fetchGallery,
-    createGalleryImage,
-    updateGalleryImage,
-    deleteGalleryImage,
-} from '@/api/gallery.api';
-import { PageShell } from '@/components/layout/PageShell';
+    EntityFormDialog,
+    FieldDef,
+} from '@/components/admin/EntityFormDialog';
+import { useAdminStore, generateId } from '@/hooks/useAdminStore';
+import type { AdminGalleryItem } from '@/types/admin';
+import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { tField } from '@/lib/i18n-field';
+import { toast } from 'sonner';
 
-export default function AdminGallery() {
-    const { t } = useLanguage();
-    const [images, setImages] = useState<GalleryImage[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState<string | null>(null);
+const CATEGORIES = [
+    'All',
+    'Beach',
+    'City',
+    'Nature',
+    'Luxury',
+    'Adventure',
+    'Culture',
+];
 
-    useEffect(() => {
-        loadGallery();
-    }, []);
+const fields: FieldDef[] = [
+    { key: 'title', label: 'Title (FR / AR / EN)', type: 'i18n' },
+    {
+        key: 'category',
+        label: 'Category',
+        type: 'select',
+        options: CATEGORIES.filter((c) => c !== 'All'),
+    },
+    { key: 'image', label: 'Image', type: 'image' },
+];
 
-    async function loadGallery() {
-        setLoading(true);
-        try {
-            const data = await fetchGallery();
-            setImages(data);
-        } finally {
-            setLoading(false);
+const AdminGallery = () => {
+    useAdminGuard();
+    const { lang } = useLanguage();
+    const { state, upsert, remove } = useAdminStore();
+    const [open, setOpen] = useState(false);
+    const [editing, setEditing] = useState<AdminGalleryItem | null>(null);
+    const [view, setView] = useState<'grid' | 'list'>('grid');
+    const [filter, setFilter] = useState('All');
+    const [query, setQuery] = useState('');
+
+    const items = useMemo(() => {
+        return state.gallery.filter((g) => {
+            const matchCat = filter === 'All' || g.category === filter;
+            const title = tField(g.title as any, lang).toLowerCase();
+            const matchQ = !query || title.includes(query.toLowerCase());
+            return matchCat && matchQ;
+        });
+    }, [state.gallery, filter, query, lang]);
+
+    const handleSave = (values: any) => {
+        if (!values.image) {
+            toast.error('Image is required');
+            return;
         }
-    }
-
-    async function addImage() {
-        try {
-            // Prompt the user to select a file, then upload immediately.
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = async () => {
-                const file = input.files?.[0];
-                if (!file) return;
-                const form = new FormData();
-                form.append('image', file);
-                form.append('caption[en]', '');
-                form.append('caption[fr]', '');
-                form.append('caption[ar]', '');
-                form.append('sort_order', String(images.length));
-
-                const newItem = await createGalleryImage(form);
-                setImages((prev) => [...prev, newItem]);
-            };
-            input.click();
-        } catch (err) {
-            console.error(err);
-            setMessage('Failed to add image');
-        }
-    }
-
-    async function saveImage(image: GalleryImage) {
-        try {
-            await updateGalleryImage(image.id, image);
-            setMessage('Saved');
-            setTimeout(() => setMessage(null), 2000);
-        } catch {
-            setMessage('Failed to save');
-        }
-    }
-
-    async function removeImage(id: number) {
-        if (!confirm('Are you sure?')) return;
-        try {
-            await deleteGalleryImage(id);
-            setImages(images.filter((img) => img.id !== id));
-        } catch {
-            setMessage('Failed to delete');
-        }
-    }
-
-    const updateImageData = (id: number, data: Partial<GalleryImage>) => {
-        setImages(
-            images.map((img) => (img.id === id ? { ...img, ...data } : img)),
-        );
+        upsert('gallery', { ...values, id: editing?.id || generateId() });
+        toast.success(editing ? 'Image updated' : 'Image added');
+        setEditing(null);
     };
 
-    const updateCaption = (id: number, l: string, val: string) => {
-        setImages(
-            images.map((img) => {
-                if (img.id === id) {
-                    return {
-                        ...img,
-                        caption: { ...(img.caption || {}), [l]: val },
-                    };
-                }
-                return img;
-            }),
-        );
+    const handleEdit = (it: AdminGalleryItem) => {
+        setEditing(it);
+        setOpen(true);
+    };
+
+    const handleDelete = (id: string) => {
+        if (confirm('Are you sure you want to delete this image?')) {
+            remove('gallery', id);
+            toast.success('Image deleted');
+        }
     };
 
     return (
-        <PageShell
-            titleKey="nav.gallery"
-            subtitleKey="gallery.subtitle"
-            breadcrumbs={[
-                { label: t('admin.home'), href: '/admin' },
-                { label: t('nav.gallery'), active: true },
-            ]}
+        <AdminLayout
+            title="Gallery"
+            subtitle={`${state.gallery.length} images in your library`}
+            actions={
+                <Button
+                    onClick={() => {
+                        setEditing(null);
+                        setOpen(true);
+                    }}
+                    className="gap-2 bg-primary text-primary-foreground"
+                >
+                    <Plus className="h-4 w-4" /> Add Image
+                </Button>
+            }
         >
-            <div className="mx-auto max-w-5xl">
-                <div className="mb-6 flex justify-between">
-                    <h2 className="flex items-center gap-2 font-serif text-2xl font-bold">
-                        <ImageIcon className="h-6 w-6 text-primary" />
-                        Gallery Management
-                    </h2>
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 md:flex-row md:items-center">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search by title..."
+                        className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm"
+                    />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {CATEGORIES.map((c) => (
+                        <button
+                            key={c}
+                            onClick={() => setFilter(c)}
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium ${filter === c ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}
+                        >
+                            {c}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex gap-1 rounded-lg border border-border p-1">
                     <button
-                        onClick={addImage}
-                        className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 font-bold text-white shadow-md transition-transform hover:scale-105 active:scale-95"
+                        onClick={() => setView('grid')}
+                        className={`rounded p-1.5 ${view === 'grid' ? 'bg-muted' : ''}`}
                     >
-                        <Plus className="h-5 w-5" /> Add New Image
+                        <LayoutGrid className="h-4 w-4" />
+                    </button>
+                    <button
+                        onClick={() => setView('list')}
+                        className={`rounded p-1.5 ${view === 'list' ? 'bg-muted' : ''}`}
+                    >
+                        <List className="h-4 w-4" />
                     </button>
                 </div>
+            </div>
 
-                {message && (
-                    <div className="mb-4 rounded-md bg-primary/10 p-3 text-center text-sm font-medium text-primary">
-                        {message}
-                    </div>
-                )}
-
-                {loading ? (
-                    <div className="py-20 text-center text-muted-foreground">
-                        Loading gallery...
-                    </div>
-                ) : (
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {images.map((img) => (
-                            <div
-                                key={img.id}
-                                className="group relative rounded-2xl border bg-card p-4 shadow-sm transition-all hover:shadow-md"
-                            >
-                                <div className="mb-4 aspect-video overflow-hidden rounded-xl bg-muted">
-                                    {img.url ? (
-                                        <img
-                                            src={img.url}
-                                            alt=""
-                                            className="h-full w-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="flex h-full items-center justify-center">
-                                            <ImageIcon className="h-12 w-12 text-muted-foreground/20" />
-                                        </div>
-                                    )}
+            {items.length === 0 ? (
+                <div className="rounded-2xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">
+                    No images match your filters. Click "Add Image" to upload
+                    one.
+                </div>
+            ) : view === 'grid' ? (
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    {items.map((it) => (
+                        <div
+                            key={it.id}
+                            className="group relative overflow-hidden rounded-2xl border border-border bg-card"
+                        >
+                            <div className="aspect-square overflow-hidden bg-muted">
+                                <img
+                                    src={it.image}
+                                    alt={tField(it.title as any, lang)}
+                                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                />
+                            </div>
+                            <div className="p-3">
+                                <div className="truncate text-sm font-semibold">
+                                    {tField(it.title as any, lang)}
                                 </div>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-xs font-bold uppercase text-muted-foreground">
-                                            Image
-                                        </label>
-                                        <div className="mt-1 flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                className="rounded-md border px-3 py-2 text-sm"
-                                                onClick={() => {
-                                                    const input =
-                                                        document.createElement(
-                                                            'input',
-                                                        );
-                                                    input.type = 'file';
-                                                    input.accept = 'image/*';
-                                                    input.onchange =
-                                                        async () => {
-                                                            const file =
-                                                                input
-                                                                    .files?.[0];
-                                                            if (!file) return;
-                                                            const form =
-                                                                new FormData();
-                                                            form.append(
-                                                                'image',
-                                                                file,
-                                                            );
-                                                            // preserve existing captions and sort order
-                                                            if (img.caption) {
-                                                                Object.entries(
-                                                                    img.caption,
-                                                                ).forEach(
-                                                                    ([
-                                                                        k,
-                                                                        v,
-                                                                    ]) => {
-                                                                        form.append(
-                                                                            `caption[${k}]`,
-                                                                            String(
-                                                                                v,
-                                                                            ),
-                                                                        );
-                                                                    },
-                                                                );
-                                                            }
-                                                            form.append(
-                                                                'sort_order',
-                                                                String(
-                                                                    img.sort_order ||
-                                                                        0,
-                                                                ),
-                                                            );
-
-                                                            try {
-                                                                const updated =
-                                                                    await updateGalleryImage(
-                                                                        img.id,
-                                                                        form as unknown as FormData,
-                                                                    );
-                                                                updateImageData(
-                                                                    img.id,
-                                                                    updated as Partial<GalleryImage>,
-                                                                );
-                                                                setMessage(
-                                                                    'Image uploaded',
-                                                                );
-                                                                setTimeout(
-                                                                    () =>
-                                                                        setMessage(
-                                                                            null,
-                                                                        ),
-                                                                    2000,
-                                                                );
-                                                            } catch (e) {
-                                                                setMessage(
-                                                                    'Failed to upload image',
-                                                                );
-                                                            }
-                                                        };
-                                                    input.click();
-                                                }}
-                                            >
-                                                Replace / Upload Image
-                                            </button>
-                                            <span className="text-sm text-muted-foreground">
-                                                {img.url
-                                                    ? 'Uploaded'
-                                                    : 'No image'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {['en', 'fr', 'ar'].map((l) => (
-                                            <div key={l}>
-                                                <label className="text-[10px] font-bold uppercase text-muted-foreground">
-                                                    Caption ({l})
-                                                </label>
-                                                <input
-                                                    className="mt-0.5 w-full rounded-md border p-1.5 text-xs"
-                                                    value={
-                                                        img.caption?.[l] || ''
-                                                    }
-                                                    onChange={(e) =>
-                                                        updateCaption(
-                                                            img.id,
-                                                            l,
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex items-center justify-between gap-4 pt-2">
+                                <div className="text-xs text-muted-foreground">
+                                    {it.category}
+                                </div>
+                            </div>
+                            <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                <button
+                                    onClick={() => handleEdit(it)}
+                                    className="rounded-lg bg-card/90 p-1.5 backdrop-blur hover:bg-card"
+                                >
+                                    <Edit className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(it.id)}
+                                    className="rounded-lg bg-card/90 p-1.5 backdrop-blur hover:bg-destructive/10"
+                                >
+                                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
+                                    Image
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
+                                    Title
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
+                                    Category
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map((it) => (
+                                <tr
+                                    key={it.id}
+                                    className="border-b border-border last:border-0 hover:bg-muted/20"
+                                >
+                                    <td className="px-4 py-3">
+                                        <img
+                                            src={it.image}
+                                            alt=""
+                                            className="h-16 w-16 rounded-lg object-cover"
+                                        />
+                                    </td>
+                                    <td className="px-4 py-3 text-sm font-semibold">
+                                        {tField(it.title as any, lang)}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="rounded-full bg-muted px-2 py-1 text-xs">
+                                            {it.category}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
-                                            <label className="text-xs font-bold text-muted-foreground">
-                                                Order:
-                                            </label>
-                                            <input
-                                                type="number"
-                                                className="w-16 rounded-md border p-1 text-xs"
-                                                value={img.sort_order}
-                                                onChange={(e) =>
-                                                    updateImageData(img.id, {
-                                                        sort_order: parseInt(
-                                                            e.target.value,
-                                                        ),
-                                                    })
-                                                }
-                                            />
-                                        </div>
-                                        <div className="flex gap-2">
                                             <button
-                                                onClick={() => saveImage(img)}
-                                                className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white transition-colors hover:bg-primary/90"
-                                                title="Save Changes"
+                                                onClick={() => handleEdit(it)}
+                                                className="rounded-lg p-1.5 hover:bg-muted"
                                             >
-                                                <Save className="h-4 w-4" />
+                                                <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
                                                 onClick={() =>
-                                                    removeImage(img.id)
+                                                    handleDelete(it.id)
                                                 }
-                                                className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive transition-colors hover:bg-destructive hover:text-white"
-                                                title="Delete Image"
+                                                className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                <Trash2 className="h-4 w-4 text-destructive" />
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </PageShell>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <EntityFormDialog
+                open={open}
+                onOpenChange={setOpen}
+                title={editing ? 'Edit Image' : 'Add Image'}
+                fields={fields}
+                initial={editing}
+                onSubmit={handleSave}
+            />
+        </AdminLayout>
     );
-}
+};
+
+export default AdminGallery;

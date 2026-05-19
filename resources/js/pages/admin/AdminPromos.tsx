@@ -1,3 +1,10 @@
+function LangBadge({ lang }: { lang: Lang }) {
+    return (
+        <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            {lang}
+        </span>
+    );
+}
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -26,9 +33,9 @@ const copy = (en: string, fr: string, ar: string): Copy => ({ en, fr, ar });
 
 function localizedFields(base: string, label: Copy, type?: FieldDef['type']) {
     return [
-        { key: `${base}_en`, label: `${label.en} (EN)`, type, required: true },
-        { key: `${base}_fr`, label: `${label.fr} (FR)`, type, required: true },
-        { key: `${base}_ar`, label: `${label.ar} (AR)`, type, required: true },
+        { key: `${base}_en`, label: label.en, type, required: true },
+        { key: `${base}_fr`, label: label.fr, type, required: true },
+        { key: `${base}_ar`, label: label.ar, type, required: true },
     ];
 }
 
@@ -60,40 +67,107 @@ const sections: SectionDef[] = [
         fields: [
             { key: 'code', label: 'Code' },
             { key: 'color', label: 'Color token' },
-            ...localizedFields('title', copy('Title', 'Titre', 'العنوان')),
-            ...localizedFields('discount', copy('Discount', 'Remise', 'الخصم')),
-            ...localizedFields(
-                'expires',
-                copy('Expires', 'Expiration', 'ينتهي'),
-            ),
         ],
+        render: ({ values, setField, activeLang }) => (
+            <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                    {[
+                        {
+                            key: 'title',
+                            label: copy('Title', 'Titre', 'العنوان'),
+                        },
+                        {
+                            key: 'discount',
+                            label: copy('Discount', 'Remise', 'الخصم'),
+                        },
+                        {
+                            key: 'expires',
+                            label: copy('Expires', 'Expiration', 'ينتهي'),
+                        },
+                    ].map((field) => {
+                        const fieldKey = `${field.key}_${activeLang}`;
+
+                        return (
+                            <div key={fieldKey} className="space-y-2">
+                                <label
+                                    htmlFor={fieldKey}
+                                    className="text-xs font-semibold text-muted-foreground"
+                                >
+                                    {field.label.en}
+                                    <LangBadge lang={activeLang} />
+                                </label>
+                                <input
+                                    id={fieldKey}
+                                    value={String(values[fieldKey] ?? '')}
+                                    onChange={(event) =>
+                                        setField(fieldKey, event.target.value)
+                                    }
+                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        ),
     },
     {
         title: 'Description and rules',
         description:
             'Copy shown in the promo detail cards and the fine print sections.',
-        fields: [
-            ...localizedFields(
-                'description',
-                copy('Description', 'Description', 'الوصف'),
-                'textarea',
-            ),
-            ...localizedFields(
-                'eligibility',
-                copy('Eligibility', 'Éligibilité', 'الأهلية'),
-                'textarea',
-            ),
-            ...localizedFields(
-                'howToUse',
-                copy('How to use', 'Comment utiliser', 'كيفية الاستخدام'),
-                'textarea',
-            ),
-            ...localizedFields(
-                'terms',
-                copy('Terms & Conditions', 'Conditions', 'الشروط'),
-                'textarea',
-            ),
-        ],
+        render: ({ values, setField, activeLang }) => (
+            <div className="grid gap-4 md:grid-cols-2">
+                {[
+                    {
+                        key: 'description',
+                        label: copy('Description', 'Description', 'الوصف'),
+                    },
+                    {
+                        key: 'eligibility',
+                        label: copy('Eligibility', 'Éligibilité', 'الأهلية'),
+                    },
+                    {
+                        key: 'howToUse',
+                        label: copy(
+                            'How to use',
+                            'Comment utiliser',
+                            'كيفية الاستخدام',
+                        ),
+                    },
+                    {
+                        key: 'terms',
+                        label: copy(
+                            'Terms & Conditions',
+                            'Conditions',
+                            'الشروط',
+                        ),
+                    },
+                ].map((field) => {
+                    const fieldKey = `${field.key}_${activeLang}`;
+
+                    return (
+                        <div key={fieldKey} className="space-y-2 md:col-span-2">
+                            <label
+                                htmlFor={fieldKey}
+                                className="text-xs font-semibold text-muted-foreground"
+                            >
+                                {field.label.en}
+                                <LangBadge lang={activeLang} />
+                            </label>
+                            <textarea
+                                id={fieldKey}
+                                value={String(values[fieldKey] ?? '')}
+                                onChange={(event) =>
+                                    setField(fieldKey, event.target.value)
+                                }
+                                rows={4}
+                                className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                            />
+                        </div>
+                    );
+                })}
+            </div>
+        ),
     },
     {
         title: 'Limits and scope',

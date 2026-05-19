@@ -65,10 +65,18 @@ describe('Admin destinations editor', () => {
         fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
         await screen.findByRole('dialog');
 
-        fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: 'Santorini' } });
-        fireEvent.change(screen.getByLabelText(/Country/i), { target: { value: 'Greece' } });
-        fireEvent.change(screen.getByLabelText(/Price/i), { target: { value: '1299' } });
-        fireEvent.change(screen.getByLabelText(/Rating/i), { target: { value: '4.9' } });
+        fireEvent.change(screen.getByLabelText(/Name/i), {
+            target: { value: 'Santorini' },
+        });
+        fireEvent.change(screen.getByLabelText(/Country/i), {
+            target: { value: 'Greece' },
+        });
+        fireEvent.change(screen.getByLabelText(/Price/i), {
+            target: { value: '1299' },
+        });
+        fireEvent.change(screen.getByLabelText(/Rating/i), {
+            target: { value: '4.9' },
+        });
 
         const categorySelect = screen.getByLabelText(/Category/i);
         fireEvent.change(categorySelect, { target: { value: 'Beach' } });
@@ -80,15 +88,29 @@ describe('Admin destinations editor', () => {
             expect(screen.getByDisplayValue('4.9')).toBeInTheDocument();
         });
 
-        const imageFile = new File(['destination-image'], 'destination.jpg', { type: 'image/jpeg' });
-        const galleryFile = new File(['destination-gallery'], 'gallery.jpg', { type: 'image/jpeg' });
+        const imageFile = new File(['destination-image'], 'destination.jpg', {
+            type: 'image/jpeg',
+        });
+        const galleryFile = new File(['destination-gallery'], 'gallery.jpg', {
+            type: 'image/jpeg',
+        });
 
-        fireEvent.change(screen.getByLabelText('Main image'), { target: { files: [imageFile] } });
-        fireEvent.change(screen.getByLabelText('Gallery'), { target: { files: [galleryFile] } });
+        fireEvent.change(screen.getByLabelText('Main image'), {
+            target: { files: [imageFile] },
+        });
+        fireEvent.change(screen.getByLabelText('Gallery'), {
+            target: { files: [galleryFile] },
+        });
 
         await waitFor(() => {
-            expect((screen.getByLabelText('Main image') as HTMLInputElement).files?.length).toBe(1);
-            expect((screen.getByLabelText('Gallery') as HTMLInputElement).files?.length).toBe(1);
+            expect(
+                (screen.getByLabelText('Main image') as HTMLInputElement).files
+                    ?.length,
+            ).toBe(1);
+            expect(
+                (screen.getByLabelText('Gallery') as HTMLInputElement).files
+                    ?.length,
+            ).toBe(1);
         });
 
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
@@ -97,7 +119,8 @@ describe('Admin destinations editor', () => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();
         });
 
-        const [entityType, payload] = vi.mocked(adminApi.saveAdminEntity).mock.calls[0] ?? [];
+        const [entityType, payload] =
+            vi.mocked(adminApi.saveAdminEntity).mock.calls[0] ?? [];
         expect(entityType).toBe('destinations');
         expect(payload).toEqual(
             expect.objectContaining({

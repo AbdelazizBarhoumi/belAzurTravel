@@ -3,28 +3,15 @@ import { Wifi, Car, Coffee, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { StarRating } from '@/components/ui/StarRating';
 import { TagFilter, type Tag } from '@/components/ui/TagFilter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useHotels } from '@/hooks/usePublicData';
-
-const HOTEL_TAGS: Tag[] = [
-    { id: 'luxury', name: { fr: 'Luxe', ar: 'فاخر', en: 'Luxury' } },
-    { id: 'budget', name: { fr: 'Économique', ar: 'اقتصادي', en: 'Budget' } },
-    { id: 'family', name: { fr: 'Famille', ar: 'عائلي', en: 'Family' } },
-    { id: 'beach', name: { fr: 'Plage', ar: 'شاطئ', en: 'Beach' } },
-    { id: 'city', name: { fr: 'Ville', ar: 'مدينة', en: 'City' } },
-    {
-        id: 'adventure',
-        name: { fr: 'Aventure', ar: 'مغامرة', en: 'Adventure' },
-    },
-    { id: 'boutique', name: { fr: 'Boutique', ar: 'بوتيك', en: 'Boutique' } },
-    { id: 'resort', name: { fr: 'Complexe', ar: 'منتجع', en: 'Resort' } },
-    { id: 'nature', name: { fr: 'Nature', ar: 'طبيعة', en: 'Nature' } },
-];
+import { useHotels, useCategories } from '@/hooks/usePublicData';
+import { matchesSearchText } from '@/lib/listFilters';
 
 const AMENITY_ICONS: Record<string, LucideIcon> = {
     wifi: Wifi,
@@ -35,11 +22,16 @@ const AMENITY_ICONS: Record<string, LucideIcon> = {
 export default function Hotels() {
     const { t, lang, dir } = useLanguage();
     const [params] = useSearchParams();
+    const initialSearch = params.get('q') || '';
+    const initialCategory = params.get('cat')?.toLowerCase() || '';
     const [showMobileFilter, setShowMobileFilter] = useState(false);
     // referenced to satisfy linter until mobile filter UI is implemented
     void showMobileFilter;
     void setShowMobileFilter;
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [selectedTags, setSelectedTags] = useState<string[]>(
+        initialCategory ? [initialCategory] : [],
+    );
 
     // Initialize star filter from URL parameter
     const initialStars: number[] = (() => {
@@ -55,20 +47,38 @@ export default function Hotels() {
 
     const [selectedStars, setSelectedStars] = useState<number[]>(initialStars);
     const { data: hotels = [] } = useHotels();
+    const { data: dynamicCategories = [] } = useCategories('hotels');
+
+    const HOTEL_TAGS: Tag[] = dynamicCategories.map((c) => ({
+        id: c.key,
+        name: {
+            en: c.name.en,
+            fr: c.name.fr || c.name.en,
+            ar: c.name.ar || c.name.en,
+        },
+    }));
+
     const maxPrice =
         hotels.length > 0 ? Math.max(...hotels.map((hotel) => hotel.price)) : 0;
+
     const minPrice =
         hotels.length > 0 ? Math.min(...hotels.map((hotel) => hotel.price)) : 0;
     const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
     const activePriceRange = priceRange ?? [minPrice, maxPrice];
 
     const filteredHotels =
+        searchQuery.trim().length === 0 &&
         selectedTags.length === 0 &&
         selectedStars.length === 0 &&
         activePriceRange[0] === minPrice &&
         activePriceRange[1] === maxPrice
             ? hotels
             : hotels.filter((hotel) => {
+                  const matchesSearch = matchesSearchText(searchQuery, [
+                      localizeText(hotel.name, lang),
+                      localizeText(hotel.location, lang),
+                      (hotel.tags ?? []).join(' '),
+                  ]);
                   const matchesTags =
                       selectedTags.length === 0 ||
                       selectedTags.some((tag) => hotel.tags.includes(tag));
@@ -78,7 +88,12 @@ export default function Hotels() {
                   const matchesPrice =
                       hotel.price >= activePriceRange[0] &&
                       hotel.price <= activePriceRange[1];
-                  return matchesTags && matchesStars && matchesPrice;
+                  return (
+                      matchesSearch &&
+                      matchesTags &&
+                      matchesStars &&
+                      matchesPrice
+                  );
               });
 
     const handleTagToggle = (tagId: string) => {
@@ -98,13 +113,14 @@ export default function Hotels() {
     };
 
     const handleClearAll = () => {
+        setSearchQuery('');
         setSelectedTags([]);
         setSelectedStars([]);
         setPriceRange(null);
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div key={params.toString()} className="min-h-screen bg-background">
             <main className="pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div
@@ -131,6 +147,21 @@ export default function Hotels() {
                             {t('hotels.subtitle')}
                         </p>
                     </motion.header>
+
+                    <ListFilterBar
+                        searchValue={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        resultCount={filteredHotels.length}
+                        hasActiveFilters={
+                            searchQuery.trim().length > 0 ||
+                            selectedTags.length > 0 ||
+                            selectedStars.length > 0 ||
+                            priceRange !== null
+                        }
+                        onClearFilters={handleClearAll}
+                        searchPlaceholder={t('common.search')}
+                        className="mb-8"
+                    />
 
                     {/* Main Layout: Sidebar + Content */}
                     <div
@@ -279,7 +310,7 @@ export default function Hotels() {
                                         >
                                             <Link
                                                 to={`/hotels/${hotel.slug}`}
-                                                className="group block overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                                className="group block transform-gpu overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                             >
                                                 <div className="relative h-56 overflow-hidden">
                                                     <img
@@ -288,7 +319,7 @@ export default function Hotels() {
                                                             hotel.name,
                                                             lang,
                                                         )}
-                                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        className="h-full w-full transform-gpu object-cover transition-transform duration-500 group-hover:scale-105"
                                                     />
 
                                                     <FavoriteButton
