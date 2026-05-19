@@ -8,31 +8,24 @@ export interface AuthUser {
     preferred_language?: 'fr' | 'ar' | 'en';
 }
 
+let currentAuthUser: AuthUser | null = null;
+
 export function redirectAfterLogin(role: UserRole): string {
     if (role === 'admin') return '/admin/dashboard';
     if (role === 'assistant') return '/assistant/dashboard';
     return '/client/dashboard';
 }
 
-export function storedRole(): UserRole | null {
-    const role = localStorage.getItem('role');
-    return role === 'admin' || role === 'assistant' || role === 'client'
-        ? role
-        : null;
+export function getAuthUser(): AuthUser | null {
+    return currentAuthUser;
 }
 
 export function storeAuthUser(user: AuthUser): void {
-    localStorage.setItem('role', user.role);
-    localStorage.setItem('userEmail', user.email);
-    localStorage.setItem('userName', user.name);
-    localStorage.setItem('userId', String(user.id));
+    currentAuthUser = user;
 }
 
 export function clearAuthUser(): void {
-    localStorage.removeItem('role');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userId');
+    currentAuthUser = null;
 }
 
 /**

@@ -25,7 +25,10 @@ export interface AdminDestination extends AdminEntity {
 /**
  * Admin destination with localized fields (storage format)
  */
-export interface LocalizedAdminDestination extends Omit<AdminDestination, 'name' | 'country' | 'category' | 'description'> {
+export interface LocalizedAdminDestination extends Omit<
+    AdminDestination,
+    'name' | 'country' | 'category' | 'description'
+> {
     name: LocalizedText;
     country: LocalizedText;
     category: LocalizedText;

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { storedRole } from '@/auth';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type { NavSettings } from '@/lib/nav-config';
 import { DEFAULT_NAV_SETTINGS } from '@/lib/nav-config';
@@ -12,7 +11,6 @@ interface NavRouteGuardProps {
 
 export function NavRouteGuard({ pageKey, children }: NavRouteGuardProps) {
     const { settings, loading } = useSiteSettings();
-    const role = storedRole();
 
     // Get nav settings from database or defaults
     let navSettings: NavSettings = DEFAULT_NAV_SETTINGS;
@@ -23,11 +21,6 @@ export function NavRouteGuard({ pageKey, children }: NavRouteGuardProps) {
     // While loading, show nothing (prevent flash)
     if (loading) {
         return null;
-    }
-
-    // Admin and assistant can always access disabled pages
-    if (role && ['admin', 'assistant'].includes(role)) {
-        return <>{children}</>;
     }
 
     // Check if page is enabled in header

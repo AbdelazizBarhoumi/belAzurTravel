@@ -49,9 +49,7 @@ async function fetchEntity<TData>(
     type: string,
     identifier?: string,
 ): Promise<TData> {
-    return apiFetch<TData>(
-        `/api/${type}${identifier ? `/${identifier}` : ''}`,
-    );
+    return apiFetch<TData>(`/api/${type}${identifier ? `/${identifier}` : ''}`);
 }
 
 function useEntityQuery<TData>(options: {
@@ -237,4 +235,3 @@ export function useBlogPostBySlug(slug?: string) {
         enabled: Boolean(slug),
     });
 }
-

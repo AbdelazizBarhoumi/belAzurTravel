@@ -8,7 +8,10 @@ export type LocalizedText = Record<Lang, string>;
 /**
  * Helper to extract text from LocalizedText for a specific language
  */
-export function getLocalizedText(value: LocalizedText, lang: Lang = 'en'): string {
+export function getLocalizedText(
+    value: LocalizedText,
+    lang: Lang = 'en',
+): string {
     return value[lang];
 }
 

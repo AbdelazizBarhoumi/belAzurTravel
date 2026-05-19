@@ -106,7 +106,9 @@ const AdminUsers = () => {
                                                     : 'Activate'}
                                             </Button>
                                             <button
-                                                onClick={() => setPendingDelete(u)}
+                                                onClick={() =>
+                                                    setPendingDelete(u)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />

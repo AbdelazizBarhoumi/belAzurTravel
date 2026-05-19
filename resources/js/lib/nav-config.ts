@@ -146,4 +146,3 @@ export function buildItemHref(
     const param = page.filterParam || 'cat';
     return `${page.href}?${param}=${encodeURIComponent(item.value)}`;
 }
-

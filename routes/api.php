@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\DealController;
 use App\Http\Controllers\Api\PromoController;
 use App\Http\Controllers\Api\BlogPostController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\NotificationStreamController;
 
 // Public (browsing) endpoints — guests may view booking details (read-only)
 use App\Http\Controllers\Api\SiteSettingsController;
@@ -68,6 +69,7 @@ Route::get('blog-posts/{slug}', [BlogPostController::class, 'show'])->middleware
 Route::middleware('auth')->group(function () {
     Route::get('/auth/user', [AuthUserController::class, 'show']);
     Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/stream', [NotificationStreamController::class, 'stream']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);

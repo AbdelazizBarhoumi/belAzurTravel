@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redis;
 
 class BookingController extends Controller
 {
@@ -157,7 +158,26 @@ class BookingController extends Controller
             ->whereIn('role', ['admin', 'assistant'])
             ->get();
 
-        Notification::send($recipients, new BookingActivityNotification($booking, $type));
+        foreach ($recipients as $recipient) {
+            $recipient->notify(new BookingActivityNotification($booking, $type));
+
+            try {
+                $notif = $recipient->notifications()->latest()->first();
+                if ($notif) {
+                    Redis::publish("notifications:user:{$recipient->id}", json_encode([
+                        'notification' => [
+                            'id' => $notif->id,
+                            'type' => $notif->data['type'] ?? class_basename($notif->type),
+                            'data' => $notif->data,
+                            'read_at' => $notif->read_at?->toJSON(),
+                            'created_at' => $notif->created_at?->toJSON(),
+                        ],
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                // swallow publishing errors to avoid breaking request
+            }
+        }
     }
 
     private function notifyClient(Booking $booking): void
@@ -166,7 +186,26 @@ class BookingController extends Controller
             return;
         }
 
-        User::query()->find($booking->user_id)?->notify(new BookingStatusNotification($booking));
+        $user = User::query()->find($booking->user_id);
+        if ($user) {
+            $user->notify(new BookingStatusNotification($booking));
+            try {
+                $notif = $user->notifications()->latest()->first();
+                if ($notif) {
+                    Redis::publish("notifications:user:{$user->id}", json_encode([
+                        'notification' => [
+                            'id' => $notif->id,
+                            'type' => $notif->data['type'] ?? class_basename($notif->type),
+                            'data' => $notif->data,
+                            'read_at' => $notif->read_at?->toJSON(),
+                            'created_at' => $notif->created_at?->toJSON(),
+                        ],
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
     }
 
     private function recordPayment(Booking $booking): void

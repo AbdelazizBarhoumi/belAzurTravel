@@ -1,4 +1,4 @@
-import { } from 'framer-motion';
+import {} from 'framer-motion';
 import {
     MapPin,
     Hotel,
@@ -210,39 +210,82 @@ const DesignTrip = () => {
                         <h1 className="mb-2 font-serif text-4xl font-bold text-foreground">
                             Design your trip
                         </h1>
-                        <p className="text-muted-foreground">Answer a few questions and we will prepare a tailored trip.</p>
+                        <p className="text-muted-foreground">
+                            Answer a few questions and we will prepare a
+                            tailored trip.
+                        </p>
                     </div>
 
                     <div className="mb-6 rounded-2xl border border-border bg-card p-6">
                         <div className="mb-4 flex items-center justify-between">
                             <div className="w-3/4">
-                                <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Progress</div>
+                                <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Progress
+                                </div>
                                 <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                                    <div className="h-2" style={{ width: `${progress}%`, background: 'hsl(var(--primary))' }} />
+                                    <div
+                                        className="h-2"
+                                        style={{
+                                            width: `${progress}%`,
+                                            background: 'hsl(var(--primary))',
+                                        }}
+                                    />
                                 </div>
                             </div>
-                            <div className="text-sm font-semibold text-muted-foreground">{Math.round(progress)}%</div>
+                            <div className="text-sm font-semibold text-muted-foreground">
+                                {Math.round(progress)}%
+                            </div>
                         </div>
 
                         <div className="mt-4">
-                            <h2 className="mb-2 font-serif text-xl font-semibold text-foreground">{current.title}</h2>
-                            <p className="mb-4 text-sm text-muted-foreground">{current.subtitle}</p>
+                            <h2 className="mb-2 font-serif text-xl font-semibold text-foreground">
+                                {current.title}
+                            </h2>
+                            <p className="mb-4 text-sm text-muted-foreground">
+                                {current.subtitle}
+                            </p>
 
                             {/* Content per step (omitted for brevity) */}
-
                         </div>
 
                         <div className="mt-6 flex items-center justify-between">
                             <div>
-                                <Button onClick={() => setStep(Math.max(0, step - 1))} variant="ghost" className="mr-2"><ChevronLeft /> Back</Button>
-                                <Button onClick={() => setStep(Math.min(steps.length - 1, step + 1))} disabled={!canNext}>Next <ChevronRight /></Button>
+                                <Button
+                                    onClick={() =>
+                                        setStep(Math.max(0, step - 1))
+                                    }
+                                    variant="ghost"
+                                    className="mr-2"
+                                >
+                                    <ChevronLeft /> Back
+                                </Button>
+                                <Button
+                                    onClick={() =>
+                                        setStep(
+                                            Math.min(
+                                                steps.length - 1,
+                                                step + 1,
+                                            ),
+                                        )
+                                    }
+                                    disabled={!canNext}
+                                >
+                                    Next <ChevronRight />
+                                </Button>
                             </div>
-                            <div className="text-sm text-muted-foreground">Estimate: ${estimate.toLocaleString()}</div>
+                            <div className="text-sm text-muted-foreground">
+                                Estimate: ${estimate.toLocaleString()}
+                            </div>
                         </div>
                     </div>
 
                     <div className="text-right">
-                        <Button onClick={submit} className="bg-primary text-primary-foreground">Send request</Button>
+                        <Button
+                            onClick={submit}
+                            className="bg-primary text-primary-foreground"
+                        >
+                            Send request
+                        </Button>
                     </div>
                 </div>
             </div>

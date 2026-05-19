@@ -14,18 +14,8 @@ const sections: SectionDef[] = [
         columns: 2,
         fields: [
             { key: 'name', label: 'Name', required: true },
-            {
-                key: 'category',
-                label: 'Category',
-                type: 'select',
-                options: ['Beach', 'City'],
-            },
-            {
-                key: 'notes',
-                label: 'Notes',
-                type: 'textarea',
-                rows: 3,
-            },
+            { key: 'category', label: 'Category', type: 'select', options: ['Beach', 'City'] },
+            { key: 'notes', label: 'Notes', type: 'textarea', rows: 3 },
         ],
     },
 ];
@@ -53,15 +43,9 @@ describe('EntityFormDialog', () => {
         expect(screen.getByLabelText('Category')).toBeInTheDocument();
         expect(screen.getByLabelText('Notes')).toBeInTheDocument();
 
-        fireEvent.change(screen.getByLabelText('Name'), {
-            target: { value: 'Santorini' },
-        });
-        fireEvent.change(screen.getByLabelText('Category'), {
-            target: { value: 'Beach' },
-        });
-        fireEvent.change(screen.getByLabelText('Notes'), {
-            target: { value: 'A sectioned dialog is alive and well.' },
-        });
+        fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Santorini' } });
+        fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'Beach' } });
+        fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'A sectioned dialog is alive and well.' } });
         fireEvent.click(screen.getByRole('button', { name: /save|enregistrer/i }));
 
         expect(onSubmit).toHaveBeenCalledWith(
@@ -71,5 +55,33 @@ describe('EntityFormDialog', () => {
                 notes: 'A sectioned dialog is alive and well.',
             }),
         );
+    });
+
+    it('shows the shared language selector and passes the active language to section renderers', () => {
+        renderWithLanguage(
+            <EntityFormDialog
+                open
+                onOpenChange={vi.fn()}
+                title="Localized entity"
+                sections={[
+                    {
+                        title: 'Localized section',
+                        render: ({ activeLang }) => <p>Current language: {activeLang}</p>,
+                    },
+                ]}
+                initial={{}}
+                onSubmit={vi.fn()}
+                languages={['en', 'fr', 'ar']}
+            />,
+        );
+
+        expect(screen.getByRole('button', { name: 'EN' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'FR' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'AR' })).toBeInTheDocument();
+        expect(screen.getByText('Current language: en')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'FR' }));
+
+        expect(screen.getByText('Current language: fr')).toBeInTheDocument();
     });
 });

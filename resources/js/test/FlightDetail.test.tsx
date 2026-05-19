@@ -12,9 +12,14 @@ function renderFlightDetail() {
         <QueryClientProvider client={queryClient}>
             <LanguageProvider>
                 <FavoritesProvider>
-                    <MemoryRouter initialEntries={['/flights/emirates-nyc-dxb']}>
+                    <MemoryRouter
+                        initialEntries={['/flights/emirates-nyc-dxb']}
+                    >
                         <Routes>
-                            <Route path="/flights/:id" element={<FlightDetail />} />
+                            <Route
+                                path="/flights/:id"
+                                element={<FlightDetail />}
+                            />
                         </Routes>
                     </MemoryRouter>
                 </FavoritesProvider>

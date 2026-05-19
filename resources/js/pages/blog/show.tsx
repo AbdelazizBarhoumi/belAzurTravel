@@ -152,7 +152,8 @@ export default function BlogPostDetail() {
                 </h1>
                 <div className="prose max-w-none text-foreground">
                     {renderTextBlocks(
-                        localize(content.body, lang) || localize(post.excerpt, lang),
+                        localize(content.body, lang) ||
+                            localize(post.excerpt, lang),
                     )}
                 </div>
 
@@ -164,10 +165,13 @@ export default function BlogPostDetail() {
                                 className="rounded-2xl border border-border bg-muted/20 p-5"
                             >
                                 <h2 className="mb-3 font-serif text-2xl font-semibold text-foreground">
-                                    {localize(section.heading, lang) || `Section ${index + 1}`}
+                                    {localize(section.heading, lang) ||
+                                        `Section ${index + 1}`}
                                 </h2>
                                 <div className="prose max-w-none text-foreground">
-                                    {renderTextBlocks(localize(section.body, lang))}
+                                    {renderTextBlocks(
+                                        localize(section.body, lang),
+                                    )}
                                 </div>
                             </section>
                         ))}

@@ -42,10 +42,12 @@ describe('PromoDetail page', () => {
             await screen.findByRole('heading', { name: /Spring Flash Sale/i }),
         ).toBeInTheDocument();
         expect(await screen.findByText(/30% OFF/i)).toBeInTheDocument();
-            // seeded description for SPRING30
-            expect(
-                await screen.findByText(/On all European destinations booked this month\./i),
-            ).toBeInTheDocument();
+        // seeded description for SPRING30
+        expect(
+            await screen.findByText(
+                /On all European destinations booked this month\./i,
+            ),
+        ).toBeInTheDocument();
         expect(
             await screen.findByRole('link', { name: /Start a booking/i }),
         ).toBeInTheDocument();

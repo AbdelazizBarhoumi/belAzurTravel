@@ -136,7 +136,6 @@ export interface TeamMember {
     bio: string;
 }
 
-
 export const contactMethods: ContactMethod[] = [
     {
         labelKey: 'contact.calls',
@@ -511,4 +510,3 @@ export const landingTrustCards: Array<{
     { icon: Phone, titleKey: 'trust.card2', descriptionKey: 'trust.card2desc' },
     { icon: Phone, titleKey: 'trust.card3', descriptionKey: 'trust.card3desc' },
 ];
-

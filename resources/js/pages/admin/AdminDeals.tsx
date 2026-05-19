@@ -9,7 +9,11 @@ import {
     type AdminRow,
 } from '@/api/admin.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { EntityFormDialog, type FieldDef, type SectionDef } from '@/components/forms/EntityFormDialog';
+import {
+    EntityFormDialog,
+    type FieldDef,
+    type SectionDef,
+} from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -52,15 +56,25 @@ const sections: SectionDef[] = [
         fields: [
             ...localizedFields('title', copy('Title', 'Titre', 'العنوان')),
             ...localizedFields('discount', copy('Discount', 'Remise', 'الخصم')),
-            ...localizedFields('expires', copy('Expires', 'Expiration', 'ينتهي')),
-            ...localizedFields('category', copy('Category', 'Catégorie', 'الفئة')),
+            ...localizedFields(
+                'expires',
+                copy('Expires', 'Expiration', 'ينتهي'),
+            ),
+            ...localizedFields(
+                'category',
+                copy('Category', 'Catégorie', 'الفئة'),
+            ),
         ],
     },
     {
         title: 'Description',
         description: 'Long-form copy shown on the deal detail page.',
         fields: [
-            ...localizedFields('description', copy('Description', 'Description', 'الوصف'), 'textarea'),
+            ...localizedFields(
+                'description',
+                copy('Description', 'Description', 'الوصف'),
+                'textarea',
+            ),
         ],
     },
 ];
@@ -71,16 +85,15 @@ export default function AdminDeals() {
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
-    const [activeLang, setActiveLang] = useState<Lang>('en');
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
     const queryKey = useMemo(() => ['admin', 'deals'], []);
     const { data: rows = [] } = useQuery<AdminRow[]>({
         queryKey,
         queryFn: async () => {
-            const data = (await listAdminEntities<AdminRow>('deals')) as unknown as
-                | AdminRow[]
-                | { data?: AdminRow[] };
+            const data = (await listAdminEntities<AdminRow>(
+                'deals',
+            )) as unknown as AdminRow[] | { data?: AdminRow[] };
             return Array.isArray(data) ? data : (data.data ?? []);
         },
     });
@@ -107,27 +120,44 @@ export default function AdminDeals() {
     const dealSections: SectionDef[] = [
         {
             title: 'Promotion details',
-            description: 'Edit localized promotion fields one language at a time.',
-            render: ({ values, setField }) => (
+            description:
+                'Edit localized promotion fields one language at a time.',
+            render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                        {(['en', 'fr', 'ar'] as Lang[]).map((code) => (
-                            <Button key={code} type="button" variant={activeLang === code ? 'default' : 'outline'} onClick={() => setActiveLang(code)}>
-                                {code.toUpperCase()}
-                            </Button>
-                        ))}
-                    </div>
-
                     <div className="grid gap-4 md:grid-cols-2">
                         {[
-                            { key: `title_${activeLang}`, label: `Title (${activeLang.toUpperCase()})` },
-                            { key: `discount_${activeLang}`, label: `Discount (${activeLang.toUpperCase()})` },
-                            { key: `expires_${activeLang}`, label: `Expires (${activeLang.toUpperCase()})` },
-                            { key: `category_${activeLang}`, label: `Category (${activeLang.toUpperCase()})` },
+                            {
+                                key: `title_${activeLang}`,
+                                label: `Title (${activeLang.toUpperCase()})`,
+                            },
+                            {
+                                key: `discount_${activeLang}`,
+                                label: `Discount (${activeLang.toUpperCase()})`,
+                            },
+                            {
+                                key: `expires_${activeLang}`,
+                                label: `Expires (${activeLang.toUpperCase()})`,
+                            },
+                            {
+                                key: `category_${activeLang}`,
+                                label: `Category (${activeLang.toUpperCase()})`,
+                            },
                         ].map((f) => (
                             <div key={f.key} className="space-y-2">
-                                <label htmlFor={f.key} className="text-xs font-semibold text-muted-foreground">{f.label}</label>
-                                <input id={f.key} value={String(values[f.key] ?? '')} onChange={(e) => setField(f.key, e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                                <label
+                                    htmlFor={f.key}
+                                    className="text-xs font-semibold text-muted-foreground"
+                                >
+                                    {f.label}
+                                </label>
+                                <input
+                                    id={f.key}
+                                    value={String(values[f.key] ?? '')}
+                                    onChange={(e) =>
+                                        setField(f.key, e.target.value)
+                                    }
+                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                />
                             </div>
                         ))}
                     </div>
@@ -198,7 +228,9 @@ export default function AdminDeals() {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(row)}
+                                                onClick={() =>
+                                                    setPendingDelete(row)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                                 aria-label={t('actions.delete')}
                                             >
@@ -224,6 +256,7 @@ export default function AdminDeals() {
                 sections={dealSections}
                 initial={editing}
                 onSubmit={handleSave}
+                languages={['en', 'fr', 'ar']}
             />
 
             <ConfirmDialog
@@ -250,4 +283,3 @@ export default function AdminDeals() {
         </AdminLayout>
     );
 }
-

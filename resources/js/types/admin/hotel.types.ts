@@ -17,7 +17,10 @@ export interface AdminHotel extends AdminEntity {
 /**
  * Admin hotel with localized fields (storage format)
  */
-export interface LocalizedAdminHotel extends Omit<AdminHotel, 'name' | 'location' | 'category'> {
+export interface LocalizedAdminHotel extends Omit<
+    AdminHotel,
+    'name' | 'location' | 'category'
+> {
     name: LocalizedText;
     location: LocalizedText;
     category: LocalizedText;

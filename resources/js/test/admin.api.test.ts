@@ -14,8 +14,12 @@ describe('saveAdminEntity', () => {
         vi.stubGlobal('fetch', fetchMock);
 
         const mainImage = new File(['main'], 'main.png', { type: 'image/png' });
-        const galleryImageOne = new File(['g1'], 'g1.png', { type: 'image/png' });
-        const galleryImageTwo = new File(['g2'], 'g2.png', { type: 'image/png' });
+        const galleryImageOne = new File(['g1'], 'g1.png', {
+            type: 'image/png',
+        });
+        const galleryImageTwo = new File(['g2'], 'g2.png', {
+            type: 'image/png',
+        });
 
         await saveAdminEntity('destinations', {
             id: '42',

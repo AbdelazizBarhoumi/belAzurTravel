@@ -13,9 +13,16 @@ function localize(value: LocalizedText, lang: Lang): string {
     return value[lang];
 }
 
-function localizeLocation(value: LocalizedText | LocalizedText[] | string | string[], lang: Lang): string {
+function localizeLocation(
+    value: LocalizedText | LocalizedText[] | string | string[],
+    lang: Lang,
+): string {
     if (Array.isArray(value)) {
-        return value.map((item) => (typeof item === 'string' ? item : localize(item, lang))).join(', ');
+        return value
+            .map((item) =>
+                typeof item === 'string' ? item : localize(item, lang),
+            )
+            .join(', ');
     }
     return typeof value === 'string' ? value : localize(value, lang);
 }
@@ -122,11 +129,15 @@ function DayByDayAndIncludes({
                                     {d.day}
                                 </div>
                                 <h3 className="font-serif text-lg font-bold text-foreground">
-                                    {typeof d.title === 'string' ? d.title : localize(d.title, lang)}
+                                    {typeof d.title === 'string'
+                                        ? d.title
+                                        : localize(d.title, lang)}
                                 </h3>
                                 {d.details ? (
                                     <p className="text-sm text-muted-foreground">
-                                        {typeof d.details === 'string' ? d.details : localize(d.details, lang)}
+                                        {typeof d.details === 'string'
+                                            ? d.details
+                                            : localize(d.details, lang)}
                                     </p>
                                 ) : null}
                             </li>
@@ -143,11 +154,17 @@ function DayByDayAndIncludes({
                     <ul className="space-y-2">
                         {(includes || []).map((i) => (
                             <li
-                                key={typeof i === 'string' ? i : (i as LocalizedText).en}
+                                key={
+                                    typeof i === 'string'
+                                        ? i
+                                        : (i as LocalizedText).en
+                                }
                                 className="flex items-start gap-2 text-sm text-foreground"
                             >
                                 <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                {typeof i === 'string' ? i : localize(i as LocalizedText, lang)}
+                                {typeof i === 'string'
+                                    ? i
+                                    : localize(i as LocalizedText, lang)}
                             </li>
                         ))}
                     </ul>
@@ -159,11 +176,17 @@ function DayByDayAndIncludes({
                     <ul className="space-y-2">
                         {(excludes || []).map((i) => (
                             <li
-                                key={typeof i === 'string' ? i : (i as LocalizedText).en}
+                                key={
+                                    typeof i === 'string'
+                                        ? i
+                                        : (i as LocalizedText).en
+                                }
                                 className="flex items-start gap-2 text-sm text-muted-foreground"
                             >
                                 <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-                                {typeof i === 'string' ? i : localize(i as LocalizedText, lang)}
+                                {typeof i === 'string'
+                                    ? i
+                                    : localize(i as LocalizedText, lang)}
                             </li>
                         ))}
                     </ul>
@@ -191,119 +214,121 @@ export default function TourDetail() {
             breadcrumbs={[
                 { label: t('common.home'), href: '/' },
                 { label: t('nav.tours'), href: '/tours' },
-                { label: typeof tour.name === 'object' ? localize(tour.name, lang) : tour.name, active: true },
+                {
+                    label:
+                        typeof tour.name === 'object'
+                            ? localize(tour.name, lang)
+                            : tour.name,
+                    active: true,
+                },
             ]}
         >
             <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid gap-10 lg:grid-cols-[2fr_1fr]"
+            >
+                <div className="space-y-8">
+                    {/* Gallery + summary card (left gallery, right card) */}
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="grid gap-10 lg:grid-cols-[2fr_1fr]"
+                        className="mb-12 grid gap-8 lg:grid-cols-2"
                     >
-                        <div className="space-y-8">
-                            {/* Gallery + summary card (left gallery, right card) */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mb-12 grid gap-8 lg:grid-cols-2"
-                            >
-                                <div className="lg:col-span-2">
-                                    <Gallery
-                                        images={tour.gallery || [tour.image]}
-                                        hotelName={
-                                            typeof tour.name === 'object'
-                                                ? localize(tour.name, lang)
-                                                : tour.name
-                                        }
-                                    />
-                                </div>
-                            </motion.div>
-
-                            <div className="lg:hidden">
-                                <StickyBookingCard
-                                    price={tour.price}
-                                    currency="$"
-                                    priceLabel={t('common.from')}
-                                    priceSuffix={t('tours.person')}
-                                    title={
-                                        typeof tour.name === 'object'
-                                            ? localize(tour.name, lang)
-                                            : tour.name
-                                    }
-                                    location={localizeLocation(tour.location, lang)}
-                                    description={
-                                        typeof tour.description === 'object'
-                                            ? localize(tour.description, lang)
-                                            : tour.description
-                                    }
-                                    duration={`${tour.durationDays} ${t('common.days')} / ${tour.durationNights} ${t('common.nights')}`}
-                                    maxGroup={tour.maxGroup}
-                                    rating={tour.rating}
-                                    favoriteItem={{
-                                        id: `tour-${tour.slug}`,
-                                        type: 'tour',
-                                        name:
-                                            typeof tour.name === 'object'
-                                                ? localize(tour.name, lang)
-                                                : tour.name,
-                                        image: tour.image,
-                                        price: tour.price,
-
-                                        location: localizeLocation(tour.location, lang),
-                                    }}
-                                    primaryButtonLabel={t('tours.bookTour')}
-                                    onBook={() => {
-                                        // simple reservation flow: scroll to booking or open modal
-                                        alert(t('tourDetail.bookingFlow'));
-                                    }}
-                                />
-                            </div>
-
-                            <DayByDayAndIncludes
-                                tour={tour}
-                                t={t}
-                                lang={lang}
-                            />
-                        </div>
-
-                        <aside className="hidden lg:block">
-                            <StickyBookingCard
-                                price={tour.price}
-                                currency="$"
-                                priceLabel={t('common.from')}
-                                priceSuffix={t('tours.person')}
-                                title={
+                        <div className="lg:col-span-2">
+                            <Gallery
+                                images={tour.gallery || [tour.image]}
+                                hotelName={
                                     typeof tour.name === 'object'
                                         ? localize(tour.name, lang)
                                         : tour.name
                                 }
-                                location={localizeLocation(tour.location, lang)}
-                                description={
-                                    typeof tour.description === 'object'
-                                        ? localize(tour.description, lang)
-                                        : tour.description
-                                }
-                                duration={`${tour.durationDays} ${t('common.days')} / ${tour.durationNights} ${t('common.nights')}`}
-                                maxGroup={tour.maxGroup}
-                                rating={tour.rating}
-                                favoriteItem={{
-                                    id: `tour-${tour.slug}`,
-                                    type: 'tour',
-                                    name:
-                                        typeof tour.name === 'object'
-                                            ? localize(tour.name, lang)
-                                            : tour.name,
-                                    image: tour.image,
-                                    price: tour.price,
-                                    location: localizeLocation(tour.location, lang),
-                                }}
-                                primaryButtonLabel={t('tours.bookTour')}
-                                onBook={() => {
-                                    // simple reservation flow: scroll to booking or open modal
-                                    alert(t('tourDetail.bookingFlow'));
-                                }}
                             />
-                        </aside>
+                        </div>
                     </motion.div>
+
+                    <div className="lg:hidden">
+                        <StickyBookingCard
+                            price={tour.price}
+                            currency="$"
+                            priceLabel={t('common.from')}
+                            priceSuffix={t('tours.person')}
+                            title={
+                                typeof tour.name === 'object'
+                                    ? localize(tour.name, lang)
+                                    : tour.name
+                            }
+                            location={localizeLocation(tour.location, lang)}
+                            description={
+                                typeof tour.description === 'object'
+                                    ? localize(tour.description, lang)
+                                    : tour.description
+                            }
+                            duration={`${tour.durationDays} ${t('common.days')} / ${tour.durationNights} ${t('common.nights')}`}
+                            maxGroup={tour.maxGroup}
+                            rating={tour.rating}
+                            favoriteItem={{
+                                id: `tour-${tour.slug}`,
+                                type: 'tour',
+                                name:
+                                    typeof tour.name === 'object'
+                                        ? localize(tour.name, lang)
+                                        : tour.name,
+                                image: tour.image,
+                                price: tour.price,
+
+                                location: localizeLocation(tour.location, lang),
+                            }}
+                            primaryButtonLabel={t('tours.bookTour')}
+                            onBook={() => {
+                                // simple reservation flow: scroll to booking or open modal
+                                alert(t('tourDetail.bookingFlow'));
+                            }}
+                        />
+                    </div>
+
+                    <DayByDayAndIncludes tour={tour} t={t} lang={lang} />
+                </div>
+
+                <aside className="hidden lg:block">
+                    <StickyBookingCard
+                        price={tour.price}
+                        currency="$"
+                        priceLabel={t('common.from')}
+                        priceSuffix={t('tours.person')}
+                        title={
+                            typeof tour.name === 'object'
+                                ? localize(tour.name, lang)
+                                : tour.name
+                        }
+                        location={localizeLocation(tour.location, lang)}
+                        description={
+                            typeof tour.description === 'object'
+                                ? localize(tour.description, lang)
+                                : tour.description
+                        }
+                        duration={`${tour.durationDays} ${t('common.days')} / ${tour.durationNights} ${t('common.nights')}`}
+                        maxGroup={tour.maxGroup}
+                        rating={tour.rating}
+                        favoriteItem={{
+                            id: `tour-${tour.slug}`,
+                            type: 'tour',
+                            name:
+                                typeof tour.name === 'object'
+                                    ? localize(tour.name, lang)
+                                    : tour.name,
+                            image: tour.image,
+                            price: tour.price,
+                            location: localizeLocation(tour.location, lang),
+                        }}
+                        primaryButtonLabel={t('tours.bookTour')}
+                        onBook={() => {
+                            // simple reservation flow: scroll to booking or open modal
+                            alert(t('tourDetail.bookingFlow'));
+                        }}
+                    />
+                </aside>
+            </motion.div>
         </PageShell>
     );
 }

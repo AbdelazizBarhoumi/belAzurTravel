@@ -137,7 +137,8 @@ describe('Navbar', () => {
         });
 
         // Need to import Navbar fresh so module mocks take effect
-        const { Navbar: FreshNavbar } = await import('@/components/layout/Navbar');
+        const { Navbar: FreshNavbar } =
+            await import('@/components/layout/Navbar');
 
         render(
             <LanguageProvider>

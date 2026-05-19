@@ -58,6 +58,7 @@ const AdminReports = () => {
     )
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
+    const topItemPeak = topItems[0]?.[1] ?? 0;
 
     const exportCSV = () => {
         const header = 'ID,Client,Type,Item,Date,Amount,Status';
@@ -182,7 +183,7 @@ const AdminReports = () => {
                                             <div
                                                 className="h-full bg-primary"
                                                 style={{
-                                                    width: `${(amt / topItems[0][1]) * 100}%`,
+                                                    width: `${topItemPeak > 0 ? (amt / topItemPeak) * 100 : 0}%`,
                                                 }}
                                             />
                                         </div>

@@ -87,7 +87,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                 side={isRtl ? 'right' : 'left'}
                 collapsible="icon"
                 variant="inset"
-                className=" group-data-[side=right]:border-l"
+                className="group-data-[side=right]:border-l"
             >
                 <SidebarHeader className="border-b border-sidebar-border/60">
                     <SidebarMenu>
@@ -203,7 +203,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                 </header>
 
                 {/* Mobile/Tablet Navigation */}
-                <div className="lg:hidden flex gap-1 overflow-x-auto px-3 py-2 border-b border-border bg-card">
+                <div className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 lg:hidden">
                     {links.map((link) => {
                         const active = link.exact
                             ? pathname === link.to
@@ -216,14 +216,16 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                 key={link.to}
                                 to={link.to}
                                 className={cn(
-                                    'shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap',
+                                    'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                                     active
                                         ? 'bg-primary text-primary-foreground'
-                                        : 'text-muted-foreground bg-muted hover:bg-muted hover:text-foreground'
+                                        : 'bg-muted text-muted-foreground hover:bg-muted hover:text-foreground',
                                 )}
                             >
                                 <Icon className="h-3.5 w-3.5" />
-                                <span className="hidden xs:inline">{label}</span>
+                                <span className="xs:inline hidden">
+                                    {label}
+                                </span>
                             </Link>
                         );
                     })}

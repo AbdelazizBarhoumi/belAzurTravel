@@ -37,7 +37,9 @@ describe('CarDetail page', () => {
         renderCarDetail();
 
         // Wait for API-backed data to populate; use findAllByRole
-        const headings = await screen.findAllByRole('heading', { name: /Mercedes E-Class/i });
+        const headings = await screen.findAllByRole('heading', {
+            name: /Mercedes E-Class/i,
+        });
         expect(headings.length).toBeGreaterThan(0);
         expect(screen.getByText(/Features/i)).toBeInTheDocument();
         expect(screen.getByText(/Rental policy/i)).toBeInTheDocument();

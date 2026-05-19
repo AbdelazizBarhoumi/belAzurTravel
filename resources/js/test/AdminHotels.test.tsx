@@ -46,10 +46,18 @@ describe('AdminHotels', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /add/i }));
 
-        expect(await screen.findByText('Core hotel details')).toBeInTheDocument();
-        expect(screen.getAllByRole('button', { name: 'EN' }).length).toBeGreaterThan(0);
-        expect(screen.getAllByRole('button', { name: 'FR' }).length).toBeGreaterThan(0);
-        expect(screen.getAllByRole('button', { name: 'AR' }).length).toBeGreaterThan(0);
+        expect(
+            await screen.findByText('Core hotel details'),
+        ).toBeInTheDocument();
+        expect(
+            screen.getAllByRole('button', { name: 'EN' }).length,
+        ).toBeGreaterThan(0);
+        expect(
+            screen.getAllByRole('button', { name: 'FR' }).length,
+        ).toBeGreaterThan(0);
+        expect(
+            screen.getAllByRole('button', { name: 'AR' }).length,
+        ).toBeGreaterThan(0);
         expect(screen.getByLabelText('Name (EN)')).toBeInTheDocument();
         expect(screen.getByLabelText('Location (EN)')).toBeInTheDocument();
         expect(screen.getByLabelText('Description (EN)')).toBeInTheDocument();
@@ -61,8 +69,12 @@ describe('AdminHotels', () => {
         expect(screen.getByLabelText('Stars')).toBeInTheDocument();
         expect(screen.getByLabelText('Hotel image')).toBeInTheDocument();
         expect(screen.getByLabelText('Gallery images')).toBeInTheDocument();
-        expect(screen.getByLabelText('Gallery URLs (one per line)')).toBeInTheDocument();
-        expect(screen.getByLabelText('Amenities (one per line)')).toBeInTheDocument();
+        expect(
+            screen.getByLabelText('Gallery URLs (one per line)'),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByLabelText('Amenities (one per line)'),
+        ).toBeInTheDocument();
         expect(screen.getByLabelText('Rooms (JSON)')).toBeInTheDocument();
     });
 });

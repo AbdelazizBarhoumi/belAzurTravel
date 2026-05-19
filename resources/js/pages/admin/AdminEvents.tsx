@@ -9,7 +9,11 @@ import {
     type AdminRow,
 } from '@/api/admin.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { EntityFormDialog, type FieldDef, type SectionDef } from '@/components/forms/EntityFormDialog';
+import {
+    EntityFormDialog,
+    type FieldDef,
+    type SectionDef,
+} from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import EntityMediaInputs from '@/components/forms/EntityMediaInputs';
@@ -48,7 +52,8 @@ const columns: Array<{ key: string; label: Copy }> = [
 const sections: SectionDef[] = [
     {
         title: 'Core information',
-        description: 'Title, location and date appear in the event cards and schedule list.',
+        description:
+            'Title, location and date appear in the event cards and schedule list.',
         columns: 2,
         fields: [
             ...localizedFields('title', copy('Title', 'Titre', 'العنوان')),
@@ -63,9 +68,17 @@ const sections: SectionDef[] = [
         fields: [
             {
                 key: 'image',
-                label: copy('Server image path', 'Chemin image serveur', 'مسار صورة الخادم').en,
+                label: copy(
+                    'Server image path',
+                    'Chemin image serveur',
+                    'مسار صورة الخادم',
+                ).en,
             },
-            ...localizedFields('description', copy('Description', 'Description', 'الوصف'), 'textarea'),
+            ...localizedFields(
+                'description',
+                copy('Description', 'Description', 'الوصف'),
+                'textarea',
+            ),
         ],
     },
 ];
@@ -76,16 +89,15 @@ export default function AdminEvents() {
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
-    const [activeLang, setActiveLang] = useState<Lang>('en');
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
     const queryKey = useMemo(() => ['admin', 'events'], []);
     const { data: rows = [] } = useQuery<AdminRow[]>({
         queryKey,
         queryFn: async () => {
-            const data = (await listAdminEntities<AdminRow>('events')) as unknown as
-                | AdminRow[]
-                | { data?: AdminRow[] };
+            const data = (await listAdminEntities<AdminRow>(
+                'events',
+            )) as unknown as AdminRow[] | { data?: AdminRow[] };
             return Array.isArray(data) ? data : (data.data ?? []);
         },
     });
@@ -109,9 +121,17 @@ export default function AdminEvents() {
             ...row,
             imagePath: (row.image as string) ?? '',
             imageFile: null,
-            galleryPaths: Array.isArray(row.gallery) ? (row.gallery as string[]) : (row.gallery ? String(row.gallery).split('\n') : []),
+            galleryPaths: Array.isArray(row.gallery)
+                ? (row.gallery as string[])
+                : row.gallery
+                  ? String(row.gallery).split('\n')
+                  : [],
             galleryFiles: [],
-            schedule: row.schedule ? (typeof row.schedule === 'string' ? row.schedule : JSON.stringify(row.schedule)) : '',
+            schedule: row.schedule
+                ? typeof row.schedule === 'string'
+                    ? row.schedule
+                    : JSON.stringify(row.schedule)
+                : '',
         } as unknown as AdminRow;
     }
 
@@ -119,9 +139,13 @@ export default function AdminEvents() {
         const payload = {
             ...(values || {}),
             id: editing?.id ?? '',
-            image: (values.imageFile as unknown as File) ?? (values.imagePath ?? ''),
-            gallery: Array.isArray(values.galleryPaths) ? (values.galleryPaths as string[]).join('\n') : (values.gallery ?? ''),
-            gallery_files: (values.galleryFiles as unknown as File[]) ?? undefined,
+            image:
+                (values.imageFile as unknown as File) ?? values.imagePath ?? '',
+            gallery: Array.isArray(values.galleryPaths)
+                ? (values.galleryPaths as string[]).join('\n')
+                : (values.gallery ?? ''),
+            gallery_files:
+                (values.galleryFiles as unknown as File[]) ?? undefined,
             schedule: values.schedule ?? '',
         } as unknown as AdminRow;
 
@@ -134,25 +158,52 @@ export default function AdminEvents() {
         {
             title: 'Core information',
             description: 'Edit localized event fields one language at a time.',
-            render: ({ values, setField }) => (
+            render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                        {(['en','fr','ar'] as Lang[]).map((code) => (
-                            <Button key={code} type="button" variant={activeLang === code ? 'default' : 'outline'} onClick={() => setActiveLang(code)}>{code.toUpperCase()}</Button>
-                        ))}
-                    </div>
-
                     <div className="grid gap-4 md:grid-cols-2">
-                        {['title','location','date'].map((k) => (
+                        {['title', 'location', 'date'].map((k) => (
                             <div key={k} className="space-y-2">
-                                <label htmlFor={`${k}_${activeLang}`} className="text-xs font-semibold text-muted-foreground">{k.replace(/^[a-z]/, s => s.toUpperCase())} ({activeLang.toUpperCase()})</label>
-                                <input id={`${k}_${activeLang}`} value={String(values[`${k}_${activeLang}`] ?? '')} onChange={(e) => setField(`${k}_${activeLang}`, e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                                <label
+                                    htmlFor={`${k}_${activeLang}`}
+                                    className="text-xs font-semibold text-muted-foreground"
+                                >
+                                    {k.replace(/^[a-z]/, (s) =>
+                                        s.toUpperCase(),
+                                    )}{' '}
+                                    ({activeLang.toUpperCase()})
+                                </label>
+                                <input
+                                    id={`${k}_${activeLang}`}
+                                    value={String(
+                                        values[`${k}_${activeLang}`] ?? '',
+                                    )}
+                                    onChange={(e) =>
+                                        setField(
+                                            `${k}_${activeLang}`,
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                />
                             </div>
                         ))}
 
                         <div className="space-y-2">
-                            <label htmlFor="event-price" className="text-xs font-semibold text-muted-foreground">{price[lang]}</label>
-                            <input id="event-price" type="number" value={String(values.price ?? '')} onChange={(e) => setField('price', e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                            <label
+                                htmlFor="event-price"
+                                className="text-xs font-semibold text-muted-foreground"
+                            >
+                                {price[lang]}
+                            </label>
+                            <input
+                                id="event-price"
+                                type="number"
+                                value={String(values.price ?? '')}
+                                onChange={(e) =>
+                                    setField('price', e.target.value)
+                                }
+                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                            />
                         </div>
                     </div>
                 </div>
@@ -173,15 +224,21 @@ export default function AdminEvents() {
                     />
 
                     <div className="mt-4">
-                        <label className="text-xs font-semibold text-muted-foreground">Schedule (JSON)</label>
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            Schedule (JSON)
+                        </label>
                         <textarea
                             value={String(values.schedule ?? '')}
-                            onChange={(e) => setField('schedule', e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm mt-2"
+                            onChange={(e) =>
+                                setField('schedule', e.target.value)
+                            }
+                            className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                             rows={6}
                             placeholder='[{ "day": {"en":"Day 1"}, "activity": {"en":"Arrival"}, "details": {"en":"..."} }]'
                         />
-                        <p className="text-xs text-muted-foreground mt-1">Provide schedule as JSON array or leave empty.</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                            Provide schedule as JSON array or leave empty.
+                        </p>
                     </div>
                 </div>
             ),
@@ -240,7 +297,9 @@ export default function AdminEvents() {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => {
-                                                    setEditing(mapRowToInitial(row));
+                                                    setEditing(
+                                                        mapRowToInitial(row),
+                                                    );
                                                     setOpen(true);
                                                 }}
                                                 className="rounded-lg p-1.5 hover:bg-muted"
@@ -249,7 +308,9 @@ export default function AdminEvents() {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(row)}
+                                                onClick={() =>
+                                                    setPendingDelete(row)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                                 aria-label={t('actions.delete')}
                                             >
@@ -297,8 +358,8 @@ export default function AdminEvents() {
                 sections={eventSections}
                 initial={editing}
                 onSubmit={handleSave}
+                languages={['en', 'fr', 'ar']}
             />
         </AdminLayout>
     );
 }
-

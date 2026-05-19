@@ -13,6 +13,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import { traceRoute } from '@/lib/routeTrace';
 import AdminDashboard from './pages/admin';
 import AdminBlog from './pages/admin/AdminBlog';
@@ -62,7 +63,18 @@ import PromoDetail from './pages/promos/show';
 import Tours from './pages/tours';
 import TourDetail from './pages/tours/show';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            // Defensive defaults to prevent accidental request storms
+            // from remounts/focus changes while still keeping data fresh.
+            staleTime: 30_000,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
+            retry: 1,
+        },
+    },
+});
 
 const adminGuard = (element: JSX.Element) => (
     <RoleGuard role="admin">{element}</RoleGuard>
@@ -161,84 +173,84 @@ const LayoutWrapper = () => {
                     />
                     <Route
                         path="/admin"
-                        element={adminGuard(<AdminDashboard />)}
+                        element={<AdminDashboard />}
                     />
                     <Route
                         path="/admin/dashboard"
-                        element={adminGuard(<AdminDashboard />)}
+                        element={<AdminDashboard />}
                     />
                     <Route
                         path="/admin/destinations"
-                        element={adminGuard(<AdminDestinations />)}
+                        element={<AdminDestinations />}
                     />
                     <Route
                         path="/admin/hotels"
-                        element={adminGuard(<AdminHotels />)}
+                        element={<AdminHotels />}
                     />
                     <Route
                         path="/admin/tours"
-                        element={adminGuard(<AdminTours />)}
+                        element={<AdminTours />}
                     />
                     {/* Tour creation/editing handled inline in AdminTours via EntityFormDialog */}
                     <Route
                         path="/admin/bookings"
-                        element={adminGuard(<AdminBookings />)}
+                        element={<AdminBookings />}
                     />
                     <Route
                         path="/admin/cars"
-                        element={adminGuard(<AdminCars />)}
+                        element={<AdminCars />}
                     />
                     <Route
                         path="/admin/flights"
-                        element={adminGuard(<AdminFlights />)}
+                        element={<AdminFlights />}
                     />
                     <Route
                         path="/admin/events"
-                        element={adminGuard(<AdminEvents />)}
+                        element={<AdminEvents />}
                     />
                     <Route
                         path="/admin/deals"
-                        element={adminGuard(<AdminDeals />)}
+                        element={<AdminDeals />}
                     />
                     <Route
                         path="/admin/promos"
-                        element={adminGuard(<AdminPromos />)}
+                        element={<AdminPromos />}
                     />
                     <Route
                         path="/admin/blog"
-                        element={adminGuard(<AdminBlog />)}
+                        element={<AdminBlog />}
                     />
                     <Route
                         path="/admin/gallery"
-                        element={adminGuard(<AdminGallery />)}
+                        element={<AdminGallery />}
                     />
                     <Route
                         path="/admin/users"
-                        element={adminGuard(<AdminUsers />)}
+                        element={<AdminUsers />}
                     />
                     <Route
                         path="/admin/reports"
-                        element={adminGuard(<AdminReports />)}
+                        element={<AdminReports />}
                     />
                     <Route
                         path="/admin/clients"
-                        element={adminGuard(<AdminUsers />)}
+                        element={<AdminUsers />}
                     />
                     <Route
                         path="/admin/clients/:id"
-                        element={adminGuard(<AdminUsers />)}
+                        element={<AdminUsers />}
                     />
                     <Route
                         path="/admin/assistants"
-                        element={adminGuard(<AdminUsers />)}
+                        element={<AdminUsers />}
                     />
                     <Route
                         path="/admin/site-settings"
-                        element={adminGuard(<AdminSiteSettings />)}
+                        element={<AdminSiteSettings />}
                     />
                     <Route
                         path="/admin/notifications"
-                        element={adminGuard(<NotificationsPage />)}
+                        element={<NotificationsPage />}
                     />
                     <Route
                         path="/assistant"
@@ -479,21 +491,23 @@ const LayoutWrapper = () => {
 const App = () => (
     <QueryClientProvider client={queryClient}>
         <LanguageProvider>
-            <FavoritesProvider>
-                <TooltipProvider>
-                    <Toaster />
-                    <Sonner />
-                    <BrowserRouter
-                        future={{
-                            v7_startTransition: true,
-                            v7_relativeSplatPath: true,
-                        }}
-                    >
-                        <RouteLoader />
-                        <LayoutWrapper />
-                    </BrowserRouter>
-                </TooltipProvider>
-            </FavoritesProvider>
+            <SiteSettingsProvider>
+                <FavoritesProvider>
+                    <TooltipProvider>
+                        <Toaster />
+                        <Sonner />
+                        <BrowserRouter
+                            future={{
+                                v7_startTransition: true,
+                                v7_relativeSplatPath: true,
+                            }}
+                        >
+                            <RouteLoader />
+                            <LayoutWrapper />
+                        </BrowserRouter>
+                    </TooltipProvider>
+                </FavoritesProvider>
+            </SiteSettingsProvider>
         </LanguageProvider>
     </QueryClientProvider>
 );

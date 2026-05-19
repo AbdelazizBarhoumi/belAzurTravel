@@ -11,6 +11,7 @@ use App\Notifications\SupportInquiryNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redis;
 
 class ClientController extends Controller
 {
@@ -110,7 +111,25 @@ class ClientController extends Controller
         ]);
 
         $recipients = User::query()->where('active', true)->whereIn('role', ['admin', 'assistant'])->get();
-        Notification::send($recipients, new SupportInquiryNotification($inquiry));
+        foreach ($recipients as $recipient) {
+            $recipient->notify(new SupportInquiryNotification($inquiry));
+            try {
+                $notif = $recipient->notifications()->latest()->first();
+                if ($notif) {
+                    Redis::publish("notifications:user:{$recipient->id}", json_encode([
+                        'notification' => [
+                            'id' => $notif->id,
+                            'type' => $notif->data['type'] ?? class_basename($notif->type),
+                            'data' => $notif->data,
+                            'read_at' => $notif->read_at?->toJSON(),
+                            'created_at' => $notif->created_at?->toJSON(),
+                        ],
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                // ignore publish errors
+            }
+        }
 
         return response()->json(['id' => $inquiry->id], 201);
     }

@@ -20,7 +20,9 @@ describe('ConfirmDialog', () => {
         );
 
         expect(screen.getByText('Delete destination?')).toBeInTheDocument();
-        expect(screen.getByText('This action cannot be undone.')).toBeInTheDocument();
+        expect(
+            screen.getByText('This action cannot be undone.'),
+        ).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 

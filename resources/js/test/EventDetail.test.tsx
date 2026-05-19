@@ -14,7 +14,10 @@ function renderEventDetail(path = '/events/cherry-blossom-festival') {
                 <FavoritesProvider>
                     <MemoryRouter initialEntries={[path]}>
                         <Routes>
-                            <Route path="/events/:slug" element={<EventDetail />} />
+                            <Route
+                                path="/events/:slug"
+                                element={<EventDetail />}
+                            />
                         </Routes>
                     </MemoryRouter>
                 </FavoritesProvider>
@@ -37,9 +40,13 @@ describe('EventDetail page', () => {
 
         // Wrap in QueryClientProvider in callers where needed; here use findBy* to wait for async data
         expect(
-            await screen.findByRole('heading', { name: /Cherry Blossom Festival/i }),
+            await screen.findByRole('heading', {
+                name: /Cherry Blossom Festival/i,
+            }),
         ).toBeInTheDocument();
-        expect(await screen.findByText(/About this event/i)).toBeInTheDocument();
+        expect(
+            await screen.findByText(/About this event/i),
+        ).toBeInTheDocument();
         expect(await screen.findByText(/Schedule/i)).toBeInTheDocument();
         expect(await screen.findByText(/Package from/i)).toBeInTheDocument();
         expect(
@@ -51,6 +58,8 @@ describe('EventDetail page', () => {
         renderEventDetail('/events/unknown-event');
 
         expect(await screen.findByText(/Event not found/i)).toBeInTheDocument();
-        expect(await screen.findByRole('link', { name: /All events/i })).toBeInTheDocument();
+        expect(
+            await screen.findByRole('link', { name: /All events/i }),
+        ).toBeInTheDocument();
     });
 });

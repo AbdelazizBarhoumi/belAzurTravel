@@ -2,16 +2,29 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { deleteAdminEntity, listAdminEntities, saveAdminEntity, type AdminRow } from '@/api/admin.api';
+import {
+    deleteAdminEntity,
+    listAdminEntities,
+    saveAdminEntity,
+    type AdminRow,
+} from '@/api/admin.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { EntityFormDialog, type SectionDef } from '@/components/forms/EntityFormDialog';
+import {
+    EntityFormDialog,
+    type SectionDef,
+} from '@/components/forms/EntityFormDialog';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
-import { categoryLabels, countryLabels, hotelLabels, localizeKnown } from '@/lib/adminI18n';
+import {
+    categoryLabels,
+    countryLabels,
+    hotelLabels,
+    localizeKnown,
+} from '@/lib/adminI18n';
 
 const copy = (en: string, fr: string, ar: string) => ({ en, fr, ar });
 
@@ -29,7 +42,11 @@ function asText(value: unknown): string {
     return typeof value === 'string' ? value : '';
 }
 
-function localizedFields(base: string, label: ReturnType<typeof copy>, type?: 'text' | 'number' | 'textarea') {
+function localizedFields(
+    base: string,
+    label: ReturnType<typeof copy>,
+    type?: 'text' | 'number' | 'textarea',
+) {
     return [
         { key: `${base}_en`, label: `${label.en} (EN)`, type, required: true },
         { key: `${base}_fr`, label: `${label.fr} (FR)`, type, required: true },
@@ -104,7 +121,8 @@ const AdminHotels = () => {
     });
 
     const saveMutation = useMutation({
-        mutationFn: (item: HotelFormValues) => saveAdminEntity('hotels', item as unknown as AdminRow),
+        mutationFn: (item: HotelFormValues) =>
+            saveAdminEntity('hotels', item as unknown as AdminRow),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin'] }),
     });
 
@@ -119,7 +137,6 @@ const AdminHotels = () => {
     const { lang, t } = useLanguage();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
-    const [activeLang, setActiveLang] = useState<Lang>('en');
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
     const dialogInitial: HotelFormValues | null = editing
@@ -131,7 +148,7 @@ const AdminHotels = () => {
               galleryFiles: [] as File[],
               galleryPaths: [] as string[],
               amenities: serializeAmenities(editing.amenities),
-                            rooms: serializeRooms(editing.rooms),
+              rooms: serializeRooms(editing.rooms),
           } as HotelFormValues)
         : null;
 
@@ -139,22 +156,8 @@ const AdminHotels = () => {
         {
             title: 'Core hotel details',
             description: 'Edit the translated core fields for the hotel.',
-            render: ({ values, setField }) => (
+            render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                        {(['en', 'fr', 'ar'] as Lang[]).map((code) => (
-                            <Button
-                                key={code}
-                                type="button"
-                                variant={activeLang === code ? 'default' : 'outline'}
-                                className="min-w-14"
-                                onClick={() => setActiveLang(code)}
-                            >
-                                {code.toUpperCase()}
-                            </Button>
-                        ))}
-                    </div>
-
                     <div className="grid gap-4 md:grid-cols-2">
                         {[
                             { key: 'name', label: 'Name' },
@@ -168,28 +171,50 @@ const AdminHotels = () => {
 
                             return (
                                 <div key={localizedKey} className="space-y-2">
-                                    <label htmlFor={localizedKey} className="text-xs font-semibold text-muted-foreground">
-                                        {field.label} ({activeLang.toUpperCase()})
+                                    <label
+                                        htmlFor={localizedKey}
+                                        className="text-xs font-semibold text-muted-foreground"
+                                    >
+                                        {field.label} (
+                                        {activeLang.toUpperCase()})
                                     </label>
                                     <input
                                         id={localizedKey}
                                         value={value}
-                                        onChange={(event) => setField(localizedKey, event.target.value)}
+                                        onChange={(event) =>
+                                            setField(
+                                                localizedKey,
+                                                event.target.value,
+                                            )
+                                        }
                                         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                                        required={field.key !== 'city' && field.key !== 'country'}
+                                        required={
+                                            field.key !== 'city' &&
+                                            field.key !== 'country'
+                                        }
                                     />
                                 </div>
                             );
                         })}
 
                         <div className="space-y-2 md:col-span-2">
-                            <label htmlFor={`description_${activeLang}`} className="text-xs font-semibold text-muted-foreground">
+                            <label
+                                htmlFor={`description_${activeLang}`}
+                                className="text-xs font-semibold text-muted-foreground"
+                            >
                                 Description ({activeLang.toUpperCase()})
                             </label>
                             <textarea
                                 id={`description_${activeLang}`}
-                                value={asText(values[`description_${activeLang}`])}
-                                onChange={(event) => setField(`description_${activeLang}`, event.target.value)}
+                                value={asText(
+                                    values[`description_${activeLang}`],
+                                )}
+                                onChange={(event) =>
+                                    setField(
+                                        `description_${activeLang}`,
+                                        event.target.value,
+                                    )
+                                }
                                 rows={5}
                                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                             />
@@ -211,7 +236,8 @@ const AdminHotels = () => {
         },
         {
             title: 'Contact and profile',
-            description: 'Location-specific profile data stored in the hotel details JSON.',
+            description:
+                'Location-specific profile data stored in the hotel details JSON.',
             columns: 2,
             fields: [
                 ...localizedFields('city', copy('City', 'Ville', 'المدينة')),
@@ -236,13 +262,18 @@ const AdminHotels = () => {
                     />
 
                     <div className="space-y-2">
-                        <label htmlFor="hotel-gallery-text" className="text-xs font-semibold text-muted-foreground">
+                        <label
+                            htmlFor="hotel-gallery-text"
+                            className="text-xs font-semibold text-muted-foreground"
+                        >
                             Gallery URLs (one per line)
                         </label>
                         <textarea
                             id="hotel-gallery-text"
                             value={asText(values.gallery)}
-                            onChange={(event) => setField('gallery', event.target.value)}
+                            onChange={(event) =>
+                                setField('gallery', event.target.value)
+                            }
                             rows={4}
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                             placeholder="/storage/uploads/hotel-1.jpg\n/storage/uploads/hotel-2.jpg"
@@ -250,36 +281,48 @@ const AdminHotels = () => {
                     </div>
 
                     <div className="space-y-2">
-                        <label htmlFor="hotel-amenities" className="text-xs font-semibold text-muted-foreground">
+                        <label
+                            htmlFor="hotel-amenities"
+                            className="text-xs font-semibold text-muted-foreground"
+                        >
                             Amenities (one per line)
                         </label>
                         <textarea
                             id="hotel-amenities"
                             value={asText(values.amenities)}
-                            onChange={(event) => setField('amenities', event.target.value)}
+                            onChange={(event) =>
+                                setField('amenities', event.target.value)
+                            }
                             rows={5}
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                             placeholder="Free Wi-Fi\nSpa access\nOcean view"
                         />
                         <p className="text-xs text-muted-foreground">
-                            Each line becomes an amenity and is mirrored across all languages for now.
+                            Each line becomes an amenity and is mirrored across
+                            all languages for now.
                         </p>
                     </div>
 
                     <div className="space-y-2">
-                        <label htmlFor="hotel-rooms" className="text-xs font-semibold text-muted-foreground">
+                        <label
+                            htmlFor="hotel-rooms"
+                            className="text-xs font-semibold text-muted-foreground"
+                        >
                             Rooms (JSON)
                         </label>
                         <textarea
                             id="hotel-rooms"
                             value={asText(values.rooms)}
-                            onChange={(event) => setField('rooms', event.target.value)}
+                            onChange={(event) =>
+                                setField('rooms', event.target.value)
+                            }
                             rows={12}
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                             placeholder='[{"id":"deluxe-1","name":{"en":"Deluxe Ocean View","fr":"...","ar":"..."},"description":{"en":"...","fr":"...","ar":"..."},"pricePerNight":320,"capacity":2,"size":45,"features":[{"en":"Wi-Fi","fr":"Wi-Fi","ar":"واي فاي"}],"images":["/storage/..."]}]'
                         />
                         <p className="text-xs text-muted-foreground">
-                            Paste a JSON array of room objects so admins can manage the room list from the dashboard.
+                            Paste a JSON array of room objects so admins can
+                            manage the room list from the dashboard.
                         </p>
                     </div>
                 </div>
@@ -288,7 +331,15 @@ const AdminHotels = () => {
     ];
 
     const handleSave = (values: HotelFormValues) => {
-        const { imageFile, imagePath, galleryFiles, gallery, amenities, rooms, ...rest } = values;
+        const {
+            imageFile,
+            imagePath,
+            galleryFiles,
+            gallery,
+            amenities,
+            rooms,
+            ...rest
+        } = values;
 
         const payload = {
             ...rest,
@@ -297,11 +348,15 @@ const AdminHotels = () => {
             amenities: parseAmenities(amenities),
             rooms: parseRooms(rooms),
             gallery: asText(gallery),
-            ...(galleryFiles && galleryFiles.length > 0 ? { gallery_files: galleryFiles } : {}),
+            ...(galleryFiles && galleryFiles.length > 0
+                ? { gallery_files: galleryFiles }
+                : {}),
         } as unknown as HotelFormValues;
 
         saveMutation.mutate(payload);
-        toast.success(editing ? t('admin.hotelUpdated') : t('admin.hotelAdded'));
+        toast.success(
+            editing ? t('admin.hotelUpdated') : t('admin.hotelAdded'),
+        );
         setEditing(null);
         setOpen(false);
     };
@@ -327,8 +382,19 @@ const AdminHotels = () => {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
-                                {['Image', 'Name', 'Location', 'Category', 'Price/night', 'Rating', 'Actions'].map((h) => (
-                                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
+                                {[
+                                    'Image',
+                                    'Name',
+                                    'Location',
+                                    'Category',
+                                    'Price/night',
+                                    'Rating',
+                                    'Actions',
+                                ].map((h) => (
+                                    <th
+                                        key={h}
+                                        className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground"
+                                    >
                                         {h}
                                     </th>
                                 ))}
@@ -336,27 +402,53 @@ const AdminHotels = () => {
                         </thead>
                         <tbody>
                             {hotels.map((d) => (
-                                <tr key={String(d.id ?? '')} className="border-b border-border last:border-0 hover:bg-muted/20">
+                                <tr
+                                    key={String(d.id ?? '')}
+                                    className="border-b border-border last:border-0 hover:bg-muted/20"
+                                >
                                     <td className="px-4 py-3">
                                         <img
-                                            src={asText(d.image) || '/images/hero-travel.jpg'}
-                                            alt={localizeKnown(asText(d.name), hotelLabels, lang)}
+                                            src={
+                                                asText(d.image) ||
+                                                '/images/hero-travel.jpg'
+                                            }
+                                            alt={localizeKnown(
+                                                asText(d.name),
+                                                hotelLabels,
+                                                lang,
+                                            )}
                                             className="h-12 w-12 rounded-lg object-cover"
                                         />
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
-                                        {localizeKnown(asText(d.name), hotelLabels, lang)}
+                                        {localizeKnown(
+                                            asText(d.name),
+                                            hotelLabels,
+                                            lang,
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                                        {localizeKnown(asText(d.location), countryLabels, lang)}
+                                        {localizeKnown(
+                                            asText(d.location),
+                                            countryLabels,
+                                            lang,
+                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className="rounded-full bg-muted px-2 py-1 text-xs">
-                                            {localizeKnown(asText(d.category), categoryLabels, lang)}
+                                            {localizeKnown(
+                                                asText(d.category),
+                                                categoryLabels,
+                                                lang,
+                                            )}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold">${String(d.price ?? 0)}</td>
-                                    <td className="px-4 py-3 text-sm">{String(d.rating ?? '')}</td>
+                                    <td className="px-4 py-3 text-sm font-semibold">
+                                        ${String(d.price ?? 0)}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                        {String(d.rating ?? '')}
+                                    </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
                                             <button
@@ -369,7 +461,9 @@ const AdminHotels = () => {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(d)}
+                                                onClick={() =>
+                                                    setPendingDelete(d)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />

@@ -101,9 +101,7 @@ export function findDestinationBySlug(
     slug?: string | null,
 ): Promise<DestinationItem | null> {
     if (!slug) return Promise.resolve(null);
-    return apiFetch<DestinationItem | null>(
-        `/api/destinations/${slug}`,
-    );
+    return apiFetch<DestinationItem | null>(`/api/destinations/${slug}`);
 }
 
 export function getHotels(): Promise<HotelItem[]> {
@@ -205,4 +203,3 @@ export function findHotelById(
     return apiFetch<HotelProfileData | null>(`/api/hotels/${id}`);
 }
 // End of API-backed helpers.
-

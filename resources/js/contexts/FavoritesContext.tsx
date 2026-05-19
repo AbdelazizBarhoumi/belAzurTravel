@@ -122,4 +122,3 @@ export function useFavorites() {
         throw new Error('useFavorites must be used within FavoritesProvider');
     return ctx;
 }
-

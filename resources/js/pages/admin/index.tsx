@@ -28,18 +28,75 @@ const AdminDashboard = () => {
     useAdminGuard();
 
     const { t, lang } = useLanguage();
-    const { data: bookings = [] } = useQuery<AdminBookingRow[]>({
+    const {
+        data: bookings = [],
+        isLoading: bookingsLoading,
+        isError: bookingsError,
+    } = useQuery<AdminBookingRow[]>({
         queryKey: ['admin-bookings'],
         queryFn: getAdminBookings,
+        staleTime: 60_000,
+        refetchOnMount: false,
     });
-    const { data: destinations = [] } = useQuery({
+    const {
+        data: destinations = [],
+        isLoading: destinationsLoading,
+        isError: destinationsError,
+    } = useQuery({
         queryKey: ['admin', 'destinations'],
         queryFn: () => listAdminEntities('destinations'),
+        staleTime: 60_000,
+        refetchOnMount: false,
     });
-    const { data: users = [] } = useQuery({
+    const {
+        data: users = [],
+        isLoading: usersLoading,
+        isError: usersError,
+    } = useQuery({
         queryKey: ['admin', 'users'],
         queryFn: listAdminUsers,
+        staleTime: 60_000,
+        refetchOnMount: false,
     });
+
+    if (bookingsLoading || destinationsLoading || usersLoading) {
+        return (
+            <AdminLayout
+                title={t('admin.dashboard')}
+                subtitle={t('admin.manage')}
+            >
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {Array.from({ length: 4 }).map((_, index) => (
+                            <div
+                                key={index}
+                                className="h-28 animate-pulse rounded-2xl border border-border bg-card"
+                            />
+                        ))}
+                    </div>
+                    <div className="h-72 animate-pulse rounded-2xl border border-border bg-card" />
+                    <div className="h-96 animate-pulse rounded-2xl border border-border bg-card" />
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (bookingsError || destinationsError || usersError) {
+        return (
+            <AdminLayout
+                title={t('admin.dashboard')}
+                subtitle={t('admin.manage')}
+            >
+                <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-destructive">
+                    <h2 className="font-semibold">Failed to load dashboard</h2>
+                    <p className="mt-2 text-sm">
+                        One or more admin data requests failed. Refresh the page
+                        or check the API logs.
+                    </p>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     const totalRevenue = bookings
         .filter((b) => b.status !== 'Cancelled')
@@ -212,11 +269,9 @@ const AdminDashboard = () => {
                                                           : 'bg-destructive/10 text-destructive'
                                                 }`}
                                             >
-                                                {
-                                                    bookingStatusLabels[
-                                                        b.status
-                                                    ][lang]
-                                                }
+                                                {bookingStatusLabels[b.status]?.[
+                                                    lang
+                                                ] ?? b.status}
                                             </span>
                                         </td>
                                     </tr>

@@ -42,7 +42,11 @@ import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavSettings } from '@/hooks/useNavSettings';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { AVAILABLE_PAGES, getPage, DEFAULT_NAV_SETTINGS } from '@/lib/nav-config';
+import {
+    AVAILABLE_PAGES,
+    getPage,
+    DEFAULT_NAV_SETTINGS,
+} from '@/lib/nav-config';
 import type {
     NavSettings,
     DropdownItemConfig,
@@ -1187,4 +1191,3 @@ export default function AdminSiteSettings() {
         </AdminLayout>
     );
 }
-

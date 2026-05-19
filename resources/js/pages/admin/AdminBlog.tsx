@@ -9,6 +9,7 @@ import {
     type AdminRow,
 } from '@/api/admin.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -33,6 +34,15 @@ const columns: Array<{ key: string; label: Copy }> = [
     { key: 'category_en', label: copy('Category', 'Catégorie', 'الفئة') },
 ];
 
+type BlogFormValues = Record<string, unknown> & {
+    imagePath?: string;
+    imageFile?: File | null;
+};
+
+function asText(value: unknown): string {
+    return typeof value === 'string' ? value : '';
+}
+
 export default function AdminBlog() {
     useAdminGuard();
     const { t, lang } = useLanguage();
@@ -40,6 +50,13 @@ export default function AdminBlog() {
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
+    const dialogInitial: BlogFormValues | null = editing
+        ? ({
+              ...editing,
+              imagePath: asText(editing.image ?? editing.imagePath),
+              imageFile: null,
+          } as BlogFormValues)
+        : null;
 
     const queryKey = useMemo(() => ['admin', 'blog-posts'], []);
     const { data: rows = [] } = useQuery<AdminRow[]>({
@@ -49,7 +66,10 @@ export default function AdminBlog() {
 
     const saveMutation = useMutation({
         mutationFn: (row: Record<string, unknown>) =>
-            saveAdminEntity('blog-posts', row as { id?: string | number | null }),
+            saveAdminEntity(
+                'blog-posts',
+                row as { id?: string | number | null },
+            ),
         onSuccess: () => queryClient.invalidateQueries({ queryKey }),
     });
 
@@ -61,8 +81,17 @@ export default function AdminBlog() {
         },
     });
 
-    function handleSave(values: Record<string, unknown>) {
-        saveMutation.mutate({ ...values, id: editing?.id ?? '' });
+    function handleSave(values: BlogFormValues) {
+        const payload: Record<string, unknown> = {
+            ...values,
+            id: editing?.id ?? '',
+            image:
+                values.imageFile instanceof File
+                    ? values.imageFile
+                    : (values.imagePath ?? values.image ?? ''),
+        };
+
+        saveMutation.mutate(payload);
         toast.success(editing ? t('actions.saved') : t('actions.added'));
         setEditing(null);
     }
@@ -128,7 +157,9 @@ export default function AdminBlog() {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(row)}
+                                                onClick={() =>
+                                                    setPendingDelete(row)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                                 aria-label={t('actions.delete')}
                                             >
@@ -174,56 +205,146 @@ export default function AdminBlog() {
                         : `${t('actions.add')} ${title[lang]}`
                 }
                 layout="grid-2"
-                initial={editing ?? undefined}
+                initial={dialogInitial ?? undefined}
                 sections={[
                     {
                         title: 'Core information',
                         columns: 2,
                         fields: [
-                            { key: 'title_en', label: 'Title (EN)', type: 'text', required: true },
-                            { key: 'title_fr', label: 'Title (FR)', type: 'text', required: true },
-                            { key: 'title_ar', label: 'Title (AR)', type: 'text', required: true },
+                            {
+                                key: 'title_en',
+                                label: 'Title (EN)',
+                                type: 'text',
+                                required: true,
+                            },
+                            {
+                                key: 'title_fr',
+                                label: 'Title (FR)',
+                                type: 'text',
+                                required: true,
+                            },
+                            {
+                                key: 'title_ar',
+                                label: 'Title (AR)',
+                                type: 'text',
+                                required: true,
+                            },
                             { key: 'date', label: 'Date', type: 'text' },
-                            { key: 'category_en', label: 'Category (EN)', type: 'text' },
-                            { key: 'category_fr', label: 'Category (FR)', type: 'text' },
-                            { key: 'category_ar', label: 'Category (AR)', type: 'text' },
+                            {
+                                key: 'category_en',
+                                label: 'Category (EN)',
+                                type: 'text',
+                            },
+                            {
+                                key: 'category_fr',
+                                label: 'Category (FR)',
+                                type: 'text',
+                            },
+                            {
+                                key: 'category_ar',
+                                label: 'Category (AR)',
+                                type: 'text',
+                            },
                         ],
-                        render: ({ values, setField }) => {
-                            const imageValue = values.image as string | File | undefined;
-                            const imagePreview = imageValue instanceof File ? URL.createObjectURL(imageValue) : (typeof imageValue === 'string' ? imageValue : values.imagePath as string | undefined);
-
-                            return (
-                                <div className="md:col-span-2 space-y-3">
-                                    <div className="overflow-hidden rounded-2xl border border-border bg-muted/30">
-                                        <img src={imagePreview} alt={String(values.title_en ?? '')} className="w-full h-auto object-cover" />
-                                    </div>
-                                    <input type="file" accept="image/*" onChange={(e) => setField('image', e.target.files?.[0] ?? null)} />
-                                </div>
-                            );
-                        },
+                        render: ({ values, setField }) => (
+                            <div className="md:col-span-2">
+                                <EntityMediaInputs
+                                    values={values}
+                                    setField={setField}
+                                    imageLabel="Main image"
+                                    showGallery={false}
+                                />
+                            </div>
+                        ),
                     },
                     {
                         title: 'Summary and body',
                         columns: 3,
                         render: ({ values, setField }) => {
-                            const content = (values.content as any) || { body: { en: '', fr: '', ar: '' }, sections: [] };
+                            const content = (values.content as any) || {
+                                body: { en: '', fr: '', ar: '' },
+                                sections: [],
+                            };
 
                             const updateBody = (lang: string, next: string) => {
-                                setField('content', { ...content, body: { ...content.body, [lang]: next } });
+                                setField('content', {
+                                    ...content,
+                                    body: { ...content.body, [lang]: next },
+                                });
                             };
 
                             return (
-                                <div className="md:col-span-2 space-y-4">
+                                <div className="space-y-4 md:col-span-2">
                                     <div className="grid gap-4 md:grid-cols-3">
-                                        <textarea value={String(values.excerpt_en ?? '')} onChange={(e) => setField('excerpt_en', e.target.value)} className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-                                        <textarea value={String(values.excerpt_fr ?? '')} onChange={(e) => setField('excerpt_fr', e.target.value)} className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-                                        <textarea value={String(values.excerpt_ar ?? '')} onChange={(e) => setField('excerpt_ar', e.target.value)} className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                                        <textarea
+                                            value={String(
+                                                values.excerpt_en ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                setField(
+                                                    'excerpt_en',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                        />
+                                        <textarea
+                                            value={String(
+                                                values.excerpt_fr ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                setField(
+                                                    'excerpt_fr',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                        />
+                                        <textarea
+                                            value={String(
+                                                values.excerpt_ar ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                setField(
+                                                    'excerpt_ar',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                        />
                                     </div>
 
                                     <div className="grid gap-4 md:grid-cols-3">
-                                        <textarea value={String(content.body.en ?? '')} onChange={(e) => updateBody('en', e.target.value)} className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Write the full article body in English..." />
-                                        <textarea value={String(content.body.fr ?? '')} onChange={(e) => updateBody('fr', e.target.value)} className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Rédigez le corps complet de l'article en français..." />
-                                        <textarea value={String(content.body.ar ?? '')} onChange={(e) => updateBody('ar', e.target.value)} className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="اكتب نص المقال الكامل بالعربية..." />
+                                        <textarea
+                                            value={String(
+                                                content.body.en ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                updateBody('en', e.target.value)
+                                            }
+                                            className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            placeholder="Write the full article body in English..."
+                                        />
+                                        <textarea
+                                            value={String(
+                                                content.body.fr ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                updateBody('fr', e.target.value)
+                                            }
+                                            className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            placeholder="Rédigez le corps complet de l'article en français..."
+                                        />
+                                        <textarea
+                                            value={String(
+                                                content.body.ar ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                updateBody('ar', e.target.value)
+                                            }
+                                            className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            placeholder="اكتب نص المقال الكامل بالعربية..."
+                                        />
                                     </div>
                                 </div>
                             );
@@ -232,10 +353,30 @@ export default function AdminBlog() {
                     {
                         title: 'Content sections',
                         render: ({ values, setField }) => {
-                            const content = (values.content as any) || { body: { en: '', fr: '', ar: '' }, sections: [] };
+                            const content = (values.content as any) || {
+                                body: { en: '', fr: '', ar: '' },
+                                sections: [],
+                            };
 
-                            const addSection = () => setField('content', { ...content, sections: [...(content.sections || []), { id: `section-${Math.random().toString(36).slice(2,9)}`, heading: { en: '', fr: '', ar: '' }, body: { en: '', fr: '', ar: '' } }] });
-                            const removeSection = (index: number) => setField('content', { ...content, sections: (content.sections || []).filter((_: any, i: number) => i !== index) });
+                            const addSection = () =>
+                                setField('content', {
+                                    ...content,
+                                    sections: [
+                                        ...(content.sections || []),
+                                        {
+                                            id: `section-${Math.random().toString(36).slice(2, 9)}`,
+                                            heading: { en: '', fr: '', ar: '' },
+                                            body: { en: '', fr: '', ar: '' },
+                                        },
+                                    ],
+                                });
+                            const removeSection = (index: number) =>
+                                setField('content', {
+                                    ...content,
+                                    sections: (content.sections || []).filter(
+                                        (_: any, i: number) => i !== index,
+                                    ),
+                                });
                             const moveSection = (from: number, to: number) => {
                                 const sections = [...(content.sections || [])];
                                 if (to < 0 || to >= sections.length) return;
@@ -243,46 +384,225 @@ export default function AdminBlog() {
                                 sections.splice(to, 0, moved);
                                 setField('content', { ...content, sections });
                             };
-                            const updateSection = (index: number, part: 'heading'|'body', lang: string, next: string) => {
-                                const sections = (content.sections || []).map((s: any, i: number) => i === index ? { ...s, [part]: { ...(s[part]||{}), [lang]: next } } : s);
+                            const updateSection = (
+                                index: number,
+                                part: 'heading' | 'body',
+                                lang: string,
+                                next: string,
+                            ) => {
+                                const sections = (content.sections || []).map(
+                                    (s: any, i: number) =>
+                                        i === index
+                                            ? {
+                                                  ...s,
+                                                  [part]: {
+                                                      ...(s[part] || {}),
+                                                      [lang]: next,
+                                                  },
+                                              }
+                                            : s,
+                                );
                                 setField('content', { ...content, sections });
                             };
 
                             return (
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-semibold text-foreground">Content sections</h3>
-                                        <button type="button" onClick={addSection} className="text-sm">Add section</button>
+                                        <h3 className="text-sm font-semibold text-foreground">
+                                            Content sections
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={addSection}
+                                            className="text-sm"
+                                        >
+                                            Add section
+                                        </button>
                                     </div>
 
-                                    {(!content.sections || content.sections.length === 0) ? (
-                                        <p className="text-sm text-muted-foreground">No extra sections yet. Add one if this article needs more detail.</p>
+                                    {!content.sections ||
+                                    content.sections.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">
+                                            No extra sections yet. Add one if
+                                            this article needs more detail.
+                                        </p>
                                     ) : (
                                         <div className="space-y-4">
-                                            {(content.sections || []).map((section: any, index: number) => (
-                                                <div key={section.id ?? index} className="space-y-4 rounded-xl border border-border bg-background p-4">
-                                                    <div className="flex items-center justify-between">
-                                                        <h4 className="text-sm font-semibold text-foreground">Section {index + 1}</h4>
-                                                        <div className="flex items-center gap-1">
-                                                            <button type="button" onClick={() => moveSection(index, index - 1)} disabled={index === 0}>↑</button>
-                                                            <button type="button" onClick={() => moveSection(index, index + 1)} disabled={index === (content.sections || []).length - 1}>↓</button>
-                                                            <button type="button" onClick={() => removeSection(index)} className="text-destructive">Remove</button>
+                                            {(content.sections || []).map(
+                                                (
+                                                    section: any,
+                                                    index: number,
+                                                ) => (
+                                                    <div
+                                                        key={
+                                                            section.id ?? index
+                                                        }
+                                                        className="space-y-4 rounded-xl border border-border bg-background p-4"
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <h4 className="text-sm font-semibold text-foreground">
+                                                                Section{' '}
+                                                                {index + 1}
+                                                            </h4>
+                                                            <div className="flex items-center gap-1">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        moveSection(
+                                                                            index,
+                                                                            index -
+                                                                                1,
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        index ===
+                                                                        0
+                                                                    }
+                                                                >
+                                                                    ↑
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        moveSection(
+                                                                            index,
+                                                                            index +
+                                                                                1,
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        index ===
+                                                                        (
+                                                                            content.sections ||
+                                                                            []
+                                                                        )
+                                                                            .length -
+                                                                            1
+                                                                    }
+                                                                >
+                                                                    ↓
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        removeSection(
+                                                                            index,
+                                                                        )
+                                                                    }
+                                                                    className="text-destructive"
+                                                                >
+                                                                    Remove
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid gap-4 md:grid-cols-3">
+                                                            <input
+                                                                value={
+                                                                    section
+                                                                        .heading
+                                                                        .en
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateSection(
+                                                                        index,
+                                                                        'heading',
+                                                                        'en',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                            />
+                                                            <input
+                                                                value={
+                                                                    section
+                                                                        .heading
+                                                                        .fr
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateSection(
+                                                                        index,
+                                                                        'heading',
+                                                                        'fr',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                            />
+                                                            <input
+                                                                value={
+                                                                    section
+                                                                        .heading
+                                                                        .ar
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateSection(
+                                                                        index,
+                                                                        'heading',
+                                                                        'ar',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                            />
+                                                        </div>
+
+                                                        <div className="grid gap-4 md:grid-cols-3">
+                                                            <textarea
+                                                                value={
+                                                                    section.body
+                                                                        .en
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateSection(
+                                                                        index,
+                                                                        'body',
+                                                                        'en',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                            />
+                                                            <textarea
+                                                                value={
+                                                                    section.body
+                                                                        .fr
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateSection(
+                                                                        index,
+                                                                        'body',
+                                                                        'fr',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                            />
+                                                            <textarea
+                                                                value={
+                                                                    section.body
+                                                                        .ar
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateSection(
+                                                                        index,
+                                                                        'body',
+                                                                        'ar',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                            />
                                                         </div>
                                                     </div>
-
-                                                    <div className="grid gap-4 md:grid-cols-3">
-                                                        <input value={section.heading.en} onChange={(e) => updateSection(index, 'heading', 'en', e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-                                                        <input value={section.heading.fr} onChange={(e) => updateSection(index, 'heading', 'fr', e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-                                                        <input value={section.heading.ar} onChange={(e) => updateSection(index, 'heading', 'ar', e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-                                                    </div>
-
-                                                    <div className="grid gap-4 md:grid-cols-3">
-                                                        <textarea value={section.body.en} onChange={(e) => updateSection(index, 'body', 'en', e.target.value)} className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-                                                        <textarea value={section.body.fr} onChange={(e) => updateSection(index, 'body', 'fr', e.target.value)} className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-                                                        <textarea value={section.body.ar} onChange={(e) => updateSection(index, 'body', 'ar', e.target.value)} className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                ),
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -292,21 +612,25 @@ export default function AdminBlog() {
                 ]}
                 onSubmit={(values) => {
                     // normalize payload similar to BlogAdminForm.handleSubmit
-                    const content = values.content ?? { body: { en: '', fr: '', ar: '' }, sections: [] };
+                    const content = values.content ?? {
+                        body: { en: '', fr: '', ar: '' },
+                        sections: [],
+                    };
                     const imageValue = values.image as unknown;
                     const payload: Record<string, unknown> = {
                         ...values,
                         image:
-                            typeof imageValue === 'object' && imageValue instanceof File
+                            typeof imageValue === 'object' &&
+                            imageValue instanceof File
                                 ? imageValue
-                                : values.imagePath ?? values.image ?? '',
+                                : (values.imagePath ?? values.image ?? ''),
                         content,
                     };
 
                     handleSave(payload);
                 }}
+                languages={['en', 'fr', 'ar']}
             />
         </AdminLayout>
     );
 }
-

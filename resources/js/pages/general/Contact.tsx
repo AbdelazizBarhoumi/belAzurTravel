@@ -68,13 +68,15 @@ export default function Contact() {
             href: settings.phone
                 ? `tel:${settings.phone.replace(/\D/g, '')}`
                 : '#',
-            icon: contactMethodDefs.find((m) => m.labelKey === 'contact.calls')?.icon,
+            icon: contactMethodDefs.find((m) => m.labelKey === 'contact.calls')
+                ?.icon,
         },
         {
             labelKey: 'contact.email',
             value: settings.email || '',
             href: settings.email ? `mailto:${settings.email}` : '#',
-            icon: contactMethodDefs.find((m) => m.labelKey === 'contact.email')?.icon,
+            icon: contactMethodDefs.find((m) => m.labelKey === 'contact.email')
+                ?.icon,
         },
         {
             labelKey: 'contact.whatsapp',
@@ -83,7 +85,9 @@ export default function Contact() {
                 settings.whatsapp || settings.phone
                     ? `https://wa.me/${(settings.whatsapp || settings.phone).replace(/\D/g, '')}`
                     : '#',
-            icon: contactMethodDefs.find((m) => m.labelKey === 'contact.whatsapp')?.icon,
+            icon: contactMethodDefs.find(
+                (m) => m.labelKey === 'contact.whatsapp',
+            )?.icon,
         },
     ];
 
@@ -327,4 +331,3 @@ export default function Contact() {
         </div>
     );
 }
-

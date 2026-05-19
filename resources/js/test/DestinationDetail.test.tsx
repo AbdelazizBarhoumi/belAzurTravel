@@ -39,7 +39,9 @@ describe('DestinationDetail page', () => {
     it('renders destination details, highlights and related content', async () => {
         renderDestinationDetail();
 
-        const headings = await screen.findAllByRole('heading', { name: /Santorini/i });
+        const headings = await screen.findAllByRole('heading', {
+            name: /Santorini/i,
+        });
         expect(headings.length).toBeGreaterThan(0);
         expect(await screen.findByText(/Highlights/i)).toBeInTheDocument();
         expect(await screen.findByText(/Where to stay/i)).toBeInTheDocument();
@@ -49,7 +51,11 @@ describe('DestinationDetail page', () => {
     it('shows a fallback message for unknown destinations', async () => {
         renderDestinationDetail('/destinations/unknown');
 
-        expect(await screen.findByText(/Destination not found/i)).toBeInTheDocument();
-        expect(await screen.findByRole('link', { name: /Back to destinations/i })).toBeInTheDocument();
+        expect(
+            await screen.findByText(/Destination not found/i),
+        ).toBeInTheDocument();
+        expect(
+            await screen.findByRole('link', { name: /Back to destinations/i }),
+        ).toBeInTheDocument();
     });
 });

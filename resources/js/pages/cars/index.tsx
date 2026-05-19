@@ -290,15 +290,15 @@ const Cars = () => {
                                     </h3>
                                     <div className="mb-4 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                                         <div className="flex items-center gap-1">
-                                            <Users className="h-3 w-3" /> {' '}
+                                            <Users className="h-3 w-3" />{' '}
                                             {c.seats}
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <Fuel className="h-3 w-3" /> {' '}
+                                            <Fuel className="h-3 w-3" />{' '}
                                             {localizeText(c.fuel, lang)}
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <Settings2 className="h-3 w-3" /> {' '}
+                                            <Settings2 className="h-3 w-3" />{' '}
                                             {localizeText(c.transmission, lang)}
                                         </div>
                                     </div>

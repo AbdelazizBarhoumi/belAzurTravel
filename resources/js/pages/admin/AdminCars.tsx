@@ -10,7 +10,11 @@ import {
 } from '@/api/admin.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
-import { EntityFormDialog, type FieldDef, type SectionDef } from '@/components/forms/EntityFormDialog';
+import {
+    EntityFormDialog,
+    type FieldDef,
+    type SectionDef,
+} from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -33,7 +37,11 @@ const name = copy('Name', 'Nom', 'الاسم');
 const category = copy('Category', 'Catégorie', 'الفئة');
 const price = copy('Price', 'Prix', 'السعر');
 const description = copy('Description', 'Description', 'الوصف');
-const image = copy('Server image path', 'Chemin image serveur', 'مسار صورة الخادم');
+const image = copy(
+    'Server image path',
+    'Chemin image serveur',
+    'مسار صورة الخادم',
+);
 
 const title = copy('Cars', 'Voitures', 'السيارات');
 const subtitle = copy(
@@ -67,12 +75,14 @@ function parseGallery(value: unknown): string[] {
 const sections: SectionDef[] = [
     {
         title: 'Core details',
-        description: 'Edit the translated car fields using the same language switching pattern as the destination modal.',
+        description:
+            'Edit the translated car fields using the same language switching pattern as the destination modal.',
         render: () => null,
     },
     {
         title: 'Powertrain and trim',
-        description: 'Drivetrain details displayed in the admin edit form and future detail cards.',
+        description:
+            'Drivetrain details displayed in the admin edit form and future detail cards.',
         render: () => null,
     },
 ];
@@ -83,7 +93,6 @@ export default function AdminCars() {
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
-    const [activeLang, setActiveLang] = useState<Lang>('en');
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
     const queryKey = useMemo(() => ['admin', 'cars'], []);
@@ -123,13 +132,22 @@ export default function AdminCars() {
             image:
                 values.imageFile instanceof File
                     ? values.imageFile
-                    : (values.imagePath as string | undefined) ?? (values.image as string | undefined) ?? '',
+                    : ((values.imagePath as string | undefined) ??
+                      (values.image as string | undefined) ??
+                      ''),
             gallery: Array.isArray(values.galleryPaths)
-                ? values.galleryPaths.filter((item): item is string => typeof item === 'string').join('\n')
+                ? values.galleryPaths
+                      .filter(
+                          (item): item is string => typeof item === 'string',
+                      )
+                      .join('\n')
                 : '',
         };
 
-        if (Array.isArray(values.galleryFiles) && values.galleryFiles.length > 0) {
+        if (
+            Array.isArray(values.galleryFiles) &&
+            values.galleryFiles.length > 0
+        ) {
             payload.gallery_files = values.galleryFiles;
         }
 
@@ -140,41 +158,47 @@ export default function AdminCars() {
 
     const translatedCarFields: SectionDef = {
         title: 'Core details',
-        description: 'Switch language to edit the translated car copy one locale at a time.',
-        render: ({ values, setField }) => (
+        description:
+            'Switch language to edit the translated car copy one locale at a time.',
+        render: ({ values, setField, activeLang }) => (
             <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                    {(['en', 'fr', 'ar'] as Lang[]).map((code) => (
-                        <Button
-                            key={code}
-                            type="button"
-                            variant={activeLang === code ? 'default' : 'outline'}
-                            className="min-w-14"
-                            onClick={() => setActiveLang(code)}
-                        >
-                            {code.toUpperCase()}
-                        </Button>
-                    ))}
-                </div>
-
                 <div className="grid gap-4 md:grid-cols-2">
                     {[
                         { key: 'name', label: name },
                         { key: 'category', label: category },
-                        { key: 'fuel', label: copy('Fuel', 'Carburant', 'الوقود') },
-                        { key: 'transmission', label: copy('Transmission', 'Transmission', 'ناقل الحركة') },
+                        {
+                            key: 'fuel',
+                            label: copy('Fuel', 'Carburant', 'الوقود'),
+                        },
+                        {
+                            key: 'transmission',
+                            label: copy(
+                                'Transmission',
+                                'Transmission',
+                                'ناقل الحركة',
+                            ),
+                        },
                     ].map((field) => {
                         const localizedKey = `${field.key}_${activeLang}`;
 
                         return (
                             <div key={localizedKey} className="space-y-2">
-                                <label htmlFor={localizedKey} className="text-xs font-semibold text-muted-foreground">
-                                    {field.label[activeLang]} ({activeLang.toUpperCase()})
+                                <label
+                                    htmlFor={localizedKey}
+                                    className="text-xs font-semibold text-muted-foreground"
+                                >
+                                    {field.label[activeLang]} (
+                                    {activeLang.toUpperCase()})
                                 </label>
                                 <input
                                     id={localizedKey}
                                     value={String(values[localizedKey] ?? '')}
-                                    onChange={(event) => setField(localizedKey, event.target.value)}
+                                    onChange={(event) =>
+                                        setField(
+                                            localizedKey,
+                                            event.target.value,
+                                        )
+                                    }
                                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                                     required
                                 />
@@ -183,39 +207,60 @@ export default function AdminCars() {
                     })}
 
                     <div className="space-y-2">
-                        <label htmlFor="car-price" className="text-xs font-semibold text-muted-foreground">
+                        <label
+                            htmlFor="car-price"
+                            className="text-xs font-semibold text-muted-foreground"
+                        >
                             {price[lang]}
                         </label>
                         <input
                             id="car-price"
                             type="number"
                             value={String(values.price ?? '')}
-                            onChange={(event) => setField('price', event.target.value)}
+                            onChange={(event) =>
+                                setField('price', event.target.value)
+                            }
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label htmlFor="car-seats" className="text-xs font-semibold text-muted-foreground">
+                        <label
+                            htmlFor="car-seats"
+                            className="text-xs font-semibold text-muted-foreground"
+                        >
                             Seats
                         </label>
                         <input
                             id="car-seats"
                             type="number"
                             value={String(values.seats ?? '')}
-                            onChange={(event) => setField('seats', event.target.value)}
+                            onChange={(event) =>
+                                setField('seats', event.target.value)
+                            }
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                         />
                     </div>
 
                     <div className="space-y-2 md:col-span-2">
-                        <label htmlFor={`car-description-${activeLang}`} className="text-xs font-semibold text-muted-foreground">
-                            {description[activeLang]} ({activeLang.toUpperCase()})
+                        <label
+                            htmlFor={`car-description-${activeLang}`}
+                            className="text-xs font-semibold text-muted-foreground"
+                        >
+                            {description[activeLang]} (
+                            {activeLang.toUpperCase()})
                         </label>
                         <textarea
                             id={`car-description-${activeLang}`}
-                            value={String(values[`description_${activeLang}`] ?? '')}
-                            onChange={(event) => setField(`description_${activeLang}`, event.target.value)}
+                            value={String(
+                                values[`description_${activeLang}`] ?? '',
+                            )}
+                            onChange={(event) =>
+                                setField(
+                                    `description_${activeLang}`,
+                                    event.target.value,
+                                )
+                            }
                             rows={5}
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                         />
@@ -227,7 +272,8 @@ export default function AdminCars() {
 
     const mediaSection: SectionDef = {
         title: 'Media and notes',
-        description: 'Upload media files directly (destination-style) and keep text notes for features and policy.',
+        description:
+            'Upload media files directly (destination-style) and keep text notes for features and policy.',
         fields: [
             {
                 key: 'features',
@@ -241,7 +287,8 @@ export default function AdminCars() {
                 label: 'Rental Policy (one per line)',
                 type: 'textarea',
                 rows: 4,
-                placeholder: 'Driver age 25+\nFull tank required\nInsurance included',
+                placeholder:
+                    'Driver age 25+\nFull tank required\nInsurance included',
             },
         ],
         render: ({ values, setField }) => (
@@ -319,7 +366,9 @@ export default function AdminCars() {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(row)}
+                                                onClick={() =>
+                                                    setPendingDelete(row)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                                 aria-label={t('actions.delete')}
                                             >
@@ -367,9 +416,9 @@ export default function AdminCars() {
                 sections={carSections}
                 initial={dialogInitial}
                 onSubmit={handleSave}
+                languages={['en', 'fr', 'ar']}
                 layout="grid-2"
             />
         </AdminLayout>
     );
 }
-

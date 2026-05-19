@@ -11,6 +11,7 @@ use App\Notifications\BookingStatusNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis;
 
 class AssistantController extends Controller
 {
@@ -99,7 +100,26 @@ class AssistantController extends Controller
                 'reference' => 'PAY-'.$booking->id.'-'.now()->format('YmdHis'),
             ]
         );
-        User::query()->find($booking->user_id)?->notify(new BookingStatusNotification($booking->refresh()));
+        $user = User::query()->find($booking->user_id);
+        if ($user) {
+            $user->notify(new BookingStatusNotification($booking->refresh()));
+            try {
+                $notif = $user->notifications()->latest()->first();
+                if ($notif) {
+                    Redis::publish("notifications:user:{$user->id}", json_encode([
+                        'notification' => [
+                            'id' => $notif->id,
+                            'type' => $notif->data['type'] ?? class_basename($notif->type),
+                            'data' => $notif->data,
+                            'read_at' => $notif->read_at?->toJSON(),
+                            'created_at' => $notif->created_at?->toJSON(),
+                        ],
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
         Cache::forget('assistant.summary');
 
         return response()->json(['message' => 'confirmed']);
@@ -108,7 +128,26 @@ class AssistantController extends Controller
     public function cancelBooking(Booking $booking): JsonResponse
     {
         $booking->update(['status' => 'Cancelled', 'cancelled_at' => now()]);
-        User::query()->find($booking->user_id)?->notify(new BookingStatusNotification($booking->refresh()));
+        $user = User::query()->find($booking->user_id);
+        if ($user) {
+            $user->notify(new BookingStatusNotification($booking->refresh()));
+            try {
+                $notif = $user->notifications()->latest()->first();
+                if ($notif) {
+                    Redis::publish("notifications:user:{$user->id}", json_encode([
+                        'notification' => [
+                            'id' => $notif->id,
+                            'type' => $notif->data['type'] ?? class_basename($notif->type),
+                            'data' => $notif->data,
+                            'read_at' => $notif->read_at?->toJSON(),
+                            'created_at' => $notif->created_at?->toJSON(),
+                        ],
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
         Cache::forget('assistant.summary');
 
         return response()->json(['message' => 'cancelled']);

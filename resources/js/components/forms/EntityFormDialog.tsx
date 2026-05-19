@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,6 +49,8 @@ export interface SectionDef {
 export interface SectionRenderApi {
     values: Record<string, unknown>;
     setField: (key: string, value: unknown) => void;
+    activeLang: Lang;
+    languages: Lang[];
 }
 
 export interface EntityFormDialogProps<T extends object> {
@@ -76,8 +78,12 @@ function toRecord(value?: object | null): Record<string, unknown> {
     const rec = value as Record<string, unknown>;
     for (const [k, v] of Object.entries(rec)) {
         if (Array.isArray(v)) {
-            if (v.every((i) => typeof i === 'string' || typeof i === 'number')) {
-                out[k] = (v as Array<string | number>).map((i) => String(i)).join('\n');
+            if (
+                v.every((i) => typeof i === 'string' || typeof i === 'number')
+            ) {
+                out[k] = (v as Array<string | number>)
+                    .map((i) => String(i))
+                    .join('\n');
                 continue;
             }
         }
@@ -142,7 +148,10 @@ function FieldControl({
 
     return (
         <div className={`space-y-2 ${normalizeSpan(field.colSpan)}`}>
-            <Label htmlFor={field.key} className="text-xs font-semibold text-muted-foreground">
+            <Label
+                htmlFor={field.key}
+                className="text-xs font-semibold text-muted-foreground"
+            >
                 {field.label}
             </Label>
 
@@ -202,7 +211,9 @@ function FieldControl({
             )}
 
             {field.helpText ? (
-                <p className="text-xs text-muted-foreground">{field.helpText}</p>
+                <p className="text-xs text-muted-foreground">
+                    {field.helpText}
+                </p>
             ) : null}
         </div>
     );
@@ -212,10 +223,14 @@ function SectionCard({
     section,
     values,
     setField,
+    activeLang,
+    languages,
 }: {
     section: SectionDef;
     values: Record<string, unknown>;
     setField: (key: string, value: unknown) => void;
+    activeLang: Lang;
+    languages: Lang[];
 }) {
     const hasFields = (section.fields?.length ?? 0) > 0;
 
@@ -229,7 +244,9 @@ function SectionCard({
                         </h3>
                     ) : null}
                     {section.description ? (
-                        <p className="text-sm text-muted-foreground">{section.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {section.description}
+                        </p>
                     ) : null}
                 </div>
             ) : null}
@@ -247,7 +264,9 @@ function SectionCard({
                 </div>
             ) : null}
 
-            {section.render ? section.render({ values, setField }) : null}
+            {section.render
+                ? section.render({ values, setField, activeLang, languages })
+                : null}
         </section>
     );
 }
@@ -268,12 +287,26 @@ export function EntityFormDialog<T extends object>({
     onActiveLangChange,
 }: EntityFormDialogProps<T>) {
     const { t } = useLanguage();
-    const [values, setValues] = useState<Record<string, unknown>>(() => toRecord(initial));
+    const [values, setValues] = useState<Record<string, unknown>>(() =>
+        toRecord(initial),
+    );
     const [internalActiveLang, setInternalActiveLang] = useState<Lang>(
         languages && languages.length > 0 ? languages[0] : ('en' as Lang),
     );
     const activeLang = activeLangProp ?? internalActiveLang;
     const formKey = useMemo(() => JSON.stringify(initial ?? {}), [initial]);
+
+    useEffect(() => {
+        if (activeLangProp) return;
+
+        // Setting internal active language when dialog opens. React lint flags
+        // calling setState synchronously in effects; this reset is intentional
+        // and safe here, so silence the rule for this line.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setInternalActiveLang(
+            languages && languages.length > 0 ? languages[0] : ('en' as Lang),
+        );
+    }, [activeLangProp, languages, open]);
 
     const effectiveSections = useMemo<SectionDef[]>(() => {
         if (sections && sections.length > 0) {
@@ -303,19 +336,30 @@ export function EntityFormDialog<T extends object>({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
-                <form key={formKey} onSubmit={handleSubmit} className="flex max-h-[92vh] flex-col">
+                <form
+                    key={formKey}
+                    onSubmit={handleSubmit}
+                    className="flex max-h-[92vh] flex-col"
+                >
                     <DialogHeader className="border-b border-border px-6 py-5 text-left">
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="space-y-1">
-                                    <DialogTitle className="text-2xl">{title}</DialogTitle>
+                                    <DialogTitle className="text-2xl">
+                                        {title}
+                                    </DialogTitle>
                                     {subtitle ? (
-                                        <DialogDescription className="max-w-3xl">{subtitle}</DialogDescription>
+                                        <DialogDescription className="max-w-3xl">
+                                            {subtitle}
+                                        </DialogDescription>
                                     ) : null}
                                 </div>
 
                                 {languages ? (
-                                    <Badge variant="secondary" className="text-xs uppercase tracking-wide">
+                                    <Badge
+                                        variant="secondary"
+                                        className="text-xs uppercase tracking-wide"
+                                    >
                                         {activeLang.toUpperCase()}
                                     </Badge>
                                 ) : null}
@@ -327,7 +371,11 @@ export function EntityFormDialog<T extends object>({
                                         <Button
                                             key={code}
                                             type="button"
-                                            variant={activeLang === code ? 'default' : 'outline'}
+                                            variant={
+                                                activeLang === code
+                                                    ? 'default'
+                                                    : 'outline'
+                                            }
                                             className="min-w-14"
                                             onClick={() => {
                                                 setInternalActiveLang(code);
@@ -347,10 +395,23 @@ export function EntityFormDialog<T extends object>({
                             <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
                                 {effectiveSections.map((section, index) => (
                                     <div
-                                        key={section.id ?? `${section.title ?? 'section'}-${index}`}
-                                        className={section.gridSpan === 2 ? 'lg:col-span-2' : ''}
+                                        key={
+                                            section.id ??
+                                            `${section.title ?? 'section'}-${index}`
+                                        }
+                                        className={
+                                            section.gridSpan === 2
+                                                ? 'lg:col-span-2'
+                                                : ''
+                                        }
                                     >
-                                        <SectionCard section={section} values={values} setField={setField} />
+                                        <SectionCard
+                                            section={section}
+                                            values={values}
+                                            setField={setField}
+                                            activeLang={activeLang}
+                                            languages={languages ?? []}
+                                        />
                                     </div>
                                 ))}
                             </div>
@@ -358,10 +419,15 @@ export function EntityFormDialog<T extends object>({
                             <div className="space-y-6">
                                 {effectiveSections.map((section, index) => (
                                     <SectionCard
-                                        key={section.id ?? `${section.title ?? 'section'}-${index}`}
+                                        key={
+                                            section.id ??
+                                            `${section.title ?? 'section'}-${index}`
+                                        }
                                         section={section}
                                         values={values}
                                         setField={setField}
+                                        activeLang={activeLang}
+                                        languages={languages ?? []}
                                     />
                                 ))}
                             </div>
@@ -369,10 +435,17 @@ export function EntityFormDialog<T extends object>({
                     </div>
 
                     <DialogFooter className="border-t border-border px-6 py-4">
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                        >
                             {t('actions.cancel')}
                         </Button>
-                        <Button type="submit" className="bg-primary text-primary-foreground">
+                        <Button
+                            type="submit"
+                            className="bg-primary text-primary-foreground"
+                        >
                             {submitLabel ?? t('actions.save')}
                         </Button>
                     </DialogFooter>

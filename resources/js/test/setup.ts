@@ -87,7 +87,11 @@ const fixtures: Record<string, unknown> = {
             price: 1299,
             categoryKey: 'beach',
             category: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
-            description: { en: 'Ionian escape', fr: 'Ionian escape', ar: 'Ionian escape' },
+            description: {
+                en: 'Ionian escape',
+                fr: 'Ionian escape',
+                ar: 'Ionian escape',
+            },
         },
     ],
     '/api/destinations/santorini': {
@@ -100,7 +104,11 @@ const fixtures: Record<string, unknown> = {
         price: 1299,
         categoryKey: 'beach',
         category: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
-        description: { en: 'Ionian escape', fr: 'Ionian escape', ar: 'Ionian escape' },
+        description: {
+            en: 'Ionian escape',
+            fr: 'Ionian escape',
+            ar: 'Ionian escape',
+        },
         about: { en: 'About', fr: 'About', ar: 'About' },
         highlights: [{ en: 'One' }, { en: 'Two' }],
         bestTime: { en: 'Spring' },
@@ -111,7 +119,11 @@ const fixtures: Record<string, unknown> = {
             name: { en: 'Mercedes E-Class', fr: 'Mercedes', ar: 'مرسيدس' },
             category: { en: 'Luxury', fr: 'Luxe', ar: 'فاخرة' },
             fuel: { en: 'Petrol', fr: 'Essence', ar: 'بنزين' },
-            transmission: { en: 'Automatic', fr: 'Automatique', ar: 'أوتوماتيكي' },
+            transmission: {
+                en: 'Automatic',
+                fr: 'Automatique',
+                ar: 'أوتوماتيكي',
+            },
             seats: 5,
             price: 120,
             image: '/images/mercedes.jpg',

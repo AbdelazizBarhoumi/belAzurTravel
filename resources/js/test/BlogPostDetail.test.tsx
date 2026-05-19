@@ -24,7 +24,10 @@ function renderBlogDetail() {
             <LanguageProvider>
                 <MemoryRouter initialEntries={['/blog/spring-updates']}>
                     <Routes>
-                        <Route path="/blog/:slug" element={<BlogPostDetail />} />
+                        <Route
+                            path="/blog/:slug"
+                            element={<BlogPostDetail />}
+                        />
                     </Routes>
                 </MemoryRouter>
             </LanguageProvider>
@@ -98,5 +101,3 @@ describe('BlogPostDetail page', () => {
         expect(screen.getByText(/Travel/i)).toBeInTheDocument();
     });
 });
-
-

@@ -9,7 +9,10 @@ import { RoomsList } from '@/components/lists/RoomsList';
 import { Gallery } from '@/components/media/Gallery';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useHotelById, type HotelDetailLookupData } from '@/hooks/usePublicData';
+import {
+    useHotelById,
+    type HotelDetailLookupData,
+} from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 
 type AmenityIcon = typeof Wifi;
@@ -41,7 +44,10 @@ const AMENITY_ICONS: Record<string, AmenityIcon> = {
 };
 
 function normalizeAmenityKey(value: string): string {
-    return value.toLowerCase().replace(/[^a-z]+/g, ' ').trim();
+    return value
+        .toLowerCase()
+        .replace(/[^a-z]+/g, ' ')
+        .trim();
 }
 
 function toAmenityView(
@@ -89,26 +95,27 @@ export default function HotelDetail() {
     }
 
     const detail = hotel as HotelDetailLookupData;
-    const gallery =
-        detail.gallery?.length
-            ? detail.gallery
-            : detail.images?.length
-              ? detail.images
-              : detail.image
-                ? [detail.image]
-                : [];
+    const gallery = detail.gallery?.length
+        ? detail.gallery
+        : detail.images?.length
+          ? detail.images
+          : detail.image
+            ? [detail.image]
+            : [];
     const rooms = (detail.rooms ?? []).map((room) => toRoomView(room, lang));
     const amenities = (detail.amenities ?? []).map((amenity, index) =>
         toAmenityView(amenity, lang, index),
     );
     const minPrice = rooms.length
         ? Math.min(...rooms.map((room) => room.pricePerNight))
-        : detail.price ?? 0;
+        : (detail.price ?? 0);
     const title = localizeText(detail.name, lang);
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
     const city = detail.city ? localizeText(detail.city, lang) : '';
-    const country = detail.country ? localizeText(detail.country, lang) : location;
+    const country = detail.country
+        ? localizeText(detail.country, lang)
+        : location;
     const whatsapp = detail.whatsapp ?? '';
 
     const handleReserve = () => {
@@ -164,7 +171,9 @@ export default function HotelDetail() {
                                 price: minPrice,
                                 location,
                             }}
-                            primaryButtonLabel={t('hotelDetail.reserveNow') || 'Book now'}
+                            primaryButtonLabel={
+                                t('hotelDetail.reserveNow') || 'Book now'
+                            }
                             onBook={handleReserve}
                         />
                     </div>
@@ -179,7 +188,10 @@ export default function HotelDetail() {
                         country={country}
                     />
 
-                    <HotelInfo description={description} amenities={amenities} />
+                    <HotelInfo
+                        description={description}
+                        amenities={amenities}
+                    />
 
                     <motion.div
                         id="rooms-list"
@@ -210,7 +222,9 @@ export default function HotelDetail() {
                             price: minPrice,
                             location,
                         }}
-                        primaryButtonLabel={t('hotelDetail.reserveNow') || 'Book now'}
+                        primaryButtonLabel={
+                            t('hotelDetail.reserveNow') || 'Book now'
+                        }
                         onBook={handleReserve}
                     />
                 </aside>

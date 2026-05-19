@@ -91,7 +91,9 @@ export default function Hotels() {
 
     const handleStarToggle = (stars: number) => {
         setSelectedStars((current) =>
-            current.includes(stars) ? current.filter((s) => s !== stars) : [...current, stars],
+            current.includes(stars)
+                ? current.filter((s) => s !== stars)
+                : [...current, stars],
         );
     };
 
@@ -131,9 +133,14 @@ export default function Hotels() {
                     </motion.header>
 
                     {/* Main Layout: Sidebar + Content */}
-                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                        className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
                         <motion.aside
-                            initial={{ opacity: 0, x: dir === 'rtl' ? 100 : -100 }}
+                            initial={{
+                                opacity: 0,
+                                x: dir === 'rtl' ? 100 : -100,
+                            }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.05 }}
                             className="hidden flex-shrink-0 md:block md:w-72"
@@ -143,8 +150,15 @@ export default function Hotels() {
                                     <h2 className="font-serif text-lg font-bold text-foreground">
                                         {t('hotels.filterByStars')}
                                     </h2>
-                                    {(selectedTags.length > 0 || selectedStars.length > 0 || activePriceRange[0] !== minPrice || activePriceRange[1] !== maxPrice) && (
-                                        <button type="button" onClick={handleClearAll} className="text-xs font-medium text-primary hover:underline">
+                                    {(selectedTags.length > 0 ||
+                                        selectedStars.length > 0 ||
+                                        activePriceRange[0] !== minPrice ||
+                                        activePriceRange[1] !== maxPrice) && (
+                                        <button
+                                            type="button"
+                                            onClick={handleClearAll}
+                                            className="text-xs font-medium text-primary hover:underline"
+                                        >
                                             {t('common.viewAll')}
                                         </button>
                                     )}
@@ -154,50 +168,102 @@ export default function Hotels() {
                                     {[5, 4, 3, 2, 1].map((stars) => (
                                         <button
                                             key={stars}
-                                            onClick={() => handleStarToggle(stars)}
+                                            onClick={() =>
+                                                handleStarToggle(stars)
+                                            }
                                             className={`flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition-all ${selectedStars.includes(stars) ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}
                                         >
                                             {'★'.repeat(stars)}
-                                            <span className="text-[10px]">({stars})</span>
+                                            <span className="text-[10px]">
+                                                ({stars})
+                                            </span>
                                         </button>
                                     ))}
                                 </div>
 
                                 <div className="border-t border-border py-6">
                                     <div className="mb-4">
-                                        <h3 className="font-serif text-base font-bold text-foreground">{t('hotels.filterByPrice')}</h3>
+                                        <h3 className="font-serif text-base font-bold text-foreground">
+                                            {t('hotels.filterByPrice')}
+                                        </h3>
                                     </div>
                                     <div className="flex flex-col gap-3">
                                         <div>
-                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('hotels.minPrice')}</label>
-                                            <input type="number" min={minPrice} max={maxPrice} value={activePriceRange[0]} onChange={(e) => {
-                                                const newMin = Math.min(parseInt(e.target.value, 10) || minPrice, activePriceRange[1]);
-                                                setPriceRange([newMin, activePriceRange[1]]);
-                                            }} className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                                {t('hotels.minPrice')}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={minPrice}
+                                                max={maxPrice}
+                                                value={activePriceRange[0]}
+                                                onChange={(e) => {
+                                                    const newMin = Math.min(
+                                                        parseInt(
+                                                            e.target.value,
+                                                            10,
+                                                        ) || minPrice,
+                                                        activePriceRange[1],
+                                                    );
+                                                    setPriceRange([
+                                                        newMin,
+                                                        activePriceRange[1],
+                                                    ]);
+                                                }}
+                                                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                            />
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('hotels.maxPrice')}</label>
-                                            <input type="number" min={minPrice} max={maxPrice} value={activePriceRange[1]} onChange={(e) => {
-                                                const newMax = Math.max(parseInt(e.target.value, 10) || maxPrice, activePriceRange[0]);
-                                                setPriceRange([activePriceRange[0], newMax]);
-                                            }} className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
+                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                                                {t('hotels.maxPrice')}
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={minPrice}
+                                                max={maxPrice}
+                                                value={activePriceRange[1]}
+                                                onChange={(e) => {
+                                                    const newMax = Math.max(
+                                                        parseInt(
+                                                            e.target.value,
+                                                            10,
+                                                        ) || maxPrice,
+                                                        activePriceRange[0],
+                                                    );
+                                                    setPriceRange([
+                                                        activePriceRange[0],
+                                                        newMax,
+                                                    ]);
+                                                }}
+                                                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                            />
                                         </div>
                                     </div>
-                                    <div className="mt-2 text-xs text-muted-foreground">DT {activePriceRange[0]} - DT {activePriceRange[1]}</div>
+                                    <div className="mt-2 text-xs text-muted-foreground">
+                                        DT {activePriceRange[0]} - DT{' '}
+                                        {activePriceRange[1]}
+                                    </div>
                                 </div>
 
                                 <div className="border-t border-border pt-6">
                                     <div className="mb-4">
-                                        <h3 className="font-serif text-base font-bold text-foreground">{t('hotels.filterByTags')}</h3>
+                                        <h3 className="font-serif text-base font-bold text-foreground">
+                                            {t('hotels.filterByTags')}
+                                        </h3>
                                     </div>
 
-                                    <TagFilter tags={HOTEL_TAGS} selectedTags={selectedTags} onTagToggle={handleTagToggle} onClearAll={handleClearAll} locale={lang} />
+                                    <TagFilter
+                                        tags={HOTEL_TAGS}
+                                        selectedTags={selectedTags}
+                                        onTagToggle={handleTagToggle}
+                                        onClearAll={handleClearAll}
+                                        locale={lang}
+                                    />
                                 </div>
                             </div>
                         </motion.aside>
-
                         {/* Main Content */}
-<div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1">
                             {filteredHotels.length === 0 ? (
                                 <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
                                     {t('hotels.noResults')}
@@ -206,13 +272,13 @@ export default function Hotels() {
                                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                     {filteredHotels.map((hotel, index) => (
                                         <motion.article
-                                                key={hotel.slug}
+                                            key={hotel.slug}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.05 }}
                                         >
                                             <Link
-                                                    to={`/hotels/${hotel.slug}`}
+                                                to={`/hotels/${hotel.slug}`}
                                                 className="group block overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                             >
                                                 <div className="relative h-56 overflow-hidden">
@@ -357,7 +423,8 @@ export default function Hotels() {
                                     ))}
                                 </div>
                             )}
-                        </div>                    </div>
+                        </div>{' '}
+                    </div>
                 </div>
             </main>
         </div>

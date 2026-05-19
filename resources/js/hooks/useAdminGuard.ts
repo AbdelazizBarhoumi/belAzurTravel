@@ -1,12 +1,23 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthUser } from '@/hooks/useAuthUser';
 
 export function useAdminGuard() {
     const navigate = useNavigate();
+    const { data, isPending, isFetching, isError } = useAuthUser();
+
     useEffect(() => {
-        const role = localStorage.getItem('role');
-        if (role !== 'admin') {
-            navigate('/login');
+        if (isPending || isFetching) {
+            return;
         }
-    }, [navigate]);
+
+        if (isError || !data) {
+            navigate('/login', { replace: true });
+            return;
+        }
+
+        if (data.role !== 'admin') {
+            navigate('/unauthorized', { replace: true });
+        }
+    }, [data, isError, isFetching, isPending, navigate]);
 }

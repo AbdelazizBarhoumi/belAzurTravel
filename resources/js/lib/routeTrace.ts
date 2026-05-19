@@ -13,7 +13,7 @@ declare global {
 
 export function traceRoute(
     event: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
 ): void {
     if (typeof window === 'undefined') {
         return;
@@ -30,7 +30,6 @@ export function traceRoute(
     window.__routeTrace.push(entry);
 
     if (import.meta.env.DEV) {
-         
         //console.log('[route-trace]', entry);
     }
 }

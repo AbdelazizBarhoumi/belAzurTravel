@@ -48,14 +48,14 @@ describe('AdminFlights page', () => {
     it('exposes full flight sections in the add dialog', async () => {
         renderAdminFlights();
 
-        fireEvent.click(
-            screen.getByRole('button', { name: /add|ajouter/i }),
-        );
+        fireEvent.click(screen.getByRole('button', { name: /add|ajouter/i }));
 
         expect(await screen.findByText('Core details')).toBeInTheDocument();
         expect(screen.getByText('Route and airline')).toBeInTheDocument();
         expect(screen.getByText('Schedule')).toBeInTheDocument();
-        expect(screen.getByText('Cabin and service details')).toBeInTheDocument();
+        expect(
+            screen.getByText('Cabin and service details'),
+        ).toBeInTheDocument();
         expect(screen.getByText('Airline (EN)')).toBeInTheDocument();
         expect(screen.getByText('Airline (FR)')).toBeInTheDocument();
         expect(screen.getByText('Airline (AR)')).toBeInTheDocument();

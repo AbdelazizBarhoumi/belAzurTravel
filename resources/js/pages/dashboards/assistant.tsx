@@ -80,12 +80,8 @@ const AssistantDashboard = () => {
     const queryClient = useQueryClient();
     const isRtl = dir === 'rtl';
 
-    useEffect(() => {
-        const role = localStorage.getItem('role');
-        if (role !== 'assistant' && role !== 'admin') {
-            navigate('/login');
-        }
-    }, [navigate]);
+    // Authorization is handled by the route-level guard (RoleGuard).
+    // Do not perform client-side localStorage role checks here.
 
     const handleLogout = async () => {
         await logout();

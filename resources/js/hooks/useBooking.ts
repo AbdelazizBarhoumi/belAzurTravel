@@ -7,7 +7,8 @@ export function useAdminBookings() {
     return useQuery({
         queryKey: ['admin-bookings'],
         queryFn: () => api.getAdminBookings(),
-        staleTime: 1000 * 30,
+        staleTime: 60_000,
+        refetchOnMount: false,
     });
 }
 

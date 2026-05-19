@@ -17,7 +17,10 @@ export interface AdminTour extends AdminEntity {
 /**
  * Admin tour with localized fields (storage format)
  */
-export interface LocalizedAdminTour extends Omit<AdminTour, 'name' | 'location' | 'duration'> {
+export interface LocalizedAdminTour extends Omit<
+    AdminTour,
+    'name' | 'location' | 'duration'
+> {
     name: LocalizedText;
     location: LocalizedText;
     duration: LocalizedText;

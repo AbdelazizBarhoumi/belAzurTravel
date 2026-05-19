@@ -9,7 +9,11 @@ import {
     type AdminRow,
 } from '@/api/admin.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { EntityFormDialog, type FieldDef, type SectionDef } from '@/components/forms/EntityFormDialog';
+import {
+    EntityFormDialog,
+    type FieldDef,
+    type SectionDef,
+} from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -58,17 +62,37 @@ const sections: SectionDef[] = [
             { key: 'color', label: 'Color token' },
             ...localizedFields('title', copy('Title', 'Titre', 'العنوان')),
             ...localizedFields('discount', copy('Discount', 'Remise', 'الخصم')),
-            ...localizedFields('expires', copy('Expires', 'Expiration', 'ينتهي')),
+            ...localizedFields(
+                'expires',
+                copy('Expires', 'Expiration', 'ينتهي'),
+            ),
         ],
     },
     {
         title: 'Description and rules',
-        description: 'Copy shown in the promo detail cards and the fine print sections.',
+        description:
+            'Copy shown in the promo detail cards and the fine print sections.',
         fields: [
-            ...localizedFields('description', copy('Description', 'Description', 'الوصف'), 'textarea'),
-            ...localizedFields('eligibility', copy('Eligibility', 'Éligibilité', 'الأهلية'), 'textarea'),
-            ...localizedFields('howToUse', copy('How to use', 'Comment utiliser', 'كيفية الاستخدام'), 'textarea'),
-            ...localizedFields('terms', copy('Terms & Conditions', 'Conditions', 'الشروط'), 'textarea'),
+            ...localizedFields(
+                'description',
+                copy('Description', 'Description', 'الوصف'),
+                'textarea',
+            ),
+            ...localizedFields(
+                'eligibility',
+                copy('Eligibility', 'Éligibilité', 'الأهلية'),
+                'textarea',
+            ),
+            ...localizedFields(
+                'howToUse',
+                copy('How to use', 'Comment utiliser', 'كيفية الاستخدام'),
+                'textarea',
+            ),
+            ...localizedFields(
+                'terms',
+                copy('Terms & Conditions', 'Conditions', 'الشروط'),
+                'textarea',
+            ),
         ],
     },
     {
@@ -76,7 +100,13 @@ const sections: SectionDef[] = [
         description: 'Campaign usage metadata and active state.',
         columns: 2,
         fields: [
-            { key: 'gallery', label: 'Gallery image URLs (one per line)', type: 'textarea', rows: 4, colSpan: 2 },
+            {
+                key: 'gallery',
+                label: 'Gallery image URLs (one per line)',
+                type: 'textarea',
+                rows: 4,
+                colSpan: 2,
+            },
             { key: 'usage_limit', label: 'Usage limit', type: 'number' },
             { key: 'per_user_limit', label: 'Per-user limit', type: 'number' },
             { key: 'applicable_to', label: 'Applicable to (comma-separated)' },
@@ -187,7 +217,9 @@ export default function AdminPromos() {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(row)}
+                                                onClick={() =>
+                                                    setPendingDelete(row)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                                 aria-label={t('actions.delete')}
                                             >
@@ -235,8 +267,8 @@ export default function AdminPromos() {
                 sections={sections}
                 initial={editing}
                 onSubmit={handleSave}
+                languages={['en', 'fr', 'ar']}
             />
         </AdminLayout>
     );
 }
-

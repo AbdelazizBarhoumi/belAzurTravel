@@ -1,37 +1,50 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/api/http';
-import { fetchSiteSettings } from '@/api/siteSettings.api';
+import { useSiteSettingsContext } from '@/contexts/SiteSettingsContext';
 import type { NavSettings } from '@/lib/nav-config';
 import { DEFAULT_NAV_SETTINGS } from '@/lib/nav-config';
 
 export function useNavSettings() {
-    const [settings, setSettings] = useState<NavSettings>(DEFAULT_NAV_SETTINGS);
-    const [loading, setLoading] = useState(true);
+    const { settings: siteSettings, loading, setSettings } =
+        useSiteSettingsContext();
 
-    // Load settings from Laravel API using shared helper which normalizes shape
+    const settings = useMemo(
+        () => siteSettings.content?.nav?.settings ?? DEFAULT_NAV_SETTINGS,
+        [siteSettings.content?.nav?.settings],
+    );
+
     useEffect(() => {
-        let mounted = true;
-        (async () => {
-            try {
-                const site = await fetchSiteSettings();
-                const navData = site.content?.nav?.settings;
-                if (mounted) setSettings(navData ?? DEFAULT_NAV_SETTINGS);
-            } catch (err) {
-                console.error('Failed to load nav settings:', err);
-                if (mounted) setSettings(DEFAULT_NAV_SETTINGS);
-            } finally {
-                if (mounted) setLoading(false);
+        setSettings((prev) => {
+            if (prev.content?.nav?.settings === settings) {
+                return prev;
             }
-        })();
-        return () => {
-            mounted = false;
-        };
-    }, []);
+
+            return {
+                ...prev,
+                content: {
+                    ...(prev.content ?? {}),
+                    nav: {
+                        ...(prev.content?.nav ?? {}),
+                        settings,
+                    },
+                },
+            };
+        });
+    }, [setSettings, settings]);
 
     // Save settings to Laravel API
     const update = useCallback(async (next: NavSettings) => {
         try {
-            setSettings(next);
+            setSettings((prev) => ({
+                ...prev,
+                content: {
+                    ...(prev.content ?? {}),
+                    nav: {
+                        ...(prev.content?.nav ?? {}),
+                        settings: next,
+                    },
+                },
+            }));
             await apiFetch('/api/site-settings', {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -42,15 +55,6 @@ export function useNavSettings() {
                     },
                 }),
             });
-            // Notify other parts of the app that site settings changed
-            try {
-                window.dispatchEvent(new CustomEvent('site-settings-updated'));
-            } catch (error) {
-                console.error(
-                    'Failed to dispatch site settings update:',
-                    error,
-                );
-            }
         } catch (err) {
             console.error('Failed to save nav settings:', err);
             throw err;
@@ -60,7 +64,16 @@ export function useNavSettings() {
     // Reset to defaults
     const reset = useCallback(async () => {
         try {
-            setSettings(DEFAULT_NAV_SETTINGS);
+            setSettings((prev) => ({
+                ...prev,
+                content: {
+                    ...(prev.content ?? {}),
+                    nav: {
+                        ...(prev.content?.nav ?? {}),
+                        settings: DEFAULT_NAV_SETTINGS,
+                    },
+                },
+            }));
             await apiFetch('/api/site-settings', {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -71,14 +84,6 @@ export function useNavSettings() {
                     },
                 }),
             });
-            try {
-                window.dispatchEvent(new CustomEvent('site-settings-updated'));
-            } catch (error) {
-                console.error(
-                    'Failed to dispatch site settings update:',
-                    error,
-                );
-            }
         } catch (err) {
             console.error('Failed to reset nav settings:', err);
             throw err;

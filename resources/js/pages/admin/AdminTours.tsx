@@ -8,6 +8,7 @@ import {
     saveAdminEntity,
 } from '@/api/admin.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import type { FieldDef, SectionDef } from '@/components/forms/EntityFormDialog';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,33 @@ const fields: FieldDef[] = [
     { key: 'rating', label: 'Rating', type: 'number' },
     { key: 'image', label: 'Image URL' },
 ];
+
+type TourFormValues = AdminTour & {
+    imagePath?: string;
+    imageFile?: File | null;
+    gallery?: string;
+    galleryPaths?: string[];
+    galleryFiles?: File[];
+};
+
+function asText(value: unknown): string {
+    return typeof value === 'string' ? value : '';
+}
+
+function parseGallery(value: unknown): string[] {
+    if (Array.isArray(value)) {
+        return value.filter((item): item is string => typeof item === 'string');
+    }
+
+    if (typeof value === 'string') {
+        return value
+            .split(/\r?\n/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+    }
+
+    return [];
+}
 
 type TourFormContext = {
     values: Record<string, unknown>;
@@ -53,13 +81,49 @@ const AdminTours = () => {
     const { lang } = useLanguage();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminTour | null>(null);
-    const [activeLang, setActiveLang] = useState<Lang>('en');
     const [pendingDelete, setPendingDelete] = useState<AdminTour | null>(null);
+    const dialogInitial: TourFormValues | null = editing
+        ? ({
+              ...editing,
+              imagePath: asText(editing.image),
+              imageFile: null,
+              gallery: '',
+              galleryPaths: parseGallery(
+                  (editing as unknown as Record<string, unknown>).gallery,
+              ),
+              galleryFiles: [],
+          } as TourFormValues)
+        : null;
 
     const { t } = useLanguage();
 
-    const handleSave = (values: AdminTour) => {
-        saveMutation.mutate({ ...values, id: editing?.id || '' });
+    const handleSave = (values: TourFormValues) => {
+        const payload: Record<string, unknown> = {
+            ...values,
+            id: editing?.id || '',
+            image:
+                values.imageFile instanceof File
+                    ? values.imageFile
+                    : (values.imagePath ?? values.image ?? ''),
+            gallery: Array.isArray(values.galleryPaths)
+                ? values.galleryPaths
+                      .filter(
+                          (item): item is string => typeof item === 'string',
+                      )
+                      .join('\n')
+                : typeof values.gallery === 'string'
+                  ? values.gallery
+                  : '',
+        };
+
+        if (
+            Array.isArray(values.galleryFiles) &&
+            values.galleryFiles.length > 0
+        ) {
+            payload.gallery_files = values.galleryFiles;
+        }
+
+        saveMutation.mutate(payload as unknown as AdminTour);
         toast.success(editing ? t('admin.tourUpdated') : t('admin.tourAdded'));
         setEditing(null);
     };
@@ -68,25 +132,56 @@ const AdminTours = () => {
         {
             title: 'Core details',
             description: 'Edit localized tour fields one language at a time.',
-            render: ({ values, setField }: TourFormContext) => (
+            render: ({
+                values,
+                setField,
+                activeLang,
+            }: TourFormContext & { activeLang: Lang }) => (
                 <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                        {(['en','fr','ar'] as Lang[]).map((code) => (
-                            <Button key={code} type="button" variant={activeLang === code ? 'default' : 'outline'} onClick={() => setActiveLang(code)}>{code.toUpperCase()}</Button>
-                        ))}
-                    </div>
-
                     <div className="grid gap-4 md:grid-cols-2">
-                        {['name','location','description'].map((k) => (
+                        {['name', 'location', 'description'].map((k) => (
                             <div key={k} className="space-y-2">
-                                <label htmlFor={`${k}_${activeLang}`} className="text-xs font-semibold text-muted-foreground">{k.replace(/^[a-z]/, s => s.toUpperCase())} ({activeLang.toUpperCase()})</label>
-                                <input id={`${k}_${activeLang}`} value={String(values[`${k}_${activeLang}`] ?? '')} onChange={(e) => setField(`${k}_${activeLang}`, e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                                <label
+                                    htmlFor={`${k}_${activeLang}`}
+                                    className="text-xs font-semibold text-muted-foreground"
+                                >
+                                    {k.replace(/^[a-z]/, (s) =>
+                                        s.toUpperCase(),
+                                    )}{' '}
+                                    ({activeLang.toUpperCase()})
+                                </label>
+                                <input
+                                    id={`${k}_${activeLang}`}
+                                    value={String(
+                                        values[`${k}_${activeLang}`] ?? '',
+                                    )}
+                                    onChange={(e) =>
+                                        setField(
+                                            `${k}_${activeLang}`,
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                />
                             </div>
                         ))}
 
                         <div className="space-y-2">
-                            <label htmlFor="tour-price" className="text-xs font-semibold text-muted-foreground">Price (USD)</label>
-                            <input id="tour-price" type="number" value={String(values.price ?? '')} onChange={(e) => setField('price', e.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                            <label
+                                htmlFor="tour-price"
+                                className="text-xs font-semibold text-muted-foreground"
+                            >
+                                Price (USD)
+                            </label>
+                            <input
+                                id="tour-price"
+                                type="number"
+                                value={String(values.price ?? '')}
+                                onChange={(e) =>
+                                    setField('price', e.target.value)
+                                }
+                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                            />
                         </div>
                     </div>
                 </div>
@@ -97,37 +192,17 @@ const AdminTours = () => {
             fields: [
                 { key: 'duration', label: 'Duration' },
                 { key: 'rating', label: 'Rating', type: 'number' },
-                { key: 'image', label: 'Image URL' },
-                {
-                    key: 'gallery',
-                    label: 'Gallery (one image path per line)',
-                    type: 'textarea',
-                    rows: 4,
-                    placeholder: '/images/tour1.jpg\n/images/tour2.jpg',
-                },
             ],
-            render: ({ values }: TourFormContext) => {
-                const galleryRaw = values.gallery ?? '';
-                const items = typeof galleryRaw === 'string'
-                    ? galleryRaw.split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
-                    : [];
-
-                if (items.length === 0) return null;
-
-                return (
-                    <div className="space-y-3 border-t border-border pt-4">
-                        <h4 className="text-sm font-semibold text-foreground">Gallery preview</h4>
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                            {items.map((src) => (
-                                <div key={src} className="overflow-hidden rounded-2xl border border-border bg-background">
-                                    <div className="aspect-[4/3] bg-muted"><img src={src} alt={src} className="h-full w-full object-cover"/></div>
-                                    <div className="px-3 py-2 text-xs text-muted-foreground">{src}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            },
+            render: ({ values, setField }) => (
+                <EntityMediaInputs
+                    values={values}
+                    setField={setField}
+                    imageLabel="Main image"
+                    galleryLabel="Gallery"
+                    showImage
+                    showGallery
+                />
+            ),
         },
     ];
 
@@ -222,7 +297,9 @@ const AdminTours = () => {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(d)}
+                                                onClick={() =>
+                                                    setPendingDelete(d)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -263,9 +340,15 @@ const AdminTours = () => {
                 onOpenChange={setOpen}
                 title={editing ? 'Edit Tour' : 'Add Tour'}
                 sections={tourSections}
-                initial={editing as unknown as Record<string, unknown> | undefined}
-                onSubmit={(values) => handleSave(values as unknown as AdminTour)}
-                languages={['en','fr','ar']}
+                initial={
+                    dialogInitial as unknown as
+                        | Record<string, unknown>
+                        | undefined
+                }
+                onSubmit={(values) =>
+                    handleSave(values as unknown as AdminTour)
+                }
+                languages={['en', 'fr', 'ar']}
                 layout="grid-2"
             />
         </AdminLayout>

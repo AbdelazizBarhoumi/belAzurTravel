@@ -72,29 +72,59 @@ export const defaultSiteSettings: SiteSettings = {
     gallery: [],
 };
 
+const SITE_SETTINGS_TTL_MS = 60_000;
+let cachedSiteSettings: SiteSettings | null = null;
+let cachedAtMs = 0;
+let inFlightSiteSettingsRequest: Promise<SiteSettings> | null = null;
+
+function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
+    return {
+        companyName: (json.companyName as string) ?? defaultSiteSettings.companyName,
+        email: (json.email as string) ?? defaultSiteSettings.email,
+        phone: (json.phone as string) ?? defaultSiteSettings.phone,
+        whatsapp: (json.whatsapp as string) ?? defaultSiteSettings.whatsapp,
+        address: (json.address as string) ?? defaultSiteSettings.address,
+        plusCode: (json.plusCode as string) ?? defaultSiteSettings.plusCode,
+        year: (json.year as number) ?? defaultSiteSettings.year,
+        socialLinks: (json.socialLinks as SiteSettings['socialLinks']) ?? [],
+        legalSections: (json.legalSections as SiteSettings['legalSections']) ?? [],
+        footerLinks: (json.footerLinks as SiteSettings['footerLinks']) ?? [],
+        hours: (json.hours as SiteSettings['hours']) ?? [],
+        content: (json.content as SiteSettings['content']) ?? {},
+        gallery: (json.gallery as SiteSettings['gallery']) ?? defaultSiteSettings.gallery,
+    };
+}
+
 export async function fetchSiteSettings(): Promise<SiteSettings> {
+    const now = Date.now();
+
+    if (cachedSiteSettings && now - cachedAtMs < SITE_SETTINGS_TTL_MS) {
+        return cachedSiteSettings;
+    }
+
+    if (inFlightSiteSettingsRequest) {
+        return inFlightSiteSettingsRequest;
+    }
+
     try {
-        const res = await fetch('/api/site-settings');
-        if (!res.ok) throw new Error('Network response was not ok');
-        const json = await res.json();
-        // basic shape validation
-        return {
-            companyName: json.companyName ?? defaultSiteSettings.companyName,
-            email: json.email ?? defaultSiteSettings.email,
-            phone: json.phone ?? defaultSiteSettings.phone,
-            whatsapp: json.whatsapp ?? defaultSiteSettings.whatsapp,
-            address: json.address ?? defaultSiteSettings.address,
-            plusCode: json.plusCode ?? defaultSiteSettings.plusCode,
-            year: json.year ?? defaultSiteSettings.year,
-            socialLinks: json.socialLinks ?? [],
-            legalSections: json.legalSections ?? [],
-            footerLinks: json.footerLinks ?? [],
-            hours: json.hours ?? [],
-            content: json.content ?? {},
-            gallery: json.gallery ?? defaultSiteSettings.gallery,
-        };
+        inFlightSiteSettingsRequest = (async () => {
+            console.debug('[fetchSiteSettings] calling /api/site-settings');
+            const res = await fetch('/api/site-settings');
+            if (!res.ok) throw new Error('Network response was not ok');
+            const json = (await res.json()) as Record<string, unknown>;
+            const mapped = mapApiToSiteSettings(json);
+
+            cachedSiteSettings = mapped;
+            cachedAtMs = Date.now();
+
+            return mapped;
+        })();
+
+        return await inFlightSiteSettingsRequest;
     } catch {
-        // fallback to defaults
-        return defaultSiteSettings;
+        // fallback to cache/defaults
+        return cachedSiteSettings ?? defaultSiteSettings;
+    } finally {
+        inFlightSiteSettingsRequest = null;
     }
 }

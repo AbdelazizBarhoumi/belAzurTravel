@@ -35,6 +35,22 @@ function toFileArray(value: unknown): File[] {
     return value.filter((item): item is File => item instanceof File);
 }
 
+function createObjectUrl(file: File): string {
+    if (typeof URL.createObjectURL !== 'function') {
+        return '';
+    }
+
+    return URL.createObjectURL(file);
+}
+
+function revokeObjectUrl(url: string) {
+    if (typeof URL.revokeObjectURL !== 'function' || !url) {
+        return;
+    }
+
+    URL.revokeObjectURL(url);
+}
+
 export function EntityMediaInputs({
     values,
     setField,
@@ -43,15 +59,17 @@ export function EntityMediaInputs({
     showImage = true,
     showGallery = true,
 }: EntityMediaInputsProps) {
-    const imagePath = typeof values.imagePath === 'string' ? values.imagePath : '';
-    const imageFile = values.imageFile instanceof File ? values.imageFile : null;
+    const imagePath =
+        typeof values.imagePath === 'string' ? values.imagePath : '';
+    const imageFile =
+        values.imageFile instanceof File ? values.imageFile : null;
 
     const galleryPaths = toStringArray(values.galleryPaths ?? values.gallery);
     const galleryFiles = toFileArray(values.galleryFiles);
 
     const imagePreview = useMemo(() => {
         if (imageFile) {
-            return URL.createObjectURL(imageFile);
+            return createObjectUrl(imageFile);
         }
 
         return imagePath;
@@ -63,18 +81,18 @@ export function EntityMediaInputs({
         }
 
         return () => {
-            URL.revokeObjectURL(imagePreview);
+            revokeObjectUrl(imagePreview);
         };
     }, [imageFile, imagePreview]);
 
     const galleryFileUrls = useMemo(
-        () => galleryFiles.map((file) => URL.createObjectURL(file)),
+        () => galleryFiles.map((file) => createObjectUrl(file)).filter(Boolean),
         [galleryFiles],
     );
 
     useEffect(() => {
         return () => {
-            galleryFileUrls.forEach((url) => URL.revokeObjectURL(url));
+            galleryFileUrls.forEach((url) => revokeObjectUrl(url));
         };
     }, [galleryFileUrls]);
 
@@ -126,7 +144,9 @@ export function EntityMediaInputs({
             {showGallery ? (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                        <Label htmlFor="entity-gallery-files">{galleryLabel}</Label>
+                        <Label htmlFor="entity-gallery-files">
+                            {galleryLabel}
+                        </Label>
                         <span className="text-xs text-muted-foreground">
                             Add one or more images from your device.
                         </span>
@@ -147,12 +167,18 @@ export function EntityMediaInputs({
                                     key={src}
                                     className="overflow-hidden rounded-2xl border border-border bg-muted/30"
                                 >
-                                    <CardMedia src={src} alt="Gallery preview" wrapperClass="aspect-square" />
+                                    <CardMedia
+                                        src={src}
+                                        alt="Gallery preview"
+                                        wrapperClass="aspect-square"
+                                    />
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <p className="text-sm text-muted-foreground">No gallery images yet.</p>
+                        <p className="text-sm text-muted-foreground">
+                            No gallery images yet.
+                        </p>
                     )}
                 </div>
             ) : null}

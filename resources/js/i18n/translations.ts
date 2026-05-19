@@ -21,6 +21,7 @@ const BOOK = tr('Réserver', 'احجز', 'Book');
 const SIGN_OUT = tr('Se Déconnecter', 'تسجيل الخروج', 'Sign Out');
 const SETTINGS = tr('Paramètres', 'الإعدادات', 'Settings');
 const PROFILE = tr('Profil', 'الملف الشخصي', 'Profile');
+const DASHBOARD = tr('Tableau de bord', 'لوحة التحكم', 'Dashboard');
 const PAYMENTS = tr('Paiements', 'المدفوعات', 'Payments');
 const ITINERARIES = tr('Itinéraires', 'الخطط', 'Itineraries');
 const WISHLIST = tr('Liste de souhaits', 'قائمة الرغبات', 'Wishlist');
@@ -56,6 +57,8 @@ export const translations: Record<string, TranslationEntry> = {
     'nav.start': { fr: 'Commencer', ar: 'ابدأ', en: 'Get Started' },
     'nav.favorites': { fr: 'Favoris', ar: 'المفضلة', en: 'Favorites' },
     'nav.design': { fr: 'Planifier', ar: 'صمم رحلتك', en: 'Design Trip' },
+    'nav.profile': PROFILE,
+    'nav.dashboard': DASHBOARD,
 
     // Categories
     'cat.beach': { fr: 'Plage', ar: 'شاطئ', en: 'Beach' },
@@ -1491,7 +1494,11 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الفئة',
         en: 'Category',
     },
-    'admin.destinationForm.price': { fr: 'Prix (USD)', ar: 'السعر (USD)', en: 'Price (USD)' },
+    'admin.destinationForm.price': {
+        fr: 'Prix (USD)',
+        ar: 'السعر (USD)',
+        en: 'Price (USD)',
+    },
     'admin.destinationForm.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
     'admin.destinationForm.description': {
         fr: 'Description',
@@ -1630,7 +1637,11 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Category',
     },
     'admin.destinationTable.price': { fr: 'Prix', ar: 'السعر', en: 'Price' },
-    'admin.destinationTable.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
+    'admin.destinationTable.rating': {
+        fr: 'Note',
+        ar: 'التقييم',
+        en: 'Rating',
+    },
     'admin.destinationTable.actions': {
         fr: 'Actions',
         ar: 'الإجراءات',

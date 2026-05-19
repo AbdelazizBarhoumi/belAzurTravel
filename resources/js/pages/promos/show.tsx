@@ -37,133 +37,136 @@ export default function PromoDetail() {
     const promoExpires = localizeText(promo.expires, lang);
 
     return (
-        <PageShell breadcrumbs={[{ label: t('common.home'), href: '/' }, { label: t('nav.promos'), href: '/promos' }, { label: promoTitle, active: true }]}>
-           <motion.div
+        <PageShell
+            breadcrumbs={[
+                { label: t('common.home'), href: '/' },
+                { label: t('nav.promos'), href: '/promos' },
+                { label: promoTitle, active: true },
+            ]}
+        >
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid gap-10 lg:grid-cols-[2fr_1fr]"
+            >
+                <div className="space-y-8">
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="grid gap-10 lg:grid-cols-[2fr_1fr]"
+                        className={`bg-gradient-to-br ${promo.color} card-elevated mb-8 rounded-3xl p-10 text-primary-foreground`}
                     >
-                        <div className="space-y-8">
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`bg-gradient-to-br ${promo.color} card-elevated mb-8 rounded-3xl p-10 text-primary-foreground`}
+                        <Tag className="mb-4 h-10 w-10 opacity-80" />
+                        <h1 className="mb-2 font-serif text-4xl font-bold">
+                            {promoTitle}
+                        </h1>
+                        <p className="mb-6 max-w-2xl text-primary-foreground/80">
+                            {promoDescription}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-4">
+                            <span className="rounded-full bg-card/20 px-4 py-2 text-sm font-bold backdrop-blur">
+                                {promoDiscount}
+                            </span>
+                            <button
+                                onClick={copyCode}
+                                className="flex items-center gap-2 rounded-xl bg-card/20 px-4 py-2 font-mono font-bold backdrop-blur transition-colors hover:bg-card/30"
                             >
-                                <Tag className="mb-4 h-10 w-10 opacity-80" />
-                                <h1 className="mb-2 font-serif text-4xl font-bold">
-                                    {promoTitle}
-                                </h1>
-                                <p className="mb-6 max-w-2xl text-primary-foreground/80">
-                                    {promoDescription}
-                                </p>
-                                <div className="flex flex-wrap items-center gap-4">
-                                    <span className="rounded-full bg-card/20 px-4 py-2 text-sm font-bold backdrop-blur">
-                                        {promoDiscount}
-                                    </span>
-                                    <button
-                                        onClick={copyCode}
-                                        className="flex items-center gap-2 rounded-xl bg-card/20 px-4 py-2 font-mono font-bold backdrop-blur transition-colors hover:bg-card/30"
-                                    >
-                                        {copied ? (
-                                            <Check className="h-4 w-4" />
-                                        ) : (
-                                            <Copy className="h-4 w-4" />
-                                        )}
-                                        {promo.code}
-                                    </button>
-                                    <span className="flex items-center gap-1 text-sm opacity-80">
-                                        <Calendar className="h-4 w-4" />{' '}
-                                        {t('promoDetail.expires')}{' '}
-                                        {promoExpires}
-                                    </span>
-                                </div>
-                            </motion.div>
-                            <section className="rounded-2xl border border-border bg-card p-6">
-                                <h3 className="mb-4 font-serif text-xl font-bold">
-                                    {t('promoDetail.eligibility')}
-                                </h3>
-                                <ul className="space-y-2 text-sm text-foreground">
-                                    {promo.eligibility.map(
-                                        (item: LocalizedText) => (
-                                            <li
-                                                key={item.en}
-                                                className="flex items-center gap-2"
-                                            >
-                                                <CheckCircle2 className="h-4 w-4 text-secondary" />{' '}
-                                                {localizeText(item, lang)}
-                                            </li>
-                                        ),
-                                    )}
-                                </ul>
-                            </section>
-                            <section className="rounded-2xl border border-border bg-card p-6">
-                                <h2 className="mb-4 font-serif text-xl font-bold text-foreground">
-                                    {t('promoDetail.termsTitle')}
-                                </h2>
-                                <ul className="space-y-2">
-                                    {promo.terms.map((term: LocalizedText) => (
-                                        <li
-                                            key={term.en}
-                                            className="flex items-start gap-2 text-sm text-muted-foreground"
-                                        >
-                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                            {localizeText(term, lang)}
-                                        </li>
-                                    ))}
-                                </ul>
-                                <Button
-                                    asChild
-                                    className="mt-6 bg-primary text-primary-foreground"
-                                >
-                                    <Link to="/destinations">
-                                        {t('promoDetail.startBooking')}
-                                    </Link>
-                                </Button>
-                            </section>
+                                {copied ? (
+                                    <Check className="h-4 w-4" />
+                                ) : (
+                                    <Copy className="h-4 w-4" />
+                                )}
+                                {promo.code}
+                            </button>
+                            <span className="flex items-center gap-1 text-sm opacity-80">
+                                <Calendar className="h-4 w-4" />{' '}
+                                {t('promoDetail.expires')} {promoExpires}
+                            </span>
                         </div>
-
-                        <aside className="hidden lg:block lg:sticky lg:top-24">
-                            <motion.div className="rounded-2xl border border-border bg-card p-6">
-                                <h3 className="mb-4 font-serif text-lg font-bold">
-                                    {t('promoDetail.quickInfo')}
-                                </h3>
-                                <div className="space-y-4">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">
-                                            {t('promoDetail.code')}
-                                        </p>
-                                        <button
-                                            onClick={copyCode}
-                                            className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg bg-primary/10 px-3 py-2 font-mono font-bold text-primary transition-colors hover:bg-primary/20"
-                                        >
-                                            {copied ? (
-                                                <Check className="h-4 w-4" />
-                                            ) : (
-                                                <Copy className="h-4 w-4" />
-                                            )}
-                                            {promo.code}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">
-                                            {t('promoDetail.discount')}
-                                        </p>
-                                        <p className="mt-1 text-lg font-bold text-primary">
-                                            {promoDiscount}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">
-                                            {t('promoDetail.expires')}
-                                        </p>
-                                        <p className="mt-1 font-semibold">
-                                            {promoExpires}
-                                        </p>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </aside>
                     </motion.div>
+                    <section className="rounded-2xl border border-border bg-card p-6">
+                        <h3 className="mb-4 font-serif text-xl font-bold">
+                            {t('promoDetail.eligibility')}
+                        </h3>
+                        <ul className="space-y-2 text-sm text-foreground">
+                            {promo.eligibility.map((item: LocalizedText) => (
+                                <li
+                                    key={item.en}
+                                    className="flex items-center gap-2"
+                                >
+                                    <CheckCircle2 className="h-4 w-4 text-secondary" />{' '}
+                                    {localizeText(item, lang)}
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                    <section className="rounded-2xl border border-border bg-card p-6">
+                        <h2 className="mb-4 font-serif text-xl font-bold text-foreground">
+                            {t('promoDetail.termsTitle')}
+                        </h2>
+                        <ul className="space-y-2">
+                            {promo.terms.map((term: LocalizedText) => (
+                                <li
+                                    key={term.en}
+                                    className="flex items-start gap-2 text-sm text-muted-foreground"
+                                >
+                                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    {localizeText(term, lang)}
+                                </li>
+                            ))}
+                        </ul>
+                        <Button
+                            asChild
+                            className="mt-6 bg-primary text-primary-foreground"
+                        >
+                            <Link to="/destinations">
+                                {t('promoDetail.startBooking')}
+                            </Link>
+                        </Button>
+                    </section>
+                </div>
+
+                <aside className="hidden lg:sticky lg:top-24 lg:block">
+                    <motion.div className="rounded-2xl border border-border bg-card p-6">
+                        <h3 className="mb-4 font-serif text-lg font-bold">
+                            {t('promoDetail.quickInfo')}
+                        </h3>
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-sm text-muted-foreground">
+                                    {t('promoDetail.code')}
+                                </p>
+                                <button
+                                    onClick={copyCode}
+                                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-primary/10 px-3 py-2 font-mono font-bold text-primary transition-colors hover:bg-primary/20"
+                                >
+                                    {copied ? (
+                                        <Check className="h-4 w-4" />
+                                    ) : (
+                                        <Copy className="h-4 w-4" />
+                                    )}
+                                    {promo.code}
+                                </button>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">
+                                    {t('promoDetail.discount')}
+                                </p>
+                                <p className="mt-1 text-lg font-bold text-primary">
+                                    {promoDiscount}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-muted-foreground">
+                                    {t('promoDetail.expires')}
+                                </p>
+                                <p className="mt-1 font-semibold">
+                                    {promoExpires}
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </aside>
+            </motion.div>
         </PageShell>
     );
 }

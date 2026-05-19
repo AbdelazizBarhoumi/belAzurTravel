@@ -17,7 +17,10 @@ export interface AdminBooking extends AdminEntity {
 /**
  * Admin booking with localized fields (storage format)
  */
-export interface LocalizedAdminBooking extends Omit<AdminBooking, 'client' | 'type' | 'item' | 'status'> {
+export interface LocalizedAdminBooking extends Omit<
+    AdminBooking,
+    'client' | 'type' | 'item' | 'status'
+> {
     client: LocalizedText;
     type: LocalizedText;
     item: LocalizedText;
