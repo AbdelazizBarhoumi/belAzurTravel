@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { Search, MapPin, Star } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import CardMedia from '@/components/ui/CardMedia';
@@ -42,6 +43,11 @@ const Destinations = () => {
     const { data: allDestinations = [] } = useDestinations();
     const { data: dynamicCategories = [] } = useCategories('destinations');
 
+    useEffect(() => {
+        setSearchQuery(initialSearch);
+        setSelectedCategory(initialCategory);
+    }, [initialSearch, initialCategory]);
+
     const categories = [
         { value: 'all', label: t('common.all') },
         ...dynamicCategories.map((c) => ({
@@ -61,7 +67,7 @@ const Destinations = () => {
                     .includes(searchQuery.toLowerCase());
             const matchesCategory =
                 selectedCategory === 'all' ||
-                d.categoryKey === selectedCategory;
+                (d.categoryKey ?? '').toLowerCase() === selectedCategory;
             return matchesSearch && matchesCategory;
         })
         .sort((a, b) => {
@@ -199,88 +205,99 @@ const Destinations = () => {
 
                     {/* Grid */}
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {filtered.map((dest, i) => (
-                            <Link
-                                key={localizeText(dest.name, lang)}
-                                to={`/destinations/${dest.slug}`}
-                                className="group block"
-                            >
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className="cursor-pointer"
+                        {filtered.length === 0 ? (
+                            <RequestThingEmptyState
+                                variant={
+                                    allDestinations.length === 0
+                                        ? 'empty'
+                                        : 'no-results'
+                                }
+                                className="sm:col-span-2 lg:col-span-3"
+                            />
+                        ) : (
+                            filtered.map((dest, i) => (
+                                <Link
+                                    key={localizeText(dest.name, lang)}
+                                    to={`/destinations/${dest.slug}`}
+                                    className="group block"
                                 >
-                                    <div className="card-elevated overflow-hidden rounded-2xl bg-card">
-                                        <CardMedia
-                                            src={dest.image}
-                                            alt={localizeText(dest.name, lang)}
-                                            wrapperClass="relative h-56"
-                                            imgClass="transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                        <FavoriteButton
-                                            className="absolute right-3 top-3"
-                                            item={{
-                                                id: `dest-${localizeText(dest.name, lang)}`,
-                                                type: 'destination',
-                                                name: localizeText(
-                                                    dest.name,
-                                                    lang,
-                                                ),
-                                                image: dest.image,
-                                                price: dest.price,
-                                                location: localizeText(
-                                                    dest.country,
-                                                    lang,
-                                                ),
-                                            }}
-                                        />
-                                        <div className="p-5">
-                                            <div className="mb-2 flex items-center justify-between">
-                                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                    <MapPin className="h-3 w-3" />{' '}
-                                                    {localizeText(
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className="cursor-pointer"
+                                    >
+                                        <div className="card-elevated overflow-hidden rounded-2xl bg-card">
+                                            <CardMedia
+                                                src={dest.image}
+                                                alt={localizeText(dest.name, lang)}
+                                                wrapperClass="relative h-56"
+                                                imgClass="transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                            <FavoriteButton
+                                                className="absolute right-3 top-3"
+                                                item={{
+                                                    id: `dest-${localizeText(dest.name, lang)}`,
+                                                    type: 'destination',
+                                                    name: localizeText(
+                                                        dest.name,
+                                                        lang,
+                                                    ),
+                                                    image: dest.image,
+                                                    price: dest.price,
+                                                    location: localizeText(
                                                         dest.country,
                                                         lang,
+                                                    ),
+                                                }}
+                                            />
+                                            <div className="p-5">
+                                                <div className="mb-2 flex items-center justify-between">
+                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                        <MapPin className="h-3 w-3" />{' '}
+                                                        {localizeText(
+                                                            dest.country,
+                                                            lang,
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-xs font-bold text-secondary">
+                                                        <Star className="h-3 w-3 fill-current" />{' '}
+                                                        {dest.rating}
+                                                    </div>
+                                                </div>
+                                                <h3 className="mb-1 font-serif text-xl font-bold text-foreground">
+                                                    {localizeText(dest.name, lang)}
+                                                </h3>
+                                                <p className="mb-4 text-sm text-muted-foreground">
+                                                    {localizeText(
+                                                        dest.description,
+                                                        lang,
                                                     )}
+                                                </p>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="font-bold text-primary">
+                                                        From $
+                                                        {dest.price.toLocaleString()}
+                                                    </span>
+                                                    <Button
+                                                        size="sm"
+                                                        className="bg-primary text-xs text-primary-foreground"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleProceed(
+                                                                dest.slug,
+                                                            );
+                                                        }}
+                                                    >
+                                                        {t('common.bookNow')}
+                                                    </Button>
                                                 </div>
-                                                <div className="flex items-center gap-1 text-xs font-bold text-secondary">
-                                                    <Star className="h-3 w-3 fill-current" />{' '}
-                                                    {dest.rating}
-                                                </div>
-                                            </div>
-                                            <h3 className="mb-1 font-serif text-xl font-bold text-foreground">
-                                                {localizeText(dest.name, lang)}
-                                            </h3>
-                                            <p className="mb-4 text-sm text-muted-foreground">
-                                                {localizeText(
-                                                    dest.description,
-                                                    lang,
-                                                )}
-                                            </p>
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className="font-bold text-primary">
-                                                    From $
-                                                    {dest.price.toLocaleString()}
-                                                </span>
-                                                <Button
-                                                    size="sm"
-                                                    className="bg-primary text-xs text-primary-foreground"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleProceed(
-                                                            dest.slug,
-                                                        );
-                                                    }}
-                                                >
-                                                    {t('common.bookNow')}
-                                                </Button>
                                             </div>
                                         </div>
-                                    </div>
-                                </motion.div>
-                            </Link>
-                        ))}
+                                    </motion.div>
+                                </Link>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>

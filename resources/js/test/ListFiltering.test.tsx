@@ -48,6 +48,20 @@ describe('list page filtering', () => {
         expect(screen.queryByText(/Mercedes E-Class/i)).not.toBeInTheDocument();
     });
 
+    it('shows the request CTA when cars have no matches', async () => {
+        renderWithProviders(<Cars />);
+
+        await screen.findByText(/Mercedes E-Class/i);
+
+        fireEvent.change(screen.getByRole('searchbox'), {
+            target: { value: 'definitely-not-a-car' },
+        });
+
+        expect(
+            await screen.findByRole('link', { name: /Request it/i }),
+        ).toBeInTheDocument();
+    });
+
     it('filters flights by search term', async () => {
         renderWithProviders(<Flights />);
 

@@ -42,6 +42,7 @@ import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavSettings } from '@/hooks/useNavSettings';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { Textarea } from '@/components/ui/textarea';
 import {
     AVAILABLE_PAGES,
     getPage,
@@ -193,6 +194,9 @@ export default function AdminSiteSettings() {
     const [whatsapp, setWhatsapp] = useState('');
     const [hours, setHours] = useState<HourRow[]>([]);
     const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+    const [legalSectionsState, setLegalSectionsState] = useState<
+        Array<{ title: Record<string, string>; body: Record<string, string> }>
+    >([]);
     const [invalidLabels, setInvalidLabels] = useState<Record<string, string>>(
         {},
     );
@@ -253,6 +257,12 @@ export default function AdminSiteSettings() {
         setWhatsapp(siteSettings.whatsapp || '');
         setHours(siteSettings.hours || []);
         setSocialLinks(siteSettings.socialLinks || []);
+        setLegalSectionsState(
+            siteSettings.legalSections?.map((s) => ({
+                title: s.title || { en: '', fr: '', ar: '' },
+                body: s.body || { en: '', fr: '', ar: '' },
+            })) ?? [],
+        );
     }, [siteSettings]);
 
     const sensors = useSensors(
@@ -440,6 +450,26 @@ export default function AdminSiteSettings() {
         setHours((prev) => [...prev, { dayKey: '', value: '' }]);
     };
 
+    const addLegalSection = () => {
+        setLegalSectionsState((prev) => [
+            ...prev,
+            { title: { en: 'New', fr: 'Nouveau', ar: 'جديد' }, body: { en: '', fr: '', ar: '' } },
+        ]);
+    };
+
+    const updateLegalSection = (
+        idx: number,
+        patch: Partial<{ title: Record<string, string>; body: Record<string, string> }>,
+    ) => {
+        setLegalSectionsState((prev) =>
+            prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)),
+        );
+    };
+
+    const removeLegalSection = (idx: number) => {
+        setLegalSectionsState((prev) => prev.filter((_, i) => i !== idx));
+    };
+
     const save = async () => {
         // Client-side validation: ensure dropdown items have en/fr/ar labels
         const errors: Record<string, string> = {};
@@ -512,6 +542,7 @@ export default function AdminSiteSettings() {
                             settings: draft,
                         },
                     },
+                    legalSections: legalSectionsState.map((s) => ({ title: s.title, body: s.body })),
                 }),
             });
             try {
@@ -800,6 +831,91 @@ export default function AdminSiteSettings() {
                                 </div>
                             ))}
                         </Card>
+                    </div>
+                </section>
+
+                <section>
+                    <div className="mb-3 flex items-center justify-between">
+                        <div>
+                            <h2 className="font-serif text-xl font-bold">
+                                {t('admin.settings.legalSections')}
+                            </h2>
+                            <p className="text-sm text-muted-foreground">
+                                Manage privacy, terms and other legal content shown on the site.
+                            </p>
+                        </div>
+                        <div>
+                            <Button size="sm" variant="outline" onClick={addLegalSection}>
+                                <Plus className="mr-1 h-4 w-4" /> Add Section
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-4">
+                        {legalSectionsState.length === 0 && (
+                            <p className="text-xs text-muted-foreground">No legal sections yet. Add Privacy Policy or Terms of Use.</p>
+                        )}
+
+                        {legalSectionsState.map((sec, idx) => (
+                            <Card key={`legal-${idx}`} className="p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <Label className="text-xs">Title (EN)</Label>
+                                        <Input value={sec.title.en} onChange={(e) => updateLegalSection(idx, { title: { ...sec.title, en: e.target.value } })} />
+                                        <div className="mt-2 grid grid-cols-2 gap-2">
+                                            <div>
+                                                <Label className="text-xs">Title (FR)</Label>
+                                                <Input value={sec.title.fr} onChange={(e) => updateLegalSection(idx, { title: { ...sec.title, fr: e.target.value } })} />
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs">Title (AR)</Label>
+                                                <Input value={sec.title.ar} onChange={(e) => updateLegalSection(idx, { title: { ...sec.title, ar: e.target.value } })} />
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3">
+                                            <Label className="text-xs">Body (EN)</Label>
+                                            <Textarea value={sec.body.en} onChange={(e) => updateLegalSection(idx, { body: { ...sec.body, en: e.target.value } })} />
+                                        </div>
+
+                                        <div className="mt-2 grid grid-cols-2 gap-2">
+                                            <div>
+                                                <Label className="text-xs">Body (FR)</Label>
+                                                <Textarea value={sec.body.fr} onChange={(e) => updateLegalSection(idx, { body: { ...sec.body, fr: e.target.value } })} />
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs">Body (AR)</Label>
+                                                <Textarea value={sec.body.ar} onChange={(e) => updateLegalSection(idx, { body: { ...sec.body, ar: e.target.value } })} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col items-end gap-2">
+                                        <div className="flex flex-col gap-2">
+                                            <Button size="icon" variant="ghost" onClick={() => {
+                                                if (idx === 0) return;
+                                                const copy = [...legalSectionsState];
+                                                [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+                                                setLegalSectionsState(copy);
+                                            }} disabled={idx === 0}>
+                                                <ArrowUp className="h-4 w-4" />
+                                            </Button>
+                                            <Button size="icon" variant="ghost" onClick={() => {
+                                                if (idx === legalSectionsState.length - 1) return;
+                                                const copy = [...legalSectionsState];
+                                                [copy[idx + 1], copy[idx]] = [copy[idx], copy[idx + 1]];
+                                                setLegalSectionsState(copy);
+                                            }} disabled={idx === legalSectionsState.length - 1}>
+                                                <ArrowDown className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <Button size="icon" variant="ghost" onClick={() => removeLegalSection(idx)}>
+                                            <Trash2 className="h-4 w-4 text-destructive" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
                     </div>
                 </section>
 

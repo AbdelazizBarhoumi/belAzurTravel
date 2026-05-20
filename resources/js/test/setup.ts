@@ -113,6 +113,21 @@ const fixtures: Record<string, unknown> = {
         highlights: [{ en: 'One' }, { en: 'Two' }],
         bestTime: { en: 'Spring' },
     },
+    '/api/destinations/nameless': {
+        slug: 'nameless',
+        name: { en: 'Nameless Coast', fr: 'Côte sans nom', ar: 'ساحل بلا اسم' },
+        country: { en: 'Nowhere', fr: 'Nulle part', ar: 'لا مكان' },
+        image: '/images/destination-santorini.jpg',
+        gallery: ['/images/destination-santorini.jpg'],
+        rating: 4.2,
+        price: 799,
+        categoryKey: 'coastal',
+        description: {
+            en: 'A destination without optional metadata in the payload.',
+            fr: 'Une destination sans métadonnées optionnelles dans la réponse.',
+            ar: 'وجهة بدون بيانات اختيارية في الحمولة.',
+        },
+    },
     '/api/cars': [
         {
             slug: 'mercedes-e-class',

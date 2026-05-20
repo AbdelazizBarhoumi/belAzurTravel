@@ -588,7 +588,7 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         const params = new URLSearchParams();
 
         if (values.destination.trim()) {
-            params.set('destination', values.destination.trim());
+            params.set('q', values.destination.trim());
         }
 
         if (values.dateRange?.from) {
@@ -604,7 +604,70 @@ export function SearchWidget({ className }: SearchWidgetProps) {
 
         params.set('guests', String(values.guests));
 
+        if (activeTab === 'hotels') {
+            const roomType = values.extras.roomType;
+            const propertyClass = values.extras.propertyClass;
+
+            if (roomType && roomType !== 'any') {
+                params.set('cat', roomType);
+            }
+
+            if (propertyClass && propertyClass !== 'any') {
+                const stars = propertyClass.replace(/[^0-9]/g, '');
+                if (stars) {
+                    params.set('stars', stars);
+                }
+            }
+        }
+
+        if (activeTab === 'tours') {
+            const tourStyle = values.extras.tourStyle;
+            const duration = values.extras.duration;
+
+            if (tourStyle) {
+                params.set('cat', tourStyle);
+            }
+
+            if (duration) {
+                params.set('duration', duration);
+            }
+        }
+
+        if (activeTab === 'flights') {
+            const cabinClass = values.extras.cabinClass;
+            const tripType = values.extras.tripType;
+
+            if (cabinClass) {
+                params.set('cabin', cabinClass);
+            }
+
+            if (tripType) {
+                params.set('type', tripType);
+            }
+        }
+
         Object.entries(values.extras).forEach(([key, value]) => {
+            if (
+                activeTab === 'hotels' &&
+                (key === 'roomType' || key === 'propertyClass')
+            ) {
+                return;
+            }
+
+            if (
+                activeTab === 'tours' &&
+                (key === 'tourStyle' || key === 'duration')
+            ) {
+                return;
+            }
+
+            if (
+                activeTab === 'flights' &&
+                (key === 'tripType' || key === 'cabinClass')
+            ) {
+                return;
+            }
+
             if (value && value !== 'any') {
                 params.set(key, value);
             }

@@ -52,6 +52,21 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الإشعارات القانونية',
         en: 'Legal',
     },
+    // Cookie / Privacy
+    'cookie.banner.title': {
+        fr: 'Nous utilisons des cookies',
+        ar: 'نستخدم ملفات تعريف الارتباط',
+        en: 'We use cookies',
+    },
+    'cookie.banner.description': {
+        fr: 'Nous utilisons des cookies pour améliorer votre expérience. Vous pouvez accepter ou gérer vos préférences.',
+        ar: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك. يمكنك قبولها أو إدارة تفضيلاتك.',
+        en: 'We use cookies to improve your experience. You can accept or manage your preferences.',
+    },
+    'cookie.accept': { fr: 'Accepter', ar: 'قبول', en: 'Accept' },
+    'cookie.decline': { fr: 'Refuser', ar: 'رفض', en: 'Decline' },
+    'cookie.learnMore': { fr: 'En savoir plus', ar: 'تعرف على المزيد', en: 'Learn more' },
+    'cookie.settings': { fr: 'Paramètres des cookies', ar: 'إعدادات الكوكيز', en: 'Cookie settings' },
     'nav.home': { fr: 'Accueil', ar: 'الرئيسية', en: 'Home' },
     'nav.signin': { fr: 'Connexion', ar: 'تسجيل الدخول', en: 'Sign in' },
     'nav.start': { fr: 'Commencer', ar: 'ابدأ', en: 'Get Started' },
@@ -658,6 +673,41 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Aucun résultat trouvé.',
         ar: 'لم يتم العثور على نتائج.',
         en: 'No results found.',
+    },
+    'common.noItemsYet': {
+        fr: 'Rien à afficher pour le moment.',
+        ar: 'لا يوجد شيء لعرضه بعد.',
+        en: 'Nothing to show yet.',
+    },
+    'common.noItemsYetDescription': {
+        fr: 'Cette liste est vide pour le moment. Vous pouvez tout de même nous envoyer une demande.',
+        ar: 'هذه القائمة فارغة حاليًا. يمكنك مع ذلك إرسال طلب إلينا.',
+        en: 'This list is empty for now. You can still send us a request.',
+    },
+    'common.requestThingEyebrow': {
+        fr: 'Vous cherchez autre chose ?',
+        ar: 'هل تبحث عن شيء آخر؟',
+        en: 'Looking for something else?',
+    },
+    'common.requestThingDescription': {
+        fr: "Vous ne trouvez pas exactement ce que vous cherchez ? Envoyez-nous une demande et nous vous aiderons à le trouver.",
+        ar: 'لا تجد بالضبط ما تبحث عنه؟ أرسل لنا طلبًا وسنساعدك في العثور عليه.',
+        en: 'Can’t find exactly what you want? Send us a request and we’ll help source it.',
+    },
+    'common.requestThingCta': {
+        fr: 'Faire une demande',
+        ar: 'اطلبها',
+        en: 'Request it',
+    },
+    'common.contactViaWhatsApp': {
+        fr: 'Contacter via WhatsApp',
+        ar: 'التواصل عبر واتساب',
+        en: 'Contact via WhatsApp',
+    },
+    'common.contactViaPhone': {
+        fr: 'Appeler',
+        ar: 'اتصل',
+        en: 'Call',
     },
     'common.clearFilters': {
         fr: 'Effacer les filtres',

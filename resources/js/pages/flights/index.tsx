@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Plane, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
@@ -24,12 +25,14 @@ function FlightsContent() {
     const navigate = useNavigate();
     const [params] = useSearchParams();
     const { data: flights = [] } = useFlights();
-    const initialSearch = params.get('q') || '';
+    // Accept landing widget destination as fallback for q
+    const initialSearch = params.get('q') || params.get('destination') || '';
     const initialAirline = params.get('airline') || ALL;
+    const initialCabin = params.get('cabinClass') || params.get('cabinclass') || ALL;
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedAirline, setSelectedAirline] = useState(initialAirline);
     const [selectedStops, setSelectedStops] = useState(ALL);
-    const [selectedCabin, setSelectedCabin] = useState(ALL);
+    const [selectedCabin, setSelectedCabin] = useState(initialCabin);
 
     const airlineOptions = useMemo(
         () =>
@@ -218,9 +221,9 @@ function FlightsContent() {
 
             <div className="space-y-4">
                 {filteredFlights.length === 0 ? (
-                    <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
-                        {t('common.noResults')}
-                    </div>
+                    <RequestThingEmptyState
+                        variant={flights.length === 0 ? 'empty' : 'no-results'}
+                    />
                 ) : (
                     filteredFlights.map((f, i) => (
                         <motion.div

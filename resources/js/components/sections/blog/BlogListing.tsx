@@ -3,6 +3,7 @@ import { Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import CardMedia from '@/components/ui/CardMedia';
 import {
@@ -121,9 +122,12 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
 
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                     {paginatedPosts.length === 0 ? (
-                        <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground md:col-span-3">
-                            {t('common.noResults')}
-                        </div>
+                        <RequestThingEmptyState
+                            variant={
+                                posts.length === 0 ? 'empty' : 'no-results'
+                            }
+                            className="md:col-span-3"
+                        />
                     ) : (
                         paginatedPosts.map((post, i) => (
                             <Link

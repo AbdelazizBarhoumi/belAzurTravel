@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { Clock, Users, MapPin, Star } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -16,28 +17,36 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useTours, useCategories } from '@/hooks/usePublicData';
-import { matchesSearchText } from '@/lib/listFilters';
+import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
 
 const Tours = () => {
     const { t, lang } = useLanguage();
     const [params] = useSearchParams();
-    const initialSearch = params.get('q') || '';
+    // Accept landing widget destination param as fallback for q
+    const initialSearch = params.get('q') || params.get('destination') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || ALL;
+    const initialDuration = params.get('duration')?.toLowerCase() || ALL;
 
     const { data: tours = [] } = useTours();
     const { data: dynamicCategories = [] } = useCategories('tours');
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedLocation, setSelectedLocation] = useState(ALL);
-    const [selectedDuration, setSelectedDuration] = useState(ALL);
+    const [selectedDuration, setSelectedDuration] = useState(initialDuration);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+
+    useEffect(() => {
+        setSearchQuery(initialSearch);
+        setSelectedCategory(initialCategory);
+        setSelectedDuration(initialDuration);
+    }, [initialSearch, initialCategory, initialDuration]);
 
     const categories = useMemo(
         () => [
             { value: ALL, label: t('common.all') },
             ...dynamicCategories.map((c) => ({
-                value: c.key,
+                value: c.key.toLowerCase(),
                 label: c.name[lang] || c.name.en,
             })),
         ],
@@ -73,10 +82,10 @@ const Tours = () => {
                     localizeText(tour.location, lang) === selectedLocation;
                 const matchesDuration =
                     selectedDuration === ALL ||
-                    localizeText(tour.duration, lang) === selectedDuration;
+                    matchesFilterValue(selectedDuration, [tour.duration]);
                 const matchesCategory =
                     selectedCategory === ALL ||
-                    tour.category_key === selectedCategory;
+                    (tour.category_key ?? '').toLowerCase() === selectedCategory;
 
                 return (
                     matchesSearch &&
@@ -228,9 +237,14 @@ const Tours = () => {
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         {filteredTours.length === 0 ? (
-                            <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground lg:col-span-2">
-                                {t('common.noResults')}
-                            </div>
+                            <RequestThingEmptyState
+                                variant={
+                                    tours.length === 0
+                                        ? 'empty'
+                                        : 'no-results'
+                                }
+                                className="lg:col-span-2"
+                            />
                         ) : (
                             filteredTours.map((tour, i) => (
                                 <Link

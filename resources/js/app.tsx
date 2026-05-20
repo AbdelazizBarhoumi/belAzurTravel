@@ -10,6 +10,7 @@ import { RoleGuard } from '@/components/ui/RoleGuard';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
+import CookieConsent from '@/components/ui/CookieConsent';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -50,6 +51,7 @@ import Favorites from './pages/general/Favorites';
 import Gallery from './pages/general/Gallery';
 import Index from './pages/general/Index';
 import Legal from './pages/general/Legal';
+import LegalDetail from './pages/general/LegalDetail';
 import Login from './pages/general/Login';
 import NotFound from './pages/general/NotFound';
 import NotificationsPage from './pages/general/NotificationsPage';
@@ -443,6 +445,14 @@ const LayoutWrapper = () => {
                         }
                     />
                     <Route
+                        path="/legal/:id"
+                        element={
+                            <NavRouteGuard pageKey="legal">
+                                <LegalDetail />
+                            </NavRouteGuard>
+                        }
+                    />
+                    <Route
                         path="/gallery"
                         element={
                             <NavRouteGuard pageKey="gallery">
@@ -513,7 +523,8 @@ const App = () => (
                             }}
                         >
                             <RouteLoader />
-                            <LayoutWrapper />
+                                <LayoutWrapper />
+                                <CookieConsent />
                         </BrowserRouter>
                     </TooltipProvider>
                 </FavoritesProvider>

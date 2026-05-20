@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
@@ -152,9 +153,10 @@ function EventsContent() {
 
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {filteredEvents.length === 0 ? (
-                    <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground md:col-span-2">
-                        {t('common.noResults')}
-                    </div>
+                    <RequestThingEmptyState
+                        variant={events.length === 0 ? 'empty' : 'no-results'}
+                        className="md:col-span-2"
+                    />
                 ) : (
                     filteredEvents.map((e, i) => (
                         <motion.div

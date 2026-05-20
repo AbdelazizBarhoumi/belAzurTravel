@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Users, Fuel, Settings2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Button } from '@/components/ui/button';
@@ -272,9 +273,10 @@ function CarsContent() {
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredCars.length === 0 ? (
-                    <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground sm:col-span-2 lg:col-span-3">
-                        {t('common.noResults')}
-                    </div>
+                    <RequestThingEmptyState
+                        variant={cars.length === 0 ? 'empty' : 'no-results'}
+                        className="sm:col-span-2 lg:col-span-3"
+                    />
                 ) : (
                     filteredCars.map((c, i) => (
                         <Link

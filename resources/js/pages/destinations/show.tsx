@@ -6,6 +6,7 @@ import { PageShell } from '@/components/layout/PageShell';
 import { Gallery } from '@/components/media/Gallery';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { localizeText } from '@/data';
 import {
     useDestinationBySlug,
     useHotels,
@@ -15,8 +16,8 @@ import type { Lang } from '@/i18n/translations';
 
 type LocalizedText = Record<Lang, string>;
 
-function localize(value: LocalizedText, lang: Lang): string {
-    return value[lang];
+function localize(value: LocalizedText | null | undefined, lang: Lang): string {
+    return localizeText(value, lang);
 }
 export default function DestinationDetail() {
     const { slug } = useParams<{ slug: string }>();
@@ -96,7 +97,7 @@ export default function DestinationDetail() {
                                                   'destinationDetail.bestTime',
                                               ),
                                               value: localize(
-                                                  destination.bestTime!,
+                                                  destination.bestTime,
                                                   lang,
                                               ),
                                               icon: Calendar,
@@ -110,7 +111,7 @@ export default function DestinationDetail() {
                                                   'destinationDetail.language',
                                               ),
                                               value: localize(
-                                                  destination.language!,
+                                                  destination.language,
                                                   lang,
                                               ),
                                               icon: Globe,
@@ -124,7 +125,7 @@ export default function DestinationDetail() {
                                                   'destinationDetail.currency',
                                               ),
                                               value: localize(
-                                                  destination.currency!,
+                                                  destination.currency,
                                                   lang,
                                               ),
                                               icon: DollarSign,
@@ -138,7 +139,7 @@ export default function DestinationDetail() {
                                                   'destinationDetail.weather',
                                               ),
                                               value: localize(
-                                                  destination.weather!,
+                                                  destination.weather,
                                                   lang,
                                               ),
                                               icon: Cloud,
@@ -146,7 +147,7 @@ export default function DestinationDetail() {
                                       ]
                                     : []),
                             ]}
-                            badge={localize(destination.category!, lang)}
+                            badge={localize(destination.category, lang)}
                             priceLabel={t('destinationDetail.startingFrom')}
                             rating={destination.rating}
                             primaryButtonLabel={t('destinationDetail.planTrip')}
@@ -202,30 +203,60 @@ export default function DestinationDetail() {
                         currency="$"
                         title={localize(destination.name, lang)}
                         location={localize(destination.country, lang)}
-                        description={localize(destination.description!, lang)}
+                        description={localize(destination.description, lang)}
                         details={[
-                            {
-                                label: t('destinationDetail.bestTime'),
-                                value: localize(destination.bestTime!, lang),
-                                icon: Calendar,
-                            },
-                            {
-                                label: t('destinationDetail.language'),
-                                value: localize(destination.language!, lang),
-                                icon: Globe,
-                            },
-                            {
-                                label: t('destinationDetail.currency'),
-                                value: localize(destination.currency!, lang),
-                                icon: DollarSign,
-                            },
-                            {
-                                label: t('destinationDetail.weather'),
-                                value: localize(destination.weather!, lang),
-                                icon: Cloud,
-                            },
+                            ...(destination.bestTime
+                                ? [
+                                      {
+                                          label: t(
+                                              'destinationDetail.bestTime',
+                                          ),
+                                          value: localize(
+                                              destination.bestTime,
+                                              lang,
+                                          ),
+                                          icon: Calendar,
+                                      },
+                                  ]
+                                : []),
+                            ...(destination.language
+                                ? [
+                                      {
+                                          label: t('destinationDetail.language'),
+                                          value: localize(
+                                              destination.language,
+                                              lang,
+                                          ),
+                                          icon: Globe,
+                                      },
+                                  ]
+                                : []),
+                            ...(destination.currency
+                                ? [
+                                      {
+                                          label: t('destinationDetail.currency'),
+                                          value: localize(
+                                              destination.currency,
+                                              lang,
+                                          ),
+                                          icon: DollarSign,
+                                      },
+                                  ]
+                                : []),
+                            ...(destination.weather
+                                ? [
+                                      {
+                                          label: t('destinationDetail.weather'),
+                                          value: localize(
+                                              destination.weather,
+                                              lang,
+                                          ),
+                                          icon: Cloud,
+                                      },
+                                  ]
+                                : []),
                         ]}
-                        badge={localize(destination.category!, lang)}
+                        badge={localize(destination.category, lang)}
                         priceLabel={t('destinationDetail.startingFrom')}
                         rating={destination.rating}
                         primaryButtonLabel={t('destinationDetail.planTrip')}

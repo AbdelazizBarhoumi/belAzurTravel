@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Tag } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -72,9 +73,10 @@ export function DealsSection() {
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     {filtered.length === 0 ? (
-                        <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground md:col-span-3">
-                            {t('common.noResults')}
-                        </div>
+                        <RequestThingEmptyState
+                            variant={deals.length === 0 ? 'empty' : 'no-results'}
+                            className="lg:col-span-3"
+                        />
                     ) : (
                         filtered.map((deal, i) => (
                             <motion.div

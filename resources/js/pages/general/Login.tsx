@@ -19,6 +19,16 @@ const Login = () => {
     const navigate = useNavigate();
     const { t } = useLanguage();
     const { data: currentUser, isPending, isFetching } = useAuthUser();
+    const [consentChecked, setConsentChecked] = useState(false);
+
+    useEffect(() => {
+        // if global cookie consent already accepted, allow login without extra checkbox
+        if (typeof window !== 'undefined') {
+            const match = document.cookie.match(new RegExp('(^| )' + 'cookie_consent' + '=([^;]+)'));
+            const c = match ? decodeURIComponent(match[2]) : null;
+            if (c === 'accepted') setConsentChecked(true);
+        }
+    }, []);
 
     useEffect(() => {
         if (currentUser) {
@@ -127,13 +137,20 @@ const Login = () => {
                             </button>
                         </div>
 
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex flex-col items-start justify-between gap-3 text-sm md:flex-row">
                             <label className="flex items-center gap-2 text-muted-foreground">
                                 <input
                                     type="checkbox"
                                     className="rounded border-border"
+                                    checked={consentChecked}
+                                    onChange={(e) => setConsentChecked(e.target.checked)}
                                 />{' '}
-                                {t('auth.rememberMe')}
+                                <span>
+                                    {t('auth.rememberMe')} ·{' '}
+                                    <a href="/legal/1" className="text-primary hover:underline">
+                                        {t('cookie.learnMore')}
+                                    </a>
+                                </span>
                             </label>
                             <a
                                 href="#"

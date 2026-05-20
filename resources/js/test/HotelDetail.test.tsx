@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import HotelDetail from '@/pages/hotels/show';
 
@@ -70,11 +71,16 @@ function renderPage(initialEntry: string) {
     return render(
         <QueryClientProvider client={queryClient}>
             <LanguageProvider>
-                <MemoryRouter initialEntries={[initialEntry]}>
-                    <Routes>
-                        <Route path="/hotels/:id" element={<HotelDetail />} />
-                    </Routes>
-                </MemoryRouter>
+                <FavoritesProvider>
+                    <MemoryRouter initialEntries={[initialEntry]}>
+                        <Routes>
+                            <Route
+                                path="/hotels/:id"
+                                element={<HotelDetail />}
+                            />
+                        </Routes>
+                    </MemoryRouter>
+                </FavoritesProvider>
             </LanguageProvider>
         </QueryClientProvider>,
     );
@@ -88,10 +94,10 @@ describe('HotelDetail', () => {
     it('renders hotel data from the API hook', async () => {
         renderPage('/hotels/sunset-paradise-resort');
 
+        expect(screen.getAllByText('Luxury resort').length).toBeGreaterThan(0);
         expect(
-            await screen.findByText('Sunset Paradise Resort'),
-        ).toBeInTheDocument();
-        expect(screen.getByText('Luxury resort')).toBeInTheDocument();
+            screen.getAllByText('Sunset Paradise Resort').length,
+        ).toBeGreaterThan(0);
         expect(screen.getByText('Chambres disponibles')).toBeInTheDocument();
     });
 });

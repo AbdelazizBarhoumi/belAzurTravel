@@ -23,7 +23,7 @@ const Legal = () => {
             ]}
         >
             <div className="mx-auto max-w-4xl space-y-6">
-                {legalSections.map((section) => (
+                {legalSections.map((section, i) => (
                     <div
                         key={section.title[lang]}
                         className="rounded-3xl border border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur-sm transition-all hover:shadow-md"
@@ -35,6 +35,12 @@ const Legal = () => {
                         <p className="text-sm leading-7 text-muted-foreground md:text-base">
                             {section.body[lang]}
                         </p>
+
+                        <div className="mt-4 text-right">
+                            <a href={`/legal/${i}`} className="text-primary hover:underline">
+                                {t('cookie.learnMore')}
+                            </a>
+                        </div>
                     </div>
                 ))}
             </div>

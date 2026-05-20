@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { Wifi, Car, Coffee, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
@@ -11,7 +12,7 @@ import { TagFilter, type Tag } from '@/components/ui/TagFilter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useHotels, useCategories } from '@/hooks/usePublicData';
-import { matchesSearchText } from '@/lib/listFilters';
+import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
 
 const AMENITY_ICONS: Record<string, LucideIcon> = {
     wifi: Wifi,
@@ -22,7 +23,8 @@ const AMENITY_ICONS: Record<string, LucideIcon> = {
 export default function Hotels() {
     const { t, lang, dir } = useLanguage();
     const [params] = useSearchParams();
-    const initialSearch = params.get('q') || '';
+    // Accept landing widget params as fallback (destination -> q)
+    const initialSearch = params.get('q') || params.get('destination') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || '';
     const [showMobileFilter, setShowMobileFilter] = useState(false);
     // referenced to satisfy linter until mobile filter UI is implemented
@@ -33,9 +35,20 @@ export default function Hotels() {
         initialCategory ? [initialCategory] : [],
     );
 
-    // Initialize star filter from URL parameter
-    const initialStars: number[] = (() => {
-        const stars = params.get('stars');
+    // Initialize star filter from URL parameter or mapped propertyClass (e.g. "4-star")
+    const initialStars = useMemo<number[]>(() => {
+        const starsParam = params.get('stars');
+        const propertyClass =
+            params.get('propertyClass') || params.get('propertyclass');
+
+        let fromPropertyClass: number | null = null;
+        if (propertyClass) {
+            const m = propertyClass.match(/(\d+)/);
+            if (m) fromPropertyClass = parseInt(m[1], 10);
+        }
+
+        const stars =
+            starsParam ?? (fromPropertyClass ? String(fromPropertyClass) : null);
         if (stars) {
             const starsNum = parseInt(stars, 10);
             if (starsNum >= 1 && starsNum <= 5) {
@@ -43,11 +56,22 @@ export default function Hotels() {
             }
         }
         return [];
-    })();
+    }, [params.toString()]);
 
     const [selectedStars, setSelectedStars] = useState<number[]>(initialStars);
+    // Honor landing roomType param as a tag-like filter when present
+    const initialRoomType =
+        params.get('roomType') || params.get('roomtype') || 'any';
+    const [roomType, setRoomType] = useState<string>(initialRoomType);
     const { data: hotels = [] } = useHotels();
     const { data: dynamicCategories = [] } = useCategories('hotels');
+
+    useEffect(() => {
+        setSearchQuery(initialSearch);
+        setSelectedTags(initialCategory ? [initialCategory] : []);
+        setSelectedStars(initialStars);
+        setRoomType(initialRoomType);
+    }, [initialSearch, initialCategory, initialStars, initialRoomType]);
 
     const HOTEL_TAGS: Tag[] = dynamicCategories.map((c) => ({
         id: c.key,
@@ -81,10 +105,13 @@ export default function Hotels() {
                   ]);
                   const matchesTags =
                       selectedTags.length === 0 ||
-                      selectedTags.some((tag) => hotel.tags.includes(tag));
+                      selectedTags.some((tag) =>
+                          matchesFilterValue(tag, hotel.tags ?? []),
+                      );
                   const matchesStars =
                       selectedStars.length === 0 ||
                       selectedStars.includes(hotel.stars);
+                  const matchesRoomType = !roomType || roomType === 'any' || (hotel.tags ?? []).includes(roomType);
                   const matchesPrice =
                       hotel.price >= activePriceRange[0] &&
                       hotel.price <= activePriceRange[1];
@@ -92,6 +119,7 @@ export default function Hotels() {
                       matchesSearch &&
                       matchesTags &&
                       matchesStars &&
+                      matchesRoomType &&
                       matchesPrice
                   );
               });
@@ -296,9 +324,13 @@ export default function Hotels() {
                         {/* Main Content */}
                         <div className="min-w-0 flex-1">
                             {filteredHotels.length === 0 ? (
-                                <div className="rounded-3xl border border-dashed border-border p-12 text-center text-muted-foreground">
-                                    {t('hotels.noResults')}
-                                </div>
+                                <RequestThingEmptyState
+                                    variant={
+                                        hotels.length === 0
+                                            ? 'empty'
+                                            : 'no-results'
+                                    }
+                                />
                             ) : (
                                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                     {filteredHotels.map((hotel, index) => (

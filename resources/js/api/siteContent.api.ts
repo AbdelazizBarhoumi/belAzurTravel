@@ -302,22 +302,22 @@ export const footerSupportLinks: SimpleLinkItem[] = [
 ];
 
 export const navbarDestinationLinks: NavDropdownItem[] = [
-    { id: 'cat-beach', labelKey: 'cat.beach', href: '/destinations?cat=Beach' },
-    { id: 'cat-city', labelKey: 'cat.city', href: '/destinations?cat=City' },
+    { id: 'cat-beach', labelKey: 'cat.beach', href: '/destinations?cat=beach' },
+    { id: 'cat-city', labelKey: 'cat.city', href: '/destinations?cat=city' },
     {
         id: 'cat-nature',
         labelKey: 'cat.nature',
-        href: '/destinations?cat=Nature',
+        href: '/destinations?cat=nature',
     },
     {
         id: 'cat-luxury',
         labelKey: 'cat.luxury',
-        href: '/destinations?cat=Luxury',
+        href: '/destinations?cat=luxury',
     },
     {
         id: 'cat-adventure',
         labelKey: 'cat.adventure',
-        href: '/destinations?cat=Adventure',
+        href: '/destinations?cat=adventure',
     },
 ];
 

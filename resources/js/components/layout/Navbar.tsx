@@ -208,7 +208,7 @@ export function Navbar() {
                     {moreEntries.length > 0 && (
                         <div className="group relative">
                             <button className="inline-flex h-10 items-center gap-1 px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-                                More
+                                {t('nav.more') || 'More'}
                                 <ChevronDown className="h-4 w-4 opacity-50 group-hover:opacity-100" />
                             </button>
                             <div className="absolute left-0 top-full hidden pt-1 group-hover:block">
@@ -356,7 +356,8 @@ export function Navbar() {
                         className="max-h-[80vh] overflow-hidden overflow-y-auto border-t border-border bg-card lg:hidden"
                     >
                         <div className="container mx-auto flex flex-col gap-1 px-4 py-4">
-                            {[...topEntries, ...moreEntries].map((entry) => {
+                            {/* Top entries shown first */}
+                            {topEntries.map((entry) => {
                                 const page = getPage(entry.pageKey);
                                 if (!page) return null;
                                 const dropdownItems = resolveDropdownItems(entry);
@@ -375,9 +376,7 @@ export function Navbar() {
                                                 {entry.linkSelf && (
                                                     <Link
                                                         to={page.href}
-                                                        onClick={() =>
-                                                            setOpen(false)
-                                                        }
+                                                        onClick={() => setOpen(false)}
                                                         className="py-1 text-sm text-primary"
                                                     >
                                                         {t('common.all')}
@@ -386,13 +385,8 @@ export function Navbar() {
                                                 {dropdownItems.map((it, i) => (
                                                     <Link
                                                         key={i}
-                                                        to={buildItemHref(
-                                                            entry.pageKey,
-                                                            it,
-                                                        )}
-                                                        onClick={() =>
-                                                            setOpen(false)
-                                                        }
+                                                        to={buildItemHref(entry.pageKey, it)}
+                                                        onClick={() => setOpen(false)}
                                                         className="py-1 text-sm text-muted-foreground"
                                                     >
                                                         {resolveLabel(it.label)}
@@ -414,6 +408,67 @@ export function Navbar() {
                                     </Link>
                                 );
                             })}
+
+                            {/* More entries grouped under a single "More" collapsible on mobile */}
+                            {moreEntries.length > 0 && (
+                                <details className="group/main">
+                                    <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
+                                        {t('nav.more') /* translation key for More */}
+                                        <ChevronDown className="h-4 w-4 transition-transform group-open/main:rotate-180" />
+                                    </summary>
+                                    <div className="flex flex-col gap-2 pb-2 pl-3">
+                                        {moreEntries.map((entry) => {
+                                            const page = getPage(entry.pageKey);
+                                            if (!page) return null;
+                                            const dropdownItems = resolveDropdownItems(entry);
+
+                                           if (entry.isDropdown && dropdownItems.length > 0) {
+                                                return (
+                                                    <details
+                                                        key={entry.pageKey}
+                                                        className="group/sub"
+                                                    >
+                                                        <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
+                                                            {t(`nav.${page.key}`)}
+                                                            <ChevronDown className="h-4 w-4 transition-transform group-open/sub:rotate-180" />
+                                                        </summary>
+                                                        <div className="flex flex-col gap-1 pb-2 pl-3">
+                                                            <Link
+                                                                to={page.href}
+                                                                onClick={() => setOpen(false)}
+                                                                className="py-1 text-sm text-primary"
+                                                            >
+                                                                {t('common.all')}
+                                                            </Link>
+                                                            {dropdownItems.map((it, i) => (
+                                                                <Link
+                                                                    key={i}
+                                                                    to={buildItemHref(entry.pageKey, it)}
+                                                                    onClick={() => setOpen(false)}
+                                                                    className="py-1 text-sm text-muted-foreground"
+                                                                >
+                                                                    {resolveLabel(it.label)}
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    </details>
+                                                );
+                                            }
+
+                                            return (
+                                                <Link
+                                                    key={entry.pageKey}
+                                                    to={page.href}
+                                                    onClick={() => setOpen(false)}
+                                                    className="py-1 text-sm text-muted-foreground"
+                                                >
+                                                    {t(`nav.${page.key}`)}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                </details>
+                            )}
 
                             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
                                 <LanguageSwitcher />
