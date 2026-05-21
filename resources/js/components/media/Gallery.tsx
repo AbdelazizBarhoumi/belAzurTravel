@@ -99,11 +99,7 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                         aria-label={isRtl ? 'Next image' : 'Previous image'}
                         className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition-opacity hover:bg-black/60 group-hover:opacity-100"
                     >
-                        {isRtl ? (
-                            <ChevronRight className="h-4 w-4" />
-                        ) : (
-                            <ChevronLeft className="h-4 w-4" />
-                        )}
+                        <ChevronLeft className="h-4 w-4" />
                     </button>
                     <button
                         type="button"
@@ -118,11 +114,7 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                         aria-label={isRtl ? 'Previous image' : 'Next image'}
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition-opacity hover:bg-black/60 group-hover:opacity-100"
                     >
-                        {isRtl ? (
-                            <ChevronLeft className="h-4 w-4" />
-                        ) : (
-                            <ChevronRight className="h-4 w-4" />
-                        )}
+                        <ChevronRight className="h-4 w-4" />
                     </button>
                 </motion.div>
 
@@ -188,16 +180,10 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                                         prevImage();
                                     }
                                 }}
-                                aria-label={
-                                    isRtl ? 'Next image' : 'Previous image'
-                                }
+                                aria-label={isRtl ? 'Next image' : 'Previous image'}
                                 className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
                             >
-                                {isRtl ? (
-                                    <ChevronRight className="h-6 w-6" />
-                                ) : (
-                                    <ChevronLeft className="h-6 w-6" />
-                                )}
+                                <ChevronLeft className="h-6 w-6" />
                             </button>
 
                             <motion.img
@@ -221,16 +207,10 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                                         nextImage();
                                     }
                                 }}
-                                aria-label={
-                                    isRtl ? 'Previous image' : 'Next image'
-                                }
+                                aria-label={isRtl ? 'Previous image' : 'Next image'}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
                             >
-                                {isRtl ? (
-                                    <ChevronLeft className="h-6 w-6" />
-                                ) : (
-                                    <ChevronRight className="h-6 w-6" />
-                                )}
+                                <ChevronRight className="h-6 w-6" />
                             </button>
 
                             <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 overflow-x-auto rounded-2xl bg-black/40 p-2 backdrop-blur-sm">

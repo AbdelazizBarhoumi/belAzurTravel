@@ -145,6 +145,26 @@ const fixtures: Record<string, unknown> = {
             features: [{ en: 'Leather seats' }],
             policy: [{ en: 'Age 25+' }],
         },
+        {
+            slug: 'tesla-model-3',
+            name: {
+                en: 'Tesla Model 3',
+                fr: 'Tesla Model 3',
+                ar: 'تسلا موديل 3',
+            },
+            category: { en: 'Electric', fr: 'Électrique', ar: 'كهربائية' },
+            fuel: { en: 'Electric', fr: 'Électrique', ar: 'كهربائية' },
+            transmission: {
+                en: 'Automatic',
+                fr: 'Automatique',
+                ar: 'أوتوماتيكي',
+            },
+            seats: 5,
+            price: 95,
+            image: '/images/tesla.jpg',
+            features: [{ en: 'Autopilot' }],
+            policy: [{ en: 'Age 25+' }],
+        },
     ],
     '/api/flights': [
         {
@@ -157,7 +177,42 @@ const fixtures: Record<string, unknown> = {
             duration: { en: '12h', fr: '12h', ar: '12س' },
             stops: { en: 'Direct', fr: 'Direct', ar: 'مباشر' },
             price: 899,
-            cabin: { en: 'Economy', fr: 'Économique', ar: 'اقتصادي' },
+            details: {
+                date: '2026-05-20',
+                seats: 12,
+                cabin: { en: 'Economy', fr: 'Économique', ar: 'اقتصادي' },
+                aircraft: { en: 'A380', fr: 'A380', ar: 'A380' },
+                baggage: {
+                    en: '1 checked bag',
+                    fr: '1 bagage enregistré',
+                    ar: 'حقيبة واحدة',
+                },
+                refund: {
+                    en: 'Non-refundable',
+                    fr: 'Non remboursable',
+                    ar: 'غير قابل للاسترداد',
+                },
+            },
+        },
+        {
+            id: 'air-france-paris',
+            airline: {
+                en: 'Air France',
+                fr: 'Air France',
+                ar: 'الخطوط الفرنسية',
+            },
+            from: 'LHR',
+            to: { en: 'Paris', fr: 'Paris', ar: 'باريس' },
+            departure: '08:10',
+            arrival: '10:25',
+            duration: { en: '1h 15m', fr: '1h 15m', ar: '1س 15د' },
+            stops: { en: 'Direct', fr: 'Direct', ar: 'مباشر' },
+            price: 189,
+            details: {
+                date: '2026-05-20',
+                seats: 24,
+                cabin: { en: 'Economy', fr: 'Économique', ar: 'اقتصادي' },
+            },
         },
     ],
     '/api/flights/emirates-nyc-dxb': {
@@ -183,12 +238,26 @@ const fixtures: Record<string, unknown> = {
             discount: { en: '20% OFF' },
             terms: [{ en: 'T&Cs apply' }],
         },
+        {
+            code: 'GROUP10',
+            title: { en: 'Group Discount' },
+            description: { en: '10% off for groups' },
+            discount: { en: '10% OFF' },
+            terms: [{ en: 'T&Cs apply' }],
+        },
     ],
     '/api/promos/SPRING30': {
         code: 'SPRING30',
         title: { en: 'Spring Promo' },
         description: { en: '20% off' },
         discount: { en: '20% OFF' },
+        terms: [{ en: 'T&Cs apply' }],
+    },
+    '/api/promos/GROUP10': {
+        code: 'GROUP10',
+        title: { en: 'Group Discount' },
+        description: { en: '10% off for groups' },
+        discount: { en: '10% OFF' },
         terms: [{ en: 'T&Cs apply' }],
     },
     '/api/blog-posts': [
@@ -214,17 +283,17 @@ const fixtures: Record<string, unknown> = {
 
 globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     try {
-        const url =
+        const rawUrl =
             typeof input === 'string'
                 ? input
                 : input instanceof URL
                   ? input.toString()
                   : input.url;
 
-        if (typeof url === 'string' && url.startsWith('/api/')) {
-            // strip origin/query params
-            const clean = url.split('?')[0];
+        const parsedUrl = new URL(rawUrl, 'http://localhost');
+        const clean = parsedUrl.pathname;
 
+        if (clean.startsWith('/api/')) {
             if (fixtures[clean]) {
                 return Promise.resolve(
                     new Response(JSON.stringify(fixtures[clean]), {
@@ -235,7 +304,7 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
             }
 
             // fallback to local backend if running
-            const proxied = `http://127.0.0.1:8000${url}`;
+            const proxied = `http://127.0.0.1:8000${parsedUrl.pathname}${parsedUrl.search}`;
             return originalFetch.call(globalThis, proxied, init);
         }
     } catch {

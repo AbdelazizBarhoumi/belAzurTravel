@@ -8,7 +8,7 @@ interface CardMediaProps {
   imgClass?: string;
 }
 
-export function CardMedia({ src, alt = '', wrapperClass = 'aspect-[4/3]', imgClass = '' }: CardMediaProps) {
+export function CardMedia({ src, alt = '', wrapperClass = 'aspect-[8/3]', imgClass = '' }: CardMediaProps) {
   return (
     <div className={`overflow-hidden ${wrapperClass}`.trim()}>
       {src ? (

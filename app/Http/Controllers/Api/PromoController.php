@@ -38,6 +38,8 @@ class PromoController extends Controller
     /** @return array<string, mixed> */
     private function payload(Promo $item): array
     {
+        $details = $item->details ?? [];
+
         return [
             'code' => $item->code,
             'title' => $item->title,
@@ -45,8 +47,32 @@ class PromoController extends Controller
             'description' => $item->description,
             'expires' => $item->expires,
             'color' => $item->color,
-            ...($item->details ?? []),
+            'eligibility' => $this->flattenLocalizedList($details['eligibility'] ?? []),
+            'howToUse' => $this->flattenLocalizedList($details['howToUse'] ?? []),
+            'terms' => $this->flattenLocalizedList($details['terms'] ?? []),
+            'gallery' => array_map(fn($img) => asset('storage/' . $img), $details['gallery'] ?? []),
+            'usage_limit' => $details['usage_limit'] ?? null,
+            'per_user_limit' => $details['per_user_limit'] ?? null,
+            'applicable_to' => $details['applicable_to'] ?? null,
+            'active' => $details['active'] ?? true,
         ];
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $items
+     * @return array<int, array<string, string>>
+     */
+    private function flattenLocalizedList(array $items): array
+    {
+        return array_map(static function (array $item): array {
+            $localized = $item['name'] ?? $item;
+
+            return [
+                'en' => $localized['en'] ?? '',
+                'fr' => $localized['fr'] ?? '',
+                'ar' => $localized['ar'] ?? '',
+            ];
+        }, $items);
     }
 }
 

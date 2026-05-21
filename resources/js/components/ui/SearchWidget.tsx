@@ -124,15 +124,9 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
                 key: 'tripType',
                 labelKey: 'search.fields.tripType',
                 options: [
-                    {
-                        value: 'round-trip',
-                        labelKey: 'search.options.roundTrip',
-                    },
+                    { value: 'round-trip', labelKey: 'search.options.roundTrip' },
                     { value: 'one-way', labelKey: 'search.options.oneWay' },
-                    {
-                        value: 'multi-city',
-                        labelKey: 'search.options.multiCity',
-                    },
+                    { value: 'multi-city', labelKey: 'search.options.multiCity' },
                 ],
             },
             {
@@ -190,18 +184,6 @@ const SEARCH_TARGETS: Record<SearchTab, string> = {
     flights: '/flights',
 };
 
-function getLocale(lang: string): string {
-    if (lang === 'ar') return 'ar-EG';
-    if (lang === 'en') return 'en-US';
-    return 'fr-FR';
-}
-
-function getDatePickerLocale(lang: string) {
-    if (lang === 'ar') return arSA;
-    if (lang === 'en') return enUS;
-    return fr;
-}
-
 interface ActiveSearchFormProps {
     tab: SearchTab;
     values: SearchFormValues;
@@ -256,6 +238,18 @@ function DestinationInput({
     );
 }
 
+function getLocale(lang: string): string {
+    if (lang === 'ar') return 'ar-EG';
+    if (lang === 'en') return 'en-US';
+    return 'fr-FR';
+}
+
+function getDatePickerLocale(lang: string) {
+    if (lang === 'ar') return arSA;
+    if (lang === 'en') return enUS;
+    return fr;
+}
+
 function DateRangePicker({
     label,
     value,
@@ -289,6 +283,7 @@ function DateRangePicker({
                     <Button
                         type="button"
                         variant="outline"
+                        aria-label={label}
                         className={cn(
                             'h-12 justify-start gap-3 rounded-2xl border-border/70 bg-background/80 px-4 font-normal shadow-sm backdrop-blur-sm hover:bg-background',
                             isRtl ? 'flex-row-reverse text-right' : 'text-left',
@@ -341,6 +336,7 @@ function GuestSelector({
                     <Button
                         type="button"
                         variant="outline"
+                        aria-label={label}
                         className={cn(
                             'h-12 rounded-2xl border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm hover:bg-background',
                             isRtl
@@ -634,15 +630,15 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         }
 
         if (activeTab === 'flights') {
-            const cabinClass = values.extras.cabinClass;
             const tripType = values.extras.tripType;
+            const cabinClass = values.extras.cabinClass;
 
-            if (cabinClass) {
-                params.set('cabin', cabinClass);
+            if (tripType && tripType !== 'any') {
+                params.set('type', tripType);
             }
 
-            if (tripType) {
-                params.set('type', tripType);
+            if (cabinClass && cabinClass !== 'any') {
+                params.set('cabinClass', cabinClass);
             }
         }
 
@@ -662,9 +658,12 @@ export function SearchWidget({ className }: SearchWidgetProps) {
             }
 
             if (
-                activeTab === 'flights' &&
-                (key === 'tripType' || key === 'cabinClass')
+                activeTab === 'flights' && key === 'cabinClass'
             ) {
+                return;
+            }
+
+            if (activeTab === 'flights' && key === 'tripType') {
                 return;
             }
 
@@ -750,16 +749,16 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                                             value,
                                         )
                                     }
-                                    onDateRangeChange={(value) =>
-                                        updateForm(
-                                            activeTab,
-                                            'dateRange',
-                                            value,
-                                        )
-                                    }
-                                    onGuestChange={(value) =>
-                                        updateForm(activeTab, 'guests', value)
-                                    }
+                                        onDateRangeChange={(value) =>
+                                            updateForm(
+                                                activeTab,
+                                                'dateRange',
+                                                value,
+                                            )
+                                        }
+                                        onGuestChange={(value) =>
+                                            updateForm(activeTab, 'guests', value)
+                                        }
                                     onExtraChange={(key, value) =>
                                         updateExtraField(activeTab, key, value)
                                     }

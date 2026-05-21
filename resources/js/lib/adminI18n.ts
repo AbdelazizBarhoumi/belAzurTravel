@@ -2,6 +2,26 @@ import type { Lang } from '@/i18n/translations';
 
 type LocalizedText = Record<Lang, string>;
 
+export function localizeAdminValue(
+    row: Record<string, unknown>,
+    baseKey: string,
+    lang: Lang,
+): string {
+    const candidates = [
+        row[`${baseKey}_${lang}`],
+        row[`${baseKey}_en`],
+        row[baseKey],
+    ];
+
+    for (const candidate of candidates) {
+        if (typeof candidate === 'string' && candidate.trim() !== '') {
+            return candidate;
+        }
+    }
+
+    return '';
+}
+
 export function localizeKnown(
     value: string,
     map: Record<string, LocalizedText>,

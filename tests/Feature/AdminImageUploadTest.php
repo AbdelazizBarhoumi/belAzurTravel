@@ -152,6 +152,58 @@ class AdminImageUploadTest extends TestCase
             ->assertJsonPath('weather.en', 'Sunny');
     }
 
+    public function test_admin_can_update_destination_main_image_without_resubmitting_other_fields(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'active' => true,
+        ]);
+
+        $makePngUpload = function (string $filename): UploadedFile {
+            $data = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
+            $path = sys_get_temp_dir().'/'.uniqid('testimg_')."_".$filename;
+            file_put_contents($path, $data);
+
+            return new UploadedFile($path, $filename, 'image/png', null, true);
+        };
+
+        $this->actingAs($admin)
+            ->post('/api/admin/destinations', [
+                'name' => 'E2E Test City',
+                'country' => 'Testland',
+                'category' => 'City',
+                'price' => 100,
+                'rating' => 4.5,
+                'image' => $makePngUpload('main-original.png'),
+                'gallery_files' => [$makePngUpload('gallery-original.png')],
+                'description' => 'Original description',
+                'description_en' => 'Original description',
+            ])
+            ->assertCreated();
+
+        $destination = Destination::query()->latest('id')->firstOrFail();
+        $originalGallery = $destination->details['gallery'];
+
+        $this->actingAs($admin)
+            ->post('/api/admin/destinations/'.$destination->getKey(), [
+                '_method' => 'PUT',
+                'image' => $makePngUpload('main-replacement.png'),
+            ])
+            ->assertOk();
+
+        $updated = Destination::query()->findOrFail($destination->getKey());
+
+        $this->assertNotSame($destination->image, $updated->image);
+        $this->assertSame($destination->country, $updated->country);
+        $this->assertSame($destination->name, $updated->name);
+        $this->assertSame($destination->price, $updated->price);
+        $this->assertSame($destination->rating, $updated->rating);
+        $this->assertSame($originalGallery, $updated->details['gallery']);
+        $this->assertTrue(Storage::disk('public')->exists(ltrim($updated->image, '/storage/')));
+    }
+
     public function test_admin_can_upload_and_replace_hotel_images(): void
     {
         Storage::fake('public');

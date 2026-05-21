@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Search, MapPin, Star } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
@@ -43,10 +43,7 @@ const Destinations = () => {
     const { data: allDestinations = [] } = useDestinations();
     const { data: dynamicCategories = [] } = useCategories('destinations');
 
-    useEffect(() => {
-        setSearchQuery(initialSearch);
-        setSelectedCategory(initialCategory);
-    }, [initialSearch, initialCategory]);
+    // Initial state is set from URL params via useState above; no effect required
 
     const categories = [
         { value: 'all', label: t('common.all') },
@@ -230,7 +227,10 @@ const Destinations = () => {
                                         <div className="card-elevated overflow-hidden rounded-2xl bg-card">
                                             <CardMedia
                                                 src={dest.image}
-                                                alt={localizeText(dest.name, lang)}
+                                                alt={localizeText(
+                                                    dest.name,
+                                                    lang,
+                                                )}
                                                 wrapperClass="relative h-56"
                                                 imgClass="transition-transform duration-500 group-hover:scale-105"
                                             />
@@ -266,7 +266,10 @@ const Destinations = () => {
                                                     </div>
                                                 </div>
                                                 <h3 className="mb-1 font-serif text-xl font-bold text-foreground">
-                                                    {localizeText(dest.name, lang)}
+                                                    {localizeText(
+                                                        dest.name,
+                                                        lang,
+                                                    )}
                                                 </h3>
                                                 <p className="mb-4 text-sm text-muted-foreground">
                                                     {localizeText(

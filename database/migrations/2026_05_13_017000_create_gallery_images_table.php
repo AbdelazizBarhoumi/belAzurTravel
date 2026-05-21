@@ -12,6 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('url');
             $table->json('caption')->nullable();
+            $table->json('title')->nullable();
+            $table->string('category')->nullable();
             $table->integer('sort_order')->default(0);
             $table->timestamps();
         });

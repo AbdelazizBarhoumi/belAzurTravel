@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
 import { Clock, Users, MapPin, Star } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
@@ -28,6 +29,9 @@ const Tours = () => {
     const initialSearch = params.get('q') || params.get('destination') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || ALL;
     const initialDuration = params.get('duration')?.toLowerCase() || ALL;
+    const initialGuests = Number(params.get('guests') || 2);
+    const initialFromDate = params.get('from') || '';
+    const initialToDate = params.get('to') || '';
 
     const { data: tours = [] } = useTours();
     const { data: dynamicCategories = [] } = useCategories('tours');
@@ -35,12 +39,13 @@ const Tours = () => {
     const [selectedLocation, setSelectedLocation] = useState(ALL);
     const [selectedDuration, setSelectedDuration] = useState(initialDuration);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+    const [travelers, setTravelers] = useState(
+        Number.isFinite(initialGuests) && initialGuests > 0 ? initialGuests : 2,
+    );
+    const [fromDate, setFromDate] = useState(initialFromDate);
+    const [toDate, setToDate] = useState(initialToDate);
 
-    useEffect(() => {
-        setSearchQuery(initialSearch);
-        setSelectedCategory(initialCategory);
-        setSelectedDuration(initialDuration);
-    }, [initialSearch, initialCategory, initialDuration]);
+    // Initial state is derived from URL params via useState above; no synchronous effect needed
 
     const categories = useMemo(
         () => [
@@ -85,13 +90,16 @@ const Tours = () => {
                     matchesFilterValue(selectedDuration, [tour.duration]);
                 const matchesCategory =
                     selectedCategory === ALL ||
-                    (tour.category_key ?? '').toLowerCase() === selectedCategory;
+                    (tour.category_key ?? '').toLowerCase() ===
+                        selectedCategory;
+                const matchesTravelers = tour.maxGroup >= travelers;
 
                 return (
                     matchesSearch &&
                     matchesLocation &&
                     matchesDuration &&
-                    matchesCategory
+                    matchesCategory &&
+                    matchesTravelers
                 );
             }),
         [
@@ -101,6 +109,7 @@ const Tours = () => {
             selectedLocation,
             selectedDuration,
             selectedCategory,
+            travelers,
         ],
     );
 
@@ -108,17 +117,26 @@ const Tours = () => {
         searchQuery.trim().length > 0 ||
         selectedLocation !== ALL ||
         selectedDuration !== ALL ||
-        selectedCategory !== ALL;
+        selectedCategory !== ALL ||
+        travelers !== 2 ||
+        fromDate !== '' ||
+        toDate !== '';
 
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedLocation(ALL);
         setSelectedDuration(ALL);
         setSelectedCategory(ALL);
+        setTravelers(2);
+        setFromDate('');
+        setToDate('');
     };
 
     return (
-        <div key={params.toString()} className="flex min-h-screen flex-col bg-background">
+        <div
+            key={params.toString()}
+            className="flex min-h-screen flex-col bg-background"
+        >
             <div className="flex-1 pb-16 pt-24">
                 <div className="container mx-auto px-4">
                     <motion.div
@@ -154,6 +172,47 @@ const Tours = () => {
                         onClearFilters={clearFilters}
                         searchPlaceholder={t('common.search')}
                     >
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            <label className="grid gap-2 text-sm">
+                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('search.fields.dates')}
+                                </span>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <DatePicker
+                                        date={fromDate ? new Date(fromDate) : undefined}
+                                        onDateChange={(date) => setFromDate(date ? date.toISOString().split('T')[0] : '')}
+                                        placeholder={t('search.placeholders.checkIn')}
+                                    />
+                                    <DatePicker
+                                        date={toDate ? new Date(toDate) : undefined}
+                                        onDateChange={(date) => setToDate(date ? date.toISOString().split('T')[0] : '')}
+                                        placeholder={t('search.placeholders.checkOut')}
+                                    />
+                                </div>
+                            </label>
+
+                            <label className="grid gap-2 text-sm">
+                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('search.fields.travelers')}
+                                </span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={travelers}
+                                    onChange={(event) =>
+                                        setTravelers(
+                                            Math.max(
+                                                1,
+                                                Number(event.target.value) || 1,
+                                            ),
+                                        )
+                                    }
+                                    className="h-12 rounded-2xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm"
+                                    aria-label={t('search.fields.travelers')}
+                                />
+                            </label>
+                        </div>
+
                         <div className="mb-6 flex flex-wrap gap-2">
                             {categories.map((cat) => (
                                 <button
@@ -239,9 +298,7 @@ const Tours = () => {
                         {filteredTours.length === 0 ? (
                             <RequestThingEmptyState
                                 variant={
-                                    tours.length === 0
-                                        ? 'empty'
-                                        : 'no-results'
+                                    tours.length === 0 ? 'empty' : 'no-results'
                                 }
                                 className="lg:col-span-2"
                             />

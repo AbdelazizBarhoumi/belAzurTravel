@@ -11,9 +11,12 @@ vi.mock('@/api/http', () => ({
 }));
 
 vi.mock('@/auth', async () => {
-    const actual = await vi.importActual<typeof import('@/auth')>(
-        '@/auth',
-    );
+    const actualModule = await vi.importActual('@/auth');
+    // Avoid `import()` type annotations which are forbidden by the linter
+    const actual = actualModule as {
+        [key: string]: unknown;
+        storeAuthUser?: typeof storeAuthUser;
+    };
 
     return {
         ...actual,
@@ -42,7 +45,9 @@ function HookProbe({ onResult }: HookProbeProps): JSX.Element | null {
     return null;
 }
 
-function renderWithQueryClient(onResult: (snapshot: AuthQuerySnapshot) => void) {
+function renderWithQueryClient(
+    onResult: (snapshot: AuthQuerySnapshot) => void,
+) {
     const queryClient = new QueryClient({
         defaultOptions: {
             queries: {

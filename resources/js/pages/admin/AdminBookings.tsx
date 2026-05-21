@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { StatusSelect } from '@/components/ui/StatusSelect';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { api, useAdminBookings } from '@/hooks/useBooking';
@@ -100,38 +101,19 @@ const AdminBookings = () => {
                                             ${b.total_amount}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <select
+                                            <StatusSelect
                                                 value={b.status}
-                                                onChange={(e) =>
-                                                    updateStatus(
-                                                        b,
-                                                        e.target.value,
-                                                    )
+                                                onValueChange={(val) =>
+                                                    updateStatus(b, val)
                                                 }
-                                                className={`rounded-lg border-0 px-2 py-1 text-xs font-semibold ${
-                                                    b.status === 'Confirmed'
-                                                        ? 'bg-primary/10 text-primary'
-                                                        : b.status === 'Pending'
-                                                          ? 'bg-secondary/10 text-secondary'
-                                                          : 'bg-destructive/10 text-destructive'
-                                                }`}
-                                            >
-                                                <option value="Pending">
-                                                    {bookingStatusLabels
-                                                        .Pending?.[lang] ??
-                                                        'Pending'}
-                                                </option>
-                                                <option value="Confirmed">
-                                                    {bookingStatusLabels
-                                                        .Confirmed?.[lang] ??
-                                                        'Confirmed'}
-                                                </option>
-                                                <option value="Cancelled">
-                                                    {bookingStatusLabels
-                                                        .Cancelled?.[lang] ??
-                                                        'Cancelled'}
-                                                </option>
-                                            </select>
+                                                options={Object.entries(
+                                                    bookingStatusLabels,
+                                                ).map(([value, labels]) => ({
+                                                    value,
+                                                    label:
+                                                        labels?.[lang] ?? value,
+                                                }))}
+                                            />
                                         </td>
                                         <td className="px-4 py-3">
                                             <button

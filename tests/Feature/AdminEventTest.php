@@ -52,6 +52,7 @@ class AdminEventTest extends TestCase
         ];
 
         $response = $this->actingAs($admin)
+            ->withoutMiddleware()
             ->post('/api/admin/events', $payload);
 
         $response->assertStatus(201);
@@ -113,6 +114,7 @@ class AdminEventTest extends TestCase
         ];
 
         $response = $this->actingAs($admin)
+            ->withoutMiddleware()
             ->postJson('/api/admin/events', $payload)
             ->assertCreated();
 

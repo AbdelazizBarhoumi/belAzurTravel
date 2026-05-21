@@ -1,13 +1,14 @@
 import { motion } from 'framer-motion';
 import { Wifi, Car, Coffee, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { StarRating } from '@/components/ui/StarRating';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { TagFilter, type Tag } from '@/components/ui/TagFilter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -26,6 +27,9 @@ export default function Hotels() {
     // Accept landing widget params as fallback (destination -> q)
     const initialSearch = params.get('q') || params.get('destination') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || '';
+    const initialGuests = Number(params.get('guests') || 2);
+    const initialFromDate = params.get('from') || '';
+    const initialToDate = params.get('to') || '';
     const [showMobileFilter, setShowMobileFilter] = useState(false);
     // referenced to satisfy linter until mobile filter UI is implemented
     void showMobileFilter;
@@ -35,8 +39,9 @@ export default function Hotels() {
         initialCategory ? [initialCategory] : [],
     );
 
+    // Use a simple string dependency for URLSearchParams to satisfy linting
     // Initialize star filter from URL parameter or mapped propertyClass (e.g. "4-star")
-    const initialStars = useMemo<number[]>(() => {
+    const initialStars = (() => {
         const starsParam = params.get('stars');
         const propertyClass =
             params.get('propertyClass') || params.get('propertyclass');
@@ -48,7 +53,8 @@ export default function Hotels() {
         }
 
         const stars =
-            starsParam ?? (fromPropertyClass ? String(fromPropertyClass) : null);
+            starsParam ??
+            (fromPropertyClass ? String(fromPropertyClass) : null);
         if (stars) {
             const starsNum = parseInt(stars, 10);
             if (starsNum >= 1 && starsNum <= 5) {
@@ -56,22 +62,22 @@ export default function Hotels() {
             }
         }
         return [];
-    }, [params.toString()]);
+    })();
 
     const [selectedStars, setSelectedStars] = useState<number[]>(initialStars);
     // Honor landing roomType param as a tag-like filter when present
     const initialRoomType =
         params.get('roomType') || params.get('roomtype') || 'any';
-    const [roomType, setRoomType] = useState<string>(initialRoomType);
+    const [roomType, _setRoomType] = useState<string>(initialRoomType);
+    const [guests, setGuests] = useState(
+        Number.isFinite(initialGuests) && initialGuests > 0 ? initialGuests : 2,
+    );
+    const [fromDate, setFromDate] = useState(initialFromDate);
+    const [toDate, setToDate] = useState(initialToDate);
     const { data: hotels = [] } = useHotels();
     const { data: dynamicCategories = [] } = useCategories('hotels');
 
-    useEffect(() => {
-        setSearchQuery(initialSearch);
-        setSelectedTags(initialCategory ? [initialCategory] : []);
-        setSelectedStars(initialStars);
-        setRoomType(initialRoomType);
-    }, [initialSearch, initialCategory, initialStars, initialRoomType]);
+    // Initial state populated via useState initializers; no synchronous effect required
 
     const HOTEL_TAGS: Tag[] = dynamicCategories.map((c) => ({
         id: c.key,
@@ -89,6 +95,9 @@ export default function Hotels() {
         hotels.length > 0 ? Math.min(...hotels.map((hotel) => hotel.price)) : 0;
     const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
     const activePriceRange = priceRange ?? [minPrice, maxPrice];
+
+    const hasLandingDateOrGuestFilters =
+        guests !== 2 || fromDate !== '' || toDate !== '';
 
     const filteredHotels =
         searchQuery.trim().length === 0 &&
@@ -111,7 +120,10 @@ export default function Hotels() {
                   const matchesStars =
                       selectedStars.length === 0 ||
                       selectedStars.includes(hotel.stars);
-                  const matchesRoomType = !roomType || roomType === 'any' || (hotel.tags ?? []).includes(roomType);
+                  const matchesRoomType =
+                      !roomType ||
+                      roomType === 'any' ||
+                      (hotel.tags ?? []).includes(roomType);
                   const matchesPrice =
                       hotel.price >= activePriceRange[0] &&
                       hotel.price <= activePriceRange[1];
@@ -184,12 +196,58 @@ export default function Hotels() {
                             searchQuery.trim().length > 0 ||
                             selectedTags.length > 0 ||
                             selectedStars.length > 0 ||
-                            priceRange !== null
+                            priceRange !== null ||
+                            hasLandingDateOrGuestFilters
                         }
                         onClearFilters={handleClearAll}
                         searchPlaceholder={t('common.search')}
                         className="mb-8"
-                    />
+                    >
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            <label className="grid gap-2 text-sm">
+                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('search.fields.dates')}
+                                </span>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <DatePicker
+                                        date={fromDate ? new Date(fromDate) : undefined}
+                                        onDateChange={(date) =>
+                                            setFromDate(date ? date.toISOString().split('T')[0] : '')
+                                        }
+                                        placeholder={t('search.placeholders.checkIn')}
+                                    />
+                                    <DatePicker
+                                        date={toDate ? new Date(toDate) : undefined}
+                                        onDateChange={(date) =>
+                                            setToDate(date ? date.toISOString().split('T')[0] : '')
+                                        }
+                                        placeholder={t('search.placeholders.checkOut')}
+                                    />
+                                </div>
+                            </label>
+
+                            <label className="grid gap-2 text-sm">
+                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('search.fields.guests')}
+                                </span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={guests}
+                                    onChange={(event) =>
+                                        setGuests(
+                                            Math.max(
+                                                1,
+                                                Number(event.target.value) || 1,
+                                            ),
+                                        )
+                                    }
+                                    className="h-12 rounded-2xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm"
+                                    aria-label={t('search.fields.guests')}
+                                />
+                            </label>
+                        </div>
+                    </ListFilterBar>
 
                     {/* Main Layout: Sidebar + Content */}
                     <div

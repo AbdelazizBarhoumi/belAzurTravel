@@ -1,7 +1,10 @@
+import { useParams, Link } from 'react-router-dom';
 import { PageShell } from '@/components/layout/PageShell';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
+import { RichTextRenderer } from '@/components/ui/RichTextRenderer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { useParams, Link } from 'react-router-dom';
+import { normalizeLegalBody } from '@/lib/legal';
 
 const LegalDetail = () => {
     const { lang, t } = useLanguage();
@@ -16,7 +19,10 @@ const LegalDetail = () => {
                 <div className="mx-auto max-w-4xl">
                     <p>{t('nav.legal')}</p>
                     <p className="mt-4">
-                        <Link to="/legal" className="text-primary hover:underline">
+                        <Link
+                            to="/legal"
+                            className="text-primary hover:underline"
+                        >
                             ← {t('nav.legal')}
                         </Link>
                     </p>
@@ -32,9 +38,26 @@ const LegalDetail = () => {
                     <h2 className="mb-3 font-serif text-xl font-bold text-foreground md:text-2xl">
                         {section.title[lang]}
                     </h2>
-                    <p className="text-sm leading-7 text-muted-foreground md:text-base">
-                        {section.body[lang]}
-                    </p>
+                    {(() => {
+                        const body = normalizeLegalBody(section.body);
+                        const content =
+                            body.content[lang] ||
+                            body.content.en ||
+                            body.content.fr ||
+                            body.content.ar ||
+                            '';
+                        return body.format === 'richtext' ? (
+                            <RichTextRenderer
+                                html={content}
+                                className="text-muted-foreground"
+                            />
+                        ) : (
+                            <MarkdownRenderer
+                                content={content}
+                                className="text-muted-foreground"
+                            />
+                        );
+                    })()}
                 </div>
             </div>
         </PageShell>

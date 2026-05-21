@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useAuthUser } from '@/hooks/useAuthUser';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuthUser } from '@/hooks/useAuthUser';
 
 function getCookie(name: string) {
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -17,25 +17,18 @@ function setCookie(name: string, value: string, days = 365) {
 
 export default function CookieConsent() {
     const { t } = useLanguage();
-    const [visible, setVisible] = useState(false);
-    const { data: currentUser, isPending } = useAuthUser();
+    const [dismissed, setDismissed] = useState(false);
+    const { data: currentUser } = useAuthUser();
 
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        const c = getCookie('cookie_consent');
-        // do not show the banner to admins
-        if (currentUser && currentUser.role === 'admin') {
-            setVisible(false);
-            return;
-        }
-        if (!c) setVisible(true);
-    }, [currentUser]);
+    // Read cookie lazily and compute visibility without setting state inside an effect
+    const cookie = typeof window === 'undefined' ? null : getCookie('cookie_consent');
+    const visible = !dismissed && !cookie && !(currentUser && currentUser.role === 'admin');
 
     if (!visible) return null;
 
     const accept = () => {
         setCookie('cookie_consent', 'accepted');
-        setVisible(false);
+        setDismissed(true);
         // Optionally notify server about consent for logged-in users
         try {
             void fetch('/api/user/consent', {
@@ -51,11 +44,11 @@ export default function CookieConsent() {
 
     const decline = () => {
         setCookie('cookie_consent', 'declined');
-        setVisible(false);
+        setDismissed(true);
     };
 
     return (
-        <div className="fixed inset-x-4 bottom-6 z-50 w-auto max-w-3xl rounded-2xl border border-border/60 bg-card/95 p-4 shadow-lg backdrop-blur-sm">
+        <div className="fixed inset-x-4 bottom-6 z-50 w-auto max-auto rounded-2xl border border-border/60 bg-card/95 p-4 shadow-lg backdrop-blur-sm">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h3 className="font-semibold">{t('cookie.banner.title')}</h3>

@@ -40,12 +40,13 @@ class BlogPostController extends Controller
     {
         return [
             'slug' => $item->slug,
-            'title' => $item->title,
-            'excerpt' => $item->excerpt,
+            'title' => $item->title ?? [],
+            'excerpt' => $item->excerpt ?? [],
             'date' => $item->date,
-            'category' => $item->category,
-            'image' => $item->image,
-            'content' => $item->content,
+            'category_key' => $item->category_key,
+            'category' => $item->category ?? [],
+            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'content' => $item->content ?? null,
         ];
     }
 }

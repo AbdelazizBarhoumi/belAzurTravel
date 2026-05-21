@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('phone')->default('+1 (555) 123-4567');
             $table->string('whatsapp')->nullable();
             $table->string('address')->nullable();
+            $table->string('plus_code')->nullable();
             $table->integer('year')->nullable();
             $table->json('social_links')->nullable();
             $table->json('legal_sections')->nullable();

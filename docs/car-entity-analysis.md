@@ -4,13 +4,13 @@
 The `Car` entity represents vehicles available for booking within the application. It is managed via `App\Models\Car` and stored in the `cars` table.
 
 ## Database Schema (Summary)
-The `cars` table was created in `2026_05_13_011000_create_catalog_tables.php` and later modified in `2026_05_19_151622_add_category_key_to_catalog_tables.php`.
+The `cars` table was created in `2026_05_13_011030_create_cars_table.php`.
 
 | Column | Type | Nullable | Notes |
 | :--- | :--- | :--- | :--- |
 | `id` | `id` | No | Primary Key |
 | `slug` | `string` | No | Unique |
-| `category_key` | `string` | Yes | Added 2026-05-19 |
+| `category_key` | `string` | Yes | Index |
 | `name` | `json` | No | Localized |
 | `category` | `json` | Yes | Localized |
 | `price` | `integer` | No | `unsignedInteger` |
@@ -28,24 +28,20 @@ The `cars` table was created in `2026_05_13_011000_create_catalog_tables.php` an
     - `name`, `category`, `fuel`, `transmission`, `details`: `array`
     - `price`, `seats`: `integer`
 
-## Observations & Potential Inconsistencies
+## API Usage & Flow
+- **Public API (`CarController`):**
+    - `index()`: Returns all cars, cached for 10 minutes, with localized payloads.
+    - `show(slug)`: Fetches a single car by `slug`, cached for 10 minutes.
+- **Admin API (`AdminCarController`):**
+    - `index()`: Cached for 5 minutes, returns full payload.
+    - `store()`/`update()`: Flushes the `cars` admin cache.
+- **Booking API (`BookingController`):**
+    - Uses `Car::query()->where('slug', $identifier)` to find a car during the booking flow.
 
-1. **Model Fillable vs. Schema**:
-    - The model includes `category_key` in `$fillable`, which matches the schema update.
-    - `seats` and `price` are cast as `integer`. This is consistent with `unsignedTinyInteger` and `unsignedInteger`.
-
-2. **Localization**:
-    - The schema defines `name`, `category`, `fuel`, and `transmission` as `json`. This is intended for localized data.
-    - Application code (e.g., `AdminCarController`) assumes a structure like `['en' => ..., 'fr' => ..., 'ar' => ...]`.
-
-3. **Inconsistency Risk**:
-    - `AdminCarController` handles `name` localization manually via `$this->localized(...)`.
-    - `AdminCarsTest` shows `category` being stored as an array of locales, but `category_key` is also present. Ensure that `category` (the array) and `category_key` remain synchronized if the app logic relies on both.
-
-4. **Image Handling**:
-    - `image` is a simple `string` in both the DB and the model. This assumes a single primary image.
-    - `details` contains a `gallery` array (referenced in `AdminCarsTest`), which is an unconventional split between a primary `image` field and a `details->gallery` array. This could lead to synchronization issues if an image is removed from the gallery but remains as the primary `image`.
-
-5. **Frontend/Backend Sync**:
-    - The admin UI for `AdminCars` interacts with the `cars` API.
-    - The test `AdminCarsTest` validates data structure, but verify that the frontend `AdminCars` component correctly handles the expected JSON structures for `details`, `category`, `fuel`, etc.
+## Observations & Inconsistencies
+1. **Localization**: The application relies on JSON columns for localization (`name`, `category`, `fuel`, `transmission`). This requires consistent handling in the frontend and controller. `AdminCarController` currently performs manual localization processing (`$this->localized(...)`).
+2. **Image Synchronization**: `image` is a plain string (primary image). There is also a `details->gallery` in the `details` JSON field. If the system logic allows editing individual gallery items, there is a risk that the primary `image` may become out-of-sync if its source is removed from the gallery.
+3. **Caching**: Both the public and admin APIs implement caching, which is good for performance but introduces the need to ensure `flushAdminCache` is correctly called in all modification paths.
+4. **Data Integrity**: `category_key` is present, but `category` is a JSON array. Logic should ensure these are kept in sync to prevent query results filtering by `category_key` returning items that display an inconsistent `category` value.
+5. **Flow Consistency**: The lookup logic in `BookingController` uses `where('slug', $identifier)`, which is consistent with the public API's `CarController` usage.
+6. **Frontend Type Mismatch**: The backend `CarController@payload` uses the spread operator for `details` (`...($item->details ?? [])`), merging arbitrary JSON fields directly into the root response object. The frontend `CarItem` interface (in `resources/js/types/public/car.types.ts`) explicitly defines these fields (e.g., `gallery`, `features`, `policy`). This loose coupling means that frontend code may fail if the backend `details` structure evolves without an update to the frontend types, or if `details` is missing expected keys.

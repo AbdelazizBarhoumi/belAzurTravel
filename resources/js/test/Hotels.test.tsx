@@ -78,7 +78,9 @@ describe('Hotels', () => {
     });
 
     it('renders hotel cards without hitting an update loop', async () => {
-        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const errorSpy = vi
+            .spyOn(console, 'error')
+            .mockImplementation(() => {});
 
         renderPage();
 

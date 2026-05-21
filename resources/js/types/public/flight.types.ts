@@ -5,6 +5,7 @@ import type { LocalizedText } from '../common';
  */
 export interface FlightItem {
     id: string;
+    code: string;
     airline: LocalizedText;
     from: string;
     to: LocalizedText;
@@ -12,11 +13,13 @@ export interface FlightItem {
     arrival: string;
     duration: LocalizedText;
     stops: LocalizedText;
-    date?: string;
-    seats?: number | null;
-    cabin: LocalizedText;
-    aircraft?: LocalizedText;
-    baggage?: LocalizedText;
-    refund?: LocalizedText;
     price: number;
+    details: {
+        date?: string;
+        seats?: number | null;
+        cabin: LocalizedText;
+        aircraft?: LocalizedText;
+        baggage?: LocalizedText;
+        refund?: LocalizedText;
+    };
 }

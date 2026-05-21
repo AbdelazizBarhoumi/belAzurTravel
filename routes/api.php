@@ -21,17 +21,18 @@ use App\Http\Controllers\Api\TourController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\FlightController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\DealController;
 use App\Http\Controllers\Api\PromoController;
 use App\Http\Controllers\Api\BlogPostController;
 use App\Http\Controllers\Api\NotificationController;
-use App\Http\Controllers\Api\NotificationStreamController;
 
 // Public (browsing) endpoints — guests may view booking details (read-only)
 use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\GalleryController;
 
 use App\Http\Controllers\Api\AdminCategoryController;
+use App\Http\Controllers\Api\AdminTeamController;
 
 Route::get('/site-settings', [SiteSettingsController::class, 'show']);
 Route::middleware(['auth', 'role:admin'])->put('/site-settings', [SiteSettingsController::class, 'update']);
@@ -66,13 +67,14 @@ Route::get('deals/{slug}', [DealController::class, 'show'])->middleware(['check-
 Route::get('promos', [PromoController::class, 'index'])->middleware(['check-nav-page:promos']);
 Route::get('promos/{code}', [PromoController::class, 'show'])->middleware(['check-nav-page:promos']);
 
+Route::get('team', [TeamController::class, 'index'])->middleware(['check-nav-page:team']);
+
 Route::get('blog-posts', [BlogPostController::class, 'index'])->middleware(['check-nav-page:blog-posts']);
 Route::get('blog-posts/{slug}', [BlogPostController::class, 'show'])->middleware(['check-nav-page:blog-posts']);
 
 // Authenticated endpoints (booking creation, cancellation for owner)
 Route::middleware('auth')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::get('/notifications/stream', [NotificationStreamController::class, 'stream']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
     Route::delete('/notifications/clear-all', [NotificationController::class, 'destroyAll']);
@@ -174,6 +176,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/categories', [AdminCategoryController::class, 'store']);
         Route::put('/admin/categories/{category}', [AdminCategoryController::class, 'update']);
         Route::delete('/admin/categories/{category}', [AdminCategoryController::class, 'destroy']);
+
+        Route::get('/admin/team', [AdminTeamController::class, 'index']);
+        Route::post('/admin/team', [AdminTeamController::class, 'store']);
+        Route::get('/admin/team/{id}', [AdminTeamController::class, 'show']);
+        Route::put('/admin/team/{id}', [AdminTeamController::class, 'update']);
+        Route::delete('/admin/team/{id}', [AdminTeamController::class, 'destroy']);
     });
 });
 

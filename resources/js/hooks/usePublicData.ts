@@ -13,6 +13,7 @@ import {
 } from '@/api/entities.api';
 import { apiFetch } from '@/api/http';
 import type { Lang } from '@/i18n/translations';
+import { fetchAllCategories } from '@/lib/categoryCache';
 
 export type HotelDetailLookupData = {
     id: string;
@@ -236,13 +237,27 @@ export type PublicCategory = {
 };
 
 export function useCategories(type?: string) {
-    return useEntityQuery<PublicCategory[]>({
-        queryKey: ['categories', type],
+    const normalizedType = type?.toLowerCase();
+
+    return useQuery({
+        queryKey: ['categories', normalizedType ?? 'all'],
         queryFn: async () => {
-            const resp = await apiFetch<{ data: PublicCategory[] }>(
-                `/api/categories${type ? `?type=${type}` : ''}`,
+            return await fetchAllCategories(async () => {
+                const resp = await apiFetch<{ data: PublicCategory[] }>(
+                    '/api/categories',
+                );
+                return resp.data;
+            });
+        },
+        select: (categories) => {
+            if (!normalizedType) {
+                return categories;
+            }
+
+            return categories.filter(
+                (category) =>
+                    category.entity_type.toLowerCase() === normalizedType,
             );
-            return resp.data;
         },
     });
 }

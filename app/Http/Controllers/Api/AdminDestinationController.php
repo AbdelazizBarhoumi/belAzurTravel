@@ -14,7 +14,9 @@ use Illuminate\Support\Str;
 
 class AdminDestinationController extends Controller
 {
-    use HandlesAdminCategories;public function index(): JsonResponse
+    use HandlesAdminCategories, \App\Concerns\HandlesAdminMedia;
+
+    public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.destinations', now()->addMinutes(5), function () {
             return Destination::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
@@ -58,19 +60,21 @@ class AdminDestinationController extends Controller
 
     private function attributes(Request $request, ?Model $existing = null): array
     {
+        $this->decodeJsonFields($request, ['gallery', 'highlights']);
+
         $rules = [
             'name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'name_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'name_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'name_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'country' => ['sometimes', 'required', 'string', 'max:255'],
+            'country' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['required', 'string', 'max:255'],
             'country_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'country_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'country_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'category' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category_key' => ['sometimes', 'nullable', 'string', 'max:255'],
             'price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'rating' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:5'],
             'image' => $request->hasFile('image') ? ['sometimes', 'nullable', 'image', 'max:10240'] : ['sometimes', 'nullable', 'string', 'max:2048'],
@@ -82,10 +86,14 @@ class AdminDestinationController extends Controller
             'about_en' => ['sometimes', 'nullable', 'string'],
             'about_fr' => ['sometimes', 'nullable', 'string'],
             'about_ar' => ['sometimes', 'nullable', 'string'],
-            'gallery' => ['sometimes', 'nullable', 'string'],
+            'gallery' => ['sometimes', 'nullable'],
             'gallery_files' => ['sometimes', 'array'],
-            'gallery_files.*' => ['file', 'image', 'max:4096'],
-            'highlights' => ['sometimes', 'nullable', 'string'],
+            'highlights' => ['sometimes', 'nullable'],
+            'highlights.*.id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'highlights.*.name' => ['sometimes', 'array'],
+            'highlights.*.name.en' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'highlights.*.name.fr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'highlights.*.name.ar' => ['sometimes', 'nullable', 'string', 'max:255'],
             'bestTime' => ['sometimes', 'nullable', 'string'],
             'bestTime_en' => ['sometimes', 'nullable', 'string'],
             'bestTime_fr' => ['sometimes', 'nullable', 'string'],
@@ -106,7 +114,12 @@ class AdminDestinationController extends Controller
 
         $data = $request->validate($rules);
 
-        $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
+        $localized = fn (string $key, string $fallback = ''): array => $this->localized(
+            $data,
+            $key,
+            $fallback,
+            is_array($existing?->{$key} ?? null) ? $existing->{$key} : null,
+        );
 
         $name = $localized('name');
         $title = $localized('title', $name['en']);
@@ -115,58 +128,40 @@ class AdminDestinationController extends Controller
         $slug = $existing->slug ?? Str::slug($slugBase).'-'.Str::lower(Str::random(5));
         $description = $localized('description', '');
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('uploads', 'public');
-            $image = '/storage/' . $path;
-        } else {
-            $incoming = $data['image'] ?? $existing?->image ?? '';
-            if ($incoming === '') {
-                $image = '';
-            } elseif (str_starts_with($incoming, 'http://') || str_starts_with($incoming, 'https://')) {
-                $image = $existing?->image ?? '';
-            } else {
-                $image = $incoming;
-            }
-        }
+        $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? []);
 
-        if ($request->hasFile('gallery_files')) {
-            $galleryPaths = collect($request->file('gallery_files', []))
-                ->filter()
-                ->map(fn ($file) => '/storage/' . $file->store('uploads', 'public'))
-                ->values()
-                ->all();
-
-            $existingGallery = isset($data['gallery']) ? $this->splitLines((string) $data['gallery']) : [];
-            $data['gallery'] = implode("\n", array_values(array_unique(array_merge($existingGallery, $galleryPaths))));
-        }
+        $categoryKey = $data['category_key']
+            ?? $data['category']
+            ?? $request->input('category')
+            ?? ($existing?->category_key ?? 'beach');
 
         return [
             'slug' => $slug,
             'name' => $name,
             'country' => $localized('country'),
-            ...$this->getCategoryData($request, 'destinations'),
-            'price' => (int) ($data['price'] ?? 0),
-            'rating' => (float) ($data['rating'] ?? 0),
-            'image' => $image,
+            'category_key' => $categoryKey,
+            'price' => (int) ($data['price'] ?? $existing?->price ?? 0),
+            'rating' => (float) ($data['rating'] ?? $existing?->rating ?? 0),
+            'image' => $this->handleMainImage($request, $existing?->image, 'uploads/destinations'),
             'description' => $description,
-            'details' => $this->destinationDetails($data, $existing, $description),
+            'details' => $this->destinationDetails($data, $existing, $description, $gallery),
         ];
     }
 
     private function adminPayload(Model $item): array
     {
         return [
-            'id' => (string) $item->id,
+            'id' => (int) $item->id,
             ...$this->flatLocalized('name', $item->name),
             ...$this->flatLocalized('country', $item->country),
-            ...$this->flatLocalized('category', $item->category),
+            ...$this->flatLocalized('category', $this->getCategory($item)),
             'price' => $item->price,
-            'rating' => $item->rating,
-            'image' => $item->image,
+            'rating' => (float) $item->rating,
+            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
             ...$this->flatLocalized('description', $item->description),
             ...$this->flatLocalized('about', $item->details['about'] ?? null),
-            'gallery' => $item->details['gallery'] ?? [$item->image],
-            'highlights' => array_values(array_map(fn (mixed $highlight): string => $this->localizedValue($highlight), $item->details['highlights'] ?? [])),
+            'gallery' => array_map(fn($img) => str_starts_with($img, 'storage/') ? asset($img) : asset('storage/' . $img), $item->details['gallery'] ?? [$item->image]),
+            'highlights' => $item->details['highlights'] ?? [],
             ...$this->flatLocalized('bestTime', $item->details['bestTime'] ?? null),
             ...$this->flatLocalized('language', $item->details['language'] ?? null),
             ...$this->flatLocalized('currency', $item->details['currency'] ?? null),
@@ -174,10 +169,24 @@ class AdminDestinationController extends Controller
         ];
     }
 
-    private function localized(array $data, string $key, string $fallback = ''): array
+    private function getCategory(Model $item): ?array
+    {
+        $category = \App\Models\Category::where('entity_type', 'destinations')
+            ->where('key', $item->category_key)
+            ->first();
+
+        return $category ? $category->name : ['en' => $item->category_key, 'fr' => $item->category_key, 'ar' => $item->category_key];
+    }
+
+    private function localized(array $data, string $key, string $fallback = '', ?array $existing = null): array
     {
         $base = $data[$key] ?? $fallback;
-        return ['fr' => $data[$key.'_fr'] ?? $base ?? '', 'ar' => $data[$key.'_ar'] ?? $base ?? '', 'en' => $data[$key.'_en'] ?? $base ?? ''];
+
+        return [
+            'fr' => $data[$key.'_fr'] ?? ($existing['fr'] ?? $base ?? ''),
+            'ar' => $data[$key.'_ar'] ?? ($existing['ar'] ?? $base ?? ''),
+            'en' => $data[$key.'_en'] ?? ($existing['en'] ?? $base ?? ''),
+        ];
     }
 
     private function flatLocalized(string $key, ?array $value): array
@@ -185,7 +194,7 @@ class AdminDestinationController extends Controller
         return [$key => $value['en'] ?? '', $key.'_fr' => $value['fr'] ?? '', $key.'_ar' => $value['ar'] ?? '', $key.'_en' => $value['en'] ?? ''];
     }
 
-    private function destinationDetails(array $data, ?Model $existing, array $description): array
+    private function destinationDetails(array $data, ?Model $existing, array $description, array $gallery): array
     {
         $details = $existing?->details ?? [];
 
@@ -193,12 +202,10 @@ class AdminDestinationController extends Controller
             $details['about'] = $this->localized($data, 'about', $description['en'] ?? '');
         }
 
-        if (array_key_exists('gallery', $data)) {
-            $details['gallery'] = $this->splitLines((string) ($data['gallery'] ?? ''));
-        }
+        $details['gallery'] = $gallery;
 
         if (array_key_exists('highlights', $data)) {
-            $details['highlights'] = array_map(fn (string $item): array => ['fr' => $item, 'ar' => $item, 'en' => $item], $this->splitLines((string) ($data['highlights'] ?? '')));
+            $details['highlights'] = $data['highlights'] ?? [];
         }
 
         foreach (['bestTime', 'language', 'currency', 'weather'] as $key) {
@@ -239,4 +246,3 @@ class AdminDestinationController extends Controller
         }
     }
 }
-

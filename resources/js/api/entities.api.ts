@@ -12,6 +12,7 @@ import type {
     TourDetailItem,
     TourItem,
 } from '@/types/public';
+import type { TeamMember } from '@/types/public';
 
 // Re-export public entity types so they're available via @/api/entities.api
 export type {
@@ -50,7 +51,6 @@ export {
     navbarMoreLinks,
     navbarSimpleLinks,
     socialLinks,
-    teamMembers,
     type BlogPost,
     type ContactMethod,
     type DealCard,
@@ -64,15 +64,29 @@ export {
     type SimpleLinkItem,
     type SocialLink,
     type StepItem,
-    type TeamMember,
 } from '@/api/siteContent.api';
 
 export type LocalizedText = Record<Lang, string>;
 
+function normalizeLocalizedText(
+    value: Record<string, unknown>,
+): Record<string, string> {
+    return Object.entries(value).reduce<Record<string, string>>(
+        (normalized, [key, entry]) => {
+            if (typeof entry === 'string' || typeof entry === 'number') {
+                normalized[key.toLowerCase()] = String(entry);
+            }
+
+            return normalized;
+        },
+        {},
+    );
+}
+
 export function localizeText(
     value:
         | LocalizedText
-        | Record<string, string>
+        | Record<string, unknown>
         | string
         | number
         | null
@@ -81,10 +95,39 @@ export function localizeText(
 ): string {
     if (value === null || value === undefined) return '';
     if (typeof value === 'string' || typeof value === 'number') {
-        return String(value);
+        const text = String(value);
+
+        if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+            try {
+                const parsed = JSON.parse(text) as unknown;
+
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                    return localizeText(
+                        parsed as Record<string, unknown>,
+                        lang,
+                    );
+                }
+            } catch {
+                // fall through to the raw string
+            }
+        }
+
+        return text;
     }
 
-    return value[lang] || value.en || value.fr || value.ar || '';
+    const normalized = normalizeLocalizedText(value);
+
+    return (
+        normalized[lang] ||
+        normalized.en ||
+        normalized.fr ||
+        normalized.ar ||
+        ''
+    );
+}
+
+export function getTeamMembers(): Promise<TeamMember[]> {
+    return apiFetch<TeamMember[]>('/api/team');
 }
 
 // All lookups now proxy to backend endpoints (DB-backed). There is

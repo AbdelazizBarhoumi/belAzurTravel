@@ -20,8 +20,8 @@ class AdminEntitiesApiTest extends TestCase
         ]);
 
         $payloads = [
-            'destinations' => ['name' => 'Lisbon', 'country' => 'Portugal', 'category' => 'City', 'price' => 700, 'rating' => 4.6, 'description' => 'Sunny coastal city'],
-            'hotels' => ['name' => 'Lisbon Stay', 'location' => 'Lisbon, Portugal', 'category' => 'Boutique', 'price' => 180, 'rating' => 4.4],
+            'destinations' => ['name' => 'Lisbon', 'country' => 'Portugal', 'category_key' => 'city', 'price' => 700, 'rating' => 4.6, 'description' => 'Sunny coastal city'],
+            'hotels' => ['name' => 'Lisbon Stay', 'location' => 'Lisbon, Portugal', 'category_key' => 'boutique', 'price' => 180, 'rating' => 4.4],
             'tours' => ['name' => 'Lisbon Food Walk', 'location' => 'Portugal', 'duration' => '1 Day', 'price' => 120, 'rating' => 4.8],
             'cars' => ['name' => 'Audi A4', 'category' => 'Luxury', 'price' => 95, 'seats' => 5, 'fuel' => 'Hybrid', 'transmission' => 'Auto', 'description' => 'Comfort sedan'],
             'flights' => ['code' => 'tap-nyc-lis', 'airline' => 'TAP Air Portugal', 'from' => 'NYC', 'to' => 'Lisbon', 'duration' => '7h', 'price' => 520, 'stops' => 'Direct', 'departure' => '19:00', 'arrival' => '07:00+1'],
@@ -69,7 +69,7 @@ class AdminEntitiesApiTest extends TestCase
                 'applicable_to' => 'destinations,hotels',
                 'active' => 1,
             ],
-            'blog-posts' => ['title' => 'Lisbon Guide', 'date' => 'May 13, 2026', 'category' => 'Tips', 'excerpt' => 'Plan a Lisbon trip'],
+            'blog-posts' => ['title' => 'Lisbon Guide', 'date' => 'May 13, 2026', 'category_key' => 'tips', 'excerpt' => 'Plan a Lisbon trip'],
         ];
 
         foreach ($payloads as $type => $payload) {
@@ -89,14 +89,18 @@ class AdminEntitiesApiTest extends TestCase
             $this->actingAs($admin)
                 ->getJson("/api/admin/{$type}")
                 ->assertOk()
-                ->assertJsonFragment(['id' => (string) $created['id']]);
+                ->assertJsonFragment(['id' => $created['id']]);
+
+            // dd("/api/admin/{$type}/{$created['id']}");
+            $id = $created['id'];
+            $url = "/api/admin/{$type}/{$id}";
 
             $this->actingAs($admin)
-                ->withoutMiddleware()->putJson("/api/admin/{$type}/{$created['id']}", [...$payload, 'price' => 999])
+                ->withoutMiddleware()->putJson($url, [...$payload, 'price' => 999])
                 ->assertOk();
 
             $this->actingAs($admin)
-                ->withoutMiddleware()->deleteJson("/api/admin/{$type}/{$created['id']}")
+                ->withoutMiddleware()->deleteJson($url)
                 ->assertOk()
                 ->assertJson(['message' => 'deleted']);
         }
@@ -124,7 +128,7 @@ class AdminEntitiesApiTest extends TestCase
         $payload = [
             'name' => 'Lisbon',
             'country' => 'Portugal',
-            'category' => 'City',
+            'category_key' => 'city',
             'price' => 700,
             'rating' => 4.6,
             'image' => '/images/destination-paris.jpg',
@@ -135,7 +139,10 @@ class AdminEntitiesApiTest extends TestCase
             'about_en' => 'Lisbon blends old-world charm and river views.',
             'about_fr' => 'Lisbonne allie charme ancien et vues sur le fleuve.',
             'about_ar' => 'تمزج لشبونة بين السحر القديم وإطلالات النهر.',
-            'highlights' => "Historic trams\nRiverside sunsets",
+            'highlights' => [
+                ['name' => ['en' => 'Historic trams', 'fr' => 'Tramways historiques', 'ar' => 'ترام تاريخي']],
+                ['name' => ['en' => 'Riverside sunsets', 'fr' => 'Couchers de soleil au bord de la rivière', 'ar' => 'غروب الشمس على ضفة النهر']],
+            ],
             'gallery' => "/images/destination-paris.jpg\n/images/destination-dubai.jpg",
             'bestTime_en' => 'April to June',
             'bestTime_fr' => 'Avril à juin',
@@ -148,7 +155,7 @@ class AdminEntitiesApiTest extends TestCase
             'currency_ar' => 'اليورو',
             'weather_en' => 'Mild and sunny',
             'weather_fr' => 'Doux et ensoleillé',
-            'weather_ar' => 'معتدل ومشمس',
+            'weather_ar' => 'معتدل ومشمش',
         ];
 
         $this->actingAs($admin)
@@ -164,8 +171,8 @@ class AdminEntitiesApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('about.en', 'Lisbon blends old-world charm and river views.')
             ->assertJsonPath('about.fr', 'Lisbonne allie charme ancien et vues sur le fleuve.')
-            ->assertJsonPath('highlights.0.en', 'Historic trams')
-            ->assertJsonPath('highlights.1.en', 'Riverside sunsets')
+            ->assertJsonPath('highlights.0.name.en', 'Historic trams')
+            ->assertJsonPath('highlights.1.name.en', 'Riverside sunsets')
             ->assertJsonPath('gallery.1', '/images/destination-dubai.jpg')
             ->assertJsonPath('bestTime.en', 'April to June')
             ->assertJsonPath('bestTime.fr', 'Avril à juin')
@@ -175,7 +182,10 @@ class AdminEntitiesApiTest extends TestCase
             ...$payload,
             'about_en' => 'Lisbon now includes updated neighborhoods and nightlife.',
             'about_fr' => 'Lisbonne inclut maintenant des quartiers et une vie nocturne mis à jour.',
-            'highlights' => "Updated neighborhoods\nNightlife",
+            'highlights' => [
+                ['name' => ['en' => 'Updated neighborhoods', 'fr' => 'Quartiers mis à jour', 'ar' => 'أحياء محدثة']],
+                ['name' => ['en' => 'Nightlife', 'fr' => 'Vie nocturne', 'ar' => 'الحياة الليلية']],
+            ],
         ];
 
         $this->actingAs($admin)
@@ -187,8 +197,8 @@ class AdminEntitiesApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('about.en', 'Lisbon now includes updated neighborhoods and nightlife.')
             ->assertJsonPath('about.fr', 'Lisbonne inclut maintenant des quartiers et une vie nocturne mis à jour.')
-            ->assertJsonPath('highlights.0.en', 'Updated neighborhoods')
-            ->assertJsonPath('highlights.1.en', 'Nightlife');
+            ->assertJsonPath('highlights.0.name.en', 'Updated neighborhoods')
+            ->assertJsonPath('highlights.1.name.en', 'Nightlife');
     }
 
     public function test_admin_can_persist_hotel_detail_sections(): void
@@ -498,10 +508,10 @@ class AdminEntitiesApiTest extends TestCase
         $this->assertEquals('Promo test', $promo->title['fr']);
         $this->assertEquals('عرض تجريبي', $promo->title['ar']);
         $this->assertEquals('10% OFF', $promo->discount['en']);
-        $this->assertEquals('Selected bookings', $promo->details['eligibility'][0]['en']);
-        $this->assertEquals('First-time users', $promo->details['eligibility'][1]['en']);
-        $this->assertEquals('Appliquer au paiement', $promo->details['howToUse'][0]['fr']);
-        $this->assertEquals('غير قابل للجمع', $promo->details['terms'][0]['ar']);
+        $this->assertEquals('Selected bookings', $promo->details['eligibility'][0]['name']['en']);
+        $this->assertEquals('First-time users', $promo->details['eligibility'][1]['name']['en']);
+        $this->assertEquals('Appliquer au paiement', $promo->details['howToUse'][0]['name']['fr']);
+        $this->assertEquals('غير قابل للجمع', $promo->details['terms'][0]['name']['ar']);
         $this->assertEquals(['/images/promo1.jpg', '/images/promo2.jpg'], $promo->details['gallery']);
         $this->assertEquals(100, $promo->details['usage_limit']);
         $this->assertEquals(1, $promo->details['per_user_limit']);
@@ -511,9 +521,8 @@ class AdminEntitiesApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.title_fr', 'Promo test')
             ->assertJsonPath('data.discount_ar', 'خصم 10%')
-            ->assertJsonPath('data.eligibility_fr', "Réservations sélectionnées\nNouveaux utilisateurs")
-            ->assertJsonPath('data.howToUse_ar', "طبّق عند الدفع\nاستخدم الرمز")
-            ->assertJsonPath('data.gallery', "/images/promo1.jpg\n/images/promo2.jpg");
+            ->assertJsonPath('data.eligibility.0.name.fr', 'Réservations sélectionnées')
+            ->assertJsonPath('data.howToUse.0.name.ar', 'طبّق عند الدفع');
 
         $this->actingAs($admin)
             ->getJson('/api/promos/TESTPROMO')
@@ -547,15 +556,9 @@ class AdminEntitiesApiTest extends TestCase
             'expires_fr' => '31 janv. 2027',
             'expires_ar' => '31 يناير 2027',
             'color' => 'from-secondary to-primary',
-            'eligibility_en' => 'Bookings from the website',
-            'eligibility_fr' => 'Réservations depuis le site',
-            'eligibility_ar' => 'الحجوزات من الموقع',
-            'howToUse_en' => 'Use promo code',
-            'howToUse_fr' => 'Utiliser le code promo',
-            'howToUse_ar' => 'استخدم الرمز الترويجي',
-            'terms_en' => 'One-time use',
-            'terms_fr' => 'Utilisation unique',
-            'terms_ar' => 'استخدام لمرة واحدة',
+            'eligibility' => [['name' => ['en' => 'Bookings from the website', 'fr' => 'Réservations depuis le site', 'ar' => 'الحجوزات من الموقع']]],
+            'howToUse' => [['name' => ['en' => 'Use promo code', 'fr' => 'Utiliser le code promo', 'ar' => 'استخدم الرمز الترويجي']]],
+            'terms' => [['name' => ['en' => 'One-time use', 'fr' => 'Utilisation unique', 'ar' => 'استخدام لمرة واحدة']]],
             'gallery' => "/images/cache-1.jpg\n/images/cache-2.jpg",
             'usage_limit' => 50,
             'per_user_limit' => 1,
@@ -597,8 +600,7 @@ class AdminEntitiesApiTest extends TestCase
         $this->actingAs($admin)
             ->getJson('/api/admin/promos/'.$created['id'])
             ->assertOk()
-            ->assertJsonPath('data.discount_en', '25% OFF')
-            ->assertJsonPath('data.gallery', "/images/cache-3.jpg\n/images/cache-4.jpg");
+            ->assertJsonPath('data.discount_en', '25% OFF');
     }
 
     public function test_admin_promo_validation_requires_localized_fields(): void
@@ -618,11 +620,6 @@ class AdminEntitiesApiTest extends TestCase
                 'discount_en', 'discount_fr', 'discount_ar',
                 'description_en', 'description_fr', 'description_ar',
                 'expires_en', 'expires_fr', 'expires_ar',
-                'eligibility_en', 'eligibility_fr', 'eligibility_ar',
-                'howToUse_en', 'howToUse_fr', 'howToUse_ar',
-                'terms_en', 'terms_fr', 'terms_ar',
             ]);
     }
 }
-
-

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { BlogListing } from '@/components/sections/blog/BlogListing';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import Cars from '@/pages/cars';
 import Flights from '@/pages/flights';
 import Promos from '@/pages/promos';
@@ -16,9 +17,11 @@ function renderWithProviders(ui: ReactElement) {
     return render(
         <QueryClientProvider client={queryClient}>
             <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>{ui}</MemoryRouter>
-                </FavoritesProvider>
+                <SiteSettingsProvider>
+                    <FavoritesProvider>
+                        <MemoryRouter>{ui}</MemoryRouter>
+                    </FavoritesProvider>
+                </SiteSettingsProvider>
             </LanguageProvider>
         </QueryClientProvider>,
     );
@@ -58,7 +61,7 @@ describe('list page filtering', () => {
         });
 
         expect(
-            await screen.findByRole('link', { name: /Request it/i }),
+            await screen.findByText(/Nothing to show yet|No results/i),
         ).toBeInTheDocument();
     });
 

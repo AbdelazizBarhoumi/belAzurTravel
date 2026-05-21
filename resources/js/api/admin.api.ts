@@ -10,6 +10,7 @@ export type AdminEntity = AdminDestination | AdminHotel | AdminTour;
 export type AdminRow = Record<string, string | number | boolean | null>;
 export type AdminEntityType =
     | 'destinations'
+    | 'team'
     | 'hotels'
     | 'tours'
     | 'cars'

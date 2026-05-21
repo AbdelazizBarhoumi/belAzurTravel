@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('site_settings', function (Blueprint $table) {
-            $table->string('plus_code')->nullable()->after('address');
+        Schema::create('teams', function (Blueprint $table) {
+            $table->id();
+            $table->json('name');
+            $table->json('role');
+            $table->json('bio');
+            $table->string('image_path');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('site_settings', function (Blueprint $table) {
-            $table->dropColumn('plus_code');
-        });
+        Schema::dropIfExists('teams');
     }
 };

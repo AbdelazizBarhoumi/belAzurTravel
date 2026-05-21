@@ -1,6 +1,9 @@
 import { PageShell } from '@/components/layout/PageShell';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
+import { RichTextRenderer } from '@/components/ui/RichTextRenderer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { normalizeLegalBody } from '@/lib/legal';
 
 const Legal = () => {
     const { lang, t } = useLanguage();
@@ -32,12 +35,32 @@ const Legal = () => {
                             {section.title[lang]}
                         </h2>
 
-                        <p className="text-sm leading-7 text-muted-foreground md:text-base">
-                            {section.body[lang]}
-                        </p>
+                        {(() => {
+                            const body = normalizeLegalBody(section.body);
+                            const content =
+                                body.content[lang] ||
+                                body.content.en ||
+                                body.content.fr ||
+                                body.content.ar ||
+                                '';
+                            return body.format === 'richtext' ? (
+                                <RichTextRenderer
+                                    html={content}
+                                    className="prose-sm text-muted-foreground"
+                                />
+                            ) : (
+                                <MarkdownRenderer
+                                    content={content}
+                                    className="prose-sm text-muted-foreground"
+                                />
+                            );
+                        })()}
 
                         <div className="mt-4 text-right">
-                            <a href={`/legal/${i}`} className="text-primary hover:underline">
+                            <a
+                                href={`/legal/${i}`}
+                                className="text-primary hover:underline"
+                            >
                                 {t('cookie.learnMore')}
                             </a>
                         </div>

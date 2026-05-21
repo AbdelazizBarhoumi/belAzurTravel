@@ -29,6 +29,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         document.documentElement.lang = lang;
         document.documentElement.dir = dir;
+        // Add a class to allow stronger CSS targeting for Arabic mode
+        if (dir === 'rtl') {
+            document.documentElement.classList.add('lang-ar');
+        } else {
+            document.documentElement.classList.remove('lang-ar');
+        }
         localStorage.setItem('lang', lang);
     }, [lang, dir]);
 

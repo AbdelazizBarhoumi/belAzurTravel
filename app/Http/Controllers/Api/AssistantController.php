@@ -12,7 +12,6 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Redis;
 
 class AssistantController extends Controller
 {
@@ -105,7 +104,6 @@ class AssistantController extends Controller
         if ($user) {
             $notification = new BookingStatusNotification($booking->refresh());
             $user->notify($notification);
-            $this->publishNotification($user, $notification);
         }
         Cache::forget('assistant.summary');
 
@@ -119,7 +117,6 @@ class AssistantController extends Controller
         if ($user) {
             $notification = new BookingStatusNotification($booking->refresh());
             $user->notify($notification);
-            $this->publishNotification($user, $notification);
         }
         Cache::forget('assistant.summary');
 
@@ -170,27 +167,5 @@ class AssistantController extends Controller
         }
 
         return Carbon::parse($value)->toDateString();
-    }
-
-    private function publishNotification(User $user, object $notification): void
-    {
-        try {
-            if (! method_exists($notification, 'toDatabase')) {
-                return;
-            }
-
-            $data = $notification->toDatabase($user);
-            Redis::publish("notifications:user:{$user->id}", json_encode([
-                'notification' => [
-                    'id' => (string) ($data['id'] ?? $user->id.'-'.now()->timestamp),
-                    'type' => $data['type'] ?? class_basename($notification::class),
-                    'data' => $data,
-                    'read_at' => null,
-                    'created_at' => now()->toJSON(),
-                ],
-            ]));
-        } catch (\Throwable $e) {
-            // ignore
-        }
     }
 }

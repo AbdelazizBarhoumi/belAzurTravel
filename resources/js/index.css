@@ -1,4 +1,9 @@
+@import '@fontsource/tajawal/300.css';
+@import '@fontsource/tajawal/400.css';
+@import '@fontsource/tajawal/500.css';
+@import '@fontsource/tajawal/700.css';
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+@import 'react-quill/dist/quill.snow.css';
 
 @tailwind base;
 @tailwind components;
@@ -8,6 +13,16 @@
     :root {
         --background: 40 30% 97%;
         --foreground: 200 30% 12%;
+
+        --font-sans:
+            'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+            Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Noto Color Emoji',
+            'Apple Color Emoji', 'Segoe UI Emoji';
+        --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        --font-arabic:
+            'Tajawal', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+            Roboto, 'Helvetica Neue', Arial, 'Noto Sans Arabic',
+            'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
 
         --card: 0 0% 100%;
         --card-foreground: 200 30% 12%;
@@ -110,7 +125,43 @@
     h4,
     h5,
     h6 {
-        font-family: 'Playfair Display', serif;
+        font-family: var(--font-serif);
+    }
+
+    /* CRITICAL: Override ALL fonts to Tajawal when Arabic mode is active */
+    html[lang='ar'],
+    html[dir='rtl'],
+    [lang='ar'],
+    [dir='rtl'],
+    html.lang-ar,
+    .lang-ar {
+        font-family: var(--font-arabic) !important;
+        --font-sans: var(--font-arabic) !important;
+        --font-serif: var(--font-arabic) !important;
+    }
+
+    /* Override ALL child elements in Arabic context */
+    html[lang='ar'] *,
+    html[dir='rtl'] *,
+    html.lang-ar *,
+    .lang-ar * {
+        font-family: var(--font-arabic) !important;
+    }
+
+    /* Override Tailwind utility classes specifically */
+    html[lang='ar'] .font-sans,
+    html[dir='rtl'] .font-sans,
+    html.lang-ar .font-sans,
+    .lang-ar .font-sans,
+    html[lang='ar'] .font-serif,
+    html[dir='rtl'] .font-serif,
+    html.lang-ar .font-serif,
+    .lang-ar .font-serif,
+    html[lang='ar'] .font-mono,
+    html[dir='rtl'] .font-mono,
+    html.lang-ar .font-mono,
+    .lang-ar .font-mono {
+        font-family: var(--font-arabic) !important;
     }
 }
 
@@ -157,4 +208,30 @@
         box-shadow: var(--card-shadow-hover);
         transform: translateY(-4px);
     }
+}
+
+/* ============================================================================
+   CRITICAL: Arabic Font Overrides - Applied AFTER all Tailwind layers
+   Must have highest specificity to override .font-serif, .font-sans, .font-mono
+   ============================================================================ */
+html[lang='ar'] .font-sans,
+html[lang='ar'] .font-serif,
+html[lang='ar'] .font-mono,
+html[dir='rtl'] .font-sans,
+html[dir='rtl'] .font-serif,
+html[dir='rtl'] .font-mono,
+html.lang-ar .font-sans,
+html.lang-ar .font-serif,
+html.lang-ar .font-mono,
+[lang='ar'] .font-sans,
+[lang='ar'] .font-serif,
+[lang='ar'] .font-mono,
+[dir='rtl'] .font-sans,
+[dir='rtl'] .font-serif,
+[dir='rtl'] .font-mono,
+.lang-ar .font-sans,
+.lang-ar .font-serif,
+.lang-ar .font-mono {
+    font-family: var(--font-arabic) !important;
+    letter-spacing: inherit;
 }

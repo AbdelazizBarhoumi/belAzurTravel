@@ -55,6 +55,15 @@ class SiteSettingsVisibilityTest extends TestCase
             'footer' => [],
         ];
 
+        // Ensure contact is present in content for visibility check
+        $content['contact'] = [
+            'title' => [
+                'en' => 'Contact Us',
+                'fr' => 'Contact Us',
+                'ar' => 'Contact Us',
+            ],
+        ];
+
         $setting->update(['content' => $content]);
         Cache::forget('site-settings');
         Cache::forget('site_settings_nav');

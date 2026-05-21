@@ -16,6 +16,8 @@ import {
     deleteCategory,
     type Category,
 } from '@/api/categories.api';
+import { clearCachedCategories } from '@/lib/categoryCache';
+import { queryClient } from '@/lib/queryClient';
 import { Plus, Trash2, Edit2, Check, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -51,6 +53,10 @@ export function CategoryManager({
     useEffect(() => {
         if (isOpen) {
             loadCategories();
+        } else {
+            setEditingId(null);
+            setNewName({ en: '', fr: '', ar: '' });
+            setIsCreating(false);
         }
     }, [isOpen, type]);
 
@@ -62,6 +68,8 @@ export function CategoryManager({
 
         try {
             await createCategory({ entity_type: type, name: newName });
+            clearCachedCategories();
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
             toast.success('Category created');
             setNewName({ en: '', fr: '', ar: '' });
             setIsCreating(false);
@@ -79,6 +87,8 @@ export function CategoryManager({
 
         try {
             await updateCategory(id, newName);
+            clearCachedCategories();
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
             toast.success('Category updated');
             setEditingId(null);
             setNewName({ en: '', fr: '', ar: '' });
@@ -97,6 +107,8 @@ export function CategoryManager({
                 }
                 return;
             }
+            clearCachedCategories();
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
             toast.success('Category deleted');
             loadCategories();
         } catch (err) {

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Destination extends Model
 {
-    protected $fillable = ['slug', 'name', 'country', 'category_key', 'category', 'price', 'rating', 'image', 'description', 'details'];
-    protected $casts = ['name' => 'array', 'country' => 'array', 'category' => 'array', 'description' => 'array', 'details' => 'array', 'price' => 'integer', 'rating' => 'float'];
+    use HasFactory;
+
+    protected $fillable = ['slug', 'name', 'country', 'category_key', 'price', 'rating', 'image', 'description', 'details'];
+    protected $casts = ['name' => 'array', 'country' => 'array', 'description' => 'array', 'details' => 'array', 'price' => 'integer', 'rating' => 'float'];
 }

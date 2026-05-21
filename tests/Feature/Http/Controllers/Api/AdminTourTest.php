@@ -42,23 +42,21 @@ class AdminTourTest extends TestCase
             'description_ar' => 'اختبر جمال جبال الألب السويسرية الخلابة.',
             'itinerary' => [
                 [
-                    'day' => 1,
                     'title' => ['en' => 'Arrival in Zurich', 'fr' => 'Arrivée à Zurich', 'ar' => 'الوصول إلى زيوريخ'],
                     'details' => ['en' => 'Arrive at Zurich airport and settle in.', 'fr' => 'Arrivée à l\'aéroport de Zurich et installation.', 'ar' => 'الوصول إلى مطار زيوريخ والاستقرار.'],
                 ],
                 [
-                    'day' => 2,
                     'title' => ['en' => 'Mountain Trekking', 'fr' => 'Trekking en Montagne', 'ar' => 'رحلة المشي الجبلية'],
                     'details' => ['en' => 'Trek through scenic trails.', 'fr' => 'Trek à travers des sentiers pittoresques.', 'ar' => 'المشي عبر المسارات الجميلة.'],
                 ],
             ],
             'includes' => [
-                ['en' => 'All meals', 'fr' => 'Tous les repas', 'ar' => 'جميع الوجبات'],
-                ['en' => 'Professional guide', 'fr' => 'Guide professionnel', 'ar' => 'دليل محترف'],
+                ['name' => ['en' => 'All meals', 'fr' => 'Tous les repas', 'ar' => 'جميع الوجبات']],
+                ['name' => ['en' => 'Professional guide', 'fr' => 'Guide professionnel', 'ar' => 'دليل محترف']],
             ],
             'excludes' => [
-                ['en' => 'Travel insurance', 'fr' => 'Assurance voyage', 'ar' => 'تأمين السفر'],
-                ['en' => 'Personal expenses', 'fr' => 'Dépenses personnelles', 'ar' => 'النفقات الشخصية'],
+                ['name' => ['en' => 'Travel insurance', 'fr' => 'Assurance voyage', 'ar' => 'تأمين السفر']],
+                ['name' => ['en' => 'Personal expenses', 'fr' => 'Dépenses personnelles', 'ar' => 'النفقات الشخصية']],
             ],
             'images' => [],
         ];
@@ -107,18 +105,17 @@ class AdminTourTest extends TestCase
 
         // Verify itinerary
         $this->assertCount(2, $tour->itinerary);
-        $this->assertEquals(1, $tour->itinerary[0]['day']);
         $this->assertEquals('Arrival in Zurich', $tour->itinerary[0]['title']['en']);
         $this->assertEquals('Arrivée à Zurich', $tour->itinerary[0]['title']['fr']);
 
         // Verify includes
         $this->assertCount(2, $tour->includes);
-        $this->assertEquals('All meals', $tour->includes[0]['en']);
-        $this->assertEquals('جميع الوجبات', $tour->includes[0]['ar']);
+        $this->assertEquals('All meals', $tour->includes[0]['name']['en']);
+        $this->assertEquals('جميع الوجبات', $tour->includes[0]['name']['ar']);
 
         // Verify excludes
         $this->assertCount(2, $tour->excludes);
-        $this->assertEquals('Travel insurance', $tour->excludes[0]['en']);
+        $this->assertEquals('Travel insurance', $tour->excludes[0]['name']['en']);
 
         // Verify details JSON stores all sections
         $this->assertArrayHasKey('itinerary', $tour->details ?? []);
@@ -207,7 +204,6 @@ class AdminTourTest extends TestCase
             'description_ar' => 'وصف محدث.',
             'itinerary' => [
                 [
-                    'day' => 1,
                     'title' => ['en' => 'Day 1', 'fr' => 'Jour 1', 'ar' => 'اليوم 1'],
                     'details' => ['en' => 'Details', 'fr' => 'Détails', 'ar' => 'تفاصيل'],
                 ],

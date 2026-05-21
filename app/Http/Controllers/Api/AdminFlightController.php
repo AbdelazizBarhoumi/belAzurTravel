@@ -10,8 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
+/**
+ * AdminFlightController
+ *
+ * API media conventions:
+ * - Main image: send `image` as a File upload or string path.
+ * - Gallery: send `gallery` as an array of paths and `gallery_files` as uploaded files.
+ */
 class AdminFlightController extends Controller
 {
+    use \App\Concerns\HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.flights', now()->addMinutes(5), function () {
@@ -29,13 +38,13 @@ class AdminFlightController extends Controller
 
     public function show(int|string $id): JsonResponse
     {
-        $item = Flight::query()->findOrFail($id);
+        $item = $this->findFlight($id);
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
     public function update(Request $request, int|string $id): JsonResponse
     {
-        $item = Flight::query()->findOrFail($id);
+        $item = $this->findFlight($id);
         $item->update($this->attributes($request, $item));
         $this->flushAdminCache('flights', $item->code ?? null);
         return response()->json(['data' => $this->adminPayload($item->refresh())]);
@@ -43,7 +52,7 @@ class AdminFlightController extends Controller
 
     public function destroy(int|string $id): JsonResponse
     {
-        $item = Flight::query()->findOrFail($id);
+        $item = $this->findFlight($id);
         $identifier = $item->code ?? (string) $id;
         $item->delete();
         $this->flushAdminCache('flights', $identifier);
@@ -52,12 +61,14 @@ class AdminFlightController extends Controller
 
     private function attributes(Request $request, ?Model $existing = null): array
     {
+        $this->decodeJsonFields($request, ['gallery', 'cabin', 'aircraft', 'baggage', 'refund']);
+
         $rules = [
             'code' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
             'airline' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
             'airline_en' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
-            'airline_fr' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'nullable', 'string', 'max:255'],
-            'airline_ar' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'nullable', 'string', 'max:255'],
+            'airline_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'airline_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
             'from' => ['sometimes', 'nullable', 'string', 'max:16'],
             'to' => ['sometimes', 'nullable', 'string', 'max:255'],
             'to_en' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
@@ -72,10 +83,6 @@ class AdminFlightController extends Controller
             'stops_en' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
             'stops_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'stops_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'departure' => ['sometimes', 'nullable', 'string', 'max:32'],
-            'arrival' => ['sometimes', 'nullable', 'string', 'max:32'],
-            'date' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'seats' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'cabin' => ['sometimes', 'nullable', 'string', 'max:255'],
             'cabin_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'cabin_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -92,55 +99,98 @@ class AdminFlightController extends Controller
             'refund_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'refund_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'refund_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
-            // localized detail sections handled above
+            'departure' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'arrival' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'date' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'seats' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'image' => $request->hasFile('image') ? ['sometimes', 'nullable', 'image', 'max:10240'] : ['sometimes', 'nullable', 'string', 'max:2048'],
+            'gallery' => ['sometimes', 'nullable', 'array'],
+            'gallery_files' => ['sometimes', 'array'],
+            'gallery_files.*' => ['image', 'max:4096'],
         ];
 
         $data = $request->validate($rules);
-
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
         $name = $localized('airline');
         $label = $name['en'] ?: ($data['code'] ?? 'flight');
         $code = $existing->code ?? ($data['code'] ?? Str::slug($label) . '-' . Str::lower(Str::random(4)));
 
+        $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? []);
+
         return [
             'code' => $code,
             'airline' => $localized('airline', $label),
-            'from' => $data['from'] ?? '',
+            'from' => $data['from'] ?? $existing?->from ?? '',
             'to' => $localized('to'),
             'duration' => $localized('duration'),
             'price' => (int) ($data['price'] ?? 0),
             'stops' => $localized('stops'),
-            'departure' => $data['departure'] ?? '',
-            'arrival' => $data['arrival'] ?? '',
-            'details' => $this->flightDetails($data, $existing),
+            'departure' => $data['departure'] ?? $existing?->departure ?? '',
+            'arrival' => $data['arrival'] ?? $existing?->arrival ?? '',
+            'image' => $this->handleMainImage($request, $existing?->image, 'uploads/flights'),
+            'details' => $this->flightDetails($data, $existing, $gallery),
         ];
     }
 
     private function adminPayload(Model $item): array
     {
+        $details = $item->details ?? [];
         return [
             'id' => (string) $item->id,
             'code' => $item->code,
-            ...$this->flatLocalized('airline', $item->airline),
+            'airline' => $item->airline,
             'from' => $item->from,
-            ...$this->flatLocalized('to', $item->to),
-            ...$this->flatLocalized('duration', $item->duration),
+            'to' => $item->to,
+            'duration' => $item->duration,
             'price' => $item->price,
-            ...$this->flatLocalized('stops', $item->stops),
+            'stops' => $item->stops,
             'departure' => $item->departure,
             'arrival' => $item->arrival,
-            'date' => $item->details['date'] ?? '',
-            'seats' => $item->details['seats'] ?? null,
-            ...$this->flatLocalized('cabin', $item->details['cabin'] ?? null),
-            ...$this->flatLocalized('aircraft', $item->details['aircraft'] ?? null),
-            ...$this->flatLocalized('baggage', $item->details['baggage'] ?? null),
-            ...$this->flatLocalized('refund', $item->details['refund'] ?? null),
+            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'gallery' => $details['gallery'] ?? [$item->image],
+            'date' => $details['date'] ?? '',
+            'seats' => $details['seats'] ?? null,
+            'details' => [
+                'gallery' => $details['gallery'] ?? [$item->image],
+                'date' => $details['date'] ?? '',
+                'seats' => $details['seats'] ?? null,
+                'cabin' => $details['cabin'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+                'aircraft' => $details['aircraft'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+                'baggage' => $details['baggage'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+                'refund' => $details['refund'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            ],
+            'cabin' => $details['cabin'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'cabin_en' => $details['cabin']['en'] ?? '',
+            'cabin_fr' => $details['cabin']['fr'] ?? '',
+            'cabin_ar' => $details['cabin']['ar'] ?? '',
+            'aircraft' => $details['aircraft'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'aircraft_en' => $details['aircraft']['en'] ?? '',
+            'aircraft_fr' => $details['aircraft']['fr'] ?? '',
+            'aircraft_ar' => $details['aircraft']['ar'] ?? '',
+            'baggage' => $details['baggage'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'baggage_en' => $details['baggage']['en'] ?? '',
+            'baggage_fr' => $details['baggage']['fr'] ?? '',
+            'baggage_ar' => $details['baggage']['ar'] ?? '',
+            'refund' => $details['refund'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'refund_en' => $details['refund']['en'] ?? '',
+            'refund_fr' => $details['refund']['fr'] ?? '',
+            'refund_ar' => $details['refund']['ar'] ?? '',
         ];
     }
 
-    private function flightDetails(array $data, ?Model $existing): array
+    private function findFlight(int|string $id): Flight
+    {
+        return Flight::query()
+            ->whereKey($id)
+            ->orWhere('code', (string) $id)
+            ->firstOrFail();
+    }
+
+    private function flightDetails(array $data, ?Model $existing, array $gallery): array
     {
         $details = $existing?->details ?? [];
+
+        $details['gallery'] = $gallery;
 
         if (array_key_exists('date', $data)) {
             $details['date'] = $data['date'] ?? '';
@@ -152,8 +202,7 @@ class AdminFlightController extends Controller
 
         foreach (['cabin', 'aircraft', 'baggage', 'refund'] as $key) {
             if (array_key_exists($key, $data) || array_key_exists($key.'_en', $data) || array_key_exists($key.'_fr', $data) || array_key_exists($key.'_ar', $data)) {
-                $fallback = data_get($existing, "details.{$key}.en") ?? data_get($existing, "details.{$key}") ?? '';
-                $details[$key] = $this->localized($data, $key, (string) $fallback);
+                $details[$key] = $this->localized($data, $key, (string) data_get($existing, "details.{$key}.en", ''));
             }
         }
 
@@ -173,11 +222,10 @@ class AdminFlightController extends Controller
 
     private function flushAdminCache(string $type, ?string $identifier = null): void
     {
-        Cache::forget("admin.entity.{$type}");
+        Cache::forget("admin.entity.flights");
         Cache::forget("entity.{$type}.index");
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("entity.{$type}.{$identifier}");
         }
     }
 }
-

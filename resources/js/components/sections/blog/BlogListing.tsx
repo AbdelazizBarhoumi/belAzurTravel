@@ -3,8 +3,8 @@ import { Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
-import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import CardMedia from '@/components/ui/CardMedia';
 import {
     Pagination,
@@ -23,6 +23,20 @@ type LocalizedText = Record<Lang, string>;
 
 function localize(value: LocalizedText, lang: Lang): string {
     return value[lang];
+}
+
+function formatBlogDate(date: string, lang: Lang): string {
+    const locale = lang === 'ar' ? 'ar-EG' : lang === 'fr' ? 'fr-FR' : 'en-US';
+
+    try {
+        return new Intl.DateTimeFormat(locale, {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        }).format(new Date(date));
+    } catch {
+        return date;
+    }
 }
 
 interface BlogListingProps {
@@ -156,7 +170,7 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
                                         </span>
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                             <Calendar className="h-3 w-3" />
-                                            {post.date}
+                                            {formatBlogDate(post.date, lang)}
                                         </div>
                                     </div>
                                     <h3 className="mb-2 font-serif text-lg font-bold text-foreground transition-colors group-hover:text-primary">

@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
@@ -6,15 +6,16 @@ import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { RouteLoader } from '@/components/layout/RouteLoader';
 import { NavRouteGuard } from '@/components/nav/NavRouteGuard';
+import CookieConsent from '@/components/ui/CookieConsent';
 import { RoleGuard } from '@/components/ui/RoleGuard';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
-import CookieConsent from '@/components/ui/CookieConsent';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
+import { queryClient } from '@/lib/queryClient';
 import { traceRoute } from '@/lib/routeTrace';
 import AdminDashboard from './pages/admin';
 import AdminBlog from './pages/admin/AdminBlog';
@@ -29,6 +30,7 @@ import AdminHotels from './pages/admin/AdminHotels';
 import AdminPromos from './pages/admin/AdminPromos';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSiteSettings from './pages/admin/AdminSiteSettings';
+import AdminTeam from './pages/admin/AdminTeam';
 import AdminTours from './pages/admin/AdminTours';
 import AdminUsers from './pages/admin/AdminUsers';
 import Blog from './pages/blog';
@@ -47,6 +49,7 @@ import EventDetail from './pages/events/show';
 import Flights from './pages/flights';
 import FlightDetail from './pages/flights/show';
 import Contact from './pages/general/Contact';
+import Error419 from './pages/general/Error419';
 import Favorites from './pages/general/Favorites';
 import Gallery from './pages/general/Gallery';
 import Index from './pages/general/Index';
@@ -64,21 +67,6 @@ import Promos from './pages/promos';
 import PromoDetail from './pages/promos/show';
 import Tours from './pages/tours';
 import TourDetail from './pages/tours/show';
-
-const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            // Conservative defaults to avoid accidental request storms.
-            // Individual screens can opt into shorter stale times if needed.
-            staleTime: 5 * 60 * 1000,
-            gcTime: 10 * 60 * 1000,
-            refetchOnMount: false,
-            refetchOnWindowFocus: false,
-            refetchOnReconnect: false,
-            retry: 1,
-        },
-    },
-});
 
 const adminGuard = (element: JSX.Element) => (
     <RoleGuard role="admin">{element}</RoleGuard>
@@ -137,6 +125,7 @@ const LayoutWrapper = () => {
                 <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/session-expired" element={<Error419 />} />
                     <Route path="/unauthorized" element={<Unauthorized />} />
                     <Route path="/register" element={<Register />} />
                     <Route
@@ -219,6 +208,10 @@ const LayoutWrapper = () => {
                     <Route
                         path="/admin/promos"
                         element={adminGuard(<AdminPromos />)}
+                    />
+                    <Route
+                        path="/admin/team"
+                        element={adminGuard(<AdminTeam />)}
                     />
                     <Route
                         path="/admin/blog"
@@ -523,8 +516,8 @@ const App = () => (
                             }}
                         >
                             <RouteLoader />
-                                <LayoutWrapper />
-                                <CookieConsent />
+                            <LayoutWrapper />
+                            <CookieConsent />
                         </BrowserRouter>
                     </TooltipProvider>
                 </FavoritesProvider>

@@ -69,11 +69,11 @@ class AdminFlightsE2ETest extends TestCase
         $createdData = $createResponse->json('data');
         $this->assertNotNull($createdData['id']);
         $this->assertEquals($payload['code'], $createdData['code']);
-        $this->assertEquals($payload['airline_en'], $createdData['airline_en']);
+        $this->assertEquals($payload['airline_en'], $createdData['airline']['en']);
         $this->assertEquals($payload['price'], $createdData['price']);
 
         // Step 2: Verify DB persistence - flight exists with correct columns
-        $dbFlight = Flight::find($createdData['id']);
+        $dbFlight = Flight::where('code', $createdData['code'])->first();
         $this->assertNotNull($dbFlight);
         $this->assertEquals($payload['code'], $dbFlight->code);
         $this->assertEquals($payload['price'], $dbFlight->price);
@@ -97,22 +97,22 @@ class AdminFlightsE2ETest extends TestCase
         $this->assertEquals($payload['baggage_en'], $dbFlight->details['baggage']['en']);
         $this->assertEquals($payload['refund_en'], $dbFlight->details['refund']['en']);
 
-        // Step 3: Retrieve from admin API - verify flattened payload
+        // Step 3: Retrieve from admin API - verify nested payload
         $this->actingAs($this->admin)
-            ->getJson("/api/admin/flights/{$createdData['id']}")
+            ->getJson("/api/admin/flights/{$dbFlight->id}")
             ->assertOk()
             ->assertJsonPath('data.code', $payload['code'])
-            ->assertJsonPath('data.airline_en', $payload['airline_en'])
-            ->assertJsonPath('data.airline_fr', $payload['airline_fr'])
-            ->assertJsonPath('data.to_en', $payload['to_en'])
-            ->assertJsonPath('data.to_fr', $payload['to_fr'])
+            ->assertJsonPath('data.airline.en', $payload['airline_en'])
+            ->assertJsonPath('data.airline.fr', $payload['airline_fr'])
+            ->assertJsonPath('data.to.en', $payload['to_en'])
+            ->assertJsonPath('data.to.fr', $payload['to_fr'])
             ->assertJsonPath('data.price', $payload['price'])
-            ->assertJsonPath('data.date', $payload['date'])
-            ->assertJsonPath('data.seats', $payload['seats'])
-            ->assertJsonPath('data.cabin_en', $payload['cabin_en'])
-            ->assertJsonPath('data.aircraft_en', $payload['aircraft_en'])
-            ->assertJsonPath('data.baggage_en', $payload['baggage_en'])
-            ->assertJsonPath('data.refund_en', $payload['refund_en']);
+            ->assertJsonPath('data.details.date', $payload['date'])
+            ->assertJsonPath('data.details.seats', $payload['seats'])
+            ->assertJsonPath('data.details.cabin.en', $payload['cabin_en'])
+            ->assertJsonPath('data.details.aircraft.en', $payload['aircraft_en'])
+            ->assertJsonPath('data.details.baggage.en', $payload['baggage_en'])
+            ->assertJsonPath('data.details.refund.en', $payload['refund_en']);
 
         // Step 4: Retrieve from public API - verify localized payload
         $publicResponse = $this->getJson("/api/flights/{$payload['code']}")
@@ -123,9 +123,9 @@ class AdminFlightsE2ETest extends TestCase
         $this->assertEquals($payload['airline_en'], $publicData['airline']['en']);
         $this->assertEquals($payload['from'], $publicData['from']);
         $this->assertEquals($payload['departure'], $publicData['departure']);
-        $this->assertEquals($payload['date'], $publicData['date']);
-        $this->assertEquals($payload['cabin_en'], $publicData['cabin']['en']);
-        $this->assertEquals($payload['aircraft_en'], $publicData['aircraft']['en']);
+        $this->assertEquals($payload['date'], $publicData['details']['date']);
+        $this->assertEquals($payload['cabin_en'], $publicData['details']['cabin']['en']);
+        $this->assertEquals($payload['aircraft_en'], $publicData['details']['aircraft']['en']);
     }
 
     /**
@@ -195,7 +195,7 @@ class AdminFlightsE2ETest extends TestCase
             ->assertOk();
 
         $updatedData = $updateResponse->json('data');
-        $this->assertEquals($updatePayload['airline_en'], $updatedData['airline_en']);
+        $this->assertEquals($updatePayload['airline_en'], $updatedData['airline']['en']);
         $this->assertEquals($updatePayload['price'], $updatedData['price']);
 
         // Step 2: Verify DB persistence
@@ -215,8 +215,8 @@ class AdminFlightsE2ETest extends TestCase
         $this->assertEquals($updatePayload['airline_en'], $publicData['airline']['en']);
         $this->assertEquals($updatePayload['from'], $publicData['from']);
         $this->assertEquals($updatePayload['price'], $publicData['price']);
-        $this->assertEquals($updatePayload['date'], $publicData['date']);
-        $this->assertEquals($updatePayload['seats'], $publicData['seats']);
+        $this->assertEquals($updatePayload['date'], $publicData['details']['date']);
+        $this->assertEquals($updatePayload['seats'], $publicData['details']['seats']);
     }
 
     /**
@@ -328,15 +328,15 @@ class AdminFlightsE2ETest extends TestCase
         $this->assertNotEmpty($flights);
 
         $flight = $flights[0];
-        // Verify admin payload format (flattened localized fields)
+        // Verify admin payload format (matches public API nested structure)
         $this->assertArrayHasKey('id', $flight);
         $this->assertArrayHasKey('code', $flight);
-        $this->assertArrayHasKey('airline', $flight); // Flattened to base + _en, _fr, _ar
-        $this->assertArrayHasKey('airline_en', $flight);
+        $this->assertArrayHasKey('airline', $flight);
+        $this->assertIsArray($flight['airline']);
+        $this->assertArrayHasKey('en', $flight['airline']);
         $this->assertArrayHasKey('to', $flight);
-        $this->assertArrayHasKey('to_en', $flight);
         $this->assertArrayHasKey('price', $flight);
-        $this->assertArrayHasKey('date', $flight); // From details
-        $this->assertArrayHasKey('cabin_en', $flight); // From details
+        $this->assertArrayHasKey('details', $flight);
+        $this->assertArrayHasKey('cabin', $flight['details']);
     }
 }

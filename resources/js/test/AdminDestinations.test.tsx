@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as adminApi from '@/api/admin.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import AdminDestinations from '@/pages/admin/AdminDestinations';
 
 vi.mock('@/hooks/useAdminGuard', () => ({
@@ -28,9 +29,11 @@ function renderAdminDestinationsPage() {
     return render(
         <QueryClientProvider client={queryClient}>
             <LanguageProvider>
-                <MemoryRouter initialEntries={['/admin/destinations']}>
-                    <AdminDestinations />
-                </MemoryRouter>
+                <SiteSettingsProvider>
+                    <MemoryRouter initialEntries={['/admin/destinations']}>
+                        <AdminDestinations />
+                    </MemoryRouter>
+                </SiteSettingsProvider>
             </LanguageProvider>
         </QueryClientProvider>,
     );
@@ -53,7 +56,7 @@ describe('Admin destinations editor', () => {
         fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
 
         expect(await screen.findByRole('dialog')).toBeInTheDocument();
-        expect(screen.getByLabelText('Main image')).toBeInTheDocument();
+        expect(screen.getByLabelText(/Image/i)).toBeInTheDocument();
         expect(screen.getByLabelText('Gallery')).toBeInTheDocument();
     });
 
@@ -78,8 +81,8 @@ describe('Admin destinations editor', () => {
             target: { value: '4.9' },
         });
 
-        const categorySelect = screen.getByLabelText(/Category/i);
-        fireEvent.change(categorySelect, { target: { value: 'Beach' } });
+        fireEvent.mouseDown(screen.getByRole('combobox', { name: /Category/i }));
+        fireEvent.click(await screen.findByText('Beach'));
 
         await waitFor(() => {
             expect(screen.getByDisplayValue('Santorini')).toBeInTheDocument();
@@ -95,7 +98,7 @@ describe('Admin destinations editor', () => {
             type: 'image/jpeg',
         });
 
-        fireEvent.change(screen.getByLabelText('Main image'), {
+        fireEvent.change(screen.getByLabelText(/Image/i), {
             target: { files: [imageFile] },
         });
         fireEvent.change(screen.getByLabelText('Gallery'), {
@@ -104,7 +107,7 @@ describe('Admin destinations editor', () => {
 
         await waitFor(() => {
             expect(
-                (screen.getByLabelText('Main image') as HTMLInputElement).files
+                (screen.getByLabelText(/Image/i) as HTMLInputElement).files
                     ?.length,
             ).toBe(1);
             expect(

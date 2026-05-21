@@ -56,7 +56,7 @@ class AdminDealController extends Controller
         return response()->json(['message' => 'deleted']);
     }
 
-    private function attributes(Request $request, ?Model $existing = null): array
+    private function attributes(Request $request, ?Deal $existing = null): array
     {
         // Strict localized contract: admin must provide title for all locales
         $rules = [
@@ -88,27 +88,39 @@ class AdminDealController extends Controller
             'discount' => ['sometimes', 'nullable', 'string', 'max:255'],
             'expires' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'highlights' => ['sometimes', 'nullable', 'array'],
+            'terms' => ['sometimes', 'nullable', 'array'],
         ];
 
         $data = $request->validate($rules);
 
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
         $title = $localized('title');
-        $slug = $existing->slug ?? Str::slug($title['en'] ?? ($data['title'] ?? 'deal')) . '-' . Str::lower(Str::random(4));
+        $slug = $existing->slug ?? Str::slug($title['en'] ?? 'deal') . '-' . Str::lower(Str::random(4));
+
+        $details = $existing?->details ?? [];
+        if (array_key_exists('highlights', $data)) {
+            $details['highlights'] = $data['highlights'];
+        }
+        if (array_key_exists('terms', $data)) {
+            $details['terms'] = $data['terms'];
+        }
+
+        $category = $localized('category');
 
         return [
             'slug' => $slug,
-            'title' => $localized('title', $this->localized($data, 'name', '')['en'] ?? ''),
+            'title' => $title,
             'description' => $localized('description', ''),
             'discount' => $localized('discount'),
             'expires' => $localized('expires'),
-            'category' => $localized('category'),
-            // Deals are text-only per project decision
-            'details' => $existing->details ?? [],
+            'category' => $category,
+            'category_key' => $category['en'] ?? null,
+            'details' => $details,
         ];
     }
 
-    private function adminPayload(Model $item): array
+    private function adminPayload(Deal $item): array
     {
         return [
             'id' => (string) $item->id,
@@ -117,6 +129,9 @@ class AdminDealController extends Controller
             ...$this->flatLocalized('discount', $item->discount),
             ...$this->flatLocalized('expires', $item->expires),
             ...$this->flatLocalized('category', $item->category),
+            'category_key' => $item->category_key,
+            'highlights' => $item->details['highlights'] ?? [],
+            'terms' => $item->details['terms'] ?? [],
         ];
     }
 

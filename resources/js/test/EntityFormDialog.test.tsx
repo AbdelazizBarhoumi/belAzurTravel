@@ -102,4 +102,22 @@ describe('EntityFormDialog', () => {
 
         expect(screen.getByText('Current language: fr')).toBeInTheDocument();
     });
+
+    it('disables the submit button while saving', () => {
+        renderWithLanguage(
+            <EntityFormDialog
+                open
+                onOpenChange={vi.fn()}
+                title="Busy entity"
+                sections={sections}
+                initial={{}}
+                onSubmit={vi.fn()}
+                isSubmitting
+            />,
+        );
+
+        expect(
+            screen.getByRole('button', { name: /save|enregistrer/i }),
+        ).toBeDisabled();
+    });
 });

@@ -22,7 +22,7 @@ import {
     ArrowUp,
     ArrowDown,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -31,6 +31,8 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
+import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import {
     Select,
     SelectContent,
@@ -43,6 +45,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavSettings } from '@/hooks/useNavSettings';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Textarea } from '@/components/ui/textarea';
+import { normalizeLegalBody, type LegalBodyFormat } from '@/lib/legal';
 import {
     AVAILABLE_PAGES,
     getPage,
@@ -62,6 +65,14 @@ interface SocialLink {
 interface HourRow {
     dayKey: string;
     value: string;
+}
+
+interface LegalSectionDraft {
+    title: Record<string, string>;
+    body: {
+        format: LegalBodyFormat;
+        content: Record<string, string>;
+    };
 }
 
 function SortableHeaderRow({
@@ -192,11 +203,31 @@ export default function AdminSiteSettings() {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
+    const [contactTitle, setContactTitle] = useState<Record<string, string>>({
+        en: '',
+        fr: '',
+        ar: '',
+    });
+    const [contactDescription, setContactDescription] = useState<
+        Record<string, string>
+    >({ en: '', fr: '', ar: '' });
     const [hours, setHours] = useState<HourRow[]>([]);
     const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
     const [legalSectionsState, setLegalSectionsState] = useState<
-        Array<{ title: Record<string, string>; body: Record<string, string> }>
+        LegalSectionDraft[]
     >([]);
+    const [markdownPreview, setMarkdownPreview] = useState<
+        Record<string, boolean>
+    >({});
+    const [legalLangTabs, setLegalLangTabs] = useState<
+        Record<number, 'en' | 'fr' | 'ar'>
+    >({});
+    const [legalAutosaveStatus, setLegalAutosaveStatus] = useState<
+        'idle' | 'saving' | 'saved' | 'error'
+    >('idle');
+    const autosaveTimerRef = useRef<number | null>(null);
+    const lastSavedLegalRef = useRef<string>('');
+    const autosaveReadyRef = useRef(false);
     const [invalidLabels, setInvalidLabels] = useState<Record<string, string>>(
         {},
     );
@@ -255,14 +286,35 @@ export default function AdminSiteSettings() {
         setEmail(siteSettings.email || '');
         setPhone(siteSettings.phone || '');
         setWhatsapp(siteSettings.whatsapp || '');
+        setContactTitle(
+            siteSettings.content?.contact?.title || { en: '', fr: '', ar: '' },
+        );
+        setContactDescription(
+            siteSettings.content?.contact?.description || {
+                en: '',
+                fr: '',
+                ar: '',
+            },
+        );
         setHours(siteSettings.hours || []);
         setSocialLinks(siteSettings.socialLinks || []);
         setLegalSectionsState(
+            siteSettings.legalSections?.map((s) => {
+                const body = normalizeLegalBody(s.body);
+                return {
+                    title: s.title || { en: '', fr: '', ar: '' },
+                    body,
+                };
+            }) ?? [],
+        );
+        const snapshot = JSON.stringify(
             siteSettings.legalSections?.map((s) => ({
                 title: s.title || { en: '', fr: '', ar: '' },
-                body: s.body || { en: '', fr: '', ar: '' },
+                body: normalizeLegalBody(s.body),
             })) ?? [],
         );
+        lastSavedLegalRef.current = snapshot;
+        autosaveReadyRef.current = true;
     }, [siteSettings]);
 
     const sensors = useSensors(
@@ -453,13 +505,19 @@ export default function AdminSiteSettings() {
     const addLegalSection = () => {
         setLegalSectionsState((prev) => [
             ...prev,
-            { title: { en: 'New', fr: 'Nouveau', ar: 'جديد' }, body: { en: '', fr: '', ar: '' } },
+            {
+                title: { en: 'New', fr: 'Nouveau', ar: 'جديد' },
+                body: {
+                    format: 'markdown',
+                    content: { en: '', fr: '', ar: '' },
+                },
+            },
         ]);
     };
 
     const updateLegalSection = (
         idx: number,
-        patch: Partial<{ title: Record<string, string>; body: Record<string, string> }>,
+        patch: Partial<LegalSectionDraft>,
     ) => {
         setLegalSectionsState((prev) =>
             prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)),
@@ -469,6 +527,59 @@ export default function AdminSiteSettings() {
     const removeLegalSection = (idx: number) => {
         setLegalSectionsState((prev) => prev.filter((_, i) => i !== idx));
     };
+
+    const toggleMarkdownPreview = (idx: number, langKey: string) => {
+        const key = `${idx}-${langKey}`;
+        setMarkdownPreview((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const getActiveLang = (idx: number) => legalLangTabs[idx] ?? 'en';
+
+    const setActiveLang = (idx: number, lang: 'en' | 'fr' | 'ar') => {
+        setLegalLangTabs((prev) => ({ ...prev, [idx]: lang }));
+    };
+
+    const buildLegalPayload = () =>
+        legalSectionsState.map((s) => ({
+            title: s.title,
+            body: { format: s.body.format, content: s.body.content },
+        }));
+
+    useEffect(() => {
+        if (!autosaveReadyRef.current) return;
+
+        const snapshot = JSON.stringify(buildLegalPayload());
+        if (snapshot === lastSavedLegalRef.current) return;
+
+        setLegalAutosaveStatus('saving');
+        if (autosaveTimerRef.current) {
+            window.clearTimeout(autosaveTimerRef.current);
+        }
+
+        autosaveTimerRef.current = window.setTimeout(async () => {
+            try {
+                await apiFetch('/api/site-settings', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        legalSections: buildLegalPayload(),
+                    }),
+                });
+                lastSavedLegalRef.current = JSON.stringify(buildLegalPayload());
+                setLegalAutosaveStatus('saved');
+                window.setTimeout(() => {
+                    setLegalAutosaveStatus('idle');
+                }, 2000);
+            } catch {
+                setLegalAutosaveStatus('error');
+            }
+        }, 1200);
+
+        return () => {
+            if (autosaveTimerRef.current) {
+                window.clearTimeout(autosaveTimerRef.current);
+            }
+        };
+    }, [legalSectionsState]);
 
     const save = async () => {
         // Client-side validation: ensure dropdown items have en/fr/ar labels
@@ -541,17 +652,22 @@ export default function AdminSiteSettings() {
                             ...(siteSettings.content?.nav ?? {}),
                             settings: draft,
                         },
+                        contact: {
+                            ...(siteSettings.content?.contact ?? {}),
+                            title: contactTitle,
+                            description: contactDescription,
+                        },
                     },
-                    legalSections: legalSectionsState.map((s) => ({ title: s.title, body: s.body })),
+                    legalSections: buildLegalPayload(),
                 }),
             });
             try {
                 window.dispatchEvent(new CustomEvent('site-settings-updated'));
             } catch {}
 
-            toast.success('Site settings saved');
+            toast.success(t('admin.settings.saveSuccess'));
         } catch {
-            toast.error('Failed to save site settings');
+            toast.error(t('admin.settings.saveError'));
         }
     };
 
@@ -561,7 +677,7 @@ export default function AdminSiteSettings() {
             setDraft(DEFAULT_NAV_SETTINGS);
             toast.info('Reset navigation to defaults');
         } catch {
-            toast.error('Failed to reset navigation settings');
+            toast.error(t('admin.settings.resetNavError'));
         }
     };
 
@@ -700,6 +816,40 @@ export default function AdminSiteSettings() {
                                     placeholder="15551234567"
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label>{t('admin.settings.contactPageTitle')}</Label>
+                                {['en', 'fr', 'ar'].map((lang) => (
+                                    <Input
+                                        key={`title-${lang}`}
+                                        value={contactTitle[lang]}
+                                        onChange={(e) =>
+                                            setContactTitle((prev) => ({
+                                                ...prev,
+                                                [lang]: e.target.value,
+                                            }))
+                                        }
+                                        placeholder={`${t('admin.settings.contactPageTitle')} (${lang.toUpperCase()})`}
+                                    />
+                                ))}
+                            </div>
+                            <div className="space-y-2">
+                                <Label>
+                                    {t('admin.settings.contactPageDescription')}
+                                </Label>
+                                {['en', 'fr', 'ar'].map((lang) => (
+                                    <Input
+                                        key={`desc-${lang}`}
+                                        value={contactDescription[lang]}
+                                        onChange={(e) =>
+                                            setContactDescription((prev) => ({
+                                                ...prev,
+                                                [lang]: e.target.value,
+                                            }))
+                                        }
+                                        placeholder={`${t('admin.settings.contactPageDescription')} (${lang.toUpperCase()})`}
+                                    />
+                                ))}
+                            </div>
                         </Card>
                     </div>
 
@@ -720,8 +870,7 @@ export default function AdminSiteSettings() {
                             </div>
                             {socialLinks.length === 0 && (
                                 <p className="text-xs text-muted-foreground">
-                                    No social links yet. Add Facebook,
-                                    Instagram, X, or any channel.
+                                    {t('admin.settings.noSocialLinks')}
                                 </p>
                             )}
                             {socialLinks.map((entry, idx) => (
@@ -729,10 +878,11 @@ export default function AdminSiteSettings() {
                                     key={`social-${idx}`}
                                     className="grid grid-cols-1 items-end gap-2 rounded-md bg-muted/40 p-2 md:grid-cols-12"
                                 >
-                                    <div className="md:col-span-4">
+                                    <div className="md:col-span-4 text-left rtl:text-right">
                                         <Label className="text-xs">Label</Label>
                                         <Input
                                             value={entry.label}
+                                            className="text-left rtl:text-right"
                                             onChange={(e) =>
                                                 updateSocial(idx, {
                                                     label: e.target.value,
@@ -741,10 +891,11 @@ export default function AdminSiteSettings() {
                                             placeholder="Instagram"
                                         />
                                     </div>
-                                    <div className="md:col-span-7">
+                                    <div className="md:col-span-7 text-center">
                                         <Label className="text-xs">URL</Label>
                                         <Input
                                             value={entry.href}
+                                            className="text-center"
                                             onChange={(e) =>
                                                 updateSocial(idx, {
                                                     href: e.target.value,
@@ -753,7 +904,7 @@ export default function AdminSiteSettings() {
                                             placeholder="https://instagram.com/belazurtravel"
                                         />
                                     </div>
-                                    <div className="md:col-span-1">
+                                    <div className="md:col-span-1 flex justify-center items-end">
                                         <Button
                                             size="icon"
                                             variant="ghost"
@@ -781,9 +932,8 @@ export default function AdminSiteSettings() {
                                 </Button>
                             </div>
                             {hours.length === 0 && (
-                                <p className="text-xs text-muted-foreground">
-                                    No hours set. Add entries like Mon-Fri /
-                                    9:00 - 18:00.
+                                <p className="text-xs text-muted-foreground text-center">
+                                    {t('admin.settings.noHours')}
                                 </p>
                             )}
                             {hours.map((entry, idx) => (
@@ -791,12 +941,13 @@ export default function AdminSiteSettings() {
                                     key={`hour-${idx}`}
                                     className="grid grid-cols-1 items-end gap-2 rounded-md bg-muted/40 p-2 md:grid-cols-12"
                                 >
-                                    <div className="md:col-span-4">
+                                    <div className="md:col-span-4 text-left rtl:text-right">
                                         <Label className="text-xs">
                                             {t('admin.settings.day')}
                                         </Label>
                                         <Input
                                             value={entry.dayKey}
+                                            className="text-left rtl:text-right"
                                             onChange={(e) =>
                                                 updateHour(idx, {
                                                     dayKey: e.target.value,
@@ -805,12 +956,13 @@ export default function AdminSiteSettings() {
                                             placeholder="mon-fri"
                                         />
                                     </div>
-                                    <div className="md:col-span-7">
+                                    <div className="md:col-span-7 text-center">
                                         <Label className="text-xs">
                                             {t('admin.settings.hours')}
                                         </Label>
                                         <Input
                                             value={entry.value}
+                                            className="text-center"
                                             onChange={(e) =>
                                                 updateHour(idx, {
                                                     value: e.target.value,
@@ -819,7 +971,7 @@ export default function AdminSiteSettings() {
                                             placeholder="9:00 - 18:00"
                                         />
                                     </div>
-                                    <div className="md:col-span-1">
+                                    <div className="md:col-span-1 flex justify-center items-end">
                                         <Button
                                             size="icon"
                                             variant="ghost"
@@ -838,14 +990,27 @@ export default function AdminSiteSettings() {
                     <div className="mb-3 flex items-center justify-between">
                         <div>
                             <h2 className="font-serif text-xl font-bold">
-                                {t('admin.settings.legalSections')}
+                                {t('admin.settings.legalSectionsTitle')}
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                                Manage privacy, terms and other legal content shown on the site.
+                                {t('admin.settings.legalSectionsDescription')}
                             </p>
                         </div>
-                        <div>
-                            <Button size="sm" variant="outline" onClick={addLegalSection}>
+                        <div className="flex items-center gap-3">
+                            {legalAutosaveStatus !== 'idle' && (
+                                <span className="text-xs text-muted-foreground">
+                                    {legalAutosaveStatus === 'saving'
+                                        ? 'Autosaving...'
+                                        : legalAutosaveStatus === 'saved'
+                                          ? 'Saved'
+                                          : 'Autosave failed'}
+                                </span>
+                            )}
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={addLegalSection}
+                            >
                                 <Plus className="mr-1 h-4 w-4" /> Add Section
                             </Button>
                         </div>
@@ -853,63 +1018,310 @@ export default function AdminSiteSettings() {
 
                     <div className="grid gap-4">
                         {legalSectionsState.length === 0 && (
-                            <p className="text-xs text-muted-foreground">No legal sections yet. Add Privacy Policy or Terms of Use.</p>
+                            <p className="text-xs text-muted-foreground">
+                                No legal sections yet. Add Privacy Policy or
+                                Terms of Use.
+                            </p>
                         )}
 
                         {legalSectionsState.map((sec, idx) => (
                             <Card key={`legal-${idx}`} className="p-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
-                                        <Label className="text-xs">Title (EN)</Label>
-                                        <Input value={sec.title.en} onChange={(e) => updateLegalSection(idx, { title: { ...sec.title, en: e.target.value } })} />
+                                        <Label className="text-xs">
+                                            Title (EN)
+                                        </Label>
+                                        <Input
+                                            value={sec.title.en}
+                                            onChange={(e) =>
+                                                updateLegalSection(idx, {
+                                                    title: {
+                                                        ...sec.title,
+                                                        en: e.target.value,
+                                                    },
+                                                })
+                                            }
+                                        />
                                         <div className="mt-2 grid grid-cols-2 gap-2">
                                             <div>
-                                                <Label className="text-xs">Title (FR)</Label>
-                                                <Input value={sec.title.fr} onChange={(e) => updateLegalSection(idx, { title: { ...sec.title, fr: e.target.value } })} />
+                                                <Label className="text-xs">
+                                                    Title (FR)
+                                                </Label>
+                                                <Input
+                                                    value={sec.title.fr}
+                                                    onChange={(e) =>
+                                                        updateLegalSection(
+                                                            idx,
+                                                            {
+                                                                title: {
+                                                                    ...sec.title,
+                                                                    fr: e.target
+                                                                        .value,
+                                                                },
+                                                            },
+                                                        )
+                                                    }
+                                                />
                                             </div>
                                             <div>
-                                                <Label className="text-xs">Title (AR)</Label>
-                                                <Input value={sec.title.ar} onChange={(e) => updateLegalSection(idx, { title: { ...sec.title, ar: e.target.value } })} />
+                                                <Label className="text-xs">
+                                                    Title (AR)
+                                                </Label>
+                                                <Input
+                                                    value={sec.title.ar}
+                                                    onChange={(e) =>
+                                                        updateLegalSection(
+                                                            idx,
+                                                            {
+                                                                title: {
+                                                                    ...sec.title,
+                                                                    ar: e.target
+                                                                        .value,
+                                                                },
+                                                            },
+                                                        )
+                                                    }
+                                                />
                                             </div>
                                         </div>
 
-                                        <div className="mt-3">
-                                            <Label className="text-xs">Body (EN)</Label>
-                                            <Textarea value={sec.body.en} onChange={(e) => updateLegalSection(idx, { body: { ...sec.body, en: e.target.value } })} />
+                                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                                            <Label className="text-xs">
+                                                Body format
+                                            </Label>
+                                            <Select
+                                                value={sec.body.format}
+                                                onValueChange={(v) =>
+                                                    updateLegalSection(idx, {
+                                                        body: {
+                                                            ...sec.body,
+                                                            format: v as LegalBodyFormat,
+                                                        },
+                                                    })
+                                                }
+                                            >
+                                                <SelectTrigger className="h-8 w-40">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="markdown">
+                                                        Markdown
+                                                    </SelectItem>
+                                                    <SelectItem value="richtext">
+                                                        Rich text
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
 
-                                        <div className="mt-2 grid grid-cols-2 gap-2">
-                                            <div>
-                                                <Label className="text-xs">Body (FR)</Label>
-                                                <Textarea value={sec.body.fr} onChange={(e) => updateLegalSection(idx, { body: { ...sec.body, fr: e.target.value } })} />
-                                            </div>
-                                            <div>
-                                                <Label className="text-xs">Body (AR)</Label>
-                                                <Textarea value={sec.body.ar} onChange={(e) => updateLegalSection(idx, { body: { ...sec.body, ar: e.target.value } })} />
-                                            </div>
+                                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                                            {(['en', 'fr', 'ar'] as const).map(
+                                                (langKey) => (
+                                                    <Button
+                                                        key={langKey}
+                                                        size="sm"
+                                                        variant={
+                                                            getActiveLang(
+                                                                idx,
+                                                            ) === langKey
+                                                                ? 'default'
+                                                                : 'ghost'
+                                                        }
+                                                        onClick={() =>
+                                                            setActiveLang(
+                                                                idx,
+                                                                langKey,
+                                                            )
+                                                        }
+                                                    >
+                                                        {langKey.toUpperCase()}
+                                                    </Button>
+                                                ),
+                                            )}
                                         </div>
+
+                                        {sec.body.format === 'markdown' ? (
+                                            <>
+                                                <div className="mt-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <Label className="text-xs">
+                                                            Body (
+                                                            {getActiveLang(
+                                                                idx,
+                                                            ).toUpperCase()}
+                                                            )
+                                                        </Label>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() =>
+                                                                toggleMarkdownPreview(
+                                                                    idx,
+                                                                    getActiveLang(
+                                                                        idx,
+                                                                    ),
+                                                                )
+                                                            }
+                                                        >
+                                                            {markdownPreview[
+                                                                `${idx}-${getActiveLang(idx)}`
+                                                            ]
+                                                                ? 'Edit'
+                                                                : 'Preview'}
+                                                        </Button>
+                                                    </div>
+                                                    {markdownPreview[
+                                                        `${idx}-${getActiveLang(idx)}`
+                                                    ] ? (
+                                                        <div className="rounded-md border bg-background p-3">
+                                                            <MarkdownRenderer
+                                                                content={
+                                                                    sec.body
+                                                                        .content[
+                                                                        getActiveLang(
+                                                                            idx,
+                                                                        )
+                                                                    ]
+                                                                }
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <Textarea
+                                                            value={
+                                                                sec.body
+                                                                    .content[
+                                                                    getActiveLang(
+                                                                        idx,
+                                                                    )
+                                                                ]
+                                                            }
+                                                            onChange={(e) =>
+                                                                updateLegalSection(
+                                                                    idx,
+                                                                    {
+                                                                        body: {
+                                                                            ...sec.body,
+                                                                            content:
+                                                                                {
+                                                                                    ...sec
+                                                                                        .body
+                                                                                        .content,
+                                                                                    [getActiveLang(
+                                                                                        idx,
+                                                                                    )]:
+                                                                                        e
+                                                                                            .target
+                                                                                            .value,
+                                                                                },
+                                                                        },
+                                                                    },
+                                                                )
+                                                            }
+                                                        />
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="mt-3 space-y-3">
+                                                <div>
+                                                    <Label className="text-xs">
+                                                        Body (
+                                                        {getActiveLang(
+                                                            idx,
+                                                        ).toUpperCase()}
+                                                        )
+                                                    </Label>
+                                                    <RichTextEditor
+                                                        value={
+                                                            sec.body.content[
+                                                                getActiveLang(
+                                                                    idx,
+                                                                )
+                                                            ]
+                                                        }
+                                                        onChange={(value) =>
+                                                            updateLegalSection(
+                                                                idx,
+                                                                {
+                                                                    body: {
+                                                                        ...sec.body,
+                                                                        content:
+                                                                            {
+                                                                                ...sec
+                                                                                    .body
+                                                                                    .content,
+                                                                                [getActiveLang(
+                                                                                    idx,
+                                                                                )]:
+                                                                                    value,
+                                                                            },
+                                                                    },
+                                                                },
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex flex-col items-end gap-2">
                                         <div className="flex flex-col gap-2">
-                                            <Button size="icon" variant="ghost" onClick={() => {
-                                                if (idx === 0) return;
-                                                const copy = [...legalSectionsState];
-                                                [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-                                                setLegalSectionsState(copy);
-                                            }} disabled={idx === 0}>
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    if (idx === 0) return;
+                                                    const copy = [
+                                                        ...legalSectionsState,
+                                                    ];
+                                                    [copy[idx - 1], copy[idx]] =
+                                                        [
+                                                            copy[idx],
+                                                            copy[idx - 1],
+                                                        ];
+                                                    setLegalSectionsState(copy);
+                                                }}
+                                                disabled={idx === 0}
+                                            >
                                                 <ArrowUp className="h-4 w-4" />
                                             </Button>
-                                            <Button size="icon" variant="ghost" onClick={() => {
-                                                if (idx === legalSectionsState.length - 1) return;
-                                                const copy = [...legalSectionsState];
-                                                [copy[idx + 1], copy[idx]] = [copy[idx], copy[idx + 1]];
-                                                setLegalSectionsState(copy);
-                                            }} disabled={idx === legalSectionsState.length - 1}>
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    if (
+                                                        idx ===
+                                                        legalSectionsState.length -
+                                                            1
+                                                    )
+                                                        return;
+                                                    const copy = [
+                                                        ...legalSectionsState,
+                                                    ];
+                                                    [copy[idx + 1], copy[idx]] =
+                                                        [
+                                                            copy[idx],
+                                                            copy[idx + 1],
+                                                        ];
+                                                    setLegalSectionsState(copy);
+                                                }}
+                                                disabled={
+                                                    idx ===
+                                                    legalSectionsState.length -
+                                                        1
+                                                }
+                                            >
                                                 <ArrowDown className="h-4 w-4" />
                                             </Button>
                                         </div>
-                                        <Button size="icon" variant="ghost" onClick={() => removeLegalSection(idx)}>
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            onClick={() =>
+                                                removeLegalSection(idx)
+                                            }
+                                        >
                                             <Trash2 className="h-4 w-4 text-destructive" />
                                         </Button>
                                     </div>

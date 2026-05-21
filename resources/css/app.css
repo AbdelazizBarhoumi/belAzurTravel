@@ -3,6 +3,12 @@
 @import '@fontsource/instrument-sans/500.css';
 @import '@fontsource/instrument-sans/600.css';
 
+/* Tajawal (Arabic) from fontsource */
+@import '@fontsource/tajawal/300.css';
+@import '@fontsource/tajawal/400.css';
+@import '@fontsource/tajawal/500.css';
+@import '@fontsource/tajawal/700.css';
+
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
@@ -144,5 +150,21 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+
+    /* Apply Tajawal automatically for Arabic content and RTL contexts */
+    :where([lang='ar'], [dir='rtl']) {
+        font-family:
+            'Tajawal',
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            'Segoe UI',
+            Roboto,
+            'Helvetica Neue',
+            Arial,
+            'Noto Color Emoji',
+            'Apple Color Emoji',
+            'Segoe UI Emoji';
     }
 }

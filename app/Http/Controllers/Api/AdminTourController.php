@@ -22,6 +22,8 @@ use Illuminate\Support\Str;
  */
 class AdminTourController extends Controller
 {
+    use \App\Concerns\HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.tours', now()->addMinutes(5), function () {
@@ -62,6 +64,8 @@ class AdminTourController extends Controller
 
     private function attributes(Request $request, ?Model $existing = null): array
     {
+        $this->decodeJsonFields($request, ['gallery', 'itinerary', 'includes', 'excludes']);
+
         $rules = [
             'name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'name_en' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -85,12 +89,11 @@ class AdminTourController extends Controller
             'description_en' => ['sometimes', 'nullable', 'string'],
             'description_fr' => ['sometimes', 'nullable', 'string'],
             'description_ar' => ['sometimes', 'nullable', 'string'],
-            'itinerary' => ['sometimes', 'nullable', 'array'],
-            'includes' => ['sometimes', 'nullable', 'array'],
-            'excludes' => ['sometimes', 'nullable', 'array'],
+            'itinerary' => ['sometimes', 'nullable'],
+            'includes' => ['sometimes', 'nullable'],
+            'excludes' => ['sometimes', 'nullable'],
             'images' => ['sometimes', 'nullable', 'array'],
-            'gallery' => ['sometimes', 'nullable', 'string'],
-            'gallery_files' => ['sometimes', 'array'],
+            'gallery' => ['sometimes', 'nullable'],
         ];
 
         $data = $request->validate($rules);
@@ -99,34 +102,25 @@ class AdminTourController extends Controller
         $name = $localized('name');
         $slug = $existing->slug ?? Str::slug($name['en'] ?? 'tour') . '-' . Str::lower(Str::random(4));
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('uploads', 'public');
-            $image = '/storage/' . $path;
-        } else {
-            $incoming = $data['image'] ?? $existing?->image ?? '';
-            if ($incoming === '') {
-                $image = '';
-            } elseif (str_starts_with($incoming, 'http://') || str_starts_with($incoming, 'https://')) {
-                $image = $existing?->image ?? '';
-            } else {
-                $image = $incoming;
-            }
+        $galleryInput = $request->input('images') ?? $request->input('gallery', []);
+        if (is_string($galleryInput)) {
+            $galleryInput = $this->splitLines($galleryInput);
         }
 
-        if ($request->hasFile('gallery_files')) {
-            $galleryPaths = collect($request->file('gallery_files', []))
-                ->filter()
-                ->map(fn ($file) => '/storage/' . $file->store('uploads', 'public'))
-                ->values()
-                ->all();
+        $gallery = $this->handleGallery($request->merge(['gallery' => $galleryInput]), $existing?->images ?? []);
 
-            $existingGallery = isset($data['gallery']) ? $this->splitLines((string) $data['gallery']) : [];
-            $data['gallery'] = implode("\n", array_values(array_unique(array_merge($existingGallery, $galleryPaths))));
+        $details = $existing?->details ?? [];
+
+        if (array_key_exists('itinerary', $data)) {
+            $details['itinerary'] = $data['itinerary'] ?? [];
         }
 
-        // ensure images array is populated from gallery if provided
-        if (!isset($data['images']) && isset($data['gallery'])) {
-            $data['images'] = $this->splitLines((string) $data['gallery']);
+        if (array_key_exists('includes', $data)) {
+            $details['inclusions'] = $data['includes'] ?? [];
+        }
+
+        if (array_key_exists('excludes', $data)) {
+            $details['excludes'] = $data['excludes'] ?? [];
         }
 
         return [
@@ -139,34 +133,18 @@ class AdminTourController extends Controller
             'max_group' => (int) ($data['max_group'] ?? $existing->max_group ?? 0),
             'price' => (int) ($data['price'] ?? 0),
             'rating' => (float) ($data['rating'] ?? 0),
-            'image' => $image,
+            'image' => $this->handleMainImage($request, $existing?->image, 'uploads/tours'),
             'description' => $localized('description', ''),
-            'images' => $data['images'] ?? $existing->images ?? [],
+            'details' => $details,
+            'images' => $gallery,
             'itinerary' => $data['itinerary'] ?? $existing->itinerary ?? [],
             'includes' => $data['includes'] ?? $existing->includes ?? [],
             'excludes' => $data['excludes'] ?? $existing->excludes ?? [],
-            'details' => array_merge($existing->details ?? [], [
-                'itinerary' => $data['itinerary'] ?? $existing->details['itinerary'] ?? [],
-                'inclusions' => $data['includes'] ?? $existing->details['inclusions'] ?? [],
-                'excludes' => $data['excludes'] ?? $existing->details['excludes'] ?? [],
-                'images' => $data['images'] ?? $existing->details['images'] ?? [],
-            ]),
         ];
     }
 
     private function adminPayload(Model $item): array
     {
-        $images = $item->details['images'] ?? $item->images ?? [];
-        // Resolve image ids to URLs when needed
-        $resolvedImages = array_map(function ($img) {
-            if (is_int($img) || (is_string($img) && ctype_digit($img))) {
-                $id = (int) $img;
-                $g = GalleryImage::find($id);
-                return $g ? $g->url : (string) $img;
-            }
-            return (string) $img;
-        }, $images);
-
         return [
             'id' => (string) $item->id,
             'slug' => $item->slug,
@@ -179,11 +157,11 @@ class AdminTourController extends Controller
             'max_group' => $item->max_group,
             'price' => $item->price,
             'rating' => $item->rating,
-            'image' => $item->image,
-            'itinerary' => $item->details['itinerary'] ?? $item->itinerary ?? [],
-            'includes' => $item->details['inclusions'] ?? $item->includes ?? [],
-            'excludes' => $item->details['excludes'] ?? $item->excludes ?? [],
-            'images' => $resolvedImages,
+            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'itinerary' => $item->itinerary ?? [],
+            'includes' => $item->includes ?? [],
+            'excludes' => $item->excludes ?? [],
+            'images' => $this->resolveImageUrls($item->images ?? []),
         ];
     }
 
@@ -201,6 +179,38 @@ class AdminTourController extends Controller
     private function flatLocalized(string $key, ?array $value): array
     {
         return [$key => $value['en'] ?? '', $key.'_fr' => $value['fr'] ?? '', $key.'_ar' => $value['ar'] ?? '', $key.'_en' => $value['en'] ?? ''];
+    }
+
+    private function resolveImageUrls(array $images): array
+    {
+        if (count($images) === 0) {
+            return [];
+        }
+
+        $ids = collect($images)
+            ->filter(fn ($value) => is_int($value) || (is_string($value) && ctype_digit($value)))
+            ->map(fn ($value) => (int) $value)
+            ->unique()
+            ->values();
+
+        $urlsById = $ids->isEmpty()
+            ? []
+            : GalleryImage::query()
+                ->whereIn('id', $ids->all())
+                ->pluck('url', 'id')
+                ->all();
+
+        return collect($images)
+            ->map(function ($value) use ($urlsById) {
+                if (is_int($value) || (is_string($value) && ctype_digit($value))) {
+                    return $urlsById[(int) $value] ?? null;
+                }
+
+                return is_string($value) ? $value : null;
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     private function flushAdminCache(string $type, ?string $identifier = null): void

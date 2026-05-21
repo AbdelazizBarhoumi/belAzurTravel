@@ -44,10 +44,11 @@ export interface PromoItem {
 ```
 
 ## 4. Inconsistencies & Findings
-1.  **Missing Fields in Database/Model:** The frontend `PromoItem` expects fields (`eligibility`, `howToUse`, `terms`, `gallery`) that are completely missing from the database migration and the Model. These appear to be expected in the frontend but not stored in the backend database.
-2.  **Field Mapping:** The database has a `details` JSON field, which might be intended to hold some of the extra data (like `eligibility`, `terms`), but this structure is not enforced or mapped in the Model.
-3.  **Data Retrieval:** The `getPromos` and `findPromoByCode` API methods fetch from `/api/promos`. If the backend just returns the Eloquent model result, the frontend will be missing `eligibility`, `howToUse`, `terms`, and `gallery` unless the API controller is specifically transforming the data.
+1.  **Field Storage Strategy:** The database structure relies heavily on a `details` JSON column to store fields that are not part of the top-level schema (`eligibility`, `howToUse`, `terms`, `gallery`, `usage_limit`, `per_user_limit`, `applicable_to`, `active`). While this allows flexibility, it means these fields are not directly queryable or indexable via SQL.
+2.  **Controller Responsibility:** `AdminPromoController` acts as a transformer between the flat request/response format (needed for forms) and the nested JSON structure stored in `details`. This logic is tightly coupled and complex, particularly in `buildLocalizedList`.
+3.  **Frontend/Backend Alignment:** The frontend `PromoItem` type and the backend `AdminPromoController` payloads are synchronized through manual field mapping. This is prone to drift if the `PromoItem` type is updated without corresponding changes in `AdminPromoController::adminPayload` or the `attributes` parsing method.
 
 ## 5. Recommendation
-- Audit `AdminPromoController` to see how it handles these extra fields (if it's using the `details` JSON field to store them).
-- Align the `Promo` database schema (or the `details` JSON structure) with the frontend `PromoItem` interface to ensure data integrity.
+- **Maintain Current Structure:** Given the current implementation in `AdminPromoController`, continue using the `details` JSON column for secondary fields, but add documentation to `Promo.php` clarifying its structure.
+- **Type Safety:** Consider centralizing the definition of the "Promo Details" schema so it can be shared or better enforced between backend transformation logic and the frontend `PromoItem` interface.
+- **Validation:** Ensure that future changes to `PromoItem` are proactively reflected in the `attributes` validation rules and `adminPayload` mapping in `AdminPromoController`.

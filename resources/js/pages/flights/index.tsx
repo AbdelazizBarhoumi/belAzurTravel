@@ -2,10 +2,11 @@ import { motion } from 'framer-motion';
 import { Plane, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/DatePicker';
 import {
     Select,
     SelectContent,
@@ -28,11 +29,24 @@ function FlightsContent() {
     // Accept landing widget destination as fallback for q
     const initialSearch = params.get('q') || params.get('destination') || '';
     const initialAirline = params.get('airline') || ALL;
-    const initialCabin = params.get('cabinClass') || params.get('cabinclass') || ALL;
+    const initialCabin =
+        params.get('cabinClass') || params.get('cabinclass') || ALL;
+    const initialTripType = params.get('type') || ALL;
+    const initialPassengers = Number(params.get('guests') || 1);
+    const initialFromDate = params.get('from') || '';
+    const initialToDate = params.get('to') || '';
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedAirline, setSelectedAirline] = useState(initialAirline);
     const [selectedStops, setSelectedStops] = useState(ALL);
     const [selectedCabin, setSelectedCabin] = useState(initialCabin);
+    const [selectedTripType, setSelectedTripType] = useState(initialTripType);
+    const [passengers, setPassengers] = useState(
+        Number.isFinite(initialPassengers) && initialPassengers > 0
+            ? initialPassengers
+            : 1,
+    );
+    const [fromDate, setFromDate] = useState(initialFromDate);
+    const [toDate, setToDate] = useState(initialToDate);
 
     const airlineOptions = useMemo(
         () =>
@@ -56,25 +70,45 @@ function FlightsContent() {
         () =>
             Array.from(
                 new Set(
-                    flights.map((flight) => localizeText(flight.cabin, lang)),
+                    flights.map((flight) =>
+                        localizeText(flight.details.cabin, lang),
+                    ),
                 ),
             ),
         [flights, lang],
     );
 
+    const tripTypeOptions = [
+        { value: ALL, label: t('common.all') },
+        { value: 'round-trip', label: t('search.options.roundTrip') },
+        { value: 'one-way', label: t('search.options.oneWay') },
+        { value: 'multi-city', label: t('search.options.multiCity') },
+    ];
+
     const filteredFlights = useMemo(
         () =>
             flights.filter((flight) => {
+                const fromDateTime = fromDate ? new Date(fromDate) : null;
+                const toDateTime = toDate ? new Date(toDate) : null;
                 const matchesSearch = matchesSearchText(searchQuery, [
                     localizeText(flight.airline, lang),
                     flight.from,
                     localizeText(flight.to, lang),
                     localizeText(flight.duration, lang),
                     localizeText(flight.stops, lang),
-                    localizeText(flight.cabin, lang),
-                    localizeText(flight.aircraft, lang),
-                    localizeText(flight.baggage, lang),
-                    localizeText(flight.refund, lang),
+                    localizeText(flight.details.cabin, lang),
+                    localizeText(
+                        flight.details.aircraft || { en: '', fr: '', ar: '' },
+                        lang,
+                    ),
+                    localizeText(
+                        flight.details.baggage || { en: '', fr: '', ar: '' },
+                        lang,
+                    ),
+                    localizeText(
+                        flight.details.refund || { en: '', fr: '', ar: '' },
+                        lang,
+                    ),
                     flight.departure,
                     flight.arrival,
                 ]);
@@ -86,13 +120,41 @@ function FlightsContent() {
                     localizeText(flight.stops, lang) === selectedStops;
                 const matchesCabin =
                     selectedCabin === ALL ||
-                    localizeText(flight.cabin, lang) === selectedCabin;
+                    localizeText(flight.details.cabin, lang) === selectedCabin;
+                const matchesPassengers =
+                    !passengers ||
+                    !flight.details.seats ||
+                    flight.details.seats >= passengers;
+                const flightDate = flight.details.date
+                    ? new Date(flight.details.date)
+                    : null;
+                const matchesDate =
+                    (!fromDateTime && !toDateTime) ||
+                    (flightDate instanceof Date &&
+                    !Number.isNaN(flightDate.getTime())
+                        ? (!fromDateTime || flightDate >= fromDateTime) &&
+                          (!toDateTime || flightDate <= toDateTime)
+                        : true);
+                const matchesTripType =
+                    selectedTripType === ALL ||
+                    (selectedTripType === 'round-trip'
+                        ? true
+                        : selectedTripType === 'one-way'
+                          ? localizeText(flight.stops, lang)
+                                .toLowerCase()
+                                .includes('direct')
+                          : !localizeText(flight.stops, lang)
+                                .toLowerCase()
+                                .includes('direct'));
 
                 return (
                     matchesSearch &&
                     matchesAirline &&
                     matchesStops &&
-                    matchesCabin
+                    matchesCabin &&
+                    matchesPassengers &&
+                    matchesDate &&
+                    matchesTripType
                 );
             }),
         [
@@ -102,6 +164,10 @@ function FlightsContent() {
             selectedAirline,
             selectedStops,
             selectedCabin,
+            selectedTripType,
+            passengers,
+            fromDate,
+            toDate,
         ],
     );
 
@@ -109,13 +175,21 @@ function FlightsContent() {
         searchQuery.trim().length > 0 ||
         selectedAirline !== ALL ||
         selectedStops !== ALL ||
-        selectedCabin !== ALL;
+        selectedCabin !== ALL ||
+        selectedTripType !== ALL ||
+        passengers !== 1 ||
+        fromDate !== '' ||
+        toDate !== '';
 
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedAirline(ALL);
         setSelectedStops(ALL);
         setSelectedCabin(ALL);
+        setSelectedTripType(ALL);
+        setPassengers(1);
+        setFromDate('');
+        setToDate('');
     };
 
     return (
@@ -136,6 +210,49 @@ function FlightsContent() {
                 searchPlaceholder={t('common.search')}
             >
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <label className="grid gap-2 text-sm">
+                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                            {t('search.fields.dates')}
+                        </span>
+                        <div className="grid grid-cols-2 gap-2">
+                            <DatePicker
+                                date={fromDate ? new Date(fromDate) : undefined}
+                                onDateChange={(date) =>
+                                    setFromDate(date ? date.toISOString().split('T')[0] : '')
+                                }
+                                placeholder={t('search.placeholders.checkIn')}
+                            />
+                            <DatePicker
+                                date={toDate ? new Date(toDate) : undefined}
+                                onDateChange={(date) =>
+                                    setToDate(date ? date.toISOString().split('T')[0] : '')
+                                }
+                                placeholder={t('search.placeholders.checkOut')}
+                            />
+                        </div>
+                    </label>
+
+                    <label className="grid gap-2 text-sm">
+                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                            {t('search.fields.passengers')}
+                        </span>
+                        <input
+                            type="number"
+                            min={1}
+                            value={passengers}
+                            onChange={(event) =>
+                                setPassengers(
+                                    Math.max(
+                                        1,
+                                        Number(event.target.value) || 1,
+                                    ),
+                                )
+                            }
+                            className="h-12 rounded-2xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm"
+                            aria-label={t('search.fields.passengers')}
+                        />
+                    </label>
+
                     <label className="grid gap-2 text-sm">
                         <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                             {t('flights.filterByAirline')}
@@ -184,6 +301,33 @@ function FlightsContent() {
                                 {stopsOptions.map((option) => (
                                     <SelectItem key={option} value={option}>
                                         {option}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </label>
+
+                    <label className="grid gap-2 text-sm">
+                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                            {t('search.fields.tripType')}
+                        </span>
+                        <Select
+                            value={selectedTripType}
+                            onValueChange={setSelectedTripType}
+                        >
+                            <SelectTrigger
+                                aria-label={t('search.fields.tripType')}
+                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
+                            >
+                                <SelectValue placeholder={t('common.all')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {tripTypeOptions.map((option) => (
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
                                     </SelectItem>
                                 ))}
                             </SelectContent>

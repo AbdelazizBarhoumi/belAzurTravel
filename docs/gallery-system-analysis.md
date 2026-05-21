@@ -36,11 +36,9 @@ This document analyzes the implementation of the `GalleryImage` system within th
 - **Consistency**: The `caption` field in TypeScript is represented as `Record<string, string>`, which aligns with the JSON array structure in Laravel.
 
 ## Identified Inconsistencies & Risks
-1. **File System Cleanup**: When a `GalleryImage` record is deleted (or updated with a new image), the old file remains in `storage/app/public/gallery`. There is no implementation to delete the file from the disk upon record deletion.
-2. **Missing Polymorphism/Associations**: The current gallery system is standalone. There is no explicit link (e.g., `imageable_id`, `imageable_type`) to associate images with other entities (like `Destination`, `Tour`, `Hotel`, etc.) in the database. Usage appears to be entirely dependent on the centralized gallery rather than entity-specific galleries.
-3. **Validation**: The store/update logic validates `caption` as an array, but doesn't define the expected structure of keys/values within that array, which could lead to inconsistent data if handled by multiple client-side components.
+1. **Missing Polymorphism/Associations**: The current gallery system is standalone. There is no explicit link (e.g., `imageable_id`, `imageable_type`) to associate images with other entities (like `Destination`, `Tour`, `Hotel`, etc.) in the database. Usage appears to be entirely dependent on the centralized gallery rather than entity-specific galleries.
+2. **Validation**: The store/update logic validates `caption` as an array, but doesn't define the expected structure of keys/values within that array, which could lead to inconsistent data if handled by multiple client-side components.
 
 ## Recommendations
-- **Implement File Cleanup**: Add a `deleted` event observer or logic within the `GalleryController::destroy` method to `Storage::disk('public')->delete(...)` the old file.
 - **Entity Association**: If images need to be associated with specific entities, introduce a polymorphic relationship.
 - **Data Validation**: Enforce a strict schema for the `caption` JSON object.

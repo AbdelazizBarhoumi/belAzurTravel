@@ -38,16 +38,22 @@ class CarController extends Controller
     /** @return array<string, mixed> */
     private function payload(Car $item): array
     {
+        $details = $item->details ?? [];
+
         return [
             'slug' => $item->slug,
             'name' => $item->name,
+            'category_key' => $item->category_key,
             'category' => $item->category,
             'price' => $item->price,
             'seats' => $item->seats,
             'fuel' => $item->fuel,
             'transmission' => $item->transmission,
-            'image' => $item->image,
-            ...($item->details ?? []),
+            'image' => $item->image ? asset('storage/' . $item->image) : null,
+            'gallery' => array_map(fn($img) => asset('storage/' . $img), $details['gallery'] ?? []),
+            'description' => $details['description'] ?? null,
+            'features' => $details['features'] ?? [],
+            'policy' => $details['policy'] ?? [],
         ];
     }
 }

@@ -36,7 +36,7 @@ describe('saveAdminEntity', () => {
         expect(fetchMock).toHaveBeenCalledTimes(1);
 
         const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(url).toBe('/api/admin/destinations/42');
+        expect(new URL(url).pathname).toBe('/api/admin/destinations/42');
         expect(init.method).toBe('POST');
         expect(init.body).toBeInstanceOf(FormData);
 

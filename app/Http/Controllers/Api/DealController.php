@@ -45,7 +45,8 @@ class DealController extends Controller
             'discount' => $item->discount,
             'expires' => $item->expires,
             'category' => $item->category,
-            ...($item->details ?? []),
+            'highlights' => $item->details['highlights'] ?? [],
+            'terms' => $item->details['terms'] ?? [],
         ];
     }
 }

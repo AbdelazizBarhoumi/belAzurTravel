@@ -32,9 +32,7 @@ describe('RequestThingEmptyState', () => {
     it('shows the request CTA for an empty list', () => {
         renderWithProviders('empty');
 
-        expect(
-            screen.getByText(/Nothing to show yet/i),
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Nothing to show yet/i)).toBeInTheDocument();
         expect(
             screen.getByRole('link', { name: /Request it/i }),
         ).toBeInTheDocument();

@@ -8,11 +8,19 @@ import {
     saveAdminEntity,
 } from '@/api/admin.api';
 import { fetchCategories } from '@/api/categories.api';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import LangBadge from '@/components/forms/LangBadge';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { CategoryManager } from '@/components/admin/CategoryManager';
+import { JsonListEditor, type JsonFieldDef } from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -43,6 +51,19 @@ function asText(value: unknown): string {
     return typeof value === 'string' ? value : '';
 }
 
+function firstNonEmpty(...values: unknown[]): string {
+    for (const value of values) {
+        if (typeof value !== 'string') continue;
+
+        const trimmed = value.trim();
+        if (trimmed !== '') {
+            return trimmed;
+        }
+    }
+
+    return '';
+}
+
 function parseGallery(value: unknown): string[] {
     if (Array.isArray(value)) {
         return value.filter((item): item is string => typeof item === 'string');
@@ -58,6 +79,10 @@ function parseGallery(value: unknown): string[] {
     return [];
 }
 
+const highlightSchema: JsonFieldDef[] = [
+    { key: 'name', labelKey: 'admin.destinationForm.highlightName', translatable: true },
+];
+
 const AdminDestinations = () => {
     useAdminGuard();
 
@@ -70,6 +95,15 @@ const AdminDestinations = () => {
     const [pendingDelete, setPendingDelete] = useState<AdminDestination | null>(
         null,
     );
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const validate = (values: DestinationFormValues): Record<string, string> => {
+        const errs: Record<string, string> = {};
+        if (!firstNonEmpty(values.name_en, values.name_fr, values.name_ar, values.name)) errs.name_en = t('admin.errors.required');
+        if (!firstNonEmpty(values.country_en, values.country_fr, values.country_ar, values.country)) errs.country_en = t('admin.errors.required');
+        if (!values.category_key) errs.category_key = t('admin.errors.required');
+        return errs;
+    };
 
     const isCodeEnabled =
         siteSettings?.config?.navigation?.enabled_dropdowns?.includes(
@@ -83,6 +117,7 @@ const AdminDestinations = () => {
               imageFile: null,
               galleryPaths: parseGallery(editing.gallery),
               galleryFiles: [],
+              highlights: Array.isArray(editing.highlights) ? editing.highlights : [],
           } as DestinationFormValues)
         : null;
 
@@ -120,11 +155,8 @@ const AdminDestinations = () => {
                     : (values.imagePath ?? values.image ?? ''),
             gallery: Array.isArray(values.galleryPaths)
                 ? values.galleryPaths
-                      .filter(
-                          (item): item is string => typeof item === 'string',
-                      )
-                      .join('\n')
-                : (values.gallery ?? ''),
+                : [],
+            highlights: Array.isArray(values.highlights) ? values.highlights : [],
         };
 
         if (
@@ -155,7 +187,7 @@ const AdminDestinations = () => {
                             onClick={() => setCatManagerOpen(true)}
                             className="gap-2"
                         >
-                            <Settings className="h-4 w-4" /> Manage Categories
+                            <Settings className="h-4 w-4" /> {t('admin.manageCategories')}
                         </Button>
                     )}
                     <Button
@@ -193,10 +225,14 @@ const AdminDestinations = () => {
                                     t('admin.destinationTable.price'),
                                     t('admin.destinationTable.rating'),
                                     t('admin.destinationTable.actions'),
-                                ].map((header) => (
+                                ].map((header, index) => (
                                     <th
                                         key={header}
-                                        className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground"
+                                        className={`px-4 py-3 text-xs font-semibold uppercase text-muted-foreground ${
+                                            index === 1 
+                                                ? (lang === 'ar' ? 'text-right' : 'text-left') 
+                                                : 'text-center'
+                                        }`}
                                     >
                                         {header}
                                     </th>
@@ -209,33 +245,35 @@ const AdminDestinations = () => {
                                     key={destination.id}
                                     className="border-b border-border last:border-0 hover:bg-muted/20"
                                 >
-                                    <td className="px-4 py-3">
-                                        <img
-                                            src={destination.image}
-                                            alt={localizeKnown(
-                                                destination.name,
-                                                destinationLabels,
-                                                lang,
-                                            )}
-                                            className="h-12 w-12 rounded-lg object-cover"
-                                        />
+                                    <td className="px-4 py-3 text-center">
+                                        <div className="flex justify-center">
+                                            <img
+                                                src={destination.image}
+                                                alt={localizeKnown(
+                                                    destination.name,
+                                                    destinationLabels,
+                                                    lang,
+                                                )}
+                                                className="h-12 w-12 rounded-lg object-cover"
+                                            />
+                                        </div>
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold">
+                                    <td className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
                                         {localizeKnown(
                                             destination.name,
                                             destinationLabels,
                                             lang,
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                                    <td className="px-4 py-3 text-sm text-muted-foreground text-center">
                                         {localizeKnown(
                                             destination.country,
                                             countryLabels,
                                             lang,
                                         )}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <span className="rounded-full bg-muted px-2 py-1 text-xs">
+                                    <td className="px-4 py-3 text-center">
+                                        <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">
                                             {typeof destination.category ===
                                                 'object' &&
                                             destination.category !== null
@@ -253,14 +291,14 @@ const AdminDestinations = () => {
                                                   )}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold">
+                                    <td className="px-4 py-3 text-sm font-semibold text-center">
                                         ${destination.price.toLocaleString()}
                                     </td>
-                                    <td className="px-4 py-3 text-sm">
+                                    <td className="px-4 py-3 text-sm text-center">
                                         {destination.rating}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
+                                    <td className="px-4 py-3 text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                             <button
                                                 onClick={() => {
                                                     setEditing(destination);
@@ -302,6 +340,13 @@ const AdminDestinations = () => {
             <EntityFormDialog
                 open={open}
                 onOpenChange={setOpen}
+                errors={errors}
+                isSubmitting={saveMutation.isPending}
+                validate={(values) => {
+                    const errs = validate(values as DestinationFormValues);
+                    setErrors(errs);
+                    return errs;
+                }}
                 title={
                     editing
                         ? t('admin.destinationEditTitle')
@@ -343,7 +388,7 @@ const AdminDestinations = () => {
                                             required: true,
                                         },
                                         {
-                                            key: 'category',
+                                            key: 'category_key',
                                             label: t(
                                                 'admin.destinationForm.category',
                                             ),
@@ -370,18 +415,18 @@ const AdminDestinations = () => {
                                             required: true,
                                         },
                                     ].map((field) => {
-                                        const key = localizedKey(
-                                            field.key,
-                                            activeLang,
-                                        );
+                                        const key = field.key;
+                                        const valueKey = field.key === 'category_key' 
+                                            ? 'category_key' 
+                                            : localizedKey(field.key, activeLang);
 
                                         return (
                                             <div
-                                                key={key}
+                                                key={valueKey}
                                                 className="space-y-2"
                                             >
                                                 <label
-                                                    htmlFor={key}
+                                                    htmlFor={valueKey}
                                                     className="text-xs font-semibold text-muted-foreground"
                                                 >
                                                     {field.label}
@@ -390,54 +435,52 @@ const AdminDestinations = () => {
                                                     />
                                                 </label>
                                                 {field.type === 'select' ? (
-                                                    <select
-                                                        id={key}
+                                                    <Select
                                                         value={String(
-                                                            values[key] ?? '',
+                                                            values[valueKey] ?? '',
                                                         )}
-                                                        onChange={(event) =>
-                                                            setField(
-                                                                key,
-                                                                event.target
-                                                                    .value,
-                                                            )
+                                                        onValueChange={(val) =>
+                                                            setField(valueKey, val)
                                                         }
-                                                        required={
-                                                            field.required
-                                                        }
-                                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                                                     >
-                                                        <option value="">
-                                                            {t(
-                                                                'actions.select',
+                                                        <SelectTrigger
+                                                            id={valueKey}
+                                                            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                                                        >
+                                                            <SelectValue
+                                                                placeholder={t(
+                                                                    'actions.select',
+                                                                )}
+                                                            />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {field.options?.map(
+                                                                (option) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            option.value
+                                                                        }
+                                                                        value={
+                                                                            option.value
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            option.label
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
                                                             )}
-                                                        </option>
-                                                        {field.options?.map(
-                                                            (option) => (
-                                                                <option
-                                                                    key={
-                                                                        option.value
-                                                                    }
-                                                                    value={
-                                                                        option.value
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        option.label
-                                                                    }
-                                                                </option>
-                                                            ),
-                                                        )}
-                                                    </select>
+                                                        </SelectContent>
+                                                    </Select>
                                                 ) : (
                                                     <input
-                                                        id={key}
+                                                        id={valueKey}
                                                         value={String(
-                                                            values[key] ?? '',
+                                                            values[valueKey] ?? '',
                                                         )}
                                                         onChange={(event) =>
                                                             setField(
-                                                                key,
+                                                                valueKey,
                                                                 event.target
                                                                     .value,
                                                             )
@@ -451,6 +494,23 @@ const AdminDestinations = () => {
                                             </div>
                                         );
                                     })}
+
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label
+                                            htmlFor={localizedKey('description', activeLang)}
+                                            className="text-xs font-semibold text-muted-foreground"
+                                        >
+                                            {t('admin.description')}
+                                            <LangBadge lang={activeLang} />
+                                        </label>
+                                        <textarea
+                                            id={localizedKey('description', activeLang)}
+                                            value={String(values[localizedKey('description', activeLang)] ?? '')}
+                                            onChange={(e) => setField(localizedKey('description', activeLang), e.target.value)}
+                                            rows={4}
+                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                        />
+                                    </div>
 
                                     <div className="space-y-2">
                                         <label
@@ -500,10 +560,8 @@ const AdminDestinations = () => {
                     },
                     {
                         title: t('admin.destinationForm.mediaAndHighlights'),
-                        description: t(
-                            'admin.destinationForm.mediaAndHighlightsHint',
-                        ),
-                        render: ({ values, setField }) => (
+                        description: t('admin.destinationForm.mediaAndHighlightsHint2'),
+                        render: ({ values, setField, activeLang }) => (
                             <div className="space-y-6">
                                 <EntityMediaInputs
                                     values={values}
@@ -518,21 +576,17 @@ const AdminDestinations = () => {
                                     showGallery
                                 />
 
-                                <div>
-                                    <label className="text-xs font-semibold text-muted-foreground">
-                                        {t('admin.destinationForm.highlights')}
-                                    </label>
-                                    <textarea
-                                        value={String(
-                                            (values.highlights as string) ?? '',
-                                        )}
-                                        onChange={(e) =>
-                                            setField(
-                                                'highlights',
-                                                e.target.value,
-                                            )
+                                <div className="pt-4 border-t border-border">
+                                    <JsonListEditor
+                                        title={t('admin.destinationForm.highlights')}
+                                        items={Array.isArray(values.highlights) ? values.highlights : []}
+                                        onItemsChange={(items) => setField('highlights', items)}
+                                        schema={highlightSchema}
+                                        activeLang={activeLang}
+                                        addButtonLabel={t('admin.destinationForm.addHighlight')}
+                                        itemLabel={(item, index) => 
+                                            (item.name as Record<string, string> | undefined)?.[activeLang] || `${t('admin.destinationForm.highlight')} ${index + 1}`
                                         }
-                                        className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                                     />
                                 </div>
                             </div>
@@ -541,7 +595,7 @@ const AdminDestinations = () => {
                     {
                         title: t('admin.destinationForm.destinationFacts'),
                         columns: 4,
-                        gridSpan: 2,
+                        column: 'main',
                         render: ({ values, setField, activeLang }) => (
                             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                                 {[
@@ -597,19 +651,45 @@ const AdminDestinations = () => {
                           ? values.gallery
                           : '';
 
+                    const name = firstNonEmpty(
+                        values.name_en,
+                        values.name_fr,
+                        values.name_ar,
+                        values.name,
+                    );
+                    const country = firstNonEmpty(
+                        values.country_en,
+                        values.country_fr,
+                        values.country_ar,
+                        values.country,
+                    );
+                    const category = firstNonEmpty(
+                        values.category_en,
+                        values.category_fr,
+                        values.category_ar,
+                        values.category,
+                    );
+                    const description = firstNonEmpty(
+                        values.description_en,
+                        values.description_fr,
+                        values.description_ar,
+                        values.description,
+                    );
+
                     const item = {
                         ...values,
                         id: editing?.id ?? '',
-                        name: values.name_en ?? '',
-                        name_en: values.name_en ?? '',
+                        name,
+                        name_en: firstNonEmpty(values.name_en, values.name),
                         name_fr: values.name_fr ?? '',
                         name_ar: values.name_ar ?? '',
-                        country: values.country_en ?? '',
-                        country_en: values.country_en ?? '',
+                        country,
+                        country_en: firstNonEmpty(values.country_en, values.country),
                         country_fr: values.country_fr ?? '',
                         country_ar: values.country_ar ?? '',
-                        category: values.category_en ?? '',
-                        category_en: values.category_en ?? '',
+                        category,
+                        category_key: category,
+                        category_en: firstNonEmpty(values.category_en, values.category),
                         category_fr: values.category_fr ?? '',
                         category_ar: values.category_ar ?? '',
                         price: Number(values.price) || 0,
@@ -618,7 +698,14 @@ const AdminDestinations = () => {
                             values.imageFile instanceof File
                                 ? values.imageFile
                                 : (values.imagePath ?? values.image ?? ''),
-                        highlights: values.highlights ?? '',
+                        description,
+                        description_en: firstNonEmpty(
+                            values.description_en,
+                            values.description,
+                        ),
+                        description_fr: values.description_fr ?? '',
+                        description_ar: values.description_ar ?? '',
+                        highlights: Array.isArray(values.highlights) ? values.highlights : [],
                         gallery,
                         gallery_files: values.galleryFiles ?? undefined,
                     } as unknown as AdminDestination;

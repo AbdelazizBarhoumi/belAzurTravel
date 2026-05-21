@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -19,15 +19,19 @@ export interface FieldDef {
         | 'i18n'
         | 'i18n-textarea'
         | 'image';
-    options?: string[];
+    // options can be a simple string list (value and label same)
+    // or objects with explicit value/label for localized or keyed options
+    options?: Array<string | { value: string; label: string }>;
 }
 
 function ImageField({
     value,
     onChange,
+    error,
 }: {
     value: string;
     onChange: (v: string) => void;
+    error?: string;
 }) {
     const handleFile = (file: File) => {
         const reader = new FileReader();
@@ -49,7 +53,7 @@ function ImageField({
                     placeholder="https://image-url..."
                     value={value || ''}
                     onChange={(e) => onChange(e.target.value)}
-                    className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    className={`flex-1 rounded-lg border px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
                 />
                 <label className="cursor-pointer rounded-lg border border-border bg-muted px-3 py-2 text-sm hover:bg-muted/80">
                     Upload
@@ -63,6 +67,7 @@ function ImageField({
                     />
                 </label>
             </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
 }
@@ -74,16 +79,19 @@ interface Props<T> {
     fields: FieldDef[];
     initial?: T | null;
     onSubmit: (values: T) => void;
+    errors?: Record<string, string>;
 }
 
 function I18nInput({
     value,
     onChange,
     multiline,
+    errors,
 }: {
     value: any;
     onChange: (v: any) => void;
     multiline?: boolean;
+    errors?: Record<string, any>;
 }) {
     const obj =
         typeof value === 'object' && value !== null
@@ -92,22 +100,26 @@ function I18nInput({
     const Input = multiline ? 'textarea' : 'input';
     return (
         <div className="grid grid-cols-2 gap-2">
-            {(['fr', 'ar'] as const).map((l) => (
-                <div key={l} className="space-y-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                        {l}
-                    </span>
-                    <Input
-                        type="text"
-                        dir={l === 'ar' ? 'rtl' : 'ltr'}
-                        value={obj[l] ?? ''}
-                        onChange={(e: any) =>
-                            onChange({ ...obj, [l]: e.target.value })
-                        }
-                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${multiline ? 'min-h-20' : ''}`}
-                    />
-                </div>
-            ))}
+            {(['fr', 'ar'] as const).map((l) => {
+                const error = errors?.[l];
+                return (
+                    <div key={l} className="space-y-1" dir={l === 'ar' ? 'rtl' : 'ltr'}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground inline-block">
+                            {l}
+                        </span>
+                        <Input
+                            type="text"
+                            dir={l === 'ar' ? 'rtl' : 'ltr'}
+                            value={obj[l] ?? ''}
+                            onChange={(e: any) =>
+                                onChange({ ...obj, [l]: e.target.value })
+                            }
+                            className={`w-full rounded-lg border px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'} ${multiline ? 'min-h-20' : ''}`}
+                        />
+                        {error && <p className="text-xs text-destructive">{error}</p>}
+                    </div>
+                );
+            })}
         </div>
     );
 }
@@ -119,6 +131,7 @@ export function EntityFormDialog<T extends Record<string, any>>({
     fields,
     initial,
     onSubmit,
+    errors,
 }: Props<T>) {
     const [values, setValues] = useState<Record<string, any>>({});
 
@@ -139,13 +152,14 @@ export function EntityFormDialog<T extends Record<string, any>>({
                 }
             });
             setValues(init);
+        } else {
+            setValues({});
         }
     }, [open, initial, fields]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit(values as T);
-        onOpenChange(false);
     };
 
     return (
@@ -155,80 +169,98 @@ export function EntityFormDialog<T extends Record<string, any>>({
                     <DialogTitle>{title}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {fields.map((f) => (
-                        <div key={f.key}>
-                            <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                                {f.label}
-                            </label>
-                            {f.type === 'i18n' || f.type === 'i18n-textarea' ? (
-                                <I18nInput
-                                    value={values[f.key]}
-                                    onChange={(v) =>
-                                        setValues({ ...values, [f.key]: v })
-                                    }
-                                    multiline={f.type === 'i18n-textarea'}
-                                />
-                            ) : f.type === 'image' ? (
-                                <ImageField
-                                    value={values[f.key] ?? ''}
-                                    onChange={(v) =>
-                                        setValues({ ...values, [f.key]: v })
-                                    }
-                                />
-                            ) : f.type === 'textarea' ? (
-                                <textarea
-                                    value={values[f.key] ?? ''}
-                                    onChange={(e) =>
-                                        setValues({
-                                            ...values,
-                                            [f.key]: e.target.value,
-                                        })
-                                    }
-                                    className="min-h-20 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                />
-                            ) : f.type === 'select' ? (
-                                <select
-                                    value={values[f.key] ?? ''}
-                                    onChange={(e) =>
-                                        setValues({
-                                            ...values,
-                                            [f.key]: e.target.value,
-                                        })
-                                    }
-                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                >
-                                    <option value="">Select...</option>
-                                    {f.options?.map((o) => (
-                                        <option key={o} value={o}>
-                                            {o}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <input
-                                    type={
-                                        f.type === 'number' ? 'number' : 'text'
-                                    }
-                                    step={
-                                        f.type === 'number' ? 'any' : undefined
-                                    }
-                                    value={values[f.key] ?? ''}
-                                    onChange={(e) =>
-                                        setValues({
-                                            ...values,
-                                            [f.key]:
-                                                f.type === 'number'
-                                                    ? parseFloat(
-                                                          e.target.value,
-                                                      ) || 0
-                                                    : e.target.value,
-                                        })
-                                    }
-                                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                />
-                            )}
-                        </div>
-                    ))}
+                    {fields.map((f) => {
+                        const error = errors?.[f.key];
+                        return (
+                            <div key={f.key}>
+                                <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                                    {f.label}
+                                </label>
+                                {f.type === 'i18n' || f.type === 'i18n-textarea' ? (
+                                    <I18nInput
+                                        value={values[f.key]}
+                                        onChange={(v) =>
+                                            setValues({ ...values, [f.key]: v })
+                                        }
+                                        multiline={f.type === 'i18n-textarea'}
+                                        errors={typeof error === 'object' ? error : undefined}
+                                    />
+                                ) : f.type === 'image' ? (
+                                    <ImageField
+                                        value={values[f.key] ?? ''}
+                                        onChange={(v) =>
+                                            setValues({ ...values, [f.key]: v })
+                                        }
+                                        error={typeof error === 'string' ? error : undefined}
+                                    />
+                                ) : f.type === 'textarea' ? (
+                                    <textarea
+                                        value={values[f.key] ?? ''}
+                                        onChange={(e) =>
+                                            setValues({
+                                                ...values,
+                                                [f.key]: e.target.value,
+                                            })
+                                        }
+                                        className={`min-h-20 w-full rounded-lg border px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
+                                    />
+                                ) : f.type === 'select' ? (
+                                    <select
+                                        value={values[f.key] ?? ''}
+                                        onChange={(e) =>
+                                            setValues({
+                                                ...values,
+                                                [f.key]: e.target.value,
+                                            })
+                                        }
+                                        className={`w-full rounded-lg border px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
+                                    >
+                                        <option value="">Select...</option>
+                                        {f.options?.map((o) => {
+                                            if (typeof o === 'string') {
+                                                return (
+                                                    <option key={o} value={o}>
+                                                        {o}
+                                                    </option>
+                                                );
+                                            }
+
+                                            return (
+                                                <option key={o.value} value={o.value}>
+                                                    {o.label}
+                                                </option>
+                                            );
+                                        })}
+                                    </select>
+                                ) : (
+                                    <input
+                                        type={
+                                            f.type === 'number' ? 'number' : 'text'
+                                        }
+                                        step={
+                                            f.type === 'number' ? 'any' : undefined
+                                        }
+                                        value={values[f.key] ?? ''}
+                                        onChange={(e) =>
+                                            setValues({
+                                                ...values,
+                                                [f.key]:
+                                                    f.type === 'number'
+                                                        ? parseFloat(
+                                                              e.target.value,
+                                                          ) || 0
+                                                        : e.target.value,
+                                            })
+                                        }
+                                        className={`w-full rounded-lg border px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
+                                    />
+                                )}
+                                {error && typeof error === 'string' && (
+                                    <p className="mt-1 text-xs text-destructive">{error}</p>
+                                )}
+                            </div>
+                        );
+                    })}
                     <DialogFooter>
                         <Button
                             type="button"

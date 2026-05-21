@@ -7,6 +7,7 @@ use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class AdminCategoryController extends Controller
@@ -14,13 +15,24 @@ class AdminCategoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $type = $request->query('type');
-        $query = Category::query();
 
-        if ($type) {
-            $query->where('entity_type', $type);
-        }
+        $categories = Cache::remember(
+            $this->cacheKey($type),
+            now()->addMinutes(5),
+            function () use ($type) {
+                $query = Category::query();
 
-        return response()->json(['data' => $query->get()]);
+                if ($type) {
+                    $query->where('entity_type', $type);
+                }
+
+                return $query->get();
+            },
+        );
+
+        return response()
+            ->json(['data' => $categories])
+            ->header('Cache-Control', 'no-cache, must-revalidate');
     }
 
     public function store(Request $request): JsonResponse
@@ -48,6 +60,8 @@ class AdminCategoryController extends Controller
             'name' => $data['name'],
         ]);
 
+        $this->clearCategoryCache($data['entity_type']);
+
         return response()->json(['data' => $category], 201);
     }
 
@@ -68,11 +82,12 @@ class AdminCategoryController extends Controller
 
         // Update all entities using this category to reflect the new name if they store it denormalized
         $this->syncEntities($category, $oldKey);
+        $this->clearCategoryCache($category->entity_type);
 
         return response()->json(['data' => $category]);
     }
 
-    public function destroy(Category $category): JsonResponse
+    public function destroy(Request $request, Category $category): JsonResponse
     {
         $type = $category->entity_type;
         $key = $category->key;
@@ -80,7 +95,7 @@ class AdminCategoryController extends Controller
         // Check if there are entities using this category
         $count = $this->getEntityCount($type, $key);
 
-        if (request()->query('force') !== 'true' && $count > 0) {
+        if ($request->query('force') !== 'true' && $count > 0) {
             return response()->json([
                 'message' => "This category is assigned to {$count} items. Deleting it will set their category to null.",
                 'count' => $count,
@@ -92,8 +107,23 @@ class AdminCategoryController extends Controller
         $this->nullifyEntities($type, $key);
 
         $category->delete();
+        $this->clearCategoryCache($type);
 
         return response()->json(['message' => 'Category deleted']);
+    }
+
+    private function cacheKey(?string $type = null): string
+    {
+        return $type ? "categories:type:{$type}" : 'categories:all';
+    }
+
+    private function clearCategoryCache(?string $type = null): void
+    {
+        Cache::forget('categories:all');
+
+        if ($type) {
+            Cache::forget($this->cacheKey($type));
+        }
     }
 
     private function getEntityCount(string $type, string $key): int

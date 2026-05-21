@@ -10,20 +10,27 @@ class NotificationController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        return response()->json(
-            $request->user()
-                ->notifications()
-                ->latest()
-                ->limit((int) $request->integer('limit', 50))
-                ->get()
-                ->map(fn ($notification) => [
-                    'id' => $notification->id,
-                    'type' => $notification->data['type'] ?? class_basename($notification->type),
-                    'data' => $notification->data,
-                    'read_at' => $notification->read_at?->toJSON(),
-                    'created_at' => $notification->created_at?->toJSON(),
-                ])
-        );
+        $notifications = $request->user()
+            ->notifications()
+            ->latest()
+            ->limit((int) $request->integer('limit', 50))
+            ->get()
+            ->map(fn ($notification) => [
+                'id' => $notification->id,
+                'type' => $notification->data['type'] ?? class_basename($notification->type),
+                'data' => $notification->data,
+                'read_at' => $notification->read_at?->toJSON(),
+                'created_at' => $notification->created_at?->toJSON(),
+            ]);
+
+        if ($request->boolean('include_count')) {
+            return response()->json([
+                'notifications' => $notifications->values(),
+                'count' => $request->user()->unreadNotifications()->count(),
+            ]);
+        }
+
+        return response()->json($notifications->values());
     }
 
     public function unreadCount(Request $request): JsonResponse

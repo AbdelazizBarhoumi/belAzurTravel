@@ -168,22 +168,20 @@ class EntitySeeder extends Seeder
         ] as $i => [$url, $caption]) {
             GalleryImage::query()->updateOrCreate(['url' => $url], [
                 'caption' => $caption,
-                'sort_order' => $i,
             ]);
         }
 
         // 4. Seed Destinations
         foreach ([
-            ['santorini', $t('Santorini'), $t('Greece'), 'beach', $t('Beach'), 1299, 4.9, '/images/destination-santorini.jpg'],
-            ['bali', $t('Bali'), $t('Indonesia'), 'nature', $t('Nature'), 899, 4.8, '/images/destination-bali.jpg'],
-            ['paris', $t('Paris'), $t('France'), 'city', $t('City'), 1499, 4.9, '/images/destination-paris.jpg'],
-            ['dubai', $t('Dubai'), $t('UAE'), 'luxury', $t('Luxury'), 1199, 4.7, '/images/destination-dubai.jpg'],
-        ] as [$slug, $name, $country, $catKey, $catName, $price, $rating, $image]) {
+            ['santorini', $t('Santorini'), $t('Greece'), 'beach', 1299, 4.9, '/images/destination-santorini.jpg'],
+            ['bali', $t('Bali'), $t('Indonesia'), 'nature', 899, 4.8, '/images/destination-bali.jpg'],
+            ['paris', $t('Paris'), $t('France'), 'city', 1499, 4.9, '/images/destination-paris.jpg'],
+            ['dubai', $t('Dubai'), $t('UAE'), 'luxury', 1199, 4.7, '/images/destination-dubai.jpg'],
+        ] as [$slug, $name, $country, $catKey, $price, $rating, $image]) {
             Destination::query()->updateOrCreate(['slug' => $slug], [
                 'name' => $name,
                 'country' => $country,
                 'category_key' => $catKey,
-                'category' => $catName,
                 'price' => $price,
                 'rating' => $rating,
                 'image' => $image,
@@ -205,7 +203,7 @@ class EntitySeeder extends Seeder
                 'name' => $name,
                 'location' => $t($dest . ', World'),
                 'category_key' => $catKey,
-                'category' => $catName,
+                'category' => json_encode($catName),
                 'price' => $price,
                 'rating' => 4.5,
                 'stars' => $stars,
@@ -227,7 +225,7 @@ class EntitySeeder extends Seeder
                 'name' => $name,
                 'location' => $t('Various'),
                 'category_key' => $catKey,
-                'category' => $catName,
+                'category' => json_encode($catName),
                 'price' => $price,
                 'rating' => 4.9,
                 'image' => $image,
@@ -245,7 +243,7 @@ class EntitySeeder extends Seeder
             Car::query()->updateOrCreate(['slug' => $slug], [
                 'name' => $name,
                 'category_key' => $catKey,
-                'category' => $catName,
+                'category' => json_encode($catName),
                 'price' => $price,
                 'seats' => 5,
                 'fuel' => $t('Premium'),
@@ -264,7 +262,7 @@ class EntitySeeder extends Seeder
                 'location' => $t('Global'),
                 'date' => $t('Summer 2026'),
                 'category_key' => $catKey,
-                'category' => $catName,
+                'category' => json_encode($catName),
                 'price' => $price,
                 'image' => $image,
                 'description' => $t('Be part of the legend.'),

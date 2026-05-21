@@ -12,13 +12,17 @@ const mockUseHotels = vi.fn();
 const mockUseTours = vi.fn();
 
 vi.mock('@/hooks/usePublicData', () => ({
-    useDestinationBySlug: (...args: unknown[]) => mockUseDestinationBySlug(...args),
+    useDestinationBySlug: (...args: unknown[]) =>
+        mockUseDestinationBySlug(...args),
     useHotels: (...args: unknown[]) => mockUseHotels(...args),
     useTours: (...args: unknown[]) => mockUseTours(...args),
 }));
 
-function makeDestination(overrides: Partial<DestinationItem> = {}): DestinationItem {
+function makeDestination(
+    overrides: Partial<DestinationItem> = {},
+): DestinationItem {
     return {
+        id: 1,
         slug: 'santorini',
         name: { en: 'Santorini', fr: 'Santorin', ar: 'سانتوريني' },
         country: { en: 'Greece', fr: 'Grèce', ar: 'اليونان' },
@@ -34,7 +38,11 @@ function makeDestination(overrides: Partial<DestinationItem> = {}): DestinationI
             ar: 'Ionian escape',
         },
         highlights: [
-            { en: 'White cliffs', fr: 'Falaises blanches', ar: 'المنحدرات البيضاء' },
+            {
+                en: 'White cliffs',
+                fr: 'Falaises blanches',
+                ar: 'المنحدرات البيضاء',
+            },
         ],
         ...overrides,
     };
@@ -45,7 +53,11 @@ function makeHotel(overrides: Partial<HotelItem> = {}): HotelItem {
         slug: 'hotel-santorini',
         id: 'hotel-santorini',
         destinationSlug: 'santorini',
-        name: { en: 'Santorini Bay Hotel', fr: 'Santorini Bay Hotel', ar: 'فندق سانتوريني باي' },
+        name: {
+            en: 'Santorini Bay Hotel',
+            fr: 'Santorini Bay Hotel',
+            ar: 'فندق سانتوريني باي',
+        },
         location: { en: 'Santorini', fr: 'Santorin', ar: 'سانتوريني' },
         price: 320,
         rating: 4.6,
@@ -61,7 +73,11 @@ function makeHotel(overrides: Partial<HotelItem> = {}): HotelItem {
 function makeTour(overrides: Partial<TourItem> = {}): TourItem {
     return {
         slug: 'tour-santorini',
-        name: { en: 'Santorini Sunset Tour', fr: 'Tour au coucher du soleil', ar: 'جولة الغروب' },
+        name: {
+            en: 'Santorini Sunset Tour',
+            fr: 'Tour au coucher du soleil',
+            ar: 'جولة الغروب',
+        },
         location: { en: 'Santorini', fr: 'Santorin', ar: 'سانتوريني' },
         duration: { en: 'Half-day', fr: 'Demi-journée', ar: 'نصف يوم' },
         maxGroup: 12,
@@ -121,7 +137,10 @@ describe('DestinationDetail page', () => {
     });
 
     it('shows a fallback message for unknown destinations', async () => {
-        mockUseDestinationBySlug.mockReturnValue({ data: null, isLoading: false });
+        mockUseDestinationBySlug.mockReturnValue({
+            data: null,
+            isLoading: false,
+        });
 
         renderDestinationDetail('/destinations/unknown');
 
@@ -137,7 +156,11 @@ describe('DestinationDetail page', () => {
         mockUseDestinationBySlug.mockReturnValue({
             data: makeDestination({
                 slug: 'nameless',
-                name: { en: 'Nameless Coast', fr: 'Côte sans nom', ar: 'ساحل بلا اسم' },
+                name: {
+                    en: 'Nameless Coast',
+                    fr: 'Côte sans nom',
+                    ar: 'ساحل بلا اسم',
+                },
                 country: { en: 'Nowhere', fr: 'Nulle part', ar: 'لا مكان' },
                 category: undefined,
                 bestTime: undefined,
@@ -153,9 +176,11 @@ describe('DestinationDetail page', () => {
         renderDestinationDetail('/destinations/nameless');
 
         expect(
-            (await screen.findAllByRole('heading', {
-                name: /Nameless Coast/i,
-            })).length,
+            (
+                await screen.findAllByRole('heading', {
+                    name: /Nameless Coast/i,
+                })
+            ).length,
         ).toBeGreaterThan(0);
         expect(screen.queryByText(/undefined/i)).not.toBeInTheDocument();
     });

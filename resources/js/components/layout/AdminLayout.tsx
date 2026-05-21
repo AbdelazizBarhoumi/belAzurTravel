@@ -54,6 +54,7 @@ const links = [
     { to: '/admin/events', icon: PartyPopper, labelKey: 'admin.events' },
     { to: '/admin/deals', icon: TicketPercent, labelKey: 'admin.deals' },
     { to: '/admin/promos', icon: TicketPercent, labelKey: 'admin.promos' },
+    { to: '/admin/team', icon: Users, labelKey: 'admin.team' },
     { to: '/admin/blog', icon: Newspaper, labelKey: 'admin.blog' },
     { to: '/admin/bookings', icon: Calendar, labelKey: 'admin.bookings' },
     { to: '/admin/notifications', icon: Bell, labelKey: 'notifications.title' },

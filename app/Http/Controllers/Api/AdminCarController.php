@@ -14,13 +14,15 @@ use Illuminate\Support\Str;
  * AdminCarController
  *
  * API media conventions:
- * - Main image: send `image` as a File upload or string URL.
- * - Gallery: frontend may send `gallery` (newline-separated URLs) and/or
+ * - Main image: send `image` as a File upload or string path.
+ * - Gallery: send `gallery` as an array of existing paths and/or
  *   `gallery_files` as uploaded image files. Uploaded files stored under
  *   `storage/app/public/uploads` and persisted with `/storage/` prefix.
  */
 class AdminCarController extends Controller
 {
+    use \App\Concerns\HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.cars', now()->addMinutes(5), function () {
@@ -61,6 +63,8 @@ class AdminCarController extends Controller
 
     private function attributes(Request $request, ?Model $existing = null): array
     {
+        $this->decodeJsonFields($request, ['gallery', 'features', 'policy']);
+
         $rules = [
             'name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'name_en' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -85,11 +89,21 @@ class AdminCarController extends Controller
             'description_en' => ['sometimes', 'nullable', 'string'],
             'description_fr' => ['sometimes', 'nullable', 'string'],
             'description_ar' => ['sometimes', 'nullable', 'string'],
-            'gallery' => ['sometimes', 'nullable', 'string'],
+            'gallery' => ['sometimes', 'nullable'],
             'gallery_files' => ['sometimes', 'array'],
             'gallery_files.*' => ['file', 'image', 'max:4096'],
-            'features' => ['sometimes', 'nullable', 'string'],
-            'policy' => ['sometimes', 'nullable', 'string'],
+            'features' => ['sometimes', 'nullable', 'array'],
+            'features.*.id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'features.*.name' => ['sometimes', 'array'],
+            'features.*.name.en' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'features.*.name.fr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'features.*.name.ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'policy' => ['sometimes', 'nullable', 'array'],
+            'policy.*.id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'policy.*.name' => ['sometimes', 'array'],
+            'policy.*.name.en' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'policy.*.name.fr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'policy.*.name.ar' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
 
         $data = $request->validate($rules);
@@ -97,37 +111,7 @@ class AdminCarController extends Controller
         $name = $this->localized($data, 'name', $existing?->name ?? null, 'car');
         $slug = $existing->slug ?? Str::slug($name['en'] ?? 'car') . '-' . Str::lower(Str::random(4));
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('uploads', 'public');
-            $image = '/storage/' . $path;
-        } else {
-            $incoming = $data['image'] ?? $existing?->image ?? '';
-            if ($incoming === '') {
-                $image = '';
-            } elseif (str_starts_with($incoming, 'http://') || str_starts_with($incoming, 'https://')) {
-                $image = $existing?->image ?? '';
-            } else {
-                $image = $incoming;
-            }
-        }
-
-        if (array_key_exists('gallery', $data) || $request->hasFile('gallery_files')) {
-            $gallery = array_key_exists('gallery', $data)
-                ? $this->splitLines((string) ($data['gallery'] ?? ''))
-                : (array) data_get($existing, 'details.gallery', []);
-
-            if ($request->hasFile('gallery_files')) {
-                $galleryPaths = collect($request->file('gallery_files', []))
-                    ->filter()
-                    ->map(fn ($file) => '/storage/' . $file->store('uploads', 'public'))
-                    ->values()
-                    ->all();
-
-                $gallery = array_values(array_unique(array_merge($gallery, $galleryPaths)));
-            }
-
-            $data['gallery'] = implode("\n", $gallery);
-        }
+        $gallery = $this->handleGallery($request, data_get($existing, 'details.gallery', []));
 
         return [
             'slug' => $slug,
@@ -137,8 +121,8 @@ class AdminCarController extends Controller
             'seats' => (int) ($data['seats'] ?? 0),
             'fuel' => $this->localized($data, 'fuel', $existing?->fuel),
             'transmission' => $this->localized($data, 'transmission', $existing?->transmission),
-            'image' => $image,
-            'details' => $this->carDetails($data, $existing, $this->localized($data, 'description', data_get($existing, 'details.description'))),
+            'image' => $this->handleMainImage($request, $existing?->image, 'uploads/cars'),
+            'details' => $this->carDetails($data, $existing, $this->localized($data, 'description', data_get($existing, 'details.description')), $gallery),
         ];
     }
 
@@ -152,28 +136,26 @@ class AdminCarController extends Controller
             'seats' => $item->seats,
             ...$this->flatLocalized('fuel', $item->fuel),
             ...$this->flatLocalized('transmission', $item->transmission),
-            'image' => $item->image,
+            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
             ...$this->flatLocalized('description', $item->details['description'] ?? []),
-            'gallery' => $item->details['gallery'] ?? [$item->image],
-            'features' => array_values(array_map(fn (mixed $feature): string => $this->localizedValue($feature), $item->details['features'] ?? [])),
-            'policy' => array_values(array_map(fn (mixed $rule): string => $this->localizedValue($rule), $item->details['policy'] ?? [])),
+            'gallery' => array_map(fn($img) => str_starts_with($img, 'storage/') ? asset($img) : asset('storage/' . $img), $item->details['gallery'] ?? [$item->image]),
+            'features' => $item->details['features'] ?? [],
+            'policy' => $item->details['policy'] ?? [],
         ];
     }
 
-    private function carDetails(array $data, ?Model $existing, array $description): array
+    private function carDetails(array $data, ?Model $existing, array $description, array $gallery): array
     {
         $details = $existing?->details ?? [];
 
-        if (array_key_exists('gallery', $data)) {
-            $details['gallery'] = $this->splitLines((string) ($data['gallery'] ?? ''));
-        }
+        $details['gallery'] = $gallery;
 
         if (array_key_exists('features', $data)) {
-            $details['features'] = array_map(fn (string $item): array => ['fr' => $item, 'ar' => $item, 'en' => $item], $this->splitLines((string) ($data['features'] ?? '')));
+            $details['features'] = $data['features'] ?? [];
         }
 
         if (array_key_exists('policy', $data)) {
-            $details['policy'] = array_map(fn (string $item): array => ['fr' => $item, 'ar' => $item, 'en' => $item], $this->splitLines((string) ($data['policy'] ?? '')));
+            $details['policy'] = $data['policy'] ?? [];
         }
 
         if (array_key_exists('description', $data) || array_key_exists('description_en', $data) || array_key_exists('description_fr', $data) || array_key_exists('description_ar', $data)) {
@@ -183,9 +165,10 @@ class AdminCarController extends Controller
         return $details;
     }
 
-    private function localized(array $data, string $key, ?array $existing = null, string $fallback = ''): array
+    private function localized(array $data, string $key, array|string|null $existing = null, string $fallback = ''): array
     {
         $base = $data[$key] ?? null;
+        $existing = $this->normalizeLocalizedValue($existing, $fallback);
 
         return [
             'fr' => $data[$key.'_fr'] ?? $base ?? ($existing['fr'] ?? $fallback),
@@ -194,14 +177,16 @@ class AdminCarController extends Controller
         ];
     }
 
-    private function flatLocalized(string $key, ?array $value): array
+    private function flatLocalized(string $key, array|string|null $value): array
     {
-        return [$key => $value['en'] ?? '', $key.'_fr' => $value['fr'] ?? '', $key.'_ar' => $value['ar'] ?? '', $key.'_en' => $value['en'] ?? ''];
-    }
+        $value = $this->normalizeLocalizedValue($value);
 
-    private function splitLines(string $value): array
-    {
-        return array_values(array_filter(array_map(static fn (string $line): string => trim($line), preg_split('/\r\n|\r|\n/', $value) ?: []), static fn (string $line): bool => $line !== ''));
+        return [
+            $key => $value['en'] ?? '',
+            $key.'_fr' => $value['fr'] ?? '',
+            $key.'_ar' => $value['ar'] ?? '',
+            $key.'_en' => $value['en'] ?? '',
+        ];
     }
 
     private function localizedValue(array|string|null $value): string
@@ -210,6 +195,37 @@ class AdminCarController extends Controller
             return (string) ($value['en'] ?? $value['fr'] ?? $value['ar'] ?? '');
         }
         return (string) ($value ?? '');
+    }
+
+    private function normalizeLocalizedValue(array|string|null $value, string $fallback = ''): array
+    {
+        if (is_array($value)) {
+            return [
+                'en' => $value['en'] ?? $fallback,
+                'fr' => $value['fr'] ?? $fallback,
+                'ar' => $value['ar'] ?? $fallback,
+            ];
+        }
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+
+            if (is_array($decoded)) {
+                return [
+                    'en' => $decoded['en'] ?? $fallback,
+                    'fr' => $decoded['fr'] ?? $fallback,
+                    'ar' => $decoded['ar'] ?? $fallback,
+                ];
+            }
+        }
+
+        $scalar = (string) ($value ?? $fallback);
+
+        return [
+            'en' => $scalar,
+            'fr' => $scalar,
+            'ar' => $scalar,
+        ];
     }
 
     private function flushAdminCache(string $type, ?string $identifier = null): void
@@ -221,4 +237,3 @@ class AdminCarController extends Controller
         }
     }
 }
-

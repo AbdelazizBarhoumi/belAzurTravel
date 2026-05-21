@@ -89,7 +89,27 @@ export function BlogSection({
                                     </span>
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                         <Calendar className="h-3 w-3" />
-                                        {post.date}
+                                        {
+                                            // Format date according to current language (e.g. "20 mai 2026")
+                                            (() => {
+                                                try {
+                                                    const locale =
+                                                        lang === 'ar'
+                                                            ? 'ar-EG'
+                                                            : lang === 'fr'
+                                                            ? 'fr-FR'
+                                                            : 'en-US';
+
+                                                    return new Intl.DateTimeFormat(locale, {
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric',
+                                                    }).format(new Date(post.date));
+                                                } catch {
+                                                    return post.date;
+                                                }
+                                            })()
+                                        }
                                     </div>
                                 </div>
                                 <h3 className="mb-2 font-serif text-lg font-bold text-foreground transition-colors group-hover:text-primary">

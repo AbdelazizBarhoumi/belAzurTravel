@@ -87,17 +87,18 @@ export async function apiFetch<T>(
             );
         }
         if (res.status === 401 || res.status === 419) {
-            // Clear client-side auth state and let the application route
-            // guards handle navigation to the login page. Performing a
-            // hard redirect here can cause full-page reloads and remounts
-            // that trigger repeated background fetches, producing a
-            // redirect/refetch loop. Throwing an error lets callers
-            // (e.g. RoleGuard) navigate appropriately.
+            // Clear client-side auth state
             try {
                 clearAuthUser();
             } catch {
-                // swallow errors from clearing state to avoid masking
-                // the original authentication failure
+                // swallow
+            }
+
+            if (res.status === 419) {
+                // For CSRF mismatch/session expiration, show the dedicated error page
+                if (typeof window !== 'undefined') {
+                    window.location.href = '/session-expired';
+                }
             }
 
             throw new Error('Authentication required');

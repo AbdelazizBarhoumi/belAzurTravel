@@ -12,7 +12,6 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Redis;
 
 class ClientController extends Controller
 {
@@ -118,21 +117,6 @@ class ClientController extends Controller
             ->each(function (User $recipient) use ($inquiry): void {
                 $notification = new SupportInquiryNotification($inquiry);
                 $recipient->notify($notification);
-
-                try {
-                    $data = $notification->toDatabase($recipient);
-                    Redis::publish("notifications:user:{$recipient->id}", json_encode([
-                        'notification' => [
-                            'id' => (string) ($data['id'] ?? $recipient->id.'-'.now()->timestamp),
-                            'type' => $data['type'] ?? class_basename($notification::class),
-                            'data' => $data,
-                            'read_at' => null,
-                            'created_at' => now()->toJSON(),
-                        ],
-                    ]));
-                } catch (\Throwable $e) {
-                    // ignore publish errors
-                }
             });
 
         return response()->json(['id' => $inquiry->id], 201);

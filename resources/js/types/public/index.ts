@@ -7,3 +7,4 @@ export * from './event.types';
 export * from './flight.types';
 export * from './promo.types';
 export type { LocalizedText } from '../common';
+export * from './team.types';

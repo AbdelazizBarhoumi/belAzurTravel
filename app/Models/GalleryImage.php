@@ -12,10 +12,12 @@ class GalleryImage extends Model
     protected $fillable = [
         'url',
         'caption',
-        'sort_order',
+        'title',
+        'category',
     ];
 
     protected $casts = [
         'caption' => 'array',
+        'title' => 'array',
     ];
 }

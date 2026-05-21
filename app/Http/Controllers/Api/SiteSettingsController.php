@@ -99,7 +99,9 @@ class SiteSettingsController extends Controller
 
         $settings = $this->filterDisabledContentForClient($request, $settings);
 
-        return response()->json($settings);
+        return response()
+            ->json($settings)
+            ->header('Cache-Control', 'no-cache, must-revalidate');
     }
 
     protected function hydrateResponseDefaults(array $settings): array
@@ -113,22 +115,6 @@ class SiteSettingsController extends Controller
 
         if (!isset($settings['footerLinks']) || !is_array($settings['footerLinks']) || count($settings['footerLinks']) === 0) {
             $settings['footerLinks'] = $this->deriveFooterLinks($navSettings);
-        }
-
-        if (!isset($content['contact']) || !is_array($content['contact'])) {
-            $content['contact'] = [
-                'title' => [
-                    'en' => 'Contact Us',
-                    'fr' => 'Contact Us',
-                    'ar' => 'Contact Us',
-                ],
-            ];
-        } elseif (!isset($content['contact']['title'])) {
-            $content['contact']['title'] = [
-                'en' => 'Contact Us',
-                'fr' => 'Contact Us',
-                'ar' => 'Contact Us',
-            ];
         }
 
         $settings['content'] = $content;
@@ -246,12 +232,50 @@ class SiteSettingsController extends Controller
         // write to DB (create or update first row)
         try {
             $row = SiteSetting::first();
+            $defaults = [
+                'company_name' => config('site.company_name'),
+                'email' => config('site.email'),
+                'phone' => config('site.phone'),
+                'whatsapp' => config('site.whatsapp'),
+                'address' => config('site.address'),
+                'year' => (int) config('site.year'),
+            ];
             
             // Use provided content or start with existing
             $content = $data['content'] ?? ($row?->content ?? []);
 
             if (isset($data['navLinks']) && is_array($data['navLinks'])) {
                 $content['nav']['simpleLinks'] = $data['navLinks'];
+            }
+
+            // Validate contact structure
+            if (isset($content['contact']) && is_array($content['contact'])) {
+                foreach (['title', 'description'] as $field) {
+                    if (isset($content['contact'][$field]) && is_array($content['contact'][$field])) {
+                        foreach (['en', 'fr', 'ar'] as $lang) {
+                            if (!isset($content['contact'][$field][$lang]) || !is_string($content['contact'][$field][$lang])) {
+                                return response()->json(['message' => "Contact '{$field}' must provide '{$lang}' translation."], 422);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Validate legalSections structure
+            if (isset($data['legalSections']) && is_array($data['legalSections'])) {
+                foreach ($data['legalSections'] as $i => $section) {
+                    if (!isset($section['title']) || !is_array($section['title'])) {
+                        return response()->json(['message' => "Legal section at index {$i} must include a 'title' object."], 422);
+                    }
+                    foreach (['en', 'fr', 'ar'] as $langKey) {
+                        if (!isset($section['title'][$langKey]) || !is_string($section['title'][$langKey])) {
+                            return response()->json(['message' => "Legal section at index {$i} must provide '{$langKey}' translation for title."], 422);
+                        }
+                    }
+                    if (!isset($section['body'])) {
+                        return response()->json(['message' => "Legal section at index {$i} must include a 'body'."], 422);
+                    }
+                }
             }
 
             // Validate nav dropdown sub-items have localized labels (en, fr, ar)
@@ -278,13 +302,13 @@ class SiteSettingsController extends Controller
             }
             
             $updateData = [
-                'company_name' => $data['companyName'] ?? ($row?->company_name ?? 'BelAzurTravel'),
-                'email' => $data['email'] ?? ($row?->email ?? 'hello@voyageur.com'),
-                'phone' => $data['phone'] ?? ($row?->phone ?? '+1 (555) 123-4567'),
-                'whatsapp' => $data['whatsapp'] ?? null,
-                'address' => $data['address'] ?? null,
+                'company_name' => $data['companyName'] ?? ($row?->company_name ?? $defaults['company_name']),
+                'email' => $data['email'] ?? ($row?->email ?? $defaults['email']),
+                'phone' => $data['phone'] ?? ($row?->phone ?? $defaults['phone']),
+                'whatsapp' => $data['whatsapp'] ?? ($row?->whatsapp ?? $defaults['whatsapp']),
+                'address' => $data['address'] ?? ($row?->address ?? $defaults['address']),
                 'plus_code' => $data['plusCode'] ?? ($row?->plus_code ?? null),
-                'year' => $data['year'] ?? date('Y'),
+                'year' => $data['year'] ?? ($row?->year ?? $defaults['year'] ?? (int) date('Y')),
                 'social_links' => $data['socialLinks'] ?? ($row?->social_links ?? []),
                 'legal_sections' => $data['legalSections'] ?? ($row?->legal_sections ?? []),
                 'footer_links' => $data['footerLinks'] ?? ($row?->footer_links ?? []),

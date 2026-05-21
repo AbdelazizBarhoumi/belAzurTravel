@@ -48,7 +48,7 @@ class HotelController extends Controller
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,
-            'image' => $item->image,
+            'image' => $item->image ? asset('storage/' . $item->image) : null,
             'amenities' => $item->amenities,
             'tags' => $item->tags,
             ...($item->details ?? []),

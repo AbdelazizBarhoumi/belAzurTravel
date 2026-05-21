@@ -69,7 +69,6 @@ class PublicEntitiesApiTest extends TestCase
             'name' => ['fr' => 'Santorin', 'ar' => 'سانتوريني', 'en' => 'Santorini'],
             'country' => ['fr' => 'Grèce', 'ar' => 'اليونان', 'en' => 'Greece'],
             'category_key' => 'beach',
-            'category' => ['fr' => 'Plage', 'ar' => 'شاطئ', 'en' => 'Beach'],
             'price' => 1299,
             'rating' => 4.9,
             'image' => '/images/destination-paris.jpg',

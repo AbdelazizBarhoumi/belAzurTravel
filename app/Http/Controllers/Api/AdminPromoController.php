@@ -15,11 +15,12 @@ use Illuminate\Validation\Rule;
  * AdminPromoController
  *
  * API media conventions for promos:
- * - Promos accept a `gallery` field as a newline-separated string of image URLs.
- * - `gallery_files` uploads are NOT accepted for promos (no file storage).
+ * - Promos accept a `gallery` field as an array of image URLs.
  */
 class AdminPromoController extends Controller
 {
+    use \App\Concerns\HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.promos', now()->addMinutes(5), function () {
@@ -61,6 +62,8 @@ class AdminPromoController extends Controller
 
     private function attributes(Request $request, ?Model $existing = null): array
     {
+        $this->decodeJsonFields($request, ['eligibility', 'howToUse', 'terms', 'gallery']);
+
         $rules = [
             'code' => ['sometimes', 'nullable', 'string', 'max:255', Rule::unique('promos', 'code')->ignore($existing?->getKey())],
             'color' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -80,31 +83,36 @@ class AdminPromoController extends Controller
             'expires_en' => ['required_without:expires', 'nullable', 'string', 'max:255'],
             'expires_fr' => ['required_without:expires', 'nullable', 'string', 'max:255'],
             'expires_ar' => ['required_without:expires', 'nullable', 'string', 'max:255'],
-            'eligibility' => ['sometimes', 'nullable', 'string'],
-            'eligibility_en' => ['required_without:eligibility', 'nullable', 'string'],
-            'eligibility_fr' => ['required_without:eligibility', 'nullable', 'string'],
-            'eligibility_ar' => ['required_without:eligibility', 'nullable', 'string'],
-            'howToUse' => ['sometimes', 'nullable', 'string'],
-            'howToUse_en' => ['required_without:howToUse', 'nullable', 'string'],
-            'howToUse_fr' => ['required_without:howToUse', 'nullable', 'string'],
-            'howToUse_ar' => ['required_without:howToUse', 'nullable', 'string'],
-            'terms' => ['sometimes', 'nullable', 'string'],
-            'terms_en' => ['required_without:terms', 'nullable', 'string'],
-            'terms_fr' => ['required_without:terms', 'nullable', 'string'],
-            'terms_ar' => ['required_without:terms', 'nullable', 'string'],
+            'eligibility' => ['sometimes', 'nullable'],
+            'eligibility.*.name' => ['sometimes', 'array'],
+            'eligibility_en' => ['sometimes', 'nullable', 'string'],
+            'eligibility_fr' => ['sometimes', 'nullable', 'string'],
+            'eligibility_ar' => ['sometimes', 'nullable', 'string'],
+            'howToUse' => ['sometimes', 'nullable'],
+            'howToUse.*.name' => ['sometimes', 'array'],
+            'howToUse_en' => ['sometimes', 'nullable', 'string'],
+            'howToUse_fr' => ['sometimes', 'nullable', 'string'],
+            'howToUse_ar' => ['sometimes', 'nullable', 'string'],
+            'terms' => ['sometimes', 'nullable'],
+            'terms.*.name' => ['sometimes', 'array'],
+            'terms_en' => ['sometimes', 'nullable', 'string'],
+            'terms_fr' => ['sometimes', 'nullable', 'string'],
+            'terms_ar' => ['sometimes', 'nullable', 'string'],
             'usage_limit' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'per_user_limit' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'applicable_to' => ['sometimes', 'nullable', 'string', 'max:255'],
             'active' => ['sometimes', 'nullable', 'boolean'],
-            // Accept newline-separated gallery URLs (no file uploads for promos)
-            'gallery' => ['sometimes', 'nullable', 'string'],
+            'gallery' => ['sometimes', 'nullable'],
         ];
 
         $data = $request->validate($rules);
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
-        $title = $localized('title');
         $code = $existing->code ?? ($data['code'] ?? Str::upper(Str::random(8)));
 
+        $gallery = $data['gallery'] ?? $existing?->details['gallery'] ?? [];
+        if (is_string($gallery)) {
+            $gallery = $this->splitLines($gallery);
+        }
 
         return [
             'code' => $code,
@@ -117,7 +125,7 @@ class AdminPromoController extends Controller
                 'eligibility' => $this->buildLocalizedList($data, 'eligibility', $existing),
                 'howToUse' => $this->buildLocalizedList($data, 'howToUse', $existing),
                 'terms' => $this->buildLocalizedList($data, 'terms', $existing),
-                'gallery' => isset($data['gallery']) ? $this->splitLines((string) $data['gallery']) : ($existing->details['gallery'] ?? []),
+                'gallery' => $gallery,
                 'usage_limit' => isset($data['usage_limit']) ? (int) $data['usage_limit'] : ($existing->details['usage_limit'] ?? null),
                 'per_user_limit' => isset($data['per_user_limit']) ? (int) $data['per_user_limit'] : ($existing->details['per_user_limit'] ?? null),
                 'applicable_to' => $data['applicable_to'] ?? $existing->details['applicable_to'] ?? null,
@@ -128,7 +136,7 @@ class AdminPromoController extends Controller
 
     private function adminPayload(Model $item): array
     {
-        return [
+        $payload = [
             'id' => (string) $item->id,
             'code' => $item->code,
             ...$this->flatLocalized('title', $item->title),
@@ -136,25 +144,36 @@ class AdminPromoController extends Controller
             ...$this->flatLocalized('description', $item->description),
             ...$this->flatLocalized('expires', $item->expires),
             'color' => $item->color,
-            'eligibility_en' => implode("\n", array_map(fn($it) => $it['en'] ?? '', $item->details['eligibility'] ?? [])),
-            'eligibility_fr' => implode("\n", array_map(fn($it) => $it['fr'] ?? '', $item->details['eligibility'] ?? [])),
-            'eligibility_ar' => implode("\n", array_map(fn($it) => $it['ar'] ?? '', $item->details['eligibility'] ?? [])),
-            'howToUse_en' => implode("\n", array_map(fn($it) => $it['en'] ?? '', $item->details['howToUse'] ?? [])),
-            'howToUse_fr' => implode("\n", array_map(fn($it) => $it['fr'] ?? '', $item->details['howToUse'] ?? [])),
-            'howToUse_ar' => implode("\n", array_map(fn($it) => $it['ar'] ?? '', $item->details['howToUse'] ?? [])),
-            'terms_en' => implode("\n", array_map(fn($it) => $it['en'] ?? '', $item->details['terms'] ?? [])),
-            'terms_fr' => implode("\n", array_map(fn($it) => $it['fr'] ?? '', $item->details['terms'] ?? [])),
-            'terms_ar' => implode("\n", array_map(fn($it) => $it['ar'] ?? '', $item->details['terms'] ?? [])),
+            'eligibility' => $this->adminLocalizedList($item->details['eligibility'] ?? []),
+            'howToUse' => $this->adminLocalizedList($item->details['howToUse'] ?? []),
+            'terms' => $this->adminLocalizedList($item->details['terms'] ?? []),
             'gallery' => implode("\n", $item->details['gallery'] ?? []),
-            'usage_limit' => $item->details['usage_limit'] ?? null,
-            'per_user_limit' => $item->details['per_user_limit'] ?? null,
-            'applicable_to' => $item->details['applicable_to'] ?? null,
-            'active' => $item->details['active'] ?? true,
         ];
+
+        $payload['usage_limit'] = $item->details['usage_limit'] ?? null;
+        $payload['per_user_limit'] = $item->details['per_user_limit'] ?? null;
+        $payload['applicable_to'] = $item->details['applicable_to'] ?? null;
+        $payload['active'] = $item->details['active'] ?? true;
+
+        return $payload;
     }
 
     private function buildLocalizedList(array $data, string $key, ?Model $existing): array
     {
+        if (isset($data[$key]) && is_array($data[$key])) {
+            return array_map(static function (array $item): array {
+                $localized = $item['name'] ?? $item;
+
+                return [
+                    'name' => [
+                        'en' => $localized['en'] ?? '',
+                        'fr' => $localized['fr'] ?? '',
+                        'ar' => $localized['ar'] ?? '',
+                    ],
+                ];
+            }, $data[$key]);
+        }
+
         $en = $data[$key . '_en'] ?? null;
         $fr = $data[$key . '_fr'] ?? null;
         $ar = $data[$key . '_ar'] ?? null;
@@ -165,22 +184,32 @@ class AdminPromoController extends Controller
             $max = max(count($enLines), count($frLines), count($arLines));
             $items = [];
             for ($i = 0; $i < $max; $i++) {
-                $items[] = ['en' => $enLines[$i] ?? $frLines[$i] ?? $arLines[$i] ?? '', 'fr' => $frLines[$i] ?? $enLines[$i] ?? $arLines[$i] ?? '', 'ar' => $arLines[$i] ?? $enLines[$i] ?? $frLines[$i] ?? ''];
+                $items[] = ['name' => ['en' => $enLines[$i] ?? $frLines[$i] ?? $arLines[$i] ?? '', 'fr' => $frLines[$i] ?? $enLines[$i] ?? $arLines[$i] ?? '', 'ar' => $arLines[$i] ?? $enLines[$i] ?? $frLines[$i] ?? '']];
             }
-            return array_values(array_filter($items, static fn ($it) => ($it['en'] !== '' || $it['fr'] !== '' || $it['ar'] !== '')));
+            return array_values(array_filter($items, static fn ($it) => ($it['name']['en'] !== '' || $it['name']['fr'] !== '' || $it['name']['ar'] !== '')));
         }
 
         if (array_key_exists($key, $data)) {
             $lines = $this->splitLines((string) ($data[$key] ?? ''));
-            return array_map(fn (string $line) => ['en' => $line, 'fr' => $line, 'ar' => $line], $lines);
+            return array_map(fn (string $line) => ['name' => ['en' => $line, 'fr' => $line, 'ar' => $line]], $lines);
         }
 
         return $existing?->details[$key] ?? [];
     }
 
-    private function splitLines(string $value): array
+    private function adminLocalizedList(array $items): array
     {
-        return array_values(array_filter(array_map(static fn (string $line): string => trim($line), preg_split('/\r\n|\r|\n/', $value) ?: []), static fn (string $line): bool => $line !== ''));
+        return array_map(static function (array $item): array {
+            $localized = $item['name'] ?? $item;
+
+            return [
+                'name' => [
+                    'en' => $localized['en'] ?? '',
+                    'fr' => $localized['fr'] ?? '',
+                    'ar' => $localized['ar'] ?? '',
+                ],
+            ];
+        }, $items);
     }
 
     private function localized(array $data, string $key, string $fallback = ''): array
@@ -203,4 +232,3 @@ class AdminPromoController extends Controller
         }
     }
 }
-

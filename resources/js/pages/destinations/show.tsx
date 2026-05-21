@@ -222,7 +222,9 @@ export default function DestinationDetail() {
                             ...(destination.language
                                 ? [
                                       {
-                                          label: t('destinationDetail.language'),
+                                          label: t(
+                                              'destinationDetail.language',
+                                          ),
                                           value: localize(
                                               destination.language,
                                               lang,
@@ -234,7 +236,9 @@ export default function DestinationDetail() {
                             ...(destination.currency
                                 ? [
                                       {
-                                          label: t('destinationDetail.currency'),
+                                          label: t(
+                                              'destinationDetail.currency',
+                                          ),
                                           value: localize(
                                               destination.currency,
                                               lang,

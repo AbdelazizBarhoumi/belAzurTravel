@@ -3,6 +3,13 @@ import type { NavSettings } from '@/lib/nav-config';
 
 type LocalizedText = Record<string, string>;
 
+export type LegalSectionBody =
+    | LocalizedText
+    | {
+          format: 'markdown' | 'richtext';
+          content: LocalizedText;
+      };
+
 interface SiteSettingsContent {
     nav?: {
         simpleLinks?: Array<SimpleLinkItem & { label?: LocalizedText }>;
@@ -44,7 +51,7 @@ export interface SiteSettings {
     socialLinks: Array<{ label: string; href: string }>;
     legalSections: Array<{
         title: Record<string, string>;
-        body: Record<string, string>;
+        body: LegalSectionBody;
     }>;
     footerLinks: Array<{
         labelKey: string;

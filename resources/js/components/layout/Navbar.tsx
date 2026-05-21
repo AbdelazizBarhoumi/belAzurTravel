@@ -216,7 +216,8 @@ export function Navbar() {
                                     {moreEntries.map((entry) => {
                                         const page = getPage(entry.pageKey);
                                         if (!page) return null;
-                                        const dropdownItems = resolveDropdownItems(entry);
+                                        const dropdownItems =
+                                            resolveDropdownItems(entry);
                                         const isExpanded =
                                             openMoreSection === entry.pageKey;
                                         return (
@@ -226,7 +227,9 @@ export function Navbar() {
                                                     <div className="rounded-md border border-border/60 bg-background/40">
                                                         <button
                                                             type="button"
-                                                            aria-expanded={isExpanded}
+                                                            aria-expanded={
+                                                                isExpanded
+                                                            }
                                                             onClick={() =>
                                                                 setOpenMoreSection(
                                                                     isExpanded
@@ -249,7 +252,9 @@ export function Navbar() {
                                                         {isExpanded && (
                                                             <div className="px-2 pb-2">
                                                                 <Link
-                                                                    to={page.href}
+                                                                    to={
+                                                                        page.href
+                                                                    }
                                                                     className="mb-1 block rounded-md px-3 py-2 text-sm font-semibold text-primary hover:bg-muted"
                                                                 >
                                                                     {t(
@@ -259,8 +264,15 @@ export function Navbar() {
                                                                 </Link>
                                                                 <ul className="space-y-1 border-l border-border pl-3">
                                                                     {dropdownItems.map(
-                                                                        (it, i) => (
-                                                                            <li key={i}>
+                                                                        (
+                                                                            it,
+                                                                            i,
+                                                                        ) => (
+                                                                            <li
+                                                                                key={
+                                                                                    i
+                                                                                }
+                                                                            >
                                                                                 <Link
                                                                                     to={buildItemHref(
                                                                                         entry.pageKey,
@@ -360,7 +372,8 @@ export function Navbar() {
                             {topEntries.map((entry) => {
                                 const page = getPage(entry.pageKey);
                                 if (!page) return null;
-                                const dropdownItems = resolveDropdownItems(entry);
+                                const dropdownItems =
+                                    resolveDropdownItems(entry);
 
                                 if (entry.isDropdown) {
                                     return (
@@ -376,7 +389,9 @@ export function Navbar() {
                                                 {entry.linkSelf && (
                                                     <Link
                                                         to={page.href}
-                                                        onClick={() => setOpen(false)}
+                                                        onClick={() =>
+                                                            setOpen(false)
+                                                        }
                                                         className="py-1 text-sm text-primary"
                                                     >
                                                         {t('common.all')}
@@ -385,8 +400,13 @@ export function Navbar() {
                                                 {dropdownItems.map((it, i) => (
                                                     <Link
                                                         key={i}
-                                                        to={buildItemHref(entry.pageKey, it)}
-                                                        onClick={() => setOpen(false)}
+                                                        to={buildItemHref(
+                                                            entry.pageKey,
+                                                            it,
+                                                        )}
+                                                        onClick={() =>
+                                                            setOpen(false)
+                                                        }
                                                         className="py-1 text-sm text-muted-foreground"
                                                     >
                                                         {resolveLabel(it.label)}
@@ -413,43 +433,70 @@ export function Navbar() {
                             {moreEntries.length > 0 && (
                                 <details className="group/main">
                                     <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
-                                        {t('nav.more') /* translation key for More */}
+                                        {
+                                            t(
+                                                'nav.more',
+                                            ) /* translation key for More */
+                                        }
                                         <ChevronDown className="h-4 w-4 transition-transform group-open/main:rotate-180" />
                                     </summary>
                                     <div className="flex flex-col gap-2 pb-2 pl-3">
                                         {moreEntries.map((entry) => {
                                             const page = getPage(entry.pageKey);
                                             if (!page) return null;
-                                            const dropdownItems = resolveDropdownItems(entry);
+                                            const dropdownItems =
+                                                resolveDropdownItems(entry);
 
-                                           if (entry.isDropdown && dropdownItems.length > 0) {
+                                            if (
+                                                entry.isDropdown &&
+                                                dropdownItems.length > 0
+                                            ) {
                                                 return (
                                                     <details
                                                         key={entry.pageKey}
                                                         className="group/sub"
                                                     >
                                                         <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
-                                                            {t(`nav.${page.key}`)}
+                                                            {t(
+                                                                `nav.${page.key}`,
+                                                            )}
                                                             <ChevronDown className="h-4 w-4 transition-transform group-open/sub:rotate-180" />
                                                         </summary>
                                                         <div className="flex flex-col gap-1 pb-2 pl-3">
                                                             <Link
                                                                 to={page.href}
-                                                                onClick={() => setOpen(false)}
+                                                                onClick={() =>
+                                                                    setOpen(
+                                                                        false,
+                                                                    )
+                                                                }
                                                                 className="py-1 text-sm text-primary"
                                                             >
-                                                                {t('common.all')}
+                                                                {t(
+                                                                    'common.all',
+                                                                )}
                                                             </Link>
-                                                            {dropdownItems.map((it, i) => (
-                                                                <Link
-                                                                    key={i}
-                                                                    to={buildItemHref(entry.pageKey, it)}
-                                                                    onClick={() => setOpen(false)}
-                                                                    className="py-1 text-sm text-muted-foreground"
-                                                                >
-                                                                    {resolveLabel(it.label)}
-                                                                </Link>
-                                                            ))}
+                                                            {dropdownItems.map(
+                                                                (it, i) => (
+                                                                    <Link
+                                                                        key={i}
+                                                                        to={buildItemHref(
+                                                                            entry.pageKey,
+                                                                            it,
+                                                                        )}
+                                                                        onClick={() =>
+                                                                            setOpen(
+                                                                                false,
+                                                                            )
+                                                                        }
+                                                                        className="py-1 text-sm text-muted-foreground"
+                                                                    >
+                                                                        {resolveLabel(
+                                                                            it.label,
+                                                                        )}
+                                                                    </Link>
+                                                                ),
+                                                            )}
                                                         </div>
                                                     </details>
                                                 );
@@ -459,7 +506,9 @@ export function Navbar() {
                                                 <Link
                                                     key={entry.pageKey}
                                                     to={page.href}
-                                                    onClick={() => setOpen(false)}
+                                                    onClick={() =>
+                                                        setOpen(false)
+                                                    }
                                                     className="py-1 text-sm text-muted-foreground"
                                                 >
                                                     {t(`nav.${page.key}`)}

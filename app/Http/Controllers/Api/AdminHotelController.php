@@ -14,14 +14,16 @@ use Illuminate\Support\Str;
  * AdminHotelController
  *
  * API media conventions:
- * - Main image: send `image` as a File upload (multipart) or as a string URL.
- * - Gallery: send `gallery` as a newline-separated string of URLs (one per line)
+ * - Main image: send `image` as a File upload (multipart) or as a string path.
+ * - Gallery: send `gallery` as an array of existing image paths
  *   and/or `gallery_files` as an array of uploaded image files.
  * - Backend will store uploaded files under `storage/app/public/uploads` and
  *   persist paths prefixed with `/storage/` in details.gallery.
  */
 class AdminHotelController extends Controller
 {
+    use \App\Concerns\HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.hotels', now()->addMinutes(5), function () {
@@ -63,6 +65,8 @@ class AdminHotelController extends Controller
 
     private function attributes(Request $request, ?Model $existing = null): array
     {
+        $this->decodeJsonFields($request, ['amenities', 'rooms', 'gallery']);
+
         $rules = [
             'slug' => ['sometimes', 'nullable', 'string', 'max:255'],
             'name' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -95,16 +99,16 @@ class AdminHotelController extends Controller
             'image' => $request->hasFile('image')
                 ? [$existing ? 'sometimes' : 'required', 'image', 'max:10240']
                 : [$existing ? 'sometimes' : 'required', 'string', 'max:2048'],
-            'gallery' => ['sometimes', 'nullable', 'string'],
+            'gallery' => ['sometimes', 'nullable'],
             'gallery_files' => ['sometimes', 'array'],
             'gallery_files.*' => ['file', 'image', 'max:4096'],
-            'amenities' => ['sometimes', 'nullable', 'array'],
+            'amenities' => ['sometimes', 'nullable'],
             'amenities.*.id' => ['sometimes', 'nullable', 'string', 'max:255'],
             'amenities.*.name' => ['sometimes', 'array'],
             'amenities.*.name.en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'amenities.*.name.fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'amenities.*.name.ar' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'rooms' => ['sometimes', 'nullable', 'array'],
+            'rooms' => ['sometimes', 'nullable'],
             'rooms.*.id' => ['sometimes', 'nullable', 'string', 'max:255'],
             'rooms.*.name' => ['sometimes', 'array'],
             'rooms.*.name.en' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -128,27 +132,7 @@ class AdminHotelController extends Controller
         $name = $localized('name', $existing?->name);
         $slug = $existing->slug ?? Str::slug($name['en'] ?? 'hotel') . '-' . Str::lower(Str::random(4));
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('uploads', 'public');
-            $image = '/storage/' . $path;
-        } else {
-            $incoming = trim((string) ($data['image'] ?? $existing?->image ?? ''));
-            $image = $incoming !== '' ? $incoming : ($existing?->image ?? '');
-        }
-
-        $galleryUploads = array_filter((array) $request->file('gallery_files', []));
-
-        if (! empty($galleryUploads)) {
-            $galleryPaths = collect($galleryUploads)
-                ->filter()
-                ->map(fn ($file) => '/storage/' . $file->store('uploads', 'public'))
-                ->values()
-                ->all();
-
-            // Merge uploaded files with existing gallery string
-            $existingGallery = isset($data['gallery']) ? $this->splitLines((string) $data['gallery']) : [];
-            $data['gallery'] = implode("\n", array_values(array_unique(array_merge($existingGallery, $galleryPaths))));
-        }
+        $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? []);
 
         return [
             'slug' => $slug,
@@ -160,10 +144,10 @@ class AdminHotelController extends Controller
             'rating' => (float) ($data['rating'] ?? 0),
             'stars' => (int) ($data['stars'] ?? $existing->stars ?? 0),
             'reviews' => (int) ($data['reviews'] ?? $existing->reviews ?? 0),
-            'image' => $image,
+            'image' => $this->handleMainImage($request, $existing?->image, 'uploads/hotels'),
             'amenities' => $data['amenities'] ?? $existing->amenities ?? [],
             'tags' => array_values(array_filter([Str::slug($data['category_en'] ?? $data['category'] ?? $existing?->details['category']['en'] ?? '')])),
-            'details' => $this->hotelDetails($data, $existing),
+            'details' => $this->hotelDetails($data, $existing, $gallery),
         ];
     }
 
@@ -172,16 +156,18 @@ class AdminHotelController extends Controller
         return [
             'id' => (string) $item->id,
             'slug' => $item->slug,
+            'destinationSlug' => $item->destination_slug,
             'code' => $item->code,
-            'destination_slug' => $item->destination_slug,
             ...$this->flatLocalized('name', $item->name),
             ...$this->flatLocalized('location', $item->location),
             'price' => $item->price,
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,
-            'image' => $item->image,
-            'gallery' => implode("\n", $item->details['gallery'] ?? [$item->image]),
+            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'amenities' => $item->amenities ?? [],
+            'tags' => $item->tags ?? [],
+            'gallery' => $item->details['gallery'] ?? [$item->image],
             ...$this->flatLocalized('category', $item->details['category'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
             ...$this->flatLocalized('city', $item->details['city'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
             ...$this->flatLocalized('country', $item->details['country'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
@@ -189,7 +175,6 @@ class AdminHotelController extends Controller
             'phone' => $item->details['phone'] ?? '',
             'whatsapp' => $item->details['whatsapp'] ?? '',
             ...$this->flatLocalized('description', $item->details['description'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
-            'amenities' => $item->amenities ?? [],
             'rooms' => $item->details['rooms'] ?? [],
         ];
     }
@@ -213,7 +198,7 @@ class AdminHotelController extends Controller
         return [$key => $value['en'] ?? '', $key.'_fr' => $value['fr'] ?? '', $key.'_ar' => $value['ar'] ?? '', $key.'_en' => $value['en'] ?? ''];
     }
 
-    private function hotelDetails(array $data, ?Model $existing): array
+    private function hotelDetails(array $data, ?Model $existing, array $gallery): array
     {
         $details = $existing?->details ?? [];
 
@@ -245,9 +230,7 @@ class AdminHotelController extends Controller
             $details['description'] = $this->localized($data, 'description', $existing?->details['description'] ?? ['en' => '', 'fr' => '', 'ar' => '']);
         }
 
-        if (array_key_exists('gallery', $data)) {
-            $details['gallery'] = $this->splitLines((string) ($data['gallery'] ?? ''));
-        }
+        $details['gallery'] = $gallery;
 
         if (array_key_exists('rooms', $data) && is_array($data['rooms'])) {
             $details['rooms'] = array_values(array_filter(array_map(fn (array $room): array => [

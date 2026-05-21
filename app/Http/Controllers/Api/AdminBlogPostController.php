@@ -10,8 +10,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
+/**
+ * AdminBlogPostController
+ *
+ * API media conventions:
+ * - Main image: send `image` as a File upload or string path.
+ */
 class AdminBlogPostController extends Controller
 {
+    use \App\Concerns\HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.blog-posts', now()->addMinutes(5), function () {
@@ -52,6 +60,8 @@ class AdminBlogPostController extends Controller
 
     private function attributes(Request $request, ?Model $existing = null): array
     {
+        $this->decodeJsonFields($request, ['content']);
+
         $rules = [
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'title_en' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -62,6 +72,7 @@ class AdminBlogPostController extends Controller
             'excerpt_fr' => ['sometimes', 'nullable', 'string'],
             'excerpt_ar' => ['sometimes', 'nullable', 'string'],
             'date' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category_key' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -75,27 +86,14 @@ class AdminBlogPostController extends Controller
         $title = $localized('title');
         $slug = $existing->slug ?? Str::slug($title['en'] ?? 'post') . '-' . Str::lower(Str::random(4));
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('uploads', 'public');
-            $image = '/storage/' . $path;
-        } else {
-            $incoming = $data['image'] ?? $existing?->image ?? '';
-            if ($incoming === '') {
-                $image = '';
-            } elseif (str_starts_with($incoming, 'http://') || str_starts_with($incoming, 'https://')) {
-                $image = $existing?->image ?? '';
-            } else {
-                $image = $incoming;
-            }
-        }
-
         return [
             'slug' => $slug,
+            'category_key' => $data['category_key'] ?? $existing?->category_key,
             'title' => $localized('title', ''),
             'excerpt' => $localized('excerpt', ''),
             'date' => $data['date'] ?? now()->format('M d, Y'),
             'category' => $localized('category'),
-            'image' => $image,
+            'image' => $this->handleMainImage($request, $existing?->image, 'uploads/blog_posts'),
             'content' => $this->blogContent($data, $existing, $localized('excerpt', '')),
         ];
     }
@@ -103,12 +101,13 @@ class AdminBlogPostController extends Controller
     private function adminPayload(Model $item): array
     {
         return [
-            'id' => (string) $item->id,
+            'id' => (int) $item->id,
+            'category_key' => $item->category_key,
             ...$this->flatLocalized('title', $item->title),
             ...$this->flatLocalized('excerpt', $item->excerpt),
             'date' => $item->date,
             ...$this->flatLocalized('category', $item->category),
-            'image' => $item->image,
+            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
             'content' => $this->blogContentFromItem($item),
         ];
     }
@@ -185,22 +184,14 @@ class AdminBlogPostController extends Controller
     {
         Cache::forget("admin.entity.{$type}");
         Cache::forget("entity.{$type}.index");
+        if ($type === 'blog-posts') {
+            Cache::forget('blog-posts.index');
+        }
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("entity.{$type}.{$identifier}");
+            if ($type === 'blog-posts') {
+                Cache::forget("blog-posts.{$identifier}");
+            }
         }
-    }
-
-    private function splitLines(string $value): array
-    {
-        return array_values(array_filter(array_map(static fn (string $line): string => trim($line), preg_split('/\r\n|\r|\n/', $value) ?: []), static fn (string $line): bool => $line !== ''));
-    }
-
-    private function localizedValue(array|string|null $value): string
-    {
-        if (is_array($value)) {
-            return (string) ($value['en'] ?? $value['fr'] ?? $value['ar'] ?? '');
-        }
-        return (string) ($value ?? '');
     }
 }
-

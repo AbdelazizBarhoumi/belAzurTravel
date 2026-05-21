@@ -12,7 +12,7 @@ class FlightController extends Controller
     public function index(): JsonResponse
     {
         $result = Cache::remember(
-            'flights.index',
+            'entity.flights.index',
             now()->addMinutes(10),
             function() {
                 return Flight::query()->oldest('id')->get()->map(
@@ -29,7 +29,7 @@ class FlightController extends Controller
         $item = Flight::query()->where('code', $code)->firstOrFail();
 
         return response()->json(Cache::remember(
-            "flights.{$code}",
+            "entity.flights.{$code}",
             now()->addMinutes(10),
             fn () => $this->payload($item)
         ));
@@ -38,8 +38,18 @@ class FlightController extends Controller
     /** @return array<string, mixed> */
     private function payload(Flight $item): array
     {
+        $details = $item->details ?? [];
+        $detailsPayload = [
+            'date' => $details['date'] ?? '',
+            'seats' => $details['seats'] ?? null,
+            'cabin' => $details['cabin'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'aircraft' => $details['aircraft'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'baggage' => $details['baggage'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'refund' => $details['refund'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+        ];
         return [
             'id' => $item->code,
+            'code' => $item->code,
             'airline' => $item->airline,
             'from' => $item->from,
             'to' => $item->to,
@@ -48,7 +58,13 @@ class FlightController extends Controller
             'stops' => $item->stops,
             'departure' => $item->departure,
             'arrival' => $item->arrival,
-            ...($item->details ?? []),
+            'details' => $detailsPayload,
+            'date' => $detailsPayload['date'],
+            'seats' => $detailsPayload['seats'],
+            'cabin' => $detailsPayload['cabin'],
+            'aircraft' => $detailsPayload['aircraft'],
+            'baggage' => $detailsPayload['baggage'],
+            'refund' => $detailsPayload['refund'],
         ];
     }
 }

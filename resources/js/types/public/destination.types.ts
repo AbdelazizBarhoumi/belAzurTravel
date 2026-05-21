@@ -4,6 +4,7 @@ import type { LocalizedText } from '../common';
  * Destination item - public view
  */
 export interface DestinationItem {
+    id: number;
     slug: string;
     name: LocalizedText;
     country: LocalizedText;

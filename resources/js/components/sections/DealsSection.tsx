@@ -74,7 +74,9 @@ export function DealsSection() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     {filtered.length === 0 ? (
                         <RequestThingEmptyState
-                            variant={deals.length === 0 ? 'empty' : 'no-results'}
+                            variant={
+                                deals.length === 0 ? 'empty' : 'no-results'
+                            }
                             className="lg:col-span-3"
                         />
                     ) : (

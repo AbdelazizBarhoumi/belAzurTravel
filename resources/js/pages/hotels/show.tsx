@@ -148,7 +148,6 @@ export default function HotelDetail() {
                 animate={{ opacity: 1, y: 0 }}
                 className="grid gap-10 lg:grid-cols-[2fr_1fr]"
             >
-                <div className="space-y-8">
                     <Gallery
                         images={gallery}
                         hotelName={title}
@@ -193,7 +192,6 @@ export default function HotelDetail() {
                     >
                         <RoomsList rooms={rooms} onBookRoom={handleBookRoom} />
                     </motion.div>
-                </div>
 
                 <aside className="sticky top-24 hidden self-start lg:block">
                     <StickyBookingCard

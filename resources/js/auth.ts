@@ -1,3 +1,5 @@
+import { AUTH_USER_QUERY_KEY, queryClient } from '@/lib/queryClient';
+
 export type UserRole = 'admin' | 'assistant' | 'client';
 
 export interface AuthUser {
@@ -22,10 +24,12 @@ export function getAuthUser(): AuthUser | null {
 
 export function storeAuthUser(user: AuthUser): void {
     currentAuthUser = user;
+    queryClient.setQueryData(AUTH_USER_QUERY_KEY, user);
 }
 
 export function clearAuthUser(): void {
     currentAuthUser = null;
+    queryClient.setQueryData(AUTH_USER_QUERY_KEY, null);
 }
 
 /**

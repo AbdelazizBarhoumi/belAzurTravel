@@ -53,7 +53,7 @@ export default function FlightDetail() {
                                         <p className="text-sm text-muted-foreground">
                                             {localizeText(flight.stops, lang)} ·{' '}
                                             {localizeText(
-                                                flight.aircraft,
+                                                flight.details.aircraft,
                                                 lang,
                                             )}
                                         </p>
@@ -95,7 +95,10 @@ export default function FlightDetail() {
                                             {t('label.cabin')}
                                         </p>
                                         <p className="font-bold text-foreground">
-                                            {localizeText(flight.cabin, lang)}
+                                            {localizeText(
+                                                flight.details.cabin,
+                                                lang,
+                                            )}
                                         </p>
                                     </div>
                                     <div className="rounded-xl bg-muted/40 p-4">
@@ -104,7 +107,14 @@ export default function FlightDetail() {
                                             {t('label.baggage')}
                                         </p>
                                         <p className="font-bold text-foreground">
-                                            {localizeText(flight.baggage, lang)}
+                                            {localizeText(
+                                                flight.details.baggage || {
+                                                    en: '',
+                                                    fr: '',
+                                                    ar: '',
+                                                },
+                                                lang,
+                                            )}
                                         </p>
                                     </div>
                                     <div className="rounded-xl bg-muted/40 p-4">
@@ -113,7 +123,11 @@ export default function FlightDetail() {
                                         </p>
                                         <p className="font-bold text-foreground">
                                             {localizeText(
-                                                flight.aircraft,
+                                                flight.details.aircraft || {
+                                                    en: '',
+                                                    fr: '',
+                                                    ar: '',
+                                                },
                                                 lang,
                                             )}
                                         </p>
@@ -131,21 +145,29 @@ export default function FlightDetail() {
                                         {
                                             label: t('label.cabin'),
                                             value: localizeText(
-                                                flight.cabin,
+                                                flight.details.cabin,
                                                 lang,
                                             ),
                                         },
                                         {
                                             label: t('label.baggage'),
                                             value: localizeText(
-                                                flight.baggage,
+                                                flight.details.baggage || {
+                                                    en: '',
+                                                    fr: '',
+                                                    ar: '',
+                                                },
                                                 lang,
                                             ),
                                         },
                                         {
                                             label: t('label.aircraft'),
                                             value: localizeText(
-                                                flight.aircraft,
+                                                flight.details.aircraft || {
+                                                    en: '',
+                                                    fr: '',
+                                                    ar: '',
+                                                },
                                                 lang,
                                             ),
                                         },
@@ -174,19 +196,30 @@ export default function FlightDetail() {
                                 details={[
                                     {
                                         label: t('label.cabin'),
-                                        value: localizeText(flight.cabin, lang),
+                                        value: localizeText(
+                                            flight.details.cabin,
+                                            lang,
+                                        ),
                                     },
                                     {
                                         label: t('label.baggage'),
                                         value: localizeText(
-                                            flight.baggage,
+                                            flight.details.baggage || {
+                                                en: '',
+                                                fr: '',
+                                                ar: '',
+                                            },
                                             lang,
                                         ),
                                     },
                                     {
                                         label: t('label.aircraft'),
                                         value: localizeText(
-                                            flight.aircraft,
+                                            flight.details.aircraft || {
+                                                en: '',
+                                                fr: '',
+                                                ar: '',
+                                            },
                                             lang,
                                         ),
                                     },

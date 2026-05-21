@@ -17,7 +17,6 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redis;
 
 class BookingController extends Controller
 {
@@ -160,7 +159,6 @@ class BookingController extends Controller
             ->each(function (User $recipient) use ($booking, $type): void {
                 $notification = new BookingActivityNotification($booking, $type);
             $recipient->notify($notification);
-            $this->publishNotification($recipient, $notification);
             });
     }
 
@@ -174,29 +172,6 @@ class BookingController extends Controller
         if ($user) {
             $notification = new BookingStatusNotification($booking);
             $user->notify($notification);
-            $this->publishNotification($user, $notification);
-        }
-    }
-
-    private function publishNotification(User $user, object $notification): void
-    {
-        try {
-            if (! method_exists($notification, 'toDatabase')) {
-                return;
-            }
-
-            $data = $notification->toDatabase($user);
-            Redis::publish("notifications:user:{$user->id}", json_encode([
-                'notification' => [
-                    'id' => (string) ($data['id'] ?? $user->id.'-'.now()->timestamp),
-                    'type' => $data['type'] ?? class_basename($notification::class),
-                    'data' => $data,
-                    'read_at' => null,
-                    'created_at' => now()->toJSON(),
-                ],
-            ]));
-        } catch (\Throwable $e) {
-            // ignore publish errors to avoid breaking request
         }
     }
 

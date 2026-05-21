@@ -12,6 +12,7 @@ import {
     Zap,
     Youtube,
 } from 'lucide-react';
+import type { LegalSectionBody } from '@/api/siteSettings.api';
 import destBali from '@/assets/dest-bali.jpg';
 import destDubai from '@/assets/dest-dubai.jpg';
 import destParis from '@/assets/dest-paris.jpg';
@@ -126,14 +127,7 @@ export interface StepItem {
 
 export interface LegalSection {
     title: LocalizedText;
-    body: LocalizedText;
-}
-
-export interface TeamMember {
-    name: string;
-    role: string;
-    image: string;
-    bio: string;
+    body: LegalSectionBody;
 }
 
 export const contactMethods: ContactMethod[] = [
@@ -452,27 +446,6 @@ export const galleryPhotos: string[] = [
     destDubai,
     '/images/destination-paris.jpg',
     '/images/destination-dubai.jpg',
-];
-
-export const teamMembers: TeamMember[] = [
-    {
-        name: 'Amina',
-        role: 'Travel Advisor',
-        image: '/images/hero-travel.jpg',
-        bio: 'Designs tailor-made escapes with a focus on luxury and comfort.',
-    },
-    {
-        name: 'Youssef',
-        role: 'Operations Lead',
-        image: '/images/destination-santorini.jpg',
-        bio: 'Coordinates logistics so every trip runs smoothly.',
-    },
-    {
-        name: 'Sara',
-        role: 'Destination Specialist',
-        image: '/images/destination-bali.jpg',
-        bio: 'Knows hidden gems, local culture, and the best places to stay.',
-    },
 ];
 
 export const legalSections: LegalSection[] = [

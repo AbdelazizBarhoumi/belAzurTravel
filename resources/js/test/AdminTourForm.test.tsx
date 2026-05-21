@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as adminApi from '@/api/admin.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import AdminTours from '@/pages/admin/AdminTours';
 
 vi.mock('@/api/admin.api');
@@ -31,9 +32,11 @@ const queryClient = new QueryClient({
 function renderComponent(component: React.ReactElement) {
     return render(
         <QueryClientProvider client={queryClient}>
-            <LanguageProvider>
-                <BrowserRouter>{component}</BrowserRouter>
-            </LanguageProvider>
+            <SiteSettingsProvider>
+                <LanguageProvider>
+                    <BrowserRouter>{component}</BrowserRouter>
+                </LanguageProvider>
+            </SiteSettingsProvider>
         </QueryClientProvider>,
     );
 }
@@ -60,6 +63,28 @@ describe('AdminTours', () => {
         expect(await screen.findByRole('dialog')).toBeInTheDocument();
         expect(screen.getByLabelText('Main image')).toBeInTheDocument();
         expect(screen.getByLabelText('Gallery')).toBeInTheDocument();
+    });
+
+    it('syncs the tour page language with the dialog language toggle', async () => {
+        renderComponent(<AdminTours />);
+
+        const heading = screen.getByRole('heading', {
+            name: /Tours|Circuits/,
+        });
+        const initialHeading = heading.textContent ?? 'Tours';
+        const targetButton = initialHeading === 'Tours' ? 'FR' : 'EN';
+        const expectedHeading = initialHeading === 'Tours' ? 'Circuits' : 'Tours';
+
+        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        await screen.findByRole('dialog');
+
+        fireEvent.click(screen.getByRole('button', { name: targetButton }));
+
+        await waitFor(() => {
+            expect(
+                screen.getByRole('heading', { name: expectedHeading }),
+            ).toBeInTheDocument();
+        });
     });
 
     it.skip('submits uploaded image and gallery files', async () => {

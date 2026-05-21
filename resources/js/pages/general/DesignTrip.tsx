@@ -29,6 +29,7 @@ import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 type Option = { id: string; label: string; icon: LucideIcon; desc?: string };
@@ -339,13 +340,12 @@ const DesignTrip = () => {
                                                 <Label className="mb-2 block">
                                                     Start Date
                                                 </Label>
-                                                <Input
-                                                    type="date"
-                                                    value={data.startDate}
-                                                    onChange={(e) =>
+                                                <DatePicker
+                                                    date={data.startDate ? new Date(data.startDate) : undefined}
+                                                    onDateChange={(date) =>
                                                         set(
                                                             'startDate',
-                                                            e.target.value,
+                                                            date ? date.toISOString().split('T')[0] : '',
                                                         )
                                                     }
                                                 />
@@ -354,13 +354,12 @@ const DesignTrip = () => {
                                                 <Label className="mb-2 block">
                                                     End Date
                                                 </Label>
-                                                <Input
-                                                    type="date"
-                                                    value={data.endDate}
-                                                    onChange={(e) =>
+                                                <DatePicker
+                                                    date={data.endDate ? new Date(data.endDate) : undefined}
+                                                    onDateChange={(date) =>
                                                         set(
                                                             'endDate',
-                                                            e.target.value,
+                                                            date ? date.toISOString().split('T')[0] : '',
                                                         )
                                                     }
                                                 />

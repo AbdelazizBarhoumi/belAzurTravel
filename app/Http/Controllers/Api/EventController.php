@@ -43,7 +43,7 @@ class EventController extends Controller
             'title' => $item->title,
             'location' => $item->location,
             'date' => $item->date,
-            'image' => $item->image,
+            'image' => $item->image ? asset('storage/' . $item->image) : null,
             'description' => $item->description,
             'price' => $item->price,
             ...($item->details ?? []),

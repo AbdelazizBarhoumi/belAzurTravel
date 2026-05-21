@@ -1,12 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, CheckCheck } from 'lucide-react';
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '@/api/http';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
-import { onNotification } from '@/lib/sse';
 import { cn } from '@/lib/utils';
 
 export interface AppNotification {
@@ -15,6 +13,11 @@ export interface AppNotification {
     data: Record<string, unknown>;
     read_at?: string | null;
     created_at?: string | null;
+}
+
+interface NotificationSummaryResponse {
+    notifications: AppNotification[];
+    count: number;
 }
 
 function message(data: Record<string, unknown>, lang: Lang): string {
@@ -43,23 +46,18 @@ export function NotificationBell({
     const queryClient = useQueryClient();
     const isRtl = dir === 'rtl';
 
-    const { data: countData } = useQuery({
-        queryKey: ['notifications', 'unread-count'],
+    const { data: summaryData } = useQuery({
+        queryKey: ['notifications', 'summary', feedPath],
         queryFn: () =>
-            apiFetch<{ count: number }>('/api/notifications/unread-count'),
-        staleTime: 5 * 60 * 1000,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
+            apiFetch<NotificationSummaryResponse>(
+                '/api/notifications?limit=10&include_count=1',
+            ),
+        staleTime: 10_000,
+        refetchInterval: 15_000,
+        refetchOnWindowFocus: true,
     });
 
-    const { data: notifications = [] } = useQuery({
-        queryKey: ['notifications', 'latest'],
-        queryFn: () =>
-            apiFetch<AppNotification[]>('/api/notifications?limit=10'),
-        staleTime: 5 * 60 * 1000,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
-    });
+    const notifications = summaryData?.notifications ?? [];
 
     const refresh = () => {
         queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -71,35 +69,7 @@ export function NotificationBell({
         onSuccess: refresh,
     });
 
-    const unreadCount = countData?.count ?? 0;
-
-    useEffect(() => {
-        const off = onNotification((payload) => {
-            const incoming =
-                payload && typeof payload === 'object' && 'notification' in payload
-                    ? (payload as { notification: AppNotification }).notification
-                    : (payload as AppNotification);
-
-            if (!incoming || typeof incoming !== 'object' || !('id' in incoming)) {
-                return;
-            }
-
-            queryClient.setQueryData<AppNotification[]>(
-                ['notifications', 'latest'],
-                (old = []) => {
-                    const next = [incoming, ...old.filter((item) => item.id !== incoming.id)];
-                    return next.slice(0, 10);
-                },
-            );
-
-            queryClient.setQueryData<{ count: number }>(
-                ['notifications', 'unread-count'],
-                (old) => ({ count: (old?.count ?? 0) + 1 }),
-            );
-        });
-
-        return off;
-    }, [queryClient]);
+    const unreadCount = summaryData?.count ?? 0;
 
     return (
         <div className={cn('group relative', className)}>

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2, Settings } from 'lucide-react';
 import { useState } from 'react';
+import { CategoryManager } from '@/components/admin/CategoryManager';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { toast } from 'sonner';
 import {
     deleteAdminEntity,
@@ -8,6 +10,13 @@ import {
     saveAdminEntity,
     type AdminRow,
 } from '@/api/admin.api';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import {
     EntityFormDialog,
@@ -15,7 +24,9 @@ import {
 } from '@/components/forms/EntityFormDialog';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import LangBadge from '@/components/forms/LangBadge';
+import { JsonListEditor, type JsonFieldDef } from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
+import { fetchCategories } from '@/api/categories.api';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -32,7 +43,7 @@ const copy = (en: string, fr: string, ar: string) => ({ en, fr, ar });
 type HotelFormValues = AdminRow & {
     amenities?: string;
     gallery?: string;
-    rooms?: string;
+    rooms?: any[];
     imagePath?: string;
     imageFile?: File | null;
     galleryFiles?: File[];
@@ -55,70 +66,35 @@ function localizedFields(
     ];
 }
 
-function serializeAmenities(amenities: unknown): string {
-    if (!Array.isArray(amenities)) return '';
+const amenitySchema: JsonFieldDef[] = [
+    { key: 'name', labelKey: 'admin.hotelForm.amenityName', translatable: true },
+];
 
-    return amenities
-        .map((amenity) => {
-            if (!amenity || typeof amenity !== 'object') return '';
-            const record = amenity as Record<string, unknown>;
-            const name = record.name;
-
-            if (typeof name === 'string') return name;
-            if (!name || typeof name !== 'object') return '';
-
-            const localized = name as Record<string, unknown>;
-            return (
-                (typeof localized.en === 'string' && localized.en) ||
-                (typeof localized.fr === 'string' && localized.fr) ||
-                (typeof localized.ar === 'string' && localized.ar) ||
-                ''
-            );
-        })
-        .filter(Boolean)
-        .join('\n');
-}
-
-function parseAmenities(value: unknown) {
-    if (typeof value !== 'string') return [];
-
-    return value
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .map((line, index) => ({
-            id: `amenity-${index + 1}`,
-            name: { en: line, fr: line, ar: line },
-        }));
-}
-
-function serializeRooms(rooms: unknown): string {
-    if (!Array.isArray(rooms)) return '';
-
-    return JSON.stringify(rooms, null, 2);
-}
-
-function parseRooms(value: unknown) {
-    if (typeof value !== 'string') return [];
-
-    const trimmed = value.trim();
-    if (!trimmed) return [];
-
-    try {
-        const parsed = JSON.parse(trimmed);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-}
+const roomSchema: JsonFieldDef[] = [
+    { key: 'name', labelKey: 'admin.hotelForm.roomName', translatable: true },
+    { key: 'description', labelKey: 'admin.description', type: 'textarea', translatable: true },
+    { key: 'pricePerNight', labelKey: 'admin.pricePerNight', type: 'number' },
+    { key: 'capacity', labelKey: 'admin.hotelForm.capacity', type: 'number' },
+    { key: 'size', labelKey: 'admin.hotelForm.size', type: 'number' },
+];
 
 const AdminHotels = () => {
     useAdminGuard();
 
     const queryClient = useQueryClient();
+    const { settings: siteSettings } = useSiteSettings();
+    const isCodeEnabled =
+        siteSettings?.config?.navigation?.enabled_dropdowns?.includes(
+            'hotels',
+        );
+    const [catManagerOpen, setCatManagerOpen] = useState(false);
     const { data: hotels = [] } = useQuery({
         queryKey: ['admin', 'hotels'],
         queryFn: () => listAdminEntities<AdminRow>('hotels'),
+    });
+    const { data: dbCategories = [] } = useQuery({
+        queryKey: ['admin', 'categories', 'hotels'],
+        queryFn: () => fetchCategories('hotels'),
     });
 
     const saveMutation = useMutation({
@@ -135,7 +111,7 @@ const AdminHotels = () => {
         },
     });
 
-    const { lang, t } = useLanguage();
+    const { lang, setLang, t } = useLanguage();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
@@ -143,29 +119,46 @@ const AdminHotels = () => {
     const dialogInitial: HotelFormValues | null = editing
         ? ({
               ...editing,
+              destinationSlug: editing.destinationSlug,
               imagePath: asText(editing.image),
               imageFile: null,
-              gallery: asText(editing.gallery),
+              galleryPaths: Array.isArray(editing.gallery) ? editing.gallery : [],
               galleryFiles: [] as File[],
-              galleryPaths: [] as string[],
-              amenities: serializeAmenities(editing.amenities),
-              rooms: serializeRooms(editing.rooms),
-          } as HotelFormValues)
+              amenities: Array.isArray(editing.amenities) ? editing.amenities : [],
+              rooms: Array.isArray(editing.rooms)
+                  ? editing.rooms
+                  : typeof editing.rooms === 'string' && editing.rooms
+                    ? JSON.parse(editing.rooms)
+                    : [],
+              address: (editing.details as any)?.address ?? '',
+              phone: (editing.details as any)?.phone ?? '',
+              whatsapp: (editing.details as any)?.whatsapp ?? '',
+          } as unknown as HotelFormValues)
         : null;
 
     const hotelSections: SectionDef[] = [
         {
-            title: 'Core hotel details',
-            description: 'Edit the translated core fields for the hotel.',
+            title: t('admin.hotelForm.coreDetails'),
+            column: 'main',
+            description: t('admin.hotelForm.coreDetailsHint'),
             render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         {[
-                            { key: 'name', label: 'Name' },
-                            { key: 'location', label: 'Location' },
-                            { key: 'category', label: 'Category' },
-                            { key: 'city', label: 'City' },
-                            { key: 'country', label: 'Country' },
+                            { key: 'name', label: t('admin.name') },
+                            {
+                                key: 'location',
+                                label: t('admin.location'),
+                            },
+                            {
+                                key: 'category',
+                                label: t('admin.category'),
+                            },
+                            { key: 'city', label: t('admin.city') },
+                            {
+                                key: 'country',
+                                label: t('admin.country'),
+                            },
                         ].map((field) => {
                             const localizedKey = `${field.key}_${activeLang}`;
                             const value = asText(values[localizedKey]);
@@ -179,21 +172,51 @@ const AdminHotels = () => {
                                         {field.label}
                                         <LangBadge lang={activeLang} />
                                     </label>
-                                    <input
-                                        id={localizedKey}
-                                        value={value}
-                                        onChange={(event) =>
-                                            setField(
-                                                localizedKey,
-                                                event.target.value,
-                                            )
-                                        }
-                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                                        required={
-                                            field.key !== 'city' &&
-                                            field.key !== 'country'
-                                        }
-                                    />
+                                    {field.key === 'category' &&
+                                    dbCategories.length > 0 ? (
+                                        <Select
+                                            value={String(value)}
+                                            onValueChange={(val) =>
+                                                setField(localizedKey, val)
+                                            }
+                                        >
+                                            <SelectTrigger
+                                                id={localizedKey}
+                                                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                            >
+                                                <SelectValue
+                                                    placeholder={t('actions.select')}
+                                                />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {dbCategories.map((c) => (
+                                                    <SelectItem
+                                                        key={c.key}
+                                                        value={c.key}
+                                                    >
+                                                        {c.name[activeLang] ||
+                                                            c.name.en}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    ) : (
+                                        <input
+                                            id={localizedKey}
+                                            value={value}
+                                            onChange={(event) =>
+                                                setField(
+                                                    localizedKey,
+                                                    event.target.value,
+                                                )
+                                            }
+                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                            required={
+                                                field.key !== 'city' &&
+                                                field.key !== 'country'
+                                            }
+                                        />
+                                    )}
                                 </div>
                             );
                         })}
@@ -203,7 +226,7 @@ const AdminHotels = () => {
                                 htmlFor={`description_${activeLang}`}
                                 className="text-xs font-semibold text-muted-foreground"
                             >
-                                Description
+                                {t('admin.description')}
                                 <LangBadge lang={activeLang} />
                             </label>
                             <textarea
@@ -226,120 +249,137 @@ const AdminHotels = () => {
             ),
         },
         {
-            title: 'Pricing and structure',
+            title: t('admin.hotelForm.pricing'),
             columns: 2,
+            column: 'main',
             fields: [
-                { key: 'price', label: 'Price / night (USD)', type: 'number' },
-                { key: 'rating', label: 'Rating', type: 'number' },
-                { key: 'destination_slug', label: 'Destination slug' },
-                { key: 'stars', label: 'Stars', type: 'number' },
-                { key: 'reviews', label: 'Reviews', type: 'number' },
+                {
+                    key: 'price',
+                    label: `${t('admin.pricePerNight')} (USD)`,
+                    type: 'number',
+                },
+                {
+                    key: 'rating',
+                    label: t('admin.rating'),
+                    type: 'number',
+                },
+                {
+                    key: 'destinationSlug',
+                    label: t('admin.destinationSlug'),
+                },
+                {
+                    key: 'stars',
+                    label: t('admin.stars'),
+                    type: 'number',
+                },
+                {
+                    key: 'reviews',
+                    label: t('admin.reviews'),
+                    type: 'number',
+                },
             ],
         },
         {
-            title: 'Contact and profile',
-            description:
-                'Location-specific profile data stored in the hotel details JSON.',
+            title: t('admin.hotelForm.contact'),
+            column: 'main',
+            description: t('admin.hotelForm.contactHint'),
             columns: 2,
             fields: [
-                ...localizedFields('city', copy('City', 'Ville', 'المدينة')),
-                ...localizedFields('country', copy('Country', 'Pays', 'البلد')),
-                { key: 'address', label: 'Address' },
-                { key: 'phone', label: 'Phone' },
-                { key: 'whatsapp', label: 'WhatsApp' },
+                { key: 'city_en', label: `${t('admin.city')} (EN)` },
+                { key: 'city_fr', label: `${t('admin.city')} (FR)` },
+                { key: 'city_ar', label: `${t('admin.city')} (AR)` },
+                { key: 'country_en', label: `${t('admin.country')} (EN)` },
+                { key: 'country_fr', label: `${t('admin.country')} (FR)` },
+                { key: 'country_ar', label: `${t('admin.country')} (AR)` },
+                { key: 'address', label: t('admin.address') },
+                { key: 'phone', label: t('admin.phone') },
+                { key: 'whatsapp', label: t('admin.whatsapp') },
             ],
         },
         {
-            title: 'Media and amenities',
-            description: 'Hotel image, gallery URLs and amenity list.',
-            render: ({ values, setField }) => (
+            title: t('admin.hotelForm.media'),
+            column: 'side',
+            description: t('admin.hotelForm.mediaHint'),
+            render: ({ values, setField, activeLang }) => (
                 <div className="space-y-6">
                     <EntityMediaInputs
                         values={values}
                         setField={setField}
-                        imageLabel="Hotel image"
-                        galleryLabel="Gallery images"
+                        imageLabel={t('admin.image')}
+                        galleryLabel={t('admin.gallery')}
                         showImage
                         showGallery
                     />
 
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="hotel-gallery-text"
-                            className="text-xs font-semibold text-muted-foreground"
-                        >
-                            Gallery URLs (one per line)
-                        </label>
-                        <textarea
-                            id="hotel-gallery-text"
-                            value={asText(values.gallery)}
-                            onChange={(event) =>
-                                setField('gallery', event.target.value)
+                    <div className="pt-4 border-t border-border">
+                        <JsonListEditor
+                            title={t('admin.hotelForm.amenities')}
+                            items={
+                                Array.isArray(values.amenities)
+                                    ? values.amenities
+                                    : []
                             }
-                            rows={4}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                            placeholder="/storage/uploads/hotel-1.jpg\n/storage/uploads/hotel-2.jpg"
+                            onItemsChange={(items) =>
+                                setField('amenities', items)
+                            }
+                            schema={amenitySchema}
+                            activeLang={activeLang}
+                            addButtonLabel={t('admin.hotelForm.addAmenity')}
+                            itemLabel={(item, index) =>
+                                (item.name as Record<string, string> | undefined)?.[activeLang] || `${t('admin.hotelForm.amenity')} ${index + 1}`
+                            }
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="hotel-amenities"
-                            className="text-xs font-semibold text-muted-foreground"
-                        >
-                            Amenities (one per line)
-                        </label>
-                        <textarea
-                            id="hotel-amenities"
-                            value={asText(values.amenities)}
-                            onChange={(event) =>
-                                setField('amenities', event.target.value)
+                    <div className="pt-4 border-t border-border">
+                        <JsonListEditor
+                            title={t('admin.hotelForm.rooms')}
+                            items={
+                                Array.isArray(values.rooms) ? values.rooms : []
                             }
-                            rows={5}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                            placeholder="Free Wi-Fi\nSpa access\nOcean view"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            Each line becomes an amenity and is mirrored across
-                            all languages for now.
-                        </p>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="hotel-rooms"
-                            className="text-xs font-semibold text-muted-foreground"
-                        >
-                            Rooms (JSON)
-                        </label>
-                        <textarea
-                            id="hotel-rooms"
-                            value={asText(values.rooms)}
-                            onChange={(event) =>
-                                setField('rooms', event.target.value)
+                            onItemsChange={(items) => setField('rooms', items)}
+                            schema={roomSchema}
+                            activeLang={activeLang}
+                            addButtonLabel={t('admin.hotelForm.addRoom')}
+                            itemLabel={(item, index) =>
+                                (item.name as Record<string, string> | undefined)?.[activeLang] || `${t('admin.hotelForm.room')} ${index + 1}`
                             }
-                            rows={12}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                            placeholder='[{"id":"deluxe-1","name":{"en":"Deluxe Ocean View","fr":"...","ar":"..."},"description":{"en":"...","fr":"...","ar":"..."},"pricePerNight":320,"capacity":2,"size":45,"features":[{"en":"Wi-Fi","fr":"Wi-Fi","ar":"واي فاي"}],"images":["/storage/..."]}]'
                         />
-                        <p className="text-xs text-muted-foreground">
-                            Paste a JSON array of room objects so admins can
-                            manage the room list from the dashboard.
-                        </p>
                     </div>
                 </div>
             ),
         },
     ];
 
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const validate = (values: HotelFormValues): Record<string, string> => {
+        const errs: Record<string, string> = {};
+        if (!values.name_en) errs.name_en = t('admin.fieldRequired');
+        if (!values.name_fr) errs.name_fr = t('admin.fieldRequired');
+        if (!values.name_ar) errs.name_ar = t('admin.fieldRequired');
+        // Add more validations as needed...
+        return errs;
+    };
+
     const handleSave = (values: HotelFormValues) => {
+        const errs = validate(values);
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            toast.error(t('admin.pleaseFixErrors'));
+            return;
+        }
+
         const {
             imageFile,
             imagePath,
             galleryFiles,
-            gallery,
+            galleryPaths,
             amenities,
             rooms,
+            address,
+            phone,
+            whatsapp,
             ...rest
         } = values;
 
@@ -347,55 +387,81 @@ const AdminHotels = () => {
             ...rest,
             id: editing?.id || '',
             image: imageFile ?? imagePath?.trim() ?? asText(editing?.image),
-            amenities: parseAmenities(amenities),
-            rooms: parseRooms(rooms),
-            gallery: asText(gallery),
+            amenities: Array.isArray(amenities) ? amenities : [],
+            rooms: Array.isArray(rooms) ? rooms : [],
+            gallery: galleryPaths ?? [],
+            details: {
+                address,
+                phone,
+                whatsapp,
+            },
             ...(galleryFiles && galleryFiles.length > 0
                 ? { gallery_files: galleryFiles }
                 : {}),
         } as unknown as HotelFormValues;
 
-        saveMutation.mutate(payload);
-        toast.success(
-            editing ? t('admin.hotelUpdated') : t('admin.hotelAdded'),
-        );
-        setEditing(null);
-        setOpen(false);
+        saveMutation.mutate(payload, {
+            onSuccess: () => {
+                setEditing(null);
+                setOpen(false);
+                setErrors({});
+                toast.success(
+                    editing ? t('admin.hotelUpdated') : t('admin.hotelAdded'),
+                );
+            },
+        });
     };
 
     return (
         <AdminLayout
-            title="Hotels"
-            subtitle="Manage hotels"
+            title={t('admin.hotels')}
+            subtitle={t('admin.hotelsSubtitle')}
             actions={
-                <Button
-                    onClick={() => {
-                        setEditing(null);
-                        setOpen(true);
-                    }}
-                    className="gap-2 bg-primary text-primary-foreground"
-                >
-                    <Plus className="h-4 w-4" /> Add
-                </Button>
+                <div className="flex gap-2">
+                    {isCodeEnabled && (
+                        <Button
+                            variant="outline"
+                            onClick={() => setCatManagerOpen(true)}
+                            className="gap-2"
+                        >
+                            <Settings className="h-4 w-4" /> {t('admin.manageCategories')}
+                        </Button>
+                    )}
+                    <Button
+                        onClick={() => {
+                            setEditing(null);
+                            setOpen(true);
+                        }}
+                        className="gap-2 bg-primary text-primary-foreground"
+                    >
+                        <Plus className="h-4 w-4" /> {t('actions.add')}
+                    </Button>
+                </div>
             }
         >
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
                                 {[
-                                    'Image',
-                                    'Name',
-                                    'Location',
-                                    'Category',
-                                    'Price/night',
-                                    'Rating',
-                                    'Actions',
-                                ].map((h) => (
+                                    t('admin.image'),
+                                    t('admin.name'),
+                                    t('admin.location'),
+                                    t('admin.category'),
+                                    t('admin.pricePerNight'),
+                                    t('admin.rating'),
+                                    t('admin.actions'),
+                                ].map((h, i) => (
                                     <th
                                         key={h}
-                                        className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground"
+                                        className={`px-4 py-3 text-xs font-semibold uppercase text-muted-foreground ${
+                                            i === 1
+                                                ? lang === 'ar'
+                                                    ? 'text-right'
+                                                    : 'text-left'
+                                                : 'text-center'
+                                        }`}
                                     >
                                         {h}
                                     </th>
@@ -408,7 +474,7 @@ const AdminHotels = () => {
                                     key={String(d.id ?? '')}
                                     className="border-b border-border last:border-0 hover:bg-muted/20"
                                 >
-                                    <td className="px-4 py-3">
+                                    <td className="flex justify-center px-4 py-3">
                                         <img
                                             src={
                                                 asText(d.image) ||
@@ -422,22 +488,28 @@ const AdminHotels = () => {
                                             className="h-12 w-12 rounded-lg object-cover"
                                         />
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold">
+                                    <td
+                                        className={`px-4 py-3 text-sm font-semibold ${
+                                            lang === 'ar'
+                                                ? 'text-right'
+                                                : 'text-left'
+                                        }`}
+                                    >
                                         {localizeKnown(
                                             asText(d.name),
                                             hotelLabels,
                                             lang,
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                                    <td className="px-4 py-3 text-center text-sm text-muted-foreground">
                                         {localizeKnown(
                                             asText(d.location),
                                             countryLabels,
                                             lang,
                                         )}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <span className="rounded-full bg-muted px-2 py-1 text-xs">
+                                    <td className="px-4 py-3 text-center">
+                                        <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">
                                             {localizeKnown(
                                                 asText(d.category),
                                                 categoryLabels,
@@ -445,20 +517,21 @@ const AdminHotels = () => {
                                             )}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold">
+                                    <td className="px-4 py-3 text-center text-sm font-semibold">
                                         ${String(d.price ?? 0)}
                                     </td>
-                                    <td className="px-4 py-3 text-sm">
+                                    <td className="px-4 py-3 text-center text-sm">
                                         {String(d.rating ?? '')}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
+                                    <td className="px-4 py-3 text-center">
+                                        <div className="flex justify-center items-center gap-2">
                                             <button
                                                 onClick={() => {
                                                     setEditing(d);
                                                     setOpen(true);
                                                 }}
                                                 className="rounded-lg p-1.5 hover:bg-muted"
+                                                aria-label={t('actions.edit')}
                                             >
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
@@ -467,6 +540,7 @@ const AdminHotels = () => {
                                                     setPendingDelete(d)
                                                 }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
+                                                aria-label={t('actions.delete')}
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </button>
@@ -504,12 +578,28 @@ const AdminHotels = () => {
             <EntityFormDialog<HotelFormValues>
                 open={open}
                 onOpenChange={setOpen}
-                title={editing ? 'Edit Hotel' : 'Add Hotel'}
+                title={
+                    editing
+                        ? `${t('actions.edit')} ${t('admin.hotels')}`
+                        : `${t('actions.add')} ${t('admin.hotels')}`
+                }
                 sections={hotelSections}
                 initial={dialogInitial}
                 onSubmit={handleSave}
                 languages={['en', 'fr', 'ar']}
                 layout="grid-2"
+                activeLang={lang}
+                onActiveLangChange={setLang}
+                isSubmitting={saveMutation.isPending}
+            />
+
+            <CategoryManager
+                type="hotels"
+                isOpen={catManagerOpen}
+                onClose={() => {
+                    setCatManagerOpen(false);
+                    queryClient.invalidateQueries({ queryKey: ['admin', 'categories', 'hotels'] });
+                }}
             />
         </AdminLayout>
     );

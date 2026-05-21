@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
@@ -44,6 +52,8 @@ export interface SectionDef {
     render?: (api: SectionRenderApi) => ReactNode;
     // when using a multi-column dialog layout, allow this section to span both columns
     gridSpan?: 1 | 2;
+    // explicit column placement for grid-2 layout
+    column?: 'main' | 'side';
 }
 
 export interface SectionRenderApi {
@@ -51,6 +61,7 @@ export interface SectionRenderApi {
     setField: (key: string, value: unknown) => void;
     activeLang: Lang;
     languages: Lang[];
+    errors?: Record<string, string>;
 }
 
 export interface EntityFormDialogProps<T extends object> {
@@ -62,14 +73,13 @@ export interface EntityFormDialogProps<T extends object> {
     sections?: SectionDef[];
     fields?: FieldDef[];
     onSubmit: (values: T) => void;
+    isSubmitting?: boolean;
     submitLabel?: string;
-    // optional language controls to match the destinations dialog style
     languages?: Lang[];
-    // if provided, the component will show a language badge and buttons in the header
-    layout?: 'stack' | 'grid-2';
-    // controlled active language (optional)
+    layout?: 'stack' | 'grid-1' | 'grid-2';
     activeLang?: Lang;
     onActiveLangChange?: (lang: Lang) => void;
+    errors?: Record<string, string>;
 }
 
 function toRecord(value?: object | null): Record<string, unknown> {
@@ -137,20 +147,21 @@ function FieldControl({
     field,
     value,
     onChange,
+    error,
 }: {
     field: FieldDef;
     value: unknown;
     onChange: (next: string | boolean) => void;
+    error?: string;
 }) {
-    const commonInputClass =
-        'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20';
+    const commonInputClass = `w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${error ? 'border-destructive ring-1 ring-destructive' : ''}`;
     const stringValue = normalizeValue(value);
 
     return (
         <div className={`space-y-2 ${normalizeSpan(field.colSpan)}`}>
             <Label
                 htmlFor={field.key}
-                className="text-xs font-semibold text-muted-foreground"
+                className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
             >
                 {field.label}
             </Label>
@@ -164,27 +175,30 @@ function FieldControl({
                     rows={field.rows ?? 4}
                     required={field.required}
                     disabled={field.disabled}
-                    className="min-h-24"
+                    className={`min-h-24 ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}
                 />
             ) : field.type === 'select' ? (
-                <select
-                    id={field.key}
+                <Select
                     value={stringValue}
-                    onChange={(event) => onChange(event.target.value)}
-                    required={field.required}
+                    onValueChange={(val) => onChange(val)}
                     disabled={field.disabled}
-                    className={commonInputClass}
                 >
-                    <option value="">Select an option</option>
-                    {(field.options ?? []).map((option) => {
-                        const optionValue = optionToValue(option);
-                        return (
-                            <option key={optionValue} value={optionValue}>
-                                {optionToLabel(option)}
-                            </option>
-                        );
-                    })}
-                </select>
+                    <SelectTrigger id={field.key} className={commonInputClass}>
+                        <SelectValue
+                            placeholder={field.placeholder ?? 'Select an option'}
+                        />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {(field.options ?? []).map((option) => {
+                            const optionValue = optionToValue(option);
+                            return (
+                                <SelectItem key={optionValue} value={optionValue}>
+                                    {optionToLabel(option)}
+                                </SelectItem>
+                            );
+                        })}
+                    </SelectContent>
+                </Select>
             ) : field.type === 'checkbox' ? (
                 <label className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 text-sm">
                     <input
@@ -210,7 +224,9 @@ function FieldControl({
                 />
             )}
 
-            {field.helpText ? (
+            {error ? (
+                <p className="text-xs text-destructive">{error}</p>
+            ) : field.helpText ? (
                 <p className="text-xs text-muted-foreground">
                     {field.helpText}
                 </p>
@@ -225,12 +241,14 @@ function SectionCard({
     setField,
     activeLang,
     languages,
+    errors,
 }: {
     section: SectionDef;
     values: Record<string, unknown>;
     setField: (key: string, value: unknown) => void;
     activeLang: Lang;
     languages: Lang[];
+    errors?: Record<string, string>;
 }) {
     const hasFields = (section.fields?.length ?? 0) > 0;
 
@@ -259,13 +277,14 @@ function SectionCard({
                             field={field}
                             value={values[field.key]}
                             onChange={(next) => setField(field.key, next)}
+                            error={errors?.[field.key]}
                         />
                     ))}
                 </div>
             ) : null}
 
             {section.render
-                ? section.render({ values, setField, activeLang, languages })
+                ? section.render({ values, setField, activeLang, languages, errors })
                 : null}
         </section>
     );
@@ -280,11 +299,13 @@ export function EntityFormDialog<T extends object>({
     sections,
     fields,
     onSubmit,
+    isSubmitting = false,
     submitLabel,
     languages,
     layout = 'stack',
     activeLang: activeLangProp,
     onActiveLangChange,
+    errors = {},
 }: EntityFormDialogProps<T>) {
     const { t } = useLanguage();
     const [values, setValues] = useState<Record<string, unknown>>(() =>
@@ -297,12 +318,15 @@ export function EntityFormDialog<T extends object>({
     const formKey = useMemo(() => JSON.stringify(initial ?? {}), [initial]);
 
     useEffect(() => {
-        if (activeLangProp) return;
+        if (open) {
+            setValues(toRecord(initial));
+        } else {
+            setValues({});
+        }
+    }, [open, initial]);
 
-        // Setting internal active language when dialog opens. React lint flags
-        // calling setState synchronously in effects; this reset is intentional
-        // and safe here, so silence the rule for this line.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => {
+        if (activeLangProp) return;
         setInternalActiveLang(
             languages && languages.length > 0 ? languages[0] : ('en' as Lang),
         );
@@ -329,20 +353,25 @@ export function EntityFormDialog<T extends object>({
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (isSubmitting) return;
         onSubmit(values as T);
-        onOpenChange(false);
     };
+
+    const submitDisabled = isSubmitting;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[92vh] max-w-6xl overflow-hidden p-0">
+                <DialogDescription className="sr-only">
+                    {title}
+                </DialogDescription>
                 <form
                     key={formKey}
                     onSubmit={handleSubmit}
                     className="flex max-h-[92vh] flex-col"
                 >
                     <DialogHeader className="border-b border-border px-6 py-5 text-left">
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-4 pt-3">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="space-y-1">
                                     <DialogTitle className="text-2xl">
@@ -367,24 +396,28 @@ export function EntityFormDialog<T extends object>({
 
                             {languages ? (
                                 <div className="flex flex-wrap gap-2">
-                                    {languages.map((code) => (
-                                        <Button
-                                            key={code}
-                                            type="button"
-                                            variant={
-                                                activeLang === code
-                                                    ? 'default'
-                                                    : 'outline'
-                                            }
-                                            className="min-w-14"
-                                            onClick={() => {
-                                                setInternalActiveLang(code);
-                                                onActiveLangChange?.(code);
-                                            }}
-                                        >
-                                            {code.toUpperCase()}
-                                        </Button>
-                                    ))}
+                                    {languages.map((code) => {
+                                        const hasError = Object.keys(errors).some(k => k.endsWith(`_${code}`));
+                                        return (
+                                            <Button
+                                                key={code}
+                                                type="button"
+                                                variant={
+                                                    activeLang === code
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
+                                                className={`min-w-14 ${hasError ? 'border-destructive text-destructive' : ''}`}
+                                                onClick={() => {
+                                                    setInternalActiveLang(code);
+                                                    onActiveLangChange?.(code);
+                                                }}
+                                            >
+                                                {code.toUpperCase()}
+                                                {hasError && <span className="ml-1">*</span>}
+                                            </Button>
+                                        );
+                                    })}
                                 </div>
                             ) : null}
                         </div>
@@ -392,52 +425,106 @@ export function EntityFormDialog<T extends object>({
 
                     <div className="flex-1 overflow-y-auto px-6 py-6">
                         {layout === 'grid-2' ? (
-                            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                                {effectiveSections.map((section, index) => (
-                                    <div
-                                        key={
-                                            section.id ??
-                                            `${section.title ?? 'section'}-${index}`
+                            <div className="space-y-6">
+                                {(() => {
+                                    const rendered: ReactNode[] = [];
+                                    let currentGroup: SectionDef[] = [];
+
+                                    const flushGroup = (group: SectionDef[]) => {
+                                        if (group.length === 0) return;
+
+                                        const main = group.filter(
+                                            (s, i) =>
+                                                s.column === 'main' ||
+                                                (!s.column && i % 2 === 0),
+                                        );
+                                        const side = group.filter(
+                                            (s, i) =>
+                                                s.column === 'side' ||
+                                                (!s.column && i % 2 === 1),
+                                        );
+
+                                        rendered.push(
+                                            <div
+                                                key={`group-${rendered.length}`}
+                                                className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-start"
+                                            >
+                                                <div className="space-y-6">
+                                                    {main.map((s, idx) => (
+                                                        <SectionCard
+                                                            key={`main-${idx}`}
+                                                            section={s}
+                                                            values={values}
+                                                            setField={setField}
+                                                            activeLang={activeLang}
+                                                            languages={languages ?? []}
+                                                            errors={errors}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <div className="space-y-6">
+                                                    {side.map((s, idx) => (
+                                                        <SectionCard
+                                                            key={`side-${idx}`}
+                                                            section={s}
+                                                            values={values}
+                                                            setField={setField}
+                                                            activeLang={activeLang}
+                                                            languages={languages ?? []}
+                                                            errors={errors}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>,
+                                        );
+                                    };
+
+                                    effectiveSections.forEach((section) => {
+                                        if (section.gridSpan === 2) {
+                                            flushGroup(currentGroup);
+                                            currentGroup = [];
+                                            rendered.push(
+                                                <SectionCard
+                                                    key={section.id ?? `full-${rendered.length}`}
+                                                    section={section}
+                                                    values={values}
+                                                    setField={setField}
+                                                    activeLang={activeLang}
+                                                    languages={languages ?? []}
+                                                    errors={errors}
+                                                />,
+                                            );
+                                        } else {
+                                            currentGroup.push(section);
                                         }
-                                        className={
-                                            section.gridSpan === 2
-                                                ? 'lg:col-span-2'
-                                                : ''
-                                        }
-                                    >
-                                        <SectionCard
-                                            section={section}
-                                            values={values}
-                                            setField={setField}
-                                            activeLang={activeLang}
-                                            languages={languages ?? []}
-                                        />
-                                    </div>
-                                ))}
+                                    });
+                                    flushGroup(currentGroup);
+
+                                    return rendered;
+                                })()}
                             </div>
                         ) : (
                             <div className="space-y-6">
                                 {effectiveSections.map((section, index) => (
                                     <SectionCard
-                                        key={
-                                            section.id ??
-                                            `${section.title ?? 'section'}-${index}`
-                                        }
+                                        key={section.id ?? `${section.title ?? 'section'}-${index}`}
                                         section={section}
                                         values={values}
                                         setField={setField}
                                         activeLang={activeLang}
                                         languages={languages ?? []}
+                                        errors={errors}
                                     />
                                 ))}
                             </div>
                         )}
                     </div>
 
-                    <DialogFooter className="border-t border-border px-6 py-4">
+                    <DialogFooter className="border-t border-border px-6 py-4 gap-3">
                         <Button
                             type="button"
                             variant="outline"
+                            disabled={submitDisabled}
                             onClick={() => onOpenChange(false)}
                         >
                             {t('actions.cancel')}
@@ -445,7 +532,11 @@ export function EntityFormDialog<T extends object>({
                         <Button
                             type="submit"
                             className="bg-primary text-primary-foreground"
+                            disabled={submitDisabled}
                         >
+                            {submitDisabled ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : null}
                             {submitLabel ?? t('actions.save')}
                         </Button>
                     </DialogFooter>

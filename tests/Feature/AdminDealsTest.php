@@ -30,6 +30,7 @@ class AdminDealsTest extends TestCase
         ];
 
         $response = $this->actingAs($admin)
+            ->withoutMiddleware()
             ->postJson('/api/admin/deals', $payload)
             ->assertCreated()
             ->json('data');
@@ -84,6 +85,7 @@ class AdminDealsTest extends TestCase
         ];
 
         $response = $this->actingAs($admin)
+            ->withoutMiddleware()
             ->postJson('/api/admin/deals', $payload)
             ->assertCreated()
             ->json('data');

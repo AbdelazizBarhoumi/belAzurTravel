@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Car;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -34,8 +35,13 @@ class AdminCarsTest extends TestCase
             'description_fr' => 'Véhicule électrique premium',
             'description_ar' => 'مركبة كهربائية فاخرة',
             'gallery' => "/images/tesla1.jpg\n/images/tesla2.jpg",
-            'features' => "Fast charging\nAuto-pilot\nLeather interior",
-            'policy' => "Age 21+\nFull insurance\nCharging cable included",
+            'features' => [
+                ['name' => ['en' => 'Fast charging', 'fr' => 'Charge rapide', 'ar' => 'شحن سريع']],
+                ['name' => ['en' => 'Auto-pilot', 'fr' => 'Auto-pilote', 'ar' => 'الطيار الآلي']],
+            ],
+            'policy' => [
+                ['name' => ['en' => 'Age 21+', 'fr' => 'Âge 21+', 'ar' => 'العمر 21+']],
+            ],
         ];
 
         $response = $this->actingAs($admin)
@@ -72,12 +78,12 @@ class AdminCarsTest extends TestCase
         $this->assertContains('/images/tesla2.jpg', $car->details['gallery']);
 
         $this->assertIsArray($car->details['features']);
-        $this->assertCount(3, $car->details['features']);
-        $this->assertEquals(['en' => 'Fast charging', 'fr' => 'Fast charging', 'ar' => 'Fast charging'], $car->details['features'][0]);
+        $this->assertCount(2, $car->details['features']);
+        $this->assertEquals('Fast charging', $car->details['features'][0]['name']['en']);
 
         $this->assertIsArray($car->details['policy']);
-        $this->assertCount(3, $car->details['policy']);
-        $this->assertEquals(['en' => 'Age 21+', 'fr' => 'Age 21+', 'ar' => 'Age 21+'], $car->details['policy'][0]);
+        $this->assertCount(1, $car->details['policy']);
+        $this->assertEquals('Age 21+', $car->details['policy'][0]['name']['en']);
     }
 
     public function test_admin_can_update_car_detail_sections(): void
@@ -86,8 +92,8 @@ class AdminCarsTest extends TestCase
         $car = Car::factory()->create([
             'details' => [
                 'gallery' => ['/old1.jpg', '/old2.jpg'],
-                'features' => [['en' => 'Old feature', 'fr' => 'Old feature', 'ar' => 'Old feature']],
-                'policy' => [['en' => 'Old policy', 'fr' => 'Old policy', 'ar' => 'Old policy']],
+                'features' => [['name' => ['en' => 'Old feature', 'fr' => 'Old feature', 'ar' => 'Old feature']]],
+                'policy' => [['name' => ['en' => 'Old policy', 'fr' => 'Old policy', 'ar' => 'Old policy']]],
             ],
         ]);
 
@@ -110,8 +116,13 @@ class AdminCarsTest extends TestCase
             'description_fr' => 'Description mise à jour',
             'description_ar' => 'وصف محدث',
             'gallery' => "/images/new1.jpg\n/images/new2.jpg\n/images/new3.jpg",
-            'features' => "New feature 1\nNew feature 2",
-            'policy' => "New policy 1\nNew policy 2\nNew policy 3",
+            'features' => [
+                ['name' => ['en' => 'New feature 1', 'fr' => 'New feature 1', 'ar' => 'New feature 1']],
+                ['name' => ['en' => 'New feature 2', 'fr' => 'New feature 2', 'ar' => 'New feature 2']],
+            ],
+            'policy' => [
+                ['name' => ['en' => 'New policy 1', 'fr' => 'New policy 1', 'ar' => 'New policy 1']],
+            ],
         ];
 
         $response = $this->actingAs($admin)
@@ -128,10 +139,10 @@ class AdminCarsTest extends TestCase
         $this->assertContains('/images/new1.jpg', $car->details['gallery']);
 
         $this->assertCount(2, $car->details['features']);
-        $this->assertEquals(['en' => 'New feature 1', 'fr' => 'New feature 1', 'ar' => 'New feature 1'], $car->details['features'][0]);
+        $this->assertEquals('New feature 1', $car->details['features'][0]['name']['en']);
 
-        $this->assertCount(3, $car->details['policy']);
-        $this->assertEquals(['en' => 'New policy 1', 'fr' => 'New policy 1', 'ar' => 'New policy 1'], $car->details['policy'][0]);
+        $this->assertCount(1, $car->details['policy']);
+        $this->assertEquals('New policy 1', $car->details['policy'][0]['name']['en']);
     }
 
     public function test_admin_can_retrieve_car_with_detail_sections(): void
@@ -143,11 +154,10 @@ class AdminCarsTest extends TestCase
                 'description' => ['en' => 'Premium sedan', 'fr' => 'Berline premium', 'ar' => 'سيدان فاخر'],
                 'gallery' => ['/images/merc1.jpg', '/images/merc2.jpg'],
                 'features' => [
-                    ['en' => 'Leather seats', 'fr' => 'Leather seats', 'ar' => 'Leather seats'],
-                    ['en' => 'Panoramic roof', 'fr' => 'Panoramic roof', 'ar' => 'Panoramic roof'],
+                    ['name' => ['en' => 'Leather seats', 'fr' => 'Leather seats', 'ar' => 'Leather seats']],
                 ],
                 'policy' => [
-                    ['en' => 'Age 25+', 'fr' => 'Age 25+', 'ar' => 'Age 25+'],
+                    ['name' => ['en' => 'Age 25+', 'fr' => 'Age 25+', 'ar' => 'Age 25+']],
                 ],
             ],
         ]);
@@ -162,8 +172,8 @@ class AdminCarsTest extends TestCase
                     'name_en' => 'Mercedes',
                     'description_en' => 'Premium sedan',
                     'gallery' => ['/images/merc1.jpg', '/images/merc2.jpg'],
-                    'features' => ['Leather seats', 'Panoramic roof'],
-                    'policy' => ['Age 25+'],
+                    'features' => [['name' => ['en' => 'Leather seats', 'fr' => 'Leather seats', 'ar' => 'Leather seats']]],
+                    'policy' => [['name' => ['en' => 'Age 25+', 'fr' => 'Age 25+', 'ar' => 'Age 25+']]],
                 ],
             ]);
     }
@@ -174,8 +184,8 @@ class AdminCarsTest extends TestCase
         Car::factory()->count(3)->create([
             'details' => [
                 'gallery' => ['/img1.jpg'],
-                'features' => [['en' => 'Feature A', 'fr' => 'Feature A', 'ar' => 'Feature A']],
-                'policy' => [['en' => 'Policy A', 'fr' => 'Policy A', 'ar' => 'Policy A']],
+                'features' => [['name' => ['en' => 'Feature A', 'fr' => 'Feature A', 'ar' => 'Feature A']]],
+                'policy' => [['name' => ['en' => 'Policy A', 'fr' => 'Policy A', 'ar' => 'Policy A']]],
             ],
         ]);
 
@@ -198,14 +208,38 @@ class AdminCarsTest extends TestCase
         $this->assertCount(3, $response['data']);
     }
 
+    public function test_admin_can_list_cars_when_category_is_stored_as_json_string(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $car = Car::factory()->create([
+            'category' => ['en' => 'Luxury', 'fr' => 'Luxe', 'ar' => 'فاخرة'],
+        ]);
+
+        DB::table('cars')
+            ->where('id', $car->id)
+            ->update(['category' => '{"en":"Luxury","fr":"Luxe","ar":"فاخرة"}']);
+
+        $response = $this->actingAs($admin)
+            ->getJson('/api/admin/cars');
+
+        $response->assertOk()
+            ->assertJsonFragment([
+                'id' => (string) $car->id,
+                'category' => 'Luxury',
+                'category_fr' => 'Luxe',
+                'category_ar' => 'فاخرة',
+                'category_en' => 'Luxury',
+            ]);
+    }
+
     public function test_admin_partial_update_preserves_existing_details(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $car = Car::factory()->create([
             'details' => [
                 'gallery' => ['/old.jpg'],
-                'features' => [['en' => 'Existing feature', 'fr' => 'Existing feature', 'ar' => 'Existing feature']],
-                'policy' => [['en' => 'Existing policy', 'fr' => 'Existing policy', 'ar' => 'Existing policy']],
+                'features' => [['name' => ['en' => 'Existing feature', 'fr' => 'Existing feature', 'ar' => 'Existing feature']]],
+                'policy' => [['name' => ['en' => 'Existing policy', 'fr' => 'Existing policy', 'ar' => 'Existing policy']]],
             ],
         ]);
 
@@ -227,7 +261,7 @@ class AdminCarsTest extends TestCase
 
         // Features and policy should be preserved
         $this->assertCount(1, $car->details['features']);
-        $this->assertEquals('Existing feature', $car->details['features'][0]['en']);
+        $this->assertEquals('Existing feature', $car->details['features'][0]['name']['en']);
         $this->assertCount(1, $car->details['policy']);
     }
 }

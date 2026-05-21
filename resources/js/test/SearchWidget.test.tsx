@@ -28,6 +28,14 @@ describe('SearchWidget', () => {
         );
         expect(screen.getByLabelText(/Destination/i)).toBeInTheDocument();
         expect(
+            screen.getByRole('button', { name: /Dates/i }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', {
+                name: /BelAzurTravels|Guests|Travelers|Passagers/i,
+            }),
+        ).toBeInTheDocument();
+        expect(
             screen.getByRole('button', { name: /Rechercher des hôtels/i }),
         ).toBeInTheDocument();
     });

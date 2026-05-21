@@ -10,14 +10,15 @@ class GalleryController extends Controller
 {
     public function index()
     {
-        return response()->json(GalleryImage::orderBy('sort_order')->get());
+        return response()->json(GalleryImage::latest()->get());
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'caption' => 'nullable|array',
-            'sort_order' => 'nullable|integer',
+            'title' => 'nullable|array',
+            'category' => 'nullable|string',
             'image' => 'required|image|max:10240',
         ]);
 
@@ -29,7 +30,8 @@ class GalleryController extends Controller
         $model = GalleryImage::create([
             'url' => $url,
             'caption' => $data['caption'] ?? null,
-            'sort_order' => $data['sort_order'] ?? null,
+            'title' => $data['title'] ?? null,
+            'category' => $data['category'] ?? null,
         ]);
 
         return response()->json($model);
@@ -39,11 +41,17 @@ class GalleryController extends Controller
     {
         $data = $request->validate([
             'caption' => 'nullable|array',
-            'sort_order' => 'nullable|integer',
-            'image' => 'nullable|image|max:10240',
+            'title' => 'nullable|array',
+            'category' => 'nullable|string',
         ]);
 
         if ($request->hasFile('image')) {
+            $request->validate(['image' => 'nullable|image|max:10240']);
+
+            // Delete old file
+            $oldPath = str_replace('/storage/', '', $galleryImage->url);
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+
             $path = $request->file('image')->store('gallery', 'public');
             $data['url'] = '/storage/' . $path;
         }
@@ -55,6 +63,9 @@ class GalleryController extends Controller
 
     public function destroy(GalleryImage $galleryImage)
     {
+        $path = str_replace('/storage/', '', $galleryImage->url);
+        \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+
         $galleryImage->delete();
 
         return response()->json(['message' => 'Image deleted']);

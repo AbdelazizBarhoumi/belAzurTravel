@@ -3,8 +3,9 @@ import { apiFetch } from './http';
 export interface GalleryImage {
     id: number;
     url: string;
+    title?: Record<string, string>;
     caption?: Record<string, string>;
-    sort_order: number;
+    category?: string;
 }
 
 export async function fetchGallery(): Promise<GalleryImage[]> {
@@ -32,9 +33,16 @@ export async function updateGalleryImage(
     data: Partial<GalleryImage> | FormData,
 ): Promise<GalleryImage> {
     if (data instanceof FormData) {
+        const formData = new FormData();
+        formData.append('_method', 'PUT');
+
+        data.forEach((value, key) => {
+            formData.append(key, value);
+        });
+
         return apiFetch<GalleryImage>(`/api/admin/gallery/${id}`, {
-            method: 'PUT',
-            body: data,
+            method: 'POST',
+            body: formData,
         });
     }
 

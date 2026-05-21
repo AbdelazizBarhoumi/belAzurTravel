@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             EntitySeeder::class,
             BookingSeeder::class,
+            TeamSeeder::class,
         ]);
     }
 }

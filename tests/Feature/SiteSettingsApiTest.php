@@ -99,4 +99,45 @@ class SiteSettingsApiTest extends TestCase
             ->assertJsonPath('content.nav.settings.header.1.enabled', false)
             ->assertJsonPath('content.nav.settings.footer.0.pageKeys.0', 'destinations');
     }
+
+    public function test_admin_can_update_contact_settings(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'active' => true]);
+
+        $payload = [
+            'content' => [
+                'contact' => [
+                    'title' => ['en' => 'Title EN', 'fr' => 'Title FR', 'ar' => 'Title AR'],
+                    'description' => ['en' => 'Desc EN', 'fr' => 'Desc FR', 'ar' => 'Desc AR'],
+                ],
+            ],
+        ];
+
+        $this->actingAs($admin)
+            ->putJson('/api/site-settings', $payload)
+            ->assertOk();
+
+        $this->actingAs($admin)
+            ->getJson('/api/site-settings')
+            ->assertOk()
+            ->assertJsonPath('content.contact.title.en', 'Title EN')
+            ->assertJsonPath('content.contact.description.ar', 'Desc AR');
+    }
+
+    public function test_admin_cannot_update_contact_settings_with_invalid_translations(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'active' => true]);
+
+        $payload = [
+            'content' => [
+                'contact' => [
+                    'title' => ['en' => 'Title EN', 'fr' => 'Title FR'], // missing AR
+                ],
+            ],
+        ];
+
+        $this->actingAs($admin)
+            ->putJson('/api/site-settings', $payload)
+            ->assertStatus(422);
+    }
 }

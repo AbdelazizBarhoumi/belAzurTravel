@@ -1,0 +1,65 @@
+<?php
+
+namespace Tests\Unit;
+
+use Tests\TestCase;
+use App\Concerns\HandlesLocalization;
+
+class HandlesLocalizationTest extends TestCase
+{
+    private $testClass;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->testClass = new class {
+            use HandlesLocalization;
+
+            public function testLocalized(array $data, string $key)
+            {
+                return $this->localized($data, $key);
+            }
+
+            public function testFlatLocalized(string $key, ?array $value)
+            {
+                return $this->flatLocalized($key, $value);
+            }
+        };
+    }
+
+    public function test_localized_maps_correctly()
+    {
+        $data = [
+            'title' => 'Base',
+            'title_en' => 'English',
+            'title_fr' => 'French',
+            'title_ar' => 'Arabic'
+        ];
+
+        $result = $this->testClass->testLocalized($data, 'title');
+
+        $this->assertEquals([
+            'fr' => 'French',
+            'ar' => 'Arabic',
+            'en' => 'English'
+        ], $result);
+    }
+
+    public function test_flatLocalized_maps_correctly()
+    {
+        $value = [
+            'en' => 'English',
+            'fr' => 'French',
+            'ar' => 'Arabic'
+        ];
+
+        $result = $this->testClass->testFlatLocalized('title', $value);
+
+        $this->assertEquals([
+            'title' => 'English',
+            'title_fr' => 'French',
+            'title_ar' => 'Arabic',
+            'title_en' => 'English'
+        ], $result);
+    }
+}
