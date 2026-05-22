@@ -23,12 +23,19 @@ vi.mock('@/hooks/usePublicData', () => ({
                       fr: 'Santorin, Grèce',
                       ar: 'سانتوريني، اليونان',
                   },
+                  category_key: 'beach',
+                  category: {
+                      en: 'Beach Resort',
+                      fr: 'Beach Resort',
+                      ar: 'Beach Resort',
+                  },
                   description: {
                       en: 'Luxury resort',
                       fr: 'Luxury resort',
                       ar: 'Luxury resort',
                   },
-                  gallery: ['/img1.jpg'],
+                  image: '/main-hotel.jpg',
+                  gallery: ['/img1.jpg', '/main-hotel.jpg'],
                   stars: 5,
                   rating: 4.9,
                   reviews: 234,
@@ -50,8 +57,8 @@ vi.mock('@/hooks/usePublicData', () => ({
                           pricePerNight: 320,
                           capacity: 2,
                           size: 45,
-                          features: [{ en: 'Wi-Fi', fr: 'Wi-Fi', ar: 'Wi-Fi' }],
-                          images: ['/room.jpg'],
+                          features: null,
+                          images: null,
                       },
                   ],
               }
@@ -98,6 +105,17 @@ describe('HotelDetail', () => {
         expect(
             screen.getAllByText('Sunset Paradise Resort').length,
         ).toBeGreaterThan(0);
+        expect(screen.getByText('Beach Resort')).toBeInTheDocument();
         expect(screen.getByText('Chambres disponibles')).toBeInTheDocument();
+        expect(
+            screen.getByAltText('Sunset Paradise Resort main image'),
+        ).toHaveAttribute('src', '/main-hotel.jpg');
+    });
+
+    it('does not crash when a room has null features', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+
+        expect(screen.getByText('Deluxe Ocean View')).toBeInTheDocument();
+        expect(screen.queryByText('Wi-Fi')).not.toBeInTheDocument();
     });
 });

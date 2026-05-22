@@ -27,10 +27,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //model strict
+        // model strict
         Model::shouldBeStrict();
         Gate::define('admin', fn ($user): bool => $user->role === 'admin' && $user->active);
-        Gate::define('assistant', fn ($user): bool => in_array($user->role, ['assistant', 'admin'], true) && $user->active);
+        Gate::define('assistant', fn ($user): bool => false);
         $this->configureDefaults();
     }
 

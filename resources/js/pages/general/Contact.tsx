@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link2, MapPin, Mail } from 'lucide-react';
+import { notifyInteraction } from '@/api/interactions.api';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
@@ -9,6 +10,7 @@ import {
     socialLinks as socialLinkDefs,
 } from '@/data';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { formatHourRanges } from '@/lib/site-hours';
 
 export default function Contact() {
     const { lang, t } = useLanguage();
@@ -149,10 +151,23 @@ export default function Contact() {
                             >
                                 {contactMethods.map((method) => {
                                     const Icon = method.icon;
+                                    const isCall =
+                                        method.labelKey === 'contact.calls';
+                                    const isWhatsapp =
+                                        method.labelKey === 'contact.whatsapp';
+
                                     return (
                                         <a
                                             key={method.labelKey}
                                             href={method.href}
+                                            onClick={() => {
+                                                if (isCall)
+                                                    notifyInteraction('call');
+                                                if (isWhatsapp)
+                                                    notifyInteraction(
+                                                        'whatsapp',
+                                                    );
+                                            }}
                                             className="group rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
                                         >
                                             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
@@ -251,7 +266,10 @@ export default function Contact() {
                                             >
                                                 <span>{row.dayKey}</span>
                                                 <span className="text-foreground">
-                                                    {row.value}
+                                                    {formatHourRanges(
+                                                        row,
+                                                        t('footer.closed'),
+                                                    )}
                                                 </span>
                                             </div>
                                         ))}

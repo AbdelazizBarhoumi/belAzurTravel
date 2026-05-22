@@ -40,18 +40,24 @@ describe('EventDetail page', () => {
 
         // Wrap in QueryClientProvider in callers where needed; here use findBy* to wait for async data
         expect(
-            await screen.findByRole('heading', {
-                name: /Cherry Blossom Festival/i,
-            }),
-        ).toBeInTheDocument();
+            (await screen.findAllByText(/Cherry Blossom Festival/i)).length,
+        ).toBeGreaterThan(0);
         expect(
             await screen.findByText(/About this event/i),
         ).toBeInTheDocument();
-        expect(await screen.findByText(/Schedule/i)).toBeInTheDocument();
-        expect(await screen.findByText(/Package from/i)).toBeInTheDocument();
         expect(
-            await screen.findByRole('button', { name: /Reserve a spot/i }),
+            await screen.findByText(
+                /A three-day spring celebration with guided hanami walks and cultural performances\./i,
+            ),
         ).toBeInTheDocument();
+        expect(await screen.findByText(/Schedule/i)).toBeInTheDocument();
+        expect(
+            (await screen.findAllByText(/Package from/i)).length,
+        ).toBeGreaterThan(0);
+        expect(
+            (await screen.findAllByRole('button', { name: /Reserve a spot/i }))
+                .length,
+        ).toBeGreaterThan(0);
     });
 
     it('shows a fallback message for unknown events', async () => {

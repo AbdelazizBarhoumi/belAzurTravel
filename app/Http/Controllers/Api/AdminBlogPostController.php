@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use Illuminate\Database\Eloquent\Model;
@@ -18,13 +19,18 @@ use Illuminate\Support\Str;
  */
 class AdminBlogPostController extends Controller
 {
-    use \App\Concerns\HandlesAdminMedia;
+    use HandlesAdminMedia;
 
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.blog-posts', now()->addMinutes(5), function () {
-            return BlogPost::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
+            return BlogPost::query()
+                ->oldest('id')
+                ->get()
+                ->map(fn (Model $item) => $this->adminPayload($item))
+                ->all();
         });
+
         return response()->json(['data' => $data]);
     }
 
@@ -32,12 +38,14 @@ class AdminBlogPostController extends Controller
     {
         $item = BlogPost::create($this->attributes($request));
         $this->flushAdminCache('blog-posts', $item->slug ?? null);
+
         return response()->json(['data' => $this->adminPayload($item)], 201);
     }
 
     public function show(int|string $id): JsonResponse
     {
         $item = BlogPost::query()->findOrFail($id);
+
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
@@ -46,6 +54,7 @@ class AdminBlogPostController extends Controller
         $item = BlogPost::query()->findOrFail($id);
         $item->update($this->attributes($request, $item));
         $this->flushAdminCache('blog-posts', $item->slug ?? null);
+
         return response()->json(['data' => $this->adminPayload($item->refresh())]);
     }
 
@@ -55,6 +64,7 @@ class AdminBlogPostController extends Controller
         $identifier = $item->slug ?? (string) $id;
         $item->delete();
         $this->flushAdminCache('blog-posts', $identifier);
+
         return response()->json(['message' => 'deleted']);
     }
 
@@ -84,7 +94,7 @@ class AdminBlogPostController extends Controller
         $data = $request->validate($rules);
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
         $title = $localized('title');
-        $slug = $existing->slug ?? Str::slug($title['en'] ?? 'post') . '-' . Str::lower(Str::random(4));
+        $slug = $existing->slug ?? Str::slug($title['en'] ?? 'post').'-'.Str::lower(Str::random(4));
 
         return [
             'slug' => $slug,
@@ -107,7 +117,7 @@ class AdminBlogPostController extends Controller
             ...$this->flatLocalized('excerpt', $item->excerpt),
             'date' => $item->date,
             ...$this->flatLocalized('category', $item->category),
-            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'image' => $this->normalizeApiOutputPath($item->image),
             'content' => $this->blogContentFromItem($item),
         ];
     }
@@ -143,6 +153,7 @@ class AdminBlogPostController extends Controller
         if (array_key_exists('body', $content) || array_key_exists('sections', $content)) {
             $body = $content['body'] ?? [];
             $sections = is_array($content['sections'] ?? null) ? $content['sections'] : [];
+
             return ['body' => $this->localizedArray($body), 'sections' => array_values(array_filter(array_map(fn (mixed $section): ?array => $this->normalizeBlogSection($section), $sections)))];
         }
 
@@ -152,6 +163,7 @@ class AdminBlogPostController extends Controller
     private function localized(array $data, string $key, string $fallback = ''): array
     {
         $base = $data[$key] ?? $fallback;
+
         return ['fr' => $data[$key.'_fr'] ?? $base ?? '', 'ar' => $data[$key.'_ar'] ?? $base ?? '', 'en' => $data[$key.'_en'] ?? $base ?? ''];
     }
 
@@ -163,6 +175,7 @@ class AdminBlogPostController extends Controller
         if (! is_array($value)) {
             return ['en' => '', 'fr' => '', 'ar' => ''];
         }
+
         return ['en' => (string) ($value['en'] ?? ''), 'fr' => (string) ($value['fr'] ?? ''), 'ar' => (string) ($value['ar'] ?? '')];
     }
 

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Destination;
 use App\Models\SiteSetting;
 use App\Models\Tour;
-use App\Models\Destination;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -119,4 +119,3 @@ class PublicEntitiesApiTest extends TestCase
         ]);
     }
 }
-

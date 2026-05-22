@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers\Api;
 
 use App\Models\GalleryImage;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +16,7 @@ class GalleryControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $user = \App\Models\User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create(['role' => 'admin']);
         $this->actingAs($user);
     }
 
@@ -25,16 +26,16 @@ class GalleryControllerTest extends TestCase
 
         $file = UploadedFile::fake()->create('test.jpg', 100, 'image/jpeg');
         $path = $file->store('gallery', 'public');
-        
+
         $gallery = GalleryImage::create([
-            'url' => '/storage/' . $path,
+            'url' => '/storage/'.$path,
             'title' => ['en' => 'Test'],
             'category' => 'Test',
         ]);
 
         $this->assertTrue(Storage::disk('public')->exists($path));
 
-        $this->deleteJson('/api/admin/gallery/' . $gallery->id)
+        $this->deleteJson('/api/admin/gallery/'.$gallery->id)
             ->assertStatus(200);
 
         $this->assertFalse(Storage::disk('public')->exists($path));
@@ -46,9 +47,9 @@ class GalleryControllerTest extends TestCase
 
         $oldFile = UploadedFile::fake()->create('old.jpg', 100, 'image/jpeg');
         $oldPath = $oldFile->store('gallery', 'public');
-        
+
         $gallery = GalleryImage::create([
-            'url' => '/storage/' . $oldPath,
+            'url' => '/storage/'.$oldPath,
             'title' => ['en' => 'Old'],
             'category' => 'Old',
         ]);
@@ -57,13 +58,13 @@ class GalleryControllerTest extends TestCase
 
         $newFile = UploadedFile::fake()->create('new.jpg', 100, 'image/jpeg');
 
-        $this->putJson('/api/admin/gallery/' . $gallery->id, [
+        $this->putJson('/api/admin/gallery/'.$gallery->id, [
             'image' => $newFile,
             'title' => ['en' => 'New'],
             'category' => 'New',
         ])->assertStatus(200);
 
         $this->assertFalse(Storage::disk('public')->exists($oldPath));
-        $this->assertTrue(Storage::disk('public')->exists('gallery/' . $newFile->hashName()));
+        $this->assertTrue(Storage::disk('public')->exists('uploads/gallery/'.$newFile->hashName()));
     }
 }

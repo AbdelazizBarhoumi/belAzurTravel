@@ -29,4 +29,4 @@ export type BookingStatus = 'Pending' | 'Confirmed' | 'Cancelled';
 /**
  * User roles
  */
-export type UserRole = 'client' | 'admin' | 'assistant';
+export type UserRole = 'owner' | 'superadmin' | 'admin' | 'assistant' | 'client';

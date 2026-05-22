@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Team;
 use Illuminate\Http\Request;
 
 class TeamController extends Controller
 {
+    use HandlesAdminMedia;
+
     /**
      * Display a listing of the resource.
      */
@@ -18,7 +21,7 @@ class TeamController extends Controller
                 'name' => $member->name,
                 'role' => $member->role,
                 'bio' => $member->bio,
-                'image' => asset('storage/' . $member->image_path),
+                'image' => $this->normalizeApiOutputPath($member->image_path),
                 'linkedin' => $member->linkedin,
                 'twitter' => $member->twitter,
                 'email' => $member->email,

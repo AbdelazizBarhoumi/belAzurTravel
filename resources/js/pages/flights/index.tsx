@@ -18,6 +18,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useFlights } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
+import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
 
 const ALL = 'all';
 
@@ -50,29 +51,23 @@ function FlightsContent() {
 
     const airlineOptions = useMemo(
         () =>
-            Array.from(
-                new Set(
-                    flights.map((flight) => localizeText(flight.airline, lang)),
-                ),
+            uniqueNonEmptySelectOptions(
+                flights.map((flight) => localizeText(flight.airline, lang)),
             ),
         [flights, lang],
     );
     const stopsOptions = useMemo(
         () =>
-            Array.from(
-                new Set(
-                    flights.map((flight) => localizeText(flight.stops, lang)),
-                ),
+            uniqueNonEmptySelectOptions(
+                flights.map((flight) => localizeText(flight.stops, lang)),
             ),
         [flights, lang],
     );
     const cabinOptions = useMemo(
         () =>
-            Array.from(
-                new Set(
-                    flights.map((flight) =>
-                        localizeText(flight.details.cabin, lang),
-                    ),
+            uniqueNonEmptySelectOptions(
+                flights.map((flight) =>
+                    localizeText(flight.details.cabin, lang),
                 ),
             ),
         [flights, lang],
@@ -218,14 +213,22 @@ function FlightsContent() {
                             <DatePicker
                                 date={fromDate ? new Date(fromDate) : undefined}
                                 onDateChange={(date) =>
-                                    setFromDate(date ? date.toISOString().split('T')[0] : '')
+                                    setFromDate(
+                                        date
+                                            ? date.toISOString().split('T')[0]
+                                            : '',
+                                    )
                                 }
                                 placeholder={t('search.placeholders.checkIn')}
                             />
                             <DatePicker
                                 date={toDate ? new Date(toDate) : undefined}
                                 onDateChange={(date) =>
-                                    setToDate(date ? date.toISOString().split('T')[0] : '')
+                                    setToDate(
+                                        date
+                                            ? date.toISOString().split('T')[0]
+                                            : '',
+                                    )
                                 }
                                 placeholder={t('search.placeholders.checkOut')}
                             />
@@ -425,7 +428,7 @@ function FlightsContent() {
                                 className={`text-center md:${dir === 'rtl' ? 'text-left' : 'text-right'}`}
                             >
                                 <p className="text-2xl font-bold text-primary">
-                                    ${f.price}
+                                    {f.price} DT
                                 </p>
                                 <Button
                                     size="sm"

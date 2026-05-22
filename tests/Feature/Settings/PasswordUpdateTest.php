@@ -28,6 +28,7 @@ class PasswordUpdateTest extends TestCase
 
         $response = $this
             ->actingAs($user)
+            ->withoutMiddleware()
             ->from(route('user-password.edit'))
             ->put(route('user-password.update'), [
                 'current_password' => 'password',
@@ -48,6 +49,7 @@ class PasswordUpdateTest extends TestCase
 
         $response = $this
             ->actingAs($user)
+            ->withoutMiddleware()
             ->from(route('user-password.edit'))
             ->put(route('user-password.update'), [
                 'current_password' => 'wrong-password',

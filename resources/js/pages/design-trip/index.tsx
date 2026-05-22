@@ -67,15 +67,20 @@ const transports: Option[] = [
     { id: 'cruise', label: 'Cruise', icon: Ship },
 ];
 const budgets: Option[] = [
-    { id: 'eco', label: 'Economy', icon: Wallet, desc: '< $1,500 / pp' },
-    { id: 'comfort', label: 'Comfort', icon: Hotel, desc: '$1,500 – $3,500' },
+    { id: 'eco', label: 'Economy', icon: Wallet, desc: '< 1,500 DT / pp' },
+    {
+        id: 'comfort',
+        label: 'Comfort',
+        icon: Hotel,
+        desc: '1,500 DT – 3,500 DT',
+    },
     {
         id: 'premium',
         label: 'Premium',
         icon: Sparkles,
-        desc: '$3,500 – $7,000',
+        desc: '3,500 DT – 7,000 DT',
     },
-    { id: 'luxury', label: 'Luxury', icon: Heart, desc: '$7,000+' },
+    { id: 'luxury', label: 'Luxury', icon: Heart, desc: '7,000 DT+' },
 ];
 const steps = [
     {
@@ -274,7 +279,7 @@ const DesignTrip = () => {
                                 </Button>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                                Estimate: ${estimate.toLocaleString()}
+                                Estimate: {estimate.toLocaleString()} DT
                             </div>
                         </div>
                     </div>

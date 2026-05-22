@@ -46,7 +46,7 @@ class GalleryAdminE2ETest extends TestCase
             'category' => 'Adventure',
         ];
 
-        $response = $this->putJson('/api/admin/gallery/' . $gallery->id, $updatePayload);
+        $response = $this->putJson('/api/admin/gallery/'.$gallery->id, $updatePayload);
         $response->assertStatus(200);
 
         $gallery->refresh();

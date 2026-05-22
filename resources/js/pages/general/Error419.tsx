@@ -22,7 +22,8 @@ const Error419 = () => {
                     {t('auth.sessionExpired') || 'Session Expired'}
                 </h2>
                 <p className="mb-8 text-muted-foreground">
-                    {t('error.419Desc') || 'Your session has expired due to inactivity. Please refresh the page to continue.'}
+                    {t('error.419Desc') ||
+                        'Your session has expired due to inactivity. Please refresh the page to continue.'}
                 </p>
                 <div className="flex flex-col gap-3">
                     <Button onClick={handleRefresh} className="w-full">

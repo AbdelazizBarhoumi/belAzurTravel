@@ -27,7 +27,7 @@ class HotelTest extends TestCase
             'image' => 'hotel.jpg',
             'amenities' => ['wifi', 'pool'],
             'tags' => ['beach'],
-            'details' => ['description' => 'Great hotel']
+            'details' => ['description' => 'Great hotel'],
         ]);
 
         $this->assertDatabaseHas('hotels', [

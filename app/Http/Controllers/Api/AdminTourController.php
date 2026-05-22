@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
-use App\Models\Tour;
 use App\Models\GalleryImage;
+use App\Models\Tour;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,13 +23,18 @@ use Illuminate\Support\Str;
  */
 class AdminTourController extends Controller
 {
-    use \App\Concerns\HandlesAdminMedia;
+    use HandlesAdminMedia;
 
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.tours', now()->addMinutes(5), function () {
-            return Tour::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
+            return Tour::query()
+                ->oldest('id')
+                ->get()
+                ->map(fn (Model $item) => $this->adminPayload($item))
+                ->all();
         });
+
         return response()->json(['data' => $data]);
     }
 
@@ -36,12 +42,14 @@ class AdminTourController extends Controller
     {
         $item = Tour::create($this->attributes($request));
         $this->flushAdminCache('tours', $item->slug ?? null);
+
         return response()->json(['data' => $this->adminPayload($item)], 201);
     }
 
     public function show(int|string $id): JsonResponse
     {
         $item = Tour::query()->findOrFail($id);
+
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
@@ -50,6 +58,7 @@ class AdminTourController extends Controller
         $item = Tour::query()->findOrFail($id);
         $item->update($this->attributes($request, $item));
         $this->flushAdminCache('tours', $item->slug ?? null);
+
         return response()->json(['data' => $this->adminPayload($item->refresh())]);
     }
 
@@ -59,6 +68,7 @@ class AdminTourController extends Controller
         $identifier = $item->slug ?? (string) $id;
         $item->delete();
         $this->flushAdminCache('tours', $identifier);
+
         return response()->json(['message' => 'deleted']);
     }
 
@@ -75,6 +85,10 @@ class AdminTourController extends Controller
             'location_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'location_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'location_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category_en' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
             'duration' => ['sometimes', 'nullable', 'string', 'max:255'],
             'duration_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'duration_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -94,20 +108,50 @@ class AdminTourController extends Controller
             'excludes' => ['sometimes', 'nullable'],
             'images' => ['sometimes', 'nullable', 'array'],
             'gallery' => ['sometimes', 'nullable'],
+            'category_key' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
 
         $data = $request->validate($rules);
 
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
         $name = $localized('name');
-        $slug = $existing->slug ?? Str::slug($name['en'] ?? 'tour') . '-' . Str::lower(Str::random(4));
+        
+        $categoryKey = (string) (
+            $data['category_key']
+            ?? $existing?->category_key
+            ?? $data['category']
+            ?? ''
+        );
+        $category = $categoryKey !== ''
+            ? \App\Models\Category::query()
+                ->where('entity_type', 'tours')
+                ->where('key', $categoryKey)
+                ->first()
+            : null;
+        $categoryName = $category?->name ?? $localized('category', $existing?->category ? ($existing->category['en'] ?? '') : '');
 
-        $galleryInput = $request->input('images') ?? $request->input('gallery', []);
+        $slug = $existing->slug ?? Str::slug($name['en'] ?? 'tour').'-'.Str::lower(Str::random(4));
+
+        $hasImagesInput = $request->has('images');
+        $hasGalleryInput = $request->has('gallery');
+
+        $galleryInput = $hasImagesInput
+            ? $request->input('images', [])
+            : ($hasGalleryInput ? $request->input('gallery', []) : []);
+
         if (is_string($galleryInput)) {
             $galleryInput = $this->splitLines($galleryInput);
         }
 
-        $gallery = $this->handleGallery($request->merge(['gallery' => $galleryInput]), $existing?->images ?? []);
+        // If gallery input contains numeric IDs (GalleryImage IDs), preserve them
+        // directly. Otherwise, process uploads/strings via handleGallery.
+        $isIdArray = is_array($galleryInput) && count($galleryInput) > 0 && collect($galleryInput)->every(fn ($v) => is_int($v) || (is_string($v) && ctype_digit($v)));
+
+        if ($isIdArray) {
+            $gallery = array_map(fn ($v) => (int) $v, $galleryInput);
+        } else {
+            $gallery = $this->handleGallery($request->merge(['gallery' => $galleryInput]), $existing?->images ?? [], 'uploads/tours');
+        }
 
         $details = $existing?->details ?? [];
 
@@ -127,6 +171,8 @@ class AdminTourController extends Controller
             'slug' => $slug,
             'name' => $name,
             'location' => $localized('location'),
+            'category_key' => $categoryKey !== '' ? $categoryKey : $existing?->category_key,
+            'category' => $categoryName,
             'duration' => $localized('duration'),
             'duration_days' => (int) ($data['duration_days'] ?? $existing->duration_days ?? 0),
             'duration_nights' => (int) ($data['duration_nights'] ?? $existing->duration_nights ?? 0),
@@ -145,29 +191,35 @@ class AdminTourController extends Controller
 
     private function adminPayload(Model $item): array
     {
+        $images = $this->resolveImageUrls($item->images ?? []);
+
         return [
             'id' => (string) $item->id,
             'slug' => $item->slug,
             ...$this->flatLocalized('name', $item->name),
             ...$this->flatLocalized('description', $item->description),
             ...$this->flatLocalized('location', $item->location),
+            'category_key' => $item->category_key,
+            ...$this->flatLocalized('category', $item->category ?? ['en' => '', 'fr' => '', 'ar' => '']),
             ...$this->flatLocalized('duration', $item->duration),
             'duration_days' => $item->duration_days,
             'duration_nights' => $item->duration_nights,
             'max_group' => $item->max_group,
             'price' => $item->price,
             'rating' => $item->rating,
-            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'image' => $this->normalizeApiOutputPath($item->image),
             'itinerary' => $item->itinerary ?? [],
             'includes' => $item->includes ?? [],
             'excludes' => $item->excludes ?? [],
-            'images' => $this->resolveImageUrls($item->images ?? []),
+            'gallery' => $images,
+            'images' => $images,
         ];
     }
 
     private function localized(array $data, string $key, string $fallback = ''): array
     {
         $base = $data[$key] ?? $fallback;
+
         return ['fr' => $data[$key.'_fr'] ?? $base ?? '', 'ar' => $data[$key.'_ar'] ?? $base ?? '', 'en' => $data[$key.'_en'] ?? $base ?? ''];
     }
 
@@ -176,8 +228,11 @@ class AdminTourController extends Controller
         return array_values(array_filter(array_map(static fn (string $line): string => trim($line), preg_split('/\r\n|\r|\n/', $value) ?: []), static fn (string $line): bool => $line !== ''));
     }
 
-    private function flatLocalized(string $key, ?array $value): array
+    private function flatLocalized(string $key, array|string|null $value): array
     {
+        if (!is_array($value)) {
+            $value = ['en' => (string) $value, 'fr' => (string) $value, 'ar' => (string) $value];
+        }
         return [$key => $value['en'] ?? '', $key.'_fr' => $value['fr'] ?? '', $key.'_ar' => $value['ar'] ?? '', $key.'_en' => $value['en'] ?? ''];
     }
 
@@ -217,9 +272,11 @@ class AdminTourController extends Controller
     {
         Cache::forget("admin.entity.{$type}");
         Cache::forget("entity.{$type}.index");
+        // Also clear public-facing caches for this entity (e.g. 'tours.index', 'tours.{slug}')
+        Cache::forget("{$type}.index");
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("entity.{$type}.{$identifier}");
+            Cache::forget("{$type}.{$identifier}");
         }
     }
 }
-

@@ -1,20 +1,21 @@
 import { AUTH_USER_QUERY_KEY, queryClient } from '@/lib/queryClient';
 
-export type UserRole = 'admin' | 'assistant' | 'client';
+export type UserRole = 'owner' | 'superadmin' | 'admin' | 'assistant' | 'client';
 
 export interface AuthUser {
     id: number;
     name: string;
     email: string;
     role: UserRole;
+    email_verified_at: string | null;
     preferred_language?: 'fr' | 'ar' | 'en';
 }
 
 let currentAuthUser: AuthUser | null = null;
 
 export function redirectAfterLogin(role: UserRole): string {
-    if (role === 'admin') return '/admin/dashboard';
-    if (role === 'assistant') return '/assistant/dashboard';
+    if (['owner', 'superadmin', 'admin'].includes(role)) return '/admin/dashboard';
+    if (role === 'assistant') return '/unauthorized';
     return '/client/dashboard';
 }
 

@@ -2,19 +2,19 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SiteSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\SiteSetting;
 
 /**
  * Middleware to check if a page is enabled in navigation settings.
- * 
+ *
  * Usage in routes:
  *   Route::get('/destinations', [...controller...])->middleware(['check-nav-page:destinations'])
- * 
+ *
  * If the page is not enabled, returns HTTP 404 (page hidden by admin).
- * 
+ *
  * Future Enhancement: Could also validate specific dropdown items by checking
  * query parameters (e.g., cat=Beach) against enabled dropdown items.
  */
@@ -37,7 +37,7 @@ class CheckNavPageEnabled
         'team',
         'legal',
         'favorites',
-        'design-trip',
+        // 'design-trip',
     ];
 
     public function handle(Request $request, Closure $next, string $pageKey): Response
@@ -46,7 +46,7 @@ class CheckNavPageEnabled
         $pageKey = $pageKey === 'blog-posts' ? 'blog' : $pageKey;
 
         // Validate page key
-        if (!in_array($pageKey, self::VALID_PAGES, true)) {
+        if (! in_array($pageKey, self::VALID_PAGES, true)) {
             abort(404);
         }
 
@@ -56,7 +56,7 @@ class CheckNavPageEnabled
         // Check if page is enabled in header navigation
         $navSettings = $siteSettings?->content['nav']['settings'] ?? null;
 
-        if (!$navSettings) {
+        if (! $navSettings) {
             // No settings defined — allow access (use defaults)
             return $next($request);
         }
@@ -72,11 +72,10 @@ class CheckNavPageEnabled
             }
         }
 
-        if (!$pageEnabled) {
+        if (! $pageEnabled) {
             abort(404, 'This page is not currently available.');
         }
 
         return $next($request);
     }
 }
-

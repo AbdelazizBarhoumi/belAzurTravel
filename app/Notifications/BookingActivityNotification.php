@@ -13,8 +13,7 @@ class BookingActivityNotification extends Notification
     public function __construct(
         private readonly Booking $booking,
         private readonly string $activityType,
-    ) {
-    }
+    ) {}
 
     public function via(object $notifiable): array
     {
@@ -28,9 +27,7 @@ class BookingActivityNotification extends Notification
         return [
             'type' => $this->activityType,
             'booking_id' => $this->booking->id,
-            'url' => $notifiable->role === 'assistant'
-                ? '/assistant/bookings/'.$this->booking->id
-                : '/admin/bookings/'.$this->booking->id,
+            'url' => '/admin/bookings/'.$this->booking->id,
             'fr' => $this->message($client, 'fr'),
             'ar' => $this->message($client, 'ar'),
             'en' => $this->message($client, 'en'),

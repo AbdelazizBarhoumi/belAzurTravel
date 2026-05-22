@@ -28,7 +28,7 @@ class AdminFlightsE2ETest extends TestCase
     public function test_create_flight_with_all_fields(): void
     {
         $payload = [
-            'code' => 'test-e2e-create-' . time(),
+            'code' => 'test-e2e-create-'.time(),
             'airline_en' => 'Test Airline',
             'airline_fr' => 'Compagnie Test',
             'airline_ar' => 'خطوط الاختبار',
@@ -135,7 +135,7 @@ class AdminFlightsE2ETest extends TestCase
     {
         // Create initial flight
         $initialFlight = Flight::create([
-            'code' => 'update-test-' . time(),
+            'code' => 'update-test-'.time(),
             'airline' => ['en' => 'Original Airline', 'fr' => 'Compagnie Originale', 'ar' => 'شركة أصلية'],
             'from' => 'NYC',
             'to' => ['en' => 'London', 'fr' => 'Londres', 'ar' => 'لندن'],
@@ -220,12 +220,136 @@ class AdminFlightsE2ETest extends TestCase
     }
 
     /**
+     * E2E: Update a flight when localized fields arrive as nested objects from the admin form.
+     */
+    public function test_update_flight_accepts_nested_localized_payload(): void
+    {
+        $flight = Flight::create([
+            'code' => 'nested-update-'.time(),
+            'airline' => ['en' => 'Original Airline', 'fr' => 'Compagnie Originale', 'ar' => 'شركة أصلية'],
+            'from' => 'PAR',
+            'to' => ['en' => 'Rome', 'fr' => 'Rome', 'ar' => 'روما'],
+            'duration' => ['en' => '2h', 'fr' => '2h', 'ar' => 'ساعتان'],
+            'price' => 320,
+            'stops' => ['en' => 'Direct', 'fr' => 'Direct', 'ar' => 'مباشر'],
+            'departure' => '08:00',
+            'arrival' => '10:00',
+            'details' => [
+                'date' => 'May 25, 2026',
+                'seats' => 140,
+                'cabin' => ['en' => 'Economy', 'fr' => 'Économie', 'ar' => 'اقتصادية'],
+                'aircraft' => ['en' => 'Airbus A320', 'fr' => 'Airbus A320', 'ar' => 'إيرباص A320'],
+                'baggage' => ['en' => '1 bag', 'fr' => '1 bagage', 'ar' => 'حقيبة واحدة'],
+                'refund' => ['en' => 'Non-refundable', 'fr' => 'Non remboursable', 'ar' => 'غير قابل للاسترداد'],
+            ],
+        ]);
+
+        $payload = [
+            'code' => $flight->code,
+            'airline' => [
+                'en' => 'Updated Airline',
+                'fr' => 'Compagnie Mise à Jour',
+                'ar' => 'شركة محدثة',
+            ],
+            'airline_en' => 'Updated Airline',
+            'airline_fr' => 'Compagnie Mise à Jour',
+            'airline_ar' => 'شركة محدثة',
+            'from' => 'LHR',
+            'to' => [
+                'en' => 'Berlin',
+                'fr' => 'Berlin',
+                'ar' => 'برلين',
+            ],
+            'to_en' => 'Berlin',
+            'to_fr' => 'Berlin',
+            'to_ar' => 'برلين',
+            'duration' => [
+                'en' => '2h 15m',
+                'fr' => '2h 15m',
+                'ar' => 'ساعتان و 15 دقيقة',
+            ],
+            'duration_en' => '2h 15m',
+            'duration_fr' => '2h 15m',
+            'duration_ar' => 'ساعتان و 15 دقيقة',
+            'price' => 360,
+            'stops' => [
+                'en' => 'Direct',
+                'fr' => 'Direct',
+                'ar' => 'مباشر',
+            ],
+            'stops_en' => 'Direct',
+            'stops_fr' => 'Direct',
+            'stops_ar' => 'مباشر',
+            'departure' => '09:30',
+            'arrival' => '11:45',
+            'date' => 'June 20, 2026',
+            'seats' => 150,
+            'cabin' => [
+                'en' => 'Business',
+                'fr' => 'Affaires',
+                'ar' => 'أعمال',
+            ],
+            'cabin_en' => 'Business',
+            'cabin_fr' => 'Affaires',
+            'cabin_ar' => 'أعمال',
+            'aircraft' => [
+                'en' => 'Boeing 737',
+                'fr' => 'Boeing 737',
+                'ar' => 'بوينج 737',
+            ],
+            'aircraft_en' => 'Boeing 737',
+            'aircraft_fr' => 'Boeing 737',
+            'aircraft_ar' => 'بوينج 737',
+            'baggage' => [
+                'en' => '2 bags',
+                'fr' => '2 bagages',
+                'ar' => 'حقيبتان',
+            ],
+            'baggage_en' => '2 bags',
+            'baggage_fr' => '2 bagages',
+            'baggage_ar' => 'حقيبتان',
+            'refund' => [
+                'en' => 'Refundable',
+                'fr' => 'Remboursable',
+                'ar' => 'قابل للاسترداد',
+            ],
+            'refund_en' => 'Refundable',
+            'refund_fr' => 'Remboursable',
+            'refund_ar' => 'قابل للاسترداد',
+        ];
+
+        $response = $this->actingAs($this->admin)
+            ->putJson("/api/admin/flights/{$flight->id}", $payload)
+            ->assertOk();
+
+        $response->assertJsonPath('data.airline.en', 'Updated Airline');
+        $response->assertJsonPath('data.to.en', 'Berlin');
+        $response->assertJsonPath('data.details.cabin.en', 'Business');
+
+        $this->assertDatabaseHas('flights', [
+            'id' => $flight->id,
+            'code' => $flight->code,
+            'from' => 'LHR',
+            'departure' => '09:30',
+            'arrival' => '11:45',
+            'price' => 360,
+        ]);
+
+        $updated = Flight::findOrFail($flight->id);
+        $this->assertEquals('Updated Airline', $updated->airline['en']);
+        $this->assertEquals('Berlin', $updated->to['en']);
+        $this->assertEquals('Business', $updated->details['cabin']['en']);
+        $this->assertEquals('Boeing 737', $updated->details['aircraft']['en']);
+        $this->assertEquals('Refundable', $updated->details['refund']['en']);
+    }
+
+    /**
      * E2E: Delete a flight and verify it's removed from DB and public API returns 404.
      */
     public function test_delete_flight_removes_from_db_and_public_api(): void
     {
         $flight = Flight::create([
-            'code' => 'delete-test-' . time(),
+            'code' => 'delete-test-'.time(),
             'airline' => ['en' => 'Test', 'fr' => 'Test', 'ar' => 'اختبار'],
             'from' => 'NYC',
             'to' => ['en' => 'Paris', 'fr' => 'Paris', 'ar' => 'باريس'],
@@ -260,7 +384,7 @@ class AdminFlightsE2ETest extends TestCase
     {
         // All fields are optional in backend, but can send empty payload
         $this->actingAs($this->admin)
-            ->postJson('/api/admin/flights', ['code' => 'empty-' . time()])
+            ->postJson('/api/admin/flights', ['code' => 'empty-'.time()])
             ->assertCreated(); // Even with minimal payload, create succeeds
 
         // Invalid price (negative)
@@ -307,7 +431,7 @@ class AdminFlightsE2ETest extends TestCase
     public function test_list_flights_returns_admin_payload_format(): void
     {
         Flight::create([
-            'code' => 'list-test-1-' . time(),
+            'code' => 'list-test-1-'.time(),
             'airline' => ['en' => 'Airline 1', 'fr' => 'Compagnie 1', 'ar' => 'خطوط 1'],
             'from' => 'NYC',
             'to' => ['en' => 'Paris', 'fr' => 'Paris', 'ar' => 'باريس'],

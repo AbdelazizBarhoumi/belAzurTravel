@@ -55,7 +55,7 @@ export default function CarDetail() {
                     <div className="mt-8 lg:hidden">
                         <StickyBookingCard
                             price={car.price}
-                            currency="$"
+                            currency="DT"
                             priceLabel={t('common.from')}
                             priceSuffix={t('cars.perDay')}
                             badge={localizeText(car.category, lang)}
@@ -89,7 +89,7 @@ export default function CarDetail() {
                             {t('carsDetail.features')}
                         </h2>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {car.features.map((feature: LocalizedText) => (
+                            {car.features?.map((feature: LocalizedText) => (
                                 <div
                                     key={String(feature.en)}
                                     className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
@@ -108,7 +108,7 @@ export default function CarDetail() {
                             {t('carsDetail.policy')}
                         </h2>
                         <ul className="space-y-3">
-                            {car.policy.map((rule: LocalizedText) => (
+                            {(car.policy ?? []).map((rule: LocalizedText) => (
                                 <li
                                     key={String(rule.en)}
                                     className="flex items-start gap-2 text-sm text-muted-foreground"
@@ -126,12 +126,14 @@ export default function CarDetail() {
                 <aside className="hidden lg:block">
                     <StickyBookingCard
                         price={car.price}
-                        currency="$"
+                        currency="DT"
                         priceLabel={t('common.from')}
                         priceSuffix={t('cars.perDay')}
                         badge={localizeText(car.category, lang)}
                         title={localizeText(car.name, lang)}
                         description={localizeText(car.description, lang)}
+                        entityType="car"
+                        itemId={String(car.id)}
                         detailsLayout="grid3"
                         details={[
                             {
@@ -151,7 +153,6 @@ export default function CarDetail() {
                             },
                         ]}
                         primaryButtonLabel={t('cars.rentNow')}
-                        onBook={() => window.open('/contact', '_self')}
                     />
                 </aside>
             </motion.div>

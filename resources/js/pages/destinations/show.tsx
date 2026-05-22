@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, Check, Cloud, DollarSign, Globe } from 'lucide-react';
+import { Calendar, Check, Cloud, Wallet, Globe } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { StickyBookingCard } from '@/components/cards/StickyBookingCard';
 import { PageShell } from '@/components/layout/PageShell';
@@ -67,7 +67,27 @@ export default function DestinationDetail() {
             >
                 <div className="flex flex-col">
                     <Gallery
-                        images={destination.gallery ?? []}
+                        images={(() => {
+                            const otherImages =
+                                Array.isArray(destination.gallery) &&
+                                destination.gallery.length > 0
+                                    ? destination.gallery
+                                    : Array.isArray(destination.images) &&
+                                        destination.images.length > 0
+                                      ? destination.images
+                                      : [];
+
+                            if (destination.image) {
+                                return [
+                                    destination.image,
+                                    ...otherImages.filter(
+                                        (i) => i !== destination.image,
+                                    ),
+                                ];
+                            }
+
+                            return otherImages;
+                        })()}
                         hotelName={localize(destination.name, lang)}
                         favoriteItem={{
                             id: `dest-${destination.slug}`,
@@ -82,7 +102,7 @@ export default function DestinationDetail() {
                     <div className="mt-8 lg:hidden">
                         <StickyBookingCard
                             price={destination.price}
-                            currency="$"
+                            currency="DT"
                             title={localize(destination.name, lang)}
                             location={localize(destination.country, lang)}
                             description={localize(
@@ -128,7 +148,7 @@ export default function DestinationDetail() {
                                                   destination.currency,
                                                   lang,
                                               ),
-                                              icon: DollarSign,
+                                              icon: Wallet,
                                           },
                                       ]
                                     : []),
@@ -153,7 +173,7 @@ export default function DestinationDetail() {
                             primaryButtonLabel={t('destinationDetail.planTrip')}
                             onBook={() =>
                                 window.open(
-                                    `/design-trip?destination=${destination.slug}`,
+                                    `/contact?destination=${destination.slug}`,
                                     '_self',
                                 )
                             }
@@ -179,19 +199,67 @@ export default function DestinationDetail() {
                                     {t('destinationDetail.highlights')}
                                 </h2>
                                 <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
-                                    {destination.highlights.map((highlight) => (
-                                        <div
-                                            key={highlight.en}
-                                            className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
-                                        >
-                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                                                <Check className="h-4 w-4 text-primary" />
-                                            </div>
-                                            <span className="text-sm text-foreground">
-                                                {localize(highlight, lang)}
-                                            </span>
-                                        </div>
-                                    ))}
+                                    {destination.highlights.map(
+                                        (highlight, idx) => {
+                                            // highlight may be either a LocalizedText object (e.g. {en,fr,ar})
+                                            // or an object wrapper like { name: { en, fr, ar } } coming from admin editor.
+                                            const localized =
+                                                highlight &&
+                                                typeof highlight === 'object' &&
+                                                'name' in
+                                                    (highlight as Record<
+                                                        string,
+                                                        unknown
+                                                    >)
+                                                    ? (
+                                                          highlight as Record<
+                                                              string,
+                                                              unknown
+                                                          >
+                                                      ).name
+                                                    : highlight;
+                                            const key =
+                                                localized &&
+                                                typeof localized === 'object'
+                                                    ? (
+                                                          localized as Record<
+                                                              string,
+                                                              string
+                                                          >
+                                                      ).en ||
+                                                      (
+                                                          localized as Record<
+                                                              string,
+                                                              string
+                                                          >
+                                                      ).fr ||
+                                                      (
+                                                          localized as Record<
+                                                              string,
+                                                              string
+                                                          >
+                                                      ).ar ||
+                                                      String(idx)
+                                                    : String(idx);
+
+                                            return (
+                                                <div
+                                                    key={key}
+                                                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+                                                >
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                                                        <Check className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    <span className="text-sm text-foreground">
+                                                        {localize(
+                                                            localized as LocalizedText,
+                                                            lang,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            );
+                                        },
+                                    )}
                                 </div>
                             </section>
                         )}
@@ -200,10 +268,12 @@ export default function DestinationDetail() {
                 <aside className="hidden lg:block">
                     <StickyBookingCard
                         price={destination.price}
-                        currency="$"
+                        currency="DT"
                         title={localize(destination.name, lang)}
                         location={localize(destination.country, lang)}
                         description={localize(destination.description, lang)}
+                        entityType="destination"
+                        itemSlug={destination.slug}
                         details={[
                             ...(destination.bestTime
                                 ? [
@@ -243,7 +313,7 @@ export default function DestinationDetail() {
                                               destination.currency,
                                               lang,
                                           ),
-                                          icon: DollarSign,
+                                          icon: Wallet,
                                       },
                                   ]
                                 : []),
@@ -264,12 +334,6 @@ export default function DestinationDetail() {
                         priceLabel={t('destinationDetail.startingFrom')}
                         rating={destination.rating}
                         primaryButtonLabel={t('destinationDetail.planTrip')}
-                        onBook={() =>
-                            window.open(
-                                `/design-trip?destination=${destination.slug}`,
-                                '_self',
-                            )
-                        }
                     />
                 </aside>
             </motion.div>
@@ -298,8 +362,8 @@ export default function DestinationDetail() {
                                         {localize(hotel.name, lang)}
                                     </h3>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {t('destinationDetail.startingFrom')} $
-                                        {hotel.price}/night
+                                        {t('destinationDetail.startingFrom')}{' '}
+                                        {hotel.price} DT/night
                                     </p>
                                 </div>
                             </Link>
@@ -333,8 +397,8 @@ export default function DestinationDetail() {
                                     </h3>
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         {localize(tour.duration, lang)} ·{' '}
-                                        {t('destinationDetail.startingFrom')} $
-                                        {tour.price.toLocaleString()}
+                                        {t('destinationDetail.startingFrom')}{' '}
+                                        {tour.price.toLocaleString()} DT
                                     </p>
                                 </div>
                             </Link>

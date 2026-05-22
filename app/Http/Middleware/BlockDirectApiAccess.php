@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Blocks direct JSON API access to public endpoints.
  * Only allows requests from the React app (same origin).
  * Prevents scraping and direct API access.
- * 
+ *
  * Usage in routes:
  *   Route::get('/destinations', [...])
  *       ->middleware(['block-direct-api-access']);
@@ -43,7 +43,7 @@ class BlockDirectApiAccess
         // Get the request origin
         $referer = $request->header('referer');
         $origin = $request->header('origin');
-        
+
         // Allow if request has Referer from the app (normal page navigation)
         if ($referer) {
             foreach ($allowedOrigins as $allowed) {
@@ -60,8 +60,8 @@ class BlockDirectApiAccess
 
         // Allow if user-agent indicates it's from the app (not a browser or curl)
         $userAgent = $request->header('user-agent', '');
-        if (str_contains($userAgent, 'Dart') || 
-            str_contains($userAgent, 'Flutter') || 
+        if (str_contains($userAgent, 'Dart') ||
+            str_contains($userAgent, 'Flutter') ||
             str_contains($userAgent, 'axios') ||
             str_contains($userAgent, 'fetch') ||
             str_contains($userAgent, 'node')) {
@@ -73,4 +73,3 @@ class BlockDirectApiAccess
         abort(404, 'This endpoint is not publicly accessible.');
     }
 }
-

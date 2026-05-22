@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Destination;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -26,7 +25,7 @@ class DestinationApiTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
-            ['id', 'slug', 'name', 'country', 'categoryKey']
+            ['id', 'slug', 'name', 'country', 'categoryKey'],
         ]);
 
         $data = $response->json();

@@ -4,6 +4,8 @@ import type { LocalizedText } from '../common';
  * Car item - brief view with rental details
  */
 export interface CarItem {
+    // unique id from backend (optional for some endpoints)
+    id?: string | number;
     slug: string;
     name: LocalizedText;
     // key of the category (e.g. "suv", "sedan") when provided by the API

@@ -105,7 +105,10 @@ export async function apiFetch<T>(
         }
 
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Request failed');
+        throw Object.assign(new Error(err.message || 'Request failed'), {
+            status: res.status,
+            data: err,
+        });
     }
 
     return res.json() as Promise<T>;

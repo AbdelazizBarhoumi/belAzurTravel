@@ -97,14 +97,19 @@ export function BlogSection({
                                                         lang === 'ar'
                                                             ? 'ar-EG'
                                                             : lang === 'fr'
-                                                            ? 'fr-FR'
-                                                            : 'en-US';
+                                                              ? 'fr-FR'
+                                                              : 'en-US';
 
-                                                    return new Intl.DateTimeFormat(locale, {
-                                                        day: 'numeric',
-                                                        month: 'long',
-                                                        year: 'numeric',
-                                                    }).format(new Date(post.date));
+                                                    return new Intl.DateTimeFormat(
+                                                        locale,
+                                                        {
+                                                            day: 'numeric',
+                                                            month: 'long',
+                                                            year: 'numeric',
+                                                        },
+                                                    ).format(
+                                                        new Date(post.date),
+                                                    );
                                                 } catch {
                                                     return post.date;
                                                 }

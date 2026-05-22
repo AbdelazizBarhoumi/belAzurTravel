@@ -23,13 +23,15 @@ class PublicEventTest extends TestCase
     public function test_public_can_view_event_details(): void
     {
         $event = Event::factory()->create([
+            'category_key' => 'cultural',
             'title' => ['en' => 'Test Event', 'fr' => 'Test Event', 'ar' => 'Test Event'],
         ]);
 
-        $response = $this->getJson('/api/events/' . $event->slug);
+        $response = $this->getJson('/api/events/'.$event->slug);
 
         $response->assertOk()
             ->assertJsonPath('slug', $event->slug)
+            ->assertJsonPath('category_key', 'cultural')
             ->assertJsonPath('title.en', 'Test Event');
     }
 }

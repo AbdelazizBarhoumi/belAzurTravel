@@ -23,9 +23,12 @@ import {
     EntityFormDialog,
     type SectionDef,
 } from '@/components/forms/EntityFormDialog';
-import { JsonListEditor, type JsonFieldDef } from '@/components/forms/JsonListEditor';
+import {
+    JsonListEditor,
+    type JsonFieldDef,
+} from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
-import { fetchCategories } from '@/api/categories.api';
+import { fetchCategories, type Category } from '@/api/categories.api';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -43,9 +46,104 @@ function asText(value: unknown): string {
     return typeof value === 'string' ? value : '';
 }
 
+function getCategoryLabel(
+    category: Category | undefined,
+    locale: Lang,
+): string {
+    if (!category) return '';
+
+    return category.name[locale] || category.name.en || category.key;
+}
+
+function resolveCategoryKey(
+    categories: Category[],
+    ...values: Array<unknown>
+): string {
+    const candidates = values
+        .flatMap((value) => {
+            if (typeof value === 'string') {
+                return [value.trim()];
+            }
+
+            if (value && typeof value === 'object') {
+                const record = value as Record<string, unknown>;
+                return [
+                    typeof record.key === 'string' ? record.key.trim() : '',
+                    typeof record.category_key === 'string'
+                        ? record.category_key.trim()
+                        : '',
+                    typeof record.en === 'string' ? record.en.trim() : '',
+                    typeof record.fr === 'string' ? record.fr.trim() : '',
+                    typeof record.ar === 'string' ? record.ar.trim() : '',
+                ];
+            }
+
+            return [] as string[];
+        })
+        .filter(Boolean);
+
+    for (const candidate of candidates) {
+        const match = categories.find((category) => {
+            const names = [
+                category.key,
+                category.name.en,
+                category.name.fr,
+                category.name.ar,
+            ]
+                .filter((value): value is string => typeof value === 'string')
+                .map((value) => value.trim())
+                .filter(Boolean);
+
+            return names.includes(candidate);
+        });
+
+        if (match) return match.key;
+    }
+
+    return candidates[0] ?? '';
+}
+
+function syncCategoryFields(
+    setField: (key: string, value: unknown) => void,
+    category: Category | undefined,
+    fallbackKey: string,
+) {
+    const selectedKey = category?.key ?? fallbackKey;
+    const baseLabel =
+        category?.name.en ??
+        category?.name.fr ??
+        category?.name.ar ??
+        selectedKey;
+
+    setField('category_key', selectedKey);
+    setField('category', baseLabel);
+    setField('category_en', category?.name.en ?? baseLabel);
+    setField('category_fr', category?.name.fr ?? baseLabel);
+    setField('category_ar', category?.name.ar ?? baseLabel);
+}
+
 function parseGallery(value: unknown): string[] {
     if (Array.isArray(value)) {
-        return value.filter((item): item is string => typeof item === 'string');
+        return value
+            .map((item) => {
+                if (typeof item === 'string') return item.trim();
+                if (typeof item === 'number') return String(item);
+                if (item && typeof item === 'object') {
+                    const record = item as Record<string, unknown>;
+                    const candidate =
+                        record.url ?? record.path ?? record.src ?? record.image;
+
+                    if (
+                        typeof candidate === 'string' ||
+                        typeof candidate === 'number'
+                    ) {
+                        return String(candidate).trim();
+                    }
+                }
+
+                return '';
+            })
+            .filter(Boolean);
     }
 
     if (typeof value === 'string') {
@@ -59,7 +157,8 @@ function parseGallery(value: unknown): string[] {
 }
 
 const simpleLocalizedSchema: JsonFieldDef[] = [
-    { key: 'name', label: 'Name', translatable: true },
+    // Use a translation key here; `t` is only available inside the component via useLanguage
+    { key: 'name', labelKey: 'admin.name', translatable: true },
 ];
 
 export default function AdminCars() {
@@ -68,23 +167,137 @@ export default function AdminCars() {
     const queryClient = useQueryClient();
     const { settings: siteSettings } = useSiteSettings();
     const isCodeEnabled =
-        siteSettings?.config?.navigation?.enabled_dropdowns?.includes(
-            'cars',
-        );
+        siteSettings?.config?.navigation?.enabled_dropdowns?.includes('cars');
+    const [catManagerOpen, setCatManagerOpen] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [open, setOpen] = useState(false);
+    const [editing, setEditing] = useState<AdminRow | null>(null);
+    const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
+
+    const queryKey = useMemo(() => ['admin', 'cars'], []);
+
+    const { data: dbCategories = [] } = useQuery({
+        queryKey: ['admin', 'categories', 'cars'],
+        queryFn: () => fetchCategories('cars'),
+    });
+
+    const categoryLabelByKey = useMemo(
+        () =>
+            new Map(
+                dbCategories.map((category) => [
+                    category.key,
+                    category.name[lang] || category.name.en,
+                ]),
+            ),
+        [dbCategories, lang],
+    );
+
+    const { data: rows = [] } = useQuery<AdminRow[]>({
+        queryKey,
+        queryFn: async () => {
+            const data = (await listAdminEntities<AdminRow>(
+                'cars',
+            )) as unknown as AdminRow[] | { data?: AdminRow[] };
+            const result = Array.isArray(data) ? data : (data.data ?? []);
+            console.log('DEBUG: rows data', result);
+            return result;
+        },
+    });
+
+    const saveMutation = useMutation({
+        mutationFn: (row: AdminRow) => saveAdminEntity('cars', row),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => deleteAdminEntity('cars', id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey });
+            toast.success(t('actions.deleted'));
+        },
+    });
+
+    const dialogInitial = useMemo<Record<string, unknown> | null>(() => {
+        if (!editing) return null;
+
+        const details =
+            editing.details && typeof editing.details === 'object'
+                ? (editing.details as Record<string, unknown>)
+                : {};
+
+        const resolvedCategoryKey = resolveCategoryKey(
+            dbCategories,
+            (editing as Record<string, unknown>).category_key,
+            editing.category,
+            (editing as Record<string, unknown>).category_en,
+            (editing as Record<string, unknown>).category_fr,
+            (editing as Record<string, unknown>).category_ar,
+            details.category,
+        );
+        const resolvedCategory = dbCategories.find(
+            (category) => category.key === resolvedCategoryKey,
+        );
+
+        return {
+            ...editing,
+            category_key: resolvedCategoryKey,
+            category:
+                resolvedCategory?.name[lang] ??
+                resolvedCategory?.name.en ??
+                asText((editing as Record<string, unknown>).category) ??
+                '',
+            category_en:
+                resolvedCategory?.name.en ??
+                asText((editing as Record<string, unknown>).category_en) ??
+                '',
+            category_fr:
+                resolvedCategory?.name.fr ??
+                asText((editing as Record<string, unknown>).category_fr) ??
+                '',
+            category_ar:
+                resolvedCategory?.name.ar ??
+                asText((editing as Record<string, unknown>).category_ar) ??
+                '',
+            imagePath: asText(editing.image),
+            imageFile: null,
+            galleryPaths: parseGallery(editing.gallery),
+            galleryFiles: [] as File[],
+            features: Array.isArray(editing.features) ? editing.features : [],
+            policy: Array.isArray(editing.policy)
+                ? editing.policy
+                : Array.isArray(details.policy)
+                  ? details.policy
+                  : [],
+        };
+    }, [dbCategories, editing, lang]);
 
     // Reset errors when dialog toggles
     const handleOpenChange = (isOpen: boolean) => {
-        if (!isOpen) setErrors({});
+        if (!isOpen) {
+            setErrors({});
+            setEditing(null);
+        }
         setOpen(isOpen);
     };
 
     const validate = (values: Record<string, unknown>) => {
         const errs: Record<string, string> = {};
-        if (!values.name_en) errs.name_en = t('admin.fieldRequired');
-        if (!values.price || Number(values.price) <= 0) errs.price = t('admin.invalidPrice');
-        if (!values.seats || Number(values.seats) <= 0) errs.seats = t('admin.invalidSeats');
+
+        ['en', 'fr', 'ar'].forEach((locale) => {
+            if (!values[`name_${locale}`]) {
+                errs[`name_${locale}`] = t('admin.fieldRequired');
+            }
+        });
+
+        if (!values.category_key) {
+            errs.category_key = t('admin.fieldRequired');
+        }
+
+        if (!values.price || Number(values.price) <= 0)
+            errs.price = t('admin.invalidPrice');
+        if (!values.seats || Number(values.seats) <= 0)
+            errs.seats = t('admin.invalidSeats');
+
         return errs;
     };
 
@@ -96,9 +309,19 @@ export default function AdminCars() {
             return;
         }
 
+        const selectedCategoryKey = asText(values.category_key);
+        const selectedCategory = dbCategories.find(
+            (category) => category.key === selectedCategoryKey,
+        );
+
         const payload: Record<string, unknown> = {
             ...values,
             id: editing?.id ?? '',
+            category_key: selectedCategoryKey,
+            category: selectedCategory?.name.en ?? values.category ?? '',
+            category_en: selectedCategory?.name.en ?? values.category_en ?? '',
+            category_fr: selectedCategory?.name.fr ?? values.category_fr ?? '',
+            category_ar: selectedCategory?.name.ar ?? values.category_ar ?? '',
             image:
                 values.imageFile instanceof File
                     ? values.imageFile
@@ -109,9 +332,8 @@ export default function AdminCars() {
                 ? values.galleryPaths
                 : [],
             features: Array.isArray(values.features) ? values.features : [],
-            details: {
-                policy: Array.isArray(values.policy) ? values.policy : [],
-            },
+            policy: Array.isArray(values.policy) ? values.policy : [],
+            details: undefined,
         };
 
         if (
@@ -121,12 +343,20 @@ export default function AdminCars() {
             payload.gallery_files = values.galleryFiles;
         }
 
-        saveMutation.mutate(payload);
-        toast.success(editing ? t('actions.saved') : t('actions.added'));
-        setEditing(null);
-        setOpen(false);
+        saveMutation.mutate(payload as unknown as AdminRow, {
+            onSuccess: () => {
+                toast.success(
+                    editing ? t('actions.saved') : t('actions.added'),
+                );
+                setEditing(null);
+                setOpen(false);
+                setErrors({});
+            },
+            onError: () => {
+                toast.error(t('admin.saveFailed'));
+            },
+        });
     }
-
     const carSections: SectionDef[] = [
         {
             title: t('admin.carForm.coreDetails'),
@@ -134,81 +364,110 @@ export default function AdminCars() {
             description: t('admin.carForm.coreDetailsHint'),
             render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label
+                            htmlFor="category_key"
+                            className={`text-xs font-semibold ${errors.category_key ? 'text-destructive' : 'text-muted-foreground'}`}
+                        >
+                            {t('admin.category')}
+                        </label>
+                        <Select
+                            value={String(values.category_key ?? '')}
+                            onValueChange={(val) =>
+                                syncCategoryFields(
+                                    setField,
+                                    dbCategories.find(
+                                        (category) => category.key === val,
+                                    ),
+                                    val,
+                                )
+                            }
+                        >
+                            <SelectTrigger
+                                id="category_key"
+                                className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.category_key ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                            >
+                                <SelectValue
+                                    placeholder={t('actions.select')}
+                                />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {dbCategories.map((category) => (
+                                    <SelectItem
+                                        key={category.key}
+                                        value={category.key}
+                                    >
+                                        {getCategoryLabel(category, activeLang)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {errors.category_key && (
+                            <p className="text-xs text-destructive">
+                                {errors.category_key}
+                            </p>
+                        )}
+                    </div>
+
                     <div className="grid gap-4 md:grid-cols-2">
                         {[
-                            { key: 'name', label: t('admin.name') },
                             {
-                                key: 'category',
-                                label: t('admin.category'),
+                                key: 'name',
+                                label: t('admin.name'),
+                                placeholder: t('admin.carForm.namePlaceholder'),
+                                helpText: t('admin.carForm.nameHint'),
                             },
                             {
                                 key: 'fuel',
                                 label: t('admin.carForm.fuel'),
+                                placeholder: t('admin.carForm.fuelPlaceholder'),
+                                helpText: t('admin.carForm.fuelHint'),
                             },
                             {
                                 key: 'transmission',
                                 label: t('admin.carForm.transmission'),
+                                placeholder: t(
+                                    'admin.carForm.transmissionPlaceholder',
+                                ),
+                                helpText: t('admin.carForm.transmissionHint'),
                             },
                         ].map((field) => {
                             const localizedKey = `${field.key}_${activeLang}`;
-                            const error = errors[localizedKey] || (field.key === 'name' ? errors.name_en : null);
+                            const error = errors[localizedKey];
 
                             return (
                                 <div key={localizedKey} className="space-y-2">
                                     <label
                                         htmlFor={localizedKey}
-                                        className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
+                                        className={`flex items-center gap-2 text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
                                     >
                                         {field.label}
                                         <LangBadge lang={activeLang} />
                                     </label>
-                                    {field.key === 'category' &&
-                                    dbCategories.length > 0 ? (
-                                        <Select
-                                            value={String(
-                                                values[localizedKey] ?? '',
-                                            )}
-                                            onValueChange={(val) =>
-                                                setField(localizedKey, val)
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                id={localizedKey}
-                                                className={`w-full rounded-xl border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 ${error ? 'border-destructive focus:ring-destructive/20' : 'border-border focus:border-primary focus:ring-primary/20'}`}
-                                            >
-                                                <SelectValue
-                                                    placeholder={t('actions.select')}
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {dbCategories.map((c) => (
-                                                    <SelectItem
-                                                        key={c.key}
-                                                        value={c.key}
-                                                    >
-                                                        {c.name[activeLang] ||
-                                                            c.name.en}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    ) : (
-                                        <input
-                                            id={localizedKey}
-                                            value={String(
-                                                values[localizedKey] ?? '',
-                                            )}
-                                            onChange={(event) =>
-                                                setField(
-                                                    localizedKey,
-                                                    event.target.value,
-                                                )
-                                            }
-                                            className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 ${error ? 'border-destructive focus:ring-destructive/20' : 'border-border focus:border-primary focus:ring-primary/20'}`}
-                                            required
-                                        />
+                                    <input
+                                        id={localizedKey}
+                                        value={String(
+                                            values[localizedKey] ?? '',
+                                        )}
+                                        placeholder={field.placeholder}
+                                        onChange={(event) =>
+                                            setField(
+                                                localizedKey,
+                                                event.target.value,
+                                            )
+                                        }
+                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                    />
+                                    {field.helpText && !error && (
+                                        <p className="text-[10px] text-muted-foreground">
+                                            {field.helpText}
+                                        </p>
                                     )}
-                                    {error && <p className="text-xs text-destructive">{error}</p>}
+                                    {error && (
+                                        <p className="text-xs text-destructive">
+                                            {error}
+                                        </p>
+                                    )}
                                 </div>
                             );
                         })}
@@ -223,13 +482,21 @@ export default function AdminCars() {
                             <input
                                 id="car-price"
                                 type="number"
+                                placeholder="0.00"
                                 value={String(values.price ?? '')}
                                 onChange={(event) =>
                                     setField('price', event.target.value)
                                 }
-                                className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 ${errors.price ? 'border-destructive focus:ring-destructive/20' : 'border-border focus:border-primary focus:ring-primary/20'}`}
+                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.price ? 'border-destructive ring-1 ring-destructive' : ''}`}
                             />
-                            {errors.price && <p className="text-xs text-destructive">{errors.price}</p>}
+                            {errors.price && (
+                                <p className="text-xs text-destructive">
+                                    {errors.price}
+                                </p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground">
+                                {t('admin.carForm.priceHint')}
+                            </p>
                         </div>
 
                         <div className="space-y-2">
@@ -242,13 +509,23 @@ export default function AdminCars() {
                             <input
                                 id="car-seats"
                                 type="number"
+                                placeholder={t(
+                                    'admin.carForm.seatsPlaceholder',
+                                )}
                                 value={String(values.seats ?? '')}
                                 onChange={(event) =>
                                     setField('seats', event.target.value)
                                 }
-                                className={`w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 ${errors.seats ? 'border-destructive focus:ring-destructive/20' : 'border-border focus:border-primary focus:ring-primary/20'}`}
+                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.seats ? 'border-destructive ring-1 ring-destructive' : ''}`}
                             />
-                            {errors.seats && <p className="text-xs text-destructive">{errors.seats}</p>}
+                            {errors.seats && (
+                                <p className="text-xs text-destructive">
+                                    {errors.seats}
+                                </p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground">
+                                {t('admin.carForm.seatsHint')}
+                            </p>
                         </div>
                         <div className="space-y-2 md:col-span-2">
                             <label
@@ -308,7 +585,7 @@ export default function AdminCars() {
                     addButtonLabel={t('admin.carForm.addFeature')}
                     itemLabel={(item, index) =>
                         ((item as any).name as any)?.[activeLang] ||
-                        `Feature ${index + 1}`
+                        `${t('admin.carForm.feature')} ${index + 1}`
                     }
                 />
             ),
@@ -327,7 +604,7 @@ export default function AdminCars() {
                     addButtonLabel={t('admin.carForm.addPolicy')}
                     itemLabel={(item, index) =>
                         ((item as any).name as any)?.[activeLang] ||
-                        `Rule ${index + 1}`
+                        `${t('admin.carForm.rule')} ${index + 1}`
                     }
                 />
             ),
@@ -389,8 +666,10 @@ export default function AdminCars() {
                                     <th
                                         key={column}
                                         className={`px-4 py-3 text-xs font-semibold uppercase text-muted-foreground ${
-                                            index === 1 
-                                                ? (lang === 'ar' ? 'text-right' : 'text-left') 
+                                            index === 1
+                                                ? lang === 'ar'
+                                                    ? 'text-right'
+                                                    : 'text-left'
                                                 : 'text-center'
                                         }`}
                                     >
@@ -403,25 +682,32 @@ export default function AdminCars() {
                             {rows.map((row) => (
                                 <tr
                                     key={String(row.id)}
-                                    className="border-b border-border last:border-0 hover:bg-muted/20 text-center"
+                                    className="border-b border-border text-center last:border-0 hover:bg-muted/20"
                                 >
-                                    <td className="px-4 py-3 flex justify-center">
+                                    <td className="flex justify-center px-4 py-3">
                                         <img
                                             src={asText(row.image)}
                                             alt={asText(row.name_en)}
                                             className="h-12 w-12 rounded-lg object-cover"
                                         />
                                     </td>
-                                    <td className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                                    <td
+                                        className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                                    >
                                         {asText(row[`name_${lang}`]) ||
                                             asText(row.name_en)}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">
                                         {asText(row[`category_${lang}`]) ||
-                                            asText(row.category_en)}
+                                            asText(row.category_en) ||
+                                            asText(row.category) ||
+                                            categoryLabelByKey.get(
+                                                asText(row.category_key),
+                                            ) ||
+                                            asText(row.category_key)}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
-                                        ${Number(row.price).toLocaleString()}
+                                        {Number(row.price).toLocaleString()} DT
                                     </td>
                                     <td className="px-4 py-3 text-sm">
                                         {asText(row.seats)}
@@ -480,7 +766,7 @@ export default function AdminCars() {
 
             <EntityFormDialog<Record<string, unknown>>
                 open={open}
-                onOpenChange={setOpen}
+                onOpenChange={handleOpenChange}
                 title={
                     editing
                         ? `${t('actions.edit')} ${t('admin.name')}`
@@ -492,6 +778,7 @@ export default function AdminCars() {
                 languages={['en', 'fr', 'ar']}
                 layout="grid-2"
                 isSubmitting={saveMutation.isPending}
+                errors={errors}
             />
         </AdminLayout>
     );

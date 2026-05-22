@@ -13,6 +13,8 @@ class TeamControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected User $admin;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,14 +27,15 @@ class TeamControllerTest extends TestCase
             'name' => ['en' => 'Test Member'],
             'role' => ['en' => 'Developer'],
             'bio' => ['en' => 'Test bio'],
-            'image_path' => 'images/test.jpg',
+            'image_path' => '/storage/uploads/teams/test-member.jpg',
         ]);
 
         $response = $this->getJson('/api/team');
 
         $response->assertStatus(200)
             ->assertJsonCount(1)
-            ->assertJsonFragment(['name' => ['en' => 'Test Member']]);
+            ->assertJsonPath('0.name.en', 'Test Member')
+            ->assertJsonPath('0.image', '/storage/uploads/teams/test-member.jpg');
     }
 
     public function test_admin_can_list_team_members(): void
@@ -59,7 +62,8 @@ class TeamControllerTest extends TestCase
         ]);
 
         $response->assertStatus(201);
-        $this->assertDatabaseHas('teams', ['image_path' => 'images/uploads/' . $file->hashName()]);
+        $this->assertDatabaseHas('teams', ['image_path' => '/storage/uploads/teams/'.$file->hashName()]);
+        $this->assertTrue(Storage::disk('public')->exists('uploads/teams/'.$file->hashName()));
     }
 
     public function test_admin_can_update_team_member_without_new_image(): void
@@ -67,7 +71,7 @@ class TeamControllerTest extends TestCase
         Storage::fake('public');
         $team = Team::factory()->create();
 
-        $response = $this->actingAs($this->admin)->putJson('/api/admin/team/' . $team->id, [
+        $response = $this->actingAs($this->admin)->putJson('/api/admin/team/'.$team->id, [
             'name_en' => 'Updated', 'name_fr' => 'Mis à jour', 'name_ar' => 'محدث',
             'role_en' => 'Lead', 'role_fr' => 'Lead', 'role_ar' => 'قائد',
             'bio_en' => 'Bio', 'bio_fr' => 'Bio', 'bio_ar' => 'سيرة',
@@ -75,7 +79,10 @@ class TeamControllerTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $this->assertDatabaseHas('teams', ['id' => $team->id, 'image_path' => $team->image_path]);
+        $this->assertDatabaseHas('teams', [
+            'id' => $team->id,
+            'image_path' => $team->image_path,
+        ]);
     }
 
     public function test_admin_can_update_team_member_with_new_image(): void
@@ -85,7 +92,7 @@ class TeamControllerTest extends TestCase
         // Use raw file with .jpg extension to pass image validation without GD
         $newFile = UploadedFile::fake()->create('new.jpg', 100);
 
-        $response = $this->actingAs($this->admin)->postJson('/api/admin/team/' . $team->id, [
+        $response = $this->actingAs($this->admin)->postJson('/api/admin/team/'.$team->id, [
             '_method' => 'PUT',
             'name_en' => 'Updated', 'name_fr' => 'Mis à jour', 'name_ar' => 'محدث',
             'role_en' => 'Lead', 'role_fr' => 'Lead', 'role_ar' => 'قائد',
@@ -94,6 +101,7 @@ class TeamControllerTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $this->assertDatabaseHas('teams', ['id' => $team->id, 'image_path' => 'images/uploads/' . $newFile->hashName()]);
+        $this->assertDatabaseHas('teams', ['id' => $team->id, 'image_path' => '/storage/uploads/teams/'.$newFile->hashName()]);
+        $this->assertTrue(Storage::disk('public')->exists('uploads/teams/'.$newFile->hashName()));
     }
 }

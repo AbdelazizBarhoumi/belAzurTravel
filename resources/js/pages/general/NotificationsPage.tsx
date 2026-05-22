@@ -13,11 +13,9 @@ export default function NotificationsPage() {
     const { t, dir } = useLanguage();
     const { pathname } = useLocation();
 
-    const role: 'admin' | 'assistant' | 'client' = pathname.startsWith('/admin')
+    const role: 'admin' | 'client' = pathname.startsWith('/admin')
         ? 'admin'
-        : pathname.startsWith('/assistant')
-          ? 'assistant'
-          : 'client';
+        : 'client';
 
     const isRtl = dir === 'rtl';
 
@@ -35,14 +33,9 @@ export default function NotificationsPage() {
         );
     }
 
-    // Default for Client (and fallback for Assistant if not using tab)
-    const backTo = role === 'assistant' ? '/assistant' : '/dashboard';
-    const backLabel =
-        role === 'assistant' ? t('assistant.panel') : t('nav.dashboard');
-    const panelLabel =
-        role === 'assistant'
-            ? t('notifications.assistantPanel')
-            : t('notifications.yourNotifications');
+    const backTo = '/dashboard';
+    const backLabel = t('nav.dashboard');
+    const panelLabel = t('notifications.yourNotifications');
 
     return (
         <div className="min-h-screen bg-background" dir={dir}>

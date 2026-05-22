@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Tour>
+ * @extends Factory<Tour>
  */
 class TourFactory extends Factory
 {
@@ -21,14 +21,14 @@ class TourFactory extends Factory
     public function definition(): array
     {
         $nameEn = fake()->words(3, true);
-        $slug = Str::slug($nameEn) . '-' . Str::lower(Str::random(5));
+        $slug = Str::slug($nameEn).'-'.Str::lower(Str::random(5));
 
         return [
             'slug' => $slug,
             'name' => [
                 'en' => ucfirst($nameEn),
-                'fr' => 'Tour ' . fake()->word(),
-                'ar' => 'جولة ' . fake()->word(),
+                'fr' => 'Tour '.fake()->word(),
+                'ar' => 'جولة '.fake()->word(),
             ],
             'location' => [
                 'en' => fake()->city(),
@@ -45,7 +45,7 @@ class TourFactory extends Factory
             'max_group' => 10,
             'price' => 1000,
             'rating' => 5.0,
-            'image' => '/images/hero-travel.jpg',
+            'image' => '/storage/uploads/seed/hero-travel.jpg',
             'description' => [
                 'en' => 'Description',
             ],

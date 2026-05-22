@@ -12,6 +12,7 @@ export interface AdminTour extends AdminEntity {
     price: number;
     rating: number;
     image: string;
+    category_key?: string;
     // optional rich fields present in editing context
     itinerary?: ItineraryDay[];
     includes?: string[];

@@ -1,16 +1,80 @@
 import { motion } from 'framer-motion';
 import { CheckCircle2, Info, Tag } from 'lucide-react';
 import { Navigate, useParams } from 'react-router-dom';
-import { StickyBookingCard } from '@/components/cards/StickyBookingCard';
 import { PageShell } from '@/components/layout/PageShell';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDealBySlug } from '@/hooks/usePublicData';
+import type { DealItem, LocalizedText } from '@/types/public';
+
+function normalizeLocalizedList(
+    value: DealItem['highlights'] | unknown,
+): LocalizedText[] {
+    if (!value) return [];
+
+    if (Array.isArray(value)) {
+        return value
+            .map((item) => {
+                if (!item) return null;
+
+                if (typeof item === 'string' || typeof item === 'number') {
+                    const text = String(item);
+                    return { en: text, fr: text, ar: text };
+                }
+
+                if (typeof item !== 'object') return null;
+
+                const candidate = item as Record<string, unknown>;
+                const localized =
+                    candidate.name && typeof candidate.name === 'object'
+                        ? (candidate.name as Record<string, unknown>)
+                        : candidate;
+
+                const entry = {
+                    en: String(localized.en ?? ''),
+                    fr: String(localized.fr ?? ''),
+                    ar: String(localized.ar ?? ''),
+                };
+
+                return entry.en || entry.fr || entry.ar ? entry : null;
+            })
+            .filter((item): item is LocalizedText => item !== null);
+    }
+
+    if (typeof value === 'object') {
+        const buckets = value as Record<string, unknown>;
+
+        if (
+            Array.isArray(buckets.en) ||
+            Array.isArray(buckets.fr) ||
+            Array.isArray(buckets.ar)
+        ) {
+            const en = (buckets.en as unknown[] | undefined) ?? [];
+            const fr = (buckets.fr as unknown[] | undefined) ?? [];
+            const ar = (buckets.ar as unknown[] | undefined) ?? [];
+            const max = Math.max(en.length, fr.length, ar.length);
+
+            return Array.from({ length: max }, (_, index) => {
+                const entry = {
+                    en: String(en[index] ?? fr[index] ?? ar[index] ?? ''),
+                    fr: String(fr[index] ?? en[index] ?? ar[index] ?? ''),
+                    ar: String(ar[index] ?? en[index] ?? fr[index] ?? ''),
+                };
+
+                return entry.en || entry.fr || entry.ar ? entry : null;
+            }).filter((item): item is LocalizedText => item !== null);
+        }
+    }
+
+    return [];
+}
 
 export default function DealDetail() {
     const { slug } = useParams<{ slug: string }>();
     const { t, lang } = useLanguage();
     const { data: deal, isLoading } = useDealBySlug(slug);
+    const highlights = normalizeLocalizedList(deal?.highlights);
+    const terms = normalizeLocalizedList(deal?.terms);
 
     if (isLoading) {
         return null;
@@ -47,28 +111,6 @@ export default function DealDetail() {
                         </div>
                     </section>
 
-                    <div className="lg:hidden">
-                        <StickyBookingCard
-                            minPrice={0}
-                            currency=""
-                            title={localizeText(deal.title, lang)}
-                            description={localizeText(deal.description, lang)}
-                            priceLabel={t('dealDetail.offer')}
-                            priceSuffix=""
-                            type={localizeText(deal.discount, lang)}
-                            rating={4.7}
-                            reviews={42}
-                            primaryButtonLabel={t('dealDetail.book')}
-                            onBook={() => window.alert(t('dealDetail.book'))}
-                            onWhatsApp={() =>
-                                window.open(
-                                    `https://wa.me/?text=${encodeURIComponent(`${t('dealDetail.inquiry')}: ${localizeText(deal.title, lang)}`)}`,
-                                    '_blank',
-                                )
-                            }
-                        />
-                    </div>
-
                     <section className="grid gap-4 md:grid-cols-3">
                         <div className="rounded-2xl border border-border bg-card p-5">
                             <div className="text-sm text-muted-foreground">
@@ -102,7 +144,7 @@ export default function DealDetail() {
                                 {t('dealDetail.highlights')}
                             </h3>
                             <ul className="space-y-2 text-foreground">
-                                {(deal.highlights ?? []).map((item) => (
+                                {highlights.map((item) => (
                                     <li key={item.en} className="flex gap-2">
                                         <CheckCircle2 className="mt-0.5 h-4 w-4 text-secondary" />{' '}
                                         {localizeText(item, lang)}
@@ -116,7 +158,7 @@ export default function DealDetail() {
                                 {t('dealDetail.terms')}
                             </h3>
                             <ul className="space-y-2 text-sm text-foreground">
-                                {(deal.terms ?? []).map((item) => (
+                                {terms.map((item) => (
                                     <li key={item.en} className="flex gap-2">
                                         <Info className="mt-0.5 h-4 w-4 text-secondary" />{' '}
                                         {localizeText(item, lang)}
@@ -156,28 +198,6 @@ export default function DealDetail() {
                         </div>
                     </section>
                 </div>
-
-                <aside className="hidden lg:block lg:pt-6">
-                    <StickyBookingCard
-                        minPrice={0}
-                        currency=""
-                        title={localizeText(deal.title, lang)}
-                        description={localizeText(deal.description, lang)}
-                        priceLabel={t('dealDetail.offer')}
-                        priceSuffix=""
-                        type={localizeText(deal.discount, lang)}
-                        rating={4.7}
-                        reviews={42}
-                        primaryButtonLabel={t('dealDetail.book')}
-                        onBook={() => window.alert(t('dealDetail.book'))}
-                        onWhatsApp={() =>
-                            window.open(
-                                `https://wa.me/?text=${encodeURIComponent(`${t('dealDetail.inquiry')}: ${localizeText(deal.title, lang)}`)}`,
-                                '_blank',
-                            )
-                        }
-                    />
-                </aside>
             </motion.div>
         </PageShell>
     );

@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Team;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class AdminTeamController extends Controller
 {
+    use HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.team', now()->addMinutes(5), function () {
@@ -30,6 +35,7 @@ class AdminTeamController extends Controller
     public function show(int|string $id): JsonResponse
     {
         $item = Team::query()->findOrFail($id);
+
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
@@ -51,7 +57,6 @@ class AdminTeamController extends Controller
         return response()->json(['message' => 'deleted']);
     }
 
-
     private function attributes(Request $request, ?Team $item = null): array
     {
         $rules = [
@@ -70,22 +75,18 @@ class AdminTeamController extends Controller
         ];
 
         // If creating or updating without existing image, image is required
-        if (!$item || !$item->image_path) {
+        if (! $item || ! $item->image_path) {
             $rules['image'] = ['required'];
-        } 
-        
+        }
+
         try {
             $data = $request->validate($rules);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            \Illuminate\Support\Facades\Log::error('Team validation failed', ['errors' => $e->errors(), 'input' => $request->all()]);
+        } catch (ValidationException $e) {
+            Log::error('Team validation failed', ['errors' => $e->errors(), 'input' => $request->all()]);
             throw $e;
         }
 
-        $imagePath = $item ? $item->image_path : null;
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('uploads/teams', 'public');
-            $imagePath = $path; // Store relative to storage/app/public/
-        }
+        $imagePath = $this->handleMainImage($request, $item?->image_path, 'uploads/teams');
 
         return [
             'name' => ['en' => $data['name_en'], 'fr' => $data['name_fr'], 'ar' => $data['name_ar']],
@@ -97,7 +98,6 @@ class AdminTeamController extends Controller
             'email' => $data['email'] ?? null,
         ];
     }
-
 
     private function adminPayload(Team $item): array
     {
@@ -115,7 +115,7 @@ class AdminTeamController extends Controller
             'bio_en' => $item->bio['en'] ?? '',
             'bio_fr' => $item->bio['fr'] ?? '',
             'bio_ar' => $item->bio['ar'] ?? '',
-            'image' => asset('storage/' . $item->image_path),
+            'image' => $this->normalizeApiOutputPath($item->image_path),
             'linkedin' => $item->linkedin,
             'twitter' => $item->twitter,
             'email' => $item->email,
@@ -128,4 +128,3 @@ class AdminTeamController extends Controller
         Cache::forget('team'); // Public endpoint cache
     }
 }
-

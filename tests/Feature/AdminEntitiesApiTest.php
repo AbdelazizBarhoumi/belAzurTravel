@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Destination;
 use App\Models\Flight;
+use App\Models\Promo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class AdminEntitiesApiTest extends TestCase
@@ -83,8 +85,6 @@ class AdminEntitiesApiTest extends TestCase
                 ->withoutMiddleware()->postJson("/api/admin/{$type}", $payload)
                 ->assertCreated()
                 ->json('data');
-
-            
 
             $this->actingAs($admin)
                 ->getJson("/api/admin/{$type}")
@@ -291,7 +291,6 @@ class AdminEntitiesApiTest extends TestCase
             ->assertOk()
             ->json();
 
-        
         $this->assertEquals('Luxury Palace Hotel', $hotel['name']['en']);
         $this->assertEquals('Luxury', $hotel['category']['en']);
         $this->assertEquals(5, $hotel['stars']);
@@ -300,6 +299,10 @@ class AdminEntitiesApiTest extends TestCase
         $this->assertEquals('Portugal', $hotel['country']['en']);
         $this->assertEquals('Rua Augusta 100', $hotel['address']);
         $this->assertEquals('+351-213-000-000', $hotel['phone']);
+        $this->assertEquals(
+            'A luxurious palace hotel in the heart of Lisbon.',
+            $hotel['description']['en'],
+        );
 
         // Verify amenities
         $this->assertCount(3, $hotel['amenities']);
@@ -318,6 +321,9 @@ class AdminEntitiesApiTest extends TestCase
             ...$payload,
             'stars' => 4,
             'reviews' => 400,
+            'description_en' => 'A refreshed luxury stay with updated suites.',
+            'description_fr' => 'Un séjour de luxe rafraîchi avec des suites mises à jour.',
+            'description_ar' => 'إقامة فاخرة مجددة مع أجنحة محدثة.',
             'amenities' => [
                 ['id' => null, 'name' => ['en' => 'Gym', 'fr' => 'Gym', 'ar' => 'صالة الألعاب']],
                 ...array_slice($payload['amenities'], 0, 1), // Keep first amenity
@@ -350,6 +356,10 @@ class AdminEntitiesApiTest extends TestCase
         $this->assertEquals(4, $updated['stars']);
         $this->assertEquals(400, $updated['reviews']);
         $this->assertEquals('Luxury', $updated['category']['en']);
+        $this->assertEquals(
+            'A refreshed luxury stay with updated suites.',
+            $updated['description']['en'],
+        );
         $this->assertCount(2, $updated['amenities']); // Gym + Swimming Pool
         $this->assertCount(3, $updated['rooms']); // Added Standard Room
         $this->assertEquals(200, $updated['rooms'][2]['pricePerNight']);
@@ -502,7 +512,7 @@ class AdminEntitiesApiTest extends TestCase
             ->assertCreated()
             ->json('data');
 
-        $promo = \App\Models\Promo::query()->where('code', 'TESTPROMO')->first();
+        $promo = Promo::query()->where('code', 'TESTPROMO')->first();
         $this->assertNotNull($promo);
         $this->assertEquals('Test Promo', $promo->title['en']);
         $this->assertEquals('Promo test', $promo->title['fr']);
@@ -610,6 +620,17 @@ class AdminEntitiesApiTest extends TestCase
             'active' => true,
         ]);
 
+        Log::shouldReceive('error')
+            ->once()
+            ->with(
+                'Promo validation failed',
+                \Mockery::on(function (array $context): bool {
+                    return isset($context['errors'])
+                        && isset($context['input'])
+                        && ($context['input']['code'] ?? null) === 'MISSINGFIELDS';
+                })
+            );
+
         $this->actingAs($admin)
             ->withoutMiddleware()->postJson('/api/admin/promos', [
                 'code' => 'MISSINGFIELDS',
@@ -621,5 +642,6 @@ class AdminEntitiesApiTest extends TestCase
                 'description_en', 'description_fr', 'description_ar',
                 'expires_en', 'expires_fr', 'expires_ar',
             ]);
+
     }
 }

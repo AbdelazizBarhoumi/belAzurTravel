@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Models\Destination;
-use App\Models\GalleryImage;
 use App\Concerns\HandlesAdminCategories;
+use App\Http\Controllers\Controller;
+use App\Models\Category;
+use App\Models\Destination;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 
 class AdminDestinationController extends Controller
 {
-    use HandlesAdminCategories, \App\Concerns\HandlesAdminMedia;
+    use \App\Concerns\HandlesAdminMedia, HandlesAdminCategories;
 
     public function index(): JsonResponse
     {
@@ -36,6 +36,7 @@ class AdminDestinationController extends Controller
     public function show(int|string $id): JsonResponse
     {
         $item = Destination::query()->findOrFail($id);
+
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
@@ -128,7 +129,7 @@ class AdminDestinationController extends Controller
         $slug = $existing->slug ?? Str::slug($slugBase).'-'.Str::lower(Str::random(5));
         $description = $localized('description', '');
 
-        $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? []);
+        $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? [], 'uploads/destinations');
 
         $categoryKey = $data['category_key']
             ?? $data['category']
@@ -154,13 +155,14 @@ class AdminDestinationController extends Controller
             'id' => (int) $item->id,
             ...$this->flatLocalized('name', $item->name),
             ...$this->flatLocalized('country', $item->country),
+            'category_key' => $item->category_key,
             ...$this->flatLocalized('category', $this->getCategory($item)),
             'price' => $item->price,
             'rating' => (float) $item->rating,
-            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'image' => $this->normalizeApiOutputPath($item->image),
             ...$this->flatLocalized('description', $item->description),
             ...$this->flatLocalized('about', $item->details['about'] ?? null),
-            'gallery' => array_map(fn($img) => str_starts_with($img, 'storage/') ? asset($img) : asset('storage/' . $img), $item->details['gallery'] ?? [$item->image]),
+            'gallery' => array_map(fn ($img) => $this->normalizeApiOutputPath($img), $item->details['gallery'] ?? [$item->image]),
             'highlights' => $item->details['highlights'] ?? [],
             ...$this->flatLocalized('bestTime', $item->details['bestTime'] ?? null),
             ...$this->flatLocalized('language', $item->details['language'] ?? null),
@@ -171,7 +173,7 @@ class AdminDestinationController extends Controller
 
     private function getCategory(Model $item): ?array
     {
-        $category = \App\Models\Category::where('entity_type', 'destinations')
+        $category = Category::where('entity_type', 'destinations')
             ->where('key', $item->category_key)
             ->first();
 
@@ -227,6 +229,7 @@ class AdminDestinationController extends Controller
         if (is_array($value)) {
             return (string) ($value['en'] ?? $value['fr'] ?? $value['ar'] ?? '');
         }
+
         return (string) ($value ?? '');
     }
 

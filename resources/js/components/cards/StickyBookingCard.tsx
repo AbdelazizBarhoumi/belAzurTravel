@@ -1,5 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
 import { MapPin, MessageCircle, Phone, Star, Clock, Users } from 'lucide-react';
+import { useState } from 'react';
+import { notifyInteraction } from '@/api/interactions.api';
+import { BookingDialog } from '@/components/forms/BookingDialog';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -23,6 +26,11 @@ interface StickyBookingCardProps {
     location?: string | string[];
     description?: string;
 
+    // Entity info for Booking
+    entityType?: 'destination' | 'hotel' | 'tour' | 'flight' | 'car';
+    itemSlug?: string;
+    itemId?: string;
+
     // Ratings/meta
     rating?: number;
     reviews?: number;
@@ -40,20 +48,23 @@ interface StickyBookingCardProps {
     secondaryButtonLabel?: string;
     tertiaryButtonLabel?: string;
     phoneNumber?: string;
-    onBook: () => void;
+    onBook?: () => void;
     onWhatsApp?: () => void;
 }
 
 export function StickyBookingCard({
     price,
     minPrice,
-    currency = '$',
+    currency = 'DT',
     priceLabel,
     priceSuffix,
     badge,
     title,
     location,
     description,
+    entityType,
+    itemSlug,
+    itemId,
     details,
     detailsLayout = 'rows',
     duration,
@@ -70,8 +81,10 @@ export function StickyBookingCard({
     onWhatsApp,
 }: StickyBookingCardProps) {
     const { t } = useLanguage();
+    const [bookingOpen, setBookingOpen] = useState(false);
 
     const handleCall = () => {
+        notifyInteraction('call');
         if (phoneNumber) {
             window.open(`tel:${phoneNumber}`);
             return;
@@ -81,6 +94,7 @@ export function StickyBookingCard({
     };
 
     const handleWhatsApp = () => {
+        notifyInteraction('whatsapp');
         if (onWhatsApp) {
             onWhatsApp();
             return;
@@ -96,6 +110,14 @@ export function StickyBookingCard({
         }
 
         window.open('/contact', '_self');
+    };
+
+    const handleBookClick = () => {
+        if (onBook) {
+            onBook();
+            return;
+        }
+        setBookingOpen(true);
     };
 
     const displayPrice = price ?? minPrice ?? 0;
@@ -236,8 +258,7 @@ export function StickyBookingCard({
 
                 <div className="flex items-baseline gap-1">
                     <span className="font-serif text-4xl font-bold leading-none text-secondary">
-                        {currency}
-                        {displayPrice.toLocaleString()}
+                        {displayPrice.toLocaleString()} {currency}
                     </span>
                     {priceSuffix && (
                         <span className="text-sm text-muted-foreground">
@@ -255,7 +276,11 @@ export function StickyBookingCard({
 
             <div className="space-y-3">
                 {displayPrimaryButtonLabel && (
-                    <Button onClick={onBook} size="lg" className="w-full">
+                    <Button
+                        onClick={handleBookClick}
+                        size="lg"
+                        className="w-full"
+                    >
                         {displayPrimaryButtonLabel}
                     </Button>
                 )}
@@ -289,6 +314,18 @@ export function StickyBookingCard({
                     </div>
                 )}
             </div>
+
+            {entityType && (
+                <BookingDialog
+                    open={bookingOpen}
+                    onOpenChange={setBookingOpen}
+                    type={entityType}
+                    itemSlug={itemSlug}
+                    itemId={itemId}
+                    itemName={title || ''}
+                    amount={displayPrice}
+                />
+            )}
         </div>
     );
 }

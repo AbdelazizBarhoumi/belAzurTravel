@@ -9,6 +9,7 @@ use App\Models\Destination;
 use App\Models\Flight;
 use App\Models\Hotel;
 use App\Models\Payment;
+use App\Models\Promo;
 use App\Models\Tour;
 use App\Models\User;
 use App\Notifications\BookingActivityNotification;
@@ -17,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class BookingController extends Controller
 {
@@ -31,7 +33,7 @@ class BookingController extends Controller
 
         $user = $request->user();
         abort_unless(
-            $user && ($booking->user_id === $user->id || $user->role === 'admin' || $user->role === 'assistant'),
+            $user && ($booking->user_id === $user->id || $user->role === 'admin'),
             403
         );
 
@@ -54,6 +56,28 @@ class BookingController extends Controller
             'notes' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
         ]);
+
+        if (! empty($data['promo_code'])) {
+            $promo = Promo::where('code', $data['promo_code'])->first();
+            if (! $promo) {
+                throw ValidationException::withMessages(['promo_code' => 'Invalid promo code.']);
+            }
+            if (isset($promo->details['active']) && $promo->details['active'] === false) {
+                throw ValidationException::withMessages(['promo_code' => 'This promo code is inactive.']);
+            }
+            if (! empty($promo->details['applicable_to']) && $promo->details['applicable_to'] !== 'all' && $promo->details['applicable_to'] !== $data['type']) {
+                throw ValidationException::withMessages(['promo_code' => 'This promo is not applicable to this category.']);
+            }
+            $usageCount = Booking::where('promo_code', $data['promo_code'])->count();
+            if (! empty($promo->details['usage_limit']) && (int) $promo->details['usage_limit'] > 0 && $usageCount >= (int) $promo->details['usage_limit']) {
+                throw ValidationException::withMessages(['promo_code' => 'Promo usage limit reached.']);
+            }
+            $userUsageCount = Booking::where('promo_code', $data['promo_code'])->where('user_id', $request->user()->id)->count();
+            $perUserLimit = $promo->details['per_user_limit'] ?? 1;
+            if ((int) $perUserLimit > 0 && $userUsageCount >= (int) $perUserLimit) {
+                throw ValidationException::withMessages(['promo_code' => 'You have already used this promo code.']);
+            }
+        }
 
         $this->findBookable($data['type'], $data['item_slug'] ?? $data['item_id']);
 
@@ -154,11 +178,11 @@ class BookingController extends Controller
     {
         User::query()
             ->where('active', true)
-            ->whereIn('role', ['admin', 'assistant'])
+            ->whereIn('role', ['admin'])
             ->get()
             ->each(function (User $recipient) use ($booking, $type): void {
                 $notification = new BookingActivityNotification($booking, $type);
-            $recipient->notify($notification);
+                $recipient->notify($notification);
             });
     }
 
@@ -182,7 +206,7 @@ class BookingController extends Controller
             [
                 'user_id' => $booking->user_id,
                 'amount' => $booking->total_amount,
-                'currency' => 'USD',
+                'currency' => 'TND',
                 'status' => 'paid',
                 'paid_at' => now(),
                 'reference' => 'PAY-'.$booking->id.'-'.now()->format('YmdHis'),

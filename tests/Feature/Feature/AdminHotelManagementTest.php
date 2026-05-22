@@ -62,4 +62,40 @@ class AdminHotelManagementTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonFragment(['price' => 250, 'name' => 'Updated Admin Hotel']);
     }
+
+    public function test_admin_show_handles_legacy_scalar_localized_fields(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin);
+
+        $hotel = Hotel::query()->create([
+            'slug' => 'legacy-hotel',
+            'code' => 'legacy-hotel-001',
+            'destination_slug' => 'legacy-destination',
+            'name' => ['en' => 'Legacy Hotel', 'fr' => 'Hotel Hérité', 'ar' => 'فندق قديم'],
+            'location' => ['en' => 'Legacy Location', 'fr' => 'Emplacement Hérité', 'ar' => 'موقع قديم'],
+            'category_key' => 'luxury',
+            'category' => 'Luxury',
+            'price' => 300,
+            'rating' => 4.4,
+            'stars' => 5,
+            'reviews' => 77,
+            'image' => '/storage/uploads/hotels/legacy.jpg',
+            'amenities' => [],
+            'tags' => [],
+            'details' => [
+                'gallery' => ['/storage/uploads/hotels/legacy.jpg'],
+            ],
+        ]);
+
+        $response = $this->getJson("/api/admin/hotels/{$hotel->id}");
+
+        $response->assertOk();
+        $response->assertJsonFragment([
+            'category' => 'Luxury',
+            'category_en' => 'Luxury',
+            'category_fr' => 'Luxury',
+            'category_ar' => 'Luxury',
+        ]);
+    }
 }

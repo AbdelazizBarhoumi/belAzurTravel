@@ -8,10 +8,8 @@ use App\Models\Category;
 use App\Models\Deal;
 use App\Models\Destination;
 use App\Models\Event;
-use App\Models\Flight;
 use App\Models\GalleryImage;
 use App\Models\Hotel;
-use App\Models\Promo;
 use App\Models\SiteSetting;
 use App\Models\Tour;
 use Illuminate\Database\Seeder;
@@ -119,25 +117,25 @@ class EntitySeeder extends Seeder
                     'settings' => [
                         'header' => [
                             ['pageKey' => 'destinations', 'enabled' => true, 'isDropdown' => true, 'linkSelf' => true, 'placement' => 'top', 'items' => [
-                                ['label' => 'Categories', 'mode' => 'categories', 'value' => '']
+                                ['label' => 'Categories', 'mode' => 'categories', 'value' => ''],
                             ]],
                             ['pageKey' => 'hotels', 'enabled' => true, 'isDropdown' => true, 'linkSelf' => true, 'placement' => 'top', 'items' => [
-                                ['label' => 'Categories', 'mode' => 'categories', 'value' => '']
+                                ['label' => 'Categories', 'mode' => 'categories', 'value' => ''],
                             ]],
                             ['pageKey' => 'tours', 'enabled' => true, 'isDropdown' => true, 'linkSelf' => true, 'placement' => 'top', 'items' => [
-                                ['label' => 'Categories', 'mode' => 'categories', 'value' => '']
+                                ['label' => 'Categories', 'mode' => 'categories', 'value' => ''],
                             ]],
                             ['pageKey' => 'deals', 'enabled' => true, 'isDropdown' => true, 'linkSelf' => true, 'placement' => 'top', 'items' => [
-                                ['label' => 'Categories', 'mode' => 'categories', 'value' => '']
+                                ['label' => 'Categories', 'mode' => 'categories', 'value' => ''],
                             ]],
                             ['pageKey' => 'blog', 'enabled' => true, 'isDropdown' => true, 'linkSelf' => true, 'placement' => 'top', 'items' => [
-                                ['label' => 'Categories', 'mode' => 'categories', 'value' => '']
+                                ['label' => 'Categories', 'mode' => 'categories', 'value' => ''],
                             ]],
                             ['pageKey' => 'cars', 'enabled' => true, 'isDropdown' => true, 'linkSelf' => true, 'placement' => 'more', 'items' => [
-                                ['label' => 'Categories', 'mode' => 'categories', 'value' => '']
+                                ['label' => 'Categories', 'mode' => 'categories', 'value' => ''],
                             ]],
                             ['pageKey' => 'events', 'enabled' => true, 'isDropdown' => true, 'linkSelf' => true, 'placement' => 'more', 'items' => [
-                                ['label' => 'Categories', 'mode' => 'categories', 'value' => '']
+                                ['label' => 'Categories', 'mode' => 'categories', 'value' => ''],
                             ]],
                             ['pageKey' => 'flights', 'enabled' => true, 'isDropdown' => false, 'linkSelf' => true, 'placement' => 'more', 'items' => []],
                             ['pageKey' => 'promos', 'enabled' => true, 'isDropdown' => false, 'linkSelf' => true, 'placement' => 'more', 'items' => []],
@@ -160,11 +158,11 @@ class EntitySeeder extends Seeder
 
         // 3. Seed Gallery
         foreach ([
-            ['/images/destination-santorini.jpg', $t('Santorini Bliss')],
-            ['/images/destination-bali.jpg', $t('Bali Spirit')],
-            ['/images/destination-paris.jpg', $t('Parisian Nights')],
-            ['/images/destination-dubai.jpg', $t('Dubai Skyline')],
-            ['/images/hero-travel.jpg', $t('World Awaits')],
+            ['/storage/uploads/seed/destination-santorini.jpg', $t('Santorini Bliss')],
+            ['/storage/uploads/seed/destination-bali.jpg', $t('Bali Spirit')],
+            ['/storage/uploads/seed/destination-paris.jpg', $t('Parisian Nights')],
+            ['/storage/uploads/seed/destination-dubai.jpg', $t('Dubai Skyline')],
+            ['/storage/uploads/seed/hero-travel.jpg', $t('World Awaits')],
         ] as $i => [$url, $caption]) {
             GalleryImage::query()->updateOrCreate(['url' => $url], [
                 'caption' => $caption,
@@ -173,10 +171,10 @@ class EntitySeeder extends Seeder
 
         // 4. Seed Destinations
         foreach ([
-            ['santorini', $t('Santorini'), $t('Greece'), 'beach', 1299, 4.9, '/images/destination-santorini.jpg'],
-            ['bali', $t('Bali'), $t('Indonesia'), 'nature', 899, 4.8, '/images/destination-bali.jpg'],
-            ['paris', $t('Paris'), $t('France'), 'city', 1499, 4.9, '/images/destination-paris.jpg'],
-            ['dubai', $t('Dubai'), $t('UAE'), 'luxury', 1199, 4.7, '/images/destination-dubai.jpg'],
+            ['santorini', $t('Santorini'), $t('Greece'), 'beach', 1299, 4.9, '/storage/uploads/seed/destination-santorini.jpg'],
+            ['bali', $t('Bali'), $t('Indonesia'), 'nature', 899, 4.8, '/storage/uploads/seed/destination-bali.jpg'],
+            ['paris', $t('Paris'), $t('France'), 'city', 1499, 4.9, '/storage/uploads/seed/destination-paris.jpg'],
+            ['dubai', $t('Dubai'), $t('UAE'), 'luxury', 1199, 4.7, '/storage/uploads/seed/destination-dubai.jpg'],
         ] as [$slug, $name, $country, $catKey, $price, $rating, $image]) {
             Destination::query()->updateOrCreate(['slug' => $slug], [
                 'name' => $name,
@@ -185,8 +183,8 @@ class EntitySeeder extends Seeder
                 'price' => $price,
                 'rating' => $rating,
                 'image' => $image,
-                'description' => $t('Experience the beauty of ' . $slug),
-                'details' => ['gallery' => [$image], 'about' => $t('About ' . $slug)],
+                'description' => $t('Experience the beauty of '.$slug),
+                'details' => ['gallery' => [$image], 'about' => $t('About '.$slug)],
             ]);
         }
 
@@ -197,29 +195,42 @@ class EntitySeeder extends Seeder
             ['city-palace', 'paris', 'boutique', $t('Boutique'), $t('City Palace'), 400, 4],
             ['desert-mirage', 'dubai', 'luxury', $t('Luxury'), $t('Desert Mirage'), 300, 5],
         ] as [$slug, $dest, $catKey, $catName, $name, $price, $stars]) {
-            Hotel::query()->updateOrCreate(['slug' => $slug], [
+            $hotel = Hotel::query()->updateOrCreate(['slug' => $slug], [
                 'code' => strtoupper($slug),
                 'destination_slug' => $dest,
                 'name' => $name,
-                'location' => $t($dest . ', World'),
+                'location' => $t($dest.', World'),
                 'category_key' => $catKey,
-                'category' => json_encode($catName),
+                'category' => $catName,
                 'price' => $price,
                 'rating' => 4.5,
                 'stars' => $stars,
                 'reviews' => rand(50, 500),
-                'image' => "/images/destination-{$dest}.jpg",
-                'amenities' => ['wifi', 'parking', 'pool'],
+                'image' => "/storage/uploads/seed/destination-{$dest}.jpg",
                 'tags' => [$catKey],
-                'details' => ['images' => ["/images/destination-{$dest}.jpg"]],
+                'details' => ['images' => ["/storage/uploads/seed/destination-{$dest}.jpg"]],
             ]);
+
+            // Add Rooms
+            $hotel->rooms()->create([
+                'name' => $t('Standard Room'),
+                'description' => $t('A cozy standard room'),
+                'price_per_night' => $price,
+                'capacity' => 2,
+                'size' => 25.0,
+            ]);
+
+            // Add Amenities
+            $wifi = \App\Models\Amenity::firstOrCreate(['name' => $t('WiFi')], ['icon' => 'wifi.svg']);
+            $pool = \App\Models\Amenity::firstOrCreate(['name' => $t('Pool')], ['icon' => 'pool.svg']);
+            $hotel->amenities()->sync([$wifi->id, $pool->id]);
         }
 
         // 6. Seed Tours
         foreach ([
-            ['aegean-cruise', 'cultural', $t('Cultural'), $t('Aegean Cruise'), 1500, '/images/destination-santorini.jpg'],
-            ['bali-trekking', 'adventure', $t('Adventure'), $t('Bali Trekking'), 800, '/images/destination-bali.jpg'],
-            ['louvre-private', 'cultural', $t('Cultural'), $t('Louvre Private Tour'), 300, '/images/destination-paris.jpg'],
+            ['aegean-cruise', 'cultural', $t('Cultural'), $t('Aegean Cruise'), 1500, '/storage/uploads/seed/destination-santorini.jpg'],
+            ['bali-trekking', 'adventure', $t('Adventure'), $t('Bali Trekking'), 800, '/storage/uploads/seed/destination-bali.jpg'],
+            ['louvre-private', 'cultural', $t('Cultural'), $t('Louvre Private Tour'), 300, '/storage/uploads/seed/destination-paris.jpg'],
         ] as [$slug, $catKey, $catName, $name, $price, $image]) {
             Tour::query()->updateOrCreate(['slug' => $slug], [
                 'name' => $name,
@@ -231,14 +242,15 @@ class EntitySeeder extends Seeder
                 'image' => $image,
                 'duration' => $t('5 Days'),
                 'description' => $t('Amazing tour experience'),
+                'images' => [$image],
             ]);
         }
 
         // 7. Seed Cars
         foreach ([
-            ['mercedes-s-class', 'luxury', $t('Luxury'), $t('Mercedes S-Class'), 250, '/images/destination-paris.jpg'],
-            ['land-rover-vogue', 'suv', $t('SUV'), $t('Range Rover Vogue'), 300, '/images/destination-dubai.jpg'],
-            ['tesla-model-s', 'electric', $t('Electric'), $t('Tesla Model S'), 200, '/images/hero-travel.jpg'],
+            ['mercedes-s-class', 'luxury', $t('Luxury'), $t('Mercedes S-Class'), 250, '/storage/uploads/seed/destination-paris.jpg'],
+            ['land-rover-vogue', 'suv', $t('SUV'), $t('Range Rover Vogue'), 300, '/storage/uploads/seed/destination-dubai.jpg'],
+            ['tesla-model-s', 'electric', $t('Electric'), $t('Tesla Model S'), 200, '/storage/uploads/seed/hero-travel.jpg'],
         ] as [$slug, $catKey, $catName, $name, $price, $image]) {
             Car::query()->updateOrCreate(['slug' => $slug], [
                 'name' => $name,
@@ -249,13 +261,14 @@ class EntitySeeder extends Seeder
                 'fuel' => $t('Premium'),
                 'transmission' => $t('Automatic'),
                 'image' => $image,
+                'details' => ['gallery' => [$image]],
             ]);
         }
 
         // 8. Seed Events
         foreach ([
-            ['tomorrowland', 'festival', $t('Festival'), $t('Tomorrowland'), 500, '/images/hero-travel.jpg'],
-            ['world-cup', 'sports', $t('Sports'), $t('World Cup Final'), 1500, '/images/destination-dubai.jpg'],
+            ['tomorrowland', 'festival', $t('Festival'), $t('Tomorrowland'), 500, '/storage/uploads/seed/hero-travel.jpg'],
+            ['world-cup', 'sports', $t('Sports'), $t('World Cup Final'), 1500, '/storage/uploads/seed/destination-dubai.jpg'],
         ] as [$slug, $catKey, $catName, $title, $price, $image]) {
             Event::query()->updateOrCreate(['slug' => $slug], [
                 'title' => $title,
@@ -266,6 +279,7 @@ class EntitySeeder extends Seeder
                 'price' => $price,
                 'image' => $image,
                 'description' => $t('Be part of the legend.'),
+                'details' => ['gallery' => [$image]],
             ]);
         }
 
@@ -286,8 +300,8 @@ class EntitySeeder extends Seeder
 
         // 10. Seed Blog
         foreach ([
-            ['top-10-beaches', 'tips', $t('Travel Tips'), $t('Top 10 Hidden Beaches'), '/images/destination-santorini.jpg'],
-            ['packing-guide', 'guides', $t('Guides'), $t('The Ultimate Packing Guide'), '/images/destination-bali.jpg'],
+            ['top-10-beaches', 'tips', $t('Travel Tips'), $t('Top 10 Hidden Beaches'), '/storage/uploads/seed/destination-santorini.jpg'],
+            ['packing-guide', 'guides', $t('Guides'), $t('The Ultimate Packing Guide'), '/storage/uploads/seed/destination-bali.jpg'],
         ] as [$slug, $catKey, $catName, $title, $image]) {
             BlogPost::query()->updateOrCreate(['slug' => $slug], [
                 'title' => $title,

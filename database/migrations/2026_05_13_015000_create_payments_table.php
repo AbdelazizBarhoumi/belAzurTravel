@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('booking_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->unsignedInteger('amount')->default(0);
-            $table->string('currency', 3)->default('USD');
+            $table->string('currency', 3)->default('TND');
             $table->string('status')->default('paid')->index();
             $table->timestamp('paid_at')->nullable();
             $table->string('reference')->nullable()->unique();

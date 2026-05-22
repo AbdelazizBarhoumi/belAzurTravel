@@ -37,11 +37,6 @@ export {
     blogPosts,
     contactMethods,
     dealsSectionData,
-    designTripAccommodations,
-    designTripBudgets,
-    designTripInterests,
-    designTripSteps,
-    designTripTransports,
     footerQuickLinks,
     footerSupportLinks,
     galleryPhotos,
@@ -83,6 +78,68 @@ function normalizeLocalizedText(
     );
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeCarLocalizedEntry(value: unknown): LocalizedText | null {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    if (typeof value === 'string' || typeof value === 'number') {
+        const text = String(value).trim();
+
+        if (!text) return null;
+
+        return {
+            en: text,
+            fr: text,
+            ar: text,
+        };
+    }
+
+    if (!isRecord(value)) {
+        return null;
+    }
+
+    if (typeof value.name === 'string' || typeof value.name === 'number') {
+        const text = String(value.name).trim();
+
+        if (!text) return null;
+
+        return {
+            en: text,
+            fr: text,
+            ar: text,
+        };
+    }
+
+    const source = isRecord(value.name) ? value.name : value;
+    const normalized = normalizeLocalizedText(source);
+    const text = normalized.en || normalized.fr || normalized.ar || '';
+
+    if (!text) {
+        return null;
+    }
+
+    return {
+        en: normalized.en || text,
+        fr: normalized.fr || text,
+        ar: normalized.ar || text,
+    };
+}
+
+export function normalizeCarDetailEntries(entries: unknown): LocalizedText[] {
+    if (!Array.isArray(entries)) {
+        return [];
+    }
+
+    return entries
+        .map((entry) => normalizeCarLocalizedEntry(entry))
+        .filter((entry): entry is LocalizedText => entry !== null);
+}
+
 export function localizeText(
     value:
         | LocalizedText
@@ -101,7 +158,11 @@ export function localizeText(
             try {
                 const parsed = JSON.parse(text) as unknown;
 
-                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                if (
+                    parsed &&
+                    typeof parsed === 'object' &&
+                    !Array.isArray(parsed)
+                ) {
                     return localizeText(
                         parsed as Record<string, unknown>,
                         lang,
@@ -165,12 +226,26 @@ export function findTourDetailBySlug(
 }
 
 export function getCars(): Promise<CarItem[]> {
-    return apiFetch<CarItem[]>('/api/cars');
+    return apiFetch<CarItem[]>('/api/cars').then((cars) =>
+        cars.map((car) => ({
+            ...car,
+            features: normalizeCarDetailEntries(car.features),
+            policy: normalizeCarDetailEntries(car.policy),
+        })),
+    );
 }
 
 export function findCarBySlug(_slug?: string | null): Promise<CarItem | null> {
     if (!_slug) return Promise.resolve(null);
-    return apiFetch<CarItem | null>(`/api/cars/${_slug}`);
+    return apiFetch<CarItem | null>(`/api/cars/${_slug}`).then((car) =>
+        car
+            ? {
+                  ...car,
+                  features: normalizeCarDetailEntries(car.features),
+                  policy: normalizeCarDetailEntries(car.policy),
+              }
+            : null,
+    );
 }
 
 export function getFlights(): Promise<FlightItem[]> {

@@ -1,5 +1,10 @@
 import { describe, expect, beforeEach, it } from 'vitest';
-import { clearAuthUser, getAuthUser, storeAuthUser, type AuthUser } from '@/auth';
+import {
+    clearAuthUser,
+    getAuthUser,
+    storeAuthUser,
+    type AuthUser,
+} from '@/auth';
 import { AUTH_USER_QUERY_KEY, queryClient } from '@/lib/queryClient';
 
 describe('auth cache synchronization', () => {

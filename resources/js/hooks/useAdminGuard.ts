@@ -16,7 +16,7 @@ export function useAdminGuard() {
             return;
         }
 
-        if (data.role !== 'admin') {
+        if (!['admin', 'superadmin', 'owner'].includes(data.role)) {
             navigate('/unauthorized', { replace: true });
         }
     }, [data, isError, isFetching, isPending, navigate]);

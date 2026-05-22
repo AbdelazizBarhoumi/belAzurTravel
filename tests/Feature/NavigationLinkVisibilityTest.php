@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\SiteSetting;
+use App\Models\Tour;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -170,7 +171,7 @@ class NavigationLinkVisibilityTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'client']);
         $admin = User::factory()->create(['role' => 'admin']);
-        
+
         // Start with all enabled
         $settings = SiteSetting::create([
             'company_name' => 'BelAzurTravel',
@@ -284,13 +285,13 @@ class NavigationLinkVisibilityTest extends TestCase
     }
 
     /**
-    * Test: Public data endpoints still work when nav link is disabled
+     * Test: Public data endpoints still work when nav link is disabled
      * The API endpoint returns data regardless of nav visibility settings
      */
     public function test_public_data_endpoints_work_when_nav_link_disabled(): void
     {
         $user = User::factory()->create(['role' => 'client']);
-        
+
         // Disable tours in nav
         SiteSetting::create([
             'company_name' => 'BelAzurTravel',
@@ -335,7 +336,7 @@ class NavigationLinkVisibilityTest extends TestCase
             ],
         ];
 
-        \App\Models\Tour::create($tourData);
+        Tour::create($tourData);
 
         // Tours should NOT appear in site settings for client
         $response = $this->actingAs($user)->getJson('/api/site-settings');

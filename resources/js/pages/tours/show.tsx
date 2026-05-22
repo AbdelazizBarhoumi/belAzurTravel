@@ -78,6 +78,7 @@ interface Tour {
     price: number;
     image: string;
     gallery?: string[];
+    images?: string[];
     itinerary: Array<
         | {
               day: number;
@@ -105,7 +106,7 @@ function DayByDayAndIncludes({
         if (typeof item === 'string') {
             return { day: idx + 1, title: item, details: '' };
         }
-        return item;
+        return { ...item, day: (item as { day?: number }).day || idx + 1 };
     });
 
     const includes = tour.includes || tour.inclusions || [];
@@ -179,7 +180,12 @@ function DayByDayAndIncludes({
                                 <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                                 {typeof i === 'string'
                                     ? i
-                                    : localize(i as LocalizedText, lang)}
+                                    : typeof i === 'object' && 'name' in i
+                                      ? localize(
+                                            (i as { name: LocalizedText }).name,
+                                            lang,
+                                        )
+                                      : localize(i as LocalizedText, lang)}
                             </li>
                         ))}
                     </ul>
@@ -201,7 +207,12 @@ function DayByDayAndIncludes({
                                 <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                                 {typeof i === 'string'
                                     ? i
-                                    : localize(i as LocalizedText, lang)}
+                                    : typeof i === 'object' && 'name' in i
+                                      ? localize(
+                                            (i as { name: LocalizedText }).name,
+                                            lang,
+                                        )
+                                      : localize(i as LocalizedText, lang)}
                             </li>
                         ))}
                     </ul>
@@ -223,6 +234,21 @@ export default function TourDetail() {
     if (!tour) {
         return <Navigate to="/tours" replace />;
     }
+
+    const otherImages =
+        Array.isArray(tour.gallery) && tour.gallery.length > 0
+            ? tour.gallery
+            : Array.isArray(tour.images) && tour.images.length > 0
+              ? tour.images
+              : [];
+
+    // Prefer the explicit `image` as the hero/main image (like other entities).
+    // Ensure it's first in the gallery list, and avoid duplicates.
+    const galleryImages = tour.image
+        ? [tour.image, ...otherImages.filter((i) => i !== tour.image)]
+        : otherImages.length
+          ? otherImages
+          : [];
 
     return (
         <PageShell
@@ -252,7 +278,7 @@ export default function TourDetail() {
                     >
                         <div className="lg:col-span-2">
                             <Gallery
-                                images={tour.gallery || [tour.image]}
+                                images={galleryImages}
                                 hotelName={
                                     typeof tour.name === 'object'
                                         ? localize(tour.name, lang)
@@ -279,7 +305,7 @@ export default function TourDetail() {
                     <div className="lg:hidden">
                         <StickyBookingCard
                             price={tour.price}
-                            currency="$"
+                            currency="DT"
                             priceLabel={t('common.from')}
                             priceSuffix={t('tours.person')}
                             title={
@@ -293,14 +319,12 @@ export default function TourDetail() {
                                     ? localize(tour.description, lang)
                                     : tour.description
                             }
+                            entityType="tour"
+                            itemSlug={tour.slug}
                             duration={`${tour.durationDays} ${t('common.days')} / ${tour.durationNights} ${t('common.nights')}`}
                             maxGroup={tour.maxGroup}
                             rating={tour.rating}
                             primaryButtonLabel={t('tours.bookTour')}
-                            onBook={() => {
-                                // simple reservation flow: scroll to booking or open modal
-                                alert(t('tourDetail.bookingFlow'));
-                            }}
                         />
                     </div>
 
@@ -310,7 +334,7 @@ export default function TourDetail() {
                 <aside className="hidden lg:block">
                     <StickyBookingCard
                         price={tour.price}
-                        currency="$"
+                        currency="DT"
                         priceLabel={t('common.from')}
                         priceSuffix={t('tours.person')}
                         title={

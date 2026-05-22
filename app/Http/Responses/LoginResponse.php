@@ -25,7 +25,7 @@ class LoginResponse implements LoginResponseContract
 
         return redirect()->intended(match ($user->role) {
             'admin' => '/admin/dashboard',
-            'assistant' => '/assistant/dashboard',
+            'assistant' => '/unauthorized',
             default => '/dashboard',
         });
     }

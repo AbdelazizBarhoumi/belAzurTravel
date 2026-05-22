@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Tour;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,7 +13,7 @@ class AdminTourApiTest extends TestCase
 
     public function test_admin_full_crud_lifecycle(): void
     {
-        $admin = \App\Models\User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'admin']);
         $this->actingAs($admin);
 
         // Store
@@ -31,14 +32,14 @@ class AdminTourApiTest extends TestCase
         $this->getJson('/api/admin/tours')->assertStatus(200);
 
         // Show
-        $this->getJson('/api/admin/tours/' . $tour->id)->assertStatus(200);
+        $this->getJson('/api/admin/tours/'.$tour->id)->assertStatus(200);
 
         // Update
-        $this->putJson('/api/admin/tours/' . $tour->id, ['itinerary' => [['day' => 1, 'activity' => 'Explore']]])
+        $this->putJson('/api/admin/tours/'.$tour->id, ['itinerary' => [['day' => 1, 'activity' => 'Explore']]])
             ->assertStatus(200);
-        
+
         // Destroy
-        $this->deleteJson('/api/admin/tours/' . $tour->id)->assertStatus(200);
+        $this->deleteJson('/api/admin/tours/'.$tour->id)->assertStatus(200);
         $this->assertDatabaseMissing('tours', ['id' => $tour->id]);
     }
 }

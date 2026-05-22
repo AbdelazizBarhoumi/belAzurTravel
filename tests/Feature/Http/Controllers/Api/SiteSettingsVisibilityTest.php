@@ -40,6 +40,50 @@ class SiteSettingsVisibilityTest extends TestCase
         $response->assertJsonPath('content.contact.title.en', 'Contact Us');
     }
 
+    public function test_favorites_is_stripped_from_nav_response(): void
+    {
+        $setting = SiteSetting::query()->firstOrFail();
+        $content = $setting->content ?? [];
+
+        $content['nav']['settings'] = [
+            'header' => [
+                [
+                    'pageKey' => 'favorites',
+                    'enabled' => true,
+                    'isDropdown' => false,
+                    'linkSelf' => true,
+                    'placement' => 'top',
+                    'items' => [],
+                ],
+                [
+                    'pageKey' => 'contact',
+                    'enabled' => true,
+                    'isDropdown' => false,
+                    'linkSelf' => true,
+                    'placement' => 'top',
+                    'items' => [],
+                ],
+            ],
+            'footer' => [],
+        ];
+
+        $setting->update(['content' => $content]);
+        Cache::forget('site-settings');
+        Cache::forget('site_settings_nav');
+
+        $response = $this->getJson('/api/site-settings');
+
+        $response->assertOk();
+        $this->assertNotContains(
+            'favorites',
+            array_column($response->json('content.nav.settings.header') ?? [], 'pageKey'),
+        );
+        $this->assertNotContains(
+            '/favorites',
+            array_column($response->json('content.nav.simpleLinks') ?? [], 'href'),
+        );
+    }
+
     protected function disableNavPage(string $pageKey): void
     {
         $setting = SiteSetting::query()->firstOrFail();

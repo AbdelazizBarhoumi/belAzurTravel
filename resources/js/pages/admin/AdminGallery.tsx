@@ -1,9 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Search, LayoutGrid, List, Settings } from 'lucide-react';
+import {
+    Plus,
+    Edit,
+    Trash2,
+    Search,
+    LayoutGrid,
+    List,
+    Settings,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { EntityFormDialog, type SectionDef } from '@/components/forms/EntityFormDialog';
+import {
+    EntityFormDialog,
+    type SectionDef,
+} from '@/components/forms/EntityFormDialog';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import LangBadge from '@/components/forms/LangBadge';
 import {
@@ -39,6 +50,61 @@ type GalleryFormValues = {
     imageFile?: File | null;
     imagePath?: string;
 };
+
+const GALLERY_LANGUAGES: Lang[] = ['en', 'fr', 'ar'];
+
+type ApiValidationError = {
+    status?: number;
+    data?: {
+        message?: string;
+        errors?: Record<string, string | string[]>;
+    };
+};
+
+function flattenValidationErrors(
+    error: unknown,
+): Record<string, string> | null {
+    const apiError = error as ApiValidationError | null | undefined;
+    const validationErrors = apiError?.data?.errors;
+
+    if (!validationErrors || typeof validationErrors !== 'object') {
+        return null;
+    }
+
+    return Object.entries(validationErrors).reduce(
+        (acc: Record<string, string>, [key, value]) => {
+            if (Array.isArray(value)) {
+                const firstMessage = value.find(
+                    (item) => typeof item === 'string',
+                );
+
+                if (firstMessage) acc[key] = firstMessage;
+
+                return acc;
+            }
+
+            if (typeof value === 'string') {
+                acc[key] = value;
+            }
+
+            return acc;
+        },
+        {},
+    );
+}
+
+function expandGalleryValidationErrors(
+    errors: Record<string, string>,
+): Record<string, string> {
+    const next = { ...errors };
+
+    if (next.title && !next.title_en && !next.title_fr && !next.title_ar) {
+        next.title_fr = next.title;
+        next.title_ar = next.title;
+    }
+
+    return next;
+}
 
 function normalizeLocalizedText(value: unknown): GalleryLocalizedText {
     if (typeof value === 'object' && value !== null) {
@@ -125,11 +191,13 @@ const AdminGallery = () => {
         if (!open) setErrors({});
     }, [open]);
 
-
     const validate = (values: GalleryFormValues) => {
         const errs: Record<string, string> = {};
-        if (!values.title?.fr || !values.title?.ar) {
-            errs.title = t('admin.error.required', lang);
+        if (!values.title?.fr) {
+            errs.title_fr = t('admin.error.required', lang);
+        }
+        if (!values.title?.ar) {
+            errs.title_ar = t('admin.error.required', lang);
         }
         if (!values.category) errs.category = t('admin.error.required', lang);
         if (!editing && !(values.imageFile instanceof File)) {
@@ -150,6 +218,7 @@ const AdminGallery = () => {
 
         setIsSaving(true);
         try {
+            setErrors({});
             const payload = buildGalleryFormData(values);
 
             if (editing) {
@@ -163,7 +232,14 @@ const AdminGallery = () => {
             setOpen(false);
             loadGallery();
         } catch (e) {
-            toast.error(t('admin.error.saveImage', lang));
+            const validationErrors = flattenValidationErrors(e);
+
+            if (validationErrors) {
+                setErrors(expandGalleryValidationErrors(validationErrors));
+                toast.error(t('admin.error.pleaseFixErrors', lang));
+            } else {
+                toast.error(t('admin.error.saveImage', lang));
+            }
         } finally {
             setIsSaving(false);
         }
@@ -171,6 +247,8 @@ const AdminGallery = () => {
 
     const handleEdit = (it: GalleryImage) => {
         setEditing(it);
+        setErrors({});
+        setActiveLang('en');
         setOpen(true);
     };
 
@@ -197,15 +275,22 @@ const AdminGallery = () => {
             {
                 title: t('admin.galleryForm.general', lang),
                 column: 'main',
-                render: ({ values, setField, activeLang: currentLang, errors: sectionErrors }) => {
+                render: ({
+                    values,
+                    setField,
+                    activeLang: currentLang,
+                    errors: sectionErrors,
+                }) => {
                     const title = normalizeLocalizedText(values.title);
                     const fieldKey = `title_${currentLang}`;
+                    const fieldError = sectionErrors?.[fieldKey];
 
                     return (
                         <div className="space-y-5">
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground">
-                                    {t('admin.title', lang)} <LangBadge lang={currentLang} />
+                                    {t('admin.title', lang)}{' '}
+                                    <LangBadge lang={currentLang} />
                                 </label>
                                 <input
                                     id={fieldKey}
@@ -217,12 +302,14 @@ const AdminGallery = () => {
                                             [currentLang]: event.target.value,
                                         })
                                     }
-                                    className={`w-full rounded-lg border px-3 py-2 text-sm ${currentLang === 'ar' ? 'text-right' : 'text-left'} ${sectionErrors?.title ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
+                                    className={`w-full rounded-lg border px-3 py-2 text-sm ${currentLang === 'ar' ? 'text-right' : 'text-left'} ${fieldError ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
                                 />
                             </div>
 
-                            {sectionErrors?.title ? (
-                                <p className="text-xs text-destructive">{sectionErrors.title}</p>
+                            {fieldError ? (
+                                <p className="text-xs text-destructive">
+                                    {fieldError}
+                                </p>
                             ) : null}
                         </div>
                     );
@@ -231,7 +318,12 @@ const AdminGallery = () => {
             {
                 title: t('admin.galleryForm.classification', lang),
                 column: 'side',
-                render: ({ values, setField, activeLang: currentLang, errors: sectionErrors }) => (
+                render: ({
+                    values,
+                    setField,
+                    activeLang: currentLang,
+                    errors: sectionErrors,
+                }) => (
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-muted-foreground">
                             {t('admin.category', lang)}
@@ -240,19 +332,33 @@ const AdminGallery = () => {
                             value={String(values.category ?? '')}
                             onValueChange={(val) => setField('category', val)}
                         >
-                            <SelectTrigger className={`w-full rounded-lg border px-3 py-2 text-sm ${sectionErrors?.category ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}>
-                                <SelectValue placeholder={t('admin.blogForm.selectCategory', lang)} />
+                            <SelectTrigger
+                                className={`w-full rounded-lg border px-3 py-2 text-sm ${sectionErrors?.category ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
+                            >
+                                <SelectValue
+                                    placeholder={t(
+                                        'admin.blogForm.selectCategory',
+                                        lang,
+                                    )}
+                                />
                             </SelectTrigger>
                             <SelectContent>
                                 {dbCategories.map((category: any) => (
-                                    <SelectItem key={category.key} value={category.key}>
-                                        {category.name?.[currentLang] || category.name?.en || category.key}
+                                    <SelectItem
+                                        key={category.key}
+                                        value={category.key}
+                                    >
+                                        {category.name?.[currentLang] ||
+                                            category.name?.en ||
+                                            category.key}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                         {sectionErrors?.category ? (
-                            <p className="text-xs text-destructive">{sectionErrors.category}</p>
+                            <p className="text-xs text-destructive">
+                                {sectionErrors.category}
+                            </p>
                         ) : null}
                     </div>
                 ),
@@ -270,7 +376,9 @@ const AdminGallery = () => {
                             showGallery={false}
                         />
                         {sectionErrors?.image ? (
-                            <p className="text-xs text-destructive">{sectionErrors.image}</p>
+                            <p className="text-xs text-destructive">
+                                {sectionErrors.image}
+                            </p>
                         ) : null}
                     </div>
                 ),
@@ -308,11 +416,14 @@ const AdminGallery = () => {
                         onClick={() => setCatManagerOpen(true)}
                         className="gap-2"
                     >
-                        <Settings className="h-4 w-4" /> {t('admin.manageCategories', lang)}
+                        <Settings className="h-4 w-4" />{' '}
+                        {t('admin.manageCategories', lang)}
                     </Button>
                     <Button
                         onClick={() => {
                             setEditing(null);
+                            setErrors({});
+                            setActiveLang('en');
                             setOpen(true);
                         }}
                         className="gap-2 bg-primary text-primary-foreground"
@@ -335,7 +446,10 @@ const AdminGallery = () => {
                 <div className="flex flex-wrap gap-2">
                     {[
                         { key: 'All', label: t('admin.all', lang) },
-                        ...((dbCategories || []).map((c: any) => ({ key: c.key, label: c.name?.[lang] || c.name?.en || c.key })) as any),
+                        ...((dbCategories || []).map((c: any) => ({
+                            key: c.key,
+                            label: c.name?.[lang] || c.name?.en || c.key,
+                        })) as any),
                     ].map((c: any) => (
                         <button
                             key={c.key}
@@ -385,7 +499,9 @@ const AdminGallery = () => {
                                     {tField(it.title as any, lang)}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                    {(dbCategories.find((c: any) => c.key === it.category)?.name?.[lang]) ?? it.category}
+                                    {dbCategories.find(
+                                        (c: any) => c.key === it.category,
+                                    )?.name?.[lang] ?? it.category}
                                 </div>
                             </div>
                             <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -413,7 +529,9 @@ const AdminGallery = () => {
                                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase text-muted-foreground">
                                     {t('admin.image', lang)}
                                 </th>
-                                <th className={`px-4 py-3 text-xs font-semibold uppercase text-muted-foreground ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                                <th
+                                    className={`px-4 py-3 text-xs font-semibold uppercase text-muted-foreground ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                                >
                                     {t('admin.title', lang)}
                                 </th>
                                 <th className="px-4 py-3 text-center text-xs font-semibold uppercase text-muted-foreground">
@@ -437,12 +555,17 @@ const AdminGallery = () => {
                                             className="h-16 w-16 rounded-lg object-cover"
                                         />
                                     </td>
-                                    <td className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                                    <td
+                                        className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                                    >
                                         {tField(it.title as any, lang)}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">
-                                            {(dbCategories.find((c: any) => c.key === it.category)?.name?.[lang]) ?? it.category}
+                                            {dbCategories.find(
+                                                (c: any) =>
+                                                    c.key === it.category,
+                                            )?.name?.[lang] ?? it.category}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
@@ -454,7 +577,9 @@ const AdminGallery = () => {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(it.id)}
+                                                onClick={() =>
+                                                    handleDelete(it.id)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -471,14 +596,18 @@ const AdminGallery = () => {
             <EntityFormDialog<GalleryFormValues>
                 open={open}
                 onOpenChange={setOpen}
-                title={editing ? t('admin.editImage', lang) : t('admin.addImage', lang)}
+                title={
+                    editing
+                        ? t('admin.editImage', lang)
+                        : t('admin.addImage', lang)
+                }
                 subtitle={t('admin.imagesInLibrary', lang)}
                 sections={gallerySections}
                 initial={dialogInitial}
                 onSubmit={handleSave}
                 errors={errors}
                 layout="grid-2"
-                languages={['en', 'fr', 'ar']}
+                languages={GALLERY_LANGUAGES}
                 activeLang={activeLang}
                 onActiveLangChange={setActiveLang}
                 isSubmitting={isSaving}
@@ -496,7 +625,9 @@ const AdminGallery = () => {
                 isOpen={catManagerOpen}
                 onClose={() => {
                     setCatManagerOpen(false);
-                    queryClient.invalidateQueries({ queryKey: ['admin', 'categories', 'gallery'] });
+                    queryClient.invalidateQueries({
+                        queryKey: ['admin', 'categories', 'gallery'],
+                    });
                 }}
             />
         </AdminLayout>

@@ -17,6 +17,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useEvents, useCategories } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
+import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
 
 const ALL = 'all';
 
@@ -50,10 +51,8 @@ function EventsContent() {
 
     const locationOptions = useMemo(
         () =>
-            Array.from(
-                new Set(
-                    events.map((event) => localizeText(event.location, lang)),
-                ),
+            uniqueNonEmptySelectOptions(
+                events.map((event) => localizeText(event.location, lang)),
             ),
         [events, lang],
     );

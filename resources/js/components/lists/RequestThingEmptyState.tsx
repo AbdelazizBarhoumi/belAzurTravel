@@ -1,4 +1,5 @@
 import { MessageCircle, Phone, SearchX } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettingsContext } from '@/contexts/SiteSettingsContext';
@@ -53,6 +54,9 @@ export function RequestThingEmptyState({
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-3">
+                <Button asChild variant="default" className="rounded-full px-6">
+                    <Link to="/requests">{t('common.requestThingCta')}</Link>
+                </Button>
                 {settings.whatsapp && (
                     <Button
                         asChild

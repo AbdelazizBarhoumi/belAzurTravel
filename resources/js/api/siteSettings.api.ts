@@ -1,5 +1,7 @@
 import type { SimpleLinkItem } from '@/api/siteContent.api';
 import type { NavSettings } from '@/lib/nav-config';
+import { normalizeHours } from '@/lib/site-hours';
+import type { SiteHourEntry } from '@/lib/site-hours';
 
 type LocalizedText = Record<string, string>;
 
@@ -58,7 +60,7 @@ export interface SiteSettings {
         href: string;
         group: 'quick' | 'support';
     }>;
-    hours: Array<{ dayKey: string; value: string }>;
+    hours: SiteHourEntry[];
     content: SiteSettingsContent;
     gallery?: string[];
     config?: {
@@ -108,7 +110,7 @@ function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
         legalSections:
             (json.legalSections as SiteSettings['legalSections']) ?? [],
         footerLinks: (json.footerLinks as SiteSettings['footerLinks']) ?? [],
-        hours: (json.hours as SiteSettings['hours']) ?? [],
+        hours: normalizeHours(json.hours) as SiteSettings['hours'],
         content: (json.content as SiteSettings['content']) ?? {},
         gallery:
             (json.gallery as SiteSettings['gallery']) ??

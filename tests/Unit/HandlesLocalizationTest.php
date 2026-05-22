@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
 use App\Concerns\HandlesLocalization;
+use Tests\TestCase;
 
 class HandlesLocalizationTest extends TestCase
 {
@@ -12,7 +12,8 @@ class HandlesLocalizationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->testClass = new class {
+        $this->testClass = new class
+        {
             use HandlesLocalization;
 
             public function testLocalized(array $data, string $key)
@@ -33,7 +34,7 @@ class HandlesLocalizationTest extends TestCase
             'title' => 'Base',
             'title_en' => 'English',
             'title_fr' => 'French',
-            'title_ar' => 'Arabic'
+            'title_ar' => 'Arabic',
         ];
 
         $result = $this->testClass->testLocalized($data, 'title');
@@ -41,16 +42,16 @@ class HandlesLocalizationTest extends TestCase
         $this->assertEquals([
             'fr' => 'French',
             'ar' => 'Arabic',
-            'en' => 'English'
+            'en' => 'English',
         ], $result);
     }
 
-    public function test_flatLocalized_maps_correctly()
+    public function test_flat_localized_maps_correctly()
     {
         $value = [
             'en' => 'English',
             'fr' => 'French',
-            'ar' => 'Arabic'
+            'ar' => 'Arabic',
         ];
 
         $result = $this->testClass->testFlatLocalized('title', $value);
@@ -59,7 +60,7 @@ class HandlesLocalizationTest extends TestCase
             'title' => 'English',
             'title_fr' => 'French',
             'title_ar' => 'Arabic',
-            'title_en' => 'English'
+            'title_en' => 'English',
         ], $result);
     }
 }

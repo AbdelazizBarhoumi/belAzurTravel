@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { RouteLoader } from '@/components/layout/RouteLoader';
@@ -15,6 +15,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
+import { useAuthUser } from '@/hooks/useAuthUser';
 import { queryClient } from '@/lib/queryClient';
 import { traceRoute } from '@/lib/routeTrace';
 import AdminDashboard from './pages/admin';
@@ -37,11 +38,9 @@ import Blog from './pages/blog';
 import BlogPostDetail from './pages/blog/show';
 import Cars from './pages/cars';
 import CarDetail from './pages/cars/show';
-import AssistantDashboard from './pages/dashboards/assistant';
 import ClientDashboard from './pages/dashboards/Client';
 import Deals from './pages/deals';
 import DealDetail from './pages/deals/show';
-import DesignTrip from './pages/design-trip';
 import Destinations from './pages/destinations';
 import DestinationDetail from './pages/destinations/show';
 import Events from './pages/events';
@@ -67,13 +66,10 @@ import Promos from './pages/promos';
 import PromoDetail from './pages/promos/show';
 import Tours from './pages/tours';
 import TourDetail from './pages/tours/show';
+import VerifyEmail from './pages/auth/VerifyEmail';
 
 const adminGuard = (element: JSX.Element) => (
     <RoleGuard role="admin">{element}</RoleGuard>
-);
-
-const assistantGuard = (element: JSX.Element) => (
-    <RoleGuard role={['assistant', 'admin']}>{element}</RoleGuard>
 );
 
 const clientGuard = (element: JSX.Element) => (
@@ -87,6 +83,19 @@ const clientGuard = (element: JSX.Element) => (
  */
 const LayoutWrapper = () => {
     const location = useLocation();
+    const { data: user } = useAuthUser();
+
+    const navigate = useNavigate();
+
+    // Verification redirect logic
+    useEffect(() => {
+        if (user && !user.email_verified_at && user.role !== 'owner') {
+            const isAuthPath = ['/login', '/register', '/verify-email', '/forgot-password', '/reset-password'].includes(location.pathname);
+            if (!isAuthPath) {
+                navigate('/verify-email', { replace: true });
+            }
+        }
+    }, [user, location.pathname, navigate]);
 
     traceRoute('LayoutWrapper.render', {
         locationKey: location.key,
@@ -101,12 +110,14 @@ const LayoutWrapper = () => {
     }, [location.key, location.pathname]);
 
     const isAdminRoute = location.pathname.startsWith('/admin');
-    const isAssistantRoute = location.pathname.startsWith('/assistant');
     const isClientRoute = location.pathname.startsWith('/client');
     const isDashboard = location.pathname === '/dashboard';
 
+    const isAuthRoute =
+        location.pathname === '/login' || location.pathname === '/register';
+
     const isSpecialLayoutRoute =
-        isAdminRoute || isAssistantRoute || isClientRoute || isDashboard;
+        isAdminRoute || isClientRoute || isDashboard || isAuthRoute;
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -125,6 +136,7 @@ const LayoutWrapper = () => {
                 <Routes>
                     <Route path="/" element={<Index />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
                     <Route path="/session-expired" element={<Error419 />} />
                     <Route path="/unauthorized" element={<Unauthorized />} />
                     <Route path="/register" element={<Register />} />
@@ -250,42 +262,6 @@ const LayoutWrapper = () => {
                         element={adminGuard(<NotificationsPage />)}
                     />
                     <Route
-                        path="/assistant"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
-                        path="/assistant/dashboard"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
-                        path="/assistant/bookings"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
-                        path="/assistant/bookings/:id"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
-                        path="/assistant/messages"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
-                        path="/assistant/profile"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
-                        path="/assistant/clients"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
-                        path="/assistant/settings"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
-                        path="/assistant/notifications"
-                        element={assistantGuard(<AssistantDashboard />)}
-                    />
-                    <Route
                         path="/destinations"
                         element={
                             <NavRouteGuard pageKey="destinations">
@@ -382,14 +358,6 @@ const LayoutWrapper = () => {
                         }
                     />
                     <Route
-                        path="/design-trip"
-                        element={
-                            <NavRouteGuard pageKey="design-trip">
-                                <DesignTrip />
-                            </NavRouteGuard>
-                        }
-                    />
-                    <Route
                         path="/blog"
                         element={
                             <NavRouteGuard pageKey="blog">
@@ -477,14 +445,7 @@ const LayoutWrapper = () => {
                             </NavRouteGuard>
                         }
                     />
-                    <Route
-                        path="/favorites"
-                        element={
-                            <NavRouteGuard pageKey="favorites">
-                                <Favorites />
-                            </NavRouteGuard>
-                        }
-                    />
+                    <Route path="/favorites" element={<Favorites />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </motion.div>

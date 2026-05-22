@@ -10,9 +10,7 @@ class BookingStatusNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(private readonly Booking $booking)
-    {
-    }
+    public function __construct(private readonly Booking $booking) {}
 
     public function via(object $notifiable): array
     {

@@ -1,6 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { JsonListEditor, type JsonFieldDef } from '@/components/forms/JsonListEditor';
+import {
+    JsonListEditor,
+    type JsonFieldDef,
+} from '@/components/forms/JsonListEditor';
 
 vi.mock('@/contexts/LanguageContext', () => ({
     useLanguage: () => ({
@@ -29,7 +32,9 @@ describe('JsonListEditor', () => {
             />,
         );
 
-        expect(screen.getByText('translated:admin.noItemsYet')).toBeInTheDocument();
+        expect(
+            screen.getByText('translated:admin.noItemsYet'),
+        ).toBeInTheDocument();
         expect(screen.getByDisplayValue('Hello')).toBeInTheDocument();
     });
 });

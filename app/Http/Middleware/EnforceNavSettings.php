@@ -2,20 +2,30 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\SiteSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\SiteSetting;
 
 /**
  * Middleware that enforces nav visibility on server-side for SPA routes.
  *
  * It maps known frontend paths to page keys and returns 404 only for
  * authenticated client users when a page has been disabled in site settings.
- * Admin and assistant users may still access disabled pages.
+ * Admin users may still access disabled pages.
  */
 class EnforceNavSettings
 {
+    /** Paths that should always behave as unpublished and never resolve. */
+    protected const ALWAYS_404_PATHS = [
+        'design-trip',
+    ];
+
+    /** Paths that must remain publicly accessible regardless of nav settings. */
+    protected const ALWAYS_PUBLIC_PATHS = [
+        'favorites',
+    ];
+
     /** Map known frontend href (without leading slash) to pageKey */
     protected const PATH_TO_PAGE = [
         'destinations' => 'destinations',
@@ -32,12 +42,18 @@ class EnforceNavSettings
         'contact' => 'contact',
         'legal' => 'legal',
         'favorites' => 'favorites',
-        'design-trip' => 'design-trip',
+        // 'design-trip' => 'design-trip',
     ];
 
     public function handle(Request $request, Closure $next): Response
     {
         $path = trim($request->path(), '/');
+
+        foreach (self::ALWAYS_404_PATHS as $disabledPath) {
+            if ($path === $disabledPath || str_starts_with($path, $disabledPath . '/')) {
+                abort(404, 'This page is not currently available.');
+            }
+        }
 
         // If this is the root or an API/auth asset route, allow through
         if ($path === '' || str_starts_with($path, 'api') || str_starts_with($path, '_next') || str_starts_with($path, 'assets')) {
@@ -47,10 +63,14 @@ class EnforceNavSettings
         // Find matching pageKey (exact match or starts with)
         $matchedKey = null;
         foreach (self::PATH_TO_PAGE as $href => $pageKey) {
-            if ($path === $href || str_starts_with($path, $href . '/')) {
+            if ($path === $href || str_starts_with($path, $href.'/')) {
                 $matchedKey = $pageKey;
                 break;
             }
+        }
+
+        if ($matchedKey !== null && in_array($matchedKey, self::ALWAYS_PUBLIC_PATHS, true)) {
+            return $next($request);
         }
 
         // If no mapped page, allow.
@@ -65,15 +85,15 @@ class EnforceNavSettings
         $navSettings = $siteSettings?->content['nav']['settings'] ?? null;
 
         // If no nav settings defined, allow (use defaults on frontend)
-        if (!$navSettings) {
+        if (! $navSettings) {
             return $next($request);
         }
 
         $user = $request->user();
 
-        // Allow only admin and assistant to access disabled pages.
+        // Allow only admin to access disabled pages.
         // Everyone else (guests and clients) must have the page enabled.
-        if ($user && in_array($user->role ?? null, ['admin', 'assistant'], true)) {
+        if ($user && in_array($user->role ?? null, ['admin'], true)) {
             return $next($request);
         }
 
@@ -88,11 +108,10 @@ class EnforceNavSettings
             }
         }
 
-        if (!$isEnabled) {
+        if (! $isEnabled) {
             abort(404, 'This page is not currently available.');
         }
 
         return $next($request);
     }
 }
-

@@ -33,8 +33,8 @@ export function RoleGuard({ role, children }: RoleGuardProps) {
         return <Navigate to="/login" replace state={{ from: location }} />;
     }
 
-    // Admins can access any guarded area
-    if (data.role === 'admin') {
+    // Admins and above can access any guarded area
+    if (['admin', 'superadmin', 'owner'].includes(data.role)) {
         return <>{children}</>;
     }
 

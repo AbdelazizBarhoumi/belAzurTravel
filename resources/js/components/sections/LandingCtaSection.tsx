@@ -50,7 +50,7 @@ export function LandingCtaSection() {
                                     size="lg"
                                     className="rounded-full bg-background text-foreground hover:bg-background/90"
                                 >
-                                    <Link to="/design-trip">
+                                    <Link to="/contact">
                                         {t('home.cta.primary')}
                                         <ArrowRight className="h-4 w-4" />
                                     </Link>

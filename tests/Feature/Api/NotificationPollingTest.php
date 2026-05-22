@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\SupportInquiry;
 use App\Models\User;
+use App\Notifications\SupportInquiryNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -22,8 +24,8 @@ class NotificationPollingTest extends TestCase
             ->assertJson(['count' => 0]);
 
         // Add a notification
-        $user->notify(new \App\Notifications\SupportInquiryNotification(
-            \App\Models\SupportInquiry::create([
+        $user->notify(new SupportInquiryNotification(
+            SupportInquiry::create([
                 'user_id' => $user->id,
                 'subject' => ['en' => 'Test Subject'],
                 'message' => ['en' => 'Test Message'],
@@ -44,8 +46,8 @@ class NotificationPollingTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $user->notify(new \App\Notifications\SupportInquiryNotification(
-            \App\Models\SupportInquiry::create([
+        $user->notify(new SupportInquiryNotification(
+            SupportInquiry::create([
                 'user_id' => $user->id,
                 'subject' => ['en' => 'Test Subject'],
                 'message' => ['en' => 'Test Message'],
@@ -66,8 +68,8 @@ class NotificationPollingTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $user->notify(new \App\Notifications\SupportInquiryNotification(
-            \App\Models\SupportInquiry::create([
+        $user->notify(new SupportInquiryNotification(
+            SupportInquiry::create([
                 'user_id' => $user->id,
                 'subject' => ['en' => 'Test Subject'],
                 'message' => ['en' => 'Test Message'],

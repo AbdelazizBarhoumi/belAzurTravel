@@ -6,7 +6,7 @@ use App\Models\GalleryImage;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\GalleryImage>
+ * @extends Factory<GalleryImage>
  */
 class GalleryImageFactory extends Factory
 {

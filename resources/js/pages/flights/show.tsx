@@ -138,7 +138,7 @@ export default function FlightDetail() {
                             <div className="mb-8 lg:hidden">
                                 <StickyBookingCard
                                     price={flight.price}
-                                    currency="$"
+                                    currency="DT"
                                     title={routeLabel}
                                     description={`${localizeText(flight.airline, lang)} · ${localizeText(flight.stops, lang)}`}
                                     details={[
@@ -190,9 +190,11 @@ export default function FlightDetail() {
                         <aside className="hidden lg:block lg:pt-6">
                             <StickyBookingCard
                                 price={flight.price}
-                                currency="$"
+                                currency="DT"
                                 title={routeLabel}
                                 description={`${localizeText(flight.airline, lang)} · ${localizeText(flight.stops, lang)}`}
+                                entityType="flight"
+                                itemId={String(flight.id)}
                                 details={[
                                     {
                                         label: t('label.cabin'),
@@ -228,9 +230,6 @@ export default function FlightDetail() {
                                 primaryButtonLabel={t(
                                     'flightDetail.bookFlight',
                                 )}
-                                onBook={() =>
-                                    window.alert(t('flightDetail.bookingFlow'))
-                                }
                             />
                         </aside>
                     </motion.div>

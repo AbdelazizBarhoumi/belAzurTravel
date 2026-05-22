@@ -24,12 +24,14 @@ class AdminEventTest extends TestCase
 
         $makePngUpload = function (string $filename): UploadedFile {
             $data = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
-            $path = sys_get_temp_dir().'/'.uniqid('testimg_')."_".$filename;
+            $path = sys_get_temp_dir().'/'.uniqid('testimg_').'_'.$filename;
             file_put_contents($path, $data);
+
             return new UploadedFile($path, $filename, 'image/png', null, true);
         };
 
         $payload = [
+            'category_key' => 'cultural',
             'title_en' => 'Sample Event',
             'title_fr' => 'Événement Exemple',
             'title_ar' => 'حدث تجريبي',
@@ -56,8 +58,11 @@ class AdminEventTest extends TestCase
             ->post('/api/admin/events', $payload);
 
         $response->assertStatus(201);
+        $response->assertJsonPath('data.category_key', 'cultural');
 
         $event = Event::query()->latest('id')->firstOrFail();
+
+        $this->assertSame('cultural', $event->category_key);
 
         // Image path should be stored under /storage/uploads/events/
         $this->assertStringStartsWith('/storage/uploads/events/', $event->image);
@@ -91,6 +96,7 @@ class AdminEventTest extends TestCase
         ]);
 
         $payload = [
+            'category_key' => 'festival',
             'title_en' => 'Title EN',
             'title_fr' => 'Titre FR',
             'title_ar' => 'عنوان AR',
@@ -121,6 +127,8 @@ class AdminEventTest extends TestCase
         /** @var Event $event */
         $event = Event::query()->findOrFail($response->json('data.id'));
 
+        $this->assertSame('festival', $event->category_key);
+
         $this->assertSame('Title EN', $event->title['en']);
         $this->assertSame('Titre FR', $event->title['fr']);
         $this->assertSame('عنوان AR', $event->title['ar']);
@@ -144,7 +152,52 @@ class AdminEventTest extends TestCase
         $this->actingAs($admin)
             ->getJson('/api/events/'.$event->slug)
             ->assertOk()
+            ->assertJsonPath('category_key', 'festival')
             ->assertJsonPath('about.fr', 'À propos FR')
             ->assertJsonPath('attendees.ar', '120 شخص');
+    }
+
+    public function test_public_event_cache_refreshes_after_admin_update(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'active' => true,
+        ]);
+
+        $event = Event::factory()->create([
+            'title' => ['en' => 'Cached Event', 'fr' => 'Événement en cache', 'ar' => 'حدث مخزن'],
+            'location' => ['en' => 'Paris', 'fr' => 'Paris', 'ar' => 'باريس'],
+            'date' => ['en' => 'May 2026', 'fr' => 'Mai 2026', 'ar' => 'مايو 2026'],
+            'description' => ['en' => 'Old description', 'fr' => 'Ancienne description', 'ar' => 'وصف قديم'],
+            'price' => 250,
+            'image' => '/images/events/cached.jpg',
+        ]);
+
+        $this->getJson('/api/events/'.$event->slug)
+            ->assertOk()
+            ->assertJsonPath('description.en', 'Old description');
+
+        $this->actingAs($admin)
+            ->withoutMiddleware()
+            ->putJson('/api/admin/events/'.$event->id, [
+                'title_en' => 'Cached Event',
+                'title_fr' => 'Événement en cache',
+                'title_ar' => 'حدث مخزن',
+                'location_en' => 'Paris',
+                'location_fr' => 'Paris',
+                'location_ar' => 'باريس',
+                'date_en' => 'May 2026',
+                'date_fr' => 'Mai 2026',
+                'date_ar' => 'مايو 2026',
+                'price' => 250,
+                'description_en' => 'Updated description',
+                'description_fr' => 'Description mise à jour',
+                'description_ar' => 'وصف محدث',
+            ])
+            ->assertOk();
+
+        $this->getJson('/api/events/'.$event->slug)
+            ->assertOk()
+            ->assertJsonPath('description.en', 'Updated description');
     }
 }

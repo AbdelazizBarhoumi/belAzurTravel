@@ -172,4 +172,3 @@ class AdminBlogTest extends TestCase
             ->assertJsonPath('content.body.en', 'New body');
     }
 }
-

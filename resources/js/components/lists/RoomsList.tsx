@@ -38,7 +38,8 @@ export function RoomsList({ rooms, onBookRoom }: RoomsListProps) {
             <div className="space-y-6">
                 {rooms.map((room, index) => (
                     <motion.div
-                        key={room.id}
+                        // Ensure a stable, unique key even if room.id is missing or not unique
+                        key={room.id ?? `room-${index}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
@@ -86,9 +87,10 @@ export function RoomsList({ rooms, onBookRoom }: RoomsListProps) {
                                             ];
                                         if (!Icon) return null;
 
+                                        // Use combined key with room id to guarantee uniqueness across the page
                                         return (
                                             <div
-                                                key={feature}
+                                                key={`${room.id ?? index}-${feature}`}
                                                 className="flex items-center gap-2 rounded-lg bg-muted px-2 py-1"
                                             >
                                                 <Icon className="h-3.5 w-3.5 text-muted-foreground" />
@@ -108,7 +110,7 @@ export function RoomsList({ rooms, onBookRoom }: RoomsListProps) {
                                         {t('hotelDetail.pricePerNight')}
                                     </div>
                                     <div className="mb-4 font-serif text-3xl font-bold text-secondary">
-                                        ${room.pricePerNight}
+                                        {room.pricePerNight} DT
                                     </div>
                                 </div>
 

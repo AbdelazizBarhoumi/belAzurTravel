@@ -1,5 +1,6 @@
 import { Link2, Mail, Phone, MapPin, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { notifyInteraction } from '@/api/interactions.api';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { socialLinks as socialLinks } from '@/data';
@@ -9,6 +10,12 @@ import {
     DEFAULT_NAV_SETTINGS,
     type NavSettings,
 } from '@/lib/nav-config';
+import {
+    formatHourGroupLabel,
+    formatHourRanges,
+    groupConsecutiveHours,
+    normalizeHours,
+} from '@/lib/site-hours';
 
 type LocalizedText = Record<string, string>;
 
@@ -39,6 +46,8 @@ export function Footer() {
 
     const getDayLabel = (dayKey: string) =>
         dayKey.startsWith('footer.') ? t(dayKey) : dayKey;
+
+    const groupedHours = groupConsecutiveHours(normalizeHours(settings.hours));
 
     if (loading) {
         return (
@@ -145,6 +154,7 @@ export function Footer() {
                             {settings.phone && (
                                 <a
                                     href={`tel:${settings.phone.replace(/\D/g, '')}`}
+                                    onClick={() => notifyInteraction('call')}
                                     className="flex items-center gap-3 hover:text-secondary"
                                 >
                                     <Phone className="h-4 w-4 shrink-0 text-secondary" />{' '}
@@ -168,17 +178,27 @@ export function Footer() {
                             {t('footer.hours')}
                         </h4>
                         <div className="space-y-1.5 text-sm text-primary-foreground/60">
-                            {settings.hours.length > 0 ? (
-                                settings.hours.map((h, i) => (
+                            {groupedHours.length > 0 ? (
+                                groupedHours.map((group, i) => (
                                     <div
-                                        key={i}
+                                        key={`${group.dayKeys.join('-')}-${i}`}
                                         className="flex justify-between gap-3"
                                     >
-                                        <span>{getDayLabel(h.dayKey)}</span>
+                                        <span>
+                                            {formatHourGroupLabel(
+                                                group,
+                                                getDayLabel,
+                                            )}
+                                        </span>
                                         <span className="text-primary-foreground/80">
-                                            {h.value.startsWith('footer.')
-                                                ? t(h.value)
-                                                : h.value}
+                                            {formatHourRanges(
+                                                {
+                                                    dayKey: group.dayKeys[0],
+                                                    ranges: group.ranges,
+                                                    closed: group.closed,
+                                                },
+                                                t('footer.closed'),
+                                            )}
                                         </span>
                                     </div>
                                 ))

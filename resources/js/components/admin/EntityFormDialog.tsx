@@ -24,51 +24,34 @@ export interface FieldDef {
     options?: Array<string | { value: string; label: string }>;
 }
 
+import { ImagePicker } from '@/components/ui/ImagePicker';
+
+// ... (in ImageField component)
+
 function ImageField({
     value,
     onChange,
     error,
+    label,
 }: {
     value: string;
     onChange: (v: string) => void;
     error?: string;
+    label?: string;
 }) {
-    const handleFile = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = () => onChange(String(reader.result));
-        reader.readAsDataURL(file);
-    };
     return (
-        <div className="space-y-2">
-            {value && (
-                <img
-                    src={value}
-                    alt=""
-                    className="h-40 w-full rounded-lg border border-border object-cover"
-                />
-            )}
-            <div className="flex gap-2">
-                <input
-                    type="text"
-                    placeholder="https://image-url..."
-                    value={value || ''}
-                    onChange={(e) => onChange(e.target.value)}
-                    className={`flex-1 rounded-lg border px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
-                />
-                <label className="cursor-pointer rounded-lg border border-border bg-muted px-3 py-2 text-sm hover:bg-muted/80">
-                    Upload
-                    <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) =>
-                            e.target.files?.[0] && handleFile(e.target.files[0])
-                        }
-                    />
-                </label>
-            </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
-        </div>
+        <ImagePicker
+            label={label}
+            value={value}
+            onChange={(file) => {
+                if (!file) return;
+                const targetFile = Array.isArray(file) ? file[0] : file;
+                const reader = new FileReader();
+                reader.onload = () => onChange(String(reader.result));
+                reader.readAsDataURL(targetFile);
+            }}
+            error={error}
+        />
     );
 }
 
@@ -103,8 +86,12 @@ function I18nInput({
             {(['fr', 'ar'] as const).map((l) => {
                 const error = errors?.[l];
                 return (
-                    <div key={l} className="space-y-1" dir={l === 'ar' ? 'rtl' : 'ltr'}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground inline-block">
+                    <div
+                        key={l}
+                        className="space-y-1"
+                        dir={l === 'ar' ? 'rtl' : 'ltr'}
+                    >
+                        <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                             {l}
                         </span>
                         <Input
@@ -116,7 +103,9 @@ function I18nInput({
                             }
                             className={`w-full rounded-lg border px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'} ${multiline ? 'min-h-20' : ''}`}
                         />
-                        {error && <p className="text-xs text-destructive">{error}</p>}
+                        {error && (
+                            <p className="text-xs text-destructive">{error}</p>
+                        )}
                     </div>
                 );
             })}
@@ -176,14 +165,19 @@ export function EntityFormDialog<T extends Record<string, any>>({
                                 <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
                                     {f.label}
                                 </label>
-                                {f.type === 'i18n' || f.type === 'i18n-textarea' ? (
+                                {f.type === 'i18n' ||
+                                f.type === 'i18n-textarea' ? (
                                     <I18nInput
                                         value={values[f.key]}
                                         onChange={(v) =>
                                             setValues({ ...values, [f.key]: v })
                                         }
                                         multiline={f.type === 'i18n-textarea'}
-                                        errors={typeof error === 'object' ? error : undefined}
+                                        errors={
+                                            typeof error === 'object'
+                                                ? error
+                                                : undefined
+                                        }
                                     />
                                 ) : f.type === 'image' ? (
                                     <ImageField
@@ -191,7 +185,11 @@ export function EntityFormDialog<T extends Record<string, any>>({
                                         onChange={(v) =>
                                             setValues({ ...values, [f.key]: v })
                                         }
-                                        error={typeof error === 'string' ? error : undefined}
+                                        error={
+                                            typeof error === 'string'
+                                                ? error
+                                                : undefined
+                                        }
                                     />
                                 ) : f.type === 'textarea' ? (
                                     <textarea
@@ -226,7 +224,10 @@ export function EntityFormDialog<T extends Record<string, any>>({
                                             }
 
                                             return (
-                                                <option key={o.value} value={o.value}>
+                                                <option
+                                                    key={o.value}
+                                                    value={o.value}
+                                                >
                                                     {o.label}
                                                 </option>
                                             );
@@ -235,10 +236,14 @@ export function EntityFormDialog<T extends Record<string, any>>({
                                 ) : (
                                     <input
                                         type={
-                                            f.type === 'number' ? 'number' : 'text'
+                                            f.type === 'number'
+                                                ? 'number'
+                                                : 'text'
                                         }
                                         step={
-                                            f.type === 'number' ? 'any' : undefined
+                                            f.type === 'number'
+                                                ? 'any'
+                                                : undefined
                                         }
                                         value={values[f.key] ?? ''}
                                         onChange={(e) =>
@@ -256,7 +261,9 @@ export function EntityFormDialog<T extends Record<string, any>>({
                                     />
                                 )}
                                 {error && typeof error === 'string' && (
-                                    <p className="mt-1 text-xs text-destructive">{error}</p>
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {error}
+                                    </p>
                                 )}
                             </div>
                         );

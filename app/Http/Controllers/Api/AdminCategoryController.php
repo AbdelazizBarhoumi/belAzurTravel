@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class AdminCategoryController extends Controller
@@ -46,12 +46,12 @@ class AdminCategoryController extends Controller
         ]);
 
         $key = Str::slug($data['name']['en']);
-        
+
         // Ensure key uniqueness for this entity type
         $baseKey = $key;
         $counter = 1;
         while (Category::where('entity_type', $data['entity_type'])->where('key', $key)->exists()) {
-            $key = $baseKey . '-' . $counter++;
+            $key = $baseKey.'-'.$counter++;
         }
 
         $category = Category::create([
@@ -99,7 +99,7 @@ class AdminCategoryController extends Controller
             return response()->json([
                 'message' => "This category is assigned to {$count} items. Deleting it will set their category to null.",
                 'count' => $count,
-                'requires_confirmation' => true
+                'requires_confirmation' => true,
             ], 409);
         }
 
@@ -129,7 +129,9 @@ class AdminCategoryController extends Controller
     private function getEntityCount(string $type, string $key): int
     {
         $table = $this->getTableName($type);
-        if (!$table) return 0;
+        if (! $table) {
+            return 0;
+        }
 
         return DB::table($table)->where('category_key', $key)->count();
     }
@@ -137,21 +139,25 @@ class AdminCategoryController extends Controller
     private function nullifyEntities(string $type, string $key): void
     {
         $table = $this->getTableName($type);
-        if (!$table) return;
+        if (! $table) {
+            return;
+        }
 
         DB::table($table)->where('category_key', $key)->update([
             'category_key' => null,
-            'category' => null
+            'category' => null,
         ]);
     }
 
     private function syncEntities(Category $category, string $oldKey): void
     {
         $table = $this->getTableName($category->entity_type);
-        if (!$table) return;
+        if (! $table) {
+            return;
+        }
 
         DB::table($table)->where('category_key', $oldKey)->update([
-            'category' => json_encode($category->name)
+            'category' => json_encode($category->name),
         ]);
     }
 

@@ -1,12 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-    TrendingUp,
-    DollarSign,
-    Calendar,
-    UserCheck,
-    Globe,
-} from 'lucide-react';
+import { TrendingUp, Wallet, Calendar, UserCheck, Globe } from 'lucide-react';
 import {
     Bar,
     BarChart,
@@ -49,15 +43,18 @@ const AdminDashboard = () => {
         refetchOnMount: false,
     });
     const {
-        data: users = [],
+        data: usersData,
         isLoading: usersLoading,
         isError: usersError,
     } = useQuery({
         queryKey: ['admin', 'users'],
-        queryFn: listAdminUsers,
+        queryFn: () => listAdminUsers(),
         staleTime: 60_000,
         refetchOnMount: false,
     });
+
+    const users = usersData?.data ?? [];
+    const totalUsers = usersData?.meta?.total ?? 0;
 
     if (bookingsLoading || destinationsLoading || usersLoading) {
         return (
@@ -105,9 +102,9 @@ const AdminDashboard = () => {
     const stats = [
         {
             labelKey: 'admin.totalRevenue',
-            value: `$${totalRevenue.toLocaleString()}`,
+            value: `${totalRevenue.toLocaleString()} DT`,
             change: '+12.5%',
-            icon: DollarSign,
+            icon: Wallet,
             color: 'text-primary',
         },
         {
@@ -119,7 +116,7 @@ const AdminDashboard = () => {
         },
         {
             labelKey: 'admin.activeUsers',
-            value: users.filter((u) => u.active).length,
+            value: totalUsers,
             change: '+5.1%',
             icon: UserCheck,
             color: 'text-primary',
@@ -257,7 +254,7 @@ const AdminDashboard = () => {
                                             ).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm font-semibold">
-                                            ${b.total_amount.toLocaleString()}
+                                            {b.total_amount.toLocaleString()} DT
                                         </td>
                                         <td className="px-6 py-4">
                                             <span

@@ -279,8 +279,9 @@ const Destinations = () => {
                                                 </p>
                                                 <div className="flex items-center justify-between gap-2">
                                                     <span className="font-bold text-primary">
-                                                        From $
-                                                        {dest.price.toLocaleString()}
+                                                        From{' '}
+                                                        {dest.price.toLocaleString()}{' '}
+                                                        DT
                                                     </span>
                                                     <Button
                                                         size="sm"

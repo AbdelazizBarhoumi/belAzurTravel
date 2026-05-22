@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +22,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
+// import removed: uniqueNonEmptySelectOptions not used in this file
 
 export type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'checkbox';
 
@@ -72,22 +73,36 @@ export interface EntityFormDialogProps<T extends object> {
     initial?: T | null;
     sections?: SectionDef[];
     fields?: FieldDef[];
-    onSubmit: (values: T) => void;
+    // Allow optional callback for legacy callers that expect a success callback
+    onSubmit: (values: T, callback?: (success: boolean) => void) => void;
+    // Optional validation hook for callers
+    validate?: (values: T) => Record<string, string>;
     isSubmitting?: boolean;
     submitLabel?: string;
     languages?: Lang[];
     layout?: 'stack' | 'grid-1' | 'grid-2';
     activeLang?: Lang;
     onActiveLangChange?: (lang: Lang) => void;
+    preserveArrayKeys?: string[];
     errors?: Record<string, string>;
 }
 
-function toRecord(value?: object | null): Record<string, unknown> {
+const EMPTY_STRING_ARRAY: string[] = [];
+
+function toRecord(
+    value?: object | null,
+    preserveArrayKeys: string[] = [],
+): Record<string, unknown> {
     if (!value) return {};
     const out: Record<string, unknown> = {};
     const rec = value as Record<string, unknown>;
+    const preserveSet = new Set(preserveArrayKeys);
     for (const [k, v] of Object.entries(rec)) {
         if (Array.isArray(v)) {
+            if (/(?:Paths|Files)$/i.test(k) || preserveSet.has(k)) {
+                out[k] = v;
+                continue;
+            }
             if (
                 v.every((i) => typeof i === 'string' || typeof i === 'number')
             ) {
@@ -185,18 +200,23 @@ function FieldControl({
                 >
                     <SelectTrigger id={field.key} className={commonInputClass}>
                         <SelectValue
-                            placeholder={field.placeholder ?? 'Select an option'}
+                            placeholder={
+                                field.placeholder ?? 'Select an option'
+                            }
                         />
                     </SelectTrigger>
                     <SelectContent>
-                        {(field.options ?? []).map((option) => {
-                            const optionValue = optionToValue(option);
-                            return (
-                                <SelectItem key={optionValue} value={optionValue}>
-                                    {optionToLabel(option)}
+                        {(field.options ?? [])
+                            .map((option) => ({
+                                value: optionToValue(option),
+                                label: optionToLabel(option),
+                            }))
+                            .filter(({ value }) => value.trim().length > 0)
+                            .map(({ value, label }) => (
+                                <SelectItem key={value} value={value}>
+                                    {label}
                                 </SelectItem>
-                            );
-                        })}
+                            ))}
                     </SelectContent>
                 </Select>
             ) : field.type === 'checkbox' ? (
@@ -225,7 +245,7 @@ function FieldControl({
             )}
 
             {error ? (
-                <p className="text-xs text-destructive">{error}</p>
+                <p className="text-[10px] text-destructive">{error}</p>
             ) : field.helpText ? (
                 <p className="text-xs text-muted-foreground">
                     {field.helpText}
@@ -284,7 +304,13 @@ function SectionCard({
             ) : null}
 
             {section.render
-                ? section.render({ values, setField, activeLang, languages, errors })
+                ? section.render({
+                      values,
+                      setField,
+                      activeLang,
+                      languages,
+                      errors,
+                  })
                 : null}
         </section>
     );
@@ -305,28 +331,39 @@ export function EntityFormDialog<T extends object>({
     layout = 'stack',
     activeLang: activeLangProp,
     onActiveLangChange,
+    preserveArrayKeys = EMPTY_STRING_ARRAY,
     errors = {},
+    validate,
 }: EntityFormDialogProps<T>) {
     const { t } = useLanguage();
     const [values, setValues] = useState<Record<string, unknown>>(() =>
-        toRecord(initial),
+        toRecord(initial, preserveArrayKeys),
     );
+    const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
     const [internalActiveLang, setInternalActiveLang] = useState<Lang>(
         languages && languages.length > 0 ? languages[0] : ('en' as Lang),
     );
     const activeLang = activeLangProp ?? internalActiveLang;
-    const formKey = useMemo(() => JSON.stringify(initial ?? {}), [initial]);
+    const initialSignature = useMemo(
+        () => JSON.stringify(toRecord(initial, preserveArrayKeys)),
+        [initial, preserveArrayKeys],
+    );
+    const formKey = initialSignature;
 
     useEffect(() => {
         if (open) {
-            setValues(toRecord(initial));
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setValues(toRecord(initial, preserveArrayKeys));
+            setLocalErrors({});
         } else {
             setValues({});
+            setLocalErrors({});
         }
-    }, [open, initial]);
+    }, [open, initialSignature]);
 
     useEffect(() => {
         if (activeLangProp) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setInternalActiveLang(
             languages && languages.length > 0 ? languages[0] : ('en' as Lang),
         );
@@ -351,10 +388,30 @@ export function EntityFormDialog<T extends object>({
         }));
     };
 
+    const mergedErrors = useMemo(
+        () => ({ ...errors, ...localErrors }),
+        [errors, localErrors],
+    );
+
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (isSubmitting) return;
-        onSubmit(values as T);
+
+        if (validate) {
+            const nextErrors = validate(values as T);
+            setLocalErrors(nextErrors);
+
+            if (Object.keys(nextErrors).length > 0) {
+                return;
+            }
+        }
+
+        setLocalErrors({});
+        onSubmit(values as T, (success = true) => {
+            if (success) {
+                onOpenChange(false);
+            }
+        });
     };
 
     const submitDisabled = isSubmitting;
@@ -368,6 +425,7 @@ export function EntityFormDialog<T extends object>({
                 <form
                     key={formKey}
                     onSubmit={handleSubmit}
+                    noValidate
                     className="flex max-h-[92vh] flex-col"
                 >
                     <DialogHeader className="border-b border-border px-6 py-5 text-left">
@@ -393,11 +451,12 @@ export function EntityFormDialog<T extends object>({
                                     </Badge>
                                 ) : null}
                             </div>
-
                             {languages ? (
                                 <div className="flex flex-wrap gap-2">
                                     {languages.map((code) => {
-                                        const hasError = Object.keys(errors).some(k => k.endsWith(`_${code}`));
+                                        const hasError = Object.keys(
+                                            mergedErrors,
+                                        ).some((k) => k.endsWith(`_${code}`));
                                         return (
                                             <Button
                                                 key={code}
@@ -407,19 +466,23 @@ export function EntityFormDialog<T extends object>({
                                                         ? 'default'
                                                         : 'outline'
                                                 }
-                                                className={`min-w-14 ${hasError ? 'border-destructive text-destructive' : ''}`}
+                                                className={`min-w-14 ${hasError ? 'border-destructive text-destructive hover:bg-destructive/10' : ''}`}
                                                 onClick={() => {
                                                     setInternalActiveLang(code);
                                                     onActiveLangChange?.(code);
                                                 }}
                                             >
                                                 {code.toUpperCase()}
-                                                {hasError && <span className="ml-1">*</span>}
+                                                {hasError && (
+                                                    <span className="ml-1">
+                                                        *
+                                                    </span>
+                                                )}
                                             </Button>
                                         );
                                     })}
                                 </div>
-                            ) : null}
+                            ) : null}{' '}
                         </div>
                     </DialogHeader>
 
@@ -430,7 +493,9 @@ export function EntityFormDialog<T extends object>({
                                     const rendered: ReactNode[] = [];
                                     let currentGroup: SectionDef[] = [];
 
-                                    const flushGroup = (group: SectionDef[]) => {
+                                    const flushGroup = (
+                                        group: SectionDef[],
+                                    ) => {
                                         if (group.length === 0) return;
 
                                         const main = group.filter(
@@ -447,7 +512,7 @@ export function EntityFormDialog<T extends object>({
                                         rendered.push(
                                             <div
                                                 key={`group-${rendered.length}`}
-                                                className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-start"
+                                                className="grid items-start gap-6 lg:grid-cols-[1.1fr_0.9fr]"
                                             >
                                                 <div className="space-y-6">
                                                     {main.map((s, idx) => (
@@ -456,9 +521,15 @@ export function EntityFormDialog<T extends object>({
                                                             section={s}
                                                             values={values}
                                                             setField={setField}
-                                                            activeLang={activeLang}
-                                                            languages={languages ?? []}
-                                                            errors={errors}
+                                                            activeLang={
+                                                                activeLang
+                                                            }
+                                                            languages={
+                                                                languages ?? []
+                                                            }
+                                                            errors={
+                                                                mergedErrors
+                                                            }
                                                         />
                                                     ))}
                                                 </div>
@@ -469,9 +540,15 @@ export function EntityFormDialog<T extends object>({
                                                             section={s}
                                                             values={values}
                                                             setField={setField}
-                                                            activeLang={activeLang}
-                                                            languages={languages ?? []}
-                                                            errors={errors}
+                                                            activeLang={
+                                                                activeLang
+                                                            }
+                                                            languages={
+                                                                languages ?? []
+                                                            }
+                                                            errors={
+                                                                mergedErrors
+                                                            }
                                                         />
                                                     ))}
                                                 </div>
@@ -485,13 +562,16 @@ export function EntityFormDialog<T extends object>({
                                             currentGroup = [];
                                             rendered.push(
                                                 <SectionCard
-                                                    key={section.id ?? `full-${rendered.length}`}
+                                                    key={
+                                                        section.id ??
+                                                        `full-${rendered.length}`
+                                                    }
                                                     section={section}
                                                     values={values}
                                                     setField={setField}
                                                     activeLang={activeLang}
                                                     languages={languages ?? []}
-                                                    errors={errors}
+                                                    errors={mergedErrors}
                                                 />,
                                             );
                                         } else {
@@ -507,20 +587,23 @@ export function EntityFormDialog<T extends object>({
                             <div className="space-y-6">
                                 {effectiveSections.map((section, index) => (
                                     <SectionCard
-                                        key={section.id ?? `${section.title ?? 'section'}-${index}`}
+                                        key={
+                                            section.id ??
+                                            `${section.title ?? 'section'}-${index}`
+                                        }
                                         section={section}
                                         values={values}
                                         setField={setField}
                                         activeLang={activeLang}
                                         languages={languages ?? []}
-                                        errors={errors}
+                                        errors={mergedErrors}
                                     />
                                 ))}
                             </div>
                         )}
                     </div>
 
-                    <DialogFooter className="border-t border-border px-6 py-4 gap-3">
+                    <DialogFooter className="gap-3 border-t border-border px-6 py-4">
                         <Button
                             type="button"
                             variant="outline"

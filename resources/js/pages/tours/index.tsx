@@ -2,11 +2,11 @@ import { motion } from 'framer-motion';
 import { Clock, Users, MapPin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { DatePicker } from '@/components/ui/DatePicker';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import {
     Select,
@@ -62,14 +62,14 @@ const Tours = () => {
         () =>
             Array.from(
                 new Set(tours.map((tour) => localizeText(tour.location, lang))),
-            ),
+            ).map(String),
         [tours, lang],
     );
     const durationOptions = useMemo(
         () =>
             Array.from(
                 new Set(tours.map((tour) => localizeText(tour.duration, lang))),
-            ),
+            ).map(String),
         [tours, lang],
     );
 
@@ -179,14 +179,42 @@ const Tours = () => {
                                 </span>
                                 <div className="grid grid-cols-2 gap-2">
                                     <DatePicker
-                                        date={fromDate ? new Date(fromDate) : undefined}
-                                        onDateChange={(date) => setFromDate(date ? date.toISOString().split('T')[0] : '')}
-                                        placeholder={t('search.placeholders.checkIn')}
+                                        date={
+                                            fromDate
+                                                ? new Date(fromDate)
+                                                : undefined
+                                        }
+                                        onDateChange={(date) =>
+                                            setFromDate(
+                                                date
+                                                    ? date
+                                                          .toISOString()
+                                                          .split('T')[0]
+                                                    : '',
+                                            )
+                                        }
+                                        placeholder={t(
+                                            'search.placeholders.checkIn',
+                                        )}
                                     />
                                     <DatePicker
-                                        date={toDate ? new Date(toDate) : undefined}
-                                        onDateChange={(date) => setToDate(date ? date.toISOString().split('T')[0] : '')}
-                                        placeholder={t('search.placeholders.checkOut')}
+                                        date={
+                                            toDate
+                                                ? new Date(toDate)
+                                                : undefined
+                                        }
+                                        onDateChange={(date) =>
+                                            setToDate(
+                                                date
+                                                    ? date
+                                                          .toISOString()
+                                                          .split('T')[0]
+                                                    : '',
+                                            )
+                                        }
+                                        placeholder={t(
+                                            'search.placeholders.checkOut',
+                                        )}
                                     />
                                 </div>
                             </label>
@@ -395,8 +423,8 @@ const Tours = () => {
                                                         </div>
 
                                                         <span className="text-lg font-bold text-primary">
-                                                            $
-                                                            {tour.price.toLocaleString()}
+                                                            {tour.price.toLocaleString()}{' '}
+                                                            DT
                                                         </span>
 
                                                         <span className="ml-1 text-xs text-muted-foreground">

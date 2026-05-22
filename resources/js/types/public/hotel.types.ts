@@ -9,6 +9,8 @@ export interface HotelItem {
     destinationSlug: string;
     name: LocalizedText;
     location: LocalizedText;
+    category_key?: string;
+    category?: LocalizedText;
     price: number;
     rating: number;
     stars: number;

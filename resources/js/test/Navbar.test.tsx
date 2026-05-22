@@ -1,11 +1,12 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type * as SiteSettingsApi from '@/api/siteSettings.api';
 import { Navbar } from '@/components/layout/Navbar';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import type * as PublicDataHooks from '@/hooks/usePublicData';
+
+const mockUseSiteSettings = vi.fn();
 
 const categoriesByType: Record<
     string,
@@ -33,6 +34,53 @@ const categoriesByType: Record<
     blog: [{ key: 'tips', name: { en: 'Tips', fr: 'Conseils', ar: 'نصائح' } }],
 };
 
+function makeNavSettings(header: Array<Record<string, unknown>>) {
+    return {
+        settings: {
+            content: {
+                nav: {
+                    settings: {
+                        header,
+                        footer: [],
+                    },
+                },
+            },
+        },
+        loading: false,
+    };
+}
+
+function setDefaultNavSettings() {
+    mockUseSiteSettings.mockReturnValue(
+        makeNavSettings([
+            {
+                pageKey: 'destinations',
+                enabled: true,
+                placement: 'top',
+                isDropdown: false,
+                linkSelf: true,
+                items: [],
+            },
+            {
+                pageKey: 'tours',
+                enabled: true,
+                placement: 'top',
+                isDropdown: false,
+                linkSelf: true,
+                items: [],
+            },
+            {
+                pageKey: 'promos',
+                enabled: true,
+                placement: 'top',
+                isDropdown: false,
+                linkSelf: true,
+                items: [],
+            },
+        ]),
+    );
+}
+
 vi.mock('@/hooks/usePublicData', async () => {
     const actual = await vi.importActual<typeof PublicDataHooks>(
         '@/hooks/usePublicData',
@@ -48,56 +96,14 @@ vi.mock('@/hooks/usePublicData', async () => {
     };
 });
 
-// Mock the site settings API module
-vi.mock('@/api/siteSettings.api', async () => {
-    const actual = await vi.importActual<typeof SiteSettingsApi>(
-        '@/api/siteSettings.api',
-    );
-    return {
-        ...actual,
-        fetchSiteSettings: async () => ({
-            ...(actual?.defaultSiteSettings ?? {}),
-            content: {
-                nav: {
-                    settings: {
-                        header: [
-                            {
-                                pageKey: 'destinations',
-                                enabled: true,
-                                placement: 'top',
-                                isDropdown: false,
-                                linkSelf: true,
-                                items: [],
-                            },
-                            {
-                                pageKey: 'tours',
-                                enabled: true,
-                                placement: 'top',
-                                isDropdown: false,
-                                linkSelf: true,
-                                items: [],
-                            },
-                            {
-                                pageKey: 'promos',
-                                enabled: true,
-                                placement: 'top',
-                                isDropdown: false,
-                                linkSelf: true,
-                                items: [],
-                            },
-                        ],
-                        footer: [],
-                    },
-                },
-            },
-        }),
-    };
-});
+vi.mock('@/hooks/useSiteSettings', () => ({
+    useSiteSettings: () => mockUseSiteSettings(),
+}));
 
 describe('Navbar', () => {
     beforeEach(() => {
-        // reset DOM
         document.documentElement.innerHTML = '';
+        setDefaultNavSettings();
     });
 
     it('renders top nav entries when enabled', async () => {
@@ -111,16 +117,6 @@ describe('Navbar', () => {
             </LanguageProvider>,
         );
 
-        // Wait for fetchSiteSettings to resolve
-        await waitFor(() =>
-            expect(
-                screen.queryByText(
-                    /Rechercher|Hôtels|Hôtels|Destinations|Circuits|Offres/i,
-                ),
-            ).toBeDefined(),
-        );
-
-        // Wait for anchor links to be rendered with expected hrefs
         await waitFor(() =>
             expect(document.querySelector('a[href="/tours"]')).toBeTruthy(),
         );
@@ -132,6 +128,39 @@ describe('Navbar', () => {
     });
 
     it('renders live categories inside dropdown menus', async () => {
+        mockUseSiteSettings.mockReturnValue(
+            makeNavSettings([
+                {
+                    pageKey: 'destinations',
+                    enabled: true,
+                    placement: 'top',
+                    isDropdown: true,
+                    linkSelf: true,
+                    items: [
+                        { label: 'Categories', mode: 'categories', value: '' },
+                    ],
+                },
+                {
+                    pageKey: 'hotels',
+                    enabled: true,
+                    placement: 'top',
+                    isDropdown: true,
+                    linkSelf: true,
+                    items: [
+                        { label: 'Categories', mode: 'categories', value: '' },
+                    ],
+                },
+                {
+                    pageKey: 'promos',
+                    enabled: true,
+                    placement: 'top',
+                    isDropdown: false,
+                    linkSelf: true,
+                    items: [],
+                },
+            ]),
+        );
+
         render(
             <LanguageProvider>
                 <FavoritesProvider>
@@ -142,78 +171,79 @@ describe('Navbar', () => {
             </LanguageProvider>,
         );
 
-        await waitFor(() => expect(screen.getByText('Beach')).toBeTruthy());
-        expect(screen.getByText('City')).toBeTruthy();
-        expect(screen.getByText('Luxury')).toBeTruthy();
+        await waitFor(() =>
+            expect(
+                document.querySelector('a[href="/destinations?cat=beach"]'),
+            ).toBeTruthy(),
+        );
+        expect(
+            document.querySelector('a[href="/destinations?cat=city"]'),
+        ).toBeTruthy();
+        expect(
+            document.querySelector('a[href="/hotels?cat=luxury"]'),
+        ).toBeTruthy();
     });
 
-    it('hides a disabled nav entry', async () => {
-        // Re-mock to disable tours
-        vi.doMock('@/api/siteSettings.api', async () => {
-            const actual = await vi.importActual<typeof SiteSettingsApi>(
-                '@/api/siteSettings.api',
-            );
-            return {
-                ...actual,
-                fetchSiteSettings: async () => ({
-                    ...(actual?.defaultSiteSettings ?? {}),
-                    content: {
-                        nav: {
-                            settings: {
-                                header: [
-                                    {
-                                        pageKey: 'destinations',
-                                        enabled: true,
-                                        placement: 'top',
-                                        isDropdown: false,
-                                        linkSelf: true,
-                                        items: [],
-                                    },
-                                    {
-                                        pageKey: 'tours',
-                                        enabled: false,
-                                        placement: 'top',
-                                        isDropdown: false,
-                                        linkSelf: true,
-                                        items: [],
-                                    },
-                                    {
-                                        pageKey: 'promos',
-                                        enabled: true,
-                                        placement: 'top',
-                                        isDropdown: false,
-                                        linkSelf: true,
-                                        items: [],
-                                    },
-                                ],
-                                footer: [],
-                            },
-                        },
-                    },
-                }),
-            };
-        });
-
-        // Need to import Navbar fresh so module mocks take effect
-        const { Navbar: FreshNavbar } =
-            await import('@/components/layout/Navbar');
-
+    it('always renders the favorites heart button', async () => {
         render(
             <LanguageProvider>
                 <FavoritesProvider>
                     <MemoryRouter>
-                        <FreshNavbar />
+                        <Navbar />
                     </MemoryRouter>
                 </FavoritesProvider>
             </LanguageProvider>,
         );
 
-        // Tours link should not be present
+        await waitFor(() =>
+            expect(document.querySelector('a[href="/favorites"]')).toBeTruthy(),
+        );
+    });
+
+    it('hides a disabled nav entry', async () => {
+        mockUseSiteSettings.mockReturnValue(
+            makeNavSettings([
+                {
+                    pageKey: 'destinations',
+                    enabled: true,
+                    placement: 'top',
+                    isDropdown: false,
+                    linkSelf: true,
+                    items: [],
+                },
+                {
+                    pageKey: 'tours',
+                    enabled: false,
+                    placement: 'top',
+                    isDropdown: false,
+                    linkSelf: true,
+                    items: [],
+                },
+                {
+                    pageKey: 'promos',
+                    enabled: true,
+                    placement: 'top',
+                    isDropdown: false,
+                    linkSelf: true,
+                    items: [],
+                },
+            ]),
+        );
+
+        render(
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter>
+                        <Navbar />
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>,
+        );
+
         await waitFor(() =>
             expect(document.querySelector('a[href="/tours"]')).toBeNull(),
         );
 
-        // Destinations and promos links remain
         expect(document.querySelector('a[href="/destinations"]')).toBeTruthy();
         expect(
             document.querySelector('a[href="/promos"]') ||

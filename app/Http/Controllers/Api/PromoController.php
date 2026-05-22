@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Promo;
 use Illuminate\Http\JsonResponse;
@@ -9,15 +10,19 @@ use Illuminate\Support\Facades\Cache;
 
 class PromoController extends Controller
 {
+    use HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $result = Cache::remember(
             'promos.index',
             now()->addMinutes(10),
-            function() {
-                return Promo::query()->oldest('id')->get()->map(
-                    fn (Promo $item) => $this->payload($item)
-                );
+            function () {
+                // Only expose promos that are active (default true when missing)
+                return Promo::query()->oldest('id')->get()
+                    ->filter(fn (Promo $item) => ($item->details['active'] ?? true) !== false)
+                    ->map(fn (Promo $item) => $this->payload($item))
+                    ->values();
             }
         );
 
@@ -27,6 +32,11 @@ class PromoController extends Controller
     public function show(string $code): JsonResponse
     {
         $item = Promo::query()->where('code', $code)->firstOrFail();
+
+        // If the promo has been explicitly deactivated, hide it from public API
+        if (isset($item->details['active']) && $item->details['active'] === false) {
+            abort(404);
+        }
 
         return response()->json(Cache::remember(
             "promos.{$code}",
@@ -50,7 +60,7 @@ class PromoController extends Controller
             'eligibility' => $this->flattenLocalizedList($details['eligibility'] ?? []),
             'howToUse' => $this->flattenLocalizedList($details['howToUse'] ?? []),
             'terms' => $this->flattenLocalizedList($details['terms'] ?? []),
-            'gallery' => array_map(fn($img) => asset('storage/' . $img), $details['gallery'] ?? []),
+            'gallery' => array_map(fn ($img) => $this->normalizeApiOutputPath($img), $details['gallery'] ?? []),
             'usage_limit' => $details['usage_limit'] ?? null,
             'per_user_limit' => $details['per_user_limit'] ?? null,
             'applicable_to' => $details['applicable_to'] ?? null,
@@ -59,7 +69,7 @@ class PromoController extends Controller
     }
 
     /**
-     * @param array<int, array<string, mixed>> $items
+     * @param  array<int, array<string, mixed>>  $items
      * @return array<int, array<string, string>>
      */
     private function flattenLocalizedList(array $items): array
@@ -75,4 +85,3 @@ class PromoController extends Controller
         }, $items);
     }
 }
-

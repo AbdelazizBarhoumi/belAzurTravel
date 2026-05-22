@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\ProfileValidationRules;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
@@ -11,10 +12,11 @@ use App\Notifications\SupportInquiryNotification;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 
 class ClientController extends Controller
 {
+    use ProfileValidationRules;
+
     public function dashboard(Request $request): JsonResponse
     {
         $bookings = Booking::query()
@@ -112,7 +114,7 @@ class ClientController extends Controller
 
         User::query()
             ->where('active', true)
-            ->whereIn('role', ['admin', 'assistant'])
+            ->whereIn('role', ['admin'])
             ->get()
             ->each(function (User $recipient) use ($inquiry): void {
                 $notification = new SupportInquiryNotification($inquiry);
@@ -131,6 +133,15 @@ class ClientController extends Controller
         $request->user()->update(['preferred_language' => $data['language']]);
 
         return response()->json(['language' => $data['language']]);
+    }
+
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $data = $request->validate($this->profileRules($request->user()->id));
+
+        $request->user()->update($data);
+
+        return response()->json($request->user());
     }
 
     private function localized(string $value): array

@@ -32,7 +32,9 @@ trait HandlesAdminMedia
     {
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store($folder, 'public');
-            return 'storage/' . $path;
+
+            // Store with a leading slash so saved values are '/storage/...'
+            return '/storage/'.$path;
         }
 
         $incoming = $request->input('image');
@@ -56,6 +58,7 @@ trait HandlesAdminMedia
         }
 
         $trimmed = trim($path);
+        $hadLeadingSlash = str_starts_with($trimmed, '/');
         if ($trimmed === '') {
             return '';
         }
@@ -65,7 +68,21 @@ trait HandlesAdminMedia
             $trimmed = $parsedPath;
         }
 
-        return ltrim($trimmed, '/');
+        // If the path points to storage (public disk) we prefer to store it
+        // without a leading slash (e.g. 'storage/uploads/...') so code that
+        // expects that format continues to work when a full URL is provided.
+        $noLeading = ltrim($trimmed, '/');
+
+        if (str_starts_with($noLeading, 'storage/') || str_starts_with($noLeading, 'images/')) {
+            // Preserve leading slash for values that originally included it
+            // (typically uploaded files), otherwise keep storage/ without slash
+            return $hadLeadingSlash ? ('/'.$noLeading) : $noLeading;
+        }
+
+        // Otherwise, do not accept legacy '/images/...' paths — only
+        // storage-backed uploads are considered valid. Return empty
+        // so callers will not expose legacy URLs.
+        return '';
     }
 
     /**
@@ -80,27 +97,38 @@ trait HandlesAdminMedia
         }
 
         $gallery = $request->input('gallery', []);
-        
+
         // If gallery is a string (legacy or manual input), split it
         if (is_string($gallery)) {
             $gallery = $this->splitLines($gallery);
         }
 
-        if (!is_array($gallery)) {
+        if (! is_array($gallery)) {
             $gallery = [];
         }
 
         if ($request->hasFile('gallery_files')) {
             $uploads = collect($request->file('gallery_files'))
                 ->filter()
-                ->map(fn($file) => 'storage/' . $file->store($folder, 'public'))
+                ->map(fn ($file) => '/storage/'.$file->store($folder, 'public'))
                 ->all();
-            
+
             $gallery = array_merge($gallery, $uploads);
         }
 
         $gallery = array_map(
-            fn (mixed $image): string => $this->normalizeStoredMediaPath(is_string($image) ? $image : ''),
+            function (mixed $image) {
+                // Preserve numeric image IDs for galleries (referencing GalleryImage)
+                if (is_int($image) || (is_string($image) && ctype_digit($image))) {
+                    return is_string($image) ? (int) $image : $image;
+                }
+
+                if (is_string($image)) {
+                    return $this->normalizeStoredMediaPath($image);
+                }
+
+                return '';
+            },
             $gallery,
         );
 
@@ -112,9 +140,51 @@ trait HandlesAdminMedia
      */
     protected function splitLines(?string $value): array
     {
-        if (!$value) {
+        if (! $value) {
             return [];
         }
+
         return array_values(array_filter(array_map(static fn (string $line): string => trim($line), preg_split('/\r\n|\r|\n/', $value) ?: []), static fn (string $line): bool => $line !== ''));
+    }
+
+    /**
+     * Normalize stored media paths for API output.
+     *
+     * - If stored as "storage/<path>" or "/storage/<path>", return "/<path>"
+     * - If stored as an absolute URL, return the path portion with a leading slash
+     * - If stored as "images/..." or "/images/...", return with leading slash
+     */
+    protected function normalizeApiOutputPath(?string $path): ?string
+    {
+        if (! is_string($path) || trim($path) === '') {
+            return null;
+        }
+
+        $p = trim($path);
+
+        // If it's a full URL, extract path
+        $parsed = parse_url($p, PHP_URL_PATH);
+        if (is_string($parsed) && $parsed !== '') {
+            $p = $parsed;
+        }
+
+        // Normalize multiple slashes to a single slash
+        $p = '/'.ltrim(preg_replace('#/+#', '/', $p), '/');
+
+        $noLeading = ltrim($p, '/');
+
+        // If path starts with /storage/, preserve it (tests expect stored
+        // values like '/storage/uploads/...'). Keep single slashes.
+        if (str_starts_with($p, '/storage/')) {
+            return $p;
+        }
+
+        // If this is a simple filename (no directory separators), return it
+        // without a leading slash so APIs that expect raw filenames keep them.
+        if (strpos($noLeading, '/') === false) {
+            return $noLeading;
+        }
+
+        return $p;
     }
 }

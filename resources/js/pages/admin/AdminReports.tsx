@@ -1,6 +1,6 @@
 import {
     Download,
-    DollarSign,
+    Wallet,
     Calendar,
     CheckCircle2,
     XCircle,
@@ -90,8 +90,8 @@ const AdminReports = () => {
     const stats = [
         {
             label: 'Total Revenue',
-            value: `$${totalRevenue.toLocaleString()}`,
-            icon: DollarSign,
+            value: `${totalRevenue.toLocaleString()} DT`,
+            icon: Wallet,
         },
         {
             label: 'Total Bookings',
@@ -189,7 +189,7 @@ const AdminReports = () => {
                                         </div>
                                     </div>
                                     <span className="text-sm font-semibold">
-                                        ${amt.toLocaleString()}
+                                        {amt.toLocaleString()} DT
                                     </span>
                                 </div>
                             ))}

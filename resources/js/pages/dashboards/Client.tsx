@@ -13,14 +13,20 @@ import {
     Clock,
     Star,
     Bell,
+    Globe,
+    Mail,
+    Trash2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
     cancelBooking,
     createSupportInquiry,
     getClientDashboard,
     getClientPayments,
+    updateClientLanguage,
+    updateClientProfile,
     type ClientBookingRow,
 } from '@/api/booking.api';
 import { logout } from '@/auth';
@@ -28,7 +34,9 @@ import { BrandLogo } from '@/components/layout/BrandLogo';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuthUser } from '@/hooks/useAuthUser';
 import { useDestinations } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 import { cn } from '@/lib/utils';
@@ -62,16 +70,28 @@ const ClientDashboard = () => {
     const { pathname } = useLocation();
     const [activeTab, setActiveTab] = useState(() => {
         if (pathname.includes('/payments')) return 'dashboard.payments';
-        if (pathname.includes('/support') || pathname.includes('/profile')) {
-            return 'dashboard.settings';
-        }
+        if (pathname.includes('/profile')) return 'dashboard.profile';
+        if (pathname.includes('/support')) return 'dashboard.settings';
         if (pathname.includes('/notifications')) return 'notifications.title';
         return 'dashboard.myBookings';
     });
     const [supportSubject, setSupportSubject] = useState('');
     const [supportMessage, setSupportMessage] = useState('');
-    const { lang, t, dir } = useLanguage();
+
+    const { data: user } = useAuthUser();
+    const [profileName, setProfileName] = useState('');
+    const [profileEmail, setProfileEmail] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            setProfileName(user.name);
+            setProfileEmail(user.email);
+        }
+    }, [user]);
+
+    const { lang, t, dir, setLanguage } = useLanguage();
     const queryClient = useQueryClient();
+    const { favorites, remove: removeFavorite } = useFavorites();
     const isRtl = dir === 'rtl';
 
     const handleLogout = async () => {
@@ -106,8 +126,27 @@ const ClientDashboard = () => {
             setSupportSubject('');
             setSupportMessage('');
             queryClient.invalidateQueries({ queryKey: ['client'] });
+            toast.success(t('client.supportSuccess') || 'Message sent.');
         },
     });
+
+    const profileMutation = useMutation({
+        mutationFn: () =>
+            updateClientProfile({ name: profileName, email: profileEmail }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+            toast.success(t('client.profileUpdated') || 'Profile updated.');
+        },
+    });
+
+    const langMutation = useMutation({
+        mutationFn: (newLang: string) => updateClientLanguage(newLang),
+        onSuccess: (_, newLang) => {
+            setLanguage(newLang as Lang);
+            toast.success(t('client.languageUpdated') || 'Language updated.');
+        },
+    });
+
     const bookings = dashboard?.bookings ?? [];
 
     useEffect(() => {
@@ -116,10 +155,9 @@ const ClientDashboard = () => {
         setTimeout(() => {
             if (pathname.includes('/payments'))
                 setActiveTab('dashboard.payments');
-            else if (
-                pathname.includes('/support') ||
-                pathname.includes('/profile')
-            )
+            else if (pathname.includes('/profile'))
+                setActiveTab('dashboard.profile');
+            else if (pathname.includes('/support'))
                 setActiveTab('dashboard.settings');
             else if (pathname.includes('/notifications'))
                 setActiveTab('notifications.title');
@@ -221,7 +259,7 @@ const ClientDashboard = () => {
                 <header className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
                     <div>
                         <h1 className="font-serif text-2xl font-bold text-foreground">
-                            {t('client.welcome')}
+                            {t('client.welcome')}, {user?.name || ''}
                         </h1>
                         <p className="text-sm text-muted-foreground">
                             {t('client.overview')}
@@ -247,7 +285,7 @@ const ClientDashboard = () => {
                                 color: 'text-primary',
                             },
                             {
-                                labelKey: 'client.countriesVisited',
+                                labelKey: 'client.unreadNotifications',
                                 value: String(
                                     dashboard?.stats.unreadNotifications ?? 0,
                                 ),
@@ -457,6 +495,93 @@ const ClientDashboard = () => {
                         </div>
                     )}
 
+                    {activeTab === 'dashboard.profile' && (
+                        <div className="space-y-6">
+                            <div className="rounded-2xl border border-border bg-card p-6">
+                                <h2 className="mb-6 font-serif text-xl font-bold text-foreground">
+                                    {t('dashboard.profile')}
+                                </h2>
+                                <div className="max-w-md space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">
+                                            {t('label.fullName')}
+                                        </label>
+                                        <div className="relative">
+                                            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <input
+                                                value={profileName}
+                                                onChange={(e) =>
+                                                    setProfileName(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="w-full rounded-xl border border-border bg-background py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">
+                                            {t('label.email')}
+                                        </label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <input
+                                                type="email"
+                                                value={profileEmail}
+                                                onChange={(e) =>
+                                                    setProfileEmail(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="w-full rounded-xl border border-border bg-background py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary"
+                                            />
+                                        </div>
+                                    </div>
+                                    <Button
+                                        onClick={() => profileMutation.mutate()}
+                                        disabled={profileMutation.isPending}
+                                        className="w-full sm:w-auto"
+                                    >
+                                        {t('actions.save')}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-border bg-card p-6">
+                                <h2 className="mb-6 font-serif text-xl font-bold text-foreground">
+                                    {t('dashboard.settings')}
+                                </h2>
+                                <div className="max-w-md space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">
+                                            {t('common.language')}
+                                        </label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['en', 'fr', 'ar'].map((l) => (
+                                                <Button
+                                                    key={l}
+                                                    variant={
+                                                        lang === l
+                                                            ? 'default'
+                                                            : 'outline'
+                                                    }
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        langMutation.mutate(l)
+                                                    }
+                                                    className="gap-2"
+                                                >
+                                                    <Globe className="h-3 w-3" />
+                                                    {l.toUpperCase()}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'notifications.title' && (
                         <div className="rounded-2xl border border-border bg-card p-6">
                             <NotificationCenter
@@ -469,43 +594,133 @@ const ClientDashboard = () => {
                     )}
 
                     {activeTab === 'dashboard.wishlist' && (
-                        <div>
-                            <h2 className="mb-4 font-serif text-xl font-bold text-foreground">
-                                {t('client.recommended')}
+                        <div className="space-y-6">
+                            <h2 className="font-serif text-xl font-bold text-foreground">
+                                {t('dashboard.wishlist')}
                             </h2>
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                                {recommendations.slice(0, 3).map((rec) => (
-                                    <div
-                                        key={rec.slug}
-                                        className="card-elevated group cursor-pointer overflow-hidden rounded-2xl bg-card"
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                {favorites.map((item) => (
+                                    <motion.div
+                                        key={item.id}
+                                        layout
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="group relative overflow-hidden rounded-2xl border border-border bg-card"
                                     >
-                                        <div className="h-40 overflow-hidden">
+                                        <div className="aspect-[4/3] overflow-hidden">
                                             <img
-                                                src={rec.image}
-                                                alt={localize(rec.name, lang)}
+                                                src={item.image}
+                                                alt={item.name}
                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                loading="lazy"
                                             />
                                         </div>
                                         <div className="p-4">
-                                            <div className="mb-1 flex items-center justify-between">
-                                                <h3 className="font-semibold text-foreground">
-                                                    {localize(rec.name, lang)}
-                                                </h3>
-                                                <div className="flex items-center gap-1 text-secondary">
-                                                    <Star className="h-3.5 w-3.5 fill-current" />
-                                                    <span className="text-xs font-bold">
-                                                        {rec.rating}
-                                                    </span>
+                                            <div className="mb-2 flex items-start justify-between">
+                                                <div>
+                                                    <h3 className="font-bold text-foreground">
+                                                        {item.name}
+                                                    </h3>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {t(
+                                                            `nav.${item.type}s` as any,
+                                                        ) || item.type}
+                                                    </p>
                                                 </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                                    onClick={() =>
+                                                        removeFavorite(item.id)
+                                                    }
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
                                             </div>
-                                            <p className="text-sm font-bold text-primary">
-                                                {t('common.from')} ${rec.price}
-                                            </p>
+                                            <div className="flex items-center justify-between">
+                                                {item.price && (
+                                                    <p className="font-bold text-primary">
+                                                        ${item.price}
+                                                    </p>
+                                                )}
+                                                <Link
+                                                    to={`/${item.type}s/${item.id}`}
+                                                    className="text-xs font-medium text-secondary hover:underline"
+                                                >
+                                                    {t('common.viewDetails')}
+                                                </Link>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
+                                {favorites.length === 0 && (
+                                    <div className="col-span-full rounded-2xl border border-dashed border-border py-12 text-center">
+                                        <Heart className="mx-auto mb-4 h-12 w-12 text-muted-foreground/20" />
+                                        <p className="text-muted-foreground">
+                                            {t('client.emptyWishlist') ||
+                                                'Your wishlist is empty.'}
+                                        </p>
+                                        <Link
+                                            to="/destinations"
+                                            className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
+                                        >
+                                            {t('client.exploreNow') ||
+                                                'Explore destinations'}
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
+
+                            {recommendations.length > 0 && (
+                                <div className="pt-8">
+                                    <h3 className="mb-4 font-serif text-lg font-bold text-foreground">
+                                        {t('client.recommended')}
+                                    </h3>
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                        {recommendations
+                                            .slice(0, 3)
+                                            .map((rec) => (
+                                                <div
+                                                    key={rec.slug}
+                                                    className="card-elevated group cursor-pointer overflow-hidden rounded-2xl bg-card"
+                                                >
+                                                    <div className="h-40 overflow-hidden">
+                                                        <img
+                                                            src={rec.image}
+                                                            alt={localize(
+                                                                rec.name,
+                                                                lang,
+                                                            )}
+                                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                            loading="lazy"
+                                                        />
+                                                    </div>
+                                                    <div className="p-4">
+                                                        <div className="mb-1 flex items-center justify-between">
+                                                            <h3 className="font-semibold text-foreground">
+                                                                {localize(
+                                                                    rec.name,
+                                                                    lang,
+                                                                )}
+                                                            </h3>
+                                                            <div className="flex items-center gap-1 text-secondary">
+                                                                <Star className="h-3.5 w-3.5 fill-current" />
+                                                                <span className="text-xs font-bold">
+                                                                    {rec.rating}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-sm font-bold text-primary">
+                                                            {t('common.from')}{' '}
+                                                            ${rec.price}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

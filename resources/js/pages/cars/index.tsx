@@ -17,6 +17,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCars, useCategories } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
+import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
 
 const ALL = 'all';
 
@@ -52,25 +53,23 @@ function CarsContent() {
 
     const fuelOptions = useMemo(
         () =>
-            Array.from(
-                new Set(cars.map((car) => localizeText(car.fuel, lang))),
+            uniqueNonEmptySelectOptions(
+                cars.map((car) => localizeText(car.fuel, lang)),
             ),
         [cars, lang],
     );
     const transmissionOptions = useMemo(
         () =>
-            Array.from(
-                new Set(
-                    cars.map((car) => localizeText(car.transmission, lang)),
-                ),
+            uniqueNonEmptySelectOptions(
+                cars.map((car) => localizeText(car.transmission, lang)),
             ),
         [cars, lang],
     );
     const seatOptions = useMemo(
         () =>
-            Array.from(new Set(cars.map((car) => String(car.seats)))).sort(
-                (a, b) => Number(a) - Number(b),
-            ),
+            uniqueNonEmptySelectOptions(
+                cars.map((car) => String(car.seats)),
+            ).sort((a, b) => Number(a) - Number(b)),
         [cars],
     );
 
@@ -321,7 +320,7 @@ function CarsContent() {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-primary">
-                                            ${c.price}
+                                            {c.price} DT
                                             <span className="text-xs font-normal text-muted-foreground">
                                                 {t('cars.perDay')}
                                             </span>

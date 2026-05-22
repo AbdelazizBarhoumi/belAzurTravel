@@ -3,26 +3,42 @@
 namespace Tests\Feature;
 
 use App\Models\Car;
+use App\Models\Category;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class AdminCarsTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function seedCarCategories(): void
+    {
+        Category::query()->create([
+            'entity_type' => 'cars',
+            'key' => 'electric',
+            'name' => ['en' => 'Electric', 'fr' => 'Électrique', 'ar' => 'كهربائي'],
+        ]);
+
+        Category::query()->create([
+            'entity_type' => 'cars',
+            'key' => 'luxury',
+            'name' => ['en' => 'Luxury', 'fr' => 'Luxe', 'ar' => 'فاخرة'],
+        ]);
+    }
+
     public function test_admin_can_create_car_with_detail_sections(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
+        $this->seedCarCategories();
 
         $payload = [
             'name_en' => 'Tesla Model 3',
             'name_fr' => 'Tesla Model 3',
             'name_ar' => 'تسلا موديل 3',
-            'category_en' => 'Electric',
-            'category_fr' => 'Électrique',
-            'category_ar' => 'كهربائي',
+            'category_key' => 'electric',
             'price' => 80,
             'seats' => 5,
             'fuel_en' => 'Electric',
@@ -51,6 +67,7 @@ class AdminCarsTest extends TestCase
             ->assertJsonStructure([
                 'data' => [
                     'id',
+                    'category_key',
                     'name_en',
                     'category_en',
                     'price',
@@ -67,6 +84,7 @@ class AdminCarsTest extends TestCase
         $car = Car::latest()->first();
         $this->assertNotNull($car);
         $this->assertEquals('Tesla Model 3', $car->name['en']);
+        $this->assertSame('electric', $car->category_key);
         $this->assertEquals(['en' => 'Electric', 'fr' => 'Électrique', 'ar' => 'كهربائي'], $car->category);
         $this->assertEquals(80, $car->price);
         $this->assertEquals(5, $car->seats);
@@ -89,7 +107,10 @@ class AdminCarsTest extends TestCase
     public function test_admin_can_update_car_detail_sections(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
+        $this->seedCarCategories();
         $car = Car::factory()->create([
+            'category_key' => 'electric',
+            'category' => ['en' => 'Electric', 'fr' => 'Électrique', 'ar' => 'كهربائي'],
             'details' => [
                 'gallery' => ['/old1.jpg', '/old2.jpg'],
                 'features' => [['name' => ['en' => 'Old feature', 'fr' => 'Old feature', 'ar' => 'Old feature']]],
@@ -101,9 +122,7 @@ class AdminCarsTest extends TestCase
             'name_en' => 'Updated Car',
             'name_fr' => 'Voiture Mise à Jour',
             'name_ar' => 'سيارة محدثة',
-            'category_en' => 'Luxury',
-            'category_fr' => 'Luxe',
-            'category_ar' => 'فاخرة',
+            'category_key' => 'luxury',
             'price' => 150,
             'seats' => 5,
             'fuel_en' => 'Petrol',
@@ -132,6 +151,7 @@ class AdminCarsTest extends TestCase
 
         $car->refresh();
         $this->assertEquals('Updated Car', $car->name['en']);
+    $this->assertSame('luxury', $car->category_key);
         $this->assertEquals(150, $car->price);
 
         // Verify detail sections updated
@@ -148,8 +168,11 @@ class AdminCarsTest extends TestCase
     public function test_admin_can_retrieve_car_with_detail_sections(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
+        $this->seedCarCategories();
         $car = Car::factory()->create([
+            'category_key' => 'luxury',
             'name' => ['en' => 'Mercedes', 'fr' => 'Mercedes', 'ar' => 'مرسيدس'],
+            'category' => ['en' => 'Luxury', 'fr' => 'Luxe', 'ar' => 'فاخرة'],
             'details' => [
                 'description' => ['en' => 'Premium sedan', 'fr' => 'Berline premium', 'ar' => 'سيدان فاخر'],
                 'gallery' => ['/images/merc1.jpg', '/images/merc2.jpg'],
@@ -169,7 +192,9 @@ class AdminCarsTest extends TestCase
             ->assertJson([
                 'data' => [
                     'id' => (string) $car->id,
+                    'category_key' => 'luxury',
                     'name_en' => 'Mercedes',
+                    'category_en' => 'Luxury',
                     'description_en' => 'Premium sedan',
                     'gallery' => ['/images/merc1.jpg', '/images/merc2.jpg'],
                     'features' => [['name' => ['en' => 'Leather seats', 'fr' => 'Leather seats', 'ar' => 'Leather seats']]],
@@ -181,7 +206,10 @@ class AdminCarsTest extends TestCase
     public function test_admin_can_list_cars_with_detail_sections(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
+        $this->seedCarCategories();
         Car::factory()->count(3)->create([
+            'category_key' => 'luxury',
+            'category' => ['en' => 'Luxury', 'fr' => 'Luxe', 'ar' => 'فاخرة'],
             'details' => [
                 'gallery' => ['/img1.jpg'],
                 'features' => [['name' => ['en' => 'Feature A', 'fr' => 'Feature A', 'ar' => 'Feature A']]],
@@ -197,6 +225,7 @@ class AdminCarsTest extends TestCase
                 'data' => [
                     '*' => [
                         'id',
+                        'category_key',
                         'name_en',
                         'gallery',
                         'features',
@@ -211,7 +240,9 @@ class AdminCarsTest extends TestCase
     public function test_admin_can_list_cars_when_category_is_stored_as_json_string(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
+        $this->seedCarCategories();
         $car = Car::factory()->create([
+            'category_key' => 'luxury',
             'category' => ['en' => 'Luxury', 'fr' => 'Luxe', 'ar' => 'فاخرة'],
         ]);
 
@@ -225,6 +256,7 @@ class AdminCarsTest extends TestCase
         $response->assertOk()
             ->assertJsonFragment([
                 'id' => (string) $car->id,
+                'category_key' => 'luxury',
                 'category' => 'Luxury',
                 'category_fr' => 'Luxe',
                 'category_ar' => 'فاخرة',
@@ -246,7 +278,7 @@ class AdminCarsTest extends TestCase
         // Only update price and gallery, keep features and policy
         $payload = [
             'price' => 200,
-            'gallery' => "/new1.jpg\n/new2.jpg",
+            'gallery' => "/images/new1.jpg\n/images/new2.jpg",
         ];
 
         $response = $this->actingAs($admin)
@@ -257,11 +289,53 @@ class AdminCarsTest extends TestCase
         $car->refresh();
         $this->assertEquals(200, $car->price);
         $this->assertCount(2, $car->details['gallery']);
-        $this->assertContains('/new1.jpg', $car->details['gallery']);
+        $this->assertContains('/images/new1.jpg', $car->details['gallery']);
 
         // Features and policy should be preserved
         $this->assertCount(1, $car->details['features']);
         $this->assertEquals('Existing feature', $car->details['features'][0]['name']['en']);
         $this->assertCount(1, $car->details['policy']);
+    }
+
+    public function test_admin_create_and_update_invalidate_public_car_cache(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $car = Car::factory()->create([
+            'slug' => 'cache-test-car',
+        ]);
+
+        Cache::spy();
+
+        $createPayload = [
+            'name_en' => 'Cache Test Car',
+            'name_fr' => 'Cache Test Car',
+            'name_ar' => 'Cache Test Car',
+            'category_en' => 'Luxury',
+            'category_fr' => 'Luxury',
+            'category_ar' => 'Luxury',
+            'price' => 100,
+            'seats' => 4,
+            'fuel_en' => 'Petrol',
+            'fuel_fr' => 'Petrol',
+            'fuel_ar' => 'Petrol',
+            'transmission_en' => 'Automatic',
+            'transmission_fr' => 'Automatic',
+            'transmission_ar' => 'Automatic',
+        ];
+
+        $this->actingAs($admin)
+            ->postJson('/api/admin/cars', $createPayload)
+            ->assertCreated();
+
+        Cache::shouldHaveReceived('forget')->with('admin.entity.cars');
+        Cache::shouldHaveReceived('forget')->with('cars.index');
+
+        $this->actingAs($admin)
+            ->putJson("/api/admin/cars/{$car->id}", [
+                'name_en' => 'Cache Test Car Updated',
+            ])
+            ->assertOk();
+
+        Cache::shouldHaveReceived('forget')->with('cars.cache-test-car');
     }
 }

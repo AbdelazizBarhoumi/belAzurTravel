@@ -15,6 +15,9 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
     const { dir } = useLanguage();
 
     const isRtl = dir === 'rtl';
+    const maxVisibleThumbnails = 5;
+    const visibleThumbnails = images.slice(0, maxVisibleThumbnails);
+    const overflowCount = images.length - maxVisibleThumbnails;
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -120,8 +123,11 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
 
                 {/* Thumbnails row */}
                 <div className="hidden gap-2 overflow-x-auto pb-1 lg:flex">
-                    {images.map((image, index) => {
+                    {visibleThumbnails.map((image, index) => {
                         const active = index === selectedIndex;
+                        const isOverflowTile =
+                            index === visibleThumbnails.length - 1 &&
+                            overflowCount > 0;
                         return (
                             <motion.button
                                 key={`${image}-${index}`}
@@ -140,9 +146,9 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                                     className="h-14 w-20 object-cover transition-transform duration-300 group-hover:scale-105"
                                     loading="lazy"
                                 />
-                                {index === 5 && images.length > 6 && (
+                                {isOverflowTile && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/55 text-sm font-bold text-white">
-                                        +{images.length - 6}
+                                        +{overflowCount}
                                     </div>
                                 )}
                             </motion.button>
@@ -180,7 +186,9 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                                         prevImage();
                                     }
                                 }}
-                                aria-label={isRtl ? 'Next image' : 'Previous image'}
+                                aria-label={
+                                    isRtl ? 'Next image' : 'Previous image'
+                                }
                                 className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
                             >
                                 <ChevronLeft className="h-6 w-6" />
@@ -207,7 +215,9 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                                         nextImage();
                                     }
                                 }}
-                                aria-label={isRtl ? 'Previous image' : 'Next image'}
+                                aria-label={
+                                    isRtl ? 'Previous image' : 'Next image'
+                                }
                                 className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20"
                             >
                                 <ChevronRight className="h-6 w-6" />

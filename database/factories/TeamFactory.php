@@ -21,7 +21,7 @@ class TeamFactory extends Factory
             'name' => ['en' => 'Test Name', 'fr' => 'Nom de test', 'ar' => 'اسم الاختبار'],
             'role' => ['en' => 'Test Role', 'fr' => 'Rôle de test', 'ar' => 'دور الاختبار'],
             'bio' => ['en' => 'Test Bio', 'fr' => 'Bio de test', 'ar' => 'سيرة الاختبار'],
-            'image_path' => 'images/test.jpg',
+            'image_path' => '/storage/uploads/seed/test.jpg',
         ];
     }
 }

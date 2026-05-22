@@ -6,7 +6,7 @@ use App\Models\Car;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Car>
+ * @extends Factory<Car>
  */
 class CarFactory extends Factory
 {
@@ -45,14 +45,14 @@ class CarFactory extends Factory
                 'fr' => $this->faker->randomElement(['Manuelle', 'Automatique']),
                 'ar' => $this->faker->randomElement(['يدوي', 'أوتوماتيكي']),
             ],
-            'image' => '/images/car-default.jpg',
+            'image' => '/storage/uploads/seed/car-default.jpg',
             'details' => [
                 'description' => [
                     'en' => $this->faker->sentence(),
                     'fr' => $this->faker->sentence(),
                     'ar' => $this->faker->sentence(),
                 ],
-                'gallery' => ['/images/car-default.jpg'],
+                'gallery' => ['/storage/uploads/seed/car-default.jpg'],
                 'features' => [],
                 'policy' => [],
             ],

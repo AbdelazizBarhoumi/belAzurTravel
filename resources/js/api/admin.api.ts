@@ -38,41 +38,37 @@ export function saveAdminEntity<T extends { id?: string | number | null }>(
     entity: T,
 ) {
     const id = entity.id as string | undefined;
-    const isFileLike = (value: unknown): value is File | Blob =>
-        value instanceof File || value instanceof Blob;
-    const isFileLikeArray = (value: unknown): value is Array<File | Blob> =>
-        Array.isArray(value) && value.length > 0 && value.every(isFileLike);
-    // If any file/blob is present, send multipart/form-data.
-    const hasFile = Object.values(entity).some(
-        (value) => isFileLike(value) || isFileLikeArray(value),
-    );
-
-    if (hasFile) {
-        const fd = new FormData();
-        if (id) {
-            fd.append('_method', 'PUT');
-        }
-        Object.entries(entity).forEach(([k, v]) => {
-            if (isFileLike(v)) {
-                fd.append(k, v);
-            } else if (isFileLikeArray(v)) {
-                v.forEach((file) => fd.append(`${k}[]`, file));
-            } else if (typeof v === 'object' && v !== null) {
-                fd.append(k, JSON.stringify(v));
-            } else if (v !== undefined && v !== null) {
-                fd.append(k, String(v));
-            }
-        });
-
-        return apiFetch<T>(`/api/admin/${type}${id ? `/${id}` : ''}`, {
-            method: 'POST',
-            body: fd,
-        });
+    const fd = new FormData();
+    if (id) {
+        fd.append('_method', 'PUT');
     }
 
+    const appendToFormData = (data: unknown, parentKey?: string) => {
+        if (data === null || data === undefined) return;
+
+        if (data instanceof File || data instanceof Blob) {
+            fd.append(parentKey || '', data);
+        } else if (Array.isArray(data)) {
+            data.forEach((value) => {
+                // For files in arrays, use key[]
+                const formKey = parentKey ? `${parentKey}[]` : '[]';
+                appendToFormData(value, formKey);
+            });
+        } else if (typeof data === 'object') {
+            Object.entries(data).forEach(([key, value]) => {
+                const formKey = parentKey ? `${parentKey}[${key}]` : key;
+                appendToFormData(value, formKey);
+            });
+        } else {
+            fd.append(parentKey || '', String(data));
+        }
+    };
+
+    appendToFormData(entity);
+
     return apiFetch<T>(`/api/admin/${type}${id ? `/${id}` : ''}`, {
-        method: id ? 'PUT' : 'POST',
-        body: JSON.stringify(entity),
+        method: 'POST',
+        body: fd,
     });
 }
 
@@ -80,8 +76,36 @@ export function deleteAdminEntity(type: AdminEntityType, id: string) {
     return apiFetch(`/api/admin/${type}/${id}`, { method: 'DELETE' });
 }
 
-export function listAdminUsers() {
-    return apiFetch<AdminUser[]>('/api/admin/users');
+export interface AdminUserListResponse {
+    data: AdminUser[];
+    meta: {
+        current_page: number;
+        last_page: number;
+        total: number;
+        per_page: number;
+    };
+}
+
+export function listAdminUsers(params?: {
+    page?: number;
+    search?: string;
+    role?: string;
+}) {
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.search) searchParams.append('search', params.search);
+    if (params?.role) searchParams.append('role', params.role);
+
+    return apiFetch<AdminUserListResponse>(
+        `/api/admin/users?${searchParams.toString()}`,
+    );
+}
+
+export function updateAdminUser(id: string, data: Partial<AdminUser>) {
+    return apiFetch<AdminUser>(`/api/admin/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+    });
 }
 
 export function toggleAdminUser(id: string) {

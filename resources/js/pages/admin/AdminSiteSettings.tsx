@@ -51,6 +51,11 @@ import {
     getPage,
     DEFAULT_NAV_SETTINGS,
 } from '@/lib/nav-config';
+import {
+    HOUR_DAY_KEYS,
+    normalizeHours,
+    type SiteHourEntry,
+} from '@/lib/site-hours';
 import type {
     NavSettings,
     DropdownItemConfig,
@@ -62,9 +67,239 @@ interface SocialLink {
     href: string;
 }
 
-interface HourRow {
-    dayKey: string;
-    value: string;
+interface HourRow extends SiteHourEntry {}
+
+function sanitizeNavSettings(nav: NavSettings): NavSettings {
+    const allowedPageKeys = new Set(AVAILABLE_PAGES.map((page) => page.key));
+
+    return {
+        header: nav.header.filter((entry) =>
+            allowedPageKeys.has(entry.pageKey),
+        ),
+        footer: nav.footer.map((column) => ({
+            ...column,
+            pageKeys: column.pageKeys.filter((pageKey) =>
+                allowedPageKeys.has(pageKey),
+            ),
+        })),
+    };
+}
+
+const DEFAULT_DAY_KEY = HOUR_DAY_KEYS[0];
+
+function createHourRow(dayKey = DEFAULT_DAY_KEY): HourRow {
+    return {
+        dayKey,
+        ranges: [{ value: '' }],
+        closed: false,
+    };
+}
+
+function normalizeHourRows(hours: SiteHourEntry[]): HourRow[] {
+    return hours.map((entry) => ({
+        dayKey: entry.dayKey,
+        ranges:
+            entry.ranges.length > 0
+                ? entry.ranges.map((range) => ({ value: range.value }))
+                : [{ value: '' }],
+        closed: Boolean(entry.closed),
+    }));
+}
+
+function serializeHourRows(
+    hours: HourRow[],
+): Array<{ dayKey: string; closed: boolean; ranges: string[] }> {
+    return hours
+        .map((entry) => ({
+            dayKey: entry.dayKey.trim(),
+            closed: Boolean(entry.closed),
+            ranges: entry.closed
+                ? []
+                : entry.ranges
+                      .map((range) => range.value.trim())
+                      .filter((value) => value.length > 0),
+        }))
+        .filter((entry) => entry.dayKey.length > 0);
+}
+
+function updateHourRange(
+    hours: HourRow[],
+    hourIndex: number,
+    rangeIndex: number,
+    value: string,
+): HourRow[] {
+    return hours.map((hour, idx) => {
+        if (idx !== hourIndex) {
+            return hour;
+        }
+
+        return {
+            ...hour,
+            ranges: hour.ranges.map((range, i) =>
+                i === rangeIndex ? { value } : range,
+            ),
+        };
+    });
+}
+
+function removeHourRange(
+    hours: HourRow[],
+    hourIndex: number,
+    rangeIndex: number,
+): HourRow[] {
+    return hours.map((hour, idx) => {
+        if (idx !== hourIndex) {
+            return hour;
+        }
+
+        const nextRanges = hour.ranges.filter((_, i) => i !== rangeIndex);
+        return {
+            ...hour,
+            ranges: nextRanges.length > 0 ? nextRanges : [{ value: '' }],
+        };
+    });
+}
+
+function addHourRange(hours: HourRow[], hourIndex: number): HourRow[] {
+    return hours.map((hour, idx) =>
+        idx === hourIndex
+            ? { ...hour, ranges: [...hour.ranges, { value: '' }] }
+            : hour,
+    );
+}
+
+function updateHourClosed(
+    hours: HourRow[],
+    hourIndex: number,
+    closed: boolean,
+): HourRow[] {
+    return hours.map((hour, idx) =>
+        idx === hourIndex
+            ? {
+                  ...hour,
+                  closed,
+                  ranges:
+                      closed && hour.ranges.length === 0
+                          ? [{ value: '' }]
+                          : hour.ranges,
+              }
+            : hour,
+    );
+}
+
+function updateHourDayKey(
+    hours: HourRow[],
+    hourIndex: number,
+    dayKey: string,
+): HourRow[] {
+    return hours.map((hour, idx) =>
+        idx === hourIndex ? { ...hour, dayKey } : hour,
+    );
+}
+
+function HourRowEditor({
+    hour,
+    hourIndex,
+    onDayKeyChange,
+    onClosedChange,
+    onAddRange,
+    onRangeChange,
+    onRemoveRange,
+    onRemoveHour,
+    t,
+}: {
+    hour: HourRow;
+    hourIndex: number;
+    onDayKeyChange: (dayKey: string) => void;
+    onClosedChange: (closed: boolean) => void;
+    onAddRange: () => void;
+    onRangeChange: (rangeIndex: number, value: string) => void;
+    onRemoveRange: (rangeIndex: number) => void;
+    onRemoveHour: () => void;
+    t: (key: string) => string;
+}) {
+    return (
+        <Card className="space-y-3 p-3">
+            <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-12">
+                <div className="md:col-span-4">
+                    <Label className="text-xs">{t('admin.settings.day')}</Label>
+                    <Select value={hour.dayKey} onValueChange={onDayKeyChange}>
+                        <SelectTrigger className="mt-1">
+                            <SelectValue
+                                placeholder={t('admin.settings.day')}
+                            />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {HOUR_DAY_KEYS.map((key) => (
+                                <SelectItem key={key} value={key}>
+                                    {t(key)}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="md:col-span-6">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                        <Label className="text-xs">
+                            {t('admin.settings.hours')}
+                        </Label>
+                        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Switch
+                                checked={hour.closed}
+                                onCheckedChange={onClosedChange}
+                            />
+                            {t('admin.settings.closed')}
+                        </label>
+                    </div>
+                    {!hour.closed && (
+                        <div className="space-y-2">
+                            {hour.ranges.map((range, rangeIndex) => (
+                                <div
+                                    key={`${hour.dayKey}-${hourIndex}-${rangeIndex}`}
+                                    className="flex items-center gap-2"
+                                >
+                                    <Input
+                                        value={range.value}
+                                        onChange={(e) =>
+                                            onRangeChange(
+                                                rangeIndex,
+                                                e.target.value,
+                                            )
+                                        }
+                                        placeholder="09:00 - 12:00"
+                                        className="flex-1"
+                                    />
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() =>
+                                            onRemoveRange(rangeIndex)
+                                        }
+                                        disabled={hour.ranges.length === 1}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            ))}
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={onAddRange}
+                            >
+                                <Plus className="mr-1 h-3.5 w-3.5" />
+                                {t('admin.settings.addTimeRange')}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+                <div className="flex items-end justify-end md:col-span-2">
+                    <Button size="icon" variant="ghost" onClick={onRemoveHour}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                </div>
+            </div>
+        </Card>
+    );
 }
 
 interface LegalSectionDraft {
@@ -228,30 +463,29 @@ export default function AdminSiteSettings() {
     const autosaveTimerRef = useRef<number | null>(null);
     const lastSavedLegalRef = useRef<string>('');
     const autosaveReadyRef = useRef(false);
-    const [invalidLabels, setInvalidLabels] = useState<Record<string, string>>(
-        {},
-    );
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     // Keep draft in sync when settings are loaded/changed externally
     // (e.g., after initial fetch or when reset is applied)
     useEffect(() => {
         // We ensure all AVAILABLE_PAGES have an entry in the header.
         // If a new page was added to nav-config.ts, it should appear in the admin.
-        const headerEntries = settings.header || [];
+        const normalizedSettings = sanitizeNavSettings(settings);
+        const headerEntries = normalizedSettings.header || [];
         const currentKeys = headerEntries.map((h) => h.pageKey);
         const missingPages = AVAILABLE_PAGES.filter(
             (p) => !currentKeys.includes(p.key),
         );
 
         // Normalize: remove footer keys that are disabled in nav
-        let normalizedSettings = settings;
-        if (settings.footer && settings.header) {
-            const enabledKeys = settings.header
+        let footerNormalizedSettings = normalizedSettings;
+        if (normalizedSettings.footer && normalizedSettings.header) {
+            const enabledKeys = normalizedSettings.header
                 .filter((h) => h.enabled)
                 .map((h) => h.pageKey);
-            normalizedSettings = {
-                ...settings,
-                footer: settings.footer.map((col) => ({
+            footerNormalizedSettings = {
+                ...normalizedSettings,
+                footer: normalizedSettings.footer.map((col) => ({
                     ...col,
                     pageKeys: col.pageKeys.filter((k) =>
                         enabledKeys.includes(k),
@@ -270,11 +504,11 @@ export default function AdminSiteSettings() {
                 items: [],
             }));
             setDraft({
-                ...normalizedSettings,
+                ...footerNormalizedSettings,
                 header: [...headerEntries, ...newEntries],
             });
         } else {
-            setDraft(normalizedSettings);
+            setDraft(footerNormalizedSettings);
         }
     }, [settings]);
 
@@ -296,7 +530,7 @@ export default function AdminSiteSettings() {
                 ar: '',
             },
         );
-        setHours(siteSettings.hours || []);
+        setHours(normalizeHourRows(normalizeHours(siteSettings.hours || [])));
         setSocialLinks(siteSettings.socialLinks || []);
         setLegalSectionsState(
             siteSettings.legalSections?.map((s) => {
@@ -499,7 +733,7 @@ export default function AdminSiteSettings() {
     };
 
     const addHour = () => {
-        setHours((prev) => [...prev, { dayKey: '', value: '' }]);
+        setHours((prev) => [...prev, createHourRow()]);
     };
 
     const addLegalSection = () => {
@@ -617,15 +851,17 @@ export default function AdminSiteSettings() {
         }
 
         if (Object.keys(errors).length > 0) {
-            setInvalidLabels(errors);
+            setFormErrors(errors);
             // show first error as toast as well
             const firstMsg = Object.values(errors)[0];
             toast.error(firstMsg);
             return;
         }
-        setInvalidLabels({});
+        setFormErrors({});
 
         try {
+            const sanitizedDraft = sanitizeNavSettings(draft);
+
             await apiFetch('/api/site-settings', {
                 method: 'PUT',
                 body: JSON.stringify({
@@ -641,16 +877,16 @@ export default function AdminSiteSettings() {
                             entry.label.trim().length > 0 &&
                             entry.href.trim().length > 0,
                     ),
-                    hours: hours.filter(
+                    hours: serializeHourRows(hours).filter(
                         (entry) =>
-                            entry.dayKey.trim().length > 0 ||
-                            entry.value.trim().length > 0,
+                            entry.dayKey.trim().length > 0 &&
+                            (entry.closed || entry.ranges.length > 0),
                     ),
                     content: {
                         ...(siteSettings.content ?? {}),
                         nav: {
                             ...(siteSettings.content?.nav ?? {}),
-                            settings: draft,
+                            settings: sanitizedDraft,
                         },
                         contact: {
                             ...(siteSettings.content?.contact ?? {}),
@@ -817,7 +1053,9 @@ export default function AdminSiteSettings() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>{t('admin.settings.contactPageTitle')}</Label>
+                                <Label>
+                                    {t('admin.settings.contactPageTitle')}
+                                </Label>
                                 {['en', 'fr', 'ar'].map((lang) => (
                                     <Input
                                         key={`title-${lang}`}
@@ -878,7 +1116,7 @@ export default function AdminSiteSettings() {
                                     key={`social-${idx}`}
                                     className="grid grid-cols-1 items-end gap-2 rounded-md bg-muted/40 p-2 md:grid-cols-12"
                                 >
-                                    <div className="md:col-span-4 text-left rtl:text-right">
+                                    <div className="text-left md:col-span-4 rtl:text-right">
                                         <Label className="text-xs">Label</Label>
                                         <Input
                                             value={entry.label}
@@ -891,7 +1129,7 @@ export default function AdminSiteSettings() {
                                             placeholder="Instagram"
                                         />
                                     </div>
-                                    <div className="md:col-span-7 text-center">
+                                    <div className="text-center md:col-span-7">
                                         <Label className="text-xs">URL</Label>
                                         <Input
                                             value={entry.href}
@@ -904,7 +1142,7 @@ export default function AdminSiteSettings() {
                                             placeholder="https://instagram.com/belazurtravel"
                                         />
                                     </div>
-                                    <div className="md:col-span-1 flex justify-center items-end">
+                                    <div className="flex items-end justify-center md:col-span-1">
                                         <Button
                                             size="icon"
                                             variant="ghost"
@@ -931,57 +1169,67 @@ export default function AdminSiteSettings() {
                                     {t('admin.settings.addRow')}
                                 </Button>
                             </div>
+                            <p className="text-xs text-muted-foreground">
+                                {t('admin.settings.openingHoursHelp')}
+                            </p>
                             {hours.length === 0 && (
-                                <p className="text-xs text-muted-foreground text-center">
+                                <p className="text-center text-xs text-muted-foreground">
                                     {t('admin.settings.noHours')}
                                 </p>
                             )}
-                            {hours.map((entry, idx) => (
-                                <div
-                                    key={`hour-${idx}`}
-                                    className="grid grid-cols-1 items-end gap-2 rounded-md bg-muted/40 p-2 md:grid-cols-12"
-                                >
-                                    <div className="md:col-span-4 text-left rtl:text-right">
-                                        <Label className="text-xs">
-                                            {t('admin.settings.day')}
-                                        </Label>
-                                        <Input
-                                            value={entry.dayKey}
-                                            className="text-left rtl:text-right"
-                                            onChange={(e) =>
-                                                updateHour(idx, {
-                                                    dayKey: e.target.value,
-                                                })
-                                            }
-                                            placeholder="mon-fri"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-7 text-center">
-                                        <Label className="text-xs">
-                                            {t('admin.settings.hours')}
-                                        </Label>
-                                        <Input
-                                            value={entry.value}
-                                            className="text-center"
-                                            onChange={(e) =>
-                                                updateHour(idx, {
-                                                    value: e.target.value,
-                                                })
-                                            }
-                                            placeholder="9:00 - 18:00"
-                                        />
-                                    </div>
-                                    <div className="md:col-span-1 flex justify-center items-end">
-                                        <Button
-                                            size="icon"
-                                            variant="ghost"
-                                            onClick={() => removeHour(idx)}
-                                        >
-                                            <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                            <div className="space-y-3">
+                                {hours.map((entry, idx) => (
+                                    <HourRowEditor
+                                        key={`hour-${idx}`}
+                                        hour={entry}
+                                        hourIndex={idx}
+                                        onDayKeyChange={(dayKey) =>
+                                            setHours((prev) =>
+                                                updateHourDayKey(
+                                                    prev,
+                                                    idx,
+                                                    dayKey,
+                                                ),
+                                            )
+                                        }
+                                        onClosedChange={(closed) =>
+                                            setHours((prev) =>
+                                                updateHourClosed(
+                                                    prev,
+                                                    idx,
+                                                    closed,
+                                                ),
+                                            )
+                                        }
+                                        onAddRange={() =>
+                                            setHours((prev) =>
+                                                addHourRange(prev, idx),
+                                            )
+                                        }
+                                        onRangeChange={(rangeIndex, value) =>
+                                            setHours((prev) =>
+                                                updateHourRange(
+                                                    prev,
+                                                    idx,
+                                                    rangeIndex,
+                                                    value,
+                                                ),
+                                            )
+                                        }
+                                        onRemoveRange={(rangeIndex) =>
+                                            setHours((prev) =>
+                                                removeHourRange(
+                                                    prev,
+                                                    idx,
+                                                    rangeIndex,
+                                                ),
+                                            )
+                                        }
+                                        onRemoveHour={() => removeHour(idx)}
+                                        t={t}
+                                    />
+                                ))}
+                            </div>
                         </Card>
                     </div>
                 </section>
@@ -1722,12 +1970,12 @@ export default function AdminSiteSettings() {
                                                                                     />
                                                                                 </div>
                                                                             </div>
-                                                                            {invalidLabels[
+                                                                            {formErrors[
                                                                                 `${idx}-${iIdx}`
                                                                             ] && (
                                                                                 <p className="mt-1 text-xs text-destructive">
                                                                                     {
-                                                                                        invalidLabels[
+                                                                                        formErrors[
                                                                                             `${idx}-${iIdx}`
                                                                                         ]
                                                                                     }

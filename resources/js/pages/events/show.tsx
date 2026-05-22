@@ -15,6 +15,9 @@ export default function EventDetail() {
     const { t, lang } = useLanguage();
 
     const { data: event, isLoading } = useEventBySlug(slug);
+    const aboutText = event
+        ? localizeText(event.description ?? event.about, lang)
+        : '';
 
     if (isLoading) {
         return null;
@@ -52,14 +55,18 @@ export default function EventDetail() {
             >
                 <div className="flex flex-col">
                     <Gallery
-                        images={event.gallery ?? []}
+                        images={
+                            event.image
+                                ? [event.image, ...(event.gallery ?? [])]
+                                : (event.gallery ?? [])
+                        }
                         hotelName={localizeText(event.title, lang)}
                     />
 
                     <div className="mt-8 lg:hidden">
                         <StickyBookingCard
                             price={event.price}
-                            currency="$"
+                            currency="DT"
                             title={localizeText(event.title, lang)}
                             details={[
                                 {
@@ -89,7 +96,7 @@ export default function EventDetail() {
                             {t('events.detail.aboutTitle')}
                         </h2>
                         <p className="leading-relaxed text-muted-foreground">
-                            {localizeText(event.about, lang)}
+                            {aboutText}
                         </p>
                     </section>
 
@@ -97,7 +104,14 @@ export default function EventDetail() {
                         <h2 className="mb-6 font-serif text-2xl font-bold text-foreground">
                             {t('events.detail.scheduleTitle')}
                         </h2>
-                        <ol className="relative ml-3 max-w-3xl space-y-5 border-l-2 border-border">
+                        <ol
+                            dir={lang === 'ar' ? 'rtl' : 'ltr'}
+                            className={`relative max-w-3xl border-border ${
+                                lang === 'ar'
+                                    ? 'border-r-2 pr-6'
+                                    : 'border-l-2 pl-6'
+                            }`}
+                        >
                             {(event.schedule ?? []).map(
                                 (
                                     step: {
@@ -109,15 +123,30 @@ export default function EventDetail() {
                                 ) => (
                                     <li
                                         key={`${event.slug}-${index}`}
-                                        className="ml-6"
+                                        className={`relative pb-8 ${
+                                            lang === 'ar'
+                                                ? 'text-right'
+                                                : 'text-left'
+                                        }`}
                                     >
-                                        <div className="absolute -left-[10px] h-5 w-5 rounded-full border-4 border-background bg-primary" />
+                                        <div
+                                            className={`absolute top-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-md ${
+                                                lang === 'ar'
+                                                    ? '-right-[42px]'
+                                                    : '-left-[42px]'
+                                            }`}
+                                        >
+                                            {index + 1}
+                                        </div>
+
                                         <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
                                             {localizeText(step.day, lang)}
                                         </p>
+
                                         <p className="font-serif text-lg font-semibold text-foreground">
                                             {localizeText(step.activity, lang)}
                                         </p>
+
                                         <p className="text-sm text-muted-foreground">
                                             {localizeText(step.details, lang)}
                                         </p>
@@ -131,8 +160,10 @@ export default function EventDetail() {
                 <aside className="hidden lg:block">
                     <StickyBookingCard
                         price={event.price}
-                        currency="$"
+                        currency="DT"
                         title={localizeText(event.title, lang)}
+                        entityType="tour"
+                        itemSlug={event.slug}
                         details={[
                             {
                                 label: t('events.detail.when'),
@@ -152,7 +183,6 @@ export default function EventDetail() {
                         ]}
                         priceLabel="Package from"
                         primaryButtonLabel="Reserve a spot"
-                        onBook={() => window.open('/contact', '_self')}
                     />
                 </aside>
             </motion.div>

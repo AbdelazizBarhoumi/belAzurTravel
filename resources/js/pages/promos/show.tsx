@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { usePromoByCode } from '@/hooks/usePublicData';
+import { getPromoBackground } from '@/lib/promoColor';
 
 export default function PromoDetail() {
     const { slug } = useParams<{ slug: string }>();
@@ -53,7 +54,8 @@ export default function PromoDetail() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`bg-gradient-to-br ${promo.color} card-elevated mb-8 rounded-3xl p-10 text-primary-foreground`}
+                        className={`card-elevated mb-8 rounded-3xl p-10 text-primary-foreground ${getPromoBackground(promo.color).className ? `bg-gradient-to-br ${getPromoBackground(promo.color).className}` : ''}`}
+                        style={getPromoBackground(promo.color).style}
                     >
                         <Tag className="mb-4 h-10 w-10 opacity-80" />
                         <h1 className="mb-2 font-serif text-4xl font-bold">
@@ -84,19 +86,40 @@ export default function PromoDetail() {
                         </div>
                     </motion.div>
                     <section className="rounded-2xl border border-border bg-card p-6">
+                        <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
+                            {t('promoDetail.howToUseTitle')}
+                        </h3>
+                        <ul className="space-y-2 text-sm text-foreground">
+                            {(promo.howToUse ?? []).map(
+                                (step: LocalizedText) => (
+                                    <li
+                                        key={step.en}
+                                        className="flex items-start gap-2"
+                                    >
+                                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />{' '}
+                                        {localizeText(step, lang)}
+                                    </li>
+                                ),
+                            )}
+                        </ul>
+                    </section>
+
+                    <section className="rounded-2xl border border-border bg-card p-6">
                         <h3 className="mb-4 font-serif text-xl font-bold">
                             {t('promoDetail.eligibility')}
                         </h3>
                         <ul className="space-y-2 text-sm text-foreground">
-                            {promo.eligibility.map((item: LocalizedText) => (
-                                <li
-                                    key={item.en}
-                                    className="flex items-center gap-2"
-                                >
-                                    <CheckCircle2 className="h-4 w-4 text-secondary" />{' '}
-                                    {localizeText(item, lang)}
-                                </li>
-                            ))}
+                            {(promo.eligibility ?? []).map(
+                                (item: LocalizedText) => (
+                                    <li
+                                        key={item.en}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <CheckCircle2 className="h-4 w-4 text-secondary" />{' '}
+                                        {localizeText(item, lang)}
+                                    </li>
+                                ),
+                            )}
                         </ul>
                     </section>
                     <section className="rounded-2xl border border-border bg-card p-6">
@@ -104,7 +127,7 @@ export default function PromoDetail() {
                             {t('promoDetail.termsTitle')}
                         </h2>
                         <ul className="space-y-2">
-                            {promo.terms.map((term: LocalizedText) => (
+                            {(promo.terms ?? []).map((term: LocalizedText) => (
                                 <li
                                     key={term.en}
                                     className="flex items-start gap-2 text-sm text-muted-foreground"

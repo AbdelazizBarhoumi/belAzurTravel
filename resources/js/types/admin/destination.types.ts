@@ -8,6 +8,7 @@ export interface AdminDestination extends AdminEntity {
     id: string;
     name: string;
     country: string;
+    category_key?: string;
     category: string;
     price: number;
     rating: number;

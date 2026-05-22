@@ -1,6 +1,6 @@
+import { arSA, enUS, fr } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
-import { arSA, enUS, fr } from 'date-fns/locale';
 import { DayPicker } from "react-day-picker";
 
 import { buttonVariants } from "@/components/ui/button";

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use Illuminate\Http\JsonResponse;
@@ -9,12 +10,14 @@ use Illuminate\Support\Facades\Cache;
 
 class BlogPostController extends Controller
 {
+    use HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $result = Cache::remember(
             'blog-posts.index',
             now()->addMinutes(10),
-            function() {
+            function () {
                 return BlogPost::query()->oldest('id')->get()->map(
                     fn (BlogPost $item) => $this->payload($item)
                 );
@@ -45,9 +48,8 @@ class BlogPostController extends Controller
             'date' => $item->date,
             'category_key' => $item->category_key,
             'category' => $item->category ?? [],
-            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'image' => $this->normalizeApiOutputPath($item->image),
             'content' => $item->content ?? null,
         ];
     }
 }
-

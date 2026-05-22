@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Trash2, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
     deleteAdminEntity,
@@ -15,12 +15,18 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import LangBadge from '@/components/forms/LangBadge';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { CategoryManager } from '@/components/admin/CategoryManager';
-import { JsonListEditor, type JsonFieldDef } from '@/components/forms/JsonListEditor';
+import {
+    JsonListEditor,
+    type JsonFieldDef,
+} from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -34,12 +40,13 @@ import {
     localizeKnown,
 } from '@/lib/adminI18n';
 
-type DestinationFormValues = AdminDestination & {
-    imagePath?: string;
-    imageFile?: File | null;
-    galleryPaths?: string[];
-    galleryFiles?: File[];
-};
+type DestinationFormValues = AdminDestination &
+    Record<string, unknown> & {
+        imagePath?: string;
+        imageFile?: File | null;
+        galleryPaths?: string[];
+        galleryFiles?: File[];
+    };
 
 type DestinationLang = 'en' | 'fr' | 'ar';
 
@@ -66,7 +73,26 @@ function firstNonEmpty(...values: unknown[]): string {
 
 function parseGallery(value: unknown): string[] {
     if (Array.isArray(value)) {
-        return value.filter((item): item is string => typeof item === 'string');
+        return value
+            .map((item) => {
+                if (typeof item === 'string') return item.trim();
+                if (typeof item === 'number') return String(item);
+                if (item && typeof item === 'object') {
+                    const record = item as Record<string, unknown>;
+                    const candidate =
+                        record.url ?? record.path ?? record.src ?? record.image;
+
+                    if (
+                        typeof candidate === 'string' ||
+                        typeof candidate === 'number'
+                    ) {
+                        return String(candidate).trim();
+                    }
+                }
+
+                return '';
+            })
+            .filter(Boolean);
     }
 
     if (typeof value === 'string') {
@@ -79,8 +105,65 @@ function parseGallery(value: unknown): string[] {
     return [];
 }
 
+function resolveCategoryKey(
+    categories: Array<{
+        key: string;
+        name: { en: string; fr: string; ar: string };
+    }>,
+    ...values: Array<unknown>
+): string {
+    const resolveFromCandidate = (candidate: string): string => {
+        const trimmed = candidate.trim();
+        if (!trimmed) return '';
+
+        const byKey = categories.find((category) => category.key === trimmed);
+        if (byKey) return byKey.key;
+
+        const byName = categories.find((category) =>
+            [category.name.en, category.name.fr, category.name.ar].some(
+                (name) => typeof name === 'string' && name.trim() === trimmed,
+            ),
+        );
+        if (byName) return byName.key;
+
+        return categories.length === 0 ? trimmed : '';
+    };
+
+    for (const value of values) {
+        if (typeof value === 'string' && value.trim() !== '') {
+            return resolveFromCandidate(value);
+        }
+
+        if (value && typeof value === 'object') {
+            const record = value as Record<string, unknown>;
+            const candidate =
+                typeof record.key === 'string'
+                    ? record.key
+                    : typeof record.category_key === 'string'
+                      ? record.category_key
+                      : '';
+
+            if (candidate.trim() !== '') {
+                return resolveFromCandidate(candidate);
+            }
+
+            for (const localized of [record.en, record.fr, record.ar]) {
+                if (typeof localized === 'string' && localized.trim() !== '') {
+                    return resolveFromCandidate(localized);
+                }
+            }
+        }
+    }
+
+    return '';
+}
+
 const highlightSchema: JsonFieldDef[] = [
-    { key: 'name', labelKey: 'admin.destinationForm.highlightName', translatable: true },
+    {
+        key: 'name',
+        labelKey: 'admin.destinationForm.highlightName',
+        translatable: true,
+    },
 ];
 
 const AdminDestinations = () => {
@@ -97,11 +180,24 @@ const AdminDestinations = () => {
     );
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const validate = (values: DestinationFormValues): Record<string, string> => {
+    const validate = (
+        values: DestinationFormValues,
+    ): Record<string, string> => {
         const errs: Record<string, string> = {};
-        if (!firstNonEmpty(values.name_en, values.name_fr, values.name_ar, values.name)) errs.name_en = t('admin.errors.required');
-        if (!firstNonEmpty(values.country_en, values.country_fr, values.country_ar, values.country)) errs.country_en = t('admin.errors.required');
-        if (!values.category_key) errs.category_key = t('admin.errors.required');
+        const langs: DestinationLang[] = ['en', 'fr', 'ar'];
+
+        langs.forEach((l) => {
+            if (!values[`name_${l}`])
+                errs[`name_${l}`] = t('admin.errors.required');
+            if (!values[`country_${l}`])
+                errs[`country_${l}`] = t('admin.errors.required');
+        });
+
+        if (!values.category_key)
+            errs.category_key = t('admin.errors.required');
+        if (!values.price || Number(values.price) <= 0)
+            errs.price = t('admin.errors.required');
+
         return errs;
     };
 
@@ -109,17 +205,6 @@ const AdminDestinations = () => {
         siteSettings?.config?.navigation?.enabled_dropdowns?.includes(
             'destinations',
         );
-
-    const dialogInitial: DestinationFormValues | null = editing
-        ? ({
-              ...editing,
-              imagePath: asText(editing.image),
-              imageFile: null,
-              galleryPaths: parseGallery(editing.gallery),
-              galleryFiles: [],
-              highlights: Array.isArray(editing.highlights) ? editing.highlights : [],
-          } as DestinationFormValues)
-        : null;
 
     const { data: destinations = [] } = useQuery({
         queryKey: ['admin', 'destinations'],
@@ -130,6 +215,31 @@ const AdminDestinations = () => {
         queryKey: ['admin', 'categories', 'destinations'],
         queryFn: () => fetchCategories('destinations'),
     });
+
+    const dialogInitial = useMemo<DestinationFormValues | null>(() => {
+        if (!editing) return null;
+
+        const editingRecord = editing as unknown as Record<string, unknown>;
+
+        return {
+            ...editing,
+            category_key: resolveCategoryKey(
+                dbCategories,
+                editingRecord.category_key,
+                editingRecord.category,
+                editingRecord.category_en,
+                editingRecord.category_fr,
+                editingRecord.category_ar,
+            ),
+            imagePath: asText(editingRecord.image),
+            imageFile: null,
+            galleryPaths: parseGallery(editingRecord.gallery),
+            galleryFiles: [],
+            highlights: Array.isArray(editingRecord.highlights)
+                ? editingRecord.highlights
+                : [],
+        } as DestinationFormValues;
+    }, [editing, dbCategories]);
 
     const saveMutation = useMutation({
         mutationFn: (item: AdminDestination) =>
@@ -145,36 +255,6 @@ const AdminDestinations = () => {
         },
     });
 
-    const handleSave = (values: DestinationFormValues) => {
-        const item: Record<string, unknown> = {
-            ...values,
-            id: editing?.id || '',
-            image:
-                values.imageFile instanceof File
-                    ? values.imageFile
-                    : (values.imagePath ?? values.image ?? ''),
-            gallery: Array.isArray(values.galleryPaths)
-                ? values.galleryPaths
-                : [],
-            highlights: Array.isArray(values.highlights) ? values.highlights : [],
-        };
-
-        if (
-            Array.isArray(values.galleryFiles) &&
-            values.galleryFiles.length > 0
-        ) {
-            item.gallery_files = values.galleryFiles;
-        }
-
-        saveMutation.mutate(item as unknown as AdminDestination);
-        toast.success(
-            editing
-                ? t('admin.destinationUpdated')
-                : t('admin.destinationAdded'),
-        );
-        setEditing(null);
-    };
-
     return (
         <AdminLayout
             title={t('admin.destinations')}
@@ -187,7 +267,8 @@ const AdminDestinations = () => {
                             onClick={() => setCatManagerOpen(true)}
                             className="gap-2"
                         >
-                            <Settings className="h-4 w-4" /> {t('admin.manageCategories')}
+                            <Settings className="h-4 w-4" />{' '}
+                            {t('admin.manageCategories')}
                         </Button>
                     )}
                     <Button
@@ -229,8 +310,10 @@ const AdminDestinations = () => {
                                     <th
                                         key={header}
                                         className={`px-4 py-3 text-xs font-semibold uppercase text-muted-foreground ${
-                                            index === 1 
-                                                ? (lang === 'ar' ? 'text-right' : 'text-left') 
+                                            index === 1
+                                                ? lang === 'ar'
+                                                    ? 'text-right'
+                                                    : 'text-left'
                                                 : 'text-center'
                                         }`}
                                     >
@@ -258,14 +341,16 @@ const AdminDestinations = () => {
                                             />
                                         </div>
                                     </td>
-                                    <td className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                                    <td
+                                        className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                                    >
                                         {localizeKnown(
                                             destination.name,
                                             destinationLabels,
                                             lang,
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-muted-foreground text-center">
+                                    <td className="px-4 py-3 text-center text-sm text-muted-foreground">
                                         {localizeKnown(
                                             destination.country,
                                             countryLabels,
@@ -291,10 +376,10 @@ const AdminDestinations = () => {
                                                   )}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-center">
-                                        ${destination.price.toLocaleString()}
+                                    <td className="px-4 py-3 text-center text-sm font-semibold">
+                                        {destination.price.toLocaleString()} DT
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-center">
+                                    <td className="px-4 py-3 text-center text-sm">
                                         {destination.rating}
                                     </td>
                                     <td className="px-4 py-3 text-center">
@@ -339,14 +424,16 @@ const AdminDestinations = () => {
 
             <EntityFormDialog
                 open={open}
-                onOpenChange={setOpen}
+                onOpenChange={(isOpen) => {
+                    setOpen(isOpen);
+                    if (!isOpen) {
+                        setErrors({});
+                        setEditing(null);
+                    }
+                }}
                 errors={errors}
                 isSubmitting={saveMutation.isPending}
-                validate={(values) => {
-                    const errs = validate(values as DestinationFormValues);
-                    setErrors(errs);
-                    return errs;
-                }}
+                validate={validate}
                 title={
                     editing
                         ? t('admin.destinationEditTitle')
@@ -355,11 +442,7 @@ const AdminDestinations = () => {
                 subtitle={t('admin.destinationForm.helper')}
                 languages={['en', 'fr', 'ar']}
                 layout="grid-2"
-                initial={
-                    dialogInitial as unknown as
-                        | Record<string, unknown>
-                        | undefined
-                }
+                initial={dialogInitial}
                 sections={[
                     {
                         title: t('admin.destinationForm.coreInformation'),
@@ -367,7 +450,7 @@ const AdminDestinations = () => {
                             'admin.destinationForm.coreInformationHint',
                         ),
                         columns: 2,
-                        render: ({ values, setField, activeLang }) => (
+                        render: ({ values, setField, activeLang, errors }) => (
                             <div className="space-y-4">
                                 <div className="grid gap-4 md:grid-cols-2">
                                     {[
@@ -378,6 +461,12 @@ const AdminDestinations = () => {
                                             ),
                                             type: 'text' as const,
                                             required: true,
+                                            helpText: t(
+                                                'admin.destinationForm.nameHelp',
+                                            ),
+                                            placeholder: t(
+                                                'admin.destinationForm.namePlaceholder',
+                                            ),
                                         },
                                         {
                                             key: 'country',
@@ -386,6 +475,12 @@ const AdminDestinations = () => {
                                             ),
                                             type: 'text' as const,
                                             required: true,
+                                            helpText: t(
+                                                'admin.destinationForm.countryHelp',
+                                            ),
+                                            placeholder: t(
+                                                'admin.destinationForm.countryPlaceholder',
+                                            ),
                                         },
                                         {
                                             key: 'category_key',
@@ -393,6 +488,10 @@ const AdminDestinations = () => {
                                                 'admin.destinationForm.category',
                                             ),
                                             type: 'select' as const,
+                                            required: true,
+                                            helpText: t(
+                                                'admin.destinationForm.categoryHelp',
+                                            ),
                                             options:
                                                 dbCategories.length > 0
                                                     ? dbCategories.map((c) => ({
@@ -412,40 +511,58 @@ const AdminDestinations = () => {
                                                               String(k),
                                                           value: String(k),
                                                       })),
-                                            required: true,
                                         },
                                     ].map((field) => {
-                                        const key = field.key;
-                                        const valueKey = field.key === 'category_key' 
-                                            ? 'category_key' 
-                                            : localizedKey(field.key, activeLang);
+                                        const valueKey =
+                                            field.key === 'category_key'
+                                                ? 'category_key'
+                                                : localizedKey(
+                                                      field.key,
+                                                      activeLang,
+                                                  );
+                                        const error = errors?.[valueKey];
 
                                         return (
                                             <div
                                                 key={valueKey}
                                                 className="space-y-2"
                                             >
-                                                <label
+                                                <Label
                                                     htmlFor={valueKey}
-                                                    className="text-xs font-semibold text-muted-foreground"
+                                                    className={
+                                                        error
+                                                            ? 'text-destructive'
+                                                            : 'text-muted-foreground'
+                                                    }
                                                 >
                                                     {field.label}
-                                                    <LangBadge
-                                                        lang={activeLang}
-                                                    />
-                                                </label>
+                                                    {field.key !==
+                                                        'category_key' && (
+                                                        <LangBadge
+                                                            lang={activeLang}
+                                                        />
+                                                    )}
+                                                </Label>
                                                 {field.type === 'select' ? (
                                                     <Select
                                                         value={String(
-                                                            values[valueKey] ?? '',
+                                                            values[valueKey] ??
+                                                                '',
                                                         )}
                                                         onValueChange={(val) =>
-                                                            setField(valueKey, val)
+                                                            setField(
+                                                                valueKey,
+                                                                val,
+                                                            )
                                                         }
                                                     >
                                                         <SelectTrigger
                                                             id={valueKey}
-                                                            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                                                            className={
+                                                                error
+                                                                    ? 'border-destructive ring-1 ring-destructive'
+                                                                    : ''
+                                                            }
                                                         >
                                                             <SelectValue
                                                                 placeholder={t(
@@ -473,86 +590,258 @@ const AdminDestinations = () => {
                                                         </SelectContent>
                                                     </Select>
                                                 ) : (
-                                                    <input
+                                                    <Input
                                                         id={valueKey}
                                                         value={String(
-                                                            values[valueKey] ?? '',
+                                                            values[valueKey] ??
+                                                                '',
                                                         )}
-                                                        onChange={(event) =>
+                                                        onChange={(e) =>
                                                             setField(
                                                                 valueKey,
-                                                                event.target
-                                                                    .value,
+                                                                e.target.value,
                                                             )
                                                         }
                                                         required={
                                                             field.required
                                                         }
-                                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                        placeholder={
+                                                            field.placeholder
+                                                        }
+                                                        className={
+                                                            error
+                                                                ? 'border-destructive ring-1 ring-destructive'
+                                                                : ''
+                                                        }
                                                     />
                                                 )}
+                                                {error ? (
+                                                    <p className="text-xs text-destructive">
+                                                        {error}
+                                                    </p>
+                                                ) : field.helpText ? (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {field.helpText}
+                                                    </p>
+                                                ) : null}
                                             </div>
                                         );
                                     })}
 
                                     <div className="space-y-2 md:col-span-2">
-                                        <label
-                                            htmlFor={localizedKey('description', activeLang)}
-                                            className="text-xs font-semibold text-muted-foreground"
+                                        <Label
+                                            htmlFor={localizedKey(
+                                                'description',
+                                                activeLang,
+                                            )}
+                                            className={
+                                                errors?.[
+                                                    localizedKey(
+                                                        'description',
+                                                        activeLang,
+                                                    )
+                                                ]
+                                                    ? 'text-destructive'
+                                                    : 'text-muted-foreground'
+                                            }
                                         >
                                             {t('admin.description')}
                                             <LangBadge lang={activeLang} />
-                                        </label>
-                                        <textarea
-                                            id={localizedKey('description', activeLang)}
-                                            value={String(values[localizedKey('description', activeLang)] ?? '')}
-                                            onChange={(e) => setField(localizedKey('description', activeLang), e.target.value)}
+                                        </Label>
+                                        <Textarea
+                                            id={localizedKey(
+                                                'description',
+                                                activeLang,
+                                            )}
+                                            value={String(
+                                                values[
+                                                    localizedKey(
+                                                        'description',
+                                                        activeLang,
+                                                    )
+                                                ] ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                setField(
+                                                    localizedKey(
+                                                        'description',
+                                                        activeLang,
+                                                    ),
+                                                    e.target.value,
+                                                )
+                                            }
                                             rows={4}
-                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            placeholder={t(
+                                                'admin.destinationForm.descriptionHelp',
+                                            )}
+                                            className={
+                                                errors?.[
+                                                    localizedKey(
+                                                        'description',
+                                                        activeLang,
+                                                    )
+                                                ]
+                                                    ? 'border-destructive ring-1 ring-destructive'
+                                                    : ''
+                                            }
                                         />
+                                        {errors?.[
+                                            localizedKey(
+                                                'description',
+                                                activeLang,
+                                            )
+                                        ] && (
+                                            <p className="text-xs text-destructive">
+                                                {
+                                                    errors[
+                                                        localizedKey(
+                                                            'description',
+                                                            activeLang,
+                                                        )
+                                                    ]
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2 md:col-span-2">
+                                        <Label
+                                            htmlFor={localizedKey(
+                                                'about',
+                                                activeLang,
+                                            )}
+                                            className={
+                                                errors?.[
+                                                    localizedKey(
+                                                        'about',
+                                                        activeLang,
+                                                    )
+                                                ]
+                                                    ? 'text-destructive'
+                                                    : 'text-muted-foreground'
+                                            }
+                                        >
+                                            {t('admin.destinationForm.about')}
+                                            <LangBadge lang={activeLang} />
+                                        </Label>
+                                        <Textarea
+                                            id={localizedKey(
+                                                'about',
+                                                activeLang,
+                                            )}
+                                            value={String(
+                                                values[
+                                                    localizedKey(
+                                                        'about',
+                                                        activeLang,
+                                                    )
+                                                ] ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                setField(
+                                                    localizedKey(
+                                                        'about',
+                                                        activeLang,
+                                                    ),
+                                                    e.target.value,
+                                                )
+                                            }
+                                            rows={4}
+                                            placeholder={t(
+                                                'admin.destinationForm.aboutHelp',
+                                            )}
+                                            className={
+                                                errors?.[
+                                                    localizedKey(
+                                                        'about',
+                                                        activeLang,
+                                                    )
+                                                ]
+                                                    ? 'border-destructive ring-1 ring-destructive'
+                                                    : ''
+                                            }
+                                        />
+                                        {errors?.[
+                                            localizedKey('about', activeLang)
+                                        ] && (
+                                            <p className="text-xs text-destructive">
+                                                {
+                                                    errors[
+                                                        localizedKey(
+                                                            'about',
+                                                            activeLang,
+                                                        )
+                                                    ]
+                                                }
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label
+                                        <Label
                                             htmlFor="destination-price"
-                                            className="text-xs font-semibold text-muted-foreground"
+                                            className={
+                                                errors?.price
+                                                    ? 'text-destructive'
+                                                    : 'text-muted-foreground'
+                                            }
                                         >
                                             {t('admin.destinationForm.price')}
-                                        </label>
-                                        <input
+                                        </Label>
+                                        <Input
                                             id="destination-price"
                                             type="number"
                                             value={String(values.price ?? '')}
-                                            onChange={(event) =>
+                                            onChange={(e) =>
                                                 setField(
                                                     'price',
-                                                    event.target.value,
+                                                    e.target.value,
                                                 )
                                             }
                                             required
-                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            placeholder="0.00"
+                                            className={
+                                                errors?.price
+                                                    ? 'border-destructive ring-1 ring-destructive'
+                                                    : ''
+                                            }
                                         />
+                                        {errors?.price && (
+                                            <p className="text-xs text-destructive">
+                                                {errors.price}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-muted-foreground">
+                                            {t(
+                                                'admin.destinationForm.priceHelp',
+                                            )}
+                                        </p>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label
+                                        <Label
                                             htmlFor="destination-rating"
-                                            className="text-xs font-semibold text-muted-foreground"
+                                            className="text-muted-foreground"
                                         >
                                             {t('admin.destinationForm.rating')}
-                                        </label>
-                                        <input
+                                        </Label>
+                                        <Input
                                             id="destination-rating"
                                             type="number"
                                             value={String(values.rating ?? '')}
-                                            onChange={(event) =>
+                                            onChange={(e) =>
                                                 setField(
                                                     'rating',
-                                                    event.target.value,
+                                                    e.target.value,
                                                 )
                                             }
-                                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            placeholder="5.0"
                                         />
+                                        <p className="text-xs text-muted-foreground">
+                                            {t(
+                                                'admin.destinationForm.ratingHelp',
+                                            )}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -560,82 +849,132 @@ const AdminDestinations = () => {
                     },
                     {
                         title: t('admin.destinationForm.mediaAndHighlights'),
-                        description: t('admin.destinationForm.mediaAndHighlightsHint2'),
+                        description: t(
+                            'admin.destinationForm.mediaAndHighlightsHint2',
+                        ),
                         render: ({ values, setField, activeLang }) => (
                             <div className="space-y-6">
-                                <EntityMediaInputs
-                                    values={values}
-                                    setField={setField}
-                                    imageLabel={t(
-                                        'admin.destinationForm.image',
-                                    )}
-                                    galleryLabel={t(
-                                        'admin.destinationForm.gallery',
-                                    )}
-                                    showImage
-                                    showGallery
-                                />
+                                <div className="space-y-2">
+                                    <Label className="text-muted-foreground">
+                                        {t('admin.destinationForm.images')}
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('admin.destinationForm.mediaHelp')}
+                                    </p>
+                                    <EntityMediaInputs
+                                        values={values}
+                                        setField={setField}
+                                        imageLabel={t(
+                                            'admin.destinationForm.image',
+                                        )}
+                                        galleryLabel={t(
+                                            'admin.destinationForm.gallery',
+                                        )}
+                                        showImage
+                                        showGallery
+                                    />
+                                </div>
 
-                                <div className="pt-4 border-t border-border">
+                                <div className="border-t border-border pt-4">
                                     <JsonListEditor
-                                        title={t('admin.destinationForm.highlights')}
-                                        items={Array.isArray(values.highlights) ? values.highlights : []}
-                                        onItemsChange={(items) => setField('highlights', items)}
+                                        title={t(
+                                            'admin.destinationForm.highlights',
+                                        )}
+                                        items={
+                                            Array.isArray(values.highlights)
+                                                ? values.highlights
+                                                : []
+                                        }
+                                        onItemsChange={(items) =>
+                                            setField('highlights', items)
+                                        }
                                         schema={highlightSchema}
                                         activeLang={activeLang}
-                                        addButtonLabel={t('admin.destinationForm.addHighlight')}
-                                        itemLabel={(item, index) => 
-                                            (item.name as Record<string, string> | undefined)?.[activeLang] || `${t('admin.destinationForm.highlight')} ${index + 1}`
+                                        addButtonLabel={t(
+                                            'admin.destinationForm.addHighlight',
+                                        )}
+                                        itemLabel={(item, index) =>
+                                            (
+                                                item.name as
+                                                    | Record<string, string>
+                                                    | undefined
+                                            )?.[activeLang] ||
+                                            `${t('admin.destinationForm.highlight')} ${index + 1}`
                                         }
                                     />
+                                    <p className="mt-2 text-xs text-muted-foreground">
+                                        {t(
+                                            'admin.destinationForm.highlightsHelp',
+                                        )}
+                                    </p>
                                 </div>
                             </div>
                         ),
                     },
                     {
                         title: t('admin.destinationForm.destinationFacts'),
-                        columns: 4,
-                        column: 'main',
+                        description: t(
+                            'admin.destinationForm.destinationFactsHint',
+                        ),
+                        columns: 2,
                         render: ({ values, setField, activeLang }) => (
-                            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                            <div className="grid gap-4 md:grid-cols-2">
                                 {[
-                                    'bestTime',
-                                    'language',
-                                    'currency',
-                                    'weather',
-                                ].map((key) => {
+                                    {
+                                        key: 'bestTime',
+                                        placeholder: t(
+                                            'admin.destinationForm.bestTimePlaceholder',
+                                        ),
+                                    },
+                                    {
+                                        key: 'language',
+                                        placeholder: t(
+                                            'admin.destinationForm.languagePlaceholder',
+                                        ),
+                                    },
+                                    {
+                                        key: 'currency',
+                                        placeholder: t(
+                                            'admin.destinationForm.currencyPlaceholder',
+                                        ),
+                                    },
+                                    {
+                                        key: 'weather',
+                                        placeholder: t(
+                                            'admin.destinationForm.weatherPlaceholder',
+                                        ),
+                                    },
+                                ].map((field) => {
                                     const fieldKey = localizedKey(
-                                        key,
+                                        field.key,
                                         activeLang,
                                     );
-                                    const label = t(
-                                        `admin.destinationForm.${key}`,
-                                    );
-
                                     return (
                                         <div
                                             key={fieldKey}
                                             className="space-y-2"
                                         >
-                                            <label
+                                            <Label
                                                 htmlFor={fieldKey}
-                                                className="text-xs font-semibold text-muted-foreground"
+                                                className="text-muted-foreground"
                                             >
-                                                {label}
+                                                {t(
+                                                    `admin.destinationForm.${field.key}`,
+                                                )}
                                                 <LangBadge lang={activeLang} />
-                                            </label>
-                                            <input
+                                            </Label>
+                                            <Input
                                                 id={fieldKey}
                                                 value={String(
                                                     values[fieldKey] ?? '',
                                                 )}
-                                                onChange={(event) =>
+                                                onChange={(e) =>
                                                     setField(
                                                         fieldKey,
-                                                        event.target.value,
+                                                        e.target.value,
                                                     )
                                                 }
-                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                                placeholder={field.placeholder}
                                             />
                                         </div>
                                     );
@@ -663,6 +1002,14 @@ const AdminDestinations = () => {
                         values.country_ar,
                         values.country,
                     );
+                    const categoryKey = resolveCategoryKey(
+                        dbCategories,
+                        values.category_key,
+                        values.category,
+                        values.category_en,
+                        values.category_fr,
+                        values.category_ar,
+                    );
                     const category = firstNonEmpty(
                         values.category_en,
                         values.category_fr,
@@ -676,6 +1023,13 @@ const AdminDestinations = () => {
                         values.description,
                     );
 
+                    const about = firstNonEmpty(
+                        values.about_en,
+                        values.about_fr,
+                        values.about_ar,
+                        values.about,
+                    );
+
                     const item = {
                         ...values,
                         id: editing?.id ?? '',
@@ -684,12 +1038,18 @@ const AdminDestinations = () => {
                         name_fr: values.name_fr ?? '',
                         name_ar: values.name_ar ?? '',
                         country,
-                        country_en: firstNonEmpty(values.country_en, values.country),
+                        country_en: firstNonEmpty(
+                            values.country_en,
+                            values.country,
+                        ),
                         country_fr: values.country_fr ?? '',
                         country_ar: values.country_ar ?? '',
                         category,
-                        category_key: category,
-                        category_en: firstNonEmpty(values.category_en, values.category),
+                        category_key: categoryKey,
+                        category_en: firstNonEmpty(
+                            values.category_en,
+                            values.category,
+                        ),
                         category_fr: values.category_fr ?? '',
                         category_ar: values.category_ar ?? '',
                         price: Number(values.price) || 0,
@@ -705,17 +1065,33 @@ const AdminDestinations = () => {
                         ),
                         description_fr: values.description_fr ?? '',
                         description_ar: values.description_ar ?? '',
-                        highlights: Array.isArray(values.highlights) ? values.highlights : [],
+                        about,
+                        about_en: firstNonEmpty(values.about_en, values.about),
+                        about_fr: values.about_fr ?? '',
+                        about_ar: values.about_ar ?? '',
+                        highlights: Array.isArray(values.highlights)
+                            ? values.highlights
+                            : [],
                         gallery,
                         gallery_files: values.galleryFiles ?? undefined,
                     } as unknown as AdminDestination;
 
-                    saveMutation.mutate(item);
-                    toast.success(
-                        editing
-                            ? t('admin.destinationUpdated')
-                            : t('admin.destinationAdded'),
-                    );
+                    saveMutation.mutate(item, {
+                        onSuccess: () => {
+                            toast.success(
+                                editing
+                                    ? t('admin.destinationUpdated')
+                                    : t('admin.destinationAdded'),
+                            );
+                            setOpen(false);
+                            setEditing(null);
+                        },
+                        onError: () => {
+                            toast.error(t('errors.generic'));
+                        },
+                    });
+
+                    setOpen(false);
                     setEditing(null);
                 }}
             />

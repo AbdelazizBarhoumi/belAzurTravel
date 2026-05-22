@@ -78,8 +78,6 @@ export const AVAILABLE_PAGES: PageDef[] = [
     { key: 'promos', label: 'Promos', href: '/promos', filterParam: 'type' },
     { key: 'team', label: 'Team', href: '/team' },
     { key: 'legal', label: 'Legal', href: '/legal' },
-    { key: 'favorites', label: 'Favorites', href: '/favorites' },
-    { key: 'design-trip', label: 'Design Trip', href: '/design-trip' },
     { key: 'contact', label: 'Contact', href: '/contact' },
 ];
 

@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Destination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
 class DestinationController extends Controller
 {
+    use HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $result = Cache::remember(
             'destinations.index',
             now()->addMinutes(10),
-            function() {
+            function () {
                 return Destination::query()->oldest('id')->get()->map(
                     fn (Destination $item) => $this->payload($item)
                 );
@@ -38,7 +42,7 @@ class DestinationController extends Controller
     /** @return array<string, mixed> */
     private function payload(Destination $item): array
     {
-        $category = \App\Models\Category::where('entity_type', 'destinations')
+        $category = Category::where('entity_type', 'destinations')
             ->where('key', $item->category_key)
             ->first();
 
@@ -47,21 +51,20 @@ class DestinationController extends Controller
             'slug' => $item->slug,
             'name' => $item->name,
             'country' => $item->country,
-            'image' => $item->image ? asset('storage/' . $item->image) : null,
-            'gallery' => array_map(fn($img) => asset('storage/' . $img), $item->details['gallery'] ?? [$item->image]),
+            'image' => $this->normalizeApiOutputPath($item->image),
+            'gallery' => array_map(fn ($img) => $this->normalizeApiOutputPath($img), $item->details['gallery'] ?? [$item->image]),
             'rating' => $item->rating,
             'price' => $item->price,
             'categoryKey' => $item->category_key,
-            'category' => $category 
-                ? $category->name 
+            'category' => $category
+                ? $category->name
                 : [
                     'en' => $item->category_key,
                     'fr' => $item->category_key,
-                    'ar' => $item->category_key
+                    'ar' => $item->category_key,
                 ],
             'description' => $item->description,
             ...($item->details ?? []),
         ];
     }
 }
-

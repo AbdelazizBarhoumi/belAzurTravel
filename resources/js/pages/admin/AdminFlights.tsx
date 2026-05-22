@@ -20,6 +20,36 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
+import type { Lang } from '@/i18n/translations';
+
+const FLIGHT_NESTED_OBJECT_FIELDS = new Set([
+    'airline',
+    'to',
+    'duration',
+    'stops',
+    'cabin',
+    'aircraft',
+    'baggage',
+    'refund',
+]);
+
+function normalizeFlightPayload(
+    values: Record<string, unknown>,
+): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(values).filter(([key, value]) => {
+            if (!FLIGHT_NESTED_OBJECT_FIELDS.has(key)) {
+                return true;
+            }
+
+            return (
+                value === null ||
+                typeof value !== 'object' ||
+                Array.isArray(value)
+            );
+        }),
+    );
+}
 
 export default function AdminFlights() {
     useAdminGuard();
@@ -38,6 +68,30 @@ export default function AdminFlights() {
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const localizedLanguages: Lang[] = ['en', 'fr', 'ar'];
+
+    const getLocalizedValue = (
+        row: AdminRow,
+        key: string,
+        locale: Lang,
+    ): string => {
+        const direct = row[`${key}_${locale}`];
+        if (typeof direct === 'string' && direct.trim().length > 0) {
+            return direct;
+        }
+
+        const nested = row[key];
+        if (nested && typeof nested === 'object') {
+            const localized = nested as Record<string, unknown>;
+            const candidate = localized[locale] ?? localized.en;
+            if (typeof candidate === 'string') {
+                return candidate;
+            }
+        }
+
+        const english = row[`${key}_en`];
+        return typeof english === 'string' ? english : '';
+    };
 
     const saveMutation = useMutation({
         mutationFn: (row: AdminRow) => saveAdminEntity('flights', row),
@@ -58,14 +112,116 @@ export default function AdminFlights() {
         },
     });
 
-    const validate = (values: any): Record<string, string> => {
+    const validate = (
+        values: Record<string, unknown>,
+    ): Record<string, string> => {
         const errs: Record<string, string> = {};
+
         if (!values.code) errs.code = t('validation.required');
-        if (!values.airline_en) errs.airline_en = t('validation.required');
-        if (!values.to_en) errs.to_en = t('validation.required');
-        if (values.price !== null && Number(values.price) < 0) errs.price = t('validation.invalidPrice');
+        if (!values.from) errs.from = t('validation.required');
+        if (!values.departure) errs.departure = t('validation.required');
+        if (!values.arrival) errs.arrival = t('validation.required');
+        if (!values.date) errs.date = t('validation.required');
+
+        localizedLanguages.forEach((locale) => {
+            if (!values[`airline_${locale}`]) {
+                errs[`airline_${locale}`] = t('validation.required');
+            }
+            if (!values[`to_${locale}`]) {
+                errs[`to_${locale}`] = t('validation.required');
+            }
+            if (!values[`duration_${locale}`]) {
+                errs[`duration_${locale}`] = t('validation.required');
+            }
+            if (!values[`stops_${locale}`]) {
+                errs[`stops_${locale}`] = t('validation.required');
+            }
+            if (!values[`cabin_${locale}`]) {
+                errs[`cabin_${locale}`] = t('validation.required');
+            }
+        });
+
+        if (
+            values.price !== null &&
+            values.price !== undefined &&
+            Number(values.price) < 0
+        ) {
+            errs.price = t('validation.invalidPrice');
+        }
+
+        if (
+            values.seats !== null &&
+            values.seats !== undefined &&
+            values.seats !== '' &&
+            Number(values.seats) < 0
+        ) {
+            errs.seats = t('admin.invalidSeats');
+        }
+
         return errs;
     };
+
+    function renderLocalizedInputs(
+        values: Record<string, unknown>,
+        setField: (key: string, value: unknown) => void,
+        activeLang: Lang,
+        fields: Array<{ key: string; label: string; placeholder: string }>,
+        sectionErrors: Record<string, string>,
+    ) {
+        return (
+            <div className="grid gap-6 md:grid-cols-2">
+                {localizedLanguages.map((locale) => (
+                    <div
+                        key={locale}
+                        className={
+                            activeLang === locale ? 'contents' : 'hidden'
+                        }
+                    >
+                        {fields.map((field) => {
+                            const fieldKey = `${field.key}_${locale}`;
+                            const error = sectionErrors?.[fieldKey];
+
+                            return (
+                                <div key={fieldKey} className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <label
+                                            htmlFor={fieldKey}
+                                            className={`text-xs font-semibold ${
+                                                error
+                                                    ? 'text-destructive'
+                                                    : 'text-muted-foreground'
+                                            }`}
+                                        >
+                                            {field.label}
+                                        </label>
+                                        <LangBadge lang={locale} />
+                                    </div>
+                                    <input
+                                        id={fieldKey}
+                                        value={String(values[fieldKey] ?? '')}
+                                        placeholder={field.placeholder}
+                                        onChange={(e) =>
+                                            setField(fieldKey, e.target.value)
+                                        }
+                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                                            error
+                                                ? 'border-destructive ring-1 ring-destructive'
+                                                : ''
+                                        }`}
+                                    />
+                                    {error ? (
+                                        <p className="text-xs text-destructive">
+                                            {error}
+                                        </p>
+                                    ) : null}
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
     function handleSave(values: AdminRow) {
         const errs = validate(values);
@@ -74,102 +230,149 @@ export default function AdminFlights() {
             toast.error(t('admin.pleaseFixErrors'));
             return;
         }
-        saveMutation.mutate({ ...values, id: editing?.id ?? '' });
+
+        saveMutation.mutate(
+            normalizeFlightPayload({
+                ...values,
+                id: editing?.id ?? '',
+            }) as AdminRow,
+        );
     }
 
     const flightSections: SectionDef[] = [
         {
             title: t('admin.flightForm.coreDetails'),
             description: t('admin.flightForm.coreDetailsHint'),
-            render: ({ values, setField, activeLang, errors }) => (
-                <div className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {[
-                            { key: 'airline', label: t('admin.airline') },
-                            { key: 'to', label: t('admin.to') },
-                            { key: 'duration', label: t('admin.duration') },
-                            { key: 'stops', label: t('label.stops') },
-                        ].map((field) => {
-                            const fieldKey = `${field.key}_${activeLang}`;
-                            const error = errors?.[fieldKey];
-
-                            return (
-                                <div key={fieldKey} className="space-y-2">
-                                    <label
-                                        htmlFor={fieldKey}
-                                        className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
-                                    >
-                                        {field.label}
-                                        <LangBadge lang={activeLang} />
-                                    </label>
-                                    <input
-                                        id={fieldKey}
-                                        value={String(values[fieldKey] ?? '')}
-                                        onChange={(e) =>
-                                            setField(fieldKey, e.target.value)
-                                        }
-                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                                    />
-                                    {error && <p className="text-xs text-destructive">{error}</p>}
-                                </div>
-                            );
-                        })}
-
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="flight-price"
-                                className={`text-xs font-semibold ${errors?.price ? 'text-destructive' : 'text-muted-foreground'}`}
-                            >
-                                {t('admin.price')}
-                            </label>
-                            <input
-                                id="flight-price"
-                                type="number"
-                                value={String(values.price ?? '')}
-                                onChange={(e) =>
-                                    setField(
-                                        'price',
-                                        e.target.value === ''
-                                            ? null
-                                            : Number(e.target.value),
-                                    )
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${errors?.price ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                            />
-                            {errors?.price && <p className="text-xs text-destructive">{errors.price}</p>}
-                        </div>
-
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="flight-date"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
-                                {t('admin.date')}
-                            </label>
-                            <DatePicker
-                                date={values.date ? new Date(String(values.date)) : undefined}
-                                onDateChange={(date) =>
-                                    setField(
-                                        'date',
-                                        date
-                                            ? format(date, 'yyyy-MM-dd')
-                                            : '',
-                                    )
-                                }
-                            />
-                        </div>
-                    </div>
+            render: ({ values, setField, activeLang, errors: sectionErrors }) =>
+                renderLocalizedInputs(
+                    values,
+                    setField,
+                    activeLang,
+                    [
+                        {
+                            key: 'airline',
+                            label: t('admin.airline'),
+                            placeholder: t('admin.airlinePlaceholder'),
+                        },
+                        {
+                            key: 'to',
+                            label: t('admin.to'),
+                            placeholder: t('admin.toPlaceholder'),
+                        },
+                        {
+                            key: 'duration',
+                            label: t('admin.duration'),
+                            placeholder: t('label.duration'),
+                        },
+                        {
+                            key: 'stops',
+                            label: t('admin.stops'),
+                            placeholder: t('admin.stops'),
+                        },
+                    ],
+                    sectionErrors ?? {},
+                ),
+        },
+        {
+            title: t('admin.flightForm.routeAndAirline'),
+            description: t('admin.flightForm.technicalInfo'),
+            fields: [
+                {
+                    key: 'code',
+                    label: t('admin.code'),
+                    placeholder: t('admin.codePlaceholder'),
+                },
+                {
+                    key: 'from',
+                    label: t('admin.from'),
+                    placeholder: t('admin.fromPlaceholder'),
+                },
+                {
+                    key: 'price',
+                    type: 'number',
+                    label: t('admin.price'),
+                    placeholder: t('admin.pricePlaceholder'),
+                },
+            ],
+        },
+        {
+            title: t('admin.flightForm.schedule'),
+            fields: [
+                {
+                    key: 'departure',
+                    label: t('admin.flightForm.departureTime'),
+                    placeholder: t('admin.flightForm.departurePlaceholder'),
+                },
+                {
+                    key: 'arrival',
+                    label: t('admin.flightForm.arrivalTime'),
+                    placeholder: t('admin.flightForm.arrivalPlaceholder'),
+                },
+                {
+                    key: 'seats',
+                    type: 'number',
+                    label: t('admin.flightForm.seats'),
+                    placeholder: t('admin.flightForm.seatsPlaceholder'),
+                },
+            ],
+            render: ({ values, setField }) => (
+                <div className="space-y-2">
+                    <label
+                        htmlFor="flight-date"
+                        className="text-xs font-semibold text-muted-foreground"
+                    >
+                        {t('admin.flightForm.travelDate')}
+                    </label>
+                    <DatePicker
+                        placeholder={t('admin.datePlaceholder')}
+                        date={
+                            values.date
+                                ? new Date(String(values.date))
+                                : undefined
+                        }
+                        onDateChange={(date) =>
+                            setField(
+                                'date',
+                                date ? format(date, 'yyyy-MM-dd') : '',
+                            )
+                        }
+                    />
                 </div>
             ),
         },
         {
-            title: t('admin.technicalInfo'),
-            fields: [
-                { key: 'code', label: t('admin.code') },
-                { key: 'from', label: t('admin.from') },
-                { key: 'aircraft', label: t('label.aircraft') },
-                { key: 'cabin', label: t('label.cabin') },
-            ],
+            title: t('admin.flightForm.cabinAndServiceDetails'),
+            render: ({ values, setField, activeLang, errors: sectionErrors }) =>
+                renderLocalizedInputs(
+                    values,
+                    setField,
+                    activeLang,
+                    [
+                        {
+                            key: 'cabin',
+                            label: t('label.cabin'),
+                            placeholder: t('label.cabinPlaceholder'),
+                        },
+                        {
+                            key: 'aircraft',
+                            label: t('label.aircraft'),
+                            placeholder: t('label.aircraftPlaceholder'),
+                        },
+                        {
+                            key: 'baggage',
+                            label: t('label.baggage'),
+                            placeholder: t('label.baggage'),
+                        },
+                        {
+                            key: 'refund',
+                            label: t('admin.flightForm.refund'),
+                            placeholder: t(
+                                'admin.flightForm.refundPlaceholder',
+                            ),
+                        },
+                    ],
+                    sectionErrors ?? {},
+                ),
         },
     ];
 
@@ -197,11 +400,17 @@ export default function AdminFlights() {
                             <tr className="border-b border-border bg-muted/30">
                                 {[
                                     { key: 'code', label: t('admin.code') },
-                                    { key: 'airline', label: t('admin.airline') },
+                                    {
+                                        key: 'airline',
+                                        label: t('admin.airline'),
+                                    },
                                     { key: 'from', label: t('admin.from') },
                                     { key: 'to', label: t('admin.to') },
                                     { key: 'price', label: t('admin.price') },
-                                    { key: 'actions', label: t('admin.actions') },
+                                    {
+                                        key: 'actions',
+                                        label: t('admin.actions'),
+                                    },
                                 ].map((column) => (
                                     <th
                                         key={column.key}
@@ -218,18 +427,32 @@ export default function AdminFlights() {
                                     key={row.id}
                                     className="border-b border-border last:border-0 hover:bg-muted/20"
                                 >
-                                    <td className="px-4 py-3 text-center text-sm">{row.code}</td>
-                                    <td className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                                        {row[`airline_${lang}`] || row.airline_en}
+                                    <td className="px-4 py-3 text-center text-sm">
+                                        {row.code}
                                     </td>
-                                    <td className="px-4 py-3 text-center text-sm">{row.from}</td>
-                                    <td className={`px-4 py-3 text-sm ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                                        {row[`to_${lang}`] || row.to_en}
+                                    <td
+                                        className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                                    >
+                                        {getLocalizedValue(
+                                            row,
+                                            'airline',
+                                            lang,
+                                        )}
+                                    </td>
+                                    <td
+                                        className={`px-4 py-3 text-sm ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                                    >
+                                        {getLocalizedValue(row, 'from', lang)}
+                                    </td>
+                                    <td
+                                        className={`px-4 py-3 text-sm ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                                    >
+                                        {getLocalizedValue(row, 'to', lang)}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        ${Number(row.price).toLocaleString()}
+                                        {Number(row.price).toLocaleString()} DT
                                     </td>
-                                    <td className="px-4 py-3 flex justify-center">
+                                    <td className="flex justify-center px-4 py-3">
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => {
@@ -257,7 +480,6 @@ export default function AdminFlights() {
                 </div>
             </div>
 
-
             <EntityFormDialog
                 open={open}
                 onOpenChange={(val) => {
@@ -268,6 +490,7 @@ export default function AdminFlights() {
                 languages={['en', 'fr', 'ar']}
                 initial={editing ?? undefined}
                 sections={flightSections}
+                preserveArrayKeys={['gallery']}
                 onSubmit={handleSave}
                 errors={errors}
                 isSubmitting={saveMutation.isPending}

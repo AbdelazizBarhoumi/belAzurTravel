@@ -118,6 +118,9 @@ const SelectItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => {
   const { dir } = useLanguage();
+  if (props.value === '') {
+    return null;
+  }
   const posClass = dir === 'rtl' ? 'right-2' : 'left-2';
   const insetClass = dir === 'rtl' ? 'pr-8' : 'pl-8';
   const marginClass = dir === 'rtl' ? 'pl-2' : 'pr-2';

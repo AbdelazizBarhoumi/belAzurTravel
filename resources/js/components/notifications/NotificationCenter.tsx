@@ -19,6 +19,7 @@ import {
     type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { apiFetch } from '@/api/http';
 import { Button } from '@/components/ui/button';
@@ -242,22 +243,37 @@ export function NotificationCenter({
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     layout
                                     className={cn(
-                                        'flex gap-4 rounded-2xl border bg-card p-4 transition-colors',
+                                        'group relative flex gap-4 rounded-2xl border bg-card p-4 transition-colors',
                                         n.read_at
                                             ? 'border-border'
                                             : 'border-primary/30 bg-primary/[0.02]',
                                     )}
                                 >
+                                    <Link
+                                        to={
+                                            typeof n.data.url === 'string'
+                                                ? n.data.url
+                                                : '#'
+                                        }
+                                        className="absolute inset-0 z-0 rounded-2xl"
+                                        aria-label={
+                                            n.data.title
+                                                ? String(n.data.title)
+                                                : t(
+                                                      `notifications.type.${type}`,
+                                                  )
+                                        }
+                                    />
                                     <div
                                         className={cn(
-                                            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+                                            'relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
                                             colorFor[type] ||
                                                 'bg-muted text-muted-foreground',
                                         )}
                                     >
                                         <Icon className="h-5 w-5" />
                                     </div>
-                                    <div className="min-w-0 flex-1">
+                                    <div className="relative z-10 min-w-0 flex-1">
                                         <div className="mb-1 flex items-center gap-2">
                                             <h3 className="text-sm font-semibold text-foreground">
                                                 {n.data.title
@@ -277,15 +293,17 @@ export function NotificationCenter({
                                             {relativeTime(n.created_at)}
                                         </p>
                                     </div>
-                                    <div className="flex shrink-0 flex-col gap-1">
+                                    <div className="relative z-10 flex shrink-0 flex-col gap-1">
                                         {!n.read_at && (
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-8 w-8"
-                                                onClick={() =>
-                                                    markRead.mutate(n.id)
-                                                }
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    markRead.mutate(n.id);
+                                                }}
                                                 title={t(
                                                     'notifications.markAsRead',
                                                 )}
@@ -297,7 +315,11 @@ export function NotificationCenter({
                                             variant="ghost"
                                             size="icon"
                                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                            onClick={() => remove.mutate(n.id)}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                remove.mutate(n.id);
+                                            }}
                                             title={t('actions.delete')}
                                         >
                                             <Trash2 className="h-4 w-4" />

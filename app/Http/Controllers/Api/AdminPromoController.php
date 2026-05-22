@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Promo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * AdminPromoController
@@ -19,7 +22,7 @@ use Illuminate\Validation\Rule;
  */
 class AdminPromoController extends Controller
 {
-    use \App\Concerns\HandlesAdminMedia;
+    use HandlesAdminMedia;
 
     public function index(): JsonResponse
     {
@@ -34,12 +37,14 @@ class AdminPromoController extends Controller
     {
         $item = Promo::create($this->attributes($request));
         $this->flushAdminCache('promos', $item->code ?? null);
+
         return response()->json(['data' => $this->adminPayload($item)], 201);
     }
 
     public function show(int|string $id): JsonResponse
     {
         $item = Promo::query()->findOrFail($id);
+
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
@@ -48,6 +53,7 @@ class AdminPromoController extends Controller
         $item = Promo::query()->findOrFail($id);
         $item->update($this->attributes($request, $item));
         $this->flushAdminCache('promos', $item->code ?? null);
+
         return response()->json(['data' => $this->adminPayload($item->refresh())]);
     }
 
@@ -57,6 +63,7 @@ class AdminPromoController extends Controller
         $identifier = $item->code ?? (string) $id;
         $item->delete();
         $this->flushAdminCache('promos', $identifier);
+
         return response()->json(['message' => 'deleted']);
     }
 
@@ -103,16 +110,24 @@ class AdminPromoController extends Controller
             'applicable_to' => ['sometimes', 'nullable', 'string', 'max:255'],
             'active' => ['sometimes', 'nullable', 'boolean'],
             'gallery' => ['sometimes', 'nullable'],
+            'gallery_files' => ['sometimes', 'array'],
+            'gallery_files.*' => ['file', 'image', 'max:4096'],
         ];
 
-        $data = $request->validate($rules);
+        try {
+            $data = $request->validate($rules);
+        } catch (ValidationException $e) {
+            Log::error('Promo validation failed', [
+                'errors' => $e->errors(),
+                'input' => $request->except(['password', 'password_confirmation']),
+            ]);
+
+            throw $e;
+        }
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
         $code = $existing->code ?? ($data['code'] ?? Str::upper(Str::random(8)));
 
-        $gallery = $data['gallery'] ?? $existing?->details['gallery'] ?? [];
-        if (is_string($gallery)) {
-            $gallery = $this->splitLines($gallery);
-        }
+        $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? [], 'uploads/promos');
 
         return [
             'code' => $code,
@@ -174,9 +189,9 @@ class AdminPromoController extends Controller
             }, $data[$key]);
         }
 
-        $en = $data[$key . '_en'] ?? null;
-        $fr = $data[$key . '_fr'] ?? null;
-        $ar = $data[$key . '_ar'] ?? null;
+        $en = $data[$key.'_en'] ?? null;
+        $fr = $data[$key.'_fr'] ?? null;
+        $ar = $data[$key.'_ar'] ?? null;
         if ($en !== null || $fr !== null || $ar !== null) {
             $enLines = $this->splitLines((string) ($en ?? ''));
             $frLines = $this->splitLines((string) ($fr ?? ''));
@@ -186,11 +201,13 @@ class AdminPromoController extends Controller
             for ($i = 0; $i < $max; $i++) {
                 $items[] = ['name' => ['en' => $enLines[$i] ?? $frLines[$i] ?? $arLines[$i] ?? '', 'fr' => $frLines[$i] ?? $enLines[$i] ?? $arLines[$i] ?? '', 'ar' => $arLines[$i] ?? $enLines[$i] ?? $frLines[$i] ?? '']];
             }
+
             return array_values(array_filter($items, static fn ($it) => ($it['name']['en'] !== '' || $it['name']['fr'] !== '' || $it['name']['ar'] !== '')));
         }
 
         if (array_key_exists($key, $data)) {
             $lines = $this->splitLines((string) ($data[$key] ?? ''));
+
             return array_map(fn (string $line) => ['name' => ['en' => $line, 'fr' => $line, 'ar' => $line]], $lines);
         }
 
@@ -215,6 +232,7 @@ class AdminPromoController extends Controller
     private function localized(array $data, string $key, string $fallback = ''): array
     {
         $base = $data[$key] ?? $fallback;
+
         return ['fr' => $data[$key.'_fr'] ?? $base ?? '', 'ar' => $data[$key.'_ar'] ?? $base ?? '', 'en' => $data[$key.'_en'] ?? $base ?? ''];
     }
 
@@ -230,5 +248,10 @@ class AdminPromoController extends Controller
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("{$type}.{$identifier}");
         }
+    }
+
+    private function splitLines(string $value): array
+    {
+        return array_values(array_filter(array_map(static fn (string $line): string => trim($line), preg_split('/\r\n|\r|\n/', $value) ?: []), static fn (string $line): bool => $line !== ''));
     }
 }

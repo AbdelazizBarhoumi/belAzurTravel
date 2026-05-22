@@ -31,12 +31,11 @@ import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
 import { localizeAdminValue } from '@/lib/adminI18n';
 
-
 const columns: Array<{ key: string; labelKey: string }> = [
     { key: 'image', labelKey: 'admin.image' },
-    { key: 'title_en', labelKey: 'admin.title' },
+    { key: 'title', labelKey: 'admin.title' },
     { key: 'date', labelKey: 'admin.date' },
-    { key: 'category_en', labelKey: 'admin.category' },
+    { key: 'category', labelKey: 'admin.category' },
 ];
 
 type BlogFormValues = Record<string, unknown> & {
@@ -153,7 +152,8 @@ export default function AdminBlog() {
         if (!values.title_en) errs.title_en = requiredMessage;
         if (!values.category_key) errs.category_key = requiredMessage;
         if (!values.date) errs.date = requiredMessage;
-        if (!values.imageFile && !values.imagePath) errs.image = requiredMessage;
+        if (!values.imageFile && !values.imagePath)
+            errs.image = requiredMessage;
         return errs;
     }
 
@@ -176,7 +176,9 @@ export default function AdminBlog() {
 
         saveMutation.mutate(payload, {
             onSuccess: () => {
-                toast.success(editing ? t('actions.saved') : t('actions.added'));
+                toast.success(
+                    editing ? t('actions.saved') : t('actions.added'),
+                );
                 setEditing(null);
                 setOpen(false);
                 setErrors({});
@@ -195,7 +197,8 @@ export default function AdminBlog() {
                         onClick={() => setCatManagerOpen(true)}
                         className="gap-2"
                     >
-                        <Settings className="h-4 w-4" /> {t('admin.manageCategories')}
+                        <Settings className="h-4 w-4" />{' '}
+                        {t('admin.manageCategories')}
                     </Button>
                     <Button
                         onClick={() => {
@@ -218,7 +221,7 @@ export default function AdminBlog() {
                                     <th
                                         key={column.key}
                                         className={`px-4 py-3 text-xs font-semibold uppercase text-muted-foreground ${
-                                            column.key === 'title_en'
+                                            column.key === 'title'
                                                 ? lang === 'ar'
                                                     ? 'text-right'
                                                     : 'text-left'
@@ -243,21 +246,19 @@ export default function AdminBlog() {
                                         <td
                                             key={column.key}
                                             className={`max-w-64 truncate px-4 py-3 text-sm ${
-                                                column.key === 'title_en'
+                                                column.key === 'title'
                                                     ? lang === 'ar'
                                                         ? 'text-right'
                                                         : 'text-left'
                                                     : column.key === 'image'
-                                                        ? 'text-center'
-                                                    : 'text-center'
+                                                      ? 'text-center'
+                                                      : 'text-center'
                                             }`}
                                         >
                                             {column.key === 'image' ? (
                                                 row.image ? (
                                                     <img
-                                                        src={String(
-                                                            row.image,
-                                                        )}
+                                                        src={String(row.image)}
                                                         alt={String(
                                                             row.title_en ?? '',
                                                         )}
@@ -268,20 +269,19 @@ export default function AdminBlog() {
                                                         —
                                                     </span>
                                                 )
+                                            ) : column.key === 'date' ? (
+                                                formatBlogDate(
+                                                    String(
+                                                        row[column.key] ?? '',
+                                                    ),
+                                                    lang,
+                                                )
                                             ) : (
-                                                column.key === 'date'
-                                                    ? formatBlogDate(
-                                                          String(
-                                                              row[column.key] ??
-                                                                  '',
-                                                          ),
-                                                          lang,
-                                                      )
-                                                    : localizeAdminValue(
-                                                          row,
-                                                          column.key.replace(/_en$/, ''),
-                                                          lang,
-                                                      )
+                                                localizeAdminValue(
+                                                    row,
+                                                    column.key,
+                                                    lang,
+                                                )
                                             )}
                                         </td>
                                     ))}
@@ -361,11 +361,24 @@ export default function AdminBlog() {
                             <div className="space-y-4">
                                 <div className="grid gap-4 md:grid-cols-2">
                                     {[
-                                        { key: 'title', label: t('admin.title') },
-                                        { key: 'category_key', label: t('admin.category') },
+                                        {
+                                            key: 'title',
+                                            label: t('admin.title'),
+                                            placeholder: t(
+                                                'admin.blogForm.titlePlaceholder',
+                                            ),
+                                        },
+                                        {
+                                            key: 'category_key',
+                                            label: t('admin.category'),
+                                        },
                                     ].map((field) => {
-                                        const isCategoryKey = field.key === 'category_key';
-                                        const fieldKey = isCategoryKey ? 'category_key' : `${field.key}_${activeLang}`;
+                                        const isCategoryKey =
+                                            field.key === 'category_key';
+                                        const fieldKey = isCategoryKey
+                                            ? 'category_key'
+                                            : `${field.key}_${activeLang}`;
+                                        const error = errors[fieldKey];
 
                                         return (
                                             <div
@@ -374,7 +387,7 @@ export default function AdminBlog() {
                                             >
                                                 <label
                                                     htmlFor={fieldKey}
-                                                    className="text-xs font-semibold text-muted-foreground"
+                                                    className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
                                                 >
                                                     {field.label}
                                                     {!isCategoryKey && (
@@ -383,68 +396,170 @@ export default function AdminBlog() {
                                                         />
                                                     )}
                                                 </label>
-                                                {isCategoryKey && dbCategories.length > 0 ? (
-                                                    <Select
-                                                        value={String(values.category_key ?? '')}
-                                                        onValueChange={(val) => {
-                                                            const category = dbCategories.find((item: any) => item.key === val) as any;
-                                                            setField('category_key', val);
-                                                            setField('category', val);
-                                                            setField('category_en', category?.name?.en ?? '');
-                                                            setField('category_fr', category?.name?.fr ?? '');
-                                                            setField('category_ar', category?.name?.ar ?? '');
-                                                        }}
-                                                    >
-                                                        <SelectTrigger id={fieldKey} className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm">
-                                                            <SelectValue placeholder={t('admin.blogForm.selectCategory')} />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {dbCategories.map((c: any) => (
-                                                                <SelectItem key={c.key} value={c.key}>
-                                                                    {c.name[activeLang] || c.name.en}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
+                                                {isCategoryKey &&
+                                                dbCategories.length > 0 ? (
+                                                    <div className="space-y-1">
+                                                        <Select
+                                                            value={String(
+                                                                values.category_key ??
+                                                                    '',
+                                                            )}
+                                                            onValueChange={(
+                                                                val,
+                                                            ) => {
+                                                                const category =
+                                                                    dbCategories.find(
+                                                                        (
+                                                                            item: any,
+                                                                        ) =>
+                                                                            item.key ===
+                                                                            val,
+                                                                    ) as any;
+                                                                setField(
+                                                                    'category_key',
+                                                                    val,
+                                                                );
+                                                                setField(
+                                                                    'category',
+                                                                    val,
+                                                                );
+                                                                setField(
+                                                                    'category_en',
+                                                                    category
+                                                                        ?.name
+                                                                        ?.en ??
+                                                                        '',
+                                                                );
+                                                                setField(
+                                                                    'category_fr',
+                                                                    category
+                                                                        ?.name
+                                                                        ?.fr ??
+                                                                        '',
+                                                                );
+                                                                setField(
+                                                                    'category_ar',
+                                                                    category
+                                                                        ?.name
+                                                                        ?.ar ??
+                                                                        '',
+                                                                );
+                                                            }}
+                                                        >
+                                                            <SelectTrigger
+                                                                id={fieldKey}
+                                                                className={`w-full rounded-xl border ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'} bg-background px-3 py-2 text-sm`}
+                                                            >
+                                                                <SelectValue
+                                                                    placeholder={t(
+                                                                        'admin.blogForm.selectCategory',
+                                                                    )}
+                                                                />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {dbCategories.map(
+                                                                    (
+                                                                        c: any,
+                                                                    ) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                c.key
+                                                                            }
+                                                                            value={
+                                                                                c.key
+                                                                            }
+                                                                        >
+                                                                            {c
+                                                                                .name[
+                                                                                activeLang
+                                                                            ] ||
+                                                                                c
+                                                                                    .name
+                                                                                    .en}
+                                                                        </SelectItem>
+                                                                    ),
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        {error && (
+                                                            <p className="text-xs text-destructive">
+                                                                {error}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 ) : (
-                                                    <input
-                                                        id={fieldKey}
-                                                        value={String(values[fieldKey] ?? '')}
-                                                        onChange={(event) =>
-                                                            setField(
-                                                                fieldKey,
-                                                                event.target.value,
-                                                            )
-                                                        }
-                                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                                    />
+                                                    <div className="space-y-1">
+                                                        <input
+                                                            id={fieldKey}
+                                                            placeholder={
+                                                                field.placeholder
+                                                            }
+                                                            value={String(
+                                                                values[
+                                                                    fieldKey
+                                                                ] ?? '',
+                                                            )}
+                                                            onChange={(event) =>
+                                                                setField(
+                                                                    fieldKey,
+                                                                    event.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            className={`w-full rounded-lg border ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'} bg-background px-3 py-2 text-sm`}
+                                                        />
+                                                        {error && (
+                                                            <p className="text-xs text-destructive">
+                                                                {error}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
                                         );
                                     })}
+
                                     <div className="space-y-2">
                                         <label
                                             htmlFor="blog-date"
-                                            className="text-xs font-semibold text-muted-foreground"
+                                            className={`text-xs font-semibold ${errors.date ? 'text-destructive' : 'text-muted-foreground'}`}
                                         >
                                             {t('admin.date')}
                                         </label>
-                                        <DatePicker
-                                            date={parseBlogDate(values.date)}
-                                            onDateChange={(date) =>
-                                                setField('date', serializeBlogDate(date))
-                                            }
-                                            placeholder={t('admin.date')}
-                                        />
+                                        <div className="space-y-1">
+                                            <DatePicker
+                                                date={parseBlogDate(
+                                                    values.date,
+                                                )}
+                                                onDateChange={(date) =>
+                                                    setField(
+                                                        'date',
+                                                        serializeBlogDate(date),
+                                                    )
+                                                }
+                                                placeholder={t('admin.date')}
+                                            />
+                                            {errors.date && (
+                                                <p className="text-xs text-destructive">
+                                                    {errors.date}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
 
-                                    <div className="md:col-span-2">
+                                    <div className="space-y-1 md:col-span-2">
                                         <EntityMediaInputs
                                             values={values}
                                             setField={setField}
                                             imageLabel={t('admin.mainImage')}
                                             showGallery={false}
                                         />
+                                        {(errors.image || errors.imagePath) && (
+                                            <p className="text-xs text-destructive">
+                                                {errors.image ||
+                                                    errors.imagePath}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -475,13 +590,16 @@ export default function AdminBlog() {
                                     <div className="space-y-2">
                                         <label
                                             htmlFor={`excerpt_${activeLang}`}
-                                            className="text-xs font-semibold text-muted-foreground"
+                                            className={`text-xs font-semibold ${errors[`excerpt_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                                         >
                                             {t('admin.blogForm.excerpt')}
                                             <LangBadge lang={activeLang} />
                                         </label>
                                         <textarea
                                             id={`excerpt_${activeLang}`}
+                                            placeholder={t(
+                                                'admin.blogForm.excerptPlaceholder',
+                                            )}
                                             value={String(
                                                 values[
                                                     `excerpt_${activeLang}`
@@ -493,8 +611,20 @@ export default function AdminBlog() {
                                                     event.target.value,
                                                 )
                                             }
-                                            className="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                                            className={`min-h-24 w-full rounded-lg border ${errors[`excerpt_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : 'border-border'} bg-background px-3 py-2 text-sm`}
                                         />
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('admin.blogForm.excerptHint')}
+                                        </p>
+                                        {errors[`excerpt_${activeLang}`] && (
+                                            <p className="text-xs text-destructive">
+                                                {
+                                                    errors[
+                                                        `excerpt_${activeLang}`
+                                                    ]
+                                                }
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="space-y-2">
@@ -507,6 +637,9 @@ export default function AdminBlog() {
                                         </label>
                                         <textarea
                                             id={`content_body_${activeLang}`}
+                                            placeholder={t(
+                                                'admin.blogForm.bodyPlaceholder',
+                                            )}
                                             value={String(
                                                 content.body?.[activeLang] ??
                                                     '',
@@ -515,8 +648,10 @@ export default function AdminBlog() {
                                                 updateBody(event.target.value)
                                             }
                                             className="min-h-32 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                                            placeholder={t('admin.blogForm.bodyPlaceholder')}
                                         />
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('admin.blogForm.bodyHint')}
+                                        </p>
                                     </div>
                                 </div>
                             );
@@ -610,7 +745,10 @@ export default function AdminBlog() {
                                                     >
                                                         <div className="flex items-center justify-between">
                                                             <h4 className="text-sm font-semibold text-foreground">
-                                                                {t('admin.blogForm.section')} {index + 1}
+                                                                {t(
+                                                                    'admin.blogForm.section',
+                                                                )}{' '}
+                                                                {index + 1}
                                                             </h4>
                                                             <div className="flex items-center gap-1">
                                                                 <button
@@ -626,7 +764,7 @@ export default function AdminBlog() {
                                                                         index ===
                                                                         0
                                                                     }
-                                                                    className="p-1 hover:bg-muted rounded"
+                                                                    className="rounded p-1 hover:bg-muted"
                                                                 >
                                                                     ↑
                                                                 </button>
@@ -648,7 +786,7 @@ export default function AdminBlog() {
                                                                             .length -
                                                                             1
                                                                     }
-                                                                    className="p-1 hover:bg-muted rounded"
+                                                                    className="rounded p-1 hover:bg-muted"
                                                                 >
                                                                     ↓
                                                                 </button>
@@ -659,16 +797,20 @@ export default function AdminBlog() {
                                                                             index,
                                                                         )
                                                                     }
-                                                                    className="text-destructive text-sm hover:underline ml-2"
+                                                                    className="ml-2 text-sm text-destructive hover:underline"
                                                                 >
-                                                                    {t('actions.remove')}
+                                                                    {t(
+                                                                        'actions.remove',
+                                                                    )}
                                                                 </button>
                                                             </div>
                                                         </div>
 
                                                         <div className="space-y-2">
                                                             <label className="text-xs font-semibold text-muted-foreground">
-                                                                {t('admin.blogForm.sectionHeading')}
+                                                                {t(
+                                                                    'admin.blogForm.sectionHeading',
+                                                                )}
                                                                 <LangBadge
                                                                     lang={
                                                                         activeLang
@@ -699,7 +841,9 @@ export default function AdminBlog() {
 
                                                         <div className="space-y-2">
                                                             <label className="text-xs font-semibold text-muted-foreground">
-                                                                {t('admin.blogForm.sectionBody')}
+                                                                {t(
+                                                                    'admin.blogForm.sectionBody',
+                                                                )}
                                                                 <LangBadge
                                                                     lang={
                                                                         activeLang
@@ -764,7 +908,9 @@ export default function AdminBlog() {
                 isOpen={catManagerOpen}
                 onClose={() => {
                     setCatManagerOpen(false);
-                    queryClient.invalidateQueries({ queryKey: ['admin', 'categories', 'blog'] });
+                    queryClient.invalidateQueries({
+                        queryKey: ['admin', 'categories', 'blog'],
+                    });
                 }}
             />
         </AdminLayout>

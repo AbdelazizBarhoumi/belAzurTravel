@@ -19,8 +19,12 @@ class DealE2ETest extends TestCase
             'title_en' => 'Test Deal',
             'title_fr' => 'Offre Test',
             'title_ar' => 'صفقة اختبار',
-            'highlights' => [['en' => 'Highlight 1'], ['en' => 'Highlight 2']],
-            'terms' => [['en' => 'Term 1']],
+            'highlights_en' => ['Highlight 1', 'Highlight 2'],
+            'highlights_fr' => ['Point fort 1', 'Point fort 2'],
+            'highlights_ar' => ['ميزة 1', 'ميزة 2'],
+            'terms_en' => ['Term 1'],
+            'terms_fr' => ['Condition 1'],
+            'terms_ar' => ['شرط 1'],
         ];
 
         // 1. Create deal
@@ -33,14 +37,14 @@ class DealE2ETest extends TestCase
 
         // 2. Verify Database
         $deal = Deal::findOrFail($dealId);
-        $this->assertEquals('Highlight 1', $deal->details['highlights'][0]['en']);
-        $this->assertEquals('Term 1', $deal->details['terms'][0]['en']);
+        $this->assertEquals('Highlight 1', $deal->details['highlights']['en'][0]);
+        $this->assertEquals('Term 1', $deal->details['terms']['en'][0]);
 
         // 3. Verify API response
         $this->actingAs($admin)
-            ->getJson('/api/admin/deals/' . $dealId)
+            ->getJson('/api/admin/deals/'.$dealId)
             ->assertOk()
-            ->assertJsonPath('data.highlights.0.en', 'Highlight 1')
-            ->assertJsonPath('data.terms.0.en', 'Term 1');
+            ->assertJsonPath('data.highlights_en.0', 'Highlight 1')
+            ->assertJsonPath('data.terms_en.0', 'Term 1');
     }
 }

@@ -343,7 +343,6 @@ export const navbarMoreLinks: NavDropdownItem[] = [
 ];
 
 export const navbarSimpleLinks: SimpleLinkItem[] = [
-    { id: 'simple-design', labelKey: 'nav.design', href: '/design-trip' },
     { id: 'simple-tours', labelKey: 'nav.tours', href: '/tours' },
     { id: 'simple-deals', labelKey: 'nav.deals', href: '/deals' },
     { id: 'simple-gallery', labelKey: 'nav.gallery', href: '/gallery' },
@@ -388,10 +387,20 @@ export const designTripTransports: OptionItem[] = [
 ];
 
 export const designTripBudgets: OptionItem[] = [
-    { id: 'eco', label: 'Eco', icon: Phone, desc: 'Under $2,000' },
-    { id: 'comfort', label: 'Comfort', icon: Phone, desc: '$2,000–$4,500' },
-    { id: 'premium', label: 'Premium', icon: Phone, desc: '$4,500–$8,000' },
-    { id: 'luxury', label: 'Luxury', icon: Phone, desc: '$8,000+' },
+    { id: 'eco', label: 'Eco', icon: Phone, desc: 'Under 2,000 DT' },
+    {
+        id: 'comfort',
+        label: 'Comfort',
+        icon: Phone,
+        desc: '2,000 DT – 4,500 DT',
+    },
+    {
+        id: 'premium',
+        label: 'Premium',
+        icon: Phone,
+        desc: '4,500 DT – 8,000 DT',
+    },
+    { id: 'luxury', label: 'Luxury', icon: Phone, desc: '8,000 DT+' },
 ];
 
 export const designTripSteps: StepItem[] = [

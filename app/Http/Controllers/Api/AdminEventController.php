@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesLocalization;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
-use App\Concerns\HandlesLocalization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,13 +21,18 @@ use Illuminate\Support\Str;
  */
 class AdminEventController extends Controller
 {
-    use HandlesLocalization, \App\Concerns\HandlesAdminMedia;
+    use \App\Concerns\HandlesAdminMedia, HandlesLocalization;
 
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.events', now()->addMinutes(5), function () {
-            return Event::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
+            return Event::query()
+                ->oldest('id')
+                ->get()
+                ->map(fn (Model $item) => $this->adminPayload($item))
+                ->all();
         });
+
         return response()->json(['data' => $data]);
     }
 
@@ -35,12 +40,14 @@ class AdminEventController extends Controller
     {
         $item = Event::create($this->attributes($request));
         $this->flushAdminCache('events', $item->slug ?? null);
+
         return response()->json(['data' => $this->adminPayload($item)], 201);
     }
 
     public function show(int|string $id): JsonResponse
     {
         $item = Event::query()->findOrFail($id);
+
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
@@ -49,6 +56,7 @@ class AdminEventController extends Controller
         $item = Event::query()->findOrFail($id);
         $item->update($this->attributes($request, $item));
         $this->flushAdminCache('events', $item->slug ?? null);
+
         return response()->json(['data' => $this->adminPayload($item->refresh())]);
     }
 
@@ -58,6 +66,7 @@ class AdminEventController extends Controller
         $identifier = $item->slug ?? (string) $id;
         $item->delete();
         $this->flushAdminCache('events', $identifier);
+
         return response()->json(['message' => 'deleted']);
     }
 
@@ -70,6 +79,7 @@ class AdminEventController extends Controller
             'title_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'title_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'title_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category_key' => ['sometimes', 'nullable', 'string', 'max:255'],
             'location' => ['sometimes', 'nullable', 'string', 'max:255'],
             'location_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'location_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -102,12 +112,13 @@ class AdminEventController extends Controller
         $data = $request->validate($rules);
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
         $title = $localized('title');
-        $slug = $existing->slug ?? Str::slug($title['en'] ?? 'event') . '-' . Str::lower(Str::random(4));
+        $slug = $existing->slug ?? Str::slug($title['en'] ?? 'event').'-'.Str::lower(Str::random(4));
 
         $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? [], 'uploads/events');
 
         return [
             'slug' => $slug,
+            'category_key' => $data['category_key'] ?? $existing?->category_key,
             'title' => $localized('title'),
             'location' => $localized('location'),
             'date' => $localized('date'),
@@ -122,11 +133,12 @@ class AdminEventController extends Controller
     {
         return [
             'id' => (string) $item->id,
+            'category_key' => $item->category_key,
             ...$this->flatLocalized('title', $item->title),
             ...$this->flatLocalized('location', $item->location),
             ...$this->flatLocalized('date', $item->date),
             'price' => $item->price,
-            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'image' => $this->normalizeApiOutputPath($item->image),
             ...$this->flatLocalized('description', $item->description),
             ...$this->flatLocalized('about', $item->details['about'] ?? []),
             ...$this->flatLocalized('attendees', $item->details['attendees'] ?? []),
@@ -164,8 +176,10 @@ class AdminEventController extends Controller
     {
         Cache::forget("admin.entity.{$type}");
         Cache::forget("entity.{$type}.index");
+        Cache::forget("{$type}.index");
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("entity.{$type}.{$identifier}");
+            Cache::forget("{$type}.{$identifier}");
         }
     }
 }

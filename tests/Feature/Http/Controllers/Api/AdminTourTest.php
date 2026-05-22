@@ -87,14 +87,15 @@ class AdminTourTest extends TestCase
 
         // Verify data was saved in database with correct structure
         $tour = Tour::findOrFail($response->json('data.id'));
+        $tourData = $tour->toArray();
 
         // Verify localized fields
-        $this->assertEquals('Alpine Adventure', $tour->name['en']);
-        $this->assertEquals('Aventure Alpine', $tour->name['fr']);
-        $this->assertEquals('مغامرة جبلية', $tour->name['ar']);
+        $this->assertEquals('Alpine Adventure', data_get($tourData, 'name.en'));
+        $this->assertEquals('Aventure Alpine', data_get($tourData, 'name.fr'));
+        $this->assertEquals('مغامرة جبلية', data_get($tourData, 'name.ar'));
 
-        $this->assertEquals('Swiss Alps', $tour->location['en']);
-        $this->assertEquals('جبال الألب السويسرية', $tour->location['ar']);
+        $this->assertEquals('Swiss Alps', data_get($tourData, 'location.en'));
+        $this->assertEquals('جبال الألب السويسرية', data_get($tourData, 'location.ar'));
 
         // Verify numeric fields
         $this->assertEquals(7, $tour->duration_days);
@@ -105,17 +106,17 @@ class AdminTourTest extends TestCase
 
         // Verify itinerary
         $this->assertCount(2, $tour->itinerary);
-        $this->assertEquals('Arrival in Zurich', $tour->itinerary[0]['title']['en']);
-        $this->assertEquals('Arrivée à Zurich', $tour->itinerary[0]['title']['fr']);
+        $this->assertEquals('Arrival in Zurich', data_get($tourData, 'itinerary.0.title.en'));
+        $this->assertEquals('Arrivée à Zurich', data_get($tourData, 'itinerary.0.title.fr'));
 
         // Verify includes
         $this->assertCount(2, $tour->includes);
-        $this->assertEquals('All meals', $tour->includes[0]['name']['en']);
-        $this->assertEquals('جميع الوجبات', $tour->includes[0]['name']['ar']);
+        $this->assertEquals('All meals', data_get($tourData, 'includes.0.name.en'));
+        $this->assertEquals('جميع الوجبات', data_get($tourData, 'includes.0.name.ar'));
 
         // Verify excludes
         $this->assertCount(2, $tour->excludes);
-        $this->assertEquals('Travel insurance', $tour->excludes[0]['name']['en']);
+        $this->assertEquals('Travel insurance', data_get($tourData, 'excludes.0.name.en'));
 
         // Verify details JSON stores all sections
         $this->assertArrayHasKey('itinerary', $tour->details ?? []);
@@ -164,7 +165,7 @@ class AdminTourTest extends TestCase
         $this->assertContains($images->first()->id, $tour->images);
 
         // Verify images are returned with URLs in admin payload
-        $imageUrls = $response->json('data.images', []);
+        $imageUrls = $response->json('data.images') ?? [];
         $this->assertCount(3, $imageUrls);
         foreach ($imageUrls as $url) {
             $this->assertIsString($url);
@@ -220,18 +221,90 @@ class AdminTourTest extends TestCase
             ->assertJsonStructure(['data' => ['id', 'name', 'location', 'price']]);
 
         $tour->refresh();
+        $tourData = $tour->toArray();
 
         // Verify updates
-        $this->assertEquals('Updated Tour', $tour->name['en']);
-        $this->assertEquals('Tour Mise à Jour', $tour->name['fr']);
-        $this->assertEquals('New Location', $tour->location['en']);
+        $this->assertEquals('Updated Tour', data_get($tourData, 'name.en'));
+        $this->assertEquals('Tour Mise à Jour', data_get($tourData, 'name.fr'));
+        $this->assertEquals('New Location', data_get($tourData, 'location.en'));
         $this->assertEquals(7, $tour->duration_days);
         $this->assertEquals(2000, $tour->price);
         $this->assertEquals(4.7, $tour->rating);
 
         // Verify itinerary was updated
         $this->assertCount(1, $tour->itinerary);
-        $this->assertEquals('Day 1', $tour->itinerary[0]['title']['en']);
+        $this->assertEquals('Day 1', data_get($tourData, 'itinerary.0.title.en'));
+    }
+
+    public function test_admin_can_update_tour_with_images(): void
+    {
+        $images = GalleryImage::factory()->count(2)->create();
+
+        $tour = Tour::factory()->create([
+            'name' => ['en' => 'Old Tour', 'fr' => 'Ancien Tour', 'ar' => 'جولة قديمة'],
+            'location' => ['en' => 'Old Location', 'fr' => 'Ancien Lieu', 'ar' => 'موقع قديم'],
+            'duration_days' => 5,
+            'price' => 1000,
+            'images' => [],
+        ]);
+
+        $payload = [
+            'name_en' => 'Updated Tour',
+            'name_fr' => 'Tour Mise à Jour',
+            'name_ar' => 'جولة محدثة',
+            'location_en' => 'New Location',
+            'location_fr' => 'Nouveau Lieu',
+            'location_ar' => 'موقع جديد',
+            'duration_en' => '7 days',
+            'duration_fr' => '7 jours',
+            'duration_ar' => '7 أيام',
+            'duration_days' => 7,
+            'duration_nights' => 6,
+            'max_group' => 15,
+            'price' => 2000,
+            'rating' => 4.7,
+            'description_en' => 'Updated description.',
+            'description_fr' => 'Description mise à jour.',
+            'description_ar' => 'وصف محدث.',
+            'itinerary' => [],
+            'includes' => [],
+            'excludes' => [],
+            'images' => $images->pluck('id')->toArray(),
+        ];
+
+        $response = $this->actingAs($this->admin)
+            ->putJson("/api/admin/tours/{$tour->id}", $payload);
+
+        $response->assertOk();
+
+        $tour->refresh();
+
+        $this->assertCount(2, $tour->images);
+        $this->assertContains($images->first()->id, $tour->images);
+        $this->assertContains($images->last()->id, $tour->images);
+    }
+
+    public function test_admin_can_remove_existing_gallery_image_on_update(): void
+    {
+        $images = GalleryImage::factory()->count(2)->create();
+
+        $tour = Tour::factory()->create([
+            'images' => $images->pluck('id')->toArray(),
+        ]);
+
+        $payload = [
+            'images' => [$images->last()->id],
+        ];
+
+        $response = $this->actingAs($this->admin)
+            ->putJson("/api/admin/tours/{$tour->id}", $payload);
+
+        $response->assertOk();
+
+        $tour->refresh();
+
+        $this->assertSame([$images->last()->id], $tour->images);
+        $this->assertCount(1, $response->json('data.images') ?? []);
     }
 
     public function test_admin_cannot_create_tour_with_missing_localized_fields(): void

@@ -27,6 +27,8 @@ const WISHLIST = tr('Liste de souhaits', 'قائمة الرغبات', 'Wishlist'
 const VIEW_ALL = tr('Tout Voir', 'عرض الكل', 'View All');
 const VIEW_DETAILS = tr('Voir les détails', 'عرض التفاصيل', 'View details');
 const ALL = tr('Tout', 'الكل', 'All');
+const OWNER = tr('Propriétaire', 'المالك', 'Owner');
+const SUPERADMIN = tr('Super Admin', 'مدير عام', 'Super Admin');
 const CLIENT = tr('Client', 'العميل', 'Client');
 const ADMIN = tr('Admin', 'مدير', 'Admin');
 const ASSISTANT = tr('Assistant', 'مساعد', 'Assistant');
@@ -78,62 +80,281 @@ export const translations: Record<string, TranslationEntry> = {
     'nav.signin': { fr: 'Connexion', ar: 'تسجيل الدخول', en: 'Sign in' },
     'nav.start': { fr: 'Commencer', ar: 'ابدأ', en: 'Get Started' },
     'nav.favorites': { fr: 'Favoris', ar: 'المفضلة', en: 'Favorites' },
-    'nav.design': { fr: 'Planifier', ar: 'صمم رحلتك', en: 'Design Trip' },
     'nav.profile': PROFILE,
     'admin.details': { fr: 'Détails', ar: 'التفاصيل', en: 'Details' },
-    'admin.eventForm.coreDetails': { fr: 'Détails de l’événement', ar: 'تفاصيل الفعالية', en: 'Event details' },
-    'admin.eventForm.coreDetailsHint': { fr: 'Modifiez les champs de l’événement localisés un par un.', ar: 'قم بتحرير حقول الفعالية المترجمة لغة بلغة.', en: 'Edit localized event fields one language at a time.' },
-    'admin.eventForm.schedule': { fr: 'Programme', ar: 'البرنامج', en: 'Schedule' },
-    'admin.eventForm.addDay': { fr: 'Ajouter un jour', ar: 'إضافة يوم', en: 'Add Day' },
+    'admin.eventForm.coreDetails': {
+        fr: 'Détails de l’événement',
+        ar: 'تفاصيل الفعالية',
+        en: 'Event details',
+    },
+    'admin.eventForm.coreDetailsHint': {
+        fr: 'Modifiez les champs de l’événement localisés un par un.',
+        ar: 'قم بتحرير حقول الفعالية المترجمة لغة بلغة.',
+        en: 'Edit localized event fields one language at a time.',
+    },
+    'admin.eventForm.about': {
+        fr: 'À propos',
+        ar: 'حول',
+        en: 'About',
+    },
+    'admin.eventForm.attendees': {
+        fr: 'Participants',
+        ar: 'الحضور',
+        en: 'Attendees',
+    },
+    'admin.eventForm.schedule': {
+        fr: 'Programme',
+        ar: 'البرنامج',
+        en: 'Schedule',
+    },
+    'admin.eventForm.addDay': {
+        fr: 'Ajouter un jour',
+        ar: 'إضافة يوم',
+        en: 'Add Day',
+    },
     'admin.day': { fr: 'Jour', ar: 'يوم', en: 'Day' },
     'admin.activity': { fr: 'Activité', ar: 'نشاط', en: 'Activity' },
-    'admin.settings.contactPageTitle': { fr: 'Titre de la page contact', ar: 'عنوان صفحة الاتصال', en: 'Contact Page Title' },
-    'admin.settings.contactPageDescription': { fr: 'Description de la page contact', ar: 'وصف صفحة الاتصال', en: 'Contact Page Description' },
-    'admin.settings.noSocialLinks': { fr: 'Aucun lien social ajouté.', ar: 'لم تتم إضافة روابط اجتماعية.', en: 'No social links yet.' },
-    'admin.settings.noHours': { fr: 'Aucune heure définie.', ar: 'لم يتم تحديد ساعات العمل.', en: 'No hours set.' },
-    'admin.settings.legalSectionsTitle': { fr: 'Sections Légales', ar: 'الأقسام القانونية', en: 'Legal Sections' },
-    'admin.settings.legalSectionsDescription': { fr: 'Gérez la confidentialité, les conditions et autres contenus juridiques affichés sur le site.', ar: 'إدارة الخصوصية والشروط والمحتويات القانونية الأخرى المعروضة على الموقع.', en: 'Manage privacy, terms and other legal content shown on the site.' },
-    'admin.settings.saveSuccess': { fr: 'Paramètres du site enregistrés', ar: 'تم حفظ إعدادات الموقع', en: 'Site settings saved' },
-    'admin.settings.saveError': { fr: 'Échec de l\'enregistrement des paramètres du site', ar: 'فشل في حفظ إعدادات الموقع', en: 'Failed to save site settings' },
-    'admin.settings.resetNavError': { fr: 'Échec de la réinitialisation des paramètres de navigation', ar: 'فشل في إعادة تعيين إعدادات التنقل', en: 'Failed to reset navigation settings' },
-    'admin.required': { fr: 'Champ requis', ar: 'حقل مطلوب', en: 'Field required' },
-    'admin.pleaseFixErrors': { fr: 'Veuillez corriger les erreurs avant d’enregistrer.', ar: 'يرجى تصحيح الأخطاء قبل الحفظ.', en: 'Please fix the errors before saving.' },
+    'admin.settings.contactPageTitle': {
+        fr: 'Titre de la page contact',
+        ar: 'عنوان صفحة الاتصال',
+        en: 'Contact Page Title',
+    },
+    'admin.settings.contactPageDescription': {
+        fr: 'Description de la page contact',
+        ar: 'وصف صفحة الاتصال',
+        en: 'Contact Page Description',
+    },
+    'admin.settings.noSocialLinks': {
+        fr: 'Aucun lien social ajouté.',
+        ar: 'لم تتم إضافة روابط اجتماعية.',
+        en: 'No social links yet.',
+    },
+    'admin.settings.noHours': {
+        fr: 'Aucune heure définie.',
+        ar: 'لم يتم تحديد ساعات العمل.',
+        en: 'No hours set.',
+    },
+    'admin.settings.legalSectionsTitle': {
+        fr: 'Sections Légales',
+        ar: 'الأقسام القانونية',
+        en: 'Legal Sections',
+    },
+    'admin.settings.legalSectionsDescription': {
+        fr: 'Gérez la confidentialité, les conditions et autres contenus juridiques affichés sur le site.',
+        ar: 'إدارة الخصوصية والشروط والمحتويات القانونية الأخرى المعروضة على الموقع.',
+        en: 'Manage privacy, terms and other legal content shown on the site.',
+    },
+    'admin.settings.saveSuccess': {
+        fr: 'Paramètres du site enregistrés',
+        ar: 'تم حفظ إعدادات الموقع',
+        en: 'Site settings saved',
+    },
+    'admin.settings.saveError': {
+        fr: "Échec de l'enregistrement des paramètres du site",
+        ar: 'فشل في حفظ إعدادات الموقع',
+        en: 'Failed to save site settings',
+    },
+    'admin.settings.resetNavError': {
+        fr: 'Échec de la réinitialisation des paramètres de navigation',
+        ar: 'فشل في إعادة تعيين إعدادات التنقل',
+        en: 'Failed to reset navigation settings',
+    },
+    'admin.required': {
+        fr: 'Champ requis',
+        ar: 'حقل مطلوب',
+        en: 'Field required',
+    },
+    'admin.pleaseFixErrors': {
+        fr: 'Veuillez corriger les erreurs avant d’enregistrer.',
+        ar: 'يرجى تصحيح الأخطاء قبل الحفظ.',
+        en: 'Please fix the errors before saving.',
+    },
 
     // Flights
-    'admin.promos.title': { fr: 'Promos', ar: 'الرموز الترويجية', en: 'Promos' },
-    'admin.promos.subtitle': { fr: 'Gérer les codes promo', ar: 'إدارة الرموز الترويجية', en: 'Manage promo codes' },
+    'admin.promos.title': {
+        fr: 'Promos',
+        ar: 'الرموز الترويجية',
+        en: 'Promos',
+    },
+    'admin.promos.subtitle': {
+        fr: 'Gérer les codes promo',
+        ar: 'إدارة الرموز الترويجية',
+        en: 'Manage promo codes',
+    },
     'admin.promos.code': { fr: 'Code', ar: 'الرمز', en: 'Code' },
     'admin.promos.titleLabel': { fr: 'Titre', ar: 'العنوان', en: 'Title' },
     'admin.promos.discount': { fr: 'Remise', ar: 'الخصم', en: 'Discount' },
     'admin.promos.expires': { fr: 'Expiration', ar: 'ينتهي', en: 'Expires' },
-    'admin.promos.eligibility': { fr: 'Éligibilité', ar: 'الأهلية', en: 'Eligibility' },
-    'admin.promos.howToUse': { fr: 'Comment utiliser', ar: 'كيفية الاستخدام', en: 'How to use' },
-    'admin.promos.terms': { fr: 'Termes et conditions', ar: 'الشروط والأحكام', en: 'Terms & Conditions' },
-    'admin.promos.addRule': { fr: 'Ajouter une règle', ar: 'إضافة قاعدة', en: 'Add rule' },
-    'admin.promos.addStep': { fr: 'Ajouter une étape', ar: 'إضافة خطوة', en: 'Add step' },
-    'admin.promos.addTerm': { fr: 'Ajouter un terme', ar: 'إضافة شرط', en: 'Add term' },
-    'admin.promos.gallery': { fr: 'Galerie d\'images', ar: 'معرض الصور', en: 'Gallery images' },
-    'admin.promos.usageLimit': { fr: 'Limite d\'utilisation', ar: 'حد الاستخدام', en: 'Usage limit' },
-    'admin.promos.perUserLimit': { fr: 'Limite par utilisateur', ar: 'الحد لكل مستخدم', en: 'Per-user limit' },
-    'admin.promos.applicableTo': { fr: 'Applicable à', ar: 'ينطبق على', en: 'Applicable to' },
+    'admin.promos.eligibility': {
+        fr: 'Éligibilité',
+        ar: 'الأهلية',
+        en: 'Eligibility',
+    },
+    'admin.promos.howToUse': {
+        fr: 'Comment utiliser',
+        ar: 'كيفية الاستخدام',
+        en: 'How to use',
+    },
+    'admin.promos.terms': {
+        fr: 'Termes et conditions',
+        ar: 'الشروط والأحكام',
+        en: 'Terms & Conditions',
+    },
+    'admin.promos.addRule': {
+        fr: 'Ajouter une règle',
+        ar: 'إضافة قاعدة',
+        en: 'Add rule',
+    },
+    'admin.promos.addStep': {
+        fr: 'Ajouter une étape',
+        ar: 'إضافة خطوة',
+        en: 'Add step',
+    },
+    'admin.promos.addTerm': {
+        fr: 'Ajouter un terme',
+        ar: 'إضافة شرط',
+        en: 'Add term',
+    },
+    'admin.promos.gallery': {
+        fr: "Galerie d'images",
+        ar: 'معرض الصور',
+        en: 'Gallery images',
+    },
+    'admin.promos.usageLimit': {
+        fr: "Limite d'utilisation",
+        ar: 'حد الاستخدام',
+        en: 'Usage limit',
+    },
+    'admin.promos.perUserLimit': {
+        fr: 'Limite par utilisateur',
+        ar: 'الحد لكل مستخدم',
+        en: 'Per-user limit',
+    },
+    'admin.promos.applicableTo': {
+        fr: 'Applicable à',
+        ar: 'ينطبق على',
+        en: 'Applicable to',
+    },
     'admin.promos.active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
     'admin.promos.inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
-    'admin.promos.limitsTitle': { fr: 'Limites et portée', ar: 'الحدود والنطاق', en: 'Limits and scope' },
-    'admin.promos.limitsDescription': { fr: 'Métadonnées d\'utilisation de la campagne et état actif.', ar: 'بيانات استخدام الحملة وحالة النشاط.', en: 'Campaign usage metadata and active state.' },
-    'admin.errors.required': { fr: 'Ce champ est requis.', ar: 'هذا الحقل مطلوب.', en: 'This field is required.' },
-    'admin.pleaseFixErrors': { fr: 'Veuillez corriger les erreurs dans le formulaire.', ar: 'يرجى تصحيح الأخطاء في النموذج.', en: 'Please fix the errors in the form.' },
-    'admin.saveError': { fr: 'Échec de l\'enregistrement des données.', ar: 'فشل حفظ البيانات.', en: 'Failed to save data.' },
+    'admin.promos.limitsTitle': {
+        fr: 'Limites et portée',
+        ar: 'الحدود والنطاق',
+        en: 'Limits and scope',
+    },
+    'admin.promos.limitsDescription': {
+        fr: "Métadonnées d'utilisation de la campagne et état actif.",
+        ar: 'بيانات استخدام الحملة وحالة النشاط.',
+        en: 'Campaign usage metadata and active state.',
+    },
+    'admin.errors.required': {
+        fr: 'Ce champ est requis.',
+        ar: 'هذا الحقل مطلوب.',
+        en: 'This field is required.',
+    },
+    'admin.saveError': {
+        fr: "Échec de l'enregistrement des données.",
+        ar: 'فشل حفظ البيانات.',
+        en: 'Failed to save data.',
+    },
 
     // Flights
     'admin.flights': { fr: 'Vols', ar: 'الرحلات', en: 'Flights' },
-    'admin.flightsSubtitle': { fr: 'Gérez les vols disponibles sur le site.', ar: 'إدارة الرحلات المتاحة على الموقع.', en: 'Manage flights available on the site.' },
-    'admin.technicalInfo': { fr: 'Informations techniques', ar: 'معلومات تقنية', en: 'Technical info' },
-    'admin.pleaseFixErrors': { fr: 'Veuillez corriger les erreurs ci-dessous.', ar: 'يرجى تصحيح الأخطاء أدناه.', en: 'Please fix the errors below.' },
-    'validation.required': { fr: 'Champ requis', ar: 'حقل مطلوب', en: 'Required field' },
-    'validation.invalidPrice': { fr: 'Prix invalide', ar: 'سعر غير صالح', en: 'Invalid price' },
-    'admin.flightForm.coreDetails': { fr: 'Détails du vol', ar: 'تفاصيل الرحلة', en: 'Flight details' },
-    'admin.flightForm.coreDetailsHint': { fr: 'Modifiez les champs de vol localisés un par un.', ar: 'قم بتحرير حقول الرحلة المترجمة لغة بلغة.', en: 'Edit localized flight fields one language at a time.' },
-    'admin.airline': { fr: 'Compagnie aérienne', ar: 'شركة الطيران', en: 'Airline' },
+    'admin.flightsSubtitle': {
+        fr: 'Gérez les vols disponibles sur le site.',
+        ar: 'إدارة الرحلات المتاحة على الموقع.',
+        en: 'Manage flights available on the site.',
+    },
+    'admin.technicalInfo': {
+        fr: 'Informations techniques',
+        ar: 'معلومات تقنية',
+        en: 'Technical info',
+    },
+    'validation.required': {
+        fr: 'Champ requis',
+        ar: 'حقل مطلوب',
+        en: 'Required field',
+    },
+    'validation.invalidPrice': {
+        fr: 'Prix invalide',
+        ar: 'سعر غير صالح',
+        en: 'Invalid price',
+    },
+    'admin.flightForm.coreDetails': {
+        fr: 'Détails du vol',
+        ar: 'تفاصيل الرحلة',
+        en: 'Flight details',
+    },
+    'admin.flightForm.coreDetailsHint': {
+        fr: 'Modifiez les champs de vol localisés un par un.',
+        ar: 'قم بتحرير حقول الرحلة المترجمة لغة بلغة.',
+        en: 'Edit localized flight fields one language at a time.',
+    },
+    'admin.flightForm.routeAndAirline': {
+        fr: 'Itinéraire et compagnie aérienne',
+        ar: 'المسار وشركة الطيران',
+        en: 'Route and airline',
+    },
+    'admin.flightForm.schedule': {
+        fr: 'Programme',
+        ar: 'الجدول الزمني',
+        en: 'Schedule',
+    },
+    'admin.flightForm.cabinAndServiceDetails': {
+        fr: 'Détails de la cabine et des services',
+        ar: 'تفاصيل المقصورة والخدمات',
+        en: 'Cabin and service details',
+    },
+    'admin.flightForm.departureTime': {
+        fr: 'Heure de départ',
+        ar: 'وقت المغادرة',
+        en: 'Departure time',
+    },
+    'admin.flightForm.arrivalTime': {
+        fr: "Heure d'arrivée",
+        ar: 'وقت الوصول',
+        en: 'Arrival time',
+    },
+    'admin.flightForm.travelDate': {
+        fr: 'Date du voyage',
+        ar: 'تاريخ السفر',
+        en: 'Travel date',
+    },
+    'admin.flightForm.seats': {
+        fr: 'Sièges',
+        ar: 'المقاعد',
+        en: 'Seats',
+    },
+    'admin.flightForm.refund': {
+        fr: 'Remboursement',
+        ar: 'الاسترداد',
+        en: 'Refund',
+    },
+    'admin.flightForm.departurePlaceholder': {
+        fr: '14:00',
+        ar: '14:00',
+        en: '14:00',
+    },
+    'admin.flightForm.arrivalPlaceholder': {
+        fr: '22:30+1',
+        ar: '22:30+1',
+        en: '22:30+1',
+    },
+    'admin.flightForm.seatsPlaceholder': {
+        fr: '250',
+        ar: '250',
+        en: '250',
+    },
+    'admin.flightForm.refundPlaceholder': {
+        fr: 'Politique de remboursement',
+        ar: 'سياسة الاسترداد',
+        en: 'Refund policy',
+    },
+    'admin.airline': {
+        fr: 'Compagnie aérienne',
+        ar: 'شركة الطيران',
+        en: 'Airline',
+    },
     'admin.to': { fr: 'Destination', ar: 'الوجهة', en: 'Destination' },
     'admin.duration': { fr: 'Durée', ar: 'المدة', en: 'Duration' },
     'label.stops': { fr: 'Escales', ar: 'توقف', en: 'Stops' },
@@ -141,6 +362,13 @@ export const translations: Record<string, TranslationEntry> = {
     'admin.date': { fr: 'Date', ar: 'التاريخ', en: 'Date' },
     'admin.code': { fr: 'Code', ar: 'الرمز', en: 'Code' },
     'admin.from': { fr: 'Origine', ar: 'الأصل', en: 'Origin' },
+    'admin.bio': { fr: 'Bio', ar: 'السيرة الذاتية', en: 'Bio' },
+    'admin.promos.descriptionPlaceholder': {
+        fr: 'Description',
+        ar: 'وصف',
+        en: 'Description',
+    },
+
     'label.aircraft': { fr: 'Avion', ar: 'الطائرة', en: 'Aircraft' },
     'label.cabin': { fr: 'Cabine', ar: 'المقصورة', en: 'Cabin' },
     'admin.actions': { fr: 'Actions', ar: 'الإجراءات', en: 'Actions' },
@@ -192,17 +420,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Start with a destination, then refine by dates and travelers to narrow the best matches.',
     },
 
-    // Design Trip page
-    'design.title': {
-        fr: 'Concevez votre voyage',
-        ar: 'صمم رحلتك',
-        en: 'Design your trip',
-    },
-    'design.subtitle': {
-        fr: "Du vol à l'hôtel — planifiez tout en une seule fois",
-        ar: 'من الرحلة إلى الفندق - خطط كل شيء دفعة واحدة',
-        en: 'From flights to hotels — plan everything in one shot',
-    },
+    // Design Trip page disabled for now.
 
     // Search Widget
     'search.tabs.hotels': { fr: 'Hôtels', ar: 'فنادق', en: 'Hotels' },
@@ -501,9 +719,9 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'The final section should convert hesitant users. It restates the value, clarifies the action, and lowers perceived risk.',
     },
     'home.cta.primary': {
-        fr: 'Concevoir mon voyage',
-        ar: 'صمم رحلتي',
-        en: 'Design my trip',
+        fr: 'Commencer à planifier',
+        ar: 'ابدأ التخطيط',
+        en: 'Start planning',
     },
     'home.cta.secondary': {
         fr: 'Parler à un conseiller',
@@ -548,25 +766,89 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Search offers...',
     },
     'deals.viewDeal': { fr: "Voir l'Offre", ar: 'شاهد العرض', en: 'View Deal' },
-    'deals.manageCategories': { fr: 'Gérer les catégories', ar: 'إدارة الفئات', en: 'Manage Categories' },
-    'deals.promotionDetails': { fr: 'Détails de la promotion', ar: 'تفاصيل العرض', en: 'Promotion details' },
-    'deals.promotionDescription': { fr: 'Modifier les champs de promotion localisés un par un.', ar: 'قم بتحرير حقول العرض المترجمة لغة بلغة.', en: 'Edit localized promotion fields one language at a time.' },
-    'deals.selectCategory': { fr: 'Sélectionner une catégorie', ar: 'اختر الفئة', en: 'Select category' },
+    'deals.placeholder.title': {
+        fr: 'p.ex. Évasion estivale',
+        ar: 'مثلاً: رحلة الصيف',
+        en: 'E.g., Summer Escape',
+    },
+    'deals.placeholder.discount': {
+        fr: 'p.ex. 20%',
+        ar: 'مثلاً: 20%',
+        en: 'E.g., 20%',
+    },
+    'deals.placeholder.expires': {
+        fr: 'p.ex. 2026-12-31',
+        ar: 'مثلاً: 2026-12-31',
+        en: 'E.g., 2026-12-31',
+    },
+    'deals.promotionDescription': {
+        fr: 'Modifier les champs de promotion localisés un par un.',
+        ar: 'قم بتحرير حقول العرض المترجمة لغة بلغة.',
+        en: 'Edit localized promotion fields one language at a time.',
+    },
+    'deals.selectCategory': {
+        fr: 'Sélectionner une catégorie',
+        ar: 'اختر الفئة',
+        en: 'Select category',
+    },
     'deals.description': { fr: 'Description', ar: 'الوصف', en: 'Description' },
-    'deals.descriptionLong': { fr: 'Description longue affichée sur la page des détails de l\'offre.', ar: 'وصف طويل معروض على صفحة تفاصيل العرض.', en: 'Long-form copy shown on the deal detail page.' },
+    'deals.descriptionLong': {
+        fr: "Description longue affichée sur la page des détails de l'offre.",
+        ar: 'وصف طويل معروض على صفحة تفاصيل العرض.',
+        en: 'Long-form copy shown on the deal detail page.',
+    },
     'deals.titleLabel': { fr: 'Titre', ar: 'العنوان', en: 'Title' },
     'deals.discountLabel': { fr: 'Remise', ar: 'الخصم', en: 'Discount' },
     'deals.expiresLabel': { fr: 'Expiration', ar: 'ينتهي', en: 'Expires' },
-    'admin.pleaseFixErrors': {
-        fr: 'Veuillez corriger les erreurs dans le formulaire avant de soumettre.',
-        ar: 'يرجى تصحيح الأخطاء في النموذج قبل الإرسال.',
-        en: 'Please fix the errors in the form before submitting.',
-    },
     'admin.fieldRequired': {
         fr: 'Ce champ est obligatoire.',
         ar: 'هذا الحقل مطلوب.',
         en: 'This field is required.',
     },
+    'deals.promotionDetails': {
+        fr: 'Détails de la promotion',
+        ar: 'تفاصيل العرض',
+        en: 'Promotion details',
+    },
+    'deals.manageCategories': {
+        fr: 'Gérer les catégories',
+        ar: 'إدارة الفئات',
+        en: 'Manage categories',
+    },
+    'deals.categoryLabel': { fr: 'Catégorie', ar: 'الفئة', en: 'Category' },
+    'admin.priceHint': {
+        fr: 'Prix par personne en DT.',
+        ar: 'السعر للشخص الواحد بالدينار التونسي.',
+        en: 'Price per person in DT.',
+    },
+    'admin.descriptionPlaceholder': {
+        fr: 'Saisissez une description détaillée de l’événement...',
+        ar: 'أدخل وصفاً تفصيلياً للفعالية...',
+        en: 'Enter a detailed description of the event...',
+    },
+    'admin.titlePlaceholder': {
+        fr: 'p.ex. Festival de musique d’été',
+        ar: 'مثلاً: مهرجان الصيف الموسيقي',
+        en: 'e.g. Summer Music Festival',
+    },
+    'admin.locationPlaceholder': {
+        fr: 'p.ex. Paris, France',
+        ar: 'مثلاً: باريس، فرنسا',
+        en: 'e.g. Paris, France',
+    },
+    'admin.error.required': {
+        fr: 'Ce champ est requis.',
+        ar: 'هذا الحقل مطلوب.',
+        en: 'This field is required.',
+    },
+    'admin.error.invalidPrice': {
+        fr: 'Prix invalide.',
+        ar: 'سعر غير صالح.',
+        en: 'Invalid price.',
+    },
+    'admin.description': { fr: 'Description', ar: 'الوصف', en: 'Description' },
+    'admin.title': { fr: 'Titre', ar: 'العنوان', en: 'Title' },
+    'admin.location': { fr: 'Localisation', ar: 'الموقع', en: 'Location' },
 
     // Footer
     'footer.tagline': {
@@ -674,6 +956,31 @@ export const translations: Record<string, TranslationEntry> = {
         fr: "Heures d'Ouverture",
         ar: 'ساعات العمل',
         en: 'Opening Hours',
+    },
+    'footer.mon': {
+        fr: 'Lundi',
+        ar: 'الإثنين',
+        en: 'Monday',
+    },
+    'footer.tue': {
+        fr: 'Mardi',
+        ar: 'الثلاثاء',
+        en: 'Tuesday',
+    },
+    'footer.wed': {
+        fr: 'Mercredi',
+        ar: 'الأربعاء',
+        en: 'Wednesday',
+    },
+    'footer.thu': {
+        fr: 'Jeudi',
+        ar: 'الخميس',
+        en: 'Thursday',
+    },
+    'footer.fri': {
+        fr: 'Vendredi',
+        ar: 'الجمعة',
+        en: 'Friday',
     },
     'footer.monfri': {
         fr: 'Lun – Ven',
@@ -914,6 +1221,8 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'تذكرني',
         en: 'Remember me',
     },
+    'auth.owner': OWNER,
+    'auth.superadmin': SUPERADMIN,
     'auth.client': CLIENT,
     'auth.admin': ADMIN,
     'auth.assistant': ASSISTANT,
@@ -1074,6 +1383,11 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'À propos de l’hôtel',
         ar: 'حول الفندق',
         en: 'About the hotel',
+    },
+    'hotelDetail.contactInfo': {
+        fr: 'Informations de contact',
+        ar: 'معلومات الاتصال',
+        en: 'Contact information',
     },
     'hotelDetail.amenities': {
         fr: 'Équipements',
@@ -1261,6 +1575,11 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Apply Code',
     },
     'promoDetail.expires': { fr: 'Expire le', ar: 'تنتهي في', en: 'Expires' },
+    'promoDetail.howToUseTitle': {
+        fr: 'Comment utiliser',
+        ar: 'كيفية الاستخدام',
+        en: 'How to use',
+    },
     'promoDetail.termsTitle': {
         fr: 'Conditions générales',
         ar: 'الشروط والأحكام',
@@ -1279,7 +1598,11 @@ export const translations: Record<string, TranslationEntry> = {
     'promoDetail.details': { fr: 'Détails', ar: 'التفاصيل', en: 'Details' },
     'promoDetail.code': { fr: 'Code promo', ar: 'رمز العرض', en: 'Promo code' },
     'promoDetail.discount': { fr: 'Réduction', ar: 'الخصم', en: 'Discount' },
-
+    'promoDetail.quickInfo': {
+        fr: 'Informations rapides',
+        ar: 'المعلومات السريعة',
+        en: 'Quick info',
+    },
     // Deal Detail Page
     'dealDetail.expires': { fr: 'Expire le', ar: 'تنتهي في', en: 'Expires' },
     'dealDetail.type': { fr: 'Type d’offre', ar: 'نوع العرض', en: 'Deal type' },
@@ -1470,7 +1793,18 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'سيارة مميزة مع حجز مرن ودعم كامل.',
         en: 'Premium car with flexible booking and full support.',
     },
-
+    'admin.carForm.transmission': {
+        fr: 'Transmission',
+        ar: 'ناقل الحركة',
+        en: 'Transmission',
+    },
+    'admin.carForm.fuel': { fr: 'Carburant', ar: 'الوقود', en: 'Fuel' },
+    'admin.carForm.seats': { fr: 'Places', ar: 'المقاعد', en: 'Seats' },
+    'admin.carForm.policyHint': {
+        fr: 'Détails sur les conditions de location, les dépôts de garantie, etc.',
+        ar: 'تفاصيل حول شروط الإيجار, الرسوم الأمينة, إلخ.',
+        en: 'Details on rental terms, deposits, etc.',
+    },
     // Events Page
     'events.title': {
         fr: 'Événements de Voyage',
@@ -1633,11 +1967,18 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Manage team members',
     },
     'admin.image': { fr: 'Image', ar: 'الصورة', en: 'Image' },
-    'admin.galleryForm.general': { fr: 'Informations de la galerie', ar: 'معلومات المعرض', en: 'Gallery information' },
+    'admin.galleryForm.general': {
+        fr: 'Informations de la galerie',
+        ar: 'معلومات المعرض',
+        en: 'Gallery information',
+    },
     'admin.galleryForm.media': { fr: 'Média', ar: 'الوسائط', en: 'Media' },
-    'admin.galleryForm.classification': { fr: 'Classification', ar: 'التصنيف', en: 'Classification' },
+    'admin.galleryForm.classification': {
+        fr: 'Classification',
+        ar: 'التصنيف',
+        en: 'Classification',
+    },
     'admin.name': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
-    'admin.location': { fr: 'Localisation', ar: 'الموقع', en: 'Location' },
     'admin.category': { fr: 'Catégorie', ar: 'الفئة', en: 'Category' },
     'admin.pricePerNight': {
         fr: 'Prix/nuit',
@@ -1646,8 +1987,25 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
     'admin.city': { fr: 'Ville', ar: 'المدينة', en: 'City' },
+    'admin.cityEn': { fr: 'Ville (EN)', ar: 'المدينة (EN)', en: 'City (EN)' },
+    'admin.cityFr': { fr: 'Ville (FR)', ar: 'المدينة (FR)', en: 'City (FR)' },
+    'admin.cityAr': { fr: 'Ville (AR)', ar: 'المدينة (AR)', en: 'City (AR)' },
     'admin.country': { fr: 'Pays', ar: 'البلد', en: 'Country' },
-    'admin.title': { fr: 'Titre', ar: 'العنوان', en: 'Title' },
+    'admin.countryEn': {
+        fr: 'Pays (EN)',
+        ar: 'البلد (EN)',
+        en: 'Country (EN)',
+    },
+    'admin.countryFr': {
+        fr: 'Pays (FR)',
+        ar: 'البلد (FR)',
+        en: 'Country (FR)',
+    },
+    'admin.countryAr': {
+        fr: 'Pays (AR)',
+        ar: 'البلد (AR)',
+        en: 'Country (AR)',
+    },
     'admin.discount': { fr: 'Remise', ar: 'الخصم', en: 'Discount' },
     'admin.expires': { fr: 'Expire', ar: 'ينتهي في', en: 'Expires' },
     'admin.role': { fr: 'Rôle', ar: 'الدور', en: 'Role' },
@@ -1656,81 +2014,454 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'إدارة الفئات',
         en: 'Manage Categories',
     },
-    'admin.categoryKey': { fr: 'Clé de catégorie', ar: 'مفتاح الفئة', en: 'Category Key' },
-    'admin.mainImage': { fr: 'Image principale', ar: 'الصورة الرئيسية', en: 'Main image' },
+    'admin.categoryKey': {
+        fr: 'Catégorie',
+        ar: 'الفئة',
+        en: 'Category',
+    },
+    'admin.mainImage': {
+        fr: 'Image principale',
+        ar: 'الصورة الرئيسية',
+        en: 'Main image',
+    },
     'admin.blogForm.excerpt': { fr: 'Extrait', ar: 'مقتطف', en: 'Excerpt' },
-    'admin.blogForm.body': { fr: 'Corps de l’article', ar: 'محتوى المقال', en: 'Body' },
-    'admin.blogForm.bodyPlaceholder': { fr: 'Rédigez le corps de l’article...', ar: 'اكتب محتوى المقال...', en: 'Write the full article body...' },
-    'admin.blogForm.sections': { fr: 'Sections de contenu', ar: 'أقسام المحتوى', en: 'Content sections' },
-    'admin.blogForm.sectionsHint': { fr: 'Gérez les en-têtes et les corps des sections.', ar: 'إدارة عناوين ومحتوى الأقسام.', en: 'Manage section headings and bodies.' },
-    'admin.blogForm.addSection': { fr: 'Ajouter une section', ar: 'إضافة قسم', en: 'Add section' },
-    'admin.blogForm.noSections': { fr: 'Aucune section pour le moment.', ar: 'لا توجد أقسام حتى الآن.', en: 'No extra sections yet.' },
+    'admin.blogForm.body': {
+        fr: 'Corps de l’article',
+        ar: 'محتوى المقال',
+        en: 'Body',
+    },
+    'admin.blogForm.bodyPlaceholder': {
+        fr: 'Rédigez le corps de l’article...',
+        ar: 'اكتب محتوى المقال...',
+        en: 'Write the full article body...',
+    },
+    'admin.blogForm.sections': {
+        fr: 'Sections de contenu',
+        ar: 'أقسام المحتوى',
+        en: 'Content sections',
+    },
+    'admin.blogForm.sectionsHint': {
+        fr: 'Gérez les en-têtes et les corps des sections.',
+        ar: 'إدارة عناوين ومحتوى الأقسام.',
+        en: 'Manage section headings and bodies.',
+    },
+    'admin.blogForm.addSection': {
+        fr: 'Ajouter une section',
+        ar: 'إضافة قسم',
+        en: 'Add section',
+    },
+    'admin.blogForm.noSections': {
+        fr: 'Aucune section pour le moment.',
+        ar: 'لا توجد أقسام حتى الآن.',
+        en: 'No extra sections yet.',
+    },
     'admin.blogForm.section': { fr: 'Section', ar: 'القسم', en: 'Section' },
-    'admin.blogForm.sectionHeading': { fr: 'En-tête de section', ar: 'عنوان القسم', en: 'Section heading' },
-    'admin.blogForm.sectionBody': { fr: 'Corps de la section', ar: 'محتوى القسم', en: 'Section body' },
-    'admin.blogForm.summaryAndBody': { fr: 'Résumé et corps', ar: 'الملخص والمحتوى', en: 'Summary and body' },
-    'admin.blogForm.summaryAndBodyHint': { fr: 'Modifiez l’extrait et le corps de l’article.', ar: 'تعديل المقتطف ومحتوى المقال.', en: 'Edit the excerpt and article body.' },
-    'admin.blogForm.coreInformation': { fr: 'Informations principales', ar: 'المعلومات الأساسية', en: 'Core information' },
-    'admin.blogForm.coreInformationHint': { fr: 'Modifiez le titre, la catégorie et la date.', ar: 'تعديل العنوان والفئة والتاريخ.', en: 'Edit title, category and date.' },
-    'admin.blogForm.selectCategory': { fr: 'Sélectionner une catégorie', ar: 'اختر فئة', en: 'Select category' },
-    'admin.hotelForm.amenityName': { fr: 'Nom de l’équipement', ar: 'اسم المرفق', en: 'Amenity Name' },
-    'admin.hotelForm.roomName': { fr: 'Nom de la chambre', ar: 'اسم الغرفة', en: 'Room Name' },
+    'admin.blogForm.sectionHeading': {
+        fr: 'En-tête de section',
+        ar: 'عنوان القسم',
+        en: 'Section heading',
+    },
+    'admin.blogForm.sectionBody': {
+        fr: 'Corps de la section',
+        ar: 'محتوى القسم',
+        en: 'Section body',
+    },
+    'admin.blogForm.summaryAndBody': {
+        fr: 'Résumé et corps',
+        ar: 'الملخص والمحتوى',
+        en: 'Summary and body',
+    },
+    'admin.blogForm.summaryAndBodyHint': {
+        fr: 'Modifiez l’extrait et le corps de l’article.',
+        ar: 'تعديل المقتطف ومحتوى المقال.',
+        en: 'Edit the excerpt and article body.',
+    },
+    'admin.blogForm.coreInformation': {
+        fr: 'Informations principales',
+        ar: 'المعلومات الأساسية',
+        en: 'Core information',
+    },
+    'admin.blogForm.coreInformationHint': {
+        fr: 'Modifiez le titre, la catégorie et la date.',
+        ar: 'تعديل العنوان والفئة والتاريخ.',
+        en: 'Edit title, category and date.',
+    },
+    'admin.blogForm.selectCategory': {
+        fr: 'Sélectionner une catégorie',
+        ar: 'اختر فئة',
+        en: 'Select category',
+    },
+    'admin.hotelForm.amenityName': {
+        fr: 'Nom de l’équipement',
+        ar: 'اسم الميزة',
+        en: 'Amenity Name',
+    },
+    'admin.hotelForm.iconType': {
+        fr: 'Type d’icône',
+        ar: 'نوع الأيقونة',
+        en: 'Icon Type',
+    },
+    'admin.hotelForm.icon': {
+        fr: 'Icône',
+        ar: 'الأيقونة',
+        en: 'Icon',
+    },
+    'admin.amenity.wifi': { fr: 'Wi-Fi', ar: 'واي فاي', en: 'Wi-Fi' },
+    'admin.amenity.parking': {
+        fr: 'Parking',
+        ar: 'مواقف سيارات',
+        en: 'Parking',
+    },
+    'admin.amenity.breakfast': {
+        fr: 'Petit-déjeuner',
+        ar: 'إفطار',
+        en: 'Breakfast',
+    },
+    'admin.amenity.gym': { fr: 'Salle de sport', ar: 'نادي رياضي', en: 'Gym' },
+    'admin.amenity.restaurant': {
+        fr: 'Restaurant',
+        ar: 'مطعم',
+        en: 'Restaurant',
+    },
+    'admin.amenity.pool': { fr: 'Piscine', ar: 'مسبح', en: 'Pool' },
+    'admin.iconType.predefined': {
+        fr: 'Prédéfini',
+        ar: 'محدد مسبقاً',
+        en: 'Predefined',
+    },
+    'admin.iconType.custom': {
+        fr: 'SVG personnalisé',
+        ar: 'SVG مخصص',
+        en: 'Custom SVG',
+    },
+    'admin.select': { fr: 'Sélectionner...', ar: 'اختر...', en: 'Select...' },
+    'admin.hotelForm.roomName': {
+        fr: 'Nom de la chambre',
+        ar: 'اسم الغرفة',
+        en: 'Room Name',
+    },
     'admin.hotelForm.capacity': { fr: 'Capacité', ar: 'السعة', en: 'Capacity' },
-    'admin.hotelForm.size': { fr: 'Taille (m²)', ar: 'المساحة (م٢)', en: 'Size (sqm)' },
-    'admin.hotelForm.amenity': { fr: 'Équipement', ar: 'المرفق', en: 'Amenity' },
+    'admin.hotelForm.size': {
+        fr: 'Taille (m²)',
+        ar: 'المساحة (م٢)',
+        en: 'Size (sqm)',
+    },
+    'admin.hotelForm.amenity': {
+        fr: 'Équipement',
+        ar: 'المرفق',
+        en: 'Amenity',
+    },
     'admin.hotelForm.room': { fr: 'Chambre', ar: 'الغرفة', en: 'Room' },
-    'admin.hotelForm.addAmenity': { fr: 'Ajouter un équipement', ar: 'إضافة مرفق', en: 'Add Amenity' },
-    'admin.hotelForm.addRoom': { fr: 'Ajouter une chambre', ar: 'إضافة غرفة', en: 'Add Room' },
-    'admin.hotelForm.amenities': { fr: 'Équipements de l’hôtel', ar: 'مرافق الفندق', en: 'Hotel Amenities' },
-    'admin.hotelForm.rooms': { fr: 'Chambres de l’hôtel', ar: 'غرف الفندق', en: 'Hotel Rooms' },
-    'admin.hotelForm.pricing': { fr: 'Tarification et structure', ar: 'التسعير والبنية', en: 'Pricing and structure' },
-    'admin.hotelForm.contactHint': { fr: 'Informations de contact et adresse.', ar: 'معلومات الاتصال والعنوان.', en: 'Contact information and address.' },
-    'admin.hotelForm.mediaHint': { fr: 'Images et listes d’équipements.', ar: 'الصور وقوائم المرافق.', en: 'Images and amenity lists.' },
-    'admin.tourForm.coreDetailsHint': { fr: 'Gérez les informations de base du circuit.', ar: 'إدارة المعلومات الأساسية للجولة.', en: 'Manage core tour information.' },
-    'admin.tourForm.itineraryHint': { fr: 'Gérez le programme quotidien.', ar: 'إدارة البرنامج اليومي.', en: 'Manage the daily schedule.' },
-    'admin.tourForm.inclusionsHint': { fr: 'Gérez ce qui est inclus ou non.', ar: 'إدارة ما هو مشمول وما هو غير مشمول.', en: 'Manage what is included and excluded.' },
+    'admin.hotelForm.addAmenity': {
+        fr: 'Ajouter un équipement',
+        ar: 'إضافة مرفق',
+        en: 'Add Amenity',
+    },
+    'admin.hotelForm.addRoom': {
+        fr: 'Ajouter une chambre',
+        ar: 'إضافة غرفة',
+        en: 'Add Room',
+    },
+    'admin.hotelForm.amenities': {
+        fr: 'Équipements de l’hôtel',
+        ar: 'مرافق الفندق',
+        en: 'Hotel Amenities',
+    },
+    'admin.hotelForm.rooms': {
+        fr: 'Chambres de l’hôtel',
+        ar: 'غرف الفندق',
+        en: 'Hotel Rooms',
+    },
+    'admin.hotelForm.pricing': {
+        fr: 'Tarification et structure',
+        ar: 'التسعير والبنية',
+        en: 'Pricing and structure',
+    },
+    'admin.hotelForm.contactHint': {
+        fr: 'Informations de contact et adresse.',
+        ar: 'معلومات الاتصال والعنوان.',
+        en: 'Contact information and address.',
+    },
+    'admin.hotelForm.mediaHint': {
+        fr: 'Images et listes d’équipements.',
+        ar: 'الصور وقوائم المرافق.',
+        en: 'Images and amenity lists.',
+    },
+    'admin.tourForm.coreDetailsHint': {
+        fr: 'Gérez les informations de base du circuit.',
+        ar: 'إدارة المعلومات الأساسية للجولة.',
+        en: 'Manage core tour information.',
+    },
+    'admin.tourForm.itineraryHint': {
+        fr: 'Gérez le programme quotidien.',
+        ar: 'إدارة البرنامج اليومي.',
+        en: 'Manage the daily schedule.',
+    },
+    'admin.tourForm.inclusionsHint': {
+        fr: 'Gérez ce qui est inclus ou non.',
+        ar: 'إدارة ما هو مشمول وما هو غير مشمول.',
+        en: 'Manage what is included and excluded.',
+    },
     'admin.tourForm.day': { fr: 'Jour', ar: 'يوم', en: 'Day' },
     'admin.tourForm.item': { fr: 'Élément', ar: 'عنصر', en: 'Item' },
-    'admin.tourForm.itemName': { fr: 'Nom de l’élément', ar: 'اسم العنصر', en: 'Item Name' },
-    'admin.tourForm.addDay': { fr: 'Ajouter un jour', ar: 'إضافة يوم', en: 'Add Day' },
-    'admin.tourForm.addInclusion': { fr: 'Ajouter une inclusion', ar: 'إضافة مشمول', en: 'Add Inclusion' },
-    'admin.tourForm.addExclusion': { fr: 'Ajouter une exclusion', ar: 'إضافة غير مشمول', en: 'Add Exclusion' },
-    'admin.tourForm.durationDays': { fr: 'Durée (jours)', ar: 'المدة (أيام)', en: 'Duration (days)' },
-    'admin.tourForm.maxGroup': { fr: 'Taille max du groupe', ar: 'أقصى حجم للمجموعة', en: 'Max group size' },
-    'admin.destinationForm.highlightName': { fr: 'Nom du point fort', ar: 'اسم النقطة البارزة', en: 'Highlight Name' },
-    'admin.destinationForm.addHighlight': { fr: 'Ajouter un point fort', ar: 'إضافة نقطة بارزة', en: 'Add highlight' },
-    'admin.destinationForm.highlight': { fr: 'Point fort', ar: 'نقطة بارزة', en: 'Highlight' },
-    'admin.destinationForm.mediaAndHighlightsHint2': { fr: 'Gérez l’image principale, la galerie et les points forts.', ar: 'إدارة الصورة الرئيسية والمعرض وأبرز النقاط.', en: 'Manage the main image, gallery and highlights.' },
+    'admin.tourForm.itemName': {
+        fr: 'Nom de l’élément',
+        ar: 'اسم العنصر',
+        en: 'Item Name',
+    },
+    'admin.tourForm.addDay': {
+        fr: 'Ajouter un jour',
+        ar: 'إضافة يوم',
+        en: 'Add Day',
+    },
+    'admin.tourForm.addInclusion': {
+        fr: 'Ajouter une inclusion',
+        ar: 'إضافة مشمول',
+        en: 'Add Inclusion',
+    },
+    'admin.tourForm.addExclusion': {
+        fr: 'Ajouter une exclusion',
+        ar: 'إضافة غير مشمول',
+        en: 'Add Exclusion',
+    },
+    'admin.tourForm.durationDays': {
+        fr: 'Durée (jours)',
+        ar: 'المدة (أيام)',
+        en: 'Duration (days)',
+    },
+    'admin.tourForm.maxGroup': {
+        fr: 'Taille max du groupe',
+        ar: 'أقصى حجم للمجموعة',
+        en: 'Max group size',
+    },
+    'admin.tourForm.coreDetails': {
+        fr: 'Détails du circuit',
+        ar: 'تفاصيل الجولة',
+        en: 'Tour details',
+    },
+    'admin.tourForm.media': {
+        fr: 'Médias du circuit',
+        ar: 'وسائط الجولة',
+        en: 'Tour media',
+    },
+    'admin.tourForm.mediaHint': {
+        fr: 'Images principales et galerie.',
+        ar: 'الصور الرئيسية والمعرض.',
+        en: 'Main image and gallery.',
+    },
+    'admin.tourForm.itinerary': {
+        fr: 'Itinéraire',
+        ar: 'المسار',
+        en: 'Itinerary',
+    },
+    'admin.tourForm.inclusions': {
+        fr: 'Inclusions et exclusions',
+        ar: 'المشمولات والمستثنيات',
+        en: 'Inclusions & Exclusions',
+    },
+    'admin.tourForm.includes': {
+        fr: 'Inclusions',
+        ar: 'المشمولات',
+        en: 'Inclusions',
+    },
+    'admin.tourForm.excludes': {
+        fr: 'Exclusions',
+        ar: 'المستثنيات',
+        en: 'Exclusions',
+    },
+    'admin.tourForm.priceUnit': {
+        fr: 'Unité de prix',
+        ar: 'وحدة السعر',
+        en: 'Price unit',
+    },
+    'admin.tourForm.selectCategory': {
+        fr: 'Sélectionner une catégorie',
+        ar: 'اختر فئة',
+        en: 'Select category',
+    },
+    'admin.destinationForm.highlightName': {
+        fr: 'Nom du point fort',
+        ar: 'اسم النقطة البارزة',
+        en: 'Highlight Name',
+    },
+    'admin.tourForm.ratingPlaceholder': {
+        fr: 'Saisissez une note',
+        ar: 'أدخل تقييماً',
+        en: 'Enter a rating',
+    },
+    'admin.tourForm.durationNights': {
+        fr: 'Durée (nuits)',
+        ar: 'المدة (ليالٍ)',
+        en: 'Duration (nights)',
+    },
+    'admin.tourForm.durationNightsPlaceholder': {
+        fr: 'Saisissez le nombre de nuits',
+        ar: 'أدخل عدد الليالي',
+        en: 'Enter number of nights',
+    },
+    'admin.destinationForm.addHighlight': {
+        fr: 'Ajouter un point fort',
+        ar: 'إضافة نقطة بارزة',
+        en: 'Add highlight',
+    },
+    'admin.destinationForm.highlight': {
+        fr: 'Point fort',
+        ar: 'نقطة بارزة',
+        en: 'Highlight',
+    },
+    'admin.destinationForm.mediaAndHighlightsHint2': {
+        fr: 'Gérez l’image principale, la galerie et les points forts.',
+        ar: 'إدارة الصورة الرئيسية والمعرض وأبرز النقاط.',
+        en: 'Manage the main image, gallery and highlights.',
+    },
+    'admin.destinationForm.aboutHelp': {
+        fr: 'Aide sur la description',
+        ar: 'مساعدة حول الوصف',
+        en: 'Help on description',
+    },
     'actions.remove': { fr: 'Retirer', ar: 'إزالة', en: 'Remove' },
-    'admin.description': { fr: 'Description', ar: 'الوصف', en: 'Description' },
     'admin.address': { fr: 'Adresse', ar: 'العنوان', en: 'Address' },
     'admin.phone': { fr: 'Téléphone', ar: 'الهاتف', en: 'Phone' },
     'admin.whatsapp': { fr: 'WhatsApp', ar: 'واتساب', en: 'WhatsApp' },
-    'admin.hotelForm.coreDetails': { fr: 'Détails de l’hôtel', ar: 'تفاصيل الفندق', en: 'Hotel details' },
-    'admin.hotelForm.coreDetailsHint': { fr: 'Gérez les informations de base de l’hôtel.', ar: 'إدارة المعلومات الأساسية للفندق.', en: 'Manage core hotel information.' },
-    'admin.hotelForm.contact': { fr: 'Contact et profil', ar: 'الاتصال والملف الشخصي', en: 'Contact and profile' },
-    'admin.tourForm.media': { fr: 'Médias du circuit', ar: 'وسائط الجولة', en: 'Tour media' },
-    'admin.tourForm.mediaHint': { fr: 'Images principales et galerie.', ar: 'الصور الرئيسية والمعرض.', en: 'Main image and gallery.' },
-    'admin.tourForm.itinerary': { fr: 'Itinéraire', ar: 'المسار', en: 'Itinerary' },
-    'admin.tourForm.inclusions': { fr: 'Inclusions et exclusions', ar: 'المشمولات والمستثنيات', en: 'Inclusions & Exclusions' },
-    'admin.tourForm.includes': { fr: 'Inclusions', ar: 'المشمولات', en: 'Inclusions' },
-    'admin.tourForm.excludes': { fr: 'Exclusions', ar: 'المستثنيات', en: 'Exclusions' },
-    'admin.carForm.coreDetails': { fr: 'Détails du véhicule', ar: 'تفاصيل المركبة', en: 'Vehicle details' },
-    'admin.carForm.features': { fr: 'Caractéristiques', ar: 'المميزات', en: 'Features' },
-    'admin.carForm.policy': { fr: 'Politique de location', ar: 'سياسة التأجير', en: 'Rental policy' },
-    'admin.blogForm.coreDetails': { fr: 'Détails de l’article', ar: 'تفاصيل المقال', en: 'Article details' },
-    'admin.teamForm.coreDetails': { fr: 'Détails du membre', ar: 'تفاصيل العضو', en: 'Member details' },
-    'admin.teamForm.coreDetailsHint': { fr: 'Gérez les informations du membre de l’équipe.', ar: 'إدارة معلومات عضو الفريق.', en: 'Manage team member information.' },
+    'admin.hotelForm.coreDetails': {
+        fr: 'Détails de l’hôtel',
+        ar: 'تفاصيل الفندق',
+        en: 'Hotel details',
+    },
+    'admin.hotelForm.coreDetailsHint': {
+        fr: 'Gérez les informations de base de l’hôtel.',
+        ar: 'إدارة المعلومات الأساسية للفندق.',
+        en: 'Manage core hotel information.',
+    },
+    'admin.hotelForm.contact': {
+        fr: 'Contact et profil',
+        ar: 'الاتصال والملف الشخصي',
+        en: 'Contact and profile',
+    },
+    'admin.hotelForm.features': {
+        fr: 'Caractéristiques',
+        ar: 'المميزات',
+        en: 'Features',
+    },
+    'admin.carForm.coreDetails': {
+        fr: 'Détails du véhicule',
+        ar: 'تفاصيل المركبة',
+        en: 'Vehicle details',
+    },
+    'admin.carForm.features': {
+        fr: 'Caractéristiques',
+        ar: 'المميزات',
+        en: 'Features',
+    },
+    'admin.carForm.policy': {
+        fr: 'Politique de location',
+        ar: 'سياسة التأجير',
+        en: 'Rental policy',
+    },
+    'admin.blogForm.titlePlaceholder': {
+        fr: 'Saisissez un titre accrocheur',
+        ar: 'أدخل عنواناً جذاباً للمقال',
+        en: 'Enter a catchy blog title',
+    },
+    'admin.blogForm.excerptPlaceholder': {
+        fr: 'Rédigez un court résumé...',
+        ar: 'اكتب ملخصاً قصيراً...',
+        en: 'Write a short summary...',
+    },
+    'admin.blogForm.excerptHint': {
+        fr: 'Une brève description pour la liste des articles.',
+        ar: 'وصف موجز لقائمة المقالات.',
+        en: 'A brief description for the blog listing.',
+    },
+    'admin.blogForm.bodyHint': {
+        fr: 'Le texte principal de votre article.',
+        ar: 'النص الرئيسي لمقالك.',
+        en: 'The main text of your article.',
+    },
+    'admin.teamForm.coreDetails': {
+        fr: 'Détails du membre',
+        ar: 'تفاصيل العضو',
+        en: 'Member details',
+    },
+    'admin.teamForm.coreDetailsHint': {
+        fr: 'Gérez les informations du membre de l’équipe.',
+        ar: 'إدارة معلومات عضو الفريق.',
+        en: 'Manage team member information.',
+    },
     'admin.teamTable.image': { fr: 'Image', ar: 'الصورة', en: 'Image' },
     'admin.teamTable.name': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
     'admin.teamTable.role': { fr: 'Rôle', ar: 'الدور', en: 'Role' },
-    'admin.teamTable.actions': { fr: 'Actions', ar: 'الإجراءات', en: 'Actions' },
-    'admin.teamForm.mainImage': { fr: 'Image principale', ar: 'الصورة الرئيسية', en: 'Main image' },
-    'admin.teamForm.linkedin': { fr: 'URL LinkedIn', ar: 'رابط LinkedIn', en: 'LinkedIn URL' },
-    'admin.teamForm.twitter': { fr: 'URL X / Twitter', ar: 'رابط X / Twitter', en: 'X / Twitter URL' },
-    'admin.teamForm.email': { fr: 'Adresse e-mail', ar: 'عنوان البريد الإلكتروني', en: 'Email address' },
-    'admin.teamEditTitle': { fr: 'Modifier le membre', ar: 'تعديل عضو', en: 'Edit Team Member' },
-    'admin.teamAddTitle': { fr: 'Ajouter un membre', ar: 'إضافة عضو', en: 'Add Team Member' },
+    'admin.teamTable.actions': {
+        fr: 'Actions',
+        ar: 'الإجراءات',
+        en: 'Actions',
+    },
+    'admin.teamForm.namePlaceholder': {
+        fr: 'Ex: Jane Doe',
+        ar: 'مثال: محمد أحمد',
+        en: 'E.g., Jane Doe',
+    },
+    'admin.teamForm.nameHint': {
+        fr: 'Nom complet du membre.',
+        ar: 'الاسم الكامل للعضو.',
+        en: 'Full name of the team member.',
+    },
+    'admin.teamForm.rolePlaceholder': {
+        fr: 'Ex: Conseiller',
+        ar: 'مثال: مستشار سفر',
+        en: 'E.g., Travel Advisor',
+    },
+    'admin.teamForm.roleHint': {
+        fr: 'Poste ou titre actuel.',
+        ar: 'المسمى الوظيفي الحالي.',
+        en: 'Current position or title.',
+    },
+    'admin.teamForm.bioPlaceholder': {
+        fr: 'Présentez brièvement le membre.',
+        ar: 'قدم العضو باختصار.',
+        en: 'Briefly introduce the member.',
+    },
+    'admin.teamForm.bioHint': {
+        fr: 'Expertise ou parcours.',
+        ar: 'خبرتهم أو مسيرتهم.',
+        en: 'Their expertise or background.',
+    },
+    'admin.teamForm.linkedin': {
+        fr: 'URL LinkedIn',
+        ar: 'رابط LinkedIn',
+        en: 'LinkedIn URL',
+    },
+    'admin.teamForm.twitter': {
+        fr: 'URL X / Twitter',
+        ar: 'رابط X / Twitter',
+        en: 'X / Twitter URL',
+    },
+    'admin.teamForm.email': {
+        fr: 'Adresse e-mail',
+        ar: 'عنوان البريد الإلكتروني',
+        en: 'Email address',
+    },
+    'admin.teamForm.mainImage': {
+        fr: 'Image principale',
+        ar: 'الصورة الرئيسية',
+        en: 'Main image',
+    },
+    'admin.teamForm.noFileChosen': {
+        fr: 'Aucun fichier choisi',
+        ar: 'لم يتم اختيار ملف',
+        en: 'No file chosen',
+    },
+
+    'admin.teamEditTitle': {
+        fr: 'Modifier le membre',
+        ar: 'تعديل عضو',
+        en: 'Edit Team Member',
+    },
+    'admin.teamAddTitle': {
+        fr: 'Ajouter un membre',
+        ar: 'إضافة عضو',
+        en: 'Add Team Member',
+    },
     'admin.destinationAddTitle': {
         fr: 'Ajouter une destination',
         ar: 'إضافة وجهة',
@@ -1786,100 +2517,534 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'رابط الوجهة',
         en: 'Destination slug',
     },
-    'admin.hotelAdded': { fr: 'Hôtel ajouté', ar: 'تم إضافة الفندق', en: 'Hotel added' },
-    'admin.hotelUpdated': { fr: 'Hôtel mis à jour', ar: 'تم تحديث الفندق', en: 'Hotel updated' },
-    'admin.destinationAdded': { fr: 'Destination ajoutée', ar: 'تم إضافة الوجهة', en: 'Destination added' },
-    'admin.destinationUpdated': { fr: 'Destination mise à jour', ar: 'تم تحديث الوجهة', en: 'Destination updated' },
-    'admin.tourAdded': { fr: 'Circuit ajouté', ar: 'تم إضافة الجولة', en: 'Tour added' },
-    'admin.tourUpdated': { fr: 'Circuit mis à jour', ar: 'تم تحديث الجولة', en: 'Tour updated' },
-    'admin.teamAdded': { fr: 'Membre ajouté', ar: 'تم إضافة العضو', en: 'Member added' },
-    'admin.teamUpdated': { fr: 'Membre mis à jour', ar: 'تم تحديث العضو', en: 'Member updated' },
-    'admin.required': { fr: 'Champ requis', ar: 'حقل مطلوب', en: 'Field is required' },
-    'admin.invalidUrl': { fr: 'URL invalide', ar: 'رابط غير صالح', en: 'Invalid URL' },
-    'admin.invalidEmail': { fr: 'E-mail invalide', ar: 'بريد إلكتروني غير صالح', en: 'Invalid email' },
-    'admin.pleaseFixErrors': { fr: 'Veuillez corriger les erreurs dans le formulaire.', ar: 'يرجى تصحيح الأخطاء في النموذج.', en: 'Please fix the errors in the form.' },
-    'admin.promoAdded': { fr: 'Promo ajoutée', ar: 'تم إضافة العرض', en: 'Promo added' },
-    'admin.promoUpdated': { fr: 'Promo mise à jour', ar: 'تم تحديث العرض', en: 'Promo updated' },
-    'admin.dealAdded': { fr: 'Offre ajoutée', ar: 'تم إضافة العرض', en: 'Deal added' },
-    'admin.dealUpdated': { fr: 'Offre mise à jour', ar: 'تم تحديث العرض', en: 'Deal updated' },
-    'admin.eventAdded': { fr: 'Événement ajouté', ar: 'تم إضافة الفعالية', en: 'Event added' },
-    'admin.eventUpdated': { fr: 'Événement mis à jour', ar: 'تم تحديث الفعالية', en: 'Event updated' },
-    'admin.error.required': { fr: 'Ce champ est requis', ar: 'هذا الحقل مطلوب', en: 'This field is required' },
-    'admin.error.invalidPrice': { fr: 'Prix invalide', ar: 'سعر غير صالح', en: 'Invalid price' },
-    'admin.pleaseFixErrors': { fr: 'Veuillez corriger les erreurs avant de continuer', ar: 'يرجى تصحيح الأخطاء قبل المتابعة', en: 'Please fix the errors before continuing' },
-    'admin.carAdded': { fr: 'Véhicule ajouté', ar: 'تم إضافة المركبة', en: 'Car added' },
-    'admin.carUpdated': { fr: 'Véhicule mis à jour', ar: 'تم تحديث المركبة', en: 'Car updated' },
-    'admin.flightAdded': { fr: 'Vol ajouté', ar: 'تم إضافة الرحلة', en: 'Flight added' },
-    'admin.flightUpdated': { fr: 'Vol mis à jour', ar: 'تم تحديث الرحلة', en: 'Flight updated' },
-    'admin.carForm.transmission': { fr: 'Transmission', ar: 'ناقل الحركة', en: 'Transmission' },
-    'admin.carForm.fuel': { fr: 'Carburant', ar: 'الوقود', en: 'Fuel' },
-    'admin.carForm.seats': { fr: 'Sièges', ar: 'المقاعد', en: 'Seats' },
-    'admin.carForm.addFeature': { fr: 'Ajouter une caractéristique', ar: 'إضافة ميزة', en: 'Add feature' },
-    'admin.carForm.addPolicy': { fr: 'Ajouter une règle', ar: 'إضافة قاعدة', en: 'Add rule' },
-    'admin.carForm.coreDetailsHint': { fr: 'Switch language to edit the translated car copy one locale at a time.', ar: 'بدّل اللغة لتعديل النص المترجم للسيارة لكل لغة على حدة.', en: 'Switch language to edit the translated car copy one locale at a time.' },
-    'admin.carForm.media': { fr: 'Médias du véhicule', ar: 'وسائط المركبة', en: 'Vehicle Media' },
-    'admin.carForm.mediaHint': { fr: 'Upload main image and gallery images.', ar: 'تحميل الصورة الرئيسية وصور المعرض.', en: 'Upload main image and gallery images.' },
-    'admin.carForm.featuresHint': { fr: 'Manage localized car features.', ar: 'إدارة مميزات السيارة المترجمة.', en: 'Manage localized car features.' },
-    'admin.pleaseFixErrors': { fr: 'Veuillez corriger les erreurs dans le formulaire.', ar: 'يرجى تصحيح الأخطاء في النموذج.', en: 'Please fix the errors in the form.' },
-    'admin.fieldRequired': { fr: 'Ce champ est requis.', ar: 'هذا الحقل مطلوب.', en: 'This field is required.' },
-    'admin.invalidPrice': { fr: 'Prix invalide.', ar: 'سعر غير صالح.', en: 'Invalid price.' },
-    'admin.invalidSeats': { fr: 'Nombre de sièges invalide.', ar: 'عدد مقاعد غير صالح.', en: 'Invalid number of seats.' },
-    'admin.flightForm.technicalInfo': { fr: 'Informations techniques', ar: 'المعلومات التقنية', en: 'Technical info' },
-    'admin.flightForm.originFixed': { fr: 'Origine (Fixe)', ar: 'المصدر (ثابت)', en: 'Origin (Fixed)' },
-    'admin.eventForm.activity': { fr: 'Activité', ar: 'النشاط', en: 'Activity' },
-    'admin.eventForm.addActivity': { fr: 'Ajouter une activité', ar: 'إضافة نشاط', en: 'Add activity' },
-    'admin.promoForm.colorToken': { fr: 'Jeton de couleur', ar: 'رمز اللون', en: 'Color token' },
-    'admin.promoForm.eligibility': { fr: 'Éligibilité', ar: 'الأهلية', en: 'Eligibility' },
-    'admin.promoForm.howToUse': { fr: 'Comment utiliser', ar: 'كيفية الاستخدام', en: 'How to Use' },
-    'admin.promoForm.terms': { fr: 'Termes et conditions', ar: 'الشروط والأحكام', en: 'Terms & Conditions' },
-    'admin.promoForm.addStep': { fr: 'Ajouter une étape', ar: 'إضافة خطوة', en: 'Add Step' },
-    'admin.promoForm.addTerm': { fr: 'Ajouter un terme', ar: 'إضافة شرط', en: 'Add Term' },
-    'admin.promoForm.usageLimit': { fr: 'Limite d’utilisation', ar: 'حد الاستخدام', en: 'Usage limit' },
-    'admin.promoForm.perUserLimit': { fr: 'Limite par utilisateur', ar: 'الحد لكل مستخدم', en: 'Per-user limit' },
-    'admin.promoForm.applicableTo': { fr: 'Applicable à', ar: 'ينطبق على', en: 'Applicable to' },
+    'admin.hotelAdded': {
+        fr: 'Hôtel ajouté',
+        ar: 'تم إضافة الفندق',
+        en: 'Hotel added',
+    },
+    'admin.hotelUpdated': {
+        fr: 'Hôtel mis à jour',
+        ar: 'تم تحديث الفندق',
+        en: 'Hotel updated',
+    },
+    'admin.destinationAdded': {
+        fr: 'Destination ajoutée',
+        ar: 'تم إضافة الوجهة',
+        en: 'Destination added',
+    },
+    'admin.destinationUpdated': {
+        fr: 'Destination mise à jour',
+        ar: 'تم تحديث الوجهة',
+        en: 'Destination updated',
+    },
+    'admin.tourAdded': {
+        fr: 'Circuit ajouté',
+        ar: 'تم إضافة الجولة',
+        en: 'Tour added',
+    },
+    'admin.tourUpdated': {
+        fr: 'Circuit mis à jour',
+        ar: 'تم تحديث الجولة',
+        en: 'Tour updated',
+    },
+    'admin.teamAdded': {
+        fr: 'Membre ajouté',
+        ar: 'تم إضافة العضو',
+        en: 'Member added',
+    },
+    'admin.teamUpdated': {
+        fr: 'Membre mis à jour',
+        ar: 'تم تحديث العضو',
+        en: 'Member updated',
+    },
+    'admin.invalidUrl': {
+        fr: 'URL invalide',
+        ar: 'رابط غير صالح',
+        en: 'Invalid URL',
+    },
+    'admin.invalidEmail': {
+        fr: 'E-mail invalide',
+        ar: 'بريد إلكتروني غير صالح',
+        en: 'Invalid email',
+    },
+    'admin.invalidRating': {
+        fr: 'Note invalide',
+        ar: 'تقييم غير صالح',
+        en: 'Invalid rating',
+    },
+    'admin.invalidNights': {
+        fr: 'Nombre de nuits invalide',
+        ar: 'عدد ليالي غير صالح',
+        en: 'Invalid number of nights',
+    },
+    'admin.promoAdded': {
+        fr: 'Promo ajoutée',
+        ar: 'تم إضافة العرض',
+        en: 'Promo added',
+    },
+    'admin.promoUpdated': {
+        fr: 'Promo mise à jour',
+        ar: 'تم تحديث العرض',
+        en: 'Promo updated',
+    },
+    'admin.dealAdded': {
+        fr: 'Offre ajoutée',
+        ar: 'تم إضافة العرض',
+        en: 'Deal added',
+    },
+    'admin.dealUpdated': {
+        fr: 'Offre mise à jour',
+        ar: 'تم تحديث العرض',
+        en: 'Deal updated',
+    },
+    'admin.eventAdded': {
+        fr: 'Événement ajouté',
+        ar: 'تم إضافة الفعالية',
+        en: 'Event added',
+    },
+    'admin.eventUpdated': {
+        fr: 'Événement mis à jour',
+        ar: 'تم تحديث الفعالية',
+        en: 'Event updated',
+    },
+    'admin.carAdded': {
+        fr: 'Véhicule ajouté',
+        ar: 'تم إضافة المركبة',
+        en: 'Car added',
+    },
+    'admin.carUpdated': {
+        fr: 'Véhicule mis à jour',
+        ar: 'تم تحديث المركبة',
+        en: 'Car updated',
+    },
+    'admin.flightAdded': {
+        fr: 'Vol ajouté',
+        ar: 'تم إضافة الرحلة',
+        en: 'Flight added',
+    },
+    'admin.flightUpdated': {
+        fr: 'Vol mis à jour',
+        ar: 'تم تحديث الرحلة',
+        en: 'Flight updated',
+    },
+    'admin.carForm.fuelPlaceholder': {
+        fr: 'p.ex. Essence, Diesel, Électrique',
+        ar: 'مثلاً: بنزين، ديزل، كهرباء',
+        en: 'e.g. Petrol, Diesel, Electric',
+    },
+    'admin.carForm.transmissionPlaceholder': {
+        fr: 'p.ex. Automatique, Manuel',
+        ar: 'مثلاً: أوتوماتيكي، يدوي',
+        en: 'e.g. Automatic, Manual',
+    },
+    'admin.carForm.pricePlaceholder': { fr: '0.00', ar: '0.00', en: '0.00' },
+    'admin.carForm.seatsPlaceholder': {
+        fr: 'p.ex. 5',
+        ar: 'مثلاً: 5',
+        en: 'e.g. 5',
+    },
+    'admin.carForm.feature': {
+        fr: 'Caractéristique',
+        ar: 'ميزة',
+        en: 'Feature',
+    },
+    'admin.carForm.rule': { fr: 'Règle', ar: 'قاعدة', en: 'Rule' },
+    'admin.carForm.namePlaceholder': {
+        fr: 'p.ex. Berline de Luxe',
+        ar: 'مثلاً: سيارة سيدان فاخرة',
+        en: 'e.g. Luxury Sedan',
+    },
+    'admin.carForm.nameHint': {
+        fr: 'Nom du modèle de voiture.',
+        ar: 'اسم طراز السيارة.',
+        en: 'Name of the car model.',
+    },
+    'admin.carForm.fuelHint': {
+        fr: 'Type de carburant (ex: Essence, Diesel).',
+        ar: 'نوع الوقود (مثلاً: بنزين، ديزل).',
+        en: 'Fuel type (e.g. Petrol, Diesel).',
+    },
+    'admin.carForm.transmissionHint': {
+        fr: 'Type de boîte de vitesses (ex: Automatique, Manuel).',
+        ar: 'نوع ناقل الحركة (مثلاً: أوتوماتيكي، يدوي).',
+        en: 'Transmission type (e.g. Automatic, Manual).',
+    },
+    'admin.carForm.priceHint': {
+        fr: 'Prix de location par jour en DT.',
+        ar: 'سعر الإيجار اليومي بالدينار التونسي.',
+        en: 'Daily rental price in DT.',
+    },
+    'admin.carForm.seatsHint': {
+        fr: 'Nombre total de sièges passagers.',
+        ar: 'إجمالي عدد مقاعد الركاب.',
+        en: 'Total number of passenger seats.',
+    },
+    'admin.carForm.addFeature': {
+        fr: 'Ajouter une caractéristique',
+        ar: 'إضافة ميزة',
+        en: 'Add feature',
+    },
+    'admin.carForm.addPolicy': {
+        fr: 'Ajouter une règle',
+        ar: 'إضافة قاعدة',
+        en: 'Add rule',
+    },
+    'admin.carForm.coreDetailsHint': {
+        fr: 'Switch language to edit the translated car copy one locale at a time.',
+        ar: 'بدّل اللغة لتعديل النص المترجم للسيارة لكل لغة على حدة.',
+        en: 'Switch language to edit the translated car copy one locale at a time.',
+    },
+    'admin.carForm.media': {
+        fr: 'Médias du véhicule',
+        ar: 'وسائط المركبة',
+        en: 'Vehicle Media',
+    },
+    'admin.carForm.mediaHint': {
+        fr: 'Upload main image and gallery images.',
+        ar: 'تحميل الصورة الرئيسية وصور المعرض.',
+        en: 'Upload main image and gallery images.',
+    },
+    'admin.carForm.featuresHint': {
+        fr: 'Manage localized car features.',
+        ar: 'إدارة مميزات السيارة المترجمة.',
+        en: 'Manage localized car features.',
+    },
+    'admin.invalidPrice': {
+        fr: 'Prix invalide.',
+        ar: 'سعر غير صالح.',
+        en: 'Invalid price.',
+    },
+    'admin.invalidSeats': {
+        fr: 'Nombre de sièges invalide.',
+        ar: 'عدد مقاعد غير صالح.',
+        en: 'Invalid number of seats.',
+    },
+    'admin.flightForm.technicalInfo': {
+        fr: 'Informations techniques',
+        ar: 'المعلومات التقنية',
+        en: 'Technical info',
+    },
+    'admin.flightForm.originFixed': {
+        fr: 'Origine (Fixe)',
+        ar: 'المصدر (ثابت)',
+        en: 'Origin (Fixed)',
+    },
+    'admin.eventForm.activity': {
+        fr: 'Activité',
+        ar: 'النشاط',
+        en: 'Activity',
+    },
+    'admin.eventForm.addActivity': {
+        fr: 'Ajouter une activité',
+        ar: 'إضافة نشاط',
+        en: 'Add activity',
+    },
+    'admin.promos.colorToken': {
+        fr: 'Jeton de couleur',
+        ar: 'رمز اللون',
+        en: 'Color token',
+    },
+    'admin.promos.colorPlaceholder': {
+        fr: 'p.ex. #FF5733 ou blue',
+        ar: 'مثلاً #FF5733 أو أزرق',
+        en: 'e.g. #FF5733 or blue',
+    },
+    'admin.promos.codePlaceholder': {
+        fr: 'p.ex. SUMMER2026',
+        ar: 'مثلاً SUMMER2026',
+        en: 'e.g. SUMMER2026',
+    },
+    'admin.promos.titlePlaceholder': {
+        fr: "Vente d'été",
+        ar: 'تخفيضات الصيف',
+        en: 'Summer Sale',
+    },
+    'admin.promos.discountPlaceholder': {
+        fr: '20% de remise',
+        ar: 'خصم 20%',
+        en: '20% OFF',
+    },
+    'admin.promos.expiresPlaceholder': {
+        fr: '2026-12-31',
+        ar: '2026-12-31',
+        en: '2026-12-31',
+    },
+    'admin.promos.applicableToPlaceholder': {
+        fr: 'Sélectionner une option...',
+        ar: 'اختر خياراً...',
+        en: 'Select an option...',
+    },
+    'admin.promos.applicableTo.all': {
+        fr: 'Tous les produits',
+        ar: 'جميع المنتجات',
+        en: 'All products',
+    },
+    'admin.promos.applicableTo.flights': {
+        fr: 'Vols uniquement',
+        ar: 'الرحلات فقط',
+        en: 'Flights only',
+    },
+    'admin.promos.applicableTo.hotels': {
+        fr: 'Hôtels uniquement',
+        ar: 'الفنادق فقط',
+        en: 'Hotels only',
+    },
+    'admin.promos.applicableTo.tours': {
+        fr: 'Tours uniquement',
+        ar: 'الجولات فقط',
+        en: 'Tours only',
+    },
+    'admin.promos.applicableTo.deals': {
+        fr: 'Offres uniquement',
+        ar: 'العروض فقط',
+        en: 'Deals only',
+    },
+    'admin.promos.applicableTo.cars': {
+        fr: 'Voitures uniquement',
+        ar: 'السيارات فقط',
+        en: 'Cars only',
+    },
+    'admin.promos.applicableTo.events': {
+        fr: 'Événements uniquement',
+        ar: 'الفعاليات فقط',
+        en: 'Events only',
+    },
+    'admin.promos.applicableTo.new_customers': {
+        fr: 'Nouveaux clients uniquement',
+        ar: 'العملاء الجدد فقط',
+        en: 'New customers only',
+    },
+    'admin.promos.applicableTo.existing_customers': {
+        fr: 'Clients existants uniquement',
+        ar: 'العملاء الحاليين فقط',
+        en: 'Existing customers only',
+    },
+    'admin.promos.description': {
+        fr: 'Description',
+        ar: 'الوصف',
+        en: 'Description',
+    },
+    'admin.promos.usageLimitHelp': {
+        fr: "Nombre total d'utilisations autorisées (laissez vide pour illimité).",
+        ar: 'إجمالي عدد الاستخدامات المسموح بها (اتركه فارغاً لغير محدود).',
+        en: 'Total number of uses allowed (leave empty for unlimited).',
+    },
+    'admin.promos.perUserLimitHelp': {
+        fr: "Nombre d'utilisations par utilisateur (laissez vide pour 1).",
+        ar: 'عدد الاستخدامات لكل مستخدم (اتركه فارغاً لـ 1).',
+        en: 'Number of uses per user (leave empty for 1).',
+    },
+    'admin.promos.applicableToHelp': {
+        fr: "Sélectionnez les entités pour lesquelles cette promotion s'applique.",
+        ar: 'حدد الكيانات التي ينطبق عليها هذا العرض الترويجي.',
+        en: 'Select the entities this promotion applies to.',
+    },
+    'admin.promos.coreInfoTitle': {
+        fr: 'Informations principales',
+        ar: 'المعلومات الأساسية',
+        en: 'Core information',
+    },
+    'admin.promos.coreInfoDescription': {
+        fr: 'Identité et valeurs de la campagne.',
+        ar: 'هوية وقيم الحملة الترويجية.',
+        en: 'Identity and campaign values.',
+    },
+    'admin.promos.descriptionRulesTitle': {
+        fr: 'Description et règles',
+        ar: 'الوصف والقواعد',
+        en: 'Description and rules',
+    },
+    'admin.promos.descriptionRulesDescription': {
+        fr: 'Texte affiché dans les détails de la promo.',
+        ar: 'النصوص المعروضة في تفاصيل العرض الترويجي.',
+        en: 'Text shown in the promo detail cards.',
+    },
+    'admin.promos.fieldName': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
+    'admin.promos.rule': { fr: 'Règle', ar: 'قاعدة', en: 'Rule' },
+    'admin.promos.step': { fr: 'Étape', ar: 'خطوة', en: 'Step' },
+    'admin.promos.term': { fr: 'Terme', ar: 'شرط', en: 'Term' },
+    'admin.promoForm.eligibility': {
+        fr: 'Éligibilité',
+        ar: 'الأهلية',
+        en: 'Eligibility',
+    },
+    'admin.promoForm.howToUse': {
+        fr: 'Comment utiliser',
+        ar: 'كيفية الاستخدام',
+        en: 'How to Use',
+    },
+    'admin.promos.eligibilityHint': {
+        fr: "Définissez les conditions d'éligibilité pour cette promotion.",
+        ar: 'حدد شروط الأهلية لهذا العرض الترويجي.',
+        en: 'Define the eligibility criteria for this promotion.',
+    },
+    'admin.promos.howToUseHint': {
+        fr: 'Expliquez comment utiliser le code promotionnel.',
+        ar: 'اشرح كيفية استخدام رمز العرض الترويجي.',
+        en: 'Explain how to use the promo code.',
+    },
+    'admin.promos.termsHint': {
+        fr: 'Spécifiez les termes et conditions applicables.',
+        ar: 'حدد الشروط والأحكام المطبقة.',
+        en: 'Specify the applicable terms and conditions.',
+    },
+    'admin.promoForm.usageLimit': {
+        fr: 'Limite d’utilisation',
+        ar: 'حد الاستخدام',
+        en: 'Usage limit',
+    },
+    'admin.promoForm.perUserLimit': {
+        fr: 'Limite par utilisateur',
+        ar: 'الحد لكل مستخدم',
+        en: 'Per-user limit',
+    },
+    'admin.promoForm.applicableTo': {
+        fr: 'Applicable à',
+        ar: 'ينطبق على',
+        en: 'Applicable to',
+    },
     'admin.teamForm.role': { fr: 'Rôle', ar: 'الدور', en: 'Role' },
     'admin.teamForm.bio': { fr: 'Biographie', ar: 'السيرة الذاتية', en: 'Bio' },
-    'admin.imagesInLibrary': { fr: 'images dans votre bibliothèque', ar: 'صور في مكتبتك', en: 'images in your library' },
+    'admin.imagesInLibrary': {
+        fr: 'images dans votre bibliothèque',
+        ar: 'صور في مكتبتك',
+        en: 'images in your library',
+    },
     'admin.gallery': { fr: 'Galerie', ar: 'المعرض', en: 'Gallery' },
     'admin.all': { fr: 'Tous', ar: 'الكل', en: 'All' },
-    'admin.addImage': { fr: 'Ajouter une image', ar: 'إضافة صورة', en: 'Add Image' },
-    'admin.editImage': { fr: 'Modifier l’image', ar: 'تعديل الصورة', en: 'Edit Image' },
-    'admin.searchByTitle': { fr: 'Rechercher par titre...', ar: 'ابحث بالعنوان...', en: 'Search by title...' },
-    'admin.noImagesMatch': { fr: 'Aucune image ne correspond à vos filtres. Cliquez sur "Ajouter une image" pour en télécharger une.', ar: 'لا توجد صور تطابق عوامل التصفية الخاصة بك. انقر على "إضافة صورة" لتحميل واحدة.', en: 'No images match your filters. Click "Add Image" to upload one.' },
-    'admin.imageUpdated': { fr: 'Image mise à jour', ar: 'تم تحديث الصورة', en: 'Image updated' },
-    'admin.imageAdded': { fr: 'Image ajoutée', ar: 'تم إضافة الصورة', en: 'Image added' },
-    'admin.imageDeleted': { fr: 'Image supprimée', ar: 'تم حذف الصورة', en: 'Image deleted' },
-    'admin.error.required': { fr: 'Champ requis', ar: 'حقل مطلوب', en: 'Field required' },
-    'admin.error.pleaseFixErrors': { fr: 'Veuillez corriger les erreurs dans le formulaire', ar: 'يرجى تصحيح الأخطاء في النموذج', en: 'Please fix the errors in the form' },
+    'admin.addImage': {
+        fr: 'Ajouter une image',
+        ar: 'إضافة صورة',
+        en: 'Add Image',
+    },
+    'admin.editImage': {
+        fr: 'Modifier l’image',
+        ar: 'تعديل الصورة',
+        en: 'Edit Image',
+    },
+    'admin.searchByTitle': {
+        fr: 'Rechercher par titre...',
+        ar: 'ابحث بالعنوان...',
+        en: 'Search by title...',
+    },
+    'admin.noImagesMatch': {
+        fr: 'Aucune image ne correspond à vos filtres. Cliquez sur "Ajouter une image" pour en télécharger une.',
+        ar: 'لا توجد صور تطابق عوامل التصفية الخاصة بك. انقر على "إضافة صورة" لتحميل واحدة.',
+        en: 'No images match your filters. Click "Add Image" to upload one.',
+    },
+    'admin.imageUpdated': {
+        fr: 'Image mise à jour',
+        ar: 'تم تحديث الصورة',
+        en: 'Image updated',
+    },
+    'admin.imageAdded': {
+        fr: 'Image ajoutée',
+        ar: 'تم إضافة الصورة',
+        en: 'Image added',
+    },
+    'admin.imageDeleted': {
+        fr: 'Image supprimée',
+        ar: 'تم حذف الصورة',
+        en: 'Image deleted',
+    },
+    'admin.error.pleaseFixErrors': {
+        fr: 'Veuillez corriger les erreurs dans le formulaire',
+        ar: 'يرجى تصحيح الأخطاء في النموذج',
+        en: 'Please fix the errors in the form',
+    },
     'admin.aircraft': { fr: 'Avion', ar: 'الطائرة', en: 'Aircraft' },
     'admin.cabin': { fr: 'Cabine', ar: 'المقصورة', en: 'Cabin' },
     'admin.stops': { fr: 'Escales', ar: 'التوقفات', en: 'Stops' },
     'admin.stars': { fr: 'Étoiles', ar: 'النجوم', en: 'Stars' },
     'admin.reviews': { fr: 'Avis', ar: 'المراجعات', en: 'Reviews' },
-    'admin.destinationForm.coreInformation': { fr: 'Informations principales', ar: 'المعلومات الأساسية', en: 'Core information' },
-    'admin.destinationForm.coreInformationHint': { fr: 'Modifiez les informations de base de la destination.', ar: 'تعديل المعلومات الأساسية للوجهة.', en: 'Edit core destination information.' },
-    'admin.destinationForm.mediaAndHighlights': { fr: 'Médias et points forts', ar: 'الوسائط وأبرز النقاط', en: 'Media and highlights' },
-    'admin.destinationForm.highlights': { fr: 'Points forts', ar: 'النقاط البارزة', en: 'Highlights' },
-    'admin.destinationForm.destinationFacts': { fr: 'Faits sur la destination', ar: 'حقائق عن الوجهة', en: 'Destination facts' },
+    'admin.destinationForm.coreInformation': {
+        fr: 'Informations principales',
+        ar: 'المعلومات الأساسية',
+        en: 'Core information',
+    },
+    'admin.destinationForm.coreInformationHint': {
+        fr: 'Modifiez les informations de base de la destination.',
+        ar: 'تعديل المعلومات الأساسية للوجهة.',
+        en: 'Edit core destination information.',
+    },
+    'admin.destinationForm.mediaAndHighlights': {
+        fr: 'Médias et points forts',
+        ar: 'الوسائط وأبرز النقاط',
+        en: 'Media and highlights',
+    },
+    'admin.destinationForm.highlights': {
+        fr: 'Points forts',
+        ar: 'النقاط البارزة',
+        en: 'Highlights',
+    },
+    'admin.destinationForm.destinationFacts': {
+        fr: 'Faits sur la destination',
+        ar: 'حقائق عن الوجهة',
+        en: 'Destination facts',
+    },
     'admin.destinationForm.name': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
     'admin.destinationForm.country': { fr: 'Pays', ar: 'البلد', en: 'Country' },
-    'admin.destinationForm.category': { fr: 'Catégorie', ar: 'الفئة', en: 'Category' },
+    'admin.destinationForm.category': {
+        fr: 'Catégorie',
+        ar: 'الفئة',
+        en: 'Category',
+    },
     'admin.destinationForm.price': { fr: 'Prix', ar: 'السعر', en: 'Price' },
     'admin.destinationForm.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
-    'admin.destinationForm.bestTime': { fr: 'Meilleur moment', ar: 'أفضل وقت', en: 'Best time' },
-    'admin.destinationForm.language': { fr: 'Langue', ar: 'اللغة', en: 'Language' },
-    'admin.destinationForm.currency': { fr: 'Devise', ar: 'العملة', en: 'Currency' },
-    'admin.destinationForm.weather': { fr: 'Météo', ar: 'الطقس', en: 'Weather' },
+    'admin.destinationForm.bestTime': {
+        fr: 'Meilleur moment',
+        ar: 'أفضل وقت',
+        en: 'Best time',
+    },
+    'admin.destinationForm.language': {
+        fr: 'Langue',
+        ar: 'اللغة',
+        en: 'Language',
+    },
+    'admin.destinationForm.currency': {
+        fr: 'Devise',
+        ar: 'العملة',
+        en: 'Currency',
+    },
+    'admin.destinationForm.weather': {
+        fr: 'Météo',
+        ar: 'الطقس',
+        en: 'Weather',
+    },
     'admin.destinationForm.image': { fr: 'Image', ar: 'الصورة', en: 'Image' },
-    'admin.destinationForm.gallery': { fr: 'Galerie', ar: 'المعرض', en: 'Gallery' },
-    'admin.destinationForm.helper': { fr: 'Informations sur la destination', ar: 'معلومات الوجهة', en: 'Destination information' },
+    'admin.destinationForm.gallery': {
+        fr: 'Galerie',
+        ar: 'المعرض',
+        en: 'Gallery',
+    },
+    'admin.destinationForm.helper': {
+        fr: 'Informations sur la destination',
+        ar: 'معلومات الوجهة',
+        en: 'Destination information',
+    },
     'admin.destinationTable.image': { fr: 'Image', ar: 'الصورة', en: 'Image' },
     'admin.destinationTable.name': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
-    'admin.destinationTable.country': { fr: 'Pays', ar: 'البلد', en: 'Country' },
-    'admin.destinationTable.category': { fr: 'Catégorie', ar: 'الفئة', en: 'Category' },
+    'admin.destinationTable.country': {
+        fr: 'Pays',
+        ar: 'البلد',
+        en: 'Country',
+    },
+    'admin.destinationTable.category': {
+        fr: 'Catégorie',
+        ar: 'الفئة',
+        en: 'Category',
+    },
     'admin.destinationTable.price': { fr: 'Prix', ar: 'السعر', en: 'Price' },
-    'admin.destinationTable.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
-    'admin.destinationTable.actions': { fr: 'Actions', ar: 'الإجراءات', en: 'Actions' },
+    'admin.destinationTable.rating': {
+        fr: 'Note',
+        ar: 'التقييم',
+        en: 'Rating',
+    },
+    'admin.destinationTable.actions': {
+        fr: 'Actions',
+        ar: 'الإجراءات',
+        en: 'Actions',
+    },
 
     'admin.destinationForm.localizedContent': {
         fr: 'Contenu localisé',
@@ -1938,33 +3103,119 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.destinationForm.bestTimePlaceholder': {
         fr: 'Par exemple : avril à juin',
-        ar: 'مثل: من أبريل إلى يونيو',
-        en: 'For example: April to June',
+        ar: 'مثلاً: من أبريل إلى يونيو',
+        en: 'e.g. April to June',
     },
     'admin.destinationForm.languagePlaceholder': {
-        fr: 'Par exemple : français, anglais',
-        ar: 'مثل: الفرنسية، الإنجليزية',
-        en: 'For example: French, English',
+        fr: 'Par exemple : Français, Anglais',
+        ar: 'مثلاً: العربية، الإنجليزية',
+        en: 'e.g. French, English',
     },
     'admin.destinationForm.currencyPlaceholder': {
-        fr: 'Par exemple : EUR, USD',
-        ar: 'مثل: EUR، USD',
-        en: 'For example: EUR, USD',
+        fr: 'Par exemple : EUR, DT',
+        ar: 'مثلاً: EUR, DT',
+        en: 'e.g. EUR, DT',
     },
     'admin.destinationForm.weatherPlaceholder': {
-        fr: 'Par exemple : tropical',
-        ar: 'مثل: استوائي',
-        en: 'For example: tropical',
+        fr: 'Par exemple : Méditerranéen, Ensoleillé',
+        ar: 'مثلاً: معتدل، مشمس',
+        en: 'e.g. Mediterranean, Sunny',
     },
     'admin.destinationForm.namePlaceholder': {
-        fr: 'Nom de la destination',
-        ar: 'اسم الوجهة',
-        en: 'Destination name',
+        fr: 'p.ex. Bali',
+        ar: 'مثلاً: بالي',
+        en: 'e.g. Bali',
     },
     'admin.destinationForm.countryPlaceholder': {
-        fr: 'Pays ou région',
-        ar: 'البلد أو المنطقة',
-        en: 'Country or region',
+        fr: 'p.ex. Indonésie',
+        ar: 'مثلاً: إندونيسيا',
+        en: 'e.g. Indonesia',
+    },
+    'admin.destinationForm.nameHelp': {
+        fr: 'Nom unique de la destination.',
+        ar: 'اسم فريد للوجهة.',
+        en: 'Unique name of the destination.',
+    },
+    'admin.destinationForm.countryHelp': {
+        fr: 'Pays ou région où se trouve la destination.',
+        ar: 'البلد أو المنطقة التي تقع فيها الوجهة.',
+        en: 'Country or region where the destination is located.',
+    },
+    'admin.destinationForm.categoryHelp': {
+        fr: 'Choisissez une catégorie pour classer cette destination.',
+        ar: 'اختر فئة لتصنيف هذه الوجهة.',
+        en: 'Choose a category to classify this destination.',
+    },
+    'admin.destinationForm.priceHelp': {
+        fr: 'Prix moyen estimé par personne.',
+        ar: 'متوسط السعر المقدر للشخص الواحد.',
+        en: 'Estimated average price per person.',
+    },
+    'admin.destinationForm.ratingHelp': {
+        fr: 'Note de 1 à 5.',
+        ar: 'تقييم من 1 إلى 5.',
+        en: 'Rating from 1 to 5.',
+    },
+    'admin.destinationForm.descriptionHelp': {
+        fr: 'Description courte et attrayante de la destination.',
+        ar: 'وصف قصير وجذاب للوجهة.',
+        en: 'Short and engaging description of the destination.',
+    },
+    'admin.destinationForm.mediaHelp': {
+        fr: 'Images principale et galerie pour illustrer la destination.',
+        ar: 'الصورة الرئيسية والمعرض لتوضيح الوجهة.',
+        en: 'Main image and gallery to illustrate the destination.',
+    },
+    'admin.destinationForm.highlightsHelp': {
+        fr: 'Ajoutez les points forts de la destination.',
+        ar: 'أضف أبرز معالم الوجهة.',
+        en: 'Add destination highlights.',
+    },
+    'admin.airlinePlaceholder': {
+        fr: 'p.ex. Emirates',
+        ar: 'مثلاً: طيران الإمارات',
+        en: 'e.g. Emirates',
+    },
+    'admin.toPlaceholder': {
+        fr: 'p.ex. Dubaï, EAU',
+        ar: 'مثلاً: دبي، الإمارات',
+        en: 'e.g. Dubai, UAE',
+    },
+    'admin.priceCurrency': {
+        fr: 'Prix (DT)',
+        ar: 'السعر (بالدينار)',
+        en: 'Price (DT)',
+    },
+    'admin.pricePlaceholder': { fr: '0.00', ar: '0.00', en: '0.00' },
+    'admin.datePlaceholder': {
+        fr: 'Choisir une date',
+        ar: 'اختر تاريخاً',
+        en: 'Pick a date',
+    },
+    'admin.codePlaceholder': {
+        fr: 'p.ex. EK-204',
+        ar: 'مثلاً: EK-204',
+        en: 'e.g. EK-204',
+    },
+    'admin.fromPlaceholder': {
+        fr: 'p.ex. LHR',
+        ar: 'مثلاً: LHR',
+        en: 'e.g. LHR',
+    },
+    'admin.destinationForm.images': {
+        fr: 'Images de la destination',
+        ar: 'صور الوجهة',
+        en: 'Destination images',
+    },
+    'label.aircraftPlaceholder': {
+        fr: 'p.ex. Airbus A380',
+        ar: 'مثلاً: إيرباص A380',
+        en: 'e.g. Airbus A380',
+    },
+    'label.cabinPlaceholder': {
+        fr: 'p.ex. Business',
+        ar: 'مثلاً: درجة رجال الأعمال',
+        en: 'e.g. Business',
     },
     'admin.destinationForm.descriptionPlaceholder': {
         fr: 'Décrivez la destination en quelques phrases',
@@ -2024,7 +3275,11 @@ export const translations: Record<string, TranslationEntry> = {
     'admin.item': { fr: 'Élément', ar: 'العنصر', en: 'Item' },
     'admin.amount': { fr: 'Montant', ar: 'المبلغ', en: 'Amount' },
     'admin.status': { fr: 'Statut', ar: 'الحالة', en: 'Status' },
-
+    'admin.technicalInfoHint': {
+        fr: 'Affichez les détails techniques de ce vol dans les cartes de résultats de recherche et les détails du vol.',
+        ar: 'اعرض التفاصيل الفنية لهذه الرحلة في بطاقات نتائج البحث وتفاصيل الرحلة.',
+        en: 'Show the technical details of this flight in search result cards and flight details.',
+    },
     // Client Dashboard
     'client.welcome': {
         fr: 'Bienvenue de retour, BelAzurTravel!',
@@ -2045,6 +3300,11 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Pays visités',
         ar: 'البلدان التي تمت زيارتها',
         en: 'Countries Visited',
+    },
+    'client.unreadNotifications': {
+        fr: 'Messages non lus',
+        ar: 'رسائل غير مقروءة',
+        en: 'Unread Messages',
     },
     'client.totalBookings': {
         fr: 'Réservations totales',
@@ -2553,8 +3813,58 @@ translations['admin.settings.addLink'] = {
     ar: 'إضافة رابط',
     en: 'Add link',
 };
+translations['admin.tourForm.namePlaceholder'] = {
+    fr: 'p. ex. Tour au coucher du soleil à Bali',
+    ar: 'مثلاً: جولة غروب الشمس في بالي',
+    en: 'e.g. Bali Sunset Tour',
+};
+translations['admin.tourForm.locationPlaceholder'] = {
+    fr: 'p. ex. Bali, Indonésie',
+    ar: 'مثلاً: بالي، إندونيسيا',
+    en: 'e.g. Bali, Indonesia',
+};
+translations['admin.tourForm.durationPlaceholder'] = {
+    fr: 'p. ex. 5 jours / 4 nuits',
+    ar: 'مثلاً: 5 أيام / 4 ليالٍ',
+    en: 'e.g. 5 days / 4 nights',
+};
+translations['admin.tourForm.descriptionPlaceholder'] = {
+    fr: 'Décrivez les points forts, le rythme et les expériences uniques du circuit...',
+    ar: 'صف أبرز معالم الجولة وإيقاعها والتجارب الفريدة...',
+    en: 'Describe the tour highlights, pace, and unique experiences...',
+};
+translations['admin.tourForm.pricePlaceholder'] = {
+    fr: 'p. ex. 500',
+    ar: 'مثلاً: 500',
+    en: 'e.g. 500',
+};
+translations['admin.tourForm.durationDaysPlaceholder'] = {
+    fr: 'p. ex. 5',
+    ar: 'مثلاً: 5',
+    en: 'e.g. 5',
+};
+translations['admin.tourForm.maxGroupPlaceholder'] = {
+    fr: 'p. ex. 12',
+    ar: 'مثلاً: 12',
+    en: 'e.g. 12',
+};
+translations['admin.invalidPrice'] = {
+    fr: 'Prix invalide',
+    ar: 'سعر غير صالح',
+    en: 'Invalid price',
+};
+translations['admin.invalidDays'] = {
+    fr: 'Nombre de jours invalide',
+    ar: 'عدد أيام غير صالح',
+    en: 'Invalid number of days',
+};
+translations['admin.invalidGroup'] = {
+    fr: 'Taille de groupe invalide',
+    ar: 'حجم مجموعة غير صالح',
+    en: 'Invalid group size',
+};
 translations['admin.settings.businessHours'] = {
-    fr: 'Heures d’ouverture',
+    fr: 'Horaires d’ouverture',
     ar: 'ساعات العمل',
     en: 'Business hours',
 };
@@ -2568,6 +3878,26 @@ translations['admin.settings.hours'] = {
     fr: 'Heures',
     ar: 'الساعات',
     en: 'Hours',
+};
+translations['admin.settings.addTimeRange'] = {
+    fr: 'Ajouter un créneau',
+    ar: 'إضافة فترة زمنية',
+    en: 'Add time range',
+};
+translations['admin.settings.closed'] = {
+    fr: 'Fermé',
+    ar: 'مغلق',
+    en: 'Closed',
+};
+translations['admin.settings.openingHoursHelp'] = {
+    fr: 'Choisissez un jour et ajoutez un ou plusieurs créneaux horaires.',
+    ar: 'اختر يوماً وأضف فترة زمنية واحدة أو أكثر.',
+    en: 'Choose a day and add one or more time ranges.',
+};
+translations['admin.settings.noHours'] = {
+    fr: 'Aucun horaire pour le moment.',
+    ar: 'لا توجد ساعات عمل بعد.',
+    en: 'No opening hours yet.',
 };
 translations['admin.settings.headerLinks'] = {
     fr: 'Liens d’en-tête',
@@ -2650,9 +3980,165 @@ translations['admin.pleaseFixErrors'] = {
     ar: 'يرجى تصحيح الأخطاء قبل المتابعة.',
     en: 'Please fix the errors before continuing.',
 };
+translations['admin.selectedImages'] = {
+    fr: 'Images sélectionnées',
+    ar: 'الصور المحددة',
+    en: 'Selected images',
+};
 
 export function t(key: string, lang: Lang): string {
     const entry = translations[key];
     if (!entry) return key;
     return entry[lang] || key;
 }
+
+translations['admin.hotelForm.namePlaceholder'] = {
+    fr: 'Ex. : Burj Al Arab',
+    ar: 'مثال: برج العرب',
+    en: 'e.g. Burj Al Arab',
+};
+translations['admin.hotelForm.nameHelp'] = {
+    fr: 'Nom commercial complet de l’hôtel.',
+    ar: 'الاسم التجاري الكامل للفندق.',
+    en: 'Full commercial name of the hotel.',
+};
+translations['admin.hotelForm.locationPlaceholder'] = {
+    fr: 'Ex. : Dubaï, EAU',
+    ar: 'مثال: دبي، الإمارات العربية المتحدة',
+    en: 'e.g. Dubai, UAE',
+};
+translations['admin.hotelForm.locationHelp'] = {
+    fr: 'Région géographique ou quartier.',
+    ar: 'المنطقة الجغرافية أو الحي.',
+    en: 'Geographic region or neighborhood.',
+};
+translations['admin.hotelForm.categoryHelp'] = {
+    fr: 'Sélectionnez la catégorie.',
+    ar: 'اختر فئة المنشأة.',
+    en: 'Select the property class.',
+};
+translations['admin.hotelForm.cityPlaceholder'] = {
+    fr: 'Ex. : Dubaï',
+    ar: 'مثال: دبي',
+    en: 'e.g. Dubai',
+};
+translations['admin.hotelForm.countryPlaceholder'] = {
+    fr: 'Ex. : Émirats arabes unis',
+    ar: 'مثال: الإمارات العربية المتحدة',
+    en: 'e.g. United Arab Emirates',
+};
+translations['admin.hotelForm.pricePlaceholder'] = {
+    fr: 'Ex. : 250',
+    ar: 'مثال: 250',
+    en: 'e.g. 250',
+};
+translations['admin.hotelForm.priceHelp'] = {
+    fr: 'Prix de base par nuit en DT.',
+    ar: 'السعر الأساسي لكل ليلة بالدينار التونسي.',
+    en: 'Base price per night in DT.',
+};
+translations['admin.hotelForm.ratingPlaceholder'] = {
+    fr: 'Ex. : 4.8',
+    ar: 'مثال: 4.8',
+    en: 'e.g. 4.8',
+};
+translations['admin.hotelForm.ratingHelp'] = {
+    fr: 'Note utilisateur (1-5).',
+    ar: 'تقييم المستخدم (1-5).',
+    en: 'User rating (1-5).',
+};
+translations['admin.hotelForm.slugPlaceholder'] = {
+    fr: 'Ex. : dubai',
+    ar: 'مثال: dubai',
+    en: 'e.g. dubai',
+};
+translations['admin.hotelForm.slugHelp'] = {
+    fr: 'Slug URL de la destination.',
+    ar: 'مُعرّف الرابط للوجهة التي ينتمي إليها هذا الفندق.',
+    en: 'The URL slug for the destination this hotel belongs to.',
+};
+translations['admin.hotelForm.starsPlaceholder'] = {
+    fr: 'Ex. : 5',
+    ar: 'مثال: 5',
+    en: 'e.g. 5',
+};
+translations['admin.hotelForm.starsHelp'] = {
+    fr: 'Nombre d’étoiles.',
+    ar: 'تصنيف الفندق بالنجوم.',
+    en: 'Hotel star rating.',
+};
+translations['admin.hotelForm.reviewsPlaceholder'] = {
+    fr: 'Ex. : 150',
+    ar: 'مثال: 150',
+    en: 'e.g. 150',
+};
+translations['admin.hotelForm.reviewsHelp'] = {
+    fr: 'Nombre total d’avis.',
+    ar: 'إجمالي عدد المراجعات.',
+    en: 'Total number of reviews.',
+};
+translations['admin.hotelForm.addressPlaceholder'] = {
+    fr: 'Adresse complète',
+    ar: 'العنوان الكامل',
+    en: 'Full address',
+};
+translations['admin.hotelForm.addressHelp'] = {
+    fr: 'Rue, bâtiment ou zone.',
+    ar: 'الشارع أو المبنى أو المنطقة.',
+    en: 'Street, building, or area.',
+};
+translations['admin.hotelForm.phonePlaceholder'] = {
+    fr: '+1 234 567 890',
+    ar: '+1 234 567 890',
+    en: '+1 234 567 890',
+};
+translations['admin.hotelForm.phoneHelp'] = {
+    fr: 'Numéro de téléphone officiel.',
+    ar: 'رقم الهاتف الرسمي.',
+    en: 'Official phone number.',
+};
+translations['admin.hotelForm.whatsappPlaceholder'] = {
+    fr: '+1 234 567 890',
+    ar: '+1 234 567 890',
+    en: '+1 234 567 890',
+};
+translations['admin.hotelForm.whatsappHelp'] = {
+    fr: 'Numéro WhatsApp professionnel.',
+    ar: 'رقم واتساب للأعمال.',
+    en: 'WhatsApp business number.',
+};
+translations['admin.hotelForm.coreDetails'] = {
+    fr: 'Détails de l’hôtel',
+    ar: 'تفاصيل الفندق',
+    en: 'Hotel details',
+};
+translations['admin.hotelForm.coreDetailsHint'] = {
+    fr: 'Gérez les informations de base de l’hôtel.',
+    ar: 'إدارة المعلومات الأساسية للفندق.',
+    en: 'Manage core hotel information.',
+};
+translations['admin.hotelForm.pricing'] = {
+    fr: 'Tarification et structure',
+    ar: 'التسعير والبنية',
+    en: 'Pricing and structure',
+};
+translations['admin.hotelForm.contact'] = {
+    fr: 'Contact et profil',
+    ar: 'الاتصال والملف الشخصي',
+    en: 'Contact and profile',
+};
+translations['admin.hotelForm.contactHint'] = {
+    fr: 'Informations de contact et adresse.',
+    ar: 'معلومات الاتصال والعنوان.',
+    en: 'Contact information and address.',
+};
+translations['admin.hotelForm.media'] = {
+    fr: 'Médias',
+    ar: 'الوسائط',
+    en: 'Media',
+};
+translations['admin.hotelForm.mediaHint'] = {
+    fr: 'Images et listes d’équipements.',
+    ar: 'الصور وقوائم المرافق.',
+    en: 'Images and amenity lists.',
+};

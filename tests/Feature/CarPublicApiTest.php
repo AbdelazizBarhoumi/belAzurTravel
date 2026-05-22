@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Car;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -32,7 +31,7 @@ class CarPublicApiTest extends TestCase
             ->assertJson([
                 'slug' => 'tesla-model-3',
                 'name' => ['en' => 'Tesla Model 3'],
-                'gallery' => ['/img1.jpg'],
+                'gallery' => ['img1.jpg'],
                 'features' => [['en' => 'Auto-pilot']],
                 'policy' => [['en' => 'Age 21+']],
             ])

@@ -1,8 +1,11 @@
 import { motion } from 'framer-motion';
 import { Car, Coffee, Droplet, Dumbbell, Utensils, Wifi } from 'lucide-react';
+import { useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
+import { notifyInteraction } from '@/api/interactions.api';
 import { HotelInfo } from '@/components/cards/HotelInfo';
 import { StickyBookingCard } from '@/components/cards/StickyBookingCard';
+import { BookingDialog } from '@/components/forms/BookingDialog';
 import { PageShell } from '@/components/layout/PageShell';
 import { RoomsList } from '@/components/lists/RoomsList';
 import { Gallery } from '@/components/media/Gallery';
@@ -50,17 +53,24 @@ function normalizeAmenityKey(value: string): string {
 }
 
 function toAmenityView(
-    amenity: string | Record<string, string>,
+    amenity: { name: Record<string, string>; icon?: string | null },
     lang: Lang,
     index: number,
 ): AmenityView {
-    const name = localizeText(amenity, lang);
+    const nameData = amenity.name;
+    const name = localizeText(nameData, lang);
     const key = normalizeAmenityKey(name);
+
+    let icon: AmenityIcon = (AMENITY_ICONS[key] ?? Wifi) as AmenityIcon;
+
+    if (amenity.icon) {
+        icon = (AMENITY_ICONS[String(amenity.icon)] ?? icon) as AmenityIcon;
+    }
 
     return {
         id: `amenity-${index + 1}`,
         name,
-        icon: AMENITY_ICONS[key] ?? Wifi,
+        icon,
     };
 }
 
@@ -68,6 +78,9 @@ function toRoomView(
     room: NonNullable<HotelDetailLookupData['rooms']>[number],
     lang: Lang,
 ): RoomView {
+    const features = Array.isArray(room.features) ? room.features : [];
+    const images = Array.isArray(room.images) ? room.images : [];
+
     return {
         id: room.id,
         name: localizeText(room.name, lang),
@@ -75,8 +88,8 @@ function toRoomView(
         pricePerNight: room.pricePerNight,
         capacity: room.capacity,
         size: room.size,
-        features: room.features.map((feature) => localizeText(feature, lang)),
-        images: room.images,
+        features: features.map((feature) => localizeText(feature, lang)),
+        images,
     };
 }
 
@@ -84,6 +97,7 @@ export default function HotelDetail() {
     const { id } = useParams<{ id: string }>();
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
+    const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
 
     if (isLoading) {
         return null;
@@ -94,17 +108,41 @@ export default function HotelDetail() {
     }
 
     const detail = hotel as HotelDetailLookupData;
-    const gallery = detail.gallery?.length
+    const otherImages = detail.gallery?.length
         ? detail.gallery
         : detail.images?.length
           ? detail.images
-          : detail.image
-            ? [detail.image]
-            : [];
+          : [];
+    const gallery = detail.image
+        ? [
+              detail.image,
+              ...otherImages.filter((image) => image !== detail.image),
+          ]
+        : otherImages;
     const rooms = (detail.rooms ?? []).map((room) => toRoomView(room, lang));
-    const amenities = (detail.amenities ?? []).map((amenity, index) =>
-        toAmenityView(amenity, lang, index),
-    );
+    const amenities = (detail.amenities ?? [])
+        .filter((amenity) => {
+            const nameData =
+                typeof amenity === 'object' &&
+                amenity !== null &&
+                'name' in amenity
+                    ? ((amenity as { name?: Record<string, string> }).name ??
+                      {})
+                    : {};
+            return Boolean(
+                nameData && (nameData.en || nameData.fr || nameData.ar),
+            );
+        })
+        .map((amenity, index) =>
+            toAmenityView(
+                amenity as {
+                    name: Record<string, string>;
+                    icon?: string | null;
+                },
+                lang,
+                index,
+            ),
+        );
     const minPrice = rooms.length
         ? Math.min(...rooms.map((room) => room.pricePerNight))
         : (detail.price ?? 0);
@@ -123,8 +161,16 @@ export default function HotelDetail() {
     };
 
     const handleBookRoom = (roomId: string) => {
+        const room = rooms.find((r) => r.id === roomId);
+        if (room) {
+            setSelectedRoom(room);
+        }
+    };
+
+    const handleWhatsAppInquiry = () => {
+        notifyInteraction('whatsapp');
         const message = encodeURIComponent(
-            `Hello, I want to reserve:\nHotel: ${title}\nRoom: ${roomId}\nPlease confirm availability.`,
+            `Hello, I want to reserve:\nHotel: ${title}\nPlease confirm availability.`,
         );
 
         if (whatsapp) {
@@ -148,6 +194,7 @@ export default function HotelDetail() {
                 animate={{ opacity: 1, y: 0 }}
                 className="grid gap-10 lg:grid-cols-[2fr_1fr]"
             >
+                <div className="flex flex-col">
                     <Gallery
                         images={gallery}
                         hotelName={title}
@@ -164,24 +211,34 @@ export default function HotelDetail() {
                     <div className="lg:hidden">
                         <StickyBookingCard
                             minPrice={minPrice}
-                            currency="$"
+                            currency="DT"
                             priceLabel={t('hotelDetail.startingFrom') || 'From'}
                             priceSuffix="/night"
                             title={title}
                             location={location}
                             description={description}
+                            entityType="hotel"
+                            itemId={detail.id}
                             rating={detail.rating}
                             reviews={detail.reviews}
                             primaryButtonLabel={
                                 t('hotelDetail.reserveNow') || 'Book now'
                             }
                             onBook={handleReserve}
+                            onWhatsApp={handleWhatsAppInquiry}
                         />
                     </div>
 
                     <HotelInfo
                         description={description}
+                        category={
+                            detail.category
+                                ? localizeText(detail.category, lang)
+                                : ''
+                        }
                         amenities={amenities}
+                        address={detail.address}
+                        phone={detail.phone}
                     />
 
                     <motion.div
@@ -192,25 +249,40 @@ export default function HotelDetail() {
                     >
                         <RoomsList rooms={rooms} onBookRoom={handleBookRoom} />
                     </motion.div>
+                </div>
 
                 <aside className="sticky top-24 hidden self-start lg:block">
                     <StickyBookingCard
                         minPrice={minPrice}
-                        currency="$"
+                        currency="DT"
                         priceLabel={t('hotelDetail.startingFrom') || 'From'}
                         priceSuffix="/night"
                         title={title}
                         location={location}
                         description={description}
+                        entityType="hotel"
+                        itemId={detail.id}
                         rating={detail.rating}
                         reviews={detail.reviews}
                         primaryButtonLabel={
                             t('hotelDetail.reserveNow') || 'Book now'
                         }
                         onBook={handleReserve}
+                        onWhatsApp={handleWhatsAppInquiry}
                     />
                 </aside>
             </motion.div>
+
+            {selectedRoom && (
+                <BookingDialog
+                    open={!!selectedRoom}
+                    onOpenChange={(open) => !open && setSelectedRoom(null)}
+                    type="hotel"
+                    itemId={detail.id}
+                    itemName={`${title} - ${selectedRoom.name}`}
+                    amount={selectedRoom.pricePerNight}
+                />
+            )}
         </PageShell>
     );
 }

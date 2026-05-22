@@ -48,13 +48,13 @@ class BookingSeeder extends Seeder
                 ->first();
 
             $payload = [
-                    'user_id' => User::query()->where('name', $client)->value('id'),
-                    'client' => ['name' => $client, 'email' => strtolower(str_replace(' ', '.', $client)).'@example.com'],
-                    'subject' => ['en' => $subject, 'fr' => $subject, 'ar' => $subject],
-                    'message' => ['en' => $message, 'fr' => $message, 'ar' => $message],
-                    'status' => $status,
-                    'priority' => $priority,
-                    'resolved_at' => $status === 'resolved' ? now() : null,
+                'user_id' => User::query()->where('name', $client)->value('id'),
+                'client' => ['name' => $client, 'email' => strtolower(str_replace(' ', '.', $client)).'@example.com'],
+                'subject' => ['en' => $subject, 'fr' => $subject, 'ar' => $subject],
+                'message' => ['en' => $message, 'fr' => $message, 'ar' => $message],
+                'status' => $status,
+                'priority' => $priority,
+                'resolved_at' => $status === 'resolved' ? now() : null,
             ];
 
             $inquiry ? $inquiry->update($payload) : SupportInquiry::query()->create($payload);

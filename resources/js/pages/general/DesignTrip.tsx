@@ -30,7 +30,6 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/DatePicker';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 type Option = { id: string; label: string; icon: LucideIcon; desc?: string };
 const destinations: Option[] = [
@@ -71,15 +70,20 @@ const transports: Option[] = [
     { id: 'cruise', label: 'Cruise', icon: Ship },
 ];
 const budgets: Option[] = [
-    { id: 'eco', label: 'Economy', icon: Wallet, desc: '< $1,500 / pp' },
-    { id: 'comfort', label: 'Comfort', icon: Hotel, desc: '$1,500 – $3,500' },
+    { id: 'eco', label: 'Economy', icon: Wallet, desc: '< 1,500 DT / pp' },
+    {
+        id: 'comfort',
+        label: 'Comfort',
+        icon: Hotel,
+        desc: '1,500 DT – 3,500 DT',
+    },
     {
         id: 'premium',
         label: 'Premium',
         icon: Sparkles,
-        desc: '$3,500 – $7,000',
+        desc: '3,500 DT – 7,000 DT',
     },
-    { id: 'luxury', label: 'Luxury', icon: Heart, desc: '$7,000+' },
+    { id: 'luxury', label: 'Luxury', icon: Heart, desc: '7,000 DT+' },
 ];
 const steps = [
     {
@@ -341,11 +345,23 @@ const DesignTrip = () => {
                                                     Start Date
                                                 </Label>
                                                 <DatePicker
-                                                    date={data.startDate ? new Date(data.startDate) : undefined}
+                                                    date={
+                                                        data.startDate
+                                                            ? new Date(
+                                                                  data.startDate,
+                                                              )
+                                                            : undefined
+                                                    }
                                                     onDateChange={(date) =>
                                                         set(
                                                             'startDate',
-                                                            date ? date.toISOString().split('T')[0] : '',
+                                                            date
+                                                                ? date
+                                                                      .toISOString()
+                                                                      .split(
+                                                                          'T',
+                                                                      )[0]
+                                                                : '',
                                                         )
                                                     }
                                                 />
@@ -355,11 +371,23 @@ const DesignTrip = () => {
                                                     End Date
                                                 </Label>
                                                 <DatePicker
-                                                    date={data.endDate ? new Date(data.endDate) : undefined}
+                                                    date={
+                                                        data.endDate
+                                                            ? new Date(
+                                                                  data.endDate,
+                                                              )
+                                                            : undefined
+                                                    }
                                                     onDateChange={(date) =>
                                                         set(
                                                             'endDate',
-                                                            date ? date.toISOString().split('T')[0] : '',
+                                                            date
+                                                                ? date
+                                                                      .toISOString()
+                                                                      .split(
+                                                                          'T',
+                                                                      )[0]
+                                                                : '',
                                                         )
                                                     }
                                                 />

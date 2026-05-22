@@ -68,12 +68,20 @@ const Login = () => {
                 if (res.status === 422) {
                     setErrors(errorData.errors || {});
                     setPassword('');
-                    toast.error(errorData.message || t('auth.invalidCredentials'));
+                    toast.error(
+                        errorData.message || t('auth.invalidCredentials'),
+                    );
                 } else if (res.status === 419) {
-                    toast.error(t('auth.sessionExpired') || 'Session expired. Please refresh the page.');
+                    toast.error(
+                        t('auth.sessionExpired') ||
+                            'Session expired. Please refresh the page.',
+                    );
                     setTimeout(() => window.location.reload(), 2000);
                 } else {
-                    toast.error(t('auth.loginFailed') || 'Login failed. Please try again.');
+                    toast.error(
+                        t('auth.loginFailed') ||
+                            'Login failed. Please try again.',
+                    );
                 }
                 return;
             }
@@ -93,7 +101,9 @@ const Login = () => {
             navigate(redirectAfterLogin(user.role), { replace: true });
         } catch (error) {
             console.error('Login catch:', error);
-            toast.error(t('auth.loginFailed') || 'Login failed. Please try again.');
+            toast.error(
+                t('auth.loginFailed') || 'Login failed. Please try again.',
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -139,7 +149,9 @@ const Login = () => {
                                         }
                                     }}
                                     className={`w-full rounded-xl border bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                                        errors.email ? 'border-destructive' : 'border-border'
+                                        errors.email
+                                            ? 'border-destructive'
+                                            : 'border-border'
                                     }`}
                                     required
                                     disabled={isSubmitting}
@@ -168,7 +180,9 @@ const Login = () => {
                                         }
                                     }}
                                     className={`w-full rounded-xl border bg-background py-3 pl-11 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                                        errors.password ? 'border-destructive' : 'border-border'
+                                        errors.password
+                                            ? 'border-destructive'
+                                            : 'border-border'
                                     }`}
                                     required
                                     disabled={isSubmitting}

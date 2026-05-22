@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { csrfToken } from '@/api/http';
+import { getAuthUser } from '@/auth';
 import type { Lang } from '@/i18n/translations';
 import { t as translate } from '@/i18n/translations';
 
@@ -40,6 +41,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     const setLang = (l: Lang) => {
         setLangState(l);
+
+        // Only attempt to persist the language server-side if the user
+        // appears to be authenticated. Guests should not trigger a
+        // /api/user/language request which results in a 401.
+        try {
+            const user = getAuthUser();
+            if (!user) return;
+        } catch {
+            // If anything goes wrong reading auth state, skip the server
+            // call to avoid unnecessary 401s in the console.
+            return;
+        }
+
         void fetch('/api/user/language', {
             method: 'PATCH',
             credentials: 'include',

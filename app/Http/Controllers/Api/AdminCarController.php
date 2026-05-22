@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Car;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -21,26 +23,30 @@ use Illuminate\Support\Str;
  */
 class AdminCarController extends Controller
 {
-    use \App\Concerns\HandlesAdminMedia;
+    use HandlesAdminMedia;
 
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.cars', now()->addMinutes(5), function () {
             return Car::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
         });
+
         return response()->json(['data' => $data]);
     }
 
     public function store(Request $request): JsonResponse
     {
-        $item = Car::create($this->attributes($request));
+        $attrs = $this->attributes($request);
+        $item = Car::create($attrs);
         $this->flushAdminCache('cars', $item->slug ?? null);
+
         return response()->json(['data' => $this->adminPayload($item)], 201);
     }
 
     public function show(int|string $id): JsonResponse
     {
         $item = Car::query()->findOrFail($id);
+
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
@@ -49,6 +55,7 @@ class AdminCarController extends Controller
         $item = Car::query()->findOrFail($id);
         $item->update($this->attributes($request, $item));
         $this->flushAdminCache('cars', $item->slug ?? null);
+
         return response()->json(['data' => $this->adminPayload($item->refresh())]);
     }
 
@@ -58,6 +65,7 @@ class AdminCarController extends Controller
         $identifier = $item->slug ?? (string) $id;
         $item->delete();
         $this->flushAdminCache('cars', $identifier);
+
         return response()->json(['message' => 'deleted']);
     }
 
@@ -70,6 +78,7 @@ class AdminCarController extends Controller
             'name_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'name_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'name_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'category_key' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'category_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -109,14 +118,16 @@ class AdminCarController extends Controller
         $data = $request->validate($rules);
 
         $name = $this->localized($data, 'name', $existing?->name ?? null, 'car');
-        $slug = $existing->slug ?? Str::slug($name['en'] ?? 'car') . '-' . Str::lower(Str::random(4));
+        $slug = $existing->slug ?? Str::slug($name['en'] ?? 'car').'-'.Str::lower(Str::random(4));
+        $category = $this->resolveCategory($data, $existing);
 
-        $gallery = $this->handleGallery($request, data_get($existing, 'details.gallery', []));
+        $gallery = $this->handleGallery($request, data_get($existing, 'details.gallery', []), 'uploads/cars');
 
         return [
             'slug' => $slug,
             'name' => $name,
-            'category' => $this->localized($data, 'category', $existing?->category),
+            'category_key' => $category['key'] !== '' ? $category['key'] : null,
+            'category' => $category['name'],
             'price' => (int) ($data['price'] ?? 0),
             'seats' => (int) ($data['seats'] ?? 0),
             'fuel' => $this->localized($data, 'fuel', $existing?->fuel),
@@ -128,22 +139,34 @@ class AdminCarController extends Controller
 
     private function adminPayload(Model $item): array
     {
+        $gallery = array_map(fn ($img) => $this->normalizeApiOutputPath($img), $item->details['gallery'] ?? [$item->image]);
+        $category = $this->resolveCategory([], $item);
+
         return [
             'id' => (string) $item->id,
             ...$this->flatLocalized('name', $item->name),
-            ...$this->flatLocalized('category', $item->category),
+            'category_key' => $category['key'] !== '' ? $category['key'] : null,
+            ...$this->flatLocalized('category', $category['name']),
             'price' => $item->price,
             'seats' => $item->seats,
             ...$this->flatLocalized('fuel', $item->fuel),
             ...$this->flatLocalized('transmission', $item->transmission),
-            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'image' => $this->normalizeApiOutputPath($item->image),
             ...$this->flatLocalized('description', $item->details['description'] ?? []),
-            'gallery' => array_map(fn($img) => str_starts_with($img, 'storage/') ? asset($img) : asset('storage/' . $img), $item->details['gallery'] ?? [$item->image]),
+            'gallery' => $gallery,
+            'images' => $gallery,
             'features' => $item->details['features'] ?? [],
             'policy' => $item->details['policy'] ?? [],
         ];
     }
 
+    /**
+     * Normalize stored media paths for API output.
+     *
+     * - If stored as "storage/<path>", return "/<path>"
+     * - If stored as an absolute URL, return the path portion with a leading slash
+     * - If stored as "images/.." or " /images/...", return with leading slash
+     */
     private function carDetails(array $data, ?Model $existing, array $description, array $gallery): array
     {
         $details = $existing?->details ?? [];
@@ -189,11 +212,88 @@ class AdminCarController extends Controller
         ];
     }
 
+    /**
+     * @return array{key: string, name: array{en: string, fr: string, ar: string}}
+     */
+    private function resolveCategory(array $data, ?Model $existing = null): array
+    {
+        $categories = Category::query()
+            ->where('entity_type', 'cars')
+            ->get();
+
+        $incomingCategory = $this->normalizeLocalizedValue(
+            [
+                'en' => $data['category_en'] ?? ($data['category'] ?? null),
+                'fr' => $data['category_fr'] ?? ($data['category'] ?? null),
+                'ar' => $data['category_ar'] ?? ($data['category'] ?? null),
+            ],
+            '',
+        );
+
+        $existingCategory = $this->normalizeLocalizedValue(
+            data_get($existing, 'category'),
+            '',
+        );
+
+        $candidateValues = array_filter([
+            $this->stringValue($data['category_key'] ?? null),
+            $this->stringValue(data_get($existing, 'category_key')),
+            $this->stringValue($data['category'] ?? null),
+            $this->stringValue($data['category_en'] ?? null),
+            $this->stringValue($data['category_fr'] ?? null),
+            $this->stringValue($data['category_ar'] ?? null),
+            $this->stringValue($incomingCategory['en'] ?? null),
+            $this->stringValue($incomingCategory['fr'] ?? null),
+            $this->stringValue($incomingCategory['ar'] ?? null),
+            $this->stringValue($existingCategory['en'] ?? null),
+            $this->stringValue($existingCategory['fr'] ?? null),
+            $this->stringValue($existingCategory['ar'] ?? null),
+        ]);
+
+        foreach ($candidateValues as $candidate) {
+            $match = $categories->first(function (Category $category) use ($candidate) {
+                $names = array_filter([
+                    $category->key,
+                    data_get($category->name, 'en'),
+                    data_get($category->name, 'fr'),
+                    data_get($category->name, 'ar'),
+                ]);
+
+                return in_array($candidate, $names, true);
+            });
+
+            if ($match) {
+                return [
+                    'key' => $match->key,
+                    'name' => $this->normalizeLocalizedValue($match->name, $match->key),
+                ];
+            }
+        }
+
+        $fallbackKey = $this->stringValue($data['category_key'] ?? null)
+            ?: $this->stringValue(data_get($existing, 'category_key'));
+
+        return [
+            'key' => $fallbackKey,
+            'name' => $incomingCategory['en'] !== ''
+                || $incomingCategory['fr'] !== ''
+                || $incomingCategory['ar'] !== ''
+                ? $incomingCategory
+                : $existingCategory,
+        ];
+    }
+
+    private function stringValue(mixed $value): string
+    {
+        return is_string($value) ? trim($value) : '';
+    }
+
     private function localizedValue(array|string|null $value): string
     {
         if (is_array($value)) {
             return (string) ($value['en'] ?? $value['fr'] ?? $value['ar'] ?? '');
         }
+
         return (string) ($value ?? '');
     }
 
@@ -231,9 +331,9 @@ class AdminCarController extends Controller
     private function flushAdminCache(string $type, ?string $identifier = null): void
     {
         Cache::forget("admin.entity.{$type}");
-        Cache::forget("entity.{$type}.index");
+        Cache::forget("{$type}.index");
         if ($identifier !== null && $identifier !== '') {
-            Cache::forget("entity.{$type}.{$identifier}");
+            Cache::forget("{$type}.{$identifier}");
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Car;
 use Illuminate\Http\JsonResponse;
@@ -9,12 +10,14 @@ use Illuminate\Support\Facades\Cache;
 
 class CarController extends Controller
 {
+    use HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $result = Cache::remember(
             'cars.index',
             now()->addMinutes(10),
-            function() {
+            function () {
                 return Car::query()->oldest('id')->get()->map(
                     fn (Car $item) => $this->payload($item)
                 );
@@ -49,12 +52,11 @@ class CarController extends Controller
             'seats' => $item->seats,
             'fuel' => $item->fuel,
             'transmission' => $item->transmission,
-            'image' => $item->image ? asset('storage/' . $item->image) : null,
-            'gallery' => array_map(fn($img) => asset('storage/' . $img), $details['gallery'] ?? []),
+            'image' => $this->normalizeApiOutputPath($item->image),
+            'gallery' => array_map(fn ($img) => $this->normalizeApiOutputPath($img), $details['gallery'] ?? []),
             'description' => $details['description'] ?? null,
             'features' => $details['features'] ?? [],
             'policy' => $details['policy'] ?? [],
         ];
     }
 }
-

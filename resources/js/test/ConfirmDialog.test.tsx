@@ -27,7 +27,9 @@ describe('ConfirmDialog', () => {
         expect(
             screen.getByText('This action cannot be undone.'),
         ).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Close' })).toHaveClass('end-4');
+        expect(screen.getByRole('button', { name: 'Close' })).toHaveClass(
+            'end-4',
+        );
 
         fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
@@ -56,8 +58,12 @@ describe('ConfirmDialog', () => {
         expect(dialog).toHaveClass('left-1/2');
         expect(dialog).toHaveAttribute('dir', 'rtl');
         expect(screen.getByText('حذف العنصر؟')).toBeInTheDocument();
-        expect(screen.getByText('هل أنت متأكد أنك تريد حذف هذا العنصر؟')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Close' })).toHaveClass('end-4');
+        expect(
+            screen.getByText('هل أنت متأكد أنك تريد حذف هذا العنصر؟'),
+        ).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Close' })).toHaveClass(
+            'end-4',
+        );
 
         fireEvent.click(screen.getByRole('button', { name: 'حذف' }));
 

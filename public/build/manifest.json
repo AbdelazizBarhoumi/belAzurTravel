@@ -1,0 +1,119 @@
+{
+  "node_modules/@fontsource/tajawal/files/tajawal-arabic-300-normal.woff": {
+    "file": "assets/tajawal-arabic-300-normal-Bq0yWa0Z.woff",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-arabic-300-normal.woff"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-arabic-300-normal.woff2": {
+    "file": "assets/tajawal-arabic-300-normal-By07C9pa.woff2",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-arabic-300-normal.woff2"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-arabic-400-normal.woff": {
+    "file": "assets/tajawal-arabic-400-normal-DCQxawbB.woff",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-arabic-400-normal.woff"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-arabic-400-normal.woff2": {
+    "file": "assets/tajawal-arabic-400-normal-CyCXRvzh.woff2",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-arabic-400-normal.woff2"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-arabic-500-normal.woff": {
+    "file": "assets/tajawal-arabic-500-normal-CbVEaYEW.woff",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-arabic-500-normal.woff"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-arabic-500-normal.woff2": {
+    "file": "assets/tajawal-arabic-500-normal-BZ8ojJNu.woff2",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-arabic-500-normal.woff2"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-arabic-700-normal.woff": {
+    "file": "assets/tajawal-arabic-700-normal-9L7Zusdl.woff",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-arabic-700-normal.woff"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-arabic-700-normal.woff2": {
+    "file": "assets/tajawal-arabic-700-normal-D2-eand5.woff2",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-arabic-700-normal.woff2"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-latin-300-normal.woff": {
+    "file": "assets/tajawal-latin-300-normal-C0-xR3ms.woff",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-latin-300-normal.woff"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-latin-300-normal.woff2": {
+    "file": "assets/tajawal-latin-300-normal-CeEKeOxZ.woff2",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-latin-300-normal.woff2"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-latin-400-normal.woff": {
+    "file": "assets/tajawal-latin-400-normal-BdYcZznU.woff",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-latin-400-normal.woff"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-latin-400-normal.woff2": {
+    "file": "assets/tajawal-latin-400-normal-BVNSOH3d.woff2",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-latin-400-normal.woff2"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-latin-500-normal.woff": {
+    "file": "assets/tajawal-latin-500-normal-DU9v6xgj.woff",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-latin-500-normal.woff"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-latin-500-normal.woff2": {
+    "file": "assets/tajawal-latin-500-normal-CoYeBiSI.woff2",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-latin-500-normal.woff2"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-latin-700-normal.woff": {
+    "file": "assets/tajawal-latin-700-normal-CV3bxpHe.woff",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-latin-700-normal.woff"
+  },
+  "node_modules/@fontsource/tajawal/files/tajawal-latin-700-normal.woff2": {
+    "file": "assets/tajawal-latin-700-normal-BypgxfGb.woff2",
+    "src": "node_modules/@fontsource/tajawal/files/tajawal-latin-700-normal.woff2"
+  },
+  "resources/js/assets/brand-logo.png": {
+    "file": "assets/brand-logo-Bwew-Sie.png",
+    "src": "resources/js/assets/brand-logo.png"
+  },
+  "resources/js/assets/dest-bali.jpg": {
+    "file": "assets/dest-bali-CVuf_1w8.jpg",
+    "src": "resources/js/assets/dest-bali.jpg"
+  },
+  "resources/js/assets/dest-dubai.jpg": {
+    "file": "assets/dest-dubai-tT4ViG37.jpg",
+    "src": "resources/js/assets/dest-dubai.jpg"
+  },
+  "resources/js/assets/dest-paris.jpg": {
+    "file": "assets/dest-paris-CrE_onAU.jpg",
+    "src": "resources/js/assets/dest-paris.jpg"
+  },
+  "resources/js/assets/dest-santorini.jpg": {
+    "file": "assets/dest-santorini-Dovs8nRZ.jpg",
+    "src": "resources/js/assets/dest-santorini.jpg"
+  },
+  "resources/js/assets/hero-travel.jpg": {
+    "file": "assets/hero-travel-C81jCcUX.jpg",
+    "src": "resources/js/assets/hero-travel.jpg"
+  },
+  "resources/js/main.tsx": {
+    "file": "assets/main-CNq0ndD6.js",
+    "name": "main",
+    "src": "resources/js/main.tsx",
+    "isEntry": true,
+    "css": [
+      "assets/main-BRmsHZuv.css"
+    ],
+    "assets": [
+      "assets/brand-logo-Bwew-Sie.png",
+      "assets/hero-travel-C81jCcUX.jpg",
+      "assets/tajawal-arabic-300-normal-By07C9pa.woff2",
+      "assets/tajawal-arabic-300-normal-Bq0yWa0Z.woff",
+      "assets/tajawal-latin-300-normal-CeEKeOxZ.woff2",
+      "assets/tajawal-latin-300-normal-C0-xR3ms.woff",
+      "assets/tajawal-arabic-400-normal-CyCXRvzh.woff2",
+      "assets/tajawal-arabic-400-normal-DCQxawbB.woff",
+      "assets/tajawal-latin-400-normal-BVNSOH3d.woff2",
+      "assets/tajawal-latin-400-normal-BdYcZznU.woff",
+      "assets/tajawal-arabic-500-normal-BZ8ojJNu.woff2",
+      "assets/tajawal-arabic-500-normal-CbVEaYEW.woff",
+      "assets/tajawal-latin-500-normal-CoYeBiSI.woff2",
+      "assets/tajawal-latin-500-normal-DU9v6xgj.woff",
+      "assets/tajawal-arabic-700-normal-D2-eand5.woff2",
+      "assets/tajawal-arabic-700-normal-9L7Zusdl.woff",
+      "assets/tajawal-latin-700-normal-BypgxfGb.woff2",
+      "assets/tajawal-latin-700-normal-CV3bxpHe.woff"
+    ]
+  }
+}

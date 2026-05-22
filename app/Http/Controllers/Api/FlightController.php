@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Flight;
 use Illuminate\Http\JsonResponse;
@@ -9,12 +10,14 @@ use Illuminate\Support\Facades\Cache;
 
 class FlightController extends Controller
 {
+    use HandlesAdminMedia;
+
     public function index(): JsonResponse
     {
         $result = Cache::remember(
             'entity.flights.index',
             now()->addMinutes(10),
-            function() {
+            function () {
                 return Flight::query()->oldest('id')->get()->map(
                     fn (Flight $item) => $this->payload($item)
                 );
@@ -47,6 +50,7 @@ class FlightController extends Controller
             'baggage' => $details['baggage'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'refund' => $details['refund'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
         ];
+
         return [
             'id' => $item->code,
             'code' => $item->code,
@@ -58,6 +62,7 @@ class FlightController extends Controller
             'stops' => $item->stops,
             'departure' => $item->departure,
             'arrival' => $item->arrival,
+            'image' => $this->normalizeApiOutputPath($item->image),
             'details' => $detailsPayload,
             'date' => $detailsPayload['date'],
             'seats' => $detailsPayload['seats'],
@@ -68,4 +73,3 @@ class FlightController extends Controller
         ];
     }
 }
-

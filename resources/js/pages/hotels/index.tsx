@@ -6,9 +6,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { StarRating } from '@/components/ui/StarRating';
-import { DatePicker } from '@/components/ui/DatePicker';
 import { TagFilter, type Tag } from '@/components/ui/TagFilter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -210,18 +210,42 @@ export default function Hotels() {
                                 </span>
                                 <div className="grid grid-cols-2 gap-2">
                                     <DatePicker
-                                        date={fromDate ? new Date(fromDate) : undefined}
-                                        onDateChange={(date) =>
-                                            setFromDate(date ? date.toISOString().split('T')[0] : '')
+                                        date={
+                                            fromDate
+                                                ? new Date(fromDate)
+                                                : undefined
                                         }
-                                        placeholder={t('search.placeholders.checkIn')}
+                                        onDateChange={(date) =>
+                                            setFromDate(
+                                                date
+                                                    ? date
+                                                          .toISOString()
+                                                          .split('T')[0]
+                                                    : '',
+                                            )
+                                        }
+                                        placeholder={t(
+                                            'search.placeholders.checkIn',
+                                        )}
                                     />
                                     <DatePicker
-                                        date={toDate ? new Date(toDate) : undefined}
-                                        onDateChange={(date) =>
-                                            setToDate(date ? date.toISOString().split('T')[0] : '')
+                                        date={
+                                            toDate
+                                                ? new Date(toDate)
+                                                : undefined
                                         }
-                                        placeholder={t('search.placeholders.checkOut')}
+                                        onDateChange={(date) =>
+                                            setToDate(
+                                                date
+                                                    ? date
+                                                          .toISOString()
+                                                          .split('T')[0]
+                                                    : '',
+                                            )
+                                        }
+                                        placeholder={t(
+                                            'search.placeholders.checkOut',
+                                        )}
                                     />
                                 </div>
                             </label>

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Hotel;
 use App\Models\Destination;
+use App\Models\Hotel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -26,8 +26,9 @@ class AdminImageUploadTest extends TestCase
         // Helper to create a valid PNG upload without requiring GD extension
         $makePngUpload = function (string $filename): UploadedFile {
             $data = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
-            $path = sys_get_temp_dir().'/'.uniqid('testimg_')."_".$filename;
+            $path = sys_get_temp_dir().'/'.uniqid('testimg_').'_'.$filename;
             file_put_contents($path, $data);
+
             return new UploadedFile($path, $filename, 'image/png', null, true);
         };
 
@@ -56,7 +57,7 @@ class AdminImageUploadTest extends TestCase
         $destination = Destination::query()->latest('id')->firstOrFail();
 
         // Image path should be stored and point to storage
-        $this->assertStringStartsWith('/storage/uploads/', $destination->image);
+        $this->assertStringStartsWith('/storage/uploads/destinations/', $destination->image);
 
         // Verify the file exists on the public disk
         $imagePath = ltrim($destination->image, '/storage/');
@@ -67,7 +68,7 @@ class AdminImageUploadTest extends TestCase
         $this->assertCount(2, $destination->details['gallery']);
 
         foreach ($destination->details['gallery'] as $g) {
-            $this->assertStringStartsWith('/storage/uploads/', $g);
+            $this->assertStringStartsWith('/storage/uploads/destinations/', $g);
             $gPath = ltrim($g, '/storage/');
             $this->assertTrue(Storage::disk('public')->exists($gPath));
         }
@@ -84,7 +85,7 @@ class AdminImageUploadTest extends TestCase
 
         $makePngUpload = function (string $filename): UploadedFile {
             $data = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
-            $path = sys_get_temp_dir().'/'.uniqid('testimg_')."_".$filename;
+            $path = sys_get_temp_dir().'/'.uniqid('testimg_').'_'.$filename;
             file_put_contents($path, $data);
 
             return new UploadedFile($path, $filename, 'image/png', null, true);
@@ -126,7 +127,7 @@ class AdminImageUploadTest extends TestCase
                 'highlights' => "New skyline\nNew beaches",
                 'bestTime_en' => 'May to September',
                 'language_en' => 'English',
-                'currency_en' => 'USD',
+                'currency_en' => 'TND',
                 'weather_en' => 'Sunny',
             ])
             ->assertOk();
@@ -134,11 +135,15 @@ class AdminImageUploadTest extends TestCase
         $updated = Destination::query()->findOrFail($destination->getKey());
 
         $this->assertNotSame($originalImage, $updated->image);
-        $this->assertStringStartsWith('/storage/uploads/', $updated->image);
+        $this->assertStringStartsWith('/storage/uploads/destinations/', $updated->image);
         $this->assertTrue(Storage::disk('public')->exists(ltrim($updated->image, '/storage/')));
 
         $this->assertIsArray($updated->details['gallery']);
         $this->assertCount(2, $updated->details['gallery']);
+
+        foreach ($updated->details['gallery'] as $g) {
+            $this->assertStringStartsWith('/storage/uploads/destinations/', $g);
+        }
 
         $this->actingAs($admin)
             ->getJson('/api/destinations/'.$updated->slug)
@@ -148,7 +153,7 @@ class AdminImageUploadTest extends TestCase
             ->assertJsonPath('about.en', 'Updated about text.')
             ->assertJsonPath('bestTime.en', 'May to September')
             ->assertJsonPath('language.en', 'English')
-            ->assertJsonPath('currency.en', 'USD')
+            ->assertJsonPath('currency.en', 'TND')
             ->assertJsonPath('weather.en', 'Sunny');
     }
 
@@ -163,7 +168,7 @@ class AdminImageUploadTest extends TestCase
 
         $makePngUpload = function (string $filename): UploadedFile {
             $data = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
-            $path = sys_get_temp_dir().'/'.uniqid('testimg_')."_".$filename;
+            $path = sys_get_temp_dir().'/'.uniqid('testimg_').'_'.$filename;
             file_put_contents($path, $data);
 
             return new UploadedFile($path, $filename, 'image/png', null, true);
@@ -215,7 +220,7 @@ class AdminImageUploadTest extends TestCase
 
         $makePngUpload = function (string $filename): UploadedFile {
             $data = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=');
-            $path = sys_get_temp_dir().'/'.uniqid('testimg_')."_".$filename;
+            $path = sys_get_temp_dir().'/'.uniqid('testimg_').'_'.$filename;
             file_put_contents($path, $data);
 
             return new UploadedFile($path, $filename, 'image/png', null, true);
@@ -249,7 +254,7 @@ class AdminImageUploadTest extends TestCase
             'reviews' => 342,
             'destination_slug' => 'lisbon',
             'image' => $makePngUpload('hotel-main-original.png'),
-            'gallery' => "/storage/uploads/hotel-gallery-1.png\n/storage/uploads/hotel-gallery-2.png",
+            'gallery' => "/storage/uploads/hotels/hotel-gallery-1.png\n/storage/uploads/hotels/hotel-gallery-2.png",
             'amenities' => [
                 ['id' => null, 'name' => ['en' => 'Swimming Pool', 'fr' => 'Piscine', 'ar' => 'حمام السباحة']],
                 ['id' => null, 'name' => ['en' => 'Spa', 'fr' => 'Spa', 'ar' => 'منتجع صحي']],
@@ -277,10 +282,14 @@ class AdminImageUploadTest extends TestCase
         /** @var Hotel $hotel */
         $hotel = Hotel::query()->latest('id')->firstOrFail();
 
-        $this->assertStringStartsWith('/storage/uploads/', $hotel->image);
+        $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
         $this->assertTrue(Storage::disk('public')->exists(ltrim($hotel->image, '/storage/')));
         $this->assertIsArray($hotel->details['gallery']);
         $this->assertCount(2, $hotel->details['gallery']);
+
+        foreach ($hotel->details['gallery'] as $g) {
+            $this->assertStringStartsWith('/storage/uploads/hotels/', $g);
+        }
 
         $this->actingAs($admin)
             ->getJson('/api/hotels/'.$hotel->slug)
@@ -319,7 +328,7 @@ class AdminImageUploadTest extends TestCase
                 'reviews' => 360,
                 'destination_slug' => 'lisbon',
                 'image' => $makePngUpload('hotel-main-updated.png'),
-                'gallery' => "/storage/uploads/hotel-gallery-1.png\n/storage/uploads/hotel-gallery-2.png",
+                'gallery' => "/storage/uploads/hotels/hotel-gallery-1.png\n/storage/uploads/hotels/hotel-gallery-2.png",
                 'amenities' => [
                     ['id' => null, 'name' => ['en' => 'Gym', 'fr' => 'Gym', 'ar' => 'صالة الألعاب']],
                 ],

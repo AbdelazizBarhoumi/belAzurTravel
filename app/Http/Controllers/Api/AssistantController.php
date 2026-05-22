@@ -7,7 +7,9 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\SupportInquiry;
 use App\Models\User;
+use App\Notifications\BookingActivityNotification;
 use App\Notifications\BookingStatusNotification;
+use App\Notifications\SupportReplyNotification;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -66,6 +68,12 @@ class AssistantController extends Controller
             'status' => $inquiry->status === 'new' ? 'in-progress' : $inquiry->status,
             'replies' => $replies,
         ]);
+
+        $client = User::query()->find($inquiry->user_id);
+        if ($client) {
+            $client->notify(new SupportReplyNotification($inquiry, $request->user()));
+        }
+
         Cache::forget('assistant.summary');
 
         return response()->json($this->inquiryPayload($inquiry->refresh()));
@@ -94,7 +102,7 @@ class AssistantController extends Controller
             [
                 'user_id' => $booking->user_id,
                 'amount' => $booking->total_amount,
-                'currency' => 'USD',
+                'currency' => 'TND',
                 'status' => 'paid',
                 'paid_at' => now(),
                 'reference' => 'PAY-'.$booking->id.'-'.now()->format('YmdHis'),
@@ -105,6 +113,7 @@ class AssistantController extends Controller
             $notification = new BookingStatusNotification($booking->refresh());
             $user->notify($notification);
         }
+        $this->notifyOperations($booking->refresh(), 'booking.confirmed');
         Cache::forget('assistant.summary');
 
         return response()->json(['message' => 'confirmed']);
@@ -118,6 +127,7 @@ class AssistantController extends Controller
             $notification = new BookingStatusNotification($booking->refresh());
             $user->notify($notification);
         }
+        $this->notifyOperations($booking->refresh(), 'booking.cancelled');
         Cache::forget('assistant.summary');
 
         return response()->json(['message' => 'cancelled']);
@@ -144,6 +154,17 @@ class AssistantController extends Controller
         Cache::put('assistant.status.'.$request->user()->id, $data['available'], now()->addDay());
 
         return response()->json(['available' => $data['available']]);
+    }
+
+    private function notifyOperations(Booking $booking, string $type): void
+    {
+        User::query()
+            ->where('active', true)
+            ->whereIn('role', ['admin', 'assistant'])
+            ->get()
+            ->each(function (User $recipient) use ($booking, $type): void {
+                $recipient->notify(new BookingActivityNotification($booking, $type));
+            });
     }
 
     private function inquiryPayload(SupportInquiry $inquiry): array

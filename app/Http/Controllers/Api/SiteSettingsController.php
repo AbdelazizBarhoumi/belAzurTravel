@@ -9,14 +9,17 @@ use Illuminate\Support\Facades\Cache;
 
 class SiteSettingsController extends Controller
 {
+    /** Disabled pages that should never be exposed through nav settings. */
+    private const DISABLED_NAV_PAGE_KEYS = ['design-trip', 'favorites'];
+
     public function show(Request $request)
     {
         $locale = $request->query('lang') ?? app()->getLocale();
 
         $settings = Cache::remember("site-settings:{$locale}", now()->addMinutes(10), function () use ($locale) {
             $row = SiteSetting::first();
-            
-            if (!$row) {
+
+            if (! $row) {
                 return [
                     'companyName' => null,
                     'email' => null,
@@ -56,6 +59,8 @@ class SiteSettingsController extends Controller
                 ],
             ];
 
+            $result['content'] = $this->sanitizeNavSettings($result['content'] ?? []);
+
             // Post-process localized labels for footer links and nav items
             // Footer links may use translation keys (labelKey) or localized label objects.
             $result['footerLinks'] = array_map(function ($link) use ($locale) {
@@ -68,6 +73,7 @@ class SiteSettingsController extends Controller
                 } elseif (isset($link['label']) && is_string($link['label'])) {
                     $link['label'] = ['en' => $link['label'], 'fr' => $link['label'], 'ar' => $link['label']];
                 }
+
                 return $link;
             }, $result['footerLinks'] ?? []);
 
@@ -96,6 +102,8 @@ class SiteSettingsController extends Controller
         });
 
         $settings = $this->hydrateResponseDefaults($settings);
+        $settings['hours'] = $this->normalizeHoursPayload($settings['hours'] ?? []);
+    $settings = $this->sanitizeNavSettings($settings);
 
         $settings = $this->filterDisabledContentForClient($request, $settings);
 
@@ -109,11 +117,11 @@ class SiteSettingsController extends Controller
         $content = $settings['content'] ?? [];
         $navSettings = $content['nav']['settings'] ?? [];
 
-        if (!isset($content['nav']['simpleLinks']) || !is_array($content['nav']['simpleLinks'])) {
+        if (! isset($content['nav']['simpleLinks']) || ! is_array($content['nav']['simpleLinks'])) {
             $content['nav']['simpleLinks'] = $this->deriveSimpleLinks($navSettings);
         }
 
-        if (!isset($settings['footerLinks']) || !is_array($settings['footerLinks']) || count($settings['footerLinks']) === 0) {
+        if (! isset($settings['footerLinks']) || ! is_array($settings['footerLinks']) || count($settings['footerLinks']) === 0) {
             $settings['footerLinks'] = $this->deriveFooterLinks($navSettings);
         }
 
@@ -137,7 +145,7 @@ class SiteSettingsController extends Controller
                     'fr' => $pageKey,
                     'ar' => $pageKey,
                 ],
-                'href' => '/' . ltrim($pageKey, '/'),
+                'href' => '/'.ltrim($pageKey, '/'),
                 'items' => $isDropdown ? ($entry['items'] ?? []) : [],
             ];
         }, array_filter($header, 'is_array')));
@@ -150,13 +158,13 @@ class SiteSettingsController extends Controller
 
         foreach ($footer as $column) {
             foreach (($column['pageKeys'] ?? []) as $pageKey) {
-                if (!is_string($pageKey) || $pageKey === '') {
+                if (! is_string($pageKey) || $pageKey === '') {
                     continue;
                 }
 
                 $links[] = [
-                    'labelKey' => 'nav.' . $pageKey,
-                    'href' => '/' . ltrim($pageKey, '/'),
+                    'labelKey' => 'nav.'.$pageKey,
+                    'href' => '/'.ltrim($pageKey, '/'),
                     'group' => 'quick',
                 ];
             }
@@ -169,14 +177,14 @@ class SiteSettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || ($user->role ?? null) !== 'client') {
+        if (! $user || ($user->role ?? null) !== 'client') {
             return $settings;
         }
 
         $siteSettings = SiteSetting::first();
         $navSettings = $siteSettings?->content['nav']['settings'] ?? null;
 
-        if (!$navSettings) {
+        if (! $navSettings) {
             return $settings;
         }
 
@@ -186,7 +194,7 @@ class SiteSettingsController extends Controller
         $disabledPages = [];
         foreach ($headerEntries as $entry) {
             $pageKey = $entry['pageKey'] ?? null;
-            if ($pageKey && !($entry['enabled'] ?? false)) {
+            if ($pageKey && ! ($entry['enabled'] ?? false)) {
                 $disabledPages[$pageKey] = true;
             }
         }
@@ -225,6 +233,11 @@ class SiteSettingsController extends Controller
             'legalSections' => ['nullable', 'array'],
             'footerLinks' => ['nullable', 'array'],
             'hours' => ['nullable', 'array'],
+            'hours.*.dayKey' => ['required_with:hours', 'string', 'max:100'],
+            'hours.*.closed' => ['nullable', 'boolean'],
+            'hours.*.ranges' => ['nullable', 'array'],
+            'hours.*.ranges.*' => ['nullable', 'string', 'max:255'],
+            'hours.*.value' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'array'],
             'navLinks' => ['nullable', 'array'],
         ]);
@@ -240,12 +253,14 @@ class SiteSettingsController extends Controller
                 'address' => config('site.address'),
                 'year' => (int) config('site.year'),
             ];
-            
+
             // Use provided content or start with existing
             $content = $data['content'] ?? ($row?->content ?? []);
+            $content = $this->sanitizeNavSettings($content);
 
             if (isset($data['navLinks']) && is_array($data['navLinks'])) {
                 $content['nav']['simpleLinks'] = $data['navLinks'];
+                $content = $this->sanitizeNavSettings($content);
             }
 
             // Validate contact structure
@@ -253,7 +268,7 @@ class SiteSettingsController extends Controller
                 foreach (['title', 'description'] as $field) {
                     if (isset($content['contact'][$field]) && is_array($content['contact'][$field])) {
                         foreach (['en', 'fr', 'ar'] as $lang) {
-                            if (!isset($content['contact'][$field][$lang]) || !is_string($content['contact'][$field][$lang])) {
+                            if (! isset($content['contact'][$field][$lang]) || ! is_string($content['contact'][$field][$lang])) {
                                 return response()->json(['message' => "Contact '{$field}' must provide '{$lang}' translation."], 422);
                             }
                         }
@@ -264,15 +279,15 @@ class SiteSettingsController extends Controller
             // Validate legalSections structure
             if (isset($data['legalSections']) && is_array($data['legalSections'])) {
                 foreach ($data['legalSections'] as $i => $section) {
-                    if (!isset($section['title']) || !is_array($section['title'])) {
+                    if (! isset($section['title']) || ! is_array($section['title'])) {
                         return response()->json(['message' => "Legal section at index {$i} must include a 'title' object."], 422);
                     }
                     foreach (['en', 'fr', 'ar'] as $langKey) {
-                        if (!isset($section['title'][$langKey]) || !is_string($section['title'][$langKey])) {
+                        if (! isset($section['title'][$langKey]) || ! is_string($section['title'][$langKey])) {
                             return response()->json(['message' => "Legal section at index {$i} must provide '{$langKey}' translation for title."], 422);
                         }
                     }
-                    if (!isset($section['body'])) {
+                    if (! isset($section['body'])) {
                         return response()->json(['message' => "Legal section at index {$i} must include a 'body'."], 422);
                     }
                 }
@@ -283,16 +298,16 @@ class SiteSettingsController extends Controller
                 foreach ($content['nav']['simpleLinks'] as $i => $entry) {
                     if (($entry['type'] ?? '') === 'dropdown' && isset($entry['items']) && is_array($entry['items'])) {
                         foreach ($entry['items'] as $j => $item) {
-                            if (!isset($item['label'])) {
+                            if (! isset($item['label'])) {
                                 return response()->json(['message' => "Dropdown item at index {$i}.{$j} must include a 'label' field with translations for en, fr and ar."], 422);
                             }
 
-                            if (!is_array($item['label'])) {
+                            if (! is_array($item['label'])) {
                                 return response()->json(['message' => "Dropdown item at index {$i}.{$j} 'label' must be an object with 'en','fr','ar' keys."], 422);
                             }
 
                             foreach (['en', 'fr', 'ar'] as $langKey) {
-                                if (!isset($item['label'][$langKey]) || !is_string($item['label'][$langKey]) || $item['label'][$langKey] === '') {
+                                if (! isset($item['label'][$langKey]) || ! is_string($item['label'][$langKey]) || $item['label'][$langKey] === '') {
                                     return response()->json(['message' => "Dropdown item at index {$i}.{$j} must provide non-empty '{$langKey}' translation."], 422);
                                 }
                             }
@@ -300,7 +315,9 @@ class SiteSettingsController extends Controller
                     }
                 }
             }
-            
+
+            $hours = $this->normalizeHoursPayload($data['hours'] ?? ($row?->hours ?? []));
+
             $updateData = [
                 'company_name' => $data['companyName'] ?? ($row?->company_name ?? $defaults['company_name']),
                 'email' => $data['email'] ?? ($row?->email ?? $defaults['email']),
@@ -312,7 +329,7 @@ class SiteSettingsController extends Controller
                 'social_links' => $data['socialLinks'] ?? ($row?->social_links ?? []),
                 'legal_sections' => $data['legalSections'] ?? ($row?->legal_sections ?? []),
                 'footer_links' => $data['footerLinks'] ?? ($row?->footer_links ?? []),
-                'hours' => $data['hours'] ?? ($row?->hours ?? []),
+                'hours' => $hours,
                 'content' => $content,
             ];
 
@@ -333,5 +350,123 @@ class SiteSettingsController extends Controller
         Cache::forget('site_settings_nav');
 
         return response()->json(['message' => 'ok']);
+    }
+
+    protected function sanitizeNavSettings(array $settings): array
+    {
+        if (! isset($settings['nav']) || ! is_array($settings['nav'])) {
+            return $settings;
+        }
+
+        $settings['nav'] = $this->sanitizeNavContent($settings['nav']);
+
+        return $settings;
+    }
+
+    protected function sanitizeNavContent(array $navContent): array
+    {
+        foreach (self::DISABLED_NAV_PAGE_KEYS as $disabledPageKey) {
+            if (isset($navContent['simpleLinks']) && is_array($navContent['simpleLinks'])) {
+                $navContent['simpleLinks'] = array_values(array_filter(
+                    $navContent['simpleLinks'],
+                    function ($entry) use ($disabledPageKey) {
+                        if (! is_array($entry)) {
+                            return true;
+                        }
+
+                        $href = (string) ($entry['href'] ?? '');
+                        $labelKey = (string) ($entry['labelKey'] ?? '');
+                        $id = (string) ($entry['id'] ?? '');
+                        $pageKey = (string) ($entry['pageKey'] ?? '');
+
+                        return ! (
+                            $href === '/'.$disabledPageKey ||
+                            str_contains($href, '/'.$disabledPageKey) ||
+                            $labelKey === 'nav.design' ||
+                            $id === 'simple-design' ||
+                            $pageKey === $disabledPageKey
+                        );
+                    }
+                ));
+            }
+
+            if (isset($navContent['settings']) && is_array($navContent['settings'])) {
+                $navContent['settings']['header'] = array_values(array_filter(
+                    $navContent['settings']['header'] ?? [],
+                    function ($entry) use ($disabledPageKey) {
+                        return is_array($entry) && (string) ($entry['pageKey'] ?? '') !== $disabledPageKey;
+                    }
+                ));
+
+                $navContent['settings']['footer'] = array_values(array_map(
+                    function ($column) use ($disabledPageKey) {
+                        if (! is_array($column)) {
+                            return $column;
+                        }
+
+                        $column['pageKeys'] = array_values(array_filter(
+                            $column['pageKeys'] ?? [],
+                            fn ($pageKey) => (string) $pageKey !== $disabledPageKey,
+                        ));
+
+                        return $column;
+                    },
+                    $navContent['settings']['footer'] ?? []
+                ));
+            }
+        }
+
+        return $navContent;
+    }
+
+    protected function normalizeHoursPayload(array $hours): array
+    {
+        $normalized = [];
+
+        foreach ($hours as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+
+            $dayKey = trim((string) ($entry['dayKey'] ?? ''));
+            if ($dayKey === '') {
+                continue;
+            }
+
+            $ranges = [];
+            if (isset($entry['ranges']) && is_array($entry['ranges'])) {
+                foreach ($entry['ranges'] as $range) {
+                    if (is_string($range)) {
+                        $value = trim($range);
+                    } elseif (is_array($range)) {
+                        $value = trim((string) ($range['value'] ?? ''));
+                    } else {
+                        $value = '';
+                    }
+
+                    if ($value !== '') {
+                        $ranges[] = ['value' => $value];
+                    }
+                }
+            } elseif (isset($entry['value']) && is_string($entry['value'])) {
+                $value = trim($entry['value']);
+                if ($value !== '') {
+                    $ranges[] = ['value' => $value];
+                }
+            }
+
+            $closed = (bool) ($entry['closed'] ?? false);
+            if (count($ranges) === 0) {
+                $closed = true;
+            }
+
+            $normalized[] = [
+                'dayKey' => $dayKey,
+                'ranges' => $ranges,
+                'closed' => $closed,
+            ];
+        }
+
+        return $normalized;
     }
 }

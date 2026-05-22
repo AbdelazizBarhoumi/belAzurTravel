@@ -10,9 +10,7 @@ class SupportInquiryNotification extends Notification
 {
     use Queueable;
 
-    public function __construct(private readonly SupportInquiry $inquiry)
-    {
-    }
+    public function __construct(private readonly SupportInquiry $inquiry) {}
 
     public function via(object $notifiable): array
     {
@@ -26,7 +24,7 @@ class SupportInquiryNotification extends Notification
         return [
             'type' => 'message.new',
             'inquiry_id' => $this->inquiry->id,
-            'url' => '/assistant/messages',
+            'url' => '/admin/notifications',
             'fr' => "Nouveau message support de {$client}",
             'ar' => "رسالة دعم جديدة من {$client}",
             'en' => "New support message from {$client}",

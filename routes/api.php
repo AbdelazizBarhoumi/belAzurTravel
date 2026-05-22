@@ -1,42 +1,41 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\AuthUserController;
-use App\Http\Controllers\Api\AdminDestinationController;
-use App\Http\Controllers\Api\AdminHotelController;
-use App\Http\Controllers\Api\AdminTourController;
-use App\Http\Controllers\Api\AdminCarController;
-use App\Http\Controllers\Api\AdminFlightController;
-use App\Http\Controllers\Api\AdminEventController;
-use App\Http\Controllers\Api\AdminDealController;
-use App\Http\Controllers\Api\AdminPromoController;
 use App\Http\Controllers\Api\AdminBlogPostController;
-use App\Http\Controllers\Api\AdminUserController;
-use App\Http\Controllers\Api\AssistantController;
-use App\Http\Controllers\Api\ClientController;
-use App\Http\Controllers\Api\DestinationController;
-use App\Http\Controllers\Api\HotelController;
-use App\Http\Controllers\Api\TourController;
-use App\Http\Controllers\Api\CarController;
-use App\Http\Controllers\Api\FlightController;
-use App\Http\Controllers\Api\EventController;
-use App\Http\Controllers\Api\TeamController;
-use App\Http\Controllers\Api\DealController;
-use App\Http\Controllers\Api\PromoController;
-use App\Http\Controllers\Api\BlogPostController;
-use App\Http\Controllers\Api\NotificationController;
-
-// Public (browsing) endpoints — guests may view booking details (read-only)
-use App\Http\Controllers\Api\SiteSettingsController;
-use App\Http\Controllers\Api\GalleryController;
-
+use App\Http\Controllers\Api\AdminCarController;
 use App\Http\Controllers\Api\AdminCategoryController;
+use App\Http\Controllers\Api\AdminDealController;
+use App\Http\Controllers\Api\AdminDestinationController;
+use App\Http\Controllers\Api\AdminEventController;
+use App\Http\Controllers\Api\AdminFlightController;
+use App\Http\Controllers\Api\AdminHotelController;
+use App\Http\Controllers\Api\AdminPromoController;
 use App\Http\Controllers\Api\AdminTeamController;
+use App\Http\Controllers\Api\AdminTourController;
+use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\AuthUserController;
+use App\Http\Controllers\Api\BlogPostController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\CarController;
+use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\DealController;
+use App\Http\Controllers\Api\DestinationController;
+use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\FlightController;
+use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\HotelController;
+use App\Http\Controllers\Api\InteractionController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PromoController;
+use App\Http\Controllers\Api\SiteSettingsController;
+use App\Http\Controllers\Api\TeamController;
+use App\Http\Controllers\Api\TourController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/site-settings', [SiteSettingsController::class, 'show']);
-Route::middleware(['auth', 'role:admin'])->put('/site-settings', [SiteSettingsController::class, 'update']);
+Route::middleware(['auth', 'role:superadmin'])->put('/site-settings', [SiteSettingsController::class, 'update']);
 Route::get('/auth/user', [AuthUserController::class, 'show']);
+
+Route::post('/interactions/notify', [InteractionController::class, 'notify']);
 
 Route::get('/categories', [AdminCategoryController::class, 'index']);
 Route::get('/gallery', [GalleryController::class, 'index'])
@@ -89,19 +88,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/client/payments', [ClientController::class, 'payments']);
     Route::get('/client/support', [ClientController::class, 'support']);
     Route::post('/client/support', [ClientController::class, 'createSupport']);
+    Route::put('/client/profile', [ClientController::class, 'updateProfile']);
     Route::patch('/user/language', [ClientController::class, 'updateLanguage']);
 
-    Route::middleware('role:assistant,admin')->group(function () {
-        Route::get('/assistant/summary', [AssistantController::class, 'summary']);
-        Route::get('/assistant/inquiries', [AssistantController::class, 'inquiries']);
-        Route::put('/assistant/inquiries/{inquiry}', [AssistantController::class, 'updateInquiry']);
-        Route::post('/assistant/inquiries/{inquiry}/reply', [AssistantController::class, 'reply']);
-        Route::get('/assistant/bookings', [AssistantController::class, 'bookings']);
-        Route::post('/assistant/bookings/{booking}/confirm', [AssistantController::class, 'confirmBooking']);
-        Route::post('/assistant/bookings/{booking}/cancel', [AssistantController::class, 'cancelBooking']);
-        Route::get('/assistant/clients', [AssistantController::class, 'clients']);
-        Route::put('/assistant/status', [AssistantController::class, 'status']);
-    });
+    // Assistant API surface disabled for now.
 
     // Admin endpoints
     Route::middleware('role:admin')->group(function () {
@@ -184,4 +174,3 @@ Route::middleware('auth')->group(function () {
         Route::delete('/admin/team/{id}', [AdminTeamController::class, 'destroy']);
     });
 });
-

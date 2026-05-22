@@ -39,6 +39,8 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
+import { useAuthUser } from '@/hooks/useAuthUser';
+
 const links = [
     {
         to: '/admin/dashboard',
@@ -61,7 +63,12 @@ const links = [
     { to: '/admin/users', icon: Users, labelKey: 'admin.users' },
     { to: '/admin/reports', icon: BarChart3, labelKey: 'admin.reports' },
     { to: '/admin/gallery', icon: ImageIcon, labelKey: 'nav.gallery' },
-    { to: '/admin/site-settings', icon: Menu, labelKey: 'admin.siteSettings' },
+    {
+        to: '/admin/site-settings',
+        icon: Menu,
+        labelKey: 'admin.siteSettings',
+        roles: ['owner', 'superadmin'],
+    },
 ];
 
 interface Props {
@@ -75,12 +82,18 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const { t, dir } = useLanguage();
+    const { data: user } = useAuthUser();
     const isRtl = dir === 'rtl';
 
     const handleLogout = async () => {
         await logout();
         navigate('/login', { replace: true });
     };
+
+    const filteredLinks = links.filter((link) => {
+        if (!link.roles) return true;
+        return user && link.roles.includes(user.role);
+    });
 
     return (
         <SidebarProvider>
@@ -128,7 +141,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                         </SidebarGroupLabel>
 
                         <SidebarMenu>
-                            {links.map((link) => {
+                            {filteredLinks.map((link) => {
                                 const active = link.exact
                                     ? pathname === link.to
                                     : pathname.startsWith(link.to);
@@ -205,7 +218,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
 
                 {/* Mobile/Tablet Navigation */}
                 <div className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 lg:hidden">
-                    {links.map((link) => {
+                    {filteredLinks.map((link) => {
                         const active = link.exact
                             ? pathname === link.to
                             : pathname.startsWith(link.to);

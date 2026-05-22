@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchGallery, deleteGalleryImage } from '@/api/gallery.api';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fetchCategories } from '@/api/categories.api';
+import { fetchGallery, deleteGalleryImage } from '@/api/gallery.api';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import AdminGallery from '../pages/admin/AdminGallery';
 
@@ -47,6 +47,10 @@ describe('AdminGallery', () => {
                 mockResolvedValue: (v: unknown) => void;
             }
         ).mockResolvedValue([]);
+    });
+
+    afterEach(() => {
+        queryClient.clear();
     });
 
     const renderWithProviders = (ui: React.ReactElement) => {
@@ -116,5 +120,31 @@ describe('AdminGallery', () => {
         fireEvent.click(deleteButton);
 
         expect(deleteGalleryImage).toHaveBeenCalledWith(1);
+    });
+
+    it('marks localized language tabs when gallery validation fails', async () => {
+        const mockGallery: never[] = [];
+        (
+            fetchGallery as unknown as {
+                mockResolvedValue: (v: unknown) => void;
+            }
+        ).mockResolvedValue(mockGallery);
+
+        renderWithProviders(<AdminGallery />);
+
+        fireEvent.click(screen.getByRole('button', { name: 'admin.addImage' }));
+
+        await screen.findByRole('dialog');
+
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /^FR/i })).toHaveClass(
+                'border-destructive',
+            );
+            expect(screen.getByRole('button', { name: /^AR/i })).toHaveClass(
+                'border-destructive',
+            );
+        });
     });
 });

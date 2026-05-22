@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Booking extends Model
 {
     protected $fillable = ['user_id', 'type', 'item_slug', 'item_id', 'items', 'start_date', 'end_date', 'client', 'travelers', 'promo_code', 'notes', 'total_amount', 'status', 'confirmed_at', 'cancelled_at'];
+
     protected $casts = ['items' => 'array', 'client' => 'array', 'travelers' => 'array', 'start_date' => 'date', 'end_date' => 'date', 'total_amount' => 'integer', 'confirmed_at' => 'datetime', 'cancelled_at' => 'datetime'];
 
     public function user(): BelongsTo

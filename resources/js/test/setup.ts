@@ -69,6 +69,39 @@ Object.defineProperty(globalThis, 'IntersectionObserver', {
     value: MockIntersectionObserver,
 });
 
+// Mock framer-motion to avoid animation-related duplicate renders in jsdom
+// tests which can cause queries to find multiple matching nodes.
+try {
+    /* eslint-disable @typescript-eslint/no-require-imports */
+    const { vi } = require('vitest');
+    vi.mock('framer-motion', () => {
+        // Use simple passthroughs for common motion primitives
+        const React = require('react');
+
+        const make = (tag) =>
+            React.forwardRef(({ children, ...props }, ref) =>
+                React.createElement(tag, { ref, ...props }, children),
+            );
+
+        return {
+            motion: {
+                div: make('div'),
+                button: make('button'),
+                img: make('img'),
+                span: make('span'),
+                form: make('form'),
+                ul: make('ul'),
+                li: make('li'),
+            },
+            AnimatePresence: ({ children }: { children?: React.ReactNode }) =>
+                children,
+        };
+    });
+    /* eslint-enable @typescript-eslint/no-require-imports */
+} catch {
+    // ignore if mocking is not available in this environment
+}
+
 // Proxy relative API requests to local PHP dev server during tests.
 // This keeps production code unchanged (no fallback) while allowing
 // unit tests to exercise real DB-backed endpoints after seeding.
@@ -142,8 +175,16 @@ const fixtures: Record<string, unknown> = {
             seats: 5,
             price: 120,
             image: '/images/mercedes.jpg',
-            features: [{ en: 'Leather seats' }],
-            policy: [{ en: 'Age 25+' }],
+            features: [
+                {
+                    name: {
+                        en: 'Leather seats',
+                        fr: 'Leather seats',
+                        ar: 'Leather seats',
+                    },
+                },
+            ],
+            policy: [{ name: { en: 'Age 25+', fr: 'Age 25+', ar: 'Age 25+' } }],
         },
         {
             slug: 'tesla-model-3',
@@ -162,8 +203,10 @@ const fixtures: Record<string, unknown> = {
             seats: 5,
             price: 95,
             image: '/images/tesla.jpg',
-            features: [{ en: 'Autopilot' }],
-            policy: [{ en: 'Age 25+' }],
+            features: [
+                { name: { en: 'Autopilot', fr: 'Autopilot', ar: 'Autopilot' } },
+            ],
+            policy: [{ name: { en: 'Age 25+', fr: 'Age 25+', ar: 'Age 25+' } }],
         },
     ],
     '/api/flights': [
@@ -279,6 +322,66 @@ const fixtures: Record<string, unknown> = {
             category: { en: 'Seasonal' },
         },
     ],
+    '/api/events': [
+        {
+            slug: 'cherry-blossom-festival',
+            title: {
+                en: 'Cherry Blossom Festival',
+                fr: 'Festival des cerisiers',
+            },
+            price: 2490,
+            date: '2026-04-01',
+            location: { en: 'Kyoto', fr: 'Kyoto' },
+            image: '/images/event-cherry.jpg',
+        },
+    ],
+    '/api/events/cherry-blossom-festival': {
+        slug: 'cherry-blossom-festival',
+        title: { en: 'Cherry Blossom Festival', fr: 'Festival des cerisiers' },
+        price: 2490,
+        date: '2026-04-01',
+        location: { en: 'Kyoto', fr: 'Kyoto' },
+        description: {
+            en: 'A three-day spring celebration with guided hanami walks and cultural performances.',
+            fr: 'Une célébration printanière de trois jours avec des promenades hanami guidées et des spectacles culturels.',
+        },
+        schedule: [{ time: '09:00', activity: { en: 'Parade' } }],
+        image: '/images/event-cherry.jpg',
+    },
+    '/api/categories': [
+        {
+            id: 1,
+            key: 'beach',
+            name: { en: 'Beach', fr: 'Plage' },
+            entity_type: 'destinations',
+        },
+        {
+            id: 2,
+            key: 'city',
+            name: { en: 'City', fr: 'Ville' },
+            entity_type: 'destinations',
+        },
+        {
+            id: 3,
+            key: 'luxury',
+            name: { en: 'Luxury', fr: 'Luxe' },
+            entity_type: 'hotels',
+        },
+    ],
+    '/api/cars/mercedes-e-class': {
+        slug: 'mercedes-e-class',
+        name: { en: 'Mercedes E-Class', fr: 'Mercedes' },
+        category: { en: 'Luxury', fr: 'Luxe' },
+        seats: 5,
+        price: 120,
+        image: '/images/mercedes.jpg',
+    },
+    '/api/site-settings': {
+        phone: '+1234567890',
+        whatsapp: '+1234567890',
+        companyName: 'BelAzurTravel',
+        content: { nav: { settings: { header: [] } } },
+    },
 };
 
 globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {

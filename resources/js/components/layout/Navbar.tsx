@@ -130,7 +130,7 @@ export function Navbar() {
     }
 
     const accountLabel = user
-        ? user.role === 'admin' || user.role === 'assistant'
+        ? ['admin', 'superadmin', 'owner'].includes(user.role)
             ? t('nav.dashboard')
             : t('nav.profile')
         : t('nav.signin');
@@ -328,15 +328,6 @@ export function Navbar() {
                     <Link to={accountLink}>
                         <Button variant="ghost" size="sm" className="gap-2">
                             <User className="h-4 w-4" /> {accountLabel}
-                        </Button>
-                    </Link>
-
-                    <Link to="/design-trip">
-                        <Button
-                            size="sm"
-                            className="bg-primary text-primary-foreground hover:bg-primary/90"
-                        >
-                            {t('nav.design')}
                         </Button>
                     </Link>
                 </div>
@@ -547,15 +538,6 @@ export function Navbar() {
                                         className="w-full"
                                     >
                                         {accountLabel}
-                                    </Button>
-                                </Link>
-                                <Link
-                                    to="/design-trip"
-                                    className="flex-1"
-                                    onClick={() => setOpen(false)}
-                                >
-                                    <Button className="w-full bg-primary text-primary-foreground">
-                                        {t('nav.design')}
                                     </Button>
                                 </Link>
                             </div>

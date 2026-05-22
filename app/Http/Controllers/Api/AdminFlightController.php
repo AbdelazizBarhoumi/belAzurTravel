@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Flight;
 use Illuminate\Database\Eloquent\Model;
@@ -19,13 +20,18 @@ use Illuminate\Support\Str;
  */
 class AdminFlightController extends Controller
 {
-    use \App\Concerns\HandlesAdminMedia;
+    use HandlesAdminMedia;
 
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.flights', now()->addMinutes(5), function () {
-            return Flight::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
+            return Flight::query()
+                ->oldest('id')
+                ->get()
+                ->map(fn (Model $item) => $this->adminPayload($item))
+                ->all();
         });
+
         return response()->json(['data' => $data]);
     }
 
@@ -33,12 +39,14 @@ class AdminFlightController extends Controller
     {
         $item = Flight::create($this->attributes($request));
         $this->flushAdminCache('flights', $item->code ?? null);
+
         return response()->json(['data' => $this->adminPayload($item)], 201);
     }
 
     public function show(int|string $id): JsonResponse
     {
         $item = $this->findFlight($id);
+
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
@@ -47,6 +55,7 @@ class AdminFlightController extends Controller
         $item = $this->findFlight($id);
         $item->update($this->attributes($request, $item));
         $this->flushAdminCache('flights', $item->code ?? null);
+
         return response()->json(['data' => $this->adminPayload($item->refresh())]);
     }
 
@@ -56,11 +65,23 @@ class AdminFlightController extends Controller
         $identifier = $item->code ?? (string) $id;
         $item->delete();
         $this->flushAdminCache('flights', $identifier);
+
         return response()->json(['message' => 'deleted']);
     }
 
     private function attributes(Request $request, ?Model $existing = null): array
     {
+        $this->normalizeLocalizedInputs($request, [
+            'airline',
+            'to',
+            'duration',
+            'stops',
+            'cabin',
+            'aircraft',
+            'baggage',
+            'refund',
+        ]);
+
         $this->decodeJsonFields($request, ['gallery', 'cabin', 'aircraft', 'baggage', 'refund']);
 
         $rules = [
@@ -113,9 +134,9 @@ class AdminFlightController extends Controller
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
         $name = $localized('airline');
         $label = $name['en'] ?: ($data['code'] ?? 'flight');
-        $code = $existing->code ?? ($data['code'] ?? Str::slug($label) . '-' . Str::lower(Str::random(4)));
+        $code = $existing->code ?? ($data['code'] ?? Str::slug($label).'-'.Str::lower(Str::random(4)));
 
-        $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? []);
+        $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? [], 'uploads/flights');
 
         return [
             'code' => $code,
@@ -135,18 +156,34 @@ class AdminFlightController extends Controller
     private function adminPayload(Model $item): array
     {
         $details = $item->details ?? [];
+
         return [
             'id' => (string) $item->id,
             'code' => $item->code,
             'airline' => $item->airline,
+            'airline_en' => $item->airline['en'] ?? '',
+            'airline_fr' => $item->airline['fr'] ?? '',
+            'airline_ar' => $item->airline['ar'] ?? '',
             'from' => $item->from,
+            'from_en' => $item->from['en'] ?? '',
+            'from_fr' => $item->from['fr'] ?? '',
+            'from_ar' => $item->from['ar'] ?? '',
             'to' => $item->to,
+            'to_en' => $item->to['en'] ?? '',
+            'to_fr' => $item->to['fr'] ?? '',
+            'to_ar' => $item->to['ar'] ?? '',
             'duration' => $item->duration,
+            'duration_en' => $item->duration['en'] ?? '',
+            'duration_fr' => $item->duration['fr'] ?? '',
+            'duration_ar' => $item->duration['ar'] ?? '',
             'price' => $item->price,
             'stops' => $item->stops,
+            'stops_en' => $item->stops['en'] ?? '',
+            'stops_fr' => $item->stops['fr'] ?? '',
+            'stops_ar' => $item->stops['ar'] ?? '',
             'departure' => $item->departure,
             'arrival' => $item->arrival,
-            'image' => $item->image ? (str_starts_with($item->image, 'storage/') ? asset($item->image) : asset('storage/' . $item->image)) : null,
+            'image' => $this->normalizeApiOutputPath($item->image),
             'gallery' => $details['gallery'] ?? [$item->image],
             'date' => $details['date'] ?? '',
             'seats' => $details['seats'] ?? null,
@@ -212,7 +249,50 @@ class AdminFlightController extends Controller
     private function localized(array $data, string $key, string $fallback = ''): array
     {
         $base = $data[$key] ?? $fallback;
+
         return ['fr' => $data[$key.'_fr'] ?? $base ?? '', 'ar' => $data[$key.'_ar'] ?? $base ?? '', 'en' => $data[$key.'_en'] ?? $base ?? ''];
+    }
+
+    private function normalizeLocalizedInputs(Request $request, array $fields): void
+    {
+        foreach ($fields as $field) {
+            $value = $request->input($field);
+
+            if (! is_array($value)) {
+                continue;
+            }
+
+            foreach (['en', 'fr', 'ar'] as $locale) {
+                $localeKey = "{$field}_{$locale}";
+
+                if (! $request->filled($localeKey)) {
+                    $localeValue = $value[$locale] ?? null;
+                    if (is_string($localeValue) || is_numeric($localeValue)) {
+                        $request->merge([$localeKey => (string) $localeValue]);
+                    }
+                }
+            }
+
+            $request->merge([$field => $this->localizedBaseValue($value)]);
+        }
+    }
+
+    private function localizedBaseValue(array $value): string
+    {
+        foreach (['en', 'fr', 'ar'] as $locale) {
+            $candidate = $value[$locale] ?? null;
+            if (is_string($candidate) || is_numeric($candidate)) {
+                return (string) $candidate;
+            }
+        }
+
+        foreach ($value as $candidate) {
+            if (is_string($candidate) || is_numeric($candidate)) {
+                return (string) $candidate;
+            }
+        }
+
+        return '';
     }
 
     private function flatLocalized(string $key, ?array $value): array
@@ -222,7 +302,7 @@ class AdminFlightController extends Controller
 
     private function flushAdminCache(string $type, ?string $identifier = null): void
     {
-        Cache::forget("admin.entity.flights");
+        Cache::forget('admin.entity.flights');
         Cache::forget("entity.{$type}.index");
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("entity.{$type}.{$identifier}");

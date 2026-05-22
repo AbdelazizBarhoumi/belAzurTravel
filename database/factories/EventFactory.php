@@ -13,15 +13,16 @@ class EventFactory extends Factory
     {
         return [
             'slug' => $this->faker->unique()->slug(),
+            'category_key' => 'cultural',
             'title' => ['en' => $this->faker->sentence(), 'fr' => $this->faker->sentence(), 'ar' => $this->faker->sentence()],
             'location' => ['en' => $this->faker->city(), 'fr' => $this->faker->city(), 'ar' => $this->faker->city()],
             'date' => ['en' => 'Summer 2026', 'fr' => 'Été 2026', 'ar' => 'صيف 2026'],
             'price' => $this->faker->numberBetween(100, 1000),
-            'image' => '/images/hero-travel.jpg',
+            'image' => '/storage/uploads/seed/hero-travel.jpg',
             'description' => ['en' => $this->faker->paragraph(), 'fr' => $this->faker->paragraph(), 'ar' => $this->faker->paragraph()],
             'details' => [
                 'about' => ['en' => 'About content', 'fr' => 'À propos', 'ar' => 'حول'],
-                'gallery' => ['/images/hero-travel.jpg'],
+                'gallery' => ['/storage/uploads/seed/hero-travel.jpg'],
                 'schedule' => [['day' => ['en' => 'Day 1'], 'activity' => ['en' => 'Arrival'], 'details' => ['en' => 'Welcome']]],
             ],
         ];

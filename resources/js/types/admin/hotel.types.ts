@@ -8,6 +8,7 @@ export interface AdminHotel extends AdminEntity {
     id: string;
     name: string;
     location: string;
+    category_key?: string;
     category: string;
     price: number;
     rating: number;

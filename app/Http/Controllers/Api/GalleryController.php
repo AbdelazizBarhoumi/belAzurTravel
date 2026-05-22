@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\GalleryImage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
 {
@@ -24,8 +25,8 @@ class GalleryController extends Controller
 
         // Store uploaded image on the public disk and save a publicly
         // accessible URL in the `url` column (via the storage symlink).
-        $path = $request->file('image')->store('gallery', 'public');
-        $url = '/storage/' . $path;
+        $path = $request->file('image')->store('uploads/gallery', 'public');
+        $url = '/storage/'.$path;
 
         $model = GalleryImage::create([
             'url' => $url,
@@ -50,10 +51,10 @@ class GalleryController extends Controller
 
             // Delete old file
             $oldPath = str_replace('/storage/', '', $galleryImage->url);
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+            Storage::disk('public')->delete($oldPath);
 
-            $path = $request->file('image')->store('gallery', 'public');
-            $data['url'] = '/storage/' . $path;
+            $path = $request->file('image')->store('uploads/gallery', 'public');
+            $data['url'] = '/storage/'.$path;
         }
 
         $galleryImage->update($data);
@@ -64,7 +65,7 @@ class GalleryController extends Controller
     public function destroy(GalleryImage $galleryImage)
     {
         $path = str_replace('/storage/', '', $galleryImage->url);
-        \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+        Storage::disk('public')->delete($path);
 
         $galleryImage->delete();
 

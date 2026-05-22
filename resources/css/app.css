@@ -168,3 +168,14 @@
             'Segoe UI Emoji';
     }
 }
+
+/* Make the default Tailwind ring color use the project's primary color
+   when elements receive focus. This overrides the --tw-ring-color
+   variable so components that rely on Tailwind's ring utilities will
+   show the primary color instead of the default (black-ish) ring. */
+@layer base {
+    :focus,
+    :focus-visible {
+        --tw-ring-color: var(--primary);
+    }
+}

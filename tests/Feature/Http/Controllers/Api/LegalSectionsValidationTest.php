@@ -21,12 +21,12 @@ class LegalSectionsValidationTest extends TestCase
     public function test_admin_can_update_legal_sections_with_valid_data(): void
     {
         $user = User::factory()->create(['role' => 'admin']);
-        
+
         $legalSections = [
             [
                 'title' => ['en' => 'Terms', 'fr' => 'Conditions', 'ar' => 'الشروط'],
-                'body' => ['format' => 'text', 'content' => 'Valid body']
-            ]
+                'body' => ['format' => 'text', 'content' => 'Valid body'],
+            ],
         ];
 
         $response = $this->actingAs($user)
@@ -39,12 +39,12 @@ class LegalSectionsValidationTest extends TestCase
     public function test_admin_cannot_update_legal_sections_with_missing_title_keys(): void
     {
         $user = User::factory()->create(['role' => 'admin']);
-        
+
         $legalSections = [
             [
                 'title' => ['en' => 'Terms'], // missing fr/ar
-                'body' => ['format' => 'text', 'content' => 'Invalid body']
-            ]
+                'body' => ['format' => 'text', 'content' => 'Invalid body'],
+            ],
         ];
 
         $response = $this->actingAs($user)
@@ -56,9 +56,9 @@ class LegalSectionsValidationTest extends TestCase
     public function test_admin_cannot_update_legal_sections_with_missing_body(): void
     {
         $user = User::factory()->create(['role' => 'admin']);
-        
+
         $legalSections = [
-            ['title' => ['en' => 'T', 'fr' => 'T', 'ar' => 'T']] // missing body
+            ['title' => ['en' => 'T', 'fr' => 'T', 'ar' => 'T']], // missing body
         ];
 
         $response = $this->actingAs($user)

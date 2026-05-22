@@ -89,6 +89,23 @@ export async function createSupportInquiry(payload: {
     });
 }
 
+export async function updateClientProfile(payload: {
+    name: string;
+    email: string;
+}) {
+    return apiFetch('/api/client/profile', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+    });
+}
+
+export async function updateClientLanguage(language: string) {
+    return apiFetch('/api/user/language', {
+        method: 'PATCH',
+        body: JSON.stringify({ language }),
+    });
+}
+
 export async function confirmBooking(id: number) {
     return apiFetch(`/api/admin/bookings/${id}/confirm`, {
         method: 'POST',

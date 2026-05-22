@@ -10,6 +10,7 @@ export interface DestinationItem {
     country: LocalizedText;
     image: string;
     gallery?: string[];
+    images?: string[];
     rating: number;
     price: number;
     categoryKey: string;
@@ -52,6 +53,7 @@ export interface TourDetailItem {
     best?: LocalizedText;
     image: string;
     gallery?: string[];
+    images?: string[];
 }
 
 /**

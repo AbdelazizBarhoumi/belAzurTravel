@@ -26,9 +26,6 @@ class EnforceNavSettingsTest extends TestCase
         $this->get('/contact')->assertNotFound();
         // Client (authenticated but public) should be blocked
         $this->actingAs($this->makeActiveUser('client'))->get('/contact')->assertNotFound();
-        // Assistant and admin should have access
-        $this->actingAs($this->makeActiveUser('assistant'))->get('/contact')->assertOk();
-        $this->actingAs($this->makeActiveUser('admin'))->get('/contact')->assertOk();
     }
 
     public function test_enabled_contact_page_is_accessible_for_every_role(): void
@@ -39,6 +36,19 @@ class EnforceNavSettingsTest extends TestCase
             $request = $role === null
                 ? $this->get('/contact')
                 : $this->actingAs($this->makeActiveUser($role))->get('/contact');
+
+            $request->assertOk();
+        }
+    }
+
+    public function test_favorites_page_is_always_public_even_when_disabled(): void
+    {
+        $this->disableNavPage('favorites');
+
+        foreach ([null, 'client', 'assistant', 'admin'] as $role) {
+            $request = $role === null
+                ? $this->get('/favorites')
+                : $this->actingAs($this->makeActiveUser($role))->get('/favorites');
 
             $request->assertOk();
         }

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\BlogPost;
+use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,7 +24,7 @@ class BlogPostModelTest extends TestCase
             'content' => ['body' => 'Content'],
         ]);
 
-        $this->assertInstanceOf(\Carbon\CarbonInterface::class, $post->date);
+        $this->assertInstanceOf(CarbonInterface::class, $post->date);
         $this->assertEquals('2026-05-20', $post->date->format('Y-m-d'));
     }
 }

@@ -17,9 +17,9 @@ describe('public entities', () => {
     });
 
     it('resolves localized text from stringified or uppercase payloads', () => {
-        expect(
-            localizeText('{"EN":"SUV","FR":"SUV","AR":"SUV"}', 'en'),
-        ).toBe('SUV');
+        expect(localizeText('{"EN":"SUV","FR":"SUV","AR":"SUV"}', 'en')).toBe(
+            'SUV',
+        );
         expect(
             localizeText({ EN: 'Luxury', FR: 'Luxe', AR: 'فاخرة' }, 'fr'),
         ).toBe('Luxe');

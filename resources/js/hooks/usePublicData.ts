@@ -11,6 +11,7 @@ import {
     type TourItem,
     type BlogPostItem,
 } from '@/api/entities.api';
+import { normalizeCarDetailEntries } from '@/api/entities.api';
 import { apiFetch } from '@/api/http';
 import type { Lang } from '@/i18n/translations';
 import { fetchAllCategories } from '@/lib/categoryCache';
@@ -21,6 +22,8 @@ export type HotelDetailLookupData = {
     city?: Record<string, string>;
     country?: Record<string, string>;
     location: Record<string, string>;
+    category_key?: string;
+    category?: Record<string, string>;
     address?: string;
     stars: number;
     rating: number;
@@ -37,12 +40,12 @@ export type HotelDetailLookupData = {
     rooms?: Array<{
         id: string;
         name: Record<string, string>;
-        description: Record<string, string>;
+        description?: Record<string, string> | null;
         pricePerNight: number;
         capacity: number;
         size: number;
-        features: Array<Record<string, string>>;
-        images: string[];
+        features?: Array<Record<string, string> | null> | null;
+        images?: string[] | null;
     }>;
 };
 
@@ -122,14 +125,30 @@ export function useTourDetailsBySlug(slug?: string) {
 export function useCars() {
     return useEntityQuery<CarItem[]>({
         queryKey: ['cars'],
-        queryFn: () => fetchEntity('cars'),
+        queryFn: () =>
+            fetchEntity<CarItem[]>('cars').then((cars) =>
+                cars.map((car) => ({
+                    ...car,
+                    features: normalizeCarDetailEntries(car.features),
+                    policy: normalizeCarDetailEntries(car.policy),
+                })),
+            ),
     });
 }
 
 export function useCarBySlug(slug?: string) {
     return useEntityQuery<CarItem | null>({
         queryKey: ['cars', slug],
-        queryFn: () => fetchEntity('cars', slug),
+        queryFn: () =>
+            fetchEntity<CarItem | null>('cars', slug).then((car) =>
+                car
+                    ? {
+                          ...car,
+                          features: normalizeCarDetailEntries(car.features),
+                          policy: normalizeCarDetailEntries(car.policy),
+                      }
+                    : null,
+            ),
         enabled: Boolean(slug),
     });
 }
@@ -238,7 +257,6 @@ export type PublicCategory = {
 
 export function useCategories(type?: string) {
     const normalizedType = type?.toLowerCase();
-
     return useQuery({
         queryKey: ['categories', normalizedType ?? 'all'],
         queryFn: async () => {

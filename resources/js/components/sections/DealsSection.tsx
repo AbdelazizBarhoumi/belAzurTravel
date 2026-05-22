@@ -17,8 +17,13 @@ export function DealsSection() {
         () => [
             { value: 'all', label: t('common.all') },
             ...Array.from(
-                new Set(deals.map((deal) => deal.category[lang])),
-            ).map((label) => ({ value: label, label })),
+                new Set(deals.map((deal) => deal.category[lang] ?? '')),
+            )
+                .filter((l) => l)
+                .map((label) => ({
+                    value: String(label),
+                    label: String(label),
+                })),
         ],
         [deals, lang, t],
     );

@@ -48,13 +48,16 @@ const Register = () => {
             if (!res.ok) {
                 const errorData = await res.json().catch(() => ({}));
                 console.error('Registration error:', res.status, errorData);
-                
+
                 if (res.status === 422) {
                     setErrors(errorData.errors || {});
                     setPassword('');
                     toast.error(errorData.message || t('register.failed'));
                 } else if (res.status === 419) {
-                    toast.error(t('auth.sessionExpired') || 'Session expired. Please refresh the page.');
+                    toast.error(
+                        t('auth.sessionExpired') ||
+                            'Session expired. Please refresh the page.',
+                    );
                     setTimeout(() => window.location.reload(), 2000);
                 } else {
                     toast.error(errorData.message || t('register.failed'));
@@ -136,7 +139,9 @@ const Register = () => {
                                         }
                                     }}
                                     className={`w-full rounded-xl border bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                                        errors.name ? 'border-destructive' : 'border-border'
+                                        errors.name
+                                            ? 'border-destructive'
+                                            : 'border-border'
                                     }`}
                                     required
                                     disabled={isSubmitting}
@@ -165,7 +170,9 @@ const Register = () => {
                                         }
                                     }}
                                     className={`w-full rounded-xl border bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                                        errors.email ? 'border-destructive' : 'border-border'
+                                        errors.email
+                                            ? 'border-destructive'
+                                            : 'border-border'
                                     }`}
                                     required
                                     disabled={isSubmitting}
@@ -194,7 +201,9 @@ const Register = () => {
                                         }
                                     }}
                                     className={`w-full rounded-xl border bg-background py-3 pl-11 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                                        errors.password ? 'border-destructive' : 'border-border'
+                                        errors.password
+                                            ? 'border-destructive'
+                                            : 'border-border'
                                     }`}
                                     required
                                     disabled={isSubmitting}

@@ -9,8 +9,14 @@ interface NavRouteGuardProps {
     children: ReactNode;
 }
 
+const ALWAYS_PUBLIC_PAGE_KEYS = new Set(['favorites']);
+
 export function NavRouteGuard({ pageKey, children }: NavRouteGuardProps) {
     const { settings, loading } = useSiteSettings();
+
+    if (ALWAYS_PUBLIC_PAGE_KEYS.has(pageKey)) {
+        return <>{children}</>;
+    }
 
     // Get nav settings from database or defaults
     let navSettings: NavSettings = DEFAULT_NAV_SETTINGS;

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Promo;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Promo>
@@ -18,7 +19,7 @@ class PromoFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => strtoupper(\Illuminate\Support\Str::random(8)),
+            'code' => strtoupper(Str::random(8)),
             'title' => ['en' => 'Title', 'fr' => 'Titre', 'ar' => 'عنوان'],
             'discount' => ['en' => '10%', 'fr' => '10%', 'ar' => '10%'],
             'description' => ['en' => 'Desc', 'fr' => 'Desc', 'ar' => 'Desc'],

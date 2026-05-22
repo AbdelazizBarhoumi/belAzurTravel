@@ -3,6 +3,7 @@
 namespace Tests\Feature\Http\Controllers\Api;
 
 use App\Models\SiteSetting;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -62,7 +63,7 @@ class SiteSettingsControllerTest extends TestCase
 
         $navLinks = $response->json('content.nav.simpleLinks');
         $navTypes = collect($navLinks)->pluck('type')->unique()->toArray();
-        
+
         $this->assertContains('simple', $navTypes);
         $this->assertContains('dropdown', $navTypes);
     }
@@ -153,12 +154,51 @@ class SiteSettingsControllerTest extends TestCase
             ->putJson('/api/site-settings', $updateData);
 
         $response->assertOk();
-        
+
         // Refresh cache to get updated data
         Cache::forget('site-settings');
         $setting = SiteSetting::first();
         $this->assertIsArray($setting->content['nav']['simpleLinks']);
         $this->assertEquals('dropdown', $setting->content['nav']['simpleLinks'][1]['type']);
+    }
+
+    public function test_authenticated_user_can_update_structured_hours(): void
+    {
+        $user = $this->createAuthenticatedAdmin();
+
+        $payload = [
+            'companyName' => 'BelAzurTravel',
+            'email' => 'hello@example.com',
+            'phone' => '+1 (555) 123-4567',
+            'hours' => [
+                [
+                    'dayKey' => 'footer.mon',
+                    'ranges' => ['09:00 - 18:00'],
+                    'closed' => false,
+                ],
+                [
+                    'dayKey' => 'footer.tue',
+                    'ranges' => ['09:00 - 18:00'],
+                    'closed' => false,
+                ],
+                [
+                    'dayKey' => 'footer.sun',
+                    'ranges' => [],
+                    'closed' => true,
+                ],
+            ],
+        ];
+
+        $this->actingAs($user)
+            ->putJson('/api/site-settings', $payload)
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->getJson('/api/site-settings')
+            ->assertOk()
+            ->assertJsonPath('hours.0.dayKey', 'footer.mon')
+            ->assertJsonPath('hours.0.ranges.0.value', '09:00 - 18:00')
+            ->assertJsonPath('hours.2.closed', true);
     }
 
     /**
@@ -256,12 +296,35 @@ class SiteSettingsControllerTest extends TestCase
         $this->assertGreaterThan(0, count($hours));
     }
 
+    public function test_site_settings_normalizes_legacy_hours_shape(): void
+    {
+        SiteSetting::query()->firstOrFail()->update([
+            'hours' => [
+                [
+                    'dayKey' => 'footer.mon',
+                    'value' => '09:00 - 18:00',
+                ],
+                [
+                    'dayKey' => 'footer.tue',
+                    'value' => '09:00 - 18:00',
+                ],
+            ],
+        ]);
+
+        $response = $this->getJson('/api/site-settings');
+
+        $response->assertOk();
+        $response->assertJsonPath('hours.0.dayKey', 'footer.mon');
+        $response->assertJsonPath('hours.0.ranges.0.value', '09:00 - 18:00');
+        $response->assertJsonPath('hours.1.dayKey', 'footer.tue');
+    }
+
     /**
      * Helper method to create authenticated admin user
      */
     protected function createAuthenticatedAdmin()
     {
-        return \App\Models\User::factory()
+        return User::factory()
             ->create(['role' => 'admin']);
     }
 }

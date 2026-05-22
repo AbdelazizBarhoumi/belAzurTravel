@@ -6,6 +6,35 @@ describe('saveAdminEntity', () => {
         vi.restoreAllMocks();
     });
 
+    it('serializes boolean fields in multipart requests as 1/0', async () => {
+        const originalFetch = globalThis.fetch;
+        const fetchSpy = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({}),
+        });
+        globalThis.fetch = fetchSpy as typeof fetch;
+
+        try {
+            const activeFile = new File(['x'], 'test.txt', {
+                type: 'text/plain',
+            });
+
+            await saveAdminEntity('promos', {
+                id: '1',
+                active: true,
+                galleryFiles: [activeFile],
+            } as never);
+
+            const [, requestInit] = fetchSpy.mock.calls[0] ?? [];
+            const body = requestInit?.body as FormData | undefined;
+
+            expect(body).toBeInstanceOf(FormData);
+            expect(body?.get('active')).toBe('1');
+        } finally {
+            globalThis.fetch = originalFetch;
+        }
+    });
+
     it('uses method spoofing for multipart destination updates', async () => {
         const fetchMock = vi.fn().mockResolvedValue({
             ok: true,
@@ -52,5 +81,48 @@ describe('saveAdminEntity', () => {
         expect(galleryEntries).toHaveLength(2);
         expect(galleryEntries[0]).toBe(galleryImageOne);
         expect(galleryEntries[1]).toBe(galleryImageTwo);
+    });
+
+    it('serializes primitive arrays as repeated multipart fields', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            json: vi.fn().mockResolvedValue({ data: {} }),
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        const mainImage = new File(['main'], 'main.jpg', {
+            type: 'image/jpeg',
+        });
+
+        await saveAdminEntity('tours', {
+            id: '7',
+            images: [
+                'storage/uploads/tours/gallery-1.jpg',
+                '/storage/uploads/tours/gallery-2.jpg',
+            ],
+            includes: ['Hotel pickup', 'Breakfast'],
+            image: mainImage,
+        } as never);
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+
+        const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(init.method).toBe('POST');
+        expect(init.body).toBeInstanceOf(FormData);
+
+        const formData = init.body as FormData;
+        expect(formData.get('_method')).toBe('PUT');
+        expect(formData.get('images[]')).toBe(
+            'storage/uploads/tours/gallery-1.jpg',
+        );
+        expect(formData.getAll('images[]')).toEqual([
+            'storage/uploads/tours/gallery-1.jpg',
+            '/storage/uploads/tours/gallery-2.jpg',
+        ]);
+        expect(formData.getAll('includes[]')).toEqual([
+            'Hotel pickup',
+            'Breakfast',
+        ]);
+        expect(formData.get('images')).toBeNull();
     });
 });

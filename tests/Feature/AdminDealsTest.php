@@ -44,7 +44,7 @@ class AdminDealsTest extends TestCase
 
         // Public index should include the deal (cache invalidated on create)
         $public = $this->getJson('/api/deals')->assertOk()->json();
-        $this->assertTrue(collect($public)->contains(fn($d) => ($d['slug'] ?? '') === $deal->slug));
+        $this->assertTrue(collect($public)->contains(fn ($d) => ($d['slug'] ?? '') === $deal->slug));
 
         // Update title
         $this->actingAs($admin)
@@ -93,5 +93,42 @@ class AdminDealsTest extends TestCase
         $deal = Deal::query()->findOrFail($response['id']);
 
         $this->assertArrayNotHasKey('image', $deal->getAttributes());
+    }
+
+    public function test_admin_can_submit_string_list_fields_for_deal_highlights(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'active' => true,
+        ]);
+
+        $payload = [
+            'title_en' => 'String List Deal',
+            'title_fr' => 'Offre liste texte',
+            'title_ar' => 'عرض قائمة نصية',
+            'description_en' => 'Limited offer',
+            'description_fr' => 'Offre limitée',
+            'description_ar' => 'عرض محدود',
+            'discount_en' => '10% OFF',
+            'expires_en' => 'Sep 30, 2026',
+            'category_en' => 'Seasonal',
+            'highlights_en' => "First line\nSecond line",
+            'highlights_fr' => 'Première ligne',
+            'highlights_ar' => 'السطر الأول',
+            'terms_en' => 'One term only',
+            'terms_fr' => 'Une seule condition',
+            'terms_ar' => 'شرط واحد',
+        ];
+
+        $response = $this->actingAs($admin)
+            ->withoutMiddleware()
+            ->postJson('/api/admin/deals', $payload)
+            ->assertCreated()
+            ->json('data');
+
+        $deal = Deal::query()->findOrFail($response['id']);
+
+        $this->assertEquals(['First line', 'Second line'], $deal->details['highlights']['en']);
+        $this->assertEquals(['One term only'], $deal->details['terms']['en']);
     }
 }
