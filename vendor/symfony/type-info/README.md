@@ -1,10 +1,8 @@
-TypeInfo Component
-==================
+# TypeInfo Component
 
 The TypeInfo component extracts PHP types information.
 
-Getting Started
----------------
+## Getting Started
 
 ```bash
 composer require symfony/type-info
@@ -45,10 +43,10 @@ $type->isIdentifiedBy('float');
 $type->isSatisfiedBy(fn (Type $type): bool => !$type->isNullable() && $type->isIdentifiedBy(TypeIdentifier::INT));
 ```
 
-Resources
----------
- * [Documentation](https://symfony.com/doc/current/components/type_info.html)
- * [Contributing](https://symfony.com/doc/current/contributing/index.html)
- * [Report issues](https://github.com/symfony/symfony/issues) and
-   [send Pull Requests](https://github.com/symfony/symfony/pulls)
-   in the [main Symfony repository](https://github.com/symfony/symfony)
+## Resources
+
+- [Documentation](https://symfony.com/doc/current/components/type_info.html)
+- [Contributing](https://symfony.com/doc/current/contributing/index.html)
+- [Report issues](https://github.com/symfony/symfony/issues) and
+  [send Pull Requests](https://github.com/symfony/symfony/pulls)
+  in the [main Symfony repository](https://github.com/symfony/symfony)

@@ -8,12 +8,14 @@
 **CBOR Object Signing and Encryption (COSE) for PHP** is a comprehensive library that provides full support for COSE operations including signing, encryption, and MAC (Message Authentication Code) operations.
 
 This library implements:
+
 - **[RFC 9052](https://datatracker.ietf.org/doc/html/rfc9052)** - COSE: Structures and Process
 - **[RFC 9053](https://datatracker.ietf.org/doc/html/rfc9053)** - COSE: Initial Algorithms
 
 ## Features
 
 ✅ **Complete COSE Tag Support**
+
 - COSE_Sign1 (tag 18) - Single signature
 - COSE_Sign (tag 98) - Multiple signatures
 - COSE_Encrypt0 (tag 16) - Single recipient encryption
@@ -22,11 +24,13 @@ This library implements:
 - COSE_Mac (tag 97) - MAC with recipients
 
 ✅ **Cryptographic Algorithms**
+
 - **Signatures**: ECDSA (ES256, ES384, ES512, ES256K), EdDSA (Ed25519, Ed448), RSA (RS256/384/512, PS256/384/512)
 - **MAC**: HMAC with SHA-256/384/512
 - Compatible with WebAuthn, FIDO2, and digital COVID certificates
 
 ✅ **Modern PHP**
+
 - PHP 8.1+ with strict types
 - Full type safety and PHPStan compliance
 - Comprehensive test coverage
@@ -139,29 +143,29 @@ This library is perfect for:
 
 ### Signature Algorithms
 
-| Algorithm | Identifier | Description |
-|-----------|------------|-------------|
-| ES256 | -7 | ECDSA with SHA-256 |
-| ES384 | -35 | ECDSA with SHA-384 |
-| ES512 | -36 | ECDSA with SHA-512 |
-| ES256K | -47 | ECDSA with secp256k1 |
-| EdDSA | -8 | EdDSA |
-| Ed25519 | - | EdDSA with Curve25519 |
-| RS256 | -257 | RSASSA-PKCS1-v1_5 with SHA-256 |
-| RS384 | -258 | RSASSA-PKCS1-v1_5 with SHA-384 |
-| RS512 | -259 | RSASSA-PKCS1-v1_5 with SHA-512 |
-| PS256 | -37 | RSASSA-PSS with SHA-256 |
-| PS384 | -38 | RSASSA-PSS with SHA-384 |
-| PS512 | -39 | RSASSA-PSS with SHA-512 |
+| Algorithm | Identifier | Description                    |
+| --------- | ---------- | ------------------------------ |
+| ES256     | -7         | ECDSA with SHA-256             |
+| ES384     | -35        | ECDSA with SHA-384             |
+| ES512     | -36        | ECDSA with SHA-512             |
+| ES256K    | -47        | ECDSA with secp256k1           |
+| EdDSA     | -8         | EdDSA                          |
+| Ed25519   | -          | EdDSA with Curve25519          |
+| RS256     | -257       | RSASSA-PKCS1-v1_5 with SHA-256 |
+| RS384     | -258       | RSASSA-PKCS1-v1_5 with SHA-384 |
+| RS512     | -259       | RSASSA-PKCS1-v1_5 with SHA-512 |
+| PS256     | -37        | RSASSA-PSS with SHA-256        |
+| PS384     | -38        | RSASSA-PSS with SHA-384        |
+| PS512     | -39        | RSASSA-PSS with SHA-512        |
 
 ### MAC Algorithms
 
-| Algorithm | Identifier | Description |
-|-----------|------------|-------------|
-| HS256 | 5 | HMAC with SHA-256 |
-| HS384 | 6 | HMAC with SHA-384 |
-| HS512 | 7 | HMAC with SHA-512 |
-| HS256/64 | 4 | HMAC with SHA-256 truncated to 64 bits |
+| Algorithm | Identifier | Description                            |
+| --------- | ---------- | -------------------------------------- |
+| HS256     | 5          | HMAC with SHA-256                      |
+| HS384     | 6          | HMAC with SHA-384                      |
+| HS512     | 7          | HMAC with SHA-512                      |
+| HS256/64  | 4          | HMAC with SHA-256 truncated to 64 bits |
 
 ## Testing
 
@@ -178,6 +182,7 @@ castor phpunit
 ```
 
 The library includes comprehensive tests including:
+
 - Unit tests for all COSE tag types
 - Integration tests with real cryptographic operations
 - COVID-19 certificate verification examples

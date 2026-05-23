@@ -50,8 +50,8 @@ class EnforceNavSettings
         $path = trim($request->path(), '/');
 
         foreach (self::ALWAYS_404_PATHS as $disabledPath) {
-            if ($path === $disabledPath || str_starts_with($path, $disabledPath . '/')) {
-                abort(404, 'This page is not currently available.');
+            if ($path === $disabledPath || str_starts_with($path, $disabledPath.'/')) {
+                abort(404, __('messages.page_not_available'));
             }
         }
 
@@ -109,7 +109,7 @@ class EnforceNavSettings
         }
 
         if (! $isEnabled) {
-            abort(404, 'This page is not currently available.');
+            abort(404, __('messages.page_not_available'));
         }
 
         return $next($request);

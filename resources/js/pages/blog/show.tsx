@@ -157,24 +157,37 @@ export default function BlogPostDetail() {
                     )}
                 </div>
 
-                {content.sections.length > 0 && (
+                {content.sections.some(
+                    (s) =>
+                        localize(s.heading, lang).trim() ||
+                        localize(s.body, lang).trim()
+                ) && (
                     <div className="mt-10 space-y-6">
-                        {content.sections.map((section, index) => (
-                            <section
-                                key={section.id ?? `${index}`}
-                                className="rounded-2xl border border-border bg-muted/20 p-5"
-                            >
-                                <h2 className="mb-3 font-serif text-2xl font-semibold text-foreground">
-                                    {localize(section.heading, lang) ||
-                                        `Section ${index + 1}`}
-                                </h2>
-                                <div className="prose max-w-none text-foreground">
-                                    {renderTextBlocks(
-                                        localize(section.body, lang),
+                        {content.sections
+                            .filter(
+                                (s) =>
+                                    localize(s.heading, lang).trim() ||
+                                    localize(s.body, lang).trim()
+                            )
+                            .map((section, index) => (
+                                <section
+                                    key={section.id ?? `${index}`}
+                                    className="rounded-2xl border border-border bg-muted/20 p-5"
+                                >
+                                    {localize(section.heading, lang).trim() && (
+                                        <h2 className="mb-3 font-serif text-2xl font-semibold text-foreground">
+                                            {localize(section.heading, lang)}
+                                        </h2>
                                     )}
-                                </div>
-                            </section>
-                        ))}
+                                    {localize(section.body, lang).trim() && (
+                                        <div className="prose max-w-none text-foreground">
+                                            {renderTextBlocks(
+                                                localize(section.body, lang),
+                                            )}
+                                        </div>
+                                    )}
+                                </section>
+                            ))}
                     </div>
                 )}
             </motion.article>

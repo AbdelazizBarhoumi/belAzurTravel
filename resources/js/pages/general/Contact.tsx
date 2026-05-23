@@ -22,14 +22,8 @@ export default function Contact() {
     ) => value?.[lang] ?? value?.en ?? value?.fr ?? value?.ar ?? fallback;
 
     const contactContent = settings.content?.contact;
-    const contactTitle = resolveLocalizedText(
-        contactContent?.title,
-        t('contact.title'),
-    );
-    const contactDescription = resolveLocalizedText(
-        contactContent?.description,
-        t('contact.description'),
-    );
+    const contactTitle = t('contact.title');
+    const contactDescription = t('contact.description');
     const contactKicker = resolveLocalizedText(
         contactContent?.kicker,
         t('contact.kicker'),

@@ -1,12 +1,5 @@
+import { buildRequestHeaders } from '@/api/requestHeaders';
 import { clearAuthUser } from '@/auth';
-
-export function csrfToken(): string {
-    return (
-        document
-            .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-            ?.getAttribute('content') ?? ''
-    );
-}
 
 export async function apiFetch<T>(
     url: string,
@@ -30,8 +23,7 @@ export async function apiFetch<T>(
     const finalUrl = isRelative ? `${origin}${url}` : url;
     // No local fallback: always proxy to backend API (DB-backed). Tests should
     // either start a test server or mock network responses as needed.
-    const headers = new Headers(options.headers);
-    headers.set('Accept', 'application/json');
+    const headers = buildRequestHeaders({ headers: options.headers });
 
     // If body is FormData, do not set Content-Type — the browser will
     // add the correct multipart boundary header automatically.
@@ -41,11 +33,6 @@ export async function apiFetch<T>(
         !headers.has('Content-Type')
     ) {
         headers.set('Content-Type', 'application/json');
-    }
-
-    const token = csrfToken();
-    if (token) {
-        headers.set('X-CSRF-TOKEN', token);
     }
 
     // Debug: log the URL when running tests to help diagnose network issues

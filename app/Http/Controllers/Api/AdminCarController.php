@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Car;
+use App\Models\Category;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -66,7 +66,7 @@ class AdminCarController extends Controller
         $item->delete();
         $this->flushAdminCache('cars', $identifier);
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function attributes(Request $request, ?Model $existing = null): array

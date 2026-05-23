@@ -112,112 +112,124 @@ function DayByDayAndIncludes({
     const includes = tour.includes || tour.inclusions || [];
     const excludes = tour.excludes || tour.exclusions || [];
 
+    const hasItinerary = itinerary.length > 0;
+    const hasIncludes = includes.length > 0;
+    const hasExcludes = excludes.length > 0;
+
     return (
         <>
-            <section className="mb-12">
-                <h2 className="mb-6 font-serif text-2xl font-bold text-foreground">
-                    {t('tourDetail.dayByDay') || 'Day-by-day itinerary'}
-                </h2>
-                <ol
-                    className={`relative max-w-3xl space-y-6 border-border ${
-                        lang === 'ar' ? 'mr-3 border-r-2' : 'ml-3 border-l-2'
-                    }`}
-                >
-                    {' '}
-                    {itinerary.map(
-                        (d: {
-                            day: number;
-                            title: LocalizedText | string;
-                            details?: LocalizedText | string;
-                        }) => (
-                            <li
-                                key={d.day}
-                                className={lang === 'ar' ? 'mr-6' : 'ml-6'}
-                            >
-                                {' '}
-                                <div
-                                    className={`absolute flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground ${
-                                        lang === 'ar'
-                                            ? '-right-[14px]'
-                                            : '-left-[14px]'
-                                    }`}
+            {hasItinerary && (
+                <section className="mb-12">
+                    <h2 className="mb-6 font-serif text-2xl font-bold text-foreground">
+                        {t('tourDetail.dayByDay') || 'Day-by-day itinerary'}
+                    </h2>
+                    <ol
+                        className={`relative max-w-3xl space-y-6 border-border ${
+                            lang === 'ar' ? 'mr-3 border-r-2' : 'ml-3 border-l-2'
+                        }`}
+                    >
+                        {' '}
+                        {itinerary.map(
+                            (d: {
+                                day: number;
+                                title: LocalizedText | string;
+                                details?: LocalizedText | string;
+                            }) => (
+                                <li
+                                    key={d.day}
+                                    className={lang === 'ar' ? 'mr-6' : 'ml-6'}
                                 >
-                                    {d.day}
-                                </div>
-                                <h3 className="font-serif text-lg font-bold text-foreground">
-                                    {typeof d.title === 'string'
-                                        ? d.title
-                                        : localize(d.title, lang)}
-                                </h3>
-                                {d.details ? (
-                                    <p className="text-sm text-muted-foreground">
-                                        {typeof d.details === 'string'
-                                            ? d.details
-                                            : localize(d.details, lang)}
-                                    </p>
-                                ) : null}
-                            </li>
-                        ),
-                    )}
-                </ol>
-            </section>
+                                    {' '}
+                                    <div
+                                        className={`absolute flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground ${
+                                            lang === 'ar'
+                                                ? '-right-[14px]'
+                                                : '-left-[14px]'
+                                        }`}
+                                    >
+                                        {d.day}
+                                    </div>
+                                    <h3 className="font-serif text-lg font-bold text-foreground">
+                                        {typeof d.title === 'string'
+                                            ? d.title
+                                            : localize(d.title, lang)}
+                                    </h3>
+                                    {d.details ? (
+                                        <p className="text-sm text-muted-foreground">
+                                            {typeof d.details === 'string'
+                                                ? d.details
+                                                : localize(d.details, lang)}
+                                        </p>
+                                    ) : null}
+                                </li>
+                            ),
+                        )}
+                    </ol>
+                </section>
+            )}
 
-            <section className="grid max-w-4xl gap-6 md:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-card p-6">
-                    <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
-                        {t('tourDetail.included') || "What's included"}
-                    </h3>
-                    <ul className="space-y-2">
-                        {(includes || []).map((i) => (
-                            <li
-                                key={
-                                    typeof i === 'string'
-                                        ? i
-                                        : (i as LocalizedText).en
-                                }
-                                className="flex items-start gap-2 text-sm text-foreground"
-                            >
-                                <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                {typeof i === 'string'
-                                    ? i
-                                    : typeof i === 'object' && 'name' in i
-                                      ? localize(
-                                            (i as { name: LocalizedText }).name,
-                                            lang,
-                                        )
-                                      : localize(i as LocalizedText, lang)}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-6">
-                    <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
-                        {t('tourDetail.notIncluded') || 'Not included'}
-                    </h3>
-                    <ul className="space-y-2">
-                        {(excludes || []).map((i) => (
-                            <li
-                                key={
-                                    typeof i === 'string'
-                                        ? i
-                                        : (i as LocalizedText).en
-                                }
-                                className="flex items-start gap-2 text-sm text-muted-foreground"
-                            >
-                                <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-                                {typeof i === 'string'
-                                    ? i
-                                    : typeof i === 'object' && 'name' in i
-                                      ? localize(
-                                            (i as { name: LocalizedText }).name,
-                                            lang,
-                                        )
-                                      : localize(i as LocalizedText, lang)}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </section>
+            {(hasIncludes || hasExcludes) && (
+                <section className="grid max-w-4xl gap-6 md:grid-cols-2">
+                    {hasIncludes && (
+                        <div className="rounded-2xl border border-border bg-card p-6">
+                            <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
+                                {t('tourDetail.included') || "What's included"}
+                            </h3>
+                            <ul className="space-y-2">
+                                {(includes || []).map((i) => (
+                                    <li
+                                        key={
+                                            typeof i === 'string'
+                                                ? i
+                                                : (i as LocalizedText).en
+                                        }
+                                        className="flex items-start gap-2 text-sm text-foreground"
+                                    >
+                                        <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                        {typeof i === 'string'
+                                            ? i
+                                            : typeof i === 'object' && 'name' in i
+                                              ? localize(
+                                                    (i as { name: LocalizedText }).name,
+                                                    lang,
+                                                )
+                                              : localize(i as LocalizedText, lang)}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                    {hasExcludes && (
+                        <div className="rounded-2xl border border-border bg-card p-6">
+                            <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
+                                {t('tourDetail.notIncluded') || 'Not included'}
+                            </h3>
+                            <ul className="space-y-2">
+                                {(excludes || []).map((i) => (
+                                    <li
+                                        key={
+                                            typeof i === 'string'
+                                                ? i
+                                                : (i as LocalizedText).en
+                                        }
+                                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                                    >
+                                        <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                                        {typeof i === 'string'
+                                            ? i
+                                            : typeof i === 'object' && 'name' in i
+                                              ? localize(
+                                                    (i as { name: LocalizedText }).name,
+                                                    lang,
+                                                )
+                                              : localize(i as LocalizedText, lang)}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </section>
+            )}
         </>
     );
 }

@@ -6,9 +6,7 @@
 [![Latest Stable Version](https://poser.pugx.org/nette/utils/v/stable)](https://github.com/nette/utils/releases)
 [![License](https://img.shields.io/badge/license-New%20BSD-blue.svg)](https://github.com/nette/utils/blob/master/license.md)
 
-
-Introduction
-------------
+## Introduction
 
 In package nette/utils you will find a set of useful classes for everyday use:
 
@@ -32,8 +30,7 @@ In package nette/utils you will find a set of useful classes for everyday use:
 
  <!---->
 
-Installation
-------------
+## Installation
 
 The recommended way to install is via Composer:
 
@@ -45,8 +42,7 @@ Nette Utils 4.1 is compatible with PHP 8.2 to 8.5.
 
  <!---->
 
-[Support Me](https://github.com/sponsors/dg)
---------------------------------------------
+## [Support Me](https://github.com/sponsors/dg)
 
 Do you like Nette Utils? Are you looking forward to the new features?
 

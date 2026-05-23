@@ -1,4 +1,5 @@
 <?php
+
 $val = "/images/t1.jpg\n/images/t2.jpg";
 $lines = preg_split('/\r\n|\r|\n/', $val);
 print_r($lines);
@@ -26,9 +27,9 @@ function normalizeStoredMediaPath(?string $path): string
         return $hadLeadingSlash ? ('/'.$noLeading) : $noLeading;
     }
 
-    return 'failed: ' . $noLeading;
+    return 'failed: '.$noLeading;
 }
 
 foreach ($lines as $line) {
-    echo "Line: $line -> " . normalizeStoredMediaPath($line) . "\n";
+    echo "Line: $line -> ".normalizeStoredMediaPath($line)."\n";
 }

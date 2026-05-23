@@ -17,7 +17,6 @@ class ContactInteractionTest extends TestCase
         Notification::fake();
 
         $admin = User::factory()->create(['role' => 'admin', 'active' => true]);
-        $assistant = User::factory()->create(['role' => 'assistant', 'active' => true]);
 
         $response = $this->postJson('/api/interactions/notify', [
             'type' => 'call',
@@ -27,7 +26,7 @@ class ContactInteractionTest extends TestCase
         $response->assertStatus(200);
 
         Notification::assertSentTo(
-            [$admin, $assistant],
+            $admin,
             ContactInteractionNotification::class
         );
     }

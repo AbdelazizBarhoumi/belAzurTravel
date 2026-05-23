@@ -38,12 +38,15 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "phpDocumentor\\Reflection\\": ["tests/unit", "tests/integration"]
+            "phpDocumentor\\Reflection\\": [
+                "tests/unit",
+                "tests/integration"
+            ]
         }
     },
     "config": {
         "platform": {
-            "php":"7.4.0"
+            "php": "7.4.0"
         },
         "allow-plugins": {
             "phpstan/extension-installer": true

@@ -38,6 +38,31 @@ export function saveAdminEntity<T extends { id?: string | number | null }>(
     entity: T,
 ) {
     const id = entity.id as string | undefined;
+    const hasFileLikeValue = (data: unknown): boolean => {
+        if (data instanceof File || data instanceof Blob) {
+            return true;
+        }
+
+        if (Array.isArray(data)) {
+            return data.some((value) => hasFileLikeValue(value));
+        }
+
+        if (data && typeof data === 'object') {
+            return Object.values(data as Record<string, unknown>).some(
+                (value) => hasFileLikeValue(value),
+            );
+        }
+
+        return false;
+    };
+
+    if (!hasFileLikeValue(entity)) {
+        return apiFetch<T>(`/api/admin/${type}${id ? `/${id}` : ''}`, {
+            method: id ? 'PUT' : 'POST',
+            body: JSON.stringify(entity),
+        });
+    }
+
     const fd = new FormData();
     if (id) {
         fd.append('_method', 'PUT');
@@ -49,9 +74,22 @@ export function saveAdminEntity<T extends { id?: string | number | null }>(
         if (data instanceof File || data instanceof Blob) {
             fd.append(parentKey || '', data);
         } else if (Array.isArray(data)) {
-            data.forEach((value) => {
-                // For files in arrays, use key[]
-                const formKey = parentKey ? `${parentKey}[]` : '[]';
+            const containsObjectItems = data.some((value) => {
+                if (!value || typeof value !== 'object') {
+                    return false;
+                }
+
+                return !(value instanceof File) && !(value instanceof Blob);
+            });
+
+            data.forEach((value, index) => {
+                // Preserve item boundaries for arrays of objects so nested
+                // payloads like hotel rooms do not collapse into ghost rows.
+                const formKey = parentKey
+                    ? containsObjectItems
+                        ? `${parentKey}[${index}]`
+                        : `${parentKey}[]`
+                    : '[]';
                 appendToFormData(value, formKey);
             });
         } else if (typeof data === 'object') {

@@ -63,23 +63,6 @@ function asText(value: unknown): string {
     return typeof value === 'string' ? value : '';
 }
 
-function parseRooms(value: unknown): unknown[] {
-    if (Array.isArray(value)) {
-        return value;
-    }
-
-    if (typeof value === 'string' && value.trim() !== '') {
-        try {
-            const parsed = JSON.parse(value);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch {
-            return [];
-        }
-    }
-
-    return [];
-}
-
 const amenitySchema = (t: any): JsonFieldDef[] => [
     {
         key: 'name',
@@ -146,6 +129,84 @@ function splitLines(value: unknown): string[] {
         .split(/\r\n|\r|\n/)
         .map((s) => s.trim())
         .filter(Boolean);
+}
+
+function roomHasMeaningfulContent(room: Record<string, unknown>): boolean {
+    for (const key of ['name', 'description']) {
+        const value = room[key];
+
+        if (typeof value === 'string' && value.trim() !== '') {
+            return true;
+        }
+
+        if (value && typeof value === 'object') {
+            const record = value as Record<string, unknown>;
+
+            if (
+                ['en', 'fr', 'ar'].some(
+                    (lang) =>
+                        typeof record[lang] === 'string' &&
+                        String(record[lang]).trim() !== '',
+                )
+            ) {
+                return true;
+            }
+        }
+    }
+
+    for (const key of ['pricePerNight', 'capacity', 'size']) {
+        const raw = room[key];
+
+        if (typeof raw === 'number' && raw > 0) {
+            return true;
+        }
+
+        if (typeof raw === 'string' && raw.trim() !== '' && Number(raw) > 0) {
+            return true;
+        }
+    }
+
+    for (const key of ['features', 'images']) {
+        const raw = room[key];
+
+        if (!Array.isArray(raw)) {
+            continue;
+        }
+
+        if (
+            raw.some((item) => {
+                if (typeof item === 'string') {
+                    return item.trim() !== '';
+                }
+
+                if (item && typeof item === 'object') {
+                    return Object.values(item as Record<string, unknown>).some(
+                        (value) => {
+                            if (typeof value === 'string') {
+                                return value.trim() !== '';
+                            }
+
+                            if (Array.isArray(value)) {
+                                return value.some((nested) =>
+                                    typeof nested === 'string'
+                                        ? nested.trim() !== ''
+                                        : Boolean(nested),
+                                );
+                            }
+
+                            return Boolean(value);
+                        },
+                    );
+                }
+
+                return Boolean(item);
+            })
+        ) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function resolveCategoryKey(...values: Array<unknown>): string {
@@ -329,7 +390,7 @@ const AdminHotels = () => {
                   : [],
               rooms: Array.isArray((editing as any).rooms)
                   ? (editing as any).rooms
-                  : parseRooms((editing.details as any)?.rooms),
+                  : [],
               address: asText(editing.address),
               phone: asText(editing.phone),
               whatsapp: asText(editing.whatsapp),
@@ -772,7 +833,17 @@ const AdminHotels = () => {
         if (!values.country_fr) errs.country_fr = t('admin.required');
         if (!values.country_ar) errs.country_ar = t('admin.required');
 
-        if (!values.category_key) errs.category_key = t('admin.required');
+        if (
+            !resolveCategoryKey(
+                values.category_key,
+                values.category,
+                values.category_en,
+                values.category_fr,
+                values.category_ar,
+            )
+        ) {
+            errs.category_key = t('admin.required');
+        }
         if (!values.price || Number(values.price) <= 0)
             errs.price = t('admin.invalidPrice');
         if (!values.destinationSlug) errs.destinationSlug = t('admin.required');
@@ -815,9 +886,16 @@ const AdminHotels = () => {
             ...rest
         } = values;
 
+        const categoryKey = resolveCategoryKey(
+            values.category_key,
+            values.category,
+            values.category_en,
+            values.category_fr,
+            values.category_ar,
+        );
+
         const selectedCategory = dbCategories.find(
-            (category) =>
-                category.key === resolveCategoryKey(values.category_key),
+            (category) => category.key === categoryKey,
         );
         const selectedCategoryLabel =
             selectedCategory?.name.en ??
@@ -826,26 +904,10 @@ const AdminHotels = () => {
             values.category_en ??
             '';
 
-        const cleanedRooms = Array.isArray(rooms)
-            ? rooms.map((r) => {
-                  const room = r || {};
-                  return {
-                      ...room,
-                      // features may be stored as textarea (string) or array
-                      features: Array.isArray(room.features)
-                          ? room.features
-                          : splitLines(room.features),
-                      images: Array.isArray(room.images)
-                          ? room.images
-                          : splitLines(room.images),
-                  };
-              })
-            : [];
-
         const payload = {
             ...rest,
             id: editing?.id || '',
-            category_key: selectedCategory?.key ?? values.category_key ?? '',
+            category_key: selectedCategory?.key ?? categoryKey ?? '',
             category: selectedCategoryLabel,
             category_en:
                 selectedCategory?.name.en ??
@@ -861,7 +923,24 @@ const AdminHotels = () => {
                 selectedCategoryLabel,
             image: imageFile ?? imagePath?.trim() ?? asText(editing?.image),
             amenities: Array.isArray(amenities) ? amenities : [],
-            rooms: cleanedRooms,
+            rooms: Array.isArray(rooms)
+                ? rooms
+                      .filter(
+                          (room) =>
+                              room &&
+                              typeof room === 'object' &&
+                              roomHasMeaningfulContent(room),
+                      )
+                      .map((room) => ({
+                          ...room,
+                          features: Array.isArray(room?.features)
+                              ? room.features
+                              : splitLines(room?.features),
+                          images: Array.isArray(room?.images)
+                              ? room.images
+                              : splitLines(room?.images),
+                      }))
+                : [],
             gallery: galleryPaths ?? [],
             address,
             phone,

@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\SeedJsDataSeeder;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,7 +18,6 @@ class DatabaseSeeder extends Seeder
             ['The Owner', 'owner@example.com', 'owner', true],
             ['Super Admin', 'super@example.com', 'superadmin', true],
             ['Anna Admin', 'admin@example.com', 'admin', true],
-            ['Liam Helper', 'liam@voyageur.com', 'assistant', true],
             ['Sarah Johnson', 'sarah@example.com', 'client', true],
             ['Mike Chen', 'mike@example.com', 'client', true],
             ['Emma Davis', 'emma@example.com', 'client', true],
@@ -46,10 +45,10 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        // Seed categories first so hotels/tours can reference real category rows.
         $this->call([
-            EntitySeeder::class,
-            BookingSeeder::class,
-            TeamSeeder::class,
+            CategorySeeder::class,
+            SeedJsDataSeeder::class,
         ]);
     }
 }

@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { useCategories, type PublicCategory } from '@/hooks/usePublicData';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { getLocalizedCategoryLabelByKey } from '@/lib/categoryLabels';
 import {
     type DropdownItemConfig,
     type HeaderEntry,
@@ -18,9 +19,8 @@ import {
     buildItemHref,
     DEFAULT_NAV_SETTINGS,
     type NavSettings,
+    type LocalizedText,
 } from '@/lib/nav-config';
-
-type LocalizedText = Record<string, string>;
 
 export function Navbar() {
     const [open, setOpen] = useState(false);
@@ -85,6 +85,27 @@ export function Navbar() {
 
     type CategoryPageKey = keyof typeof categoriesByPage;
 
+    const resolveDropdownItemLabel = (
+        entry: HeaderEntry,
+        item: DropdownItemConfig,
+    ): string => {
+        if (item.mode === 'filter') {
+            const categories =
+                categoriesByPage[entry.pageKey as CategoryPageKey] ?? [];
+            const localizedCategoryLabel = getLocalizedCategoryLabelByKey(
+                categories,
+                item.value,
+                lang,
+            );
+
+            if (localizedCategoryLabel) {
+                return localizedCategoryLabel;
+            }
+        }
+
+        return resolveLabel(item.label);
+    };
+
     const resolveDropdownItems = (entry: HeaderEntry): DropdownItemConfig[] =>
         entry.items.flatMap((item) => {
             if (item.mode !== 'categories') {
@@ -95,7 +116,7 @@ export function Navbar() {
                 categoriesByPage[entry.pageKey as CategoryPageKey] ?? [];
 
             return categories.map((category: PublicCategory) => ({
-                label: category.name,
+                label: category.name as unknown as LocalizedText,
                 mode: 'filter' as const,
                 value: category.key,
             }));
@@ -181,10 +202,14 @@ export function Navbar() {
                                                         to={buildItemHref(
                                                             entry.pageKey,
                                                             it,
+                                                            lang,
                                                         )}
                                                         className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                     >
-                                                        {resolveLabel(it.label)}
+                                                        {resolveDropdownItemLabel(
+                                                            entry,
+                                                            it,
+                                                        )}
                                                     </Link>
                                                 </li>
                                             ))}
@@ -277,11 +302,13 @@ export function Navbar() {
                                                                                     to={buildItemHref(
                                                                                         entry.pageKey,
                                                                                         it,
+                                                                                        lang,
                                                                                     )}
                                                                                     className="block rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                                                 >
-                                                                                    {resolveLabel(
-                                                                                        it.label,
+                                                                                    {resolveDropdownItemLabel(
+                                                                                        entry,
+                                                                                        it,
                                                                                     )}
                                                                                 </Link>
                                                                             </li>
@@ -394,13 +421,17 @@ export function Navbar() {
                                                         to={buildItemHref(
                                                             entry.pageKey,
                                                             it,
+                                                            lang,
                                                         )}
                                                         onClick={() =>
                                                             setOpen(false)
                                                         }
                                                         className="py-1 text-sm text-muted-foreground"
                                                     >
-                                                        {resolveLabel(it.label)}
+                                                        {resolveDropdownItemLabel(
+                                                            entry,
+                                                            it,
+                                                        )}
                                                     </Link>
                                                 ))}
                                             </div>
@@ -474,6 +505,7 @@ export function Navbar() {
                                                                         to={buildItemHref(
                                                                             entry.pageKey,
                                                                             it,
+                                                                            lang,
                                                                         )}
                                                                         onClick={() =>
                                                                             setOpen(

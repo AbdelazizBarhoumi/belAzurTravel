@@ -11,9 +11,11 @@
         <meta property="og:description" content="BelAzur Travel">
         <meta property="og:type" content="website">
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        @php($brandLogo = Vite::asset('resources/js/assets/brand-logo.png'))
+
+        {{-- Use the actual brand asset so the browser tab and touch icon match the app logo. --}}
+        <link rel="icon" href="{{ $brandLogo }}" type="image/png" sizes="512x512">
+        <link rel="apple-touch-icon" href="{{ $brandLogo }}">
 
         @viteReactRefresh
         @vite(['resources/js/main.tsx'])

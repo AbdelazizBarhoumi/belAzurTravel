@@ -485,13 +485,7 @@ export default function Hotels() {
                                                         <span className="text-sm font-semibold text-secondary">
                                                             {hotel.rating}
                                                         </span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            ({hotel.reviews}{' '}
-                                                            {t(
-                                                                'hotels.reviews',
-                                                            )}
-                                                            )
-                                                        </span>
+
                                                     </div>
 
                                                     <div className="mb-4">

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { csrfToken } from '@/api/http';
+import { buildRequestHeaders } from '@/api/requestHeaders';
 import { getAuthUser } from '@/auth';
 import type { Lang } from '@/i18n/translations';
 import { t as translate } from '@/i18n/translations';
@@ -57,11 +57,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         void fetch('/api/user/language', {
             method: 'PATCH',
             credentials: 'include',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken(),
-            },
+            headers: buildRequestHeaders({
+                headers: { 'Content-Type': 'application/json' },
+            }),
             body: JSON.stringify({ language: l }),
         }).catch(() => undefined);
     };

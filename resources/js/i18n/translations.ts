@@ -53,6 +53,12 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الإشعارات القانونية',
         en: 'Legal',
     },
+    'nav.dashboard': {
+        fr: 'Tableau de bord',
+        ar: 'لوحة القيادة',
+        en: 'Dashboard',
+    },
+
     // Cookie / Privacy
     'cookie.banner.title': {
         fr: 'Cookies & Confidentialité',
@@ -114,16 +120,6 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.day': { fr: 'Jour', ar: 'يوم', en: 'Day' },
     'admin.activity': { fr: 'Activité', ar: 'نشاط', en: 'Activity' },
-    'admin.settings.contactPageTitle': {
-        fr: 'Titre de la page contact',
-        ar: 'عنوان صفحة الاتصال',
-        en: 'Contact Page Title',
-    },
-    'admin.settings.contactPageDescription': {
-        fr: 'Description de la page contact',
-        ar: 'وصف صفحة الاتصال',
-        en: 'Contact Page Description',
-    },
     'admin.settings.noSocialLinks': {
         fr: 'Aucun lien social ajouté.',
         ar: 'لم تتم إضافة روابط اجتماعية.',
@@ -153,6 +149,11 @@ export const translations: Record<string, TranslationEntry> = {
         fr: "Échec de l'enregistrement des paramètres du site",
         ar: 'فشل في حفظ إعدادات الموقع',
         en: 'Failed to save site settings',
+    },
+    'admin.settings.missingTranslation': {
+        fr: 'Traduction :lang manquante',
+        ar: 'ترجمة :lang مفقودة',
+        en: 'Missing :lang translation',
     },
     'admin.settings.resetNavError': {
         fr: 'Échec de la réinitialisation des paramètres de navigation',
@@ -377,6 +378,13 @@ export const translations: Record<string, TranslationEntry> = {
     'actions.added': { fr: 'Ajouté', ar: 'تمت الإضافة', en: 'Added' },
     'actions.edit': { fr: 'Modifier', ar: 'تعديل', en: 'Edit' },
     'actions.add': { fr: 'Ajouter', ar: 'إضافة', en: 'Add' },
+    'actions.book_now': {
+        fr: 'Réserver maintenant',
+        ar: 'احجز الآن',
+        en: 'Book now',
+    },
+    'actions.whatsapp': { fr: 'WhatsApp', ar: 'واتساب', en: 'WhatsApp' },
+    'actions.call': { fr: 'Appeler', ar: 'اتصال', en: 'Call' },
 
     'cat.city': { fr: 'Ville', ar: 'مدينة', en: 'City' },
     'cat.nature': { fr: 'Nature', ar: 'طبيعة', en: 'Nature' },
@@ -1410,6 +1418,7 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'اختر الغرفة',
         en: 'Select room',
     },
+    'hotelDetail.pernight': { fr: '/nuit', ar: '/ليلة', en: '/night' },
     'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
     'tourDetail.notIncluded': {
         fr: 'Non inclus',
@@ -3282,9 +3291,9 @@ export const translations: Record<string, TranslationEntry> = {
     },
     // Client Dashboard
     'client.welcome': {
-        fr: 'Bienvenue de retour, BelAzurTravel!',
-        ar: 'مرحبًا بعودتك، أيها المسافر!',
-        en: 'Welcome back, Traveler!',
+        fr: 'Bienvenue',
+        ar: 'مرحباً',
+        en: 'Welcome',
     },
     'client.overview': {
         fr: 'Voici votre aperçu de voyage',
@@ -3295,11 +3304,6 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Voyages à venir',
         ar: 'الرحلات القادمة',
         en: 'Upcoming Trips',
-    },
-    'client.countriesVisited': {
-        fr: 'Pays visités',
-        ar: 'البلدان التي تمت زيارتها',
-        en: 'Countries Visited',
     },
     'client.unreadNotifications': {
         fr: 'Messages non lus',
@@ -3337,6 +3341,32 @@ export const translations: Record<string, TranslationEntry> = {
     'client.payments': PAYMENTS,
     'client.profile': PROFILE,
     'client.settings': SETTINGS,
+    'client.supportSubject': { fr: 'Sujet', ar: 'الموضوع', en: 'Subject' },
+    'client.supportSuccess': {
+        fr: 'Message envoyé avec succès.',
+        ar: 'تم إرسال الرسالة بنجاح.',
+        en: 'Message sent successfully.',
+    },
+    'client.profileUpdated': {
+        fr: 'Profil mis à jour.',
+        ar: 'تم تحديث الملف الشخصي.',
+        en: 'Profile updated.',
+    },
+    'client.languageUpdated': {
+        fr: 'Langue mise à jour.',
+        ar: 'تم تحديث اللغة.',
+        en: 'Language updated.',
+    },
+    'client.emptyWishlist': {
+        fr: 'Votre liste de souhaits est vide.',
+        ar: 'قائمة الرغبات الخاصة بك فارغة.',
+        en: 'Your wishlist is empty.',
+    },
+    'client.exploreNow': {
+        fr: 'Explorer maintenant',
+        ar: 'استكشف الآن',
+        en: 'Explore now',
+    },
 
     // Assistant Dashboard
     'assistant.panel': {
@@ -3412,6 +3442,61 @@ export const translations: Record<string, TranslationEntry> = {
     'label.trending': { fr: 'Tendance', ar: 'متوجه', en: 'Trending' },
     'label.popular': { fr: 'Populaire', ar: 'شهير', en: 'Popular' },
     'label.romantic': { fr: 'Romantique', ar: 'رومانسي', en: 'Romantic' },
+    'label.fullName': {
+        fr: 'Nom complet',
+        ar: 'الاسم الكامل',
+        en: 'Full Name',
+    },
+    'label.email': { fr: 'E-mail', ar: 'البريد الإلكتروني', en: 'Email' },
+    'label.phone': { fr: 'Téléphone', ar: 'الهاتف', en: 'Phone' },
+    'label.startDate': {
+        fr: 'Date de début',
+        ar: 'تاريخ البدء',
+        en: 'Start Date',
+    },
+    'label.endDate': {
+        fr: 'Date de fin',
+        ar: 'تاريخ الانتهاء',
+        en: 'End Date',
+    },
+    'label.notes': { fr: 'Notes', ar: 'ملاحظات', en: 'Notes' },
+    'booking.success': {
+        fr: 'Demande de réservation soumise avec succès !',
+        ar: 'تم تقديم طلب الحجز بنجاح!',
+        en: 'Booking request submitted successfully!',
+    },
+    'booking.error': {
+        fr: 'Échec de la soumission de la demande de réservation.',
+        ar: 'فشل في تقديم طلب الحجز.',
+        en: 'Failed to submit booking request.',
+    },
+    'auth.requiredToBook': {
+        fr: 'Veuillez vous connecter pour effectuer une réservation.',
+        ar: 'يرجى تسجيل الدخول لإجراء حجز.',
+        en: 'Please log in to make a booking.',
+    },
+    'booking.title': { fr: 'Réserver', ar: 'حجز', en: 'Book' },
+    'booking.description': {
+        fr: 'Remplissez les détails ci-dessous pour demander une réservation.',
+        ar: 'املأ التفاصيل أدناه لطلب حجز.',
+        en: 'Fill in the details below to request a booking.',
+    },
+    'booking.notesPlaceholder': {
+        fr: 'Des demandes spéciales ?',
+        ar: 'أي طلبات خاصة؟',
+        en: 'Any special requests?',
+    },
+    'booking.submit': {
+        fr: 'Demander la réservation',
+        ar: 'طلب الحجز',
+        en: 'Request Booking',
+    },
+    'common.processing': {
+        fr: 'Traitement...',
+        ar: 'جاري المعالجة...',
+        en: 'Processing...',
+    },
+    'common.language': { fr: 'Langue', ar: 'اللغة', en: 'Language' },
 };
 
 // app-specific action/notification keys
@@ -3919,10 +4004,25 @@ translations['admin.settings.dropdown'] = {
     ar: 'قائمة منسدلة',
     en: 'Dropdown',
 };
-translations['admin.settings.triggerLinks'] = {
+translations['admin_settings_triggerLinks'] = {
     fr: 'Déclencher des liens vers la page',
     ar: 'تفعيل الروابط للصفحة',
     en: 'Trigger links to page',
+};
+translations['admin_settings_mode'] = {
+    fr: 'Mode',
+    ar: 'الوضع',
+    en: 'Mode',
+};
+translations['admin_settings_select_category'] = {
+    fr: 'Sélectionner une catégorie',
+    ar: 'اختر فئة',
+    en: 'Select category',
+};
+translations['admin_settings_label'] = {
+    fr: 'Libellé',
+    ar: 'العنوان',
+    en: 'Label',
 };
 translations['admin.settings.addItem'] = {
     fr: 'Ajouter un élément',
@@ -3944,10 +4044,96 @@ translations['admin.settings.topBar'] = {
     ar: 'الشريط العلوي',
     en: 'Top bar',
 };
-translations['admin.settings.more'] = {
-    fr: '+ Plus',
-    ar: '+ المزيد',
-    en: '+ More',
+translations['admin.settings.placeholder.companyName'] = {
+    fr: 'BelAzur Travel',
+    ar: 'بل أزور للسفر',
+    en: 'BelAzur Travel',
+};
+translations['admin.settings.placeholder.address'] = {
+    fr: 'Ville, pays',
+    ar: 'المدينة، الدولة',
+    en: 'City, country',
+};
+translations['admin.settings.placeholder.plusCode'] = {
+    fr: '8FVC9G8F+5V',
+    ar: '8FVC9G8F+5V',
+    en: '8FVC9G8F+5V',
+};
+translations['admin.settings.placeholder.email'] = {
+    fr: 'hello@example.com',
+    ar: 'hello@example.com',
+    en: 'hello@example.com',
+};
+translations['admin.settings.placeholder.phone'] = {
+    fr: '+1 (555) 123-4567',
+    ar: '+1 (555) 123-4567',
+    en: '+1 (555) 123-4567',
+};
+translations['admin.settings.placeholder.whatsapp'] = {
+    fr: '+15551234567',
+    ar: '+15551234567',
+    en: '+15551234567',
+};
+translations['admin.settings.placeholder.titleEN'] = {
+    fr: 'Titre (EN)',
+    ar: 'العنوان (EN)',
+    en: 'Title (EN)',
+};
+translations['admin.settings.placeholder.titleFR'] = {
+    fr: 'Titre (FR)',
+    ar: 'العنوان (FR)',
+    en: 'Title (FR)',
+};
+translations['admin.settings.add_section'] = {
+    fr: 'Ajouter une section',
+    ar: 'إضافة قسم',
+    en: 'Add Section',
+};
+translations['admin.settings.no_legal_sections'] = {
+    fr: 'Aucune section légale pour l’instant. Ajoutez une politique de confidentialité ou des conditions d’utilisation.',
+    ar: 'لا توجد أقسام قانونية حتى الآن. أضف سياسة الخصوصية أو شروط الاستخدام.',
+    en: 'No legal sections yet. Add Privacy Policy or Terms of Use.',
+};
+translations['admin.settings.body_format'] = {
+    fr: 'Format du corps',
+    ar: 'تنسيق الجسم',
+    en: 'Body format',
+};
+translations['admin.settings.body'] = { fr: 'Corps', ar: 'الجسم', en: 'Body' };
+translations['admin.settings.title_en'] = {
+    fr: 'Titre (EN)',
+    ar: 'العنوان (EN)',
+    en: 'Title (EN)',
+};
+translations['admin.settings.title_fr'] = {
+    fr: 'Titre (FR)',
+    ar: 'العنوان (FR)',
+    en: 'Title (FR)',
+};
+translations['admin.settings.title_ar'] = {
+    fr: 'Titre (AR)',
+    ar: 'العنوان (AR)',
+    en: 'Title (AR)',
+};
+translations['admin.settings.markdown'] = {
+    fr: 'Markdown',
+    ar: 'Markdown',
+    en: 'Markdown',
+};
+translations['admin.settings.richtext'] = {
+    fr: 'Texte riche',
+    ar: 'نص منسق',
+    en: 'Rich text',
+};
+translations['admin.settings.preview'] = {
+    fr: 'Aperçu',
+    ar: 'معاينة',
+    en: 'Preview',
+};
+translations['admin.settings.edit'] = {
+    fr: 'Modifier',
+    ar: 'تحرير',
+    en: 'Edit',
 };
 translations['client.supportMessage'] = {
     fr: 'Votre message',

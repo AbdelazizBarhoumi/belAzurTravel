@@ -32,7 +32,9 @@
         "psr-4": {
             "PragmaRX\\Google2FA\\Tests\\": "tests/"
         },
-        "files": ["tests/helpers.php"]
+        "files": [
+            "tests/helpers.php"
+        ]
     },
     "scripts": {
         "test": "bash ./tests/tools/test.sh",

@@ -43,7 +43,9 @@
         "symfony/serializer": "<6.4"
     },
     "autoload": {
-        "psr-4": { "Symfony\\Component\\PropertyInfo\\": "" },
+        "psr-4": {
+            "Symfony\\Component\\PropertyInfo\\": ""
+        },
         "exclude-from-classmap": [
             "/Tests/"
         ]

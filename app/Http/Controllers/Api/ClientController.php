@@ -166,7 +166,7 @@ class ClientController extends Controller
             'total_amount' => $booking->total_amount,
             'status' => $booking->status,
             'can_cancel' => $canCancel,
-            'cancel_reason' => $canCancel ? null : 'Cancellation is closed within 24 hours of travel.',
+            'cancel_reason' => $canCancel ? null : __('messages.cancellation_closed'),
             'created_at' => $booking->created_at?->toJSON(),
         ];
     }

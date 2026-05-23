@@ -111,62 +111,74 @@ export default function DealDetail() {
                         </div>
                     </section>
 
-                    <section className="grid gap-4 md:grid-cols-3">
-                        <div className="rounded-2xl border border-border bg-card p-5">
-                            <div className="text-sm text-muted-foreground">
-                                {t('dealDetail.expires')}
+                    { (deal.expires || deal.category) && (
+                        <section className="grid gap-4 md:grid-cols-3">
+                            {deal.expires && (
+                                <div className="rounded-2xl border border-border bg-card p-5">
+                                    <div className="text-sm text-muted-foreground">
+                                        {t('dealDetail.expires')}
+                                    </div>
+                                    <div className="mt-2 font-semibold">
+                                        {localizeText(deal.expires, lang)}
+                                    </div>
+                                </div>
+                            )}
+                            {deal.category && (
+                                <div className="rounded-2xl border border-border bg-card p-5">
+                                    <div className="text-sm text-muted-foreground">
+                                        {t('dealDetail.category')}
+                                    </div>
+                                    <div className="mt-2 font-semibold">
+                                        {localizeText(deal.category, lang)}
+                                    </div>
+                                </div>
+                            )}
+                            <div className="rounded-2xl border border-border bg-card p-5">
+                                <div className="text-sm text-muted-foreground">
+                                    {t('dealDetail.type')}
+                                </div>
+                                <div className="mt-2 font-semibold">
+                                    {t('dealDetail.specialOffer')}
+                                </div>
                             </div>
-                            <div className="mt-2 font-semibold">
-                                {localizeText(deal.expires, lang)}
-                            </div>
-                        </div>
-                        <div className="rounded-2xl border border-border bg-card p-5">
-                            <div className="text-sm text-muted-foreground">
-                                {t('dealDetail.category')}
-                            </div>
-                            <div className="mt-2 font-semibold">
-                                {localizeText(deal.category, lang)}
-                            </div>
-                        </div>
-                        <div className="rounded-2xl border border-border bg-card p-5">
-                            <div className="text-sm text-muted-foreground">
-                                {t('dealDetail.type')}
-                            </div>
-                            <div className="mt-2 font-semibold">
-                                {t('dealDetail.specialOffer')}
-                            </div>
-                        </div>
-                    </section>
+                        </section>
+                    )}
 
-                    <section className="grid gap-4 md:grid-cols-2">
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="mb-4 font-serif text-xl font-bold">
-                                {t('dealDetail.highlights')}
-                            </h3>
-                            <ul className="space-y-2 text-foreground">
-                                {highlights.map((item) => (
-                                    <li key={item.en} className="flex gap-2">
-                                        <CheckCircle2 className="mt-0.5 h-4 w-4 text-secondary" />{' '}
-                                        {localizeText(item, lang)}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                    {(highlights.length > 0 || terms.length > 0) && (
+                        <section className="grid gap-4 md:grid-cols-2">
+                            {highlights.length > 0 && (
+                                <div className="rounded-2xl border border-border bg-card p-6">
+                                    <h3 className="mb-4 font-serif text-xl font-bold">
+                                        {t('dealDetail.highlights')}
+                                    </h3>
+                                    <ul className="space-y-2 text-foreground">
+                                        {highlights.map((item) => (
+                                            <li key={item.en} className="flex gap-2">
+                                                <CheckCircle2 className="mt-0.5 h-4 w-4 text-secondary" />{' '}
+                                                {localizeText(item, lang)}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
 
-                        <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="mb-4 font-serif text-xl font-bold">
-                                {t('dealDetail.terms')}
-                            </h3>
-                            <ul className="space-y-2 text-sm text-foreground">
-                                {terms.map((item) => (
-                                    <li key={item.en} className="flex gap-2">
-                                        <Info className="mt-0.5 h-4 w-4 text-secondary" />{' '}
-                                        {localizeText(item, lang)}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </section>
+                            {terms.length > 0 && (
+                                <div className="rounded-2xl border border-border bg-card p-6">
+                                    <h3 className="mb-4 font-serif text-xl font-bold">
+                                        {t('dealDetail.terms')}
+                                    </h3>
+                                    <ul className="space-y-2 text-sm text-foreground">
+                                        {terms.map((item) => (
+                                            <li key={item.en} className="flex gap-2">
+                                                <Info className="mt-0.5 h-4 w-4 text-secondary" />{' '}
+                                                {localizeText(item, lang)}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </section>
+                    )}
 
                     <section className="rounded-2xl border border-border bg-card p-6">
                         <h3 className="mb-5 font-serif text-xl font-bold">

@@ -2,7 +2,11 @@
     "name": "symfony/uid",
     "type": "library",
     "description": "Provides an object-oriented API to generate and represent UIDs",
-    "keywords": ["uid", "uuid", "ulid"],
+    "keywords": [
+        "uid",
+        "uuid",
+        "ulid"
+    ],
     "homepage": "https://symfony.com",
     "license": "MIT",
     "authors": [
@@ -27,7 +31,9 @@
         "symfony/console": "^6.4|^7.0|^8.0"
     },
     "autoload": {
-        "psr-4": { "Symfony\\Component\\Uid\\": "" },
+        "psr-4": {
+            "Symfony\\Component\\Uid\\": ""
+        },
         "exclude-from-classmap": [
             "/Tests/"
         ]

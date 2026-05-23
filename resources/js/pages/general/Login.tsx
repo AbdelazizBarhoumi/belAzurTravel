@@ -3,7 +3,7 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { csrfToken } from '@/api/http';
+import { buildRequestHeaders } from '@/api/requestHeaders';
 import type { AuthUser } from '@/auth';
 import { redirectAfterLogin, storeAuthUser } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
@@ -53,11 +53,9 @@ const Login = () => {
             const res = await fetch('/login', {
                 method: 'POST',
                 credentials: 'include',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken(),
-                },
+                headers: buildRequestHeaders({
+                    headers: { 'Content-Type': 'application/json' },
+                }),
                 body: JSON.stringify({ email, password, remember: true }),
             });
 
@@ -92,8 +90,6 @@ const Login = () => {
 
             if (user.role === 'admin') {
                 toast.success(t('auth.welcomeAdmin'));
-            } else if (user.role === 'assistant') {
-                toast.success(t('auth.welcomeAssistant'));
             } else {
                 toast.success(t('auth.welcomeBack'));
             }

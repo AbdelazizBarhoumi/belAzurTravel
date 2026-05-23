@@ -36,7 +36,7 @@ class AmenityE2ETest extends TestCase
             ->postJson('/api/admin/hotels', $payload);
 
         $response->assertStatus(201);
-        
+
         $hotel = Hotel::where('name->en', 'Grand Hotel')->first();
         $this->assertNotNull($hotel);
         $this->assertCount(1, $hotel->amenities);
@@ -52,7 +52,7 @@ class AmenityE2ETest extends TestCase
             'name' => ['en' => 'Test', 'fr' => 'Test', 'ar' => 'Test'],
             'location' => ['en' => 'Test', 'fr' => 'Test', 'ar' => 'Test'],
             'category' => ['en' => 'Test', 'fr' => 'Test', 'ar' => 'Test'],
-            'image' => 'test.jpg'
+            'image' => 'test.jpg',
         ]);
         $amenity = Amenity::create(['name' => ['en' => 'Pool', 'fr' => 'Piscine', 'ar' => 'مسبح'], 'icon' => 'pool']);
         $hotel->amenities()->attach($amenity);

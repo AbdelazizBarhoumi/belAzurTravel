@@ -23,6 +23,7 @@ class AuthUserApiTest extends TestCase
         $user = User::factory()->create([
             'role' => 'assistant',
             'preferred_language' => 'fr',
+            'email_verified_at' => now(),
         ]);
 
         $response = $this->actingAs($user)->getJson('/api/auth/user');
@@ -32,6 +33,7 @@ class AuthUserApiTest extends TestCase
             ->assertJsonPath('user.name', $user->name)
             ->assertJsonPath('user.email', $user->email)
             ->assertJsonPath('user.role', $user->role)
+            ->assertJsonPath('user.email_verified_at', $user->email_verified_at?->toISOString())
             ->assertJsonPath('user.preferred_language', $user->preferred_language);
     }
 }

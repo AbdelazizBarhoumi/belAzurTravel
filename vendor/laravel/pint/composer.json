@@ -1,7 +1,14 @@
 {
     "name": "laravel/pint",
     "description": "An opinionated code formatter for PHP.",
-    "keywords": ["php", "format", "formatter", "lint", "linter", "dev"],
+    "keywords": [
+        "php",
+        "format",
+        "formatter",
+        "lint",
+        "linter",
+        "dev"
+    ],
     "homepage": "https://laravel.com",
     "type": "project",
     "license": "MIT",
@@ -58,5 +65,7 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "bin": ["builds/pint"]
+    "bin": [
+        "builds/pint"
+    ]
 }

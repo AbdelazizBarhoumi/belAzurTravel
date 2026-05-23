@@ -1,6 +1,12 @@
+import { buildRequestHeaders } from '@/api/requestHeaders';
 import { AUTH_USER_QUERY_KEY, queryClient } from '@/lib/queryClient';
 
-export type UserRole = 'owner' | 'superadmin' | 'admin' | 'assistant' | 'client';
+export type UserRole =
+    | 'owner'
+    | 'superadmin'
+    | 'admin'
+    | 'assistant'
+    | 'client';
 
 export interface AuthUser {
     id: number;
@@ -14,7 +20,8 @@ export interface AuthUser {
 let currentAuthUser: AuthUser | null = null;
 
 export function redirectAfterLogin(role: UserRole): string {
-    if (['owner', 'superadmin', 'admin'].includes(role)) return '/admin/dashboard';
+    if (['owner', 'superadmin', 'admin'].includes(role))
+        return '/admin/dashboard';
     if (role === 'assistant') return '/unauthorized';
     return '/client/dashboard';
 }
@@ -47,11 +54,12 @@ export async function logout(): Promise<void> {
         await fetch('/logout', {
             method: 'POST',
             credentials: 'include',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
+            headers: buildRequestHeaders({
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            }),
         });
     } catch (error) {
         console.error('Logout error:', error);

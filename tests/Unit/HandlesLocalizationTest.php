@@ -16,12 +16,12 @@ class HandlesLocalizationTest extends TestCase
         {
             use HandlesLocalization;
 
-            public function testLocalized(array $data, string $key)
+            public function test_localized(array $data, string $key)
             {
                 return $this->localized($data, $key);
             }
 
-            public function testFlatLocalized(string $key, ?array $value)
+            public function test_flat_localized(string $key, ?array $value)
             {
                 return $this->flatLocalized($key, $value);
             }

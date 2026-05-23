@@ -6,14 +6,18 @@ import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import TourDetail from '@/pages/tours/show';
 
-const mockUseTourDetailsBySlug = vi.fn((..._args: unknown[]) => ({
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+ 
+const mockUseTourDetailsBySlug: any = vi.fn(() => ({
     data: undefined,
     isLoading: true,
 }));
 
 vi.mock('@/hooks/usePublicData', () => ({
+     
     useTourDetailsBySlug: (...args: unknown[]) =>
-        mockUseTourDetailsBySlug(...args),
+        mockUseTourDetailsBySlug(...(args as any[])),
 }));
 
 function renderTourDetail(path = '/tours/greek-island-hopping') {

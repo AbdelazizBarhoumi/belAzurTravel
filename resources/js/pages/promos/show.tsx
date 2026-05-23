@@ -85,13 +85,13 @@ export default function PromoDetail() {
                             </span>
                         </div>
                     </motion.div>
-                    <section className="rounded-2xl border border-border bg-card p-6">
-                        <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
-                            {t('promoDetail.howToUseTitle')}
-                        </h3>
-                        <ul className="space-y-2 text-sm text-foreground">
-                            {(promo.howToUse ?? []).map(
-                                (step: LocalizedText) => (
+                    {promo.howToUse && promo.howToUse.length > 0 && (
+                        <section className="rounded-2xl border border-border bg-card p-6">
+                            <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
+                                {t('promoDetail.howToUseTitle')}
+                            </h3>
+                            <ul className="space-y-2 text-sm text-foreground">
+                                {promo.howToUse.map((step: LocalizedText) => (
                                     <li
                                         key={step.en}
                                         className="flex items-start gap-2"
@@ -99,18 +99,18 @@ export default function PromoDetail() {
                                         <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />{' '}
                                         {localizeText(step, lang)}
                                     </li>
-                                ),
-                            )}
-                        </ul>
-                    </section>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
 
-                    <section className="rounded-2xl border border-border bg-card p-6">
-                        <h3 className="mb-4 font-serif text-xl font-bold">
-                            {t('promoDetail.eligibility')}
-                        </h3>
-                        <ul className="space-y-2 text-sm text-foreground">
-                            {(promo.eligibility ?? []).map(
-                                (item: LocalizedText) => (
+                    {promo.eligibility && promo.eligibility.length > 0 && (
+                        <section className="rounded-2xl border border-border bg-card p-6">
+                            <h3 className="mb-4 font-serif text-xl font-bold">
+                                {t('promoDetail.eligibility')}
+                            </h3>
+                            <ul className="space-y-2 text-sm text-foreground">
+                                {promo.eligibility.map((item: LocalizedText) => (
                                     <li
                                         key={item.en}
                                         className="flex items-center gap-2"
@@ -118,34 +118,37 @@ export default function PromoDetail() {
                                         <CheckCircle2 className="h-4 w-4 text-secondary" />{' '}
                                         {localizeText(item, lang)}
                                     </li>
-                                ),
-                            )}
-                        </ul>
-                    </section>
-                    <section className="rounded-2xl border border-border bg-card p-6">
-                        <h2 className="mb-4 font-serif text-xl font-bold text-foreground">
-                            {t('promoDetail.termsTitle')}
-                        </h2>
-                        <ul className="space-y-2">
-                            {(promo.terms ?? []).map((term: LocalizedText) => (
-                                <li
-                                    key={term.en}
-                                    className="flex items-start gap-2 text-sm text-muted-foreground"
-                                >
-                                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                    {localizeText(term, lang)}
-                                </li>
-                            ))}
-                        </ul>
-                        <Button
-                            asChild
-                            className="mt-6 bg-primary text-primary-foreground"
-                        >
-                            <Link to="/destinations">
-                                {t('promoDetail.startBooking')}
-                            </Link>
-                        </Button>
-                    </section>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
+
+                    {promo.terms && promo.terms.length > 0 && (
+                        <section className="rounded-2xl border border-border bg-card p-6">
+                            <h2 className="mb-4 font-serif text-xl font-bold text-foreground">
+                                {t('promoDetail.termsTitle')}
+                            </h2>
+                            <ul className="space-y-2">
+                                {promo.terms.map((term: LocalizedText) => (
+                                    <li
+                                        key={term.en}
+                                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                                    >
+                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                        {localizeText(term, lang)}
+                                    </li>
+                                ))}
+                            </ul>
+                            <Button
+                                asChild
+                                className="mt-6 bg-primary text-primary-foreground"
+                            >
+                                <Link to="/destinations">
+                                    {t('promoDetail.startBooking')}
+                                </Link>
+                            </Button>
+                        </section>
+                    )}
                 </div>
 
                 <aside className="hidden lg:sticky lg:top-24 lg:block">

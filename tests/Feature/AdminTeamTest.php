@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -53,7 +52,7 @@ class AdminTeamTest extends TestCase
         $payload['name_en'] = 'John Smith';
         $this->actingAs($admin)
             ->withoutMiddleware()
-            ->putJson('/api/admin/team/' . $created['id'], $payload)
+            ->putJson('/api/admin/team/'.$created['id'], $payload)
             ->assertOk()
             ->assertJsonPath('data.name_en', 'John Smith');
     }

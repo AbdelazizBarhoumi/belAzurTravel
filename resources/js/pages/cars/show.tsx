@@ -84,43 +84,47 @@ export default function CarDetail() {
                         />
                     </div>
 
-                    <section className="mt-8 max-w-3xl">
-                        <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
-                            {t('carsDetail.features')}
-                        </h2>
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            {car.features?.map((feature: LocalizedText) => (
-                                <div
-                                    key={String(feature.en)}
-                                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
-                                >
-                                    <Check className="h-4 w-4 shrink-0 text-primary" />
-                                    <span className="text-sm text-foreground">
-                                        {String(localizeText(feature, lang))}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+                    {car.features && car.features.length > 0 && (
+                        <section className="mt-8 max-w-3xl">
+                            <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
+                                {t('carsDetail.features')}
+                            </h2>
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                {car.features?.map((feature: LocalizedText) => (
+                                    <div
+                                        key={String(feature.en)}
+                                        className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+                                    >
+                                        <Check className="h-4 w-4 shrink-0 text-primary" />
+                                        <span className="text-sm text-foreground">
+                                            {String(localizeText(feature, lang))}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
-                    <section className="mt-8 max-w-3xl">
-                        <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
-                            {t('carsDetail.policy')}
-                        </h2>
-                        <ul className="space-y-3">
-                            {(car.policy ?? []).map((rule: LocalizedText) => (
-                                <li
-                                    key={String(rule.en)}
-                                    className="flex items-start gap-2 text-sm text-muted-foreground"
-                                >
-                                    <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
-                                    <span>
-                                        {String(localizeText(rule, lang))}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
+                    {car.policy && car.policy.length > 0 && (
+                        <section className="mt-8 max-w-3xl">
+                            <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
+                                {t('carsDetail.policy')}
+                            </h2>
+                            <ul className="space-y-3">
+                                {(car.policy ?? []).map((rule: LocalizedText) => (
+                                    <li
+                                        key={String(rule.en)}
+                                        className="flex items-start gap-2 text-sm text-muted-foreground"
+                                    >
+                                        <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
+                                        <span>
+                                            {String(localizeText(rule, lang))}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
                 </div>
 
                 <aside className="hidden lg:block">

@@ -65,7 +65,7 @@ class AdminDealController extends Controller
         $item->delete();
         $this->flushAdminCache('deals', $identifier);
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function attributes(Request $request, ?Deal $existing = null): array

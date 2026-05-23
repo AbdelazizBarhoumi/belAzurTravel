@@ -54,7 +54,7 @@ class AdminTeamController extends Controller
         $item->delete();
         $this->flushAdminCache();
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function attributes(Request $request, ?Team $item = null): array

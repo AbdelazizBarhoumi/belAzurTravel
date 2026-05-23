@@ -1,10 +1,8 @@
-Translation Component
-=====================
+# Translation Component
 
 The Translation component provides tools to internationalize your application.
 
-Getting Started
----------------
+## Getting Started
 
 ```bash
 composer require symfony/translation
@@ -23,18 +21,16 @@ $translator->addResource('array', [
 echo $translator->trans('Hello World!'); // outputs « Bonjour ! »
 ```
 
-Sponsor
--------
+## Sponsor
 
 Help Symfony by [sponsoring][3] its development!
 
-Resources
----------
+## Resources
 
- * [Documentation](https://symfony.com/doc/current/translation.html)
- * [Contributing](https://symfony.com/doc/current/contributing/index.html)
- * [Report issues](https://github.com/symfony/symfony/issues) and
-   [send Pull Requests](https://github.com/symfony/symfony/pulls)
-   in the [main Symfony repository](https://github.com/symfony/symfony)
+- [Documentation](https://symfony.com/doc/current/translation.html)
+- [Contributing](https://symfony.com/doc/current/contributing/index.html)
+- [Report issues](https://github.com/symfony/symfony/issues) and
+  [send Pull Requests](https://github.com/symfony/symfony/pulls)
+  in the [main Symfony repository](https://github.com/symfony/symfony)
 
 [3]: https://symfony.com/sponsor

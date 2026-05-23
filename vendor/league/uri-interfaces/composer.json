@@ -1,7 +1,7 @@
 {
     "name": "league/uri-interfaces",
     "type": "library",
-    "description" : "Common tools for parsing and resolving RFC3987/RFC3986 URI",
+    "description": "Common tools for parsing and resolving RFC3987/RFC3986 URI",
     "keywords": [
         "url",
         "uri",
@@ -25,9 +25,9 @@
     "homepage": "https://uri.thephpleague.com",
     "authors": [
         {
-            "name" : "Ignace Nyamagana Butera",
-            "email" : "nyamsprod@gmail.com",
-            "homepage" : "https://nyamsprod.com"
+            "name": "Ignace Nyamagana Butera",
+            "email": "nyamsprod@gmail.com",
+            "homepage": "https://nyamsprod.com"
         }
     ],
     "funding": [
@@ -37,7 +37,7 @@
         }
     ],
     "require": {
-        "php" : "^8.1",
+        "php": "^8.1",
         "ext-filter": "*",
         "psr/http-message": "^1.1 || ^2.0"
     },

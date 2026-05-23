@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { buildRequestHeaders } from '@/api/requestHeaders';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
@@ -34,7 +35,9 @@ export default function CookieConsent() {
             void fetch('/api/user/consent', {
                 method: 'POST',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
+                headers: buildRequestHeaders({
+                    headers: { 'Content-Type': 'application/json' },
+                }),
                 body: JSON.stringify({ consent: 'accepted' }),
             });
         } catch {

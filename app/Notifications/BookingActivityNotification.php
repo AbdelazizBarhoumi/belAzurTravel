@@ -37,21 +37,9 @@ class BookingActivityNotification extends Notification
     private function message(string $client, string $lang): string
     {
         return match ($this->activityType) {
-            'booking.cancelled' => match ($lang) {
-                'fr' => "Reservation annulee par {$client}",
-                'ar' => "تم الغاء حجز بواسطة {$client}",
-                default => "Booking cancelled by {$client}",
-            },
-            'booking.confirmed' => match ($lang) {
-                'fr' => "Reservation confirmee pour {$client}",
-                'ar' => "تم تاكيد الحجز لـ {$client}",
-                default => "Booking confirmed for {$client}",
-            },
-            default => match ($lang) {
-                'fr' => "Nouvelle reservation de {$client}",
-                'ar' => "حجز جديد من {$client}",
-                default => "New booking by {$client}",
-            },
+            'booking.cancelled' => __('messages.booking_cancelled_by', ['client' => $client], $lang),
+            'booking.confirmed' => __('messages.booking_confirmed_for', ['client' => $client], $lang),
+            default => __('messages.booking_created', ['client' => $client], $lang),
         };
     }
 }

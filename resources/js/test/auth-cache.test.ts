@@ -19,6 +19,7 @@ describe('auth cache synchronization', () => {
             name: 'Leila',
             email: 'leila@example.com',
             role: 'assistant',
+            email_verified_at: null,
             preferred_language: 'en',
         };
 
@@ -34,6 +35,7 @@ describe('auth cache synchronization', () => {
             name: 'Omar',
             email: 'omar@example.com',
             role: 'client',
+            email_verified_at: null,
         });
 
         clearAuthUser();

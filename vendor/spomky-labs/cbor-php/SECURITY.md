@@ -29,17 +29,17 @@ The Webauthn Framework Security Team's PGP is key is available on the [PGP keyse
 
 Provide a descriptive subject line and in the body of the email include the following information:
 
--   Basic identity information, such as your name and your affiliation or company.
--   Detailed steps to reproduce the vulnerability (POC scripts, screenshots, and compressed packet captures are all helpful to us).
--   Description of the effects of the vulnerability on Webauthn Framework and the related hardware and software configurations, so that the Webauthn Framework Security Team can reproduce it.
--   How the vulnerability affects Webauthn Framework usage and an estimation of the attack surface, if there is one.
--   List other projects or dependencies that were used in conjunction with Webauthn Framework to produce the vulnerability.
+- Basic identity information, such as your name and your affiliation or company.
+- Detailed steps to reproduce the vulnerability (POC scripts, screenshots, and compressed packet captures are all helpful to us).
+- Description of the effects of the vulnerability on Webauthn Framework and the related hardware and software configurations, so that the Webauthn Framework Security Team can reproduce it.
+- How the vulnerability affects Webauthn Framework usage and an estimation of the attack surface, if there is one.
+- List other projects or dependencies that were used in conjunction with Webauthn Framework to produce the vulnerability.
 
 ## When to report a vulnerability
 
--   When you think Webauthn Framework has a potential security vulnerability.
--   When you suspect a potential vulnerability, but you are unsure that it impacts Webauthn Framework.
--   When you know of or suspect a potential vulnerability on another project that is used by Webauthn Framework. For example Webauthn Framework has a dependency on Docker, PGSql, Redis, Notary, Trivy, etc.
+- When you think Webauthn Framework has a potential security vulnerability.
+- When you suspect a potential vulnerability, but you are unsure that it impacts Webauthn Framework.
+- When you know of or suspect a potential vulnerability on another project that is used by Webauthn Framework. For example Webauthn Framework has a dependency on Docker, PGSql, Redis, Notary, Trivy, etc.
 
 ## Patch, Release, and Disclosure
 
@@ -61,7 +61,7 @@ The Security Team will also publish any mitigating steps users can take until th
 
 ## Mailing lists
 
--   Use security@spomky-labs.com to report security concerns to the Webauthn Framework Security Team, who uses the list to privately discuss security issues and fixes prior to disclosure.
+- Use security@spomky-labs.com to report security concerns to the Webauthn Framework Security Team, who uses the list to privately discuss security issues and fixes prior to disclosure.
 
 ## Early Disclosure to Webauthn Framework Distributors List
 

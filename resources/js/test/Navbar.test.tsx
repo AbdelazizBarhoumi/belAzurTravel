@@ -184,6 +184,98 @@ describe('Navbar', () => {
         ).toBeTruthy();
     });
 
+    it('uses the active locale label for search dropdown links', async () => {
+        localStorage.setItem('lang', 'ar');
+
+        mockUseSiteSettings.mockReturnValue(
+            makeNavSettings([
+                {
+                    pageKey: 'tours',
+                    enabled: true,
+                    placement: 'top',
+                    isDropdown: true,
+                    linkSelf: true,
+                    items: [
+                        {
+                            label: {
+                                en: 'Summer',
+                                fr: 'Été',
+                                ar: 'صيف',
+                            },
+                            mode: 'search',
+                            value: '',
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        render(
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter>
+                        <Navbar />
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>,
+        );
+
+        await waitFor(() => {
+            const link = Array.from(document.querySelectorAll('a')).find(
+                (anchor) =>
+                    anchor.getAttribute('href') ===
+                    '/tours?q=%D8%B5%D9%8A%D9%81',
+            );
+            expect(link).toBeTruthy();
+            expect(link?.getAttribute('href')).toBe(
+                '/tours?q=%D8%B5%D9%8A%D9%81',
+            );
+        });
+    });
+
+    it('resolves raw filter labels from the live category key', async () => {
+        localStorage.setItem('lang', 'fr');
+
+        mockUseSiteSettings.mockReturnValue(
+            makeNavSettings([
+                {
+                    pageKey: 'destinations',
+                    enabled: true,
+                    placement: 'top',
+                    isDropdown: true,
+                    linkSelf: true,
+                    items: [
+                        {
+                            label: 'beach',
+                            mode: 'filter',
+                            value: 'beach',
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        render(
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter>
+                        <Navbar />
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>,
+        );
+
+        await waitFor(() => {
+            const link = Array.from(document.querySelectorAll('a')).find(
+                (anchor) =>
+                    anchor.getAttribute('href') === '/destinations?cat=beach',
+            );
+
+            expect(link).toBeTruthy();
+            expect(link?.textContent).toContain('Plage');
+        });
+    });
+
     it('always renders the favorites heart button', async () => {
         render(
             <LanguageProvider>

@@ -1,5 +1,4 @@
-Licenses
-========
+# Licenses
 
 Good news! You may use Nette Framework under the terms of either
 the New BSD License or the GNU General Public License (GPL) version 2 or 3.
@@ -17,9 +16,7 @@ usage has some limitations. So please do not use word "Nette" in the name of you
 project or top-level domain, and choose a name that stands on its own merits.
 If your stuff is good, it will not take long to establish a reputation for yourselves.
 
-
-New BSD License
----------------
+## New BSD License
 
 Copyright (c) 2004, 2014 David Grudl (https://davidgrudl.com)
 All rights reserved.
@@ -27,16 +24,16 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-	* Redistributions of source code must retain the above copyright notice,
-	this list of conditions and the following disclaimer.
+    * Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
 
-	* Redistributions in binary form must reproduce the above copyright notice,
-	this list of conditions and the following disclaimer in the documentation
-	and/or other materials provided with the distribution.
+    * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
 
-	* Neither the name of "Nette Framework" nor the names of its contributors
-	may be used to endorse or promote products derived from this software
-	without specific prior written permission.
+    * Neither the name of "Nette Framework" nor the names of its contributors
+    may be used to endorse or promote products derived from this software
+    without specific prior written permission.
 
 This software is provided by the copyright holders and contributors "as is" and
 any express or implied warranties, including, but not limited to, the implied
@@ -49,9 +46,7 @@ any theory of liability, whether in contract, strict liability, or tort
 (including negligence or otherwise) arising in any way out of the use of this
 software, even if advised of the possibility of such damage.
 
-
-GNU General Public License
---------------------------
+## GNU General Public License
 
 GPL licenses are very very long, so instead of including them here we offer
 you URLs with full text:

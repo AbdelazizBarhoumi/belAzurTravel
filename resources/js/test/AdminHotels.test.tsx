@@ -85,6 +85,10 @@ describe('AdminHotels', () => {
     beforeEach(() => {
         localStorage.setItem('lang', 'en');
         vi.clearAllMocks();
+        Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+            configurable: true,
+            value: vi.fn(),
+        });
         vi.mocked(adminApi.listAdminEntities).mockResolvedValue([] as never);
         vi.mocked(fetchCategories).mockResolvedValue(hotelCategories as never);
     });
@@ -116,10 +120,10 @@ describe('AdminHotels', () => {
         expect(screen.getByText('Pricing and structure')).toBeInTheDocument();
         expect(screen.getByText('Contact and profile')).toBeInTheDocument();
         expect(
-            screen.getByRole('textbox', { name: /City en City en/i }),
+            screen.getByRole('textbox', { name: /City en/i }),
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('textbox', { name: /Country en Country en/i }),
+            screen.getByRole('textbox', { name: /Country en/i }),
         ).toBeInTheDocument();
         expect(screen.getByText('Address')).toBeInTheDocument();
         expect(screen.getByText('Phone')).toBeInTheDocument();
@@ -282,5 +286,110 @@ describe('AdminHotels', () => {
                 screen.getByRole('button', { name: targetButton }),
             ).toHaveClass('bg-primary');
         });
+    });
+
+    it('drops blank room drafts before saving a hotel', async () => {
+        vi.mocked(fetchCategories).mockResolvedValue([] as never);
+        renderPage();
+
+        fireEvent.click(screen.getAllByRole('button', { name: /^add$/i })[0]);
+
+        const dialogs = await screen.findAllByRole('dialog');
+        const dialog =
+            dialogs.find((d) =>
+                (d.getAttribute('style') ?? '').includes(
+                    'pointer-events: auto',
+                ),
+            ) || dialogs[0];
+
+        const fill = (id: string, value: string) => {
+            const pretty =
+                id === 'destinationSlug'
+                    ? 'Destination slug'
+                    : id === 'price'
+                      ? 'Price/night'
+                      : id === 'category'
+                        ? 'Category'
+                        : id
+                              .replace(/_/g, ' ')
+                              .replace(/([a-z])([A-Z])/g, '$1 $2');
+            const role = id === 'price' ? 'spinbutton' : 'textbox';
+            const input = screen.getByRole(role, {
+                name: new RegExp(pretty, 'i'),
+            }) as HTMLInputElement;
+            fireEvent.change(input, {
+                target: { value },
+            });
+        };
+
+        const fillLanguage = async (
+            lang: 'en' | 'fr' | 'ar',
+            values: Record<string, string>,
+        ) => {
+            fireEvent.click(
+                within(dialog).getByRole('button', {
+                    name: new RegExp(`^${lang}$`, 'i'),
+                }),
+            );
+
+            await waitFor(() => {
+                expect(
+                    within(dialog).getByRole('button', {
+                        name: new RegExp(`^${lang}$`, 'i'),
+                    }),
+                ).toHaveClass('bg-primary');
+            });
+
+            Object.entries(values).forEach(([field, value]) => {
+                if (field === 'category') {
+                    fill('category', value);
+                    return;
+                }
+
+                fill(`${field}_${lang}`, value);
+            });
+        };
+
+        await fillLanguage('en', {
+            name: 'Harbor Hotel',
+            location: 'Port City',
+            city: 'Lisbon',
+            country: 'Portugal',
+            description: 'Demo hotel',
+            category: 'Beach',
+        });
+        await fillLanguage('fr', {
+            name: 'Harbor Hotel',
+            location: 'Port City',
+            city: 'Lisbonne',
+            country: 'Portugal',
+            description: 'Demo hotel',
+            category: 'Plage',
+        });
+        await fillLanguage('ar', {
+            name: 'Harbor Hotel',
+            location: 'Port City',
+            city: 'لشبونة',
+            country: 'البرتغال',
+            description: 'Demo hotel',
+            category: 'شاطئ',
+        });
+        fill('price', '200');
+        fill('destinationSlug', 'lisbon');
+        fill('address', 'Rua Augusta 100');
+        fill('phone', '+351-213-000-000');
+        fill('whatsapp', '+351-213-000-001');
+
+        fireEvent.click(screen.getByRole('button', { name: /add room/i }));
+        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+        await waitFor(() => {
+            expect(adminApi.saveAdminEntity).toHaveBeenCalledTimes(1);
+        });
+
+        const [, payload] =
+            vi.mocked(adminApi.saveAdminEntity).mock.calls[0] ?? [];
+        expect(payload).toBeDefined();
+        expect((payload as Record<string, unknown>).rooms).toEqual([]);
     });
 });

@@ -4,7 +4,6 @@ namespace Tests\Feature\Api;
 
 use App\Models\Booking;
 use App\Models\Hotel;
-use App\Models\SupportInquiry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,9 +16,8 @@ class NotificationE2ETest extends TestCase
     {
         parent::setUp();
 
-        // Create an admin and an assistant to receive notifications
+        // Create an admin to receive notifications
         User::factory()->create(['role' => 'admin', 'active' => true]);
-        User::factory()->create(['role' => 'assistant', 'active' => true]);
     }
 
     public function test_client_booking_notifies_operations(): void
@@ -54,13 +52,9 @@ class NotificationE2ETest extends TestCase
         $this->assertEquals(1, $admin->unreadNotifications()->count());
         $this->assertEquals('booking.created', $admin->unreadNotifications()->first()->data['type']);
 
-        // Check if assistant got a notification
-        $assistant = User::where('role', 'assistant')->first();
-        $this->assertEquals(1, $assistant->unreadNotifications()->count());
-        $this->assertEquals('booking.created', $assistant->unreadNotifications()->first()->data['type']);
     }
 
-    public function test_assistant_confirm_notifies_client_and_other_ops(): void
+    public function test_admin_confirm_notifies_client_and_other_ops(): void
     {
         $client = User::factory()->create(['role' => 'client']);
         $booking = Booking::create([
@@ -72,9 +66,9 @@ class NotificationE2ETest extends TestCase
             'status' => 'Pending',
         ]);
 
-        $assistant = User::where('role', 'assistant')->first();
+        $admin = User::where('role', 'admin')->first();
 
-        $this->actingAs($assistant)->postJson("/api/assistant/bookings/{$booking->id}/confirm")
+        $this->actingAs($admin)->postJson("/api/admin/bookings/{$booking->id}/confirm")
             ->assertOk();
 
         // Client should be notified
@@ -100,34 +94,12 @@ class NotificationE2ETest extends TestCase
         $admin = User::where('role', 'admin')->first();
         $this->assertEquals(1, $admin->unreadNotifications()->count());
         $this->assertEquals('message.new', $admin->unreadNotifications()->first()->data['type']);
-
-        // Assistant should be notified
-        $assistant = User::where('role', 'assistant')->first();
-        $this->assertEquals(1, $assistant->unreadNotifications()->count());
-        $this->assertEquals('message.new', $assistant->unreadNotifications()->first()->data['type']);
     }
 
-    public function test_assistant_reply_notifies_client(): void
+    public function test_assistant_routes_are_disabled(): void
     {
-        $client = User::factory()->create(['role' => 'client']);
-        $inquiry = SupportInquiry::create([
-            'user_id' => $client->id,
-            'client' => ['name' => $client->name, 'email' => $client->email],
-            'subject' => ['en' => 'Question'],
-            'message' => ['en' => 'Body'],
-            'status' => 'new',
-            'priority' => 'medium',
-        ]);
-
-        $assistant = User::where('role', 'assistant')->first();
-
-        $this->actingAs($assistant)->postJson("/api/assistant/inquiries/{$inquiry->id}/reply", [
-            'message' => 'This is a reply.',
-        ])->assertOk();
-
-        // Client should be notified
-        $this->assertEquals(1, $client->unreadNotifications()->count());
-        $this->assertEquals('message.reply', $client->unreadNotifications()->first()->data['type']);
+        $this->getJson('/api/assistant/summary')->assertNotFound();
+        $this->postJson('/api/assistant/inquiries/1/reply', ['message' => 'This is a reply.'])->assertNotFound();
     }
 
     public function test_client_cancellation_notifies_operations(): void
@@ -149,10 +121,5 @@ class NotificationE2ETest extends TestCase
         $admin = User::where('role', 'admin')->first();
         $this->assertEquals(1, $admin->unreadNotifications()->count());
         $this->assertEquals('booking.cancelled', $admin->unreadNotifications()->first()->data['type']);
-
-        // Assistant should be notified
-        $assistant = User::where('role', 'assistant')->first();
-        $this->assertEquals(1, $assistant->unreadNotifications()->count());
-        $this->assertEquals('booking.cancelled', $assistant->unreadNotifications()->first()->data['type']);
     }
 }

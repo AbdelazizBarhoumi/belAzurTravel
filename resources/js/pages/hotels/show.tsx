@@ -135,7 +135,7 @@ export default function HotelDetail() {
         })
         .map((amenity, index) =>
             toAmenityView(
-                amenity as {
+                amenity as unknown as {
                     name: Record<string, string>;
                     icon?: string | null;
                 },
@@ -213,10 +213,9 @@ export default function HotelDetail() {
                             minPrice={minPrice}
                             currency="DT"
                             priceLabel={t('hotelDetail.startingFrom') || 'From'}
-                            priceSuffix="/night"
+                            priceSuffix={t('hotelDetail.pernight')}
                             title={title}
                             location={location}
-                            description={description}
                             entityType="hotel"
                             itemId={detail.id}
                             rating={detail.rating}
@@ -241,14 +240,16 @@ export default function HotelDetail() {
                         phone={detail.phone}
                     />
 
-                    <motion.div
-                        id="rooms-list"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.15 }}
-                    >
-                        <RoomsList rooms={rooms} onBookRoom={handleBookRoom} />
-                    </motion.div>
+                    {rooms.length > 0 && (
+                        <motion.div
+                            id="rooms-list"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.15 }}
+                        >
+                            <RoomsList rooms={rooms} onBookRoom={handleBookRoom} />
+                        </motion.div>
+                    )}
                 </div>
 
                 <aside className="sticky top-24 hidden self-start lg:block">
@@ -256,10 +257,9 @@ export default function HotelDetail() {
                         minPrice={minPrice}
                         currency="DT"
                         priceLabel={t('hotelDetail.startingFrom') || 'From'}
-                        priceSuffix="/night"
+                        priceSuffix={t('hotelDetail.pernight')}
                         title={title}
                         location={location}
-                        description={description}
                         entityType="hotel"
                         itemId={detail.id}
                         rating={detail.rating}

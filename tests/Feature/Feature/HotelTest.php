@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Feature;
 
+use App\Models\Amenity;
 use App\Models\Hotel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -25,10 +26,16 @@ class HotelTest extends TestCase
             'stars' => 5,
             'reviews' => 10,
             'image' => 'hotel.jpg',
-            'amenities' => ['wifi', 'pool'],
             'tags' => ['beach'],
             'details' => ['description' => 'Great hotel'],
         ]);
+
+        $amenity = Amenity::create([
+            'name' => ['en' => 'Wifi', 'fr' => 'Wi-Fi', 'ar' => 'واي فاي'],
+            'icon' => 'wifi',
+        ]);
+
+        $hotel->amenities()->attach($amenity);
 
         $this->assertDatabaseHas('hotels', [
             'slug' => 'test-hotel',
@@ -36,5 +43,6 @@ class HotelTest extends TestCase
         ]);
         $this->assertEquals('luxury', $hotel->category_key);
         $this->assertEquals(['label' => 'Luxury'], $hotel->category);
+        $this->assertCount(1, $hotel->fresh()->amenities);
     }
 }

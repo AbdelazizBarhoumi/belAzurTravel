@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class AdminCategoryController extends Controller
@@ -83,6 +84,7 @@ class AdminCategoryController extends Controller
         // Update all entities using this category to reflect the new name if they store it denormalized
         $this->syncEntities($category, $oldKey);
         $this->clearCategoryCache($category->entity_type);
+        $this->clearEntityCaches($category->entity_type);
 
         return response()->json(['data' => $category]);
     }
@@ -108,8 +110,9 @@ class AdminCategoryController extends Controller
 
         $category->delete();
         $this->clearCategoryCache($type);
+        $this->clearEntityCaches($type);
 
-        return response()->json(['message' => 'Category deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function cacheKey(?string $type = null): string
@@ -124,6 +127,47 @@ class AdminCategoryController extends Controller
         if ($type) {
             Cache::forget($this->cacheKey($type));
         }
+    }
+
+    private function clearEntityCaches(string $type): void
+    {
+        $cacheType = $this->cacheTypeForEntityType($type);
+
+        if (! $cacheType) {
+            return;
+        }
+
+        Cache::forget("admin.entity.{$cacheType}");
+        Cache::forget("entity.{$cacheType}.index");
+        Cache::forget("{$cacheType}.index");
+
+        $table = $this->getTableName($type);
+
+        if (! $table) {
+            return;
+        }
+
+        $identifiers = DB::table($table)
+            ->whereNotNull('slug')
+            ->pluck('slug');
+
+        foreach ($identifiers as $identifier) {
+            if (! is_string($identifier) || $identifier === '') {
+                continue;
+            }
+
+            Cache::forget("entity.{$cacheType}.{$identifier}");
+            Cache::forget("{$cacheType}.{$identifier}");
+        }
+    }
+
+    private function cacheTypeForEntityType(string $type): ?string
+    {
+        return match ($type) {
+            'blog' => 'blog-posts',
+            'destinations', 'hotels', 'tours', 'cars', 'events', 'deals' => $type,
+            default => null,
+        };
     }
 
     private function getEntityCount(string $type, string $key): int
@@ -156,9 +200,12 @@ class AdminCategoryController extends Controller
             return;
         }
 
-        DB::table($table)->where('category_key', $oldKey)->update([
-            'category' => json_encode($category->name),
-        ]);
+        // Only update denormalized `category` column where it exists
+        if (Schema::hasColumn($table, 'category')) {
+            DB::table($table)->where('category_key', $oldKey)->update([
+                'category' => json_encode($category->name),
+            ]);
+        }
     }
 
     private function getTableName(string $type): ?string

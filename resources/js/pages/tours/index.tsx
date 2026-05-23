@@ -18,6 +18,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useTours, useCategories } from '@/hooks/usePublicData';
+import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
@@ -52,7 +53,7 @@ const Tours = () => {
             { value: ALL, label: t('common.all') },
             ...dynamicCategories.map((c) => ({
                 value: c.key.toLowerCase(),
-                label: c.name[lang] || c.name.en,
+                label: getLocalizedCategoryLabel(c, lang),
             })),
         ],
         [dynamicCategories, lang, t],
@@ -343,8 +344,8 @@ const Tours = () => {
                                         transition={{ delay: i * 0.1 }}
                                         className="h-full cursor-pointer"
                                     >
-                                        <div className="card-elevated flex h-auto min-h-52 flex-col overflow-hidden rounded-2xl bg-card lg:h-52 lg:flex-row">
-                                            <div className="relative h-52 shrink-0 overflow-hidden lg:h-full lg:w-1/3">
+                                        <div className="card-elevated flex h-auto min-h-52 flex-col overflow-hidden rounded-2xl bg-card lg:h-64 lg:flex-row">
+                                            <div className="relative h-64 shrink-0 overflow-hidden lg:h-full lg:w-1/3">
                                                 <img
                                                     src={tour.image}
                                                     alt={localizeText(

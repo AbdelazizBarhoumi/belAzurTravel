@@ -1,5 +1,4 @@
-CBOR for PHP
-============
+# CBOR for PHP
 
 ![Build Status](https://github.com/Spomky-Labs/cbor-php/workflows/Integrate/badge.svg)
 
@@ -38,8 +37,8 @@ This library supports all Major Types defined in the RFC8949 and has capabilitie
 
 Each object have at least:
 
-* a static method `create`. This method will correctly instantiate the object.
-* can be converted into a binary string: `$object->__toString();` or `(string) $object`.
+- a static method `create`. This method will correctly instantiate the object.
+- can be converted into a binary string: `$object->__toString();` or `(string) $object`.
 
 ### Positive Integer (Major Type 0)
 
@@ -144,8 +143,8 @@ Keys and values in the Map object can be any of CBOR Object type.
 
 **However, be really careful with keys. Please follow the recommendation hereunder:**
 
-* Keys should not be duplicated
-* Keys should be of type Positive or Negative Integer, (Indefinite Length)Byte String or (Indefinite Length)Text String. Other types may cause errors.
+- Keys should not be duplicated
+- Keys should be of type Positive or Negative Integer, (Indefinite Length)Byte String or (Indefinite Length)Text String. Other types may cause errors.
 
 ```php
 <?php
@@ -174,15 +173,15 @@ $object = IndefiniteLengthMapObject::create()
 This library can support any kind of tags.
 It comes with some of the thew described in the specification:
 
-* Base 16 encoding
-* Base 64 encoding
-* Base 64 Url Safe encoding
-* Big Float
-* Decimal Fraction
-* Epoch
-* Timestamp
-* Positive Big Integer
-* Negative Big Integer
+- Base 16 encoding
+- Base 64 encoding
+- Base 64 Url Safe encoding
+- Big Float
+- Decimal Fraction
+- Epoch
+- Timestamp
+- Positive Big Integer
+- Negative Big Integer
 
 You can easily create your own tag by extending the abstract class `CBOR\TagObject`.
 This library provides a `CBOR\Tag\GenericTag` class that can be used for any other unknown/unsupported tags.
@@ -205,14 +204,14 @@ $taggedObject = TimestampTag::create($object); // Returns a \DateTimeImmutable o
 This library can support any kind of "other objects".
 It comes with some of the thew described in the specification:
 
-* False
-* True
-* Null
-* Undefined
-* Half Precision Float
-* Single Precision Float
-* Double Precision Float
-* Simple Value
+- False
+- True
+- Null
+- Undefined
+- Half Precision Float
+- Single Precision Float
+- Double Precision Float
+- Simple Value
 
 You can easily create your own object by extending the abstract class `CBOR\OtherObject`.
 This library provides a `CBOR\OtherObject\GenericTag` class that can be used for any other unknown/unsupported objects.

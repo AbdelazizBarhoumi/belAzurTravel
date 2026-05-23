@@ -27,7 +27,9 @@
         "symfony/console": "<6.4"
     },
     "autoload": {
-        "psr-4": { "Symfony\\Component\\Yaml\\": "" },
+        "psr-4": {
+            "Symfony\\Component\\Yaml\\": ""
+        },
         "exclude-from-classmap": [
             "/Tests/"
         ]

@@ -39,7 +39,9 @@
         "symfony/event-dispatcher-implementation": "2.0|3.0"
     },
     "autoload": {
-        "psr-4": { "Symfony\\Component\\EventDispatcher\\": "" },
+        "psr-4": {
+            "Symfony\\Component\\EventDispatcher\\": ""
+        },
         "exclude-from-classmap": [
             "/Tests/"
         ]

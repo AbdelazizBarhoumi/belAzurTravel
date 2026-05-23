@@ -14,12 +14,12 @@ This document analyzes the consistency of the admin-facing gallery system and co
 
 ## 2. Inconsistency Audit
 
-| Feature | `GalleryImage` Model / DB | Admin UI (`AdminGallery.tsx`) | Status |
-| :--- | :--- | :--- | :--- |
-| `url` / `image` | `url` (string) | `image` (string/file) | Inconsistent key name |
-| `caption` / `title` | `caption` (json) | `title` (i18n) | Inconsistent key name & structure |
-| `sort_order` | `sort_order` (int) | N/A | Missing in UI |
-| `category` | N/A | `category` (string) | Missing in DB/Model |
+| Feature             | `GalleryImage` Model / DB | Admin UI (`AdminGallery.tsx`) | Status                            |
+| :------------------ | :------------------------ | :---------------------------- | :-------------------------------- |
+| `url` / `image`     | `url` (string)            | `image` (string/file)         | Inconsistent key name             |
+| `caption` / `title` | `caption` (json)          | `title` (i18n)                | Inconsistent key name & structure |
+| `sort_order`        | `sort_order` (int)        | N/A                           | Missing in UI                     |
+| `category`          | N/A                       | `category` (string)           | Missing in DB/Model               |
 
 ## 3. Observations & Recommendations
 
@@ -28,6 +28,7 @@ This document analyzes the consistency of the admin-facing gallery system and co
 - **Missing Migration:** The database needs to be updated if the admin features (categories and titles) are intended to be supported. Alternatively, the UI should be updated to align with the existing `GalleryImage` model (caption, sort_order).
 
 **Action Items:**
+
 1. Determine if `GalleryImage` should be expanded to support `title` (or `caption`) and `category`.
 2. Update `GalleryImage` model and migration if necessary.
 3. Refactor `AdminGallery.tsx` to use the actual `GalleryImage` API instead of the generic `useAdminStore`.

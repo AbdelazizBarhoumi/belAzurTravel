@@ -1,9 +1,9 @@
 ---
 name: merge-up
 description: >
-  Cascade-merge maintained branches from oldest to newest (e.g.
-  3.1.x → 3.2.x → 3.3.x → 4.0.x). Use when the user says "merge branches",
-  "merge up", "cascade merge", "sync branches", or "update branches".
+    Cascade-merge maintained branches from oldest to newest (e.g.
+    3.1.x → 3.2.x → 3.3.x → 4.0.x). Use when the user says "merge branches",
+    "merge up", "cascade merge", "sync branches", or "update branches".
 ---
 
 # Branch Cascade Merge
@@ -32,6 +32,7 @@ git status --porcelain --untracked-files=no
 ```
 
 If any output, **stop**:
+
 > "The working tree is not clean. Please commit or stash your changes first."
 
 ---
@@ -102,12 +103,12 @@ git commit --no-edit
 
 #### Conflict resolution rules
 
-| File pattern | Strategy |
-|---|---|
-| `CHANGELOG*.md` | Keep entries from both sides; newer branch entries on top |
-| Version constants, `composer.json` branch aliases | Keep the TARGET branch value |
-| `composer.json` dependency versions | Keep the TARGET branch value (newer branch may require higher versions) |
-| Code files | Merge logically based on context; when unsure, ask the user |
+| File pattern                                      | Strategy                                                                |
+| ------------------------------------------------- | ----------------------------------------------------------------------- |
+| `CHANGELOG*.md`                                   | Keep entries from both sides; newer branch entries on top               |
+| Version constants, `composer.json` branch aliases | Keep the TARGET branch value                                            |
+| `composer.json` dependency versions               | Keep the TARGET branch value (newer branch may require higher versions) |
+| Code files                                        | Merge logically based on context; when unsure, ask the user             |
 
 After resolving, show `git diff HEAD~1` (first parent of the merge commit, i.e.
 the previous TARGET state) and wait for the user to confirm the resolution looks
@@ -132,6 +133,7 @@ castor phpunit
 If tests fail, first check whether the failure is pre-existing: run the same
 test on the TARGET branch before the merge. Only fix failures introduced by the
 merge:
+
 1. Analyze and fix the code.
 2. Commit the fix with a descriptive message.
 3. Re-run failing tests until green.

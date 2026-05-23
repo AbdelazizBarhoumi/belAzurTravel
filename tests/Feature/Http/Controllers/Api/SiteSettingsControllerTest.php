@@ -15,7 +15,88 @@ class SiteSettingsControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
+
+        SiteSetting::query()->create([
+            'company_name' => 'BelAzurTravel',
+            'email' => 'hello@voyageur.com',
+            'phone' => '+1 (555) 123-4567',
+            'whatsapp' => '15551234567',
+            'address' => '123 Travel St, NY 10001',
+            'plus_code' => '8FVC9G8F+5V',
+            'year' => 2026,
+            'social_links' => [
+                ['label' => 'Facebook', 'href' => 'https://facebook.com'],
+                ['label' => 'Instagram', 'href' => 'https://instagram.com'],
+            ],
+            'legal_sections' => [
+                [
+                    'title' => ['en' => 'Terms of Use', 'fr' => 'Conditions d’utilisation', 'ar' => 'شروط الاستخدام'],
+                    'body' => ['en' => 'Terms', 'fr' => 'Conditions', 'ar' => 'شروط'],
+                ],
+            ],
+            'footer_links' => [
+                ['labelKey' => 'nav.destinations', 'href' => '/destinations', 'group' => 'quick'],
+            ],
+            'hours' => [
+                [
+                    'dayKey' => 'footer.mon',
+                    'ranges' => [['value' => '09:00 - 18:00']],
+                    'closed' => false,
+                ],
+            ],
+            'content' => [
+                'nav' => [
+                    'simpleLinks' => [
+                        [
+                            'type' => 'simple',
+                            'label' => ['en' => 'Home', 'fr' => 'Accueil', 'ar' => 'الرئيسية'],
+                            'href' => '/',
+                        ],
+                        [
+                            'type' => 'dropdown',
+                            'label' => ['en' => 'Services', 'fr' => 'Services', 'ar' => 'الخدمات'],
+                            'items' => [
+                                [
+                                    'label' => ['en' => 'Tours', 'fr' => 'Circuits', 'ar' => 'الجولات'],
+                                    'mode' => 'filter',
+                                    'value' => 'tours',
+                                    'href' => '/tours',
+                                ],
+                            ],
+                        ],
+                    ],
+                    'settings' => [
+                        'header' => [
+                            [
+                                'pageKey' => 'destinations',
+                                'enabled' => true,
+                                'isDropdown' => true,
+                                'linkSelf' => true,
+                                'placement' => 'top',
+                                'items' => [
+                                    [
+                                        'label' => ['en' => 'Categories', 'fr' => 'Categories', 'ar' => 'Categories'],
+                                        'mode' => 'categories',
+                                        'value' => '',
+                                    ],
+                                ],
+                            ],
+                        ],
+                        'footer' => [
+                            [
+                                'title' => ['en' => 'Quick Links', 'fr' => 'Quick Links', 'ar' => 'Quick Links'],
+                                'pageKeys' => ['destinations'],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        Cache::forget('site-settings');
+        foreach (['en', 'fr', 'ar'] as $locale) {
+            Cache::forget("site-settings:{$locale}");
+        }
     }
 
     /**
@@ -160,6 +241,119 @@ class SiteSettingsControllerTest extends TestCase
         $setting = SiteSetting::first();
         $this->assertIsArray($setting->content['nav']['simpleLinks']);
         $this->assertEquals('dropdown', $setting->content['nav']['simpleLinks'][1]['type']);
+    }
+
+    public function test_authenticated_user_can_save_legacy_string_dropdown_labels(): void
+    {
+        $user = $this->createAuthenticatedAdmin();
+
+        $payload = [
+            'companyName' => 'BelAzurTravel',
+            'email' => 'hello@example.com',
+            'phone' => '+1 (555) 123-4567',
+            'content' => [
+                'nav' => [
+                    'simpleLinks' => [
+                        [
+                            'type' => 'dropdown',
+                            'label' => 'Services',
+                            'items' => [
+                                [
+                                    'label' => 'Tours',
+                                    'mode' => 'filter',
+                                    'value' => 'tours',
+                                    'href' => '/tours',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->actingAs($user)
+            ->putJson('/api/site-settings', $payload)
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->getJson('/api/site-settings')
+            ->assertOk()
+            ->assertJsonPath('content.nav.simpleLinks.0.label.en', 'Services')
+            ->assertJsonPath('content.nav.simpleLinks.0.items.0.label.fr', 'Tours');
+    }
+
+    public function test_authenticated_user_can_save_dynamic_category_dropdown_without_labels(): void
+    {
+        $user = $this->createAuthenticatedAdmin();
+
+        $payload = [
+            'companyName' => 'BelAzurTravel',
+            'email' => 'hello@example.com',
+            'phone' => '+1 (555) 123-4567',
+            'content' => [
+                'nav' => [
+                    'simpleLinks' => [
+                        [
+                            'type' => 'dropdown',
+                            'label' => ['en' => 'Destinations', 'fr' => 'Destinations', 'ar' => 'الوجهات'],
+                            'items' => [
+                                [
+                                    'mode' => 'categories',
+                                    'value' => '',
+                                    'href' => '/destinations',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->actingAs($user)
+            ->putJson('/api/site-settings', $payload)
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->getJson('/api/site-settings')
+            ->assertOk()
+            ->assertJsonPath('content.nav.simpleLinks.0.items.0.mode', 'categories');
+    }
+
+    public function test_authenticated_user_cannot_save_dropdown_labels_with_missing_translations(): void
+    {
+        $user = $this->createAuthenticatedAdmin();
+
+        $payload = [
+            'companyName' => 'BelAzurTravel',
+            'email' => 'hello@example.com',
+            'phone' => '+1 (555) 123-4567',
+            'content' => [
+                'nav' => [
+                    'simpleLinks' => [
+                        [
+                            'type' => 'dropdown',
+                            'label' => ['en' => 'Services', 'fr' => 'Services', 'ar' => 'الخدمات'],
+                            'items' => [
+                                [
+                                    'label' => ['en' => 'Tours', 'fr' => 'Circuits'],
+                                    'mode' => 'filter',
+                                    'value' => 'tours',
+                                    'href' => '/tours',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $this->actingAs($user)
+            ->putJson('/api/site-settings', $payload)
+            ->assertStatus(422)
+            ->assertJsonPath('message', __('messages.dropdown_label_translation_required', [
+                'index' => '0.0',
+                'lang' => 'ar',
+            ]));
     }
 
     public function test_authenticated_user_can_update_structured_hours(): void
@@ -325,6 +519,6 @@ class SiteSettingsControllerTest extends TestCase
     protected function createAuthenticatedAdmin()
     {
         return User::factory()
-            ->create(['role' => 'admin']);
+            ->create(['role' => 'superadmin']);
     }
 }

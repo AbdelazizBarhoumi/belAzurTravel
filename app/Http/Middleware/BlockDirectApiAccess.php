@@ -70,6 +70,6 @@ class BlockDirectApiAccess
 
         // Block direct access (curl, Postman, browser address bar, etc.)
         // Return 404 instead of 403 to avoid revealing the endpoint exists
-        abort(404, 'This endpoint is not publicly accessible.');
+        abort(404, __('messages.endpoint_not_public'));
     }
 }

@@ -1,10 +1,8 @@
-Clock Component
-===============
+# Clock Component
 
 Symfony Clock decouples applications from the system clock.
 
-Getting Started
----------------
+## Getting Started
 
 ```bash
 composer require symfony/clock
@@ -37,11 +35,10 @@ $service = new MyClockSensitiveClass($clock);
 $service->doSomething();
 ```
 
-Resources
----------
+## Resources
 
- * [Documentation](https://symfony.com/doc/current/components/clock.html)
- * [Contributing](https://symfony.com/doc/current/contributing/index.html)
- * [Report issues](https://github.com/symfony/symfony/issues) and
-   [send Pull Requests](https://github.com/symfony/symfony/pulls)
-   in the [main Symfony repository](https://github.com/symfony/symfony)
+- [Documentation](https://symfony.com/doc/current/components/clock.html)
+- [Contributing](https://symfony.com/doc/current/contributing/index.html)
+- [Report issues](https://github.com/symfony/symfony/issues) and
+  [send Pull Requests](https://github.com/symfony/symfony/pulls)
+  in the [main Symfony repository](https://github.com/symfony/symfony)

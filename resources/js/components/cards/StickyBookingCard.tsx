@@ -71,7 +71,6 @@ export function StickyBookingCard({
     maxGroup,
     type,
     rating,
-    reviews,
     ratingMeta,
     primaryButtonLabel,
     secondaryButtonLabel,
@@ -117,7 +116,15 @@ export function StickyBookingCard({
             onBook();
             return;
         }
-        setBookingOpen(true);
+
+        // If this card has an entity type we can open the booking dialog,
+        // otherwise fallback to the contact page so users can still book.
+        if (entityType) {
+            setBookingOpen(true);
+            return;
+        }
+
+        window.open('/contact', '_self');
     };
 
     const displayPrice = price ?? minPrice ?? 0;
@@ -144,10 +151,13 @@ export function StickyBookingCard({
               ]
             : []),
     ];
+    // Provide localized default labels so buttons always display
     const displayPriceLabel = priceLabel;
-    const displayPrimaryButtonLabel = primaryButtonLabel;
-    const displaySecondaryButtonLabel = secondaryButtonLabel;
-    const displayTertiaryButtonLabel = tertiaryButtonLabel;
+    const displayPrimaryButtonLabel =
+        primaryButtonLabel ?? t('actions.book_now');
+    const displaySecondaryButtonLabel =
+        secondaryButtonLabel ?? t('actions.whatsapp');
+    const displayTertiaryButtonLabel = tertiaryButtonLabel ?? t('actions.call');
 
     return (
         <div className="card-elevated sticky top-24 h-fit self-start rounded-3xl border border-border bg-card p-6">
@@ -178,11 +188,7 @@ export function StickyBookingCard({
                 <div className="mb-4 flex items-center gap-2">
                     <Star className="h-4 w-4 fill-current text-secondary" />
                     <span className="font-bold text-foreground">{rating}</span>
-                    {reviews !== undefined && (
-                        <span className="text-sm text-muted-foreground">
-                            · {reviews} {t('hotels.reviews')}
-                        </span>
-                    )}
+
                     {ratingMeta && (
                         <span className="text-sm text-muted-foreground">
                             · {ratingMeta}
@@ -275,44 +281,31 @@ export function StickyBookingCard({
             </div>
 
             <div className="space-y-3">
-                {displayPrimaryButtonLabel && (
+                <Button onClick={handleBookClick} size="lg" className="w-full">
+                    {displayPrimaryButtonLabel}
+                </Button>
+
+                <div className="flex gap-3">
                     <Button
-                        onClick={handleBookClick}
+                        onClick={handleWhatsApp}
+                        variant="outline"
                         size="lg"
-                        className="w-full"
+                        className="flex-1 gap-2"
                     >
-                        {displayPrimaryButtonLabel}
+                        <MessageCircle className="h-4 w-4" />
+                        {displaySecondaryButtonLabel}
                     </Button>
-                )}
 
-                {(displaySecondaryButtonLabel ||
-                    displayTertiaryButtonLabel) && (
-                    <div className="flex gap-3">
-                        {displaySecondaryButtonLabel && (
-                            <Button
-                                onClick={handleWhatsApp}
-                                variant="outline"
-                                size="lg"
-                                className="flex-1 gap-2"
-                            >
-                                <MessageCircle className="h-4 w-4" />
-                                {displaySecondaryButtonLabel}
-                            </Button>
-                        )}
-
-                        {displayTertiaryButtonLabel && (
-                            <Button
-                                onClick={handleCall}
-                                variant="outline"
-                                size="lg"
-                                className="flex-1 gap-2"
-                            >
-                                <Phone className="h-4 w-4" />
-                                {displayTertiaryButtonLabel}
-                            </Button>
-                        )}
-                    </div>
-                )}
+                    <Button
+                        onClick={handleCall}
+                        variant="outline"
+                        size="lg"
+                        className="flex-1 gap-2"
+                    >
+                        <Phone className="h-4 w-4" />
+                        {displayTertiaryButtonLabel}
+                    </Button>
+                </div>
             </div>
 
             {entityType && (

@@ -180,17 +180,20 @@ export default function DestinationDetail() {
                         />
                     </div>
 
-                    {destination.about && (
-                        <section className="mt-8 max-w-3xl">
-                            <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
-                                {t('destinationDetail.about')}{' '}
-                                {localize(destination.name, lang)}
-                            </h2>
-                            <p className="leading-relaxed text-muted-foreground">
-                                {localize(destination.about, lang)}
-                            </p>
-                        </section>
-                    )}
+                    {destination.about &&
+                        Object.values(destination.about).some(
+                            (val) => val && val.trim().length > 0,
+                        ) && (
+                            <section className="mt-8 max-w-3xl">
+                                <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
+                                    {t('destinationDetail.about')}{' '}
+                                    {localize(destination.name, lang)}
+                                </h2>
+                                <p className="leading-relaxed text-muted-foreground">
+                                    {localize(destination.about, lang)}
+                                </p>
+                            </section>
+                        )}
 
                     {destination.highlights &&
                         destination.highlights.length > 0 && (
@@ -338,7 +341,7 @@ export default function DestinationDetail() {
                 </aside>
             </motion.div>
 
-            {relatedHotels.length > 0 && (
+            {relatedHotels && relatedHotels.length > 0 && (
                 <section className="mb-12">
                     <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
                         {t('destinationDetail.whereToStay')}
@@ -372,7 +375,7 @@ export default function DestinationDetail() {
                 </section>
             )}
 
-            {relatedTours.length > 0 && (
+            {relatedTours && relatedTours.length > 0 && (
                 <section>
                     <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
                         {t('destinationDetail.suggestedTours')}

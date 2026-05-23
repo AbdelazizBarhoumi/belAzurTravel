@@ -1,7 +1,13 @@
 {
     "name": "laravel/passkeys",
     "description": "Passwordless authentication using WebAuthn/passkeys for Laravel",
-    "keywords": ["laravel", "passkeys", "webauthn", "passwordless", "authentication"],
+    "keywords": [
+        "laravel",
+        "passkeys",
+        "webauthn",
+        "passwordless",
+        "authentication"
+    ],
     "homepage": "https://github.com/laravel/passkeys-server",
     "license": "MIT",
     "support": {

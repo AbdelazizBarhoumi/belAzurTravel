@@ -3,6 +3,7 @@ import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { buildRequestHeaders } from '@/api/requestHeaders';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
@@ -27,16 +28,9 @@ const Register = () => {
             const res = await fetch('/register', {
                 method: 'POST',
                 credentials: 'include',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN':
-                        (
-                            document.querySelector(
-                                'meta[name="csrf-token"]',
-                            ) as HTMLMetaElement
-                        )?.content || '',
-                },
+                headers: buildRequestHeaders({
+                    headers: { 'Content-Type': 'application/json' },
+                }),
                 body: JSON.stringify({
                     name,
                     email,

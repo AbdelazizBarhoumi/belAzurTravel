@@ -25,30 +25,23 @@ class BookingStatusNotification extends Notification
             'type' => 'booking.status_changed',
             'booking_id' => $this->booking->id,
             'url' => '/client/bookings/'.$this->booking->id,
-            'fr' => "Votre reservation #{$this->booking->id} est {$this->statusLabel($status, 'fr')}",
-            'ar' => "حجزك رقم {$this->booking->id} {$this->statusLabel($status, 'ar')}",
-            'en' => "Your booking #{$this->booking->id} is {$this->statusLabel($status, 'en')}",
+            'fr' => $this->message($status, 'fr'),
+            'ar' => $this->message($status, 'ar'),
+            'en' => $this->message($status, 'en'),
         ];
     }
 
-    private function statusLabel(string $status, string $lang): string
+    private function message(string $status, string $lang): string
     {
-        return match ($status) {
-            'Confirmed' => match ($lang) {
-                'fr' => 'confirmee',
-                'ar' => 'مؤكد',
-                default => 'confirmed',
-            },
-            'Cancelled' => match ($lang) {
-                'fr' => 'annulee',
-                'ar' => 'ملغى',
-                default => 'cancelled',
-            },
-            default => match ($lang) {
-                'fr' => 'en attente',
-                'ar' => 'قيد الانتظار',
-                default => 'pending',
-            },
+        $statusKey = match ($status) {
+            'Confirmed' => 'messages.status_confirmed',
+            'Cancelled' => 'messages.status_cancelled',
+            default => 'messages.status_pending',
         };
+
+        return __('messages.booking_status_changed', [
+            'id' => $this->booking->id,
+            'status' => __($statusKey, [], $lang),
+        ], $lang);
     }
 }

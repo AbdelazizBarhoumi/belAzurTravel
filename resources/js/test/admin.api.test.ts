@@ -125,4 +125,91 @@ describe('saveAdminEntity', () => {
         ]);
         expect(formData.get('images')).toBeNull();
     });
+
+    it('uses JSON bodies when no files are present so empty arrays are preserved', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            json: vi.fn().mockResolvedValue({ data: {} }),
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        await saveAdminEntity('hotels', {
+            id: '18',
+            name: 'Marina Hotel',
+            rooms: [],
+            amenities: [],
+            gallery: [],
+        } as never);
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+
+        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(new URL(url).pathname).toBe('/api/admin/hotels/18');
+        expect(init.method).toBe('PUT');
+        expect(init.body).toBe(
+            JSON.stringify({
+                id: '18',
+                name: 'Marina Hotel',
+                rooms: [],
+                amenities: [],
+                gallery: [],
+            }),
+        );
+    });
+
+    it('keeps hotel room object boundaries when multipart hotel saves include an image', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            json: vi.fn().mockResolvedValue({ data: {} }),
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        const mainImage = new File(['main'], 'hotel.png', {
+            type: 'image/png',
+        });
+        const roomImage = new File(['room'], 'room.png', {
+            type: 'image/png',
+        });
+
+        await saveAdminEntity('hotels', {
+            id: '99',
+            name_en: 'Beach Hotel',
+            image: mainImage,
+            rooms: [
+                {
+                    id: 'item-1',
+                    name: {
+                        en: 'Deluxe Room',
+                        fr: 'Deluxe Room',
+                        ar: 'Deluxe Room',
+                    },
+                    description: {
+                        en: 'Sea view',
+                        fr: 'Sea view',
+                        ar: 'Sea view',
+                    },
+                    pricePerNight: 180,
+                    capacity: 2,
+                    size: 35,
+                    features: ['Balcony'],
+                    images: [roomImage],
+                },
+            ],
+        } as never);
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+
+        const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(init.method).toBe('POST');
+        expect(init.body).toBeInstanceOf(FormData);
+
+        const formData = init.body as FormData;
+        expect(formData.get('_method')).toBe('PUT');
+        expect(formData.get('rooms[0][id]')).toBe('item-1');
+        expect(formData.get('rooms[0][name][en]')).toBe('Deluxe Room');
+        expect(formData.get('rooms[0][pricePerNight]')).toBe('180');
+        expect(formData.getAll('rooms[0][images][]')).toHaveLength(1);
+        expect(formData.get('rooms[0][images][]')).toBe(roomImage);
+        expect(formData.get('rooms[][id]')).toBeNull();
+    });
 });

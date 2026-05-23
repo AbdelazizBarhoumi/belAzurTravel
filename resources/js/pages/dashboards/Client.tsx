@@ -84,12 +84,15 @@ const ClientDashboard = () => {
 
     useEffect(() => {
         if (user) {
-            setProfileName(user.name);
-            setProfileEmail(user.email);
+            // Defer to avoid synchronous setState in effect
+            setTimeout(() => {
+                setProfileName(user.name);
+                setProfileEmail(user.email);
+            }, 0);
         }
     }, [user]);
 
-    const { lang, t, dir, setLanguage } = useLanguage();
+    const { lang, t, dir, setLang } = useLanguage();
     const queryClient = useQueryClient();
     const { favorites, remove: removeFavorite } = useFavorites();
     const isRtl = dir === 'rtl';
@@ -142,7 +145,7 @@ const ClientDashboard = () => {
     const langMutation = useMutation({
         mutationFn: (newLang: string) => updateClientLanguage(newLang),
         onSuccess: (_, newLang) => {
-            setLanguage(newLang as Lang);
+            setLang(newLang as Lang);
             toast.success(t('client.languageUpdated') || 'Language updated.');
         },
     });
@@ -623,7 +626,7 @@ const ClientDashboard = () => {
                                                     </h3>
                                                     <p className="text-xs text-muted-foreground">
                                                         {t(
-                                                            `nav.${item.type}s` as any,
+                                                            `nav.${item.type}s`,
                                                         ) || item.type}
                                                     </p>
                                                 </div>
@@ -712,8 +715,8 @@ const ClientDashboard = () => {
                                                             </div>
                                                         </div>
                                                         <p className="text-sm font-bold text-primary">
-                                                            {t('common.from')}{' '}
-                                                            ${rec.price}
+                                                            {t('common.from')} $
+                                                            {rec.price}
                                                         </p>
                                                     </div>
                                                 </div>

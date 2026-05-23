@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/DatePicker';
@@ -50,8 +50,11 @@ export function BookingDialog({
 
     useEffect(() => {
         if (open && user) {
-            setName(user.name || '');
-            setEmail(user.email || '');
+            // Defer state updates to avoid synchronous setState within effect
+            setTimeout(() => {
+                setName(user.name || '');
+                setEmail(user.email || '');
+            }, 0);
         }
     }, [open, user]);
 

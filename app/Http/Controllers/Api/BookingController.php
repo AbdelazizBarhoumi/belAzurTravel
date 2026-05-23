@@ -60,22 +60,22 @@ class BookingController extends Controller
         if (! empty($data['promo_code'])) {
             $promo = Promo::where('code', $data['promo_code'])->first();
             if (! $promo) {
-                throw ValidationException::withMessages(['promo_code' => 'Invalid promo code.']);
+                throw ValidationException::withMessages(['promo_code' => __('messages.promo_invalid')]);
             }
             if (isset($promo->details['active']) && $promo->details['active'] === false) {
-                throw ValidationException::withMessages(['promo_code' => 'This promo code is inactive.']);
+                throw ValidationException::withMessages(['promo_code' => __('messages.promo_inactive')]);
             }
             if (! empty($promo->details['applicable_to']) && $promo->details['applicable_to'] !== 'all' && $promo->details['applicable_to'] !== $data['type']) {
-                throw ValidationException::withMessages(['promo_code' => 'This promo is not applicable to this category.']);
+                throw ValidationException::withMessages(['promo_code' => __('messages.promo_not_applicable')]);
             }
             $usageCount = Booking::where('promo_code', $data['promo_code'])->count();
             if (! empty($promo->details['usage_limit']) && (int) $promo->details['usage_limit'] > 0 && $usageCount >= (int) $promo->details['usage_limit']) {
-                throw ValidationException::withMessages(['promo_code' => 'Promo usage limit reached.']);
+                throw ValidationException::withMessages(['promo_code' => __('messages.promo_usage_limit_reached')]);
             }
             $userUsageCount = Booking::where('promo_code', $data['promo_code'])->where('user_id', $request->user()->id)->count();
             $perUserLimit = $promo->details['per_user_limit'] ?? 1;
             if ((int) $perUserLimit > 0 && $userUsageCount >= (int) $perUserLimit) {
-                throw ValidationException::withMessages(['promo_code' => 'You have already used this promo code.']);
+                throw ValidationException::withMessages(['promo_code' => __('messages.promo_already_used')]);
             }
         }
 
@@ -116,7 +116,7 @@ class BookingController extends Controller
             && $booking->start_date
             && now()->gte(Carbon::parse($booking->start_date)->subDay()),
             422,
-            'Cancellation is closed within 24 hours of travel.'
+            __('messages.cancellation_closed')
         );
 
         $booking->update([
@@ -171,7 +171,7 @@ class BookingController extends Controller
             default => null,
         };
 
-        abort_unless($query?->exists(), 422, 'Selected item does not exist.');
+        abort_unless($query?->exists(), 422, __('messages.selected_item_missing'));
     }
 
     private function notifyOperations(Booking $booking, string $type): void

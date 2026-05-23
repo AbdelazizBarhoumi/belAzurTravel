@@ -22,7 +22,7 @@ import {
     ArrowUp,
     ArrowDown,
 } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -44,8 +44,16 @@ import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavSettings } from '@/hooks/useNavSettings';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { useCategories, type PublicCategory } from '@/hooks/usePublicData';
 import { Textarea } from '@/components/ui/textarea';
 import { normalizeLegalBody, type LegalBodyFormat } from '@/lib/legal';
+import {
+    createLocalizedText,
+    normalizeLocalizedText,
+    normalizeNavSettingsDraft,
+    normalizeSiteSettingsContentForSave,
+    type LocalizedText,
+} from '@/lib/siteSettingsPayload';
 import {
     AVAILABLE_PAGES,
     getPage,
@@ -56,11 +64,7 @@ import {
     normalizeHours,
     type SiteHourEntry,
 } from '@/lib/site-hours';
-import type {
-    NavSettings,
-    DropdownItemConfig,
-    HeaderEntry,
-} from '@/lib/nav-config';
+import type { NavSettings, HeaderEntry } from '@/lib/nav-config';
 
 interface SocialLink {
     label: string;
@@ -82,6 +86,51 @@ function sanitizeNavSettings(nav: NavSettings): NavSettings {
                 allowedPageKeys.has(pageKey),
             ),
         })),
+    };
+}
+
+function resolveCategoryLabel(
+    category: PublicCategory,
+    lang: 'en' | 'fr' | 'ar',
+): string {
+    return category.name[lang] ?? category.name.en ?? category.key;
+}
+
+function getCategoryByKey(
+    categories: PublicCategory[],
+    key: string,
+): PublicCategory | undefined {
+    return categories.find((category) => category.key === key);
+}
+
+function getLocalizedCategoryName(category: PublicCategory): LocalizedText {
+    return normalizeLocalizedText(category.name);
+}
+
+function getDropdownLabelValue(
+    item: HeaderEntry['items'][number],
+    lang: 'en' | 'fr' | 'ar',
+): string {
+    return normalizeLocalizedText(
+        (item as HeaderEntry['items'][number] & { label?: unknown }).label,
+    )[lang];
+}
+
+function updateDropdownItemLabel(
+    item: HeaderEntry['items'][number],
+    lang: 'en' | 'fr' | 'ar',
+    value: string,
+): HeaderEntry['items'][number] {
+    const current = normalizeLocalizedText(
+        (item as HeaderEntry['items'][number] & { label?: unknown }).label,
+    );
+
+    return {
+        ...item,
+        label: {
+            ...current,
+            [lang]: value,
+        } as LocalizedText,
     };
 }
 
@@ -438,14 +487,6 @@ export default function AdminSiteSettings() {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
-    const [contactTitle, setContactTitle] = useState<Record<string, string>>({
-        en: '',
-        fr: '',
-        ar: '',
-    });
-    const [contactDescription, setContactDescription] = useState<
-        Record<string, string>
-    >({ en: '', fr: '', ar: '' });
     const [hours, setHours] = useState<HourRow[]>([]);
     const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
     const [legalSectionsState, setLegalSectionsState] = useState<
@@ -464,6 +505,35 @@ export default function AdminSiteSettings() {
     const lastSavedLegalRef = useRef<string>('');
     const autosaveReadyRef = useRef(false);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+    const { data: destinationCategories = [] } = useCategories('destinations');
+    const { data: hotelCategories = [] } = useCategories('hotels');
+    const { data: tourCategories = [] } = useCategories('tours');
+    const { data: carCategories = [] } = useCategories('cars');
+    const { data: eventCategories = [] } = useCategories('events');
+    const { data: dealCategories = [] } = useCategories('deals');
+    const { data: blogCategories = [] } = useCategories('blog');
+
+    const categoriesByPage = useMemo(
+        () => ({
+            destinations: destinationCategories,
+            hotels: hotelCategories,
+            tours: tourCategories,
+            cars: carCategories,
+            events: eventCategories,
+            deals: dealCategories,
+            blog: blogCategories,
+        }),
+        [
+            destinationCategories,
+            hotelCategories,
+            tourCategories,
+            carCategories,
+            eventCategories,
+            dealCategories,
+            blogCategories,
+        ],
+    );
 
     // Keep draft in sync when settings are loaded/changed externally
     // (e.g., after initial fetch or when reset is applied)
@@ -503,12 +573,14 @@ export default function AdminSiteSettings() {
                 placement: 'more',
                 items: [],
             }));
-            setDraft({
-                ...footerNormalizedSettings,
-                header: [...headerEntries, ...newEntries],
-            });
+            setDraft(
+                normalizeNavSettingsDraft({
+                    ...footerNormalizedSettings,
+                    header: [...headerEntries, ...newEntries],
+                }),
+            );
         } else {
-            setDraft(footerNormalizedSettings);
+            setDraft(normalizeNavSettingsDraft(footerNormalizedSettings));
         }
     }, [settings]);
 
@@ -520,16 +592,6 @@ export default function AdminSiteSettings() {
         setEmail(siteSettings.email || '');
         setPhone(siteSettings.phone || '');
         setWhatsapp(siteSettings.whatsapp || '');
-        setContactTitle(
-            siteSettings.content?.contact?.title || { en: '', fr: '', ar: '' },
-        );
-        setContactDescription(
-            siteSettings.content?.contact?.description || {
-                en: '',
-                fr: '',
-                ar: '',
-            },
-        );
         setHours(normalizeHourRows(normalizeHours(siteSettings.hours || [])));
         setSocialLinks(siteSettings.socialLinks || []);
         setLegalSectionsState(
@@ -555,7 +617,10 @@ export default function AdminSiteSettings() {
         useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     );
 
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
+
+    const getCategoriesForPage = (pageKey: string): PublicCategory[] =>
+        categoriesByPage[pageKey as keyof typeof categoriesByPage] ?? [];
 
     const setHeader = (idx: number, patch: Partial<HeaderEntry>) => {
         const nextHeader = draft.header.map((h, i) =>
@@ -580,20 +645,30 @@ export default function AdminSiteSettings() {
 
     const addItem = (idx: number) => {
         const entry = draft.header[idx];
-        const newLabel = {
-            en: 'New item',
-            fr: 'New item',
-            ar: 'New item',
-        } as any;
+        const firstCategory = getCategoriesForPage(entry.pageKey)[0];
         setHeader(idx, {
             items: [
                 ...entry.items,
-                { label: newLabel, mode: 'filter', value: '' } as any,
+                {
+                    label: firstCategory
+                        ? getLocalizedCategoryName(firstCategory)
+                        : createLocalizedText('New item'),
+                    mode: 'filter',
+                    value: firstCategory?.key ?? '',
+                },
             ],
         });
     };
 
-    const updateItem = (hIdx: number, iIdx: number, patch: Partial<any>) => {
+    const updateItem = (
+        hIdx: number,
+        iIdx: number,
+        patch: Partial<
+            HeaderEntry['items'][number] & {
+                activeLang?: 'en' | 'fr' | 'ar';
+            }
+        >,
+    ) => {
         const entry = draft.header[hIdx];
         setHeader(hIdx, {
             items: entry.items.map((it: any, i: number) =>
@@ -829,20 +904,31 @@ export default function AdminSiteSettings() {
                 Array.isArray(entry.items)
             ) {
                 for (const [iIdx, item] of entry.items.entries()) {
-                    const label = (item as any).label;
                     const key = `${hIdx}-${iIdx}`;
-                    if (!label || typeof label !== 'object') {
+
+                    // Skip label validation if mode is 'categories' (dynamic)
+                    if (item.mode === 'categories') continue;
+
+                    const rawLabel = (
+                        item as HeaderEntry['items'][number] & {
+                            label?: unknown;
+                        }
+                    ).label;
+                    if (rawLabel === undefined || rawLabel === null) {
                         errors[key] = 'Provide translations for EN / FR / AR';
                         continue;
                     }
-                    for (const k of ['en', 'fr', 'ar']) {
+
+                    const label = normalizeLocalizedText(rawLabel);
+
+                    for (const k of ['en', 'fr', 'ar'] as const) {
+                        const val = label[k];
                         if (
-                            !label[k] ||
-                            typeof label[k] !== 'string' ||
-                            label[k].trim() === ''
+                            val === undefined ||
+                            val === null ||
+                            (typeof val === 'string' && val.trim() === '')
                         ) {
-                            errors[key] =
-                                `Missing ${k.toUpperCase()} translation`;
+                            errors[key] = t('admin.settings.missingTranslation').replace(':lang', k.toUpperCase());
                             break;
                         }
                     }
@@ -860,7 +946,12 @@ export default function AdminSiteSettings() {
         setFormErrors({});
 
         try {
-            const sanitizedDraft = sanitizeNavSettings(draft);
+            const sanitizedDraft = normalizeNavSettingsDraft(
+                sanitizeNavSettings(draft),
+            );
+            const normalizedContent = normalizeSiteSettingsContentForSave(
+                siteSettings.content ?? {},
+            );
 
             await apiFetch('/api/site-settings', {
                 method: 'PUT',
@@ -883,15 +974,12 @@ export default function AdminSiteSettings() {
                             (entry.closed || entry.ranges.length > 0),
                     ),
                     content: {
-                        ...(siteSettings.content ?? {}),
+                        ...normalizedContent,
                         nav: {
-                            ...(siteSettings.content?.nav ?? {}),
+                            ...(normalizedContent.nav as
+                                | Record<string, unknown>
+                                | undefined),
                             settings: sanitizedDraft,
-                        },
-                        contact: {
-                            ...(siteSettings.content?.contact ?? {}),
-                            title: contactTitle,
-                            description: contactDescription,
                         },
                     },
                     legalSections: buildLegalPayload(),
@@ -983,7 +1071,9 @@ export default function AdminSiteSettings() {
                                     onChange={(e) =>
                                         setCompanyName(e.target.value)
                                     }
-                                    placeholder="BelAzur Travel"
+                                    placeholder={t(
+                                        'admin.settings.placeholder.companyName',
+                                    )}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -991,7 +1081,9 @@ export default function AdminSiteSettings() {
                                 <Input
                                     value={address}
                                     onChange={(e) => setAddress(e.target.value)}
-                                    placeholder="City, country"
+                                    placeholder={t(
+                                        'admin.settings.placeholder.address',
+                                    )}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -1001,7 +1093,9 @@ export default function AdminSiteSettings() {
                                     onChange={(e) =>
                                         setPlusCode(e.target.value)
                                     }
-                                    placeholder="8FVC9G8F+5V"
+                                    placeholder={t(
+                                        'admin.settings.placeholder.plusCode',
+                                    )}
                                 />
                                 <p className="text-xs text-muted-foreground">
                                     {t('admin.destinationForm.imageHelper')}
@@ -1031,7 +1125,9 @@ export default function AdminSiteSettings() {
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="hello@example.com"
+                                    placeholder={t(
+                                        'admin.settings.placeholder.email',
+                                    )}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -1039,7 +1135,9 @@ export default function AdminSiteSettings() {
                                 <Input
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
-                                    placeholder="+1 (555) 123-4567"
+                                    placeholder={t(
+                                        'admin.settings.placeholder.phone',
+                                    )}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -1049,44 +1147,10 @@ export default function AdminSiteSettings() {
                                     onChange={(e) =>
                                         setWhatsapp(e.target.value)
                                     }
-                                    placeholder="15551234567"
+                                    placeholder={t(
+                                        'admin.settings.placeholder.whatsapp',
+                                    )}
                                 />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>
-                                    {t('admin.settings.contactPageTitle')}
-                                </Label>
-                                {['en', 'fr', 'ar'].map((lang) => (
-                                    <Input
-                                        key={`title-${lang}`}
-                                        value={contactTitle[lang]}
-                                        onChange={(e) =>
-                                            setContactTitle((prev) => ({
-                                                ...prev,
-                                                [lang]: e.target.value,
-                                            }))
-                                        }
-                                        placeholder={`${t('admin.settings.contactPageTitle')} (${lang.toUpperCase()})`}
-                                    />
-                                ))}
-                            </div>
-                            <div className="space-y-2">
-                                <Label>
-                                    {t('admin.settings.contactPageDescription')}
-                                </Label>
-                                {['en', 'fr', 'ar'].map((lang) => (
-                                    <Input
-                                        key={`desc-${lang}`}
-                                        value={contactDescription[lang]}
-                                        onChange={(e) =>
-                                            setContactDescription((prev) => ({
-                                                ...prev,
-                                                [lang]: e.target.value,
-                                            }))
-                                        }
-                                        placeholder={`${t('admin.settings.contactPageDescription')} (${lang.toUpperCase()})`}
-                                    />
-                                ))}
                             </div>
                         </Card>
                     </div>
@@ -1259,7 +1323,8 @@ export default function AdminSiteSettings() {
                                 variant="outline"
                                 onClick={addLegalSection}
                             >
-                                <Plus className="mr-1 h-4 w-4" /> Add Section
+                                <Plus className="mr-1 h-4 w-4" />{' '}
+                                {t('admin.settings.add_section')}
                             </Button>
                         </div>
                     </div>
@@ -1267,8 +1332,7 @@ export default function AdminSiteSettings() {
                     <div className="grid gap-4">
                         {legalSectionsState.length === 0 && (
                             <p className="text-xs text-muted-foreground">
-                                No legal sections yet. Add Privacy Policy or
-                                Terms of Use.
+                                {t('admin.settings.no_legal_sections')}
                             </p>
                         )}
 
@@ -1277,7 +1341,7 @@ export default function AdminSiteSettings() {
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
                                         <Label className="text-xs">
-                                            Title (EN)
+                                            {t('admin.settings.title_en')}
                                         </Label>
                                         <Input
                                             value={sec.title.en}
@@ -1293,7 +1357,9 @@ export default function AdminSiteSettings() {
                                         <div className="mt-2 grid grid-cols-2 gap-2">
                                             <div>
                                                 <Label className="text-xs">
-                                                    Title (FR)
+                                                    {t(
+                                                        'admin.settings.title_fr',
+                                                    )}
                                                 </Label>
                                                 <Input
                                                     value={sec.title.fr}
@@ -1313,7 +1379,9 @@ export default function AdminSiteSettings() {
                                             </div>
                                             <div>
                                                 <Label className="text-xs">
-                                                    Title (AR)
+                                                    {t(
+                                                        'admin.settings.title_ar',
+                                                    )}
                                                 </Label>
                                                 <Input
                                                     value={sec.title.ar}
@@ -1335,7 +1403,9 @@ export default function AdminSiteSettings() {
 
                                         <div className="mt-4 flex flex-wrap items-center gap-3">
                                             <Label className="text-xs">
-                                                Body format
+                                                {t(
+                                                    'admin.settings.body_format',
+                                                )}
                                             </Label>
                                             <Select
                                                 value={sec.body.format}
@@ -1353,10 +1423,14 @@ export default function AdminSiteSettings() {
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="markdown">
-                                                        Markdown
+                                                        {t(
+                                                            'admin.settings.markdown',
+                                                        )}
                                                     </SelectItem>
                                                     <SelectItem value="richtext">
-                                                        Rich text
+                                                        {t(
+                                                            'admin.settings.richtext',
+                                                        )}
                                                     </SelectItem>
                                                 </SelectContent>
                                             </Select>
@@ -1393,7 +1467,10 @@ export default function AdminSiteSettings() {
                                                 <div className="mt-3">
                                                     <div className="flex items-center justify-between">
                                                         <Label className="text-xs">
-                                                            Body (
+                                                            {t(
+                                                                'admin.settings.body',
+                                                            )}{' '}
+                                                            (
                                                             {getActiveLang(
                                                                 idx,
                                                             ).toUpperCase()}
@@ -1414,8 +1491,12 @@ export default function AdminSiteSettings() {
                                                             {markdownPreview[
                                                                 `${idx}-${getActiveLang(idx)}`
                                                             ]
-                                                                ? 'Edit'
-                                                                : 'Preview'}
+                                                                ? t(
+                                                                      'admin.settings.edit',
+                                                                  )
+                                                                : t(
+                                                                      'admin.settings.preview',
+                                                                  )}
                                                         </Button>
                                                     </div>
                                                     {markdownPreview[
@@ -1650,7 +1731,9 @@ export default function AdminSiteSettings() {
                                                         <div className="flex flex-wrap items-center gap-3">
                                                             <div className="flex items-center gap-2">
                                                                 <Label className="text-xs text-muted-foreground">
-                                                                    Placement
+                                                                    {t(
+                                                                        'admin_settings_placement',
+                                                                    )}
                                                                 </Label>
                                                                 <Select
                                                                     value={
@@ -1686,7 +1769,9 @@ export default function AdminSiteSettings() {
                                                             {isCodeEnabled && (
                                                                 <div className="flex items-center gap-2">
                                                                     <Label className="text-xs">
-                                                                        Dropdown
+                                                                        {t(
+                                                                            'admin_settings_dropdown',
+                                                                        )}
                                                                     </Label>
                                                                     <Switch
                                                                         checked={
@@ -1710,10 +1795,9 @@ export default function AdminSiteSettings() {
                                                                 entry.isDropdown && (
                                                                     <div className="flex items-center gap-2">
                                                                         <Label className="text-xs">
-                                                                            Trigger
-                                                                            links
-                                                                            to
-                                                                            page
+                                                                            {t(
+                                                                                'admin_settings_triggerLinks',
+                                                                            )}
                                                                         </Label>
                                                                         <Switch
                                                                             checked={
@@ -1785,7 +1869,10 @@ export default function AdminSiteSettings() {
                                                                     }
                                                                 >
                                                                     <Plus className="mr-1 h-3.5 w-3.5" />{' '}
-                                                                    Add item
+                                                                    $
+                                                                    {t(
+                                                                        'admin.settings.addItem',
+                                                                    )}
                                                                 </Button>
                                                             </div>
                                                             {entry.items
@@ -1807,184 +1894,11 @@ export default function AdminSiteSettings() {
                                                                         }
                                                                         className="grid grid-cols-1 items-end gap-2 rounded-md bg-muted/40 p-2 md:grid-cols-12"
                                                                     >
-                                                                        <div className="md:col-span-4">
-                                                                            <Label className="text-xs">
-                                                                                Label
-                                                                                (EN)
-                                                                            </Label>
-                                                                            <Input
-                                                                                value={
-                                                                                    typeof (
-                                                                                        item as any
-                                                                                    )
-                                                                                        .label ===
-                                                                                    'string'
-                                                                                        ? (
-                                                                                              item as any
-                                                                                          )
-                                                                                              .label
-                                                                                        : ((
-                                                                                              item as any
-                                                                                          )
-                                                                                              .label
-                                                                                              ?.en ??
-                                                                                          '')
-                                                                                }
-                                                                                onChange={(
-                                                                                    e,
-                                                                                ) =>
-                                                                                    updateItem(
-                                                                                        idx,
-                                                                                        iIdx,
-                                                                                        {
-                                                                                            label: {
-                                                                                                ...(typeof item.label ===
-                                                                                                'object'
-                                                                                                    ? item.label
-                                                                                                    : {
-                                                                                                          en:
-                                                                                                              item.label ??
-                                                                                                              '',
-                                                                                                          fr:
-                                                                                                              item.label ??
-                                                                                                              '',
-                                                                                                          ar:
-                                                                                                              item.label ??
-                                                                                                              '',
-                                                                                                      }),
-                                                                                                en: e
-                                                                                                    .target
-                                                                                                    .value,
-                                                                                            },
-                                                                                        },
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                            <div className="mt-2 grid grid-cols-2 gap-2">
-                                                                                <div>
-                                                                                    <Label className="text-xs">
-                                                                                        Label
-                                                                                        (FR)
-                                                                                    </Label>
-                                                                                    <Input
-                                                                                        value={
-                                                                                            typeof (
-                                                                                                item as any
-                                                                                            )
-                                                                                                .label ===
-                                                                                            'string'
-                                                                                                ? (
-                                                                                                      item as any
-                                                                                                  )
-                                                                                                      .label
-                                                                                                : ((
-                                                                                                      item as any
-                                                                                                  )
-                                                                                                      .label
-                                                                                                      ?.fr ??
-                                                                                                  '')
-                                                                                        }
-                                                                                        onChange={(
-                                                                                            e,
-                                                                                        ) =>
-                                                                                            updateItem(
-                                                                                                idx,
-                                                                                                iIdx,
-                                                                                                {
-                                                                                                    label: {
-                                                                                                        ...(typeof item.label ===
-                                                                                                        'object'
-                                                                                                            ? item.label
-                                                                                                            : {
-                                                                                                                  en:
-                                                                                                                      item.label ??
-                                                                                                                      '',
-                                                                                                                  fr:
-                                                                                                                      item.label ??
-                                                                                                                      '',
-                                                                                                                  ar:
-                                                                                                                      item.label ??
-                                                                                                                      '',
-                                                                                                              }),
-                                                                                                        fr: e
-                                                                                                            .target
-                                                                                                            .value,
-                                                                                                    },
-                                                                                                },
-                                                                                            )
-                                                                                        }
-                                                                                    />
-                                                                                </div>
-                                                                                <div>
-                                                                                    <Label className="text-xs">
-                                                                                        Label
-                                                                                        (AR)
-                                                                                    </Label>
-                                                                                    <Input
-                                                                                        value={
-                                                                                            typeof (
-                                                                                                item as any
-                                                                                            )
-                                                                                                .label ===
-                                                                                            'string'
-                                                                                                ? (
-                                                                                                      item as any
-                                                                                                  )
-                                                                                                      .label
-                                                                                                : ((
-                                                                                                      item as any
-                                                                                                  )
-                                                                                                      .label
-                                                                                                      ?.ar ??
-                                                                                                  '')
-                                                                                        }
-                                                                                        onChange={(
-                                                                                            e,
-                                                                                        ) =>
-                                                                                            updateItem(
-                                                                                                idx,
-                                                                                                iIdx,
-                                                                                                {
-                                                                                                    label: {
-                                                                                                        ...(typeof item.label ===
-                                                                                                        'object'
-                                                                                                            ? item.label
-                                                                                                            : {
-                                                                                                                  en:
-                                                                                                                      item.label ??
-                                                                                                                      '',
-                                                                                                                  fr:
-                                                                                                                      item.label ??
-                                                                                                                      '',
-                                                                                                                  ar:
-                                                                                                                      item.label ??
-                                                                                                                      '',
-                                                                                                              }),
-                                                                                                        ar: e
-                                                                                                            .target
-                                                                                                            .value,
-                                                                                                    },
-                                                                                                },
-                                                                                            )
-                                                                                        }
-                                                                                    />
-                                                                                </div>
-                                                                            </div>
-                                                                            {formErrors[
-                                                                                `${idx}-${iIdx}`
-                                                                            ] && (
-                                                                                <p className="mt-1 text-xs text-destructive">
-                                                                                    {
-                                                                                        formErrors[
-                                                                                            `${idx}-${iIdx}`
-                                                                                        ]
-                                                                                    }
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
                                                                         <div className="md:col-span-3">
                                                                             <Label className="text-xs">
-                                                                                Mode
+                                                                                {t(
+                                                                                    'admin_settings_mode',
+                                                                                )}
                                                                             </Label>
                                                                             <Select
                                                                                 value={
@@ -2014,56 +1928,216 @@ export default function AdminSiteSettings() {
 
                                                                                         )
                                                                                     </SelectItem>
-                                                                                    <SelectItem value="categories">
-                                                                                        Dynamic
-                                                                                        Categories
-                                                                                    </SelectItem>
+                                                                                    {page?.canHaveDropdown && (
+                                                                                        <SelectItem value="categories">
+                                                                                            Dynamic
+                                                                                            Categories
+                                                                                        </SelectItem>
+                                                                                    )}
                                                                                     <SelectItem value="search">
                                                                                         Search
                                                                                         keyword
                                                                                         (q)
-                                                                                    </SelectItem>
+                                                                                    </SelectItem>{' '}
                                                                                 </SelectContent>
                                                                             </Select>
                                                                         </div>
-                                                                        <div className="md:col-span-4">
-                                                                            {item.mode !==
-                                                                                'categories' && (
-                                                                                <>
-                                                                                    <Label className="text-xs">
-                                                                                        {item.mode ===
-                                                                                        'filter'
-                                                                                            ? 'Filter value'
-                                                                                            : 'Search word'}
-                                                                                    </Label>
+                                                                        <div className="md:col-span-8">
+                                                                            {item.mode ===
+                                                                            'categories' ? null : item.mode ===
+                                                                              'filter' ? (
+                                                                                getCategoriesForPage(
+                                                                                    entry.pageKey,
+                                                                                )
+                                                                                    .length >
+                                                                                0 ? (
+                                                                                    <div className="space-y-1">
+                                                                                        <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                                                                                            Category
+                                                                                        </Label>
+                                                                                        <Select
+                                                                                            value={
+                                                                                                item.value
+                                                                                            }
+                                                                                            onValueChange={(
+                                                                                                value,
+                                                                                            ) =>
+                                                                                                updateItem(
+                                                                                                    idx,
+                                                                                                    iIdx,
+                                                                                                    {
+                                                                                                        value,
+                                                                                                        label: getCategoryByKey(
+                                                                                                            getCategoriesForPage(
+                                                                                                                entry.pageKey,
+                                                                                                            ),
+                                                                                                            value,
+                                                                                                        )
+                                                                                                            ? getLocalizedCategoryName(
+                                                                                                                  getCategoryByKey(
+                                                                                                                      getCategoriesForPage(
+                                                                                                                          entry.pageKey,
+                                                                                                                      ),
+                                                                                                                      value,
+                                                                                                                  )!,
+                                                                                                              )
+                                                                                                            : item.label,
+                                                                                                    },
+                                                                                                )
+                                                                                            }
+                                                                                        >
+                                                                                            <SelectTrigger>
+                                                                                                <SelectValue
+                                                                                                    placeholder={t(
+                                                                                                        'admin.settings.selectCategory',
+                                                                                                    )}
+                                                                                                />
+                                                                                            </SelectTrigger>
+                                                                                            <SelectContent>
+                                                                                                {getCategoriesForPage(
+                                                                                                    entry.pageKey,
+                                                                                                ).map(
+                                                                                                    (
+                                                                                                        category,
+                                                                                                    ) => (
+                                                                                                        <SelectItem
+                                                                                                            key={String(
+                                                                                                                category.id,
+                                                                                                            )}
+                                                                                                            value={
+                                                                                                                category.key
+                                                                                                            }
+                                                                                                        >
+                                                                                                            {resolveCategoryLabel(
+                                                                                                                category,
+                                                                                                                lang,
+                                                                                                            )}
+                                                                                                        </SelectItem>
+                                                                                                    ),
+                                                                                                )}
+                                                                                            </SelectContent>
+                                                                                        </Select>
+                                                                                    </div>
+                                                                                ) : null
+                                                                            ) : item.mode ===
+                                                                              'search' ? (
+                                                                                <div className="space-y-2">
+                                                                                    <div className="flex items-center gap-1">
+                                                                                        {(
+                                                                                            [
+                                                                                                'en',
+                                                                                                'fr',
+                                                                                                'ar',
+                                                                                            ] as const
+                                                                                        ).map(
+                                                                                            (
+                                                                                                langKey,
+                                                                                            ) => {
+                                                                                                const activeLabelLang =
+                                                                                                    (
+                                                                                                        item as HeaderEntry['items'][number] & {
+                                                                                                            activeLang?:
+                                                                                                                | 'en'
+                                                                                                                | 'fr'
+                                                                                                                | 'ar';
+                                                                                                        }
+                                                                                                    )
+                                                                                                        .activeLang ??
+                                                                                                    'en';
+
+                                                                                                return (
+                                                                                                    <Button
+                                                                                                        key={
+                                                                                                            langKey
+                                                                                                        }
+                                                                                                        type="button"
+                                                                                                        size="sm"
+                                                                                                        variant={
+                                                                                                            activeLabelLang ===
+                                                                                                            langKey
+                                                                                                                ? 'default'
+                                                                                                                : 'ghost'
+                                                                                                        }
+                                                                                                        className="h-7 px-2 text-xs"
+                                                                                                        onClick={() =>
+                                                                                                            updateItem(
+                                                                                                                idx,
+                                                                                                                iIdx,
+                                                                                                                {
+                                                                                                                    activeLang:
+                                                                                                                        langKey,
+                                                                                                                },
+                                                                                                            )
+                                                                                                        }
+                                                                                                    >
+                                                                                                        {langKey.toUpperCase()}
+                                                                                                    </Button>
+                                                                                                );
+                                                                                            },
+                                                                                        )}
+                                                                                    </div>
                                                                                     <Input
-                                                                                        value={
-                                                                                            item.value
-                                                                                        }
-                                                                                        placeholder={
-                                                                                            item.mode ===
-                                                                                            'filter'
-                                                                                                ? 'e.g. Beach'
-                                                                                                : 'e.g. paradise'
-                                                                                        }
+                                                                                        value={getDropdownLabelValue(
+                                                                                            item,
+                                                                                            (
+                                                                                                item as HeaderEntry['items'][number] & {
+                                                                                                    activeLang?:
+                                                                                                        | 'en'
+                                                                                                        | 'fr'
+                                                                                                        | 'ar';
+                                                                                                }
+                                                                                            )
+                                                                                                .activeLang ??
+                                                                                                'en',
+                                                                                        )}
                                                                                         onChange={(
                                                                                             e,
                                                                                         ) =>
                                                                                             updateItem(
                                                                                                 idx,
                                                                                                 iIdx,
-                                                                                                {
-                                                                                                    value: e
+                                                                                                updateDropdownItemLabel(
+                                                                                                    item,
+                                                                                                    (
+                                                                                                        item as HeaderEntry['items'][number] & {
+                                                                                                            activeLang?:
+                                                                                                                | 'en'
+                                                                                                                | 'fr'
+                                                                                                                | 'ar';
+                                                                                                        }
+                                                                                                    )
+                                                                                                        .activeLang ??
+                                                                                                        'en',
+                                                                                                    e
                                                                                                         .target
                                                                                                         .value,
-                                                                                                },
+                                                                                                ),
                                                                                             )
                                                                                         }
+                                                                                        placeholder={`${t('admin_settings_label')} ${(
+                                                                                            item as HeaderEntry['items'][number] & {
+                                                                                                activeLang?:
+                                                                                                    | 'en'
+                                                                                                    | 'fr'
+                                                                                                    | 'ar';
+                                                                                            }
+                                                                                        ).activeLang?.toUpperCase()}`}
                                                                                     />
-                                                                                </>
+                                                                                </div>
+                                                                            ) : null}
+                                                                            {formErrors[
+                                                                                `${idx}-${iIdx}`
+                                                                            ] && (
+                                                                                <p className="mt-1 text-xs text-destructive">
+                                                                                    {
+                                                                                        formErrors[
+                                                                                            `${idx}-${iIdx}`
+                                                                                        ]
+                                                                                    }
+                                                                                </p>
                                                                             )}
                                                                         </div>
-                                                                        <div className="md:col-span-1">
+                                                                        <div className="md:col-span-1 md:justify-self-end">
                                                                             <Button
                                                                                 size="icon"
                                                                                 variant="ghost"
@@ -2118,7 +2192,9 @@ export default function AdminSiteSettings() {
                                                 en: e.target.value,
                                             })
                                         }
-                                        placeholder="Title (EN)"
+                                        placeholder={t(
+                                            'admin.settings.placeholder.titleEN',
+                                        )}
                                     />
                                     <div className="grid grid-cols-2 gap-2">
                                         <Input
@@ -2134,7 +2210,9 @@ export default function AdminSiteSettings() {
                                                     fr: e.target.value,
                                                 })
                                             }
-                                            placeholder="Title (FR)"
+                                            placeholder={t(
+                                                'admin.settings.placeholder.titleFR',
+                                            )}
                                         />
                                         <Input
                                             value={
@@ -2149,7 +2227,9 @@ export default function AdminSiteSettings() {
                                                     ar: e.target.value,
                                                 })
                                             }
-                                            placeholder="Title (AR)"
+                                            placeholder={t(
+                                                'admin.settings.placeholder.titleAR',
+                                            )}
                                         />
                                     </div>
                                 </div>

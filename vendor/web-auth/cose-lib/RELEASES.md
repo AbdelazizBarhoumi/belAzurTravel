@@ -13,6 +13,6 @@ Such releases will be considered as "pre-releases".
 ## Minor Release Support Matrix
 
 | Version | Supported          |
-|---------|--------------------|
+| ------- | ------------------ |
 | 4.5.x   | :white_check_mark: |
 | < 4.5.x | :x:                |

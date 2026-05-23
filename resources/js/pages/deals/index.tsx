@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDeals, useCategories } from '@/hooks/usePublicData';
+import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 
 const ALL = 'all';
@@ -31,7 +32,7 @@ export default function Deals() {
             { value: 'all', label: t('common.all') },
             ...dynamicCategories.map((c) => ({
                 value: c.key,
-                label: c.name[lang] || c.name.en,
+                label: getLocalizedCategoryLabel(c, lang),
             })),
         ],
         [dynamicCategories, lang, t],

@@ -9,7 +9,7 @@ An international PHP extension for DateTime. [Documentation](https://carbonphp.g
 
 > [!NOTE]  
 > We're migrating the repository from [briannesbitt/Carbon](https://github.com/briannesbitt/Carbon) to [CarbonPHP/carbon](https://github.com/CarbonPHP/carbon),
-> which means if you're looking specific issues/pull-requests, you may have to search both. No other impact as code on both will be kept up to date. 
+> which means if you're looking specific issues/pull-requests, you may have to search both. No other impact as code on both will be kept up to date.
 
 ```php
 <?php
@@ -114,7 +114,7 @@ Tidelift will coordinate the fix and disclosure.
 
 ### Contributors
 
-This project exists thanks to all the people who contribute. 
+This project exists thanks to all the people who contribute.
 
 <a href="https://github.com/CarbonPHP/carbon/graphs/contributors" target="_blank"><img src="https://opencollective.com/Carbon/contributors.svg?width=890&button=false" /></a>
 
@@ -127,6 +127,7 @@ This project exists thanks to all the people who contribute.
 Support this project by becoming a sponsor. Your logo will show up here with a link to your website.
 
 <!-- <open-collective-sponsors> -->
+
 <a title="Нова українська букмекерська контора" href="https://betking.com.ua/sports-book/?utm_source=opencollective&amp;utm_medium=github&amp;utm_campaign=Carbon" target="_blank"><img alt="Ставки на спорт" src="https://opencollective-production.s3.us-west-1.amazonaws.com/account-avatar/c56d2fe2-f9fb-4d63-947c-77575f4b15c6/stavki.jpg" width="96" height="96"></a>
 <a title="Онлайн казино 777 Україна" href="https://777.ua/?utm_source=opencollective&amp;utm_medium=github&amp;utm_campaign=Carbon" target="_blank"><img alt="Онлайн казино 777" src="https://opencollective-production.s3.us-west-1.amazonaws.com/account-avatar/7e572d50-1ce8-4d69-ae12-86cc80371373/ok-ua-777.png" width="96" height="96"></a>
 <a title="Non GamStop Bookies UK" href="https://netto.co.uk/betting-sites-not-on-gamstop/?utm_source=opencollective&amp;utm_medium=github&amp;utm_campaign=Carbon" target="_blank"><img alt="Non GamStop Bookies UK" src="https://opencollective-production.s3.us-west-1.amazonaws.com/account-avatar/51bfaa05-02b3-4cd9-b1a4-9d0d8f34cbae/%D0%97%D0%BD%D1%96%D0%BC%D0%BE%D0%BA%20%D0%B5%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202025-07-04%20%D0%BE%2015.21.16%20(1)%20(1)%20(1).jpg" width="126" height="96"></a>
@@ -187,11 +188,11 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 [[See all](https://carbonphp.github.io/carbon/#sponsors)]
 
-[[Become a sponsor via OpenCollective*](https://opencollective.com/Carbon#sponsor)]
+[[Become a sponsor via OpenCollective\*](https://opencollective.com/Carbon#sponsor)]
 
-[[Become a sponsor via GitHub*](https://github.com/sponsors/kylekatarnls)]
+[[Become a sponsor via GitHub\*](https://github.com/sponsors/kylekatarnls)]
 
-<small>* This is a donation. No goods or services are expected in return. Any requests for refunds for those purposes will be rejected.</small>
+<small>\* This is a donation. No goods or services are expected in return. Any requests for refunds for those purposes will be rejected.</small>
 
 ### Backers
 
@@ -205,4 +206,4 @@ Thank you to all our backers! 🙏
 
 Available as part of the Tidelift Subscription.
 
-The maintainers of ``Carbon`` and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/packagist-nesbot-carbon?utm_source=packagist-nesbot-carbon&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
+The maintainers of `Carbon` and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/packagist-nesbot-carbon?utm_source=packagist-nesbot-carbon&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)

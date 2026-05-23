@@ -6,6 +6,4 @@
 [![Stable Version](https://img.shields.io/packagist/v/phpDocumentor/Reflection-Common.svg)](https://packagist.org/packages/phpDocumentor/Reflection-Common)
 [![Unstable Version](https://img.shields.io/packagist/vpre/phpDocumentor/Reflection-Common.svg)](https://packagist.org/packages/phpDocumentor/Reflection-Common)
 
-
-ReflectionCommon
-================
+# ReflectionCommon

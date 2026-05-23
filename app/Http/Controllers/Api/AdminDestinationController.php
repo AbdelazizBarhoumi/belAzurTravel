@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Concerns\HandlesAdminCategories;
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Destination;
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
 
 class AdminDestinationController extends Controller
 {
-    use \App\Concerns\HandlesAdminMedia, HandlesAdminCategories;
+    use HandlesAdminCategories, HandlesAdminMedia;
 
     public function index(): JsonResponse
     {
@@ -56,7 +57,7 @@ class AdminDestinationController extends Controller
         $item->delete();
         $this->flushAdminCache('destinations', $identifier);
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function attributes(Request $request, ?Model $existing = null): array

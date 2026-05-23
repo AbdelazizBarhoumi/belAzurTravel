@@ -5,11 +5,9 @@
 [![Stable Version](https://img.shields.io/packagist/v/phpdocumentor/reflection-docblock.svg?label=stable)](https://packagist.org/packages/phpdocumentor/reflection-docblock)
 [![Unstable Version](https://img.shields.io/packagist/v/phpdocumentor/reflection-docblock.svg?include_prereleases&label=unstable)](https://packagist.org/packages/phpdocumentor/reflection-docblock)
 
-ReflectionDocBlock 
-==================
+# ReflectionDocBlock
 
-Introduction
-------------
+## Introduction
 
 The ReflectionDocBlock component of phpDocumentor provides a DocBlock parser
 that is 100% compatible with the [PHPDoc standard](http://phpdoc.org/docs/latest).
@@ -17,15 +15,13 @@ that is 100% compatible with the [PHPDoc standard](http://phpdoc.org/docs/latest
 With this component, a library can provide support for annotations via DocBlocks
 or otherwise retrieve information that is embedded in a DocBlock.
 
-Installation
-------------
+## Installation
 
 ```bash
 composer require phpdocumentor/reflection-docblock
 ```
 
-Usage
------
+## Usage
 
 In order to parse the DocBlock one needs a DocBlockFactory that can be
 instantiated using its `createInstance` factory method like this:

@@ -37,9 +37,8 @@ import {
     SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
-
 import { useAuthUser } from '@/hooks/useAuthUser';
+import { cn } from '@/lib/utils';
 
 const links = [
     {

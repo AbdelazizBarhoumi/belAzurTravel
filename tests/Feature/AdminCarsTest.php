@@ -151,7 +151,7 @@ class AdminCarsTest extends TestCase
 
         $car->refresh();
         $this->assertEquals('Updated Car', $car->name['en']);
-    $this->assertSame('luxury', $car->category_key);
+        $this->assertSame('luxury', $car->category_key);
         $this->assertEquals(150, $car->price);
 
         // Verify detail sections updated

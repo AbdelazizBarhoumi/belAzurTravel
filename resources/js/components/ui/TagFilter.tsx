@@ -61,7 +61,7 @@ function TagFilter({
                             )}
                         >
                             <span className="text-center">
-                                {tag.name[locale]}
+                                {tag.name[locale] || tag.name.en || tag.id}
                             </span>
                         </button>
                     );

@@ -69,6 +69,6 @@ class GalleryController extends Controller
 
         $galleryImage->delete();
 
-        return response()->json(['message' => 'Image deleted']);
+        return response()->json(['message' => __('messages.image_deleted')]);
     }
 }

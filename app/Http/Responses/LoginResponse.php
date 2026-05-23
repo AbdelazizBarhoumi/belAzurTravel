@@ -18,6 +18,7 @@ class LoginResponse implements LoginResponseContract
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'email_verified_at' => $user->email_verified_at?->toISOString(),
                     'preferred_language' => $user->preferred_language,
                 ],
             ]);

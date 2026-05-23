@@ -3,7 +3,10 @@
     "type": "library",
     "license": "MIT",
     "description": "CBOR Object Signing and Encryption (COSE) For PHP",
-    "keywords": ["COSE", "RFC8152"],
+    "keywords": [
+        "COSE",
+        "RFC8152"
+    ],
     "homepage": "https://github.com/web-auth",
     "authors": [
         {

@@ -2,9 +2,13 @@
     "name": "staabm/side-effects-detector",
     "license": "MIT",
     "description": "A static analysis tool to detect side effects in PHP code",
-    "keywords": ["static analysis"],
+    "keywords": [
+        "static analysis"
+    ],
     "autoload": {
-        "classmap": ["lib/"]
+        "classmap": [
+            "lib/"
+        ]
     },
     "autoload-dev": {
         "classmap": [
@@ -31,7 +35,10 @@
         }
     },
     "scripts": {
-        "qa": ["@test", "@phpstan"],
+        "qa": [
+            "@test",
+            "@phpstan"
+        ],
         "phpstan": "phpstan analyze",
         "test": "phpunit"
     }

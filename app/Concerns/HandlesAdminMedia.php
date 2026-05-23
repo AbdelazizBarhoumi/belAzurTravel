@@ -162,6 +162,10 @@ trait HandlesAdminMedia
 
         $p = trim($path);
 
+        if (preg_match('#^https?://#i', $p)) {
+            return $p;
+        }
+
         // If it's a full URL, extract path
         $parsed = parse_url($p, PHP_URL_PATH);
         if (is_string($parsed) && $parsed !== '') {

@@ -25,6 +25,6 @@ class InteractionController extends Controller
 
         Notification::send($recipients, new ContactInteractionNotification($type, $user, $page));
 
-        return response()->json(['message' => 'ok']);
+        return response()->json(['message' => __('messages.ok')]);
     }
 }

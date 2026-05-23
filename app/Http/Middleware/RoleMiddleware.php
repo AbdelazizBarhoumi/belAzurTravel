@@ -13,7 +13,7 @@ class RoleMiddleware
         $user = $request->user();
 
         if (! $user || ! $user->active) {
-            abort(response()->json(['error' => 'Unauthenticated'], 401));
+            abort(response()->json(['error' => __('messages.unauthenticated')], 401));
         }
 
         $levels = [
@@ -33,6 +33,6 @@ class RoleMiddleware
             }
         }
 
-        abort(response()->json(['error' => 'Forbidden'], 403));
+        abort(response()->json(['error' => __('messages.forbidden')], 403));
     }
 }

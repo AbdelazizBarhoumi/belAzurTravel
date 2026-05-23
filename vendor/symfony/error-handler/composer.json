@@ -33,7 +33,9 @@
         "symfony/http-kernel": "<6.4"
     },
     "autoload": {
-        "psr-4": { "Symfony\\Component\\ErrorHandler\\": "" },
+        "psr-4": {
+            "Symfony\\Component\\ErrorHandler\\": ""
+        },
         "exclude-from-classmap": [
             "/Tests/"
         ]

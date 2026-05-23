@@ -5,7 +5,6 @@ use App\Http\Middleware\EnforceNavSettings;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
-
 Route::post('/browser-log', [BrowserLogController::class, 'store']);
 
 Route::prefix('api')->middleware('web')->group(base_path('routes/api.php'));
@@ -27,6 +26,10 @@ Route::get('/assistant', fn () => abort(404, 'This page is not currently availab
 Route::get('/assistant/{any}', fn () => abort(404, 'This page is not currently available.'))
     ->where('any', '.*');
 
+Route::any('/api/assistant', fn () => abort(404, 'This page is not currently available.'));
+Route::any('/api/assistant/{any}', fn () => abort(404, 'This page is not currently available.'))
+    ->where('any', '.*');
+
 // Protect admin area (admin only)
 Route::view('/admin', 'app')->middleware(['auth', 'role:admin']);
 Route::view('/admin/{any}', 'app')
@@ -38,7 +41,7 @@ Route::view('/{any}', 'app')
     ->where('any', '.*')
     ->middleware(EnforceNavSettings::class);
 
-    Route::get('/run-migrate', function () {
+Route::get('/run-migrate', function () {
 
     try {
         $exitCode = Artisan::call('migrate', [
@@ -53,7 +56,7 @@ Route::view('/{any}', 'app')
             'output' => $output,
         ]);
 
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
 
         return response()->json([
             'status' => 'error',

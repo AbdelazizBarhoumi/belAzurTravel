@@ -359,7 +359,7 @@ export function EntityFormDialog<T extends object>({
             setValues({});
             setLocalErrors({});
         }
-    }, [open, initialSignature]);
+    }, [open, initialSignature, initial, preserveArrayKeys]);
 
     useEffect(() => {
         if (activeLangProp) return;

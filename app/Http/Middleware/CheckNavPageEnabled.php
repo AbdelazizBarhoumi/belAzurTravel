@@ -73,7 +73,7 @@ class CheckNavPageEnabled
         }
 
         if (! $pageEnabled) {
-            abort(404, 'This page is not currently available.');
+            abort(404, __('messages.page_not_available'));
         }
 
         return $next($request);

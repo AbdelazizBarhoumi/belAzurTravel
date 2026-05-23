@@ -4,7 +4,7 @@
 
 Via Composer
 
-``` bash
+```bash
 $ composer require guzzlehttp/uri-template
 ```
 
@@ -14,7 +14,7 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Testing
 
-``` bash
+```bash
 $ make test
 ```
 

@@ -92,11 +92,13 @@ export function getFooterPage(key: string): PageDef | undefined {
 export type DropdownItemMode = 'filter' | 'search' | 'categories';
 
 export interface DropdownItemConfig {
-    label: string | Record<string, string>;
+    label: LocalizedText;
     mode: DropdownItemMode;
     /** filter -> value of filterParam; search -> the q= keyword */
     value: string;
 }
+
+export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
 
 export interface HeaderEntry {
     pageKey: string;
@@ -168,7 +170,17 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'cars',
             'events',
         ].includes(p.key)
-            ? [{ label: 'Categories', mode: 'categories', value: '' }]
+            ? [
+                  {
+                      label: {
+                          en: 'Categories',
+                          fr: 'Categories',
+                          ar: 'Categories',
+                      },
+                      mode: 'categories',
+                      value: '',
+                  },
+              ]
             : [],
     })),
     footer: DEFAULT_FOOTER_COLUMNS.map((c) => ({
@@ -180,11 +192,13 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
 export function buildItemHref(
     pageKey: string,
     item: DropdownItemConfig,
+    lang: 'en' | 'fr' | 'ar' = 'en',
 ): string {
     const page = getPage(pageKey);
     if (!page) return '#';
     if (item.mode === 'search') {
-        return `${page.href}?q=${encodeURIComponent(item.value)}`;
+        const query = item.label[lang] ?? item.label.en ?? '';
+        return `${page.href}?q=${encodeURIComponent(query)}`;
     }
     const param = page.filterParam || 'cat';
     return `${page.href}?${param}=${encodeURIComponent(item.value)}`;

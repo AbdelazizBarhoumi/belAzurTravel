@@ -16,6 +16,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCars, useCategories } from '@/hooks/usePublicData';
+import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
 
@@ -45,7 +46,7 @@ function CarsContent() {
             { value: ALL, label: t('common.all') },
             ...dynamicCategories.map((c) => ({
                 value: c.key,
-                label: c.name[lang] || c.name.en,
+                label: getLocalizedCategoryLabel(c, lang),
             })),
         ],
         [dynamicCategories, lang, t],

@@ -10,7 +10,7 @@ class Hotel extends Model
     protected $fillable = [
         'slug', 'code', 'destination_slug', 'name', 'location', 
         'category_key', 'category', 'price', 'price_per_night', 
-        'rating', 'stars', 'reviews', 'description', 'image', 'amenities',
+        'rating', 'stars', 'reviews', 'description', 'image',
         'tags', 'details'
     ];
 

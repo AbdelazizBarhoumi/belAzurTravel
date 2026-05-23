@@ -35,7 +35,7 @@ class RoleHierarchyTest extends TestCase
     public function test_owner_can_access_site_settings()
     {
         $owner = User::factory()->create(['role' => 'owner', 'active' => true]);
-        
+
         // SiteSettings show is public, but update is restricted
         $response = $this->actingAs($owner)->putJson('/api/site-settings', []);
         // Should not be 403. It might be 422 if data is missing, but not 403.
@@ -45,7 +45,7 @@ class RoleHierarchyTest extends TestCase
     public function test_superadmin_can_access_site_settings()
     {
         $superadmin = User::factory()->create(['role' => 'superadmin', 'active' => true]);
-        
+
         $response = $this->actingAs($superadmin)->putJson('/api/site-settings', []);
         $this->assertNotEquals(403, $response->status());
     }
@@ -53,7 +53,7 @@ class RoleHierarchyTest extends TestCase
     public function test_admin_cannot_access_site_settings()
     {
         $admin = User::factory()->create(['role' => 'admin', 'active' => true]);
-        
+
         $response = $this->actingAs($admin)->putJson('/api/site-settings', []);
         $response->assertStatus(403);
     }
@@ -87,7 +87,7 @@ class RoleHierarchyTest extends TestCase
 
         $response = $this->actingAs($owner)->putJson("/api/admin/users/{$superadmin->id}", [
             'name' => 'Updated Super',
-            'role' => 'admin'
+            'role' => 'admin',
         ]);
 
         $response->assertStatus(200);
@@ -100,7 +100,7 @@ class RoleHierarchyTest extends TestCase
         $super2 = User::factory()->create(['role' => 'superadmin', 'active' => true]);
 
         $response = $this->actingAs($super1)->putJson("/api/admin/users/{$super2->id}", [
-            'name' => 'Attempt'
+            'name' => 'Attempt',
         ]);
 
         $response->assertStatus(403);
@@ -112,7 +112,7 @@ class RoleHierarchyTest extends TestCase
         $client = User::factory()->create(['role' => 'client', 'active' => true]);
 
         $response = $this->actingAs($super)->putJson("/api/admin/users/{$client->id}", [
-            'role' => 'admin'
+            'role' => 'admin',
         ]);
 
         $response->assertStatus(200);

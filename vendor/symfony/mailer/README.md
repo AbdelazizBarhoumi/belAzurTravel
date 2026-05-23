@@ -1,10 +1,8 @@
-Mailer Component
-================
+# Mailer Component
 
 The Mailer component helps sending emails.
 
-Getting Started
----------------
+## Getting Started
 
 ```bash
 composer require symfony/mailer
@@ -64,18 +62,16 @@ $email = (new TemplatedEmail())
 $mailer->send($email);
 ```
 
-Sponsor
--------
+## Sponsor
 
 Help Symfony by [sponsoring][3] its development!
 
-Resources
----------
+## Resources
 
- * [Documentation](https://symfony.com/doc/current/mailer.html)
- * [Contributing](https://symfony.com/doc/current/contributing/index.html)
- * [Report issues](https://github.com/symfony/symfony/issues) and
-   [send Pull Requests](https://github.com/symfony/symfony/pulls)
-   in the [main Symfony repository](https://github.com/symfony/symfony)
+- [Documentation](https://symfony.com/doc/current/mailer.html)
+- [Contributing](https://symfony.com/doc/current/contributing/index.html)
+- [Report issues](https://github.com/symfony/symfony/issues) and
+  [send Pull Requests](https://github.com/symfony/symfony/pulls)
+  in the [main Symfony repository](https://github.com/symfony/symfony)
 
 [3]: https://symfony.com/sponsor

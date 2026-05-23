@@ -43,7 +43,7 @@ class AdminUserController extends Controller
         $currentUser = $request->user();
 
         if ($currentUser->id === $user->id) {
-            return response()->json(['message' => 'Forbidden: Users cannot manage themselves'], 403);
+            return response()->json(['message' => __('messages.forbidden_manage_self')], 403);
         }
 
         $levels = [
@@ -60,7 +60,7 @@ class AdminUserController extends Controller
         // Cannot edit someone of higher or equal rank unless you are the owner (who can't edit themselves here but can edit others)
         // Actually, owner should be able to edit anyone except maybe other owners if they existed.
         if ($currentLevel <= $targetLevel && $currentUser->id !== $user->id && $currentUser->role !== 'owner') {
-            return response()->json(['message' => 'Forbidden: Cannot edit users with higher or equal rank'], 403);
+            return response()->json(['message' => __('messages.forbidden_higher_rank')], 403);
         }
 
         $data = $request->validate([
@@ -75,17 +75,17 @@ class AdminUserController extends Controller
 
             // Only owner can create/remove superadmins
             if (($data['role'] === 'superadmin' || $user->role === 'superadmin') && $currentUser->role !== 'owner') {
-                return response()->json(['message' => 'Forbidden: Only owner can manage superadmins'], 403);
+                return response()->json(['message' => __('messages.forbidden_manage_superadmins')], 403);
             }
 
             // Only superadmin and owner can promote to admin
             if ($newRoleLevel >= 2 && $currentLevel < 3) {
-                return response()->json(['message' => 'Forbidden: Only superadmin or owner can promote to admin'], 403);
+                return response()->json(['message' => __('messages.forbidden_promote_admin')], 403);
             }
-            
+
             // Cannot promote someone to a level equal or higher than yourself (unless owner)
             if ($newRoleLevel >= $currentLevel && $currentUser->role !== 'owner') {
-                return response()->json(['message' => 'Forbidden: Cannot promote user to your rank or higher'], 403);
+                return response()->json(['message' => __('messages.forbidden_promote_rank')], 403);
             }
         }
 
@@ -99,7 +99,7 @@ class AdminUserController extends Controller
         $currentUser = $request->user();
 
         if ($currentUser->id === $user->id) {
-            return response()->json(['message' => 'Forbidden: Users cannot manage themselves'], 403);
+            return response()->json(['message' => __('messages.forbidden_manage_self')], 403);
         }
 
         $levels = [
@@ -111,7 +111,7 @@ class AdminUserController extends Controller
         ];
 
         if (($levels[$currentUser->role] ?? -1) <= ($levels[$user->role] ?? -1) && $currentUser->role !== 'owner') {
-            return response()->json(['message' => 'Forbidden: Cannot toggle users with higher or equal rank'], 403);
+            return response()->json(['message' => __('messages.forbidden_toggle_rank')], 403);
         }
 
         $user->update(['active' => ! $user->active]);
@@ -124,7 +124,7 @@ class AdminUserController extends Controller
         $currentUser = $request->user();
 
         if ($currentUser->id === $user->id) {
-            return response()->json(['message' => 'Forbidden: Users cannot manage themselves'], 403);
+            return response()->json(['message' => __('messages.forbidden_manage_self')], 403);
         }
 
         $levels = [
@@ -136,12 +136,12 @@ class AdminUserController extends Controller
         ];
 
         if (($levels[$currentUser->role] ?? -1) <= ($levels[$user->role] ?? -1) && $currentUser->role !== 'owner') {
-            return response()->json(['message' => 'Forbidden: Cannot delete users with higher or equal rank'], 403);
+            return response()->json(['message' => __('messages.forbidden_delete_rank')], 403);
         }
 
         $user->delete();
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     /** @return array<string, mixed> */

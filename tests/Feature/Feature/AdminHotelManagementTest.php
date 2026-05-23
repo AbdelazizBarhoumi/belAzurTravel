@@ -81,7 +81,6 @@ class AdminHotelManagementTest extends TestCase
             'stars' => 5,
             'reviews' => 77,
             'image' => '/storage/uploads/hotels/legacy.jpg',
-            'amenities' => [],
             'tags' => [],
             'details' => [
                 'gallery' => ['/storage/uploads/hotels/legacy.jpg'],

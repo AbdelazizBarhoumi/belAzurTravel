@@ -91,70 +91,74 @@ export default function EventDetail() {
                         />
                     </div>
 
-                    <section className="mt-8 max-w-3xl">
-                        <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
-                            {t('events.detail.aboutTitle')}
-                        </h2>
-                        <p className="leading-relaxed text-muted-foreground">
-                            {aboutText}
-                        </p>
-                    </section>
+                    {aboutText && (
+                        <section className="mt-8 max-w-3xl">
+                            <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
+                                {t('events.detail.aboutTitle')}
+                            </h2>
+                            <p className="leading-relaxed text-muted-foreground">
+                                {aboutText}
+                            </p>
+                        </section>
+                    )}
 
-                    <section className="mt-8">
-                        <h2 className="mb-6 font-serif text-2xl font-bold text-foreground">
-                            {t('events.detail.scheduleTitle')}
-                        </h2>
-                        <ol
-                            dir={lang === 'ar' ? 'rtl' : 'ltr'}
-                            className={`relative max-w-3xl border-border ${
-                                lang === 'ar'
-                                    ? 'border-r-2 pr-6'
-                                    : 'border-l-2 pl-6'
-                            }`}
-                        >
-                            {(event.schedule ?? []).map(
-                                (
-                                    step: {
-                                        day: LocalizedText;
-                                        activity: LocalizedText;
-                                        details: LocalizedText;
-                                    },
-                                    index: number,
-                                ) => (
-                                    <li
-                                        key={`${event.slug}-${index}`}
-                                        className={`relative pb-8 ${
-                                            lang === 'ar'
-                                                ? 'text-right'
-                                                : 'text-left'
-                                        }`}
-                                    >
-                                        <div
-                                            className={`absolute top-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-md ${
+                    {event.schedule && event.schedule.length > 0 && (
+                        <section className="mt-8">
+                            <h2 className="mb-6 font-serif text-2xl font-bold text-foreground">
+                                {t('events.detail.scheduleTitle')}
+                            </h2>
+                            <ol
+                                dir={lang === 'ar' ? 'rtl' : 'ltr'}
+                                className={`relative max-w-3xl border-border ${
+                                    lang === 'ar'
+                                        ? 'border-r-2 pr-6'
+                                        : 'border-l-2 pl-6'
+                                }`}
+                            >
+                                {(event.schedule ?? []).map(
+                                    (
+                                        step: {
+                                            day: LocalizedText;
+                                            activity: LocalizedText;
+                                            details: LocalizedText;
+                                        },
+                                        index: number,
+                                    ) => (
+                                        <li
+                                            key={`${event.slug}-${index}`}
+                                            className={`relative pb-8 ${
                                                 lang === 'ar'
-                                                    ? '-right-[42px]'
-                                                    : '-left-[42px]'
+                                                    ? 'text-right'
+                                                    : 'text-left'
                                             }`}
                                         >
-                                            {index + 1}
-                                        </div>
+                                            <div
+                                                className={`absolute top-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground shadow-md ${
+                                                    lang === 'ar'
+                                                        ? '-right-[42px]'
+                                                        : '-left-[42px]'
+                                                }`}
+                                            >
+                                                {index + 1}
+                                            </div>
 
-                                        <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
-                                            {localizeText(step.day, lang)}
-                                        </p>
+                                            <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
+                                                {localizeText(step.day, lang)}
+                                            </p>
 
-                                        <p className="font-serif text-lg font-semibold text-foreground">
-                                            {localizeText(step.activity, lang)}
-                                        </p>
+                                            <p className="font-serif text-lg font-semibold text-foreground">
+                                                {localizeText(step.activity, lang)}
+                                            </p>
 
-                                        <p className="text-sm text-muted-foreground">
-                                            {localizeText(step.details, lang)}
-                                        </p>
-                                    </li>
-                                ),
-                            )}
-                        </ol>
-                    </section>
+                                            <p className="text-sm text-muted-foreground">
+                                                {localizeText(step.details, lang)}
+                                            </p>
+                                        </li>
+                                    ),
+                                )}
+                            </ol>
+                        </section>
+                    )}
                 </div>
 
                 <aside className="hidden lg:block">

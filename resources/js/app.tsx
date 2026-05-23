@@ -1,7 +1,14 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import {
+    BrowserRouter,
+    Routes,
+    Route,
+    useLocation,
+    useNavigate,
+} from 'react-router-dom';
+import { redirectAfterLogin } from '@/auth';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { RouteLoader } from '@/components/layout/RouteLoader';
@@ -34,6 +41,7 @@ import AdminSiteSettings from './pages/admin/AdminSiteSettings';
 import AdminTeam from './pages/admin/AdminTeam';
 import AdminTours from './pages/admin/AdminTours';
 import AdminUsers from './pages/admin/AdminUsers';
+import VerifyEmail from './pages/auth/VerifyEmail';
 import Blog from './pages/blog';
 import BlogPostDetail from './pages/blog/show';
 import Cars from './pages/cars';
@@ -66,7 +74,6 @@ import Promos from './pages/promos';
 import PromoDetail from './pages/promos/show';
 import Tours from './pages/tours';
 import TourDetail from './pages/tours/show';
-import VerifyEmail from './pages/auth/VerifyEmail';
 
 const adminGuard = (element: JSX.Element) => (
     <RoleGuard role="admin">{element}</RoleGuard>
@@ -78,7 +85,7 @@ const clientGuard = (element: JSX.Element) => (
 
 /**
  * LayoutWrapper detects the current route and conditionally renders:
- * - Only Routes for admin, assistant, and client pages (they have their own layouts)
+ * - Only Routes for admin and client pages (they have their own layouts)
  * - Navbar + Routes + Footer for public pages
  */
 const LayoutWrapper = () => {
@@ -90,10 +97,21 @@ const LayoutWrapper = () => {
     // Verification redirect logic
     useEffect(() => {
         if (user && !user.email_verified_at && user.role !== 'owner') {
-            const isAuthPath = ['/login', '/register', '/verify-email', '/forgot-password', '/reset-password'].includes(location.pathname);
+            const isAuthPath = [
+                '/login',
+                '/register',
+                '/verify-email',
+                '/forgot-password',
+                '/reset-password',
+            ].includes(location.pathname);
             if (!isAuthPath) {
                 navigate('/verify-email', { replace: true });
             }
+            return;
+        }
+
+        if (user?.email_verified_at && location.pathname === '/verify-email') {
+            navigate(redirectAfterLogin(user.role), { replace: true });
         }
     }, [user, location.pathname, navigate]);
 
@@ -247,10 +265,6 @@ const LayoutWrapper = () => {
                     />
                     <Route
                         path="/admin/clients/:id"
-                        element={adminGuard(<AdminUsers />)}
-                    />
-                    <Route
-                        path="/admin/assistants"
                         element={adminGuard(<AdminUsers />)}
                     />
                     <Route

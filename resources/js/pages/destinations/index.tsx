@@ -20,6 +20,7 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDestinations, useCategories } from '@/hooks/usePublicData';
+import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 
 const SORT_OPTIONS = [
     { value: 'featured', labelKey: 'dest.sort.featured' },
@@ -49,7 +50,7 @@ const Destinations = () => {
         { value: 'all', label: t('common.all') },
         ...dynamicCategories.map((c) => ({
             value: c.key,
-            label: c.name[lang] || c.name.en,
+            label: getLocalizedCategoryLabel(c, lang),
         })),
     ];
 

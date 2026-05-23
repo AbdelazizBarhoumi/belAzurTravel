@@ -66,7 +66,7 @@ class AdminFlightController extends Controller
         $item->delete();
         $this->flushAdminCache('flights', $identifier);
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function attributes(Request $request, ?Model $existing = null): array

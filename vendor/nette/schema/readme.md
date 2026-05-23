@@ -6,9 +6,7 @@
 [![Latest Stable Version](https://poser.pugx.org/nette/schema/v/stable)](https://github.com/nette/schema/releases)
 [![License](https://img.shields.io/badge/license-New%20BSD-blue.svg)](https://github.com/nette/schema/blob/master/license.md)
 
-
-Introduction
-============
+# Introduction
 
 A practical library for validation and normalization of data structures against a given schema with a smart & easy-to-understand API.
 
@@ -22,9 +20,7 @@ composer require nette/schema
 
 It requires PHP version 8.1 and supports PHP up to 8.5.
 
-
-[Support Me](https://github.com/sponsors/dg)
---------------------------------------------
+## [Support Me](https://github.com/sponsors/dg)
 
 Do you like Nette Schema? Are you looking forward to the new features?
 
@@ -32,9 +28,7 @@ Do you like Nette Schema? Are you looking forward to the new features?
 
 Thank you!
 
-
-Basic Usage
------------
+## Basic Usage
 
 In variable `$schema` we have a validation schema (what exactly this means and how to create it we will say later) and in variable `$data` we have a data structure that we want to validate and normalize. This can be, for example, data sent by the user through an API, configuration file, etc.
 
@@ -52,9 +46,7 @@ try {
 
 Method `$e->getMessages()` returns array of all message strings and `$e->getMessageObjects()` return all messages as [Nette\Schema\Message](https://api.nette.org/schema/master/Nette/Schema/Message.html) objects.
 
-
-Defining Schema
----------------
+## Defining Schema
 
 And now let's create a schema. The class [Nette\Schema\Expect](https://api.nette.org/schema/master/Nette/Schema/Expect.html) is used to define it, we actually define expectations of what the data should look like. Let's say that the input data must be a structure (e.g. an array) containing elements `processRefund` of type bool and `refundAmount` of type int.
 
@@ -111,9 +103,7 @@ is_bool($normalized->processRefund); // true
 
 Now you know the basics of how the schema is defined and how the individual elements of the structure behave. We will now show what all the other elements can be used in defining a schema.
 
-
-Data Types: type()
-------------------
+## Data Types: type()
 
 All standard PHP data types can be listed in the schema:
 
@@ -136,9 +126,7 @@ Expect::type('bool|string|array')
 
 The default value is always `null` except for `array` and `list`, where it is an empty array. (A list is an array indexed in ascending order of numeric keys from zero, that is, a non-associative array).
 
-
-Array of Values: arrayOf() listOf()
------------------------------------
+## Array of Values: arrayOf() listOf()
 
 The array is too general structure, it is more useful to specify exactly what elements it can contain. For example, an array whose elements can only be strings:
 
@@ -178,9 +166,7 @@ Expect::arrayOf(Expect::bool())
 
 The default value is an empty array. If you specify a default value, it will be merged with the passed data. This can be disabled using `mergeDefaults(false)`.
 
-
-Enumeration: anyOf()
---------------------
+## Enumeration: anyOf()
 
 `anyOf()` is a set of values ​​or schemas that a value can be. Here's how to write an array of elements that can be either `'a'`, `true`, or `null`:
 
@@ -213,9 +199,7 @@ The default value is `null`. Use the `firstIsDefault()` method to make the first
 Expect::anyOf(Expect::string('hello'), true, null)->firstIsDefault();
 ```
 
-
-Structures
-----------
+## Structures
 
 Structures are objects with defined keys. Each of these key => value pairs is referred to as a "property":
 
@@ -285,9 +269,7 @@ $processor->process($schema, ['additional' => 1]); // OK
 $processor->process($schema, ['additional' => true]); // ERROR
 ```
 
-
-Deprecations
-------------
+## Deprecations
 
 You can deprecate property using the `deprecated([string $message])` method. Deprecation notices are returned by `$processor->getWarnings()`:
 
@@ -300,9 +282,7 @@ $processor->process($schema, ['old' => 1]); // OK
 $processor->getWarnings(); // ["The item 'old' is deprecated"]
 ```
 
-
-Ranges: min() max()
--------------------
+## Ranges: min() max()
 
 Use `min()` and `max()` to limit the number of elements for arrays:
 
@@ -332,9 +312,7 @@ Of course, it is possible to mention only `min()`, or only `max()`:
 Expect::string()->max(20);
 ```
 
-
-Regular Expressions: pattern()
-------------------------------
+## Regular Expressions: pattern()
 
 Using `pattern()`, you can specify a regular expression which the **whole** input string must match (i.e. as if it were wrapped in characters `^` a `$`):
 
@@ -343,9 +321,7 @@ Using `pattern()`, you can specify a regular expression which the **whole** inpu
 Expect::string()->pattern('\d{9}');
 ```
 
-
-Custom Assertions: assert()
----------------------------
+## Custom Assertions: assert()
 
 You can add any other restrictions using `assert(callable $fn)`.
 
@@ -377,9 +353,7 @@ $processor->process($schema, ['a', 'b', 'c']);
 
 The method can be called repeatedly to add multiple constraints. It can be intermixed with calls to `transform()` and `castTo()`.
 
-
-Transformation: transform()
----------------------------
+## Transformation: transform()
 
 Successfully validated data can be modified using a custom function:
 
@@ -411,9 +385,7 @@ Expect::string()
 	});
 ```
 
-
-Casting: castTo()
------------------
+## Casting: castTo()
 
 Successfully validated data can be cast:
 
@@ -460,9 +432,7 @@ Expect::string()->castTo(DateTime::class);
 // creates new DateTime(...)
 ```
 
-
-Normalization: before()
------------------------
+## Normalization: before()
 
 Prior to the validation itself, the data can be normalized using the method `before()`. As an example, let's have an element that must be an array of strings (eg `['a', 'b', 'c']`), but receives input in the form of a string `a b c`:
 
@@ -476,9 +446,7 @@ $normalized = $processor->process($schema, 'a b c');
 // OK, returns ['a', 'b', 'c']
 ```
 
-
-Mapping to Objects: from()
---------------------------
+## Mapping to Objects: from()
 
 You can generate structure schema from the class. Example:
 

@@ -40,7 +40,8 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useAuthUser } from '@/hooks/useAuthUser';
-import type { AdminUser, UserRole } from '@/auth';
+import type { UserRole } from '@/auth';
+import type { AdminUser } from '@/types/admin';
 
 const AdminUsers = () => {
     useAdminGuard();
@@ -112,6 +113,7 @@ const AdminUsers = () => {
 
     const canManage = (target: AdminUser) => {
         if (!currentUser) return false;
+        if (String(currentUser.id) === String(target.id)) return false;
         if (currentUser.role === 'owner') return true;
         return roleLevels[currentUser.role] > roleLevels[target.role];
     };
@@ -127,7 +129,7 @@ const AdminUsers = () => {
     return (
         <AdminLayout title="Users" subtitle="Manage client and staff accounts">
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex flex-1 items-center gap-2 max-w-md">
+                <div className="flex max-w-md flex-1 items-center gap-2">
                     <div className="relative w-full">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
@@ -156,9 +158,10 @@ const AdminUsers = () => {
                         <SelectContent>
                             <SelectItem value="all">All Roles</SelectItem>
                             <SelectItem value="client">Client</SelectItem>
-                            <SelectItem value="assistant">Assistant</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="superadmin">Superadmin</SelectItem>
+                            <SelectItem value="superadmin">
+                                Superadmin
+                            </SelectItem>
                             <SelectItem value="owner">Owner</SelectItem>
                         </SelectContent>
                     </Select>
@@ -190,13 +193,19 @@ const AdminUsers = () => {
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                                    <td
+                                        colSpan={6}
+                                        className="px-4 py-12 text-center text-muted-foreground"
+                                    >
                                         Loading users...
                                     </td>
                                 </tr>
                             ) : users.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                                    <td
+                                        colSpan={6}
+                                        className="px-4 py-12 text-center text-muted-foreground"
+                                    >
                                         No users found.
                                     </td>
                                 </tr>
@@ -224,7 +233,9 @@ const AdminUsers = () => {
                                             <span
                                                 className={`rounded-full px-3 py-1 text-xs font-semibold ${u.active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}
                                             >
-                                                {u.active ? 'Active' : 'Inactive'}
+                                                {u.active
+                                                    ? 'Active'
+                                                    : 'Inactive'}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3">
@@ -233,7 +244,9 @@ const AdminUsers = () => {
                                                     size="sm"
                                                     variant="outline"
                                                     disabled={!canManage(u)}
-                                                    onClick={() => handleToggleActive(u)}
+                                                    onClick={() =>
+                                                        handleToggleActive(u)
+                                                    }
                                                 >
                                                     {u.active
                                                         ? 'Deactivate'
@@ -241,14 +254,18 @@ const AdminUsers = () => {
                                                 </Button>
                                                 <button
                                                     disabled={!canManage(u)}
-                                                    onClick={() => setEditingUser(u)}
+                                                    onClick={() =>
+                                                        setEditingUser(u)
+                                                    }
                                                     className="rounded-lg p-1.5 hover:bg-primary/10 disabled:opacity-50"
                                                 >
                                                     <Edit2 className="h-4 w-4 text-primary" />
                                                 </button>
                                                 <button
                                                     disabled={!canManage(u)}
-                                                    onClick={() => setPendingDelete(u)}
+                                                    onClick={() =>
+                                                        setPendingDelete(u)
+                                                    }
                                                     className="rounded-lg p-1.5 hover:bg-destructive/10 disabled:opacity-50"
                                                 >
                                                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -273,31 +290,42 @@ const AdminUsers = () => {
                                             e.preventDefault();
                                             if (page > 1) setPage(page - 1);
                                         }}
-                                        className={page === 1 ? 'pointer-events-none opacity-50' : ''}
+                                        className={
+                                            page === 1
+                                                ? 'pointer-events-none opacity-50'
+                                                : ''
+                                        }
                                     />
                                 </PaginationItem>
-                                {Array.from({ length: meta.last_page }).map((_, i) => (
-                                    <PaginationItem key={i + 1}>
-                                        <PaginationLink
-                                            href="#"
-                                            isActive={page === i + 1}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setPage(i + 1);
-                                            }}
-                                        >
-                                            {i + 1}
-                                        </PaginationLink>
-                                    </PaginationItem>
-                                ))}
+                                {Array.from({ length: meta.last_page }).map(
+                                    (_, i) => (
+                                        <PaginationItem key={i + 1}>
+                                            <PaginationLink
+                                                href="#"
+                                                isActive={page === i + 1}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setPage(i + 1);
+                                                }}
+                                            >
+                                                {i + 1}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    ),
+                                )}
                                 <PaginationItem>
                                     <PaginationNext
                                         href="#"
                                         onClick={(e) => {
                                             e.preventDefault();
-                                            if (page < meta.last_page) setPage(page + 1);
+                                            if (page < meta.last_page)
+                                                setPage(page + 1);
                                         }}
-                                        className={page === meta.last_page ? 'pointer-events-none opacity-50' : ''}
+                                        className={
+                                            page === meta.last_page
+                                                ? 'pointer-events-none opacity-50'
+                                                : ''
+                                        }
                                     />
                                 </PaginationItem>
                             </PaginationContent>
@@ -352,7 +380,13 @@ interface EditDialogProps {
     currentUserRole: UserRole;
 }
 
-const UserEditDialog = ({ user, open, onClose, onSave, currentUserRole }: EditDialogProps) => {
+const UserEditDialog = ({
+    user,
+    open,
+    onClose,
+    onSave,
+    currentUserRole,
+}: EditDialogProps) => {
     const { t } = useLanguage();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -377,8 +411,9 @@ const UserEditDialog = ({ user, open, onClose, onSave, currentUserRole }: EditDi
     const currentLevel = roleLevels[currentUserRole];
 
     const availableRoles: UserRole[] = useMemo(() => {
-        if (currentUserRole === 'owner') return ['client', 'assistant', 'admin', 'superadmin', 'owner'];
-        if (currentUserRole === 'superadmin') return ['client', 'assistant', 'admin'];
+        if (currentUserRole === 'owner')
+            return ['client', 'admin', 'superadmin', 'owner'];
+        if (currentUserRole === 'superadmin') return ['client', 'admin'];
         return [];
     }, [currentUserRole]);
 
@@ -439,14 +474,17 @@ const UserEditDialog = ({ user, open, onClose, onSave, currentUserRole }: EditDi
                                 ))}
                                 {!availableRoles.includes(role) && (
                                     <SelectItem value={role} disabled>
-                                        <span className="capitalize">{role} (Restricted)</span>
+                                        <span className="capitalize">
+                                            {role} (Restricted)
+                                        </span>
                                     </SelectItem>
                                 )}
                             </SelectContent>
                         </Select>
                         {currentLevel < 3 && (
                             <p className="text-xs text-muted-foreground">
-                                Only Superadmins and Owners can manage advanced roles.
+                                Only Superadmins and Owners can manage advanced
+                                roles.
                             </p>
                         )}
                     </div>

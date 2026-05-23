@@ -102,8 +102,9 @@ class SiteSettingsController extends Controller
         });
 
         $settings = $this->hydrateResponseDefaults($settings);
+        $settings['content'] = $this->normalizeNavLabelShapes($settings['content'] ?? []);
         $settings['hours'] = $this->normalizeHoursPayload($settings['hours'] ?? []);
-    $settings = $this->sanitizeNavSettings($settings);
+        $settings = $this->sanitizeNavSettings($settings);
 
         $settings = $this->filterDisabledContentForClient($request, $settings);
 
@@ -263,32 +264,26 @@ class SiteSettingsController extends Controller
                 $content = $this->sanitizeNavSettings($content);
             }
 
-            // Validate contact structure
+            $content = $this->normalizeNavLabelShapes($content);
+
+            // Contact page title/description are now static in translation files, not DB-managed.
             if (isset($content['contact']) && is_array($content['contact'])) {
-                foreach (['title', 'description'] as $field) {
-                    if (isset($content['contact'][$field]) && is_array($content['contact'][$field])) {
-                        foreach (['en', 'fr', 'ar'] as $lang) {
-                            if (! isset($content['contact'][$field][$lang]) || ! is_string($content['contact'][$field][$lang])) {
-                                return response()->json(['message' => "Contact '{$field}' must provide '{$lang}' translation."], 422);
-                            }
-                        }
-                    }
-                }
+                unset($content['contact']['title'], $content['contact']['description']);
             }
 
             // Validate legalSections structure
             if (isset($data['legalSections']) && is_array($data['legalSections'])) {
                 foreach ($data['legalSections'] as $i => $section) {
                     if (! isset($section['title']) || ! is_array($section['title'])) {
-                        return response()->json(['message' => "Legal section at index {$i} must include a 'title' object."], 422);
+                        return response()->json(['message' => __('messages.legal_title_object_required', ['index' => $i])], 422);
                     }
                     foreach (['en', 'fr', 'ar'] as $langKey) {
                         if (! isset($section['title'][$langKey]) || ! is_string($section['title'][$langKey])) {
-                            return response()->json(['message' => "Legal section at index {$i} must provide '{$langKey}' translation for title."], 422);
+                            return response()->json(['message' => __('messages.legal_title_translation_required', ['index' => $i, 'lang' => $langKey])], 422);
                         }
                     }
                     if (! isset($section['body'])) {
-                        return response()->json(['message' => "Legal section at index {$i} must include a 'body'."], 422);
+                        return response()->json(['message' => __('messages.legal_body_required', ['index' => $i])], 422);
                     }
                 }
             }
@@ -298,17 +293,21 @@ class SiteSettingsController extends Controller
                 foreach ($content['nav']['simpleLinks'] as $i => $entry) {
                     if (($entry['type'] ?? '') === 'dropdown' && isset($entry['items']) && is_array($entry['items'])) {
                         foreach ($entry['items'] as $j => $item) {
+                            if (($item['mode'] ?? '') === 'categories') {
+                                continue;
+                            }
+
                             if (! isset($item['label'])) {
-                                return response()->json(['message' => "Dropdown item at index {$i}.{$j} must include a 'label' field with translations for en, fr and ar."], 422);
+                                return response()->json(['message' => __('messages.dropdown_label_required', ['index' => "{$i}.{$j}"])], 422);
                             }
 
                             if (! is_array($item['label'])) {
-                                return response()->json(['message' => "Dropdown item at index {$i}.{$j} 'label' must be an object with 'en','fr','ar' keys."], 422);
+                                return response()->json(['message' => __('messages.dropdown_label_object_required', ['index' => "{$i}.{$j}"])], 422);
                             }
 
                             foreach (['en', 'fr', 'ar'] as $langKey) {
                                 if (! isset($item['label'][$langKey]) || ! is_string($item['label'][$langKey]) || $item['label'][$langKey] === '') {
-                                    return response()->json(['message' => "Dropdown item at index {$i}.{$j} must provide non-empty '{$langKey}' translation."], 422);
+                                    return response()->json(['message' => __('messages.dropdown_label_translation_required', ['index' => "{$i}.{$j}", 'lang' => $langKey])], 422);
                                 }
                             }
                         }
@@ -339,7 +338,7 @@ class SiteSettingsController extends Controller
                 SiteSetting::create($updateData);
             }
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Failed to save settings'], 500);
+            return response()->json(['message' => __('messages.failed_to_save_settings')], 500);
         }
 
         // Clear both cache keys (including per-locale caches)
@@ -349,7 +348,7 @@ class SiteSettingsController extends Controller
         }
         Cache::forget('site_settings_nav');
 
-        return response()->json(['message' => 'ok']);
+        return response()->json(['message' => __('messages.ok')]);
     }
 
     protected function sanitizeNavSettings(array $settings): array
@@ -417,6 +416,75 @@ class SiteSettingsController extends Controller
         }
 
         return $navContent;
+    }
+
+    protected function normalizeNavLabelShapes(array $content): array
+    {
+        if (isset($content['nav']) && is_array($content['nav'])) {
+            if (isset($content['nav']['simpleLinks']) && is_array($content['nav']['simpleLinks'])) {
+                foreach ($content['nav']['simpleLinks'] as &$entry) {
+                    if (! is_array($entry)) {
+                        continue;
+                    }
+
+                    if (isset($entry['label']) && is_string($entry['label'])) {
+                        $entry['label'] = [
+                            'en' => $entry['label'],
+                            'fr' => $entry['label'],
+                            'ar' => $entry['label'],
+                        ];
+                    }
+
+                    if (isset($entry['items']) && is_array($entry['items'])) {
+                        foreach ($entry['items'] as &$item) {
+                            if (! is_array($item)) {
+                                continue;
+                            }
+
+                            if (isset($item['label']) && is_string($item['label'])) {
+                                $item['label'] = [
+                                    'en' => $item['label'],
+                                    'fr' => $item['label'],
+                                    'ar' => $item['label'],
+                                ];
+                            }
+                        }
+                        unset($item);
+                    }
+                }
+                unset($entry);
+            }
+
+            if (isset($content['nav']['settings']) && is_array($content['nav']['settings'])) {
+                if (isset($content['nav']['settings']['header']) && is_array($content['nav']['settings']['header'])) {
+                    foreach ($content['nav']['settings']['header'] as &$entry) {
+                        if (! is_array($entry)) {
+                            continue;
+                        }
+
+                        if (isset($entry['items']) && is_array($entry['items'])) {
+                            foreach ($entry['items'] as &$item) {
+                                if (! is_array($item)) {
+                                    continue;
+                                }
+
+                                if (isset($item['label']) && is_string($item['label'])) {
+                                    $item['label'] = [
+                                        'en' => $item['label'],
+                                        'fr' => $item['label'],
+                                        'ar' => $item['label'],
+                                    ];
+                                }
+                            }
+                            unset($item);
+                        }
+                    }
+                    unset($entry);
+                }
+            }
+        }
+
+        return $content;
     }
 
     protected function normalizeHoursPayload(array $hours): array

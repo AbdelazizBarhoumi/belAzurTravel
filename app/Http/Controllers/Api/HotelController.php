@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
+use App\Models\Amenity;
 use App\Models\Hotel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -18,7 +19,7 @@ class HotelController extends Controller
             'hotels.index',
             now()->addMinutes(10),
             function () {
-                return Hotel::query()->with('rooms', 'amenities')->oldest('id')->get()->map(
+                return Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->oldest('id')->get()->map(
                     fn (Hotel $item) => $this->payload($item)
                 );
             }
@@ -29,7 +30,7 @@ class HotelController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $item = Hotel::query()->with('rooms', 'amenities')->where('slug', $slug)->firstOrFail();
+        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->where('slug', $slug)->firstOrFail();
 
         return response()->json(Cache::remember(
             "hotels.{$slug}",
@@ -60,20 +61,28 @@ class HotelController extends Controller
             'stars' => $item->stars,
             'reviews' => $item->reviews,
             'image' => $this->normalizeApiOutputPath($item->image),
-            'amenities' => $item->relationLoaded('amenities') && is_iterable($item->amenities) ? $item->amenities->map(fn ($amenity) => [
+            'amenities' => collect($item->amenities ?? [])->map(fn (Amenity $amenity) => [
                 'name' => $amenity->name,
                 'icon' => $amenity->icon,
-            ]) : [],
+            ])->values(),
             'tags' => $item->tags,
-            'rooms' => $item->relationLoaded('rooms') ? $item->rooms->map(fn ($room) => [
-                'name' => $room->name,
-                'description' => $room->description,
-                'pricePerNight' => (float) $room->price_per_night,
-                'capacity' => (int) $room->capacity,
-                'size' => (float) $room->size,
-                'features' => $room->features,
-                'images' => array_map(fn ($img) => $this->normalizeApiOutputPath($img), $room->images ?? []),
-            ]) : [],
+            'rooms' => collect($item->rooms ?? [])->map(fn ($room) => [
+                'name' => is_object($room) ? [
+                    'en' => $room->name_en ?? '',
+                    'fr' => $room->name_fr ?? '',
+                    'ar' => $room->name_ar ?? '',
+                ] : ($room['name'] ?? []),
+                'description' => is_object($room) ? [
+                    'en' => $room->description_en ?? '',
+                    'fr' => $room->description_fr ?? '',
+                    'ar' => $room->description_ar ?? '',
+                ] : ($room['description'] ?? []),
+                'pricePerNight' => (float) (is_object($room) ? $room->price_per_night : ($room['price_per_night'] ?? 0)),
+                'capacity' => (int) (is_object($room) ? $room->capacity : ($room['capacity'] ?? 0)),
+                'size' => (float) (is_object($room) ? $room->size : ($room['size'] ?? 0)),
+                'features' => is_object($room) ? $room->featureItems->pluck('label')->all() : ($room['features'] ?? []),
+                'images' => is_object($room) ? array_map(fn ($img) => $this->normalizeApiOutputPath($img->path), $room->imageItems->all()) : (array) ($room['images'] ?? []),
+            ])->values(),
             ...$details,
         ];
     }

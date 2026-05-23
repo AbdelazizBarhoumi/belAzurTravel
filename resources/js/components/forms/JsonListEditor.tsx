@@ -332,13 +332,6 @@ export const JsonListEditor: React.FC<JsonListEditorProps> = ({
         const newItem: JsonItem = {
             [idField]: `item-${Math.random().toString(36).slice(2, 9)}`,
         };
-        schema.forEach((field) => {
-            if (field.translatable) {
-                newItem[field.key] = { en: '', fr: '', ar: '' };
-            } else {
-                newItem[field.key] = field.type === 'number' ? 0 : '';
-            }
-        });
         onItemsChange([...items, newItem]);
     };
 

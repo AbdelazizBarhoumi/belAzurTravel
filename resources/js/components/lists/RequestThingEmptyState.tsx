@@ -54,15 +54,8 @@ export function RequestThingEmptyState({
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-3">
-                <Button asChild variant="default" className="rounded-full px-6">
-                    <Link to="/requests">{t('common.requestThingCta')}</Link>
-                </Button>
                 {settings.whatsapp && (
-                    <Button
-                        asChild
-                        variant="default"
-                        className="rounded-full px-6"
-                    >
+                    <Button asChild variant="default" className="rounded-full px-6">
                         <a
                             href={`https://wa.me/${settings.whatsapp.replace(/[^0-9]/g, '')}`}
                             target="_blank"
@@ -73,12 +66,9 @@ export function RequestThingEmptyState({
                         </a>
                     </Button>
                 )}
+
                 {settings.phone && (
-                    <Button
-                        asChild
-                        variant="outline"
-                        className="rounded-full px-6"
-                    >
+                    <Button asChild variant="outline" className="rounded-full px-6">
                         <a href={`tel:${settings.phone}`}>
                             <Phone className="mr-2 h-4 w-4" />
                             {t('common.contactViaPhone')}

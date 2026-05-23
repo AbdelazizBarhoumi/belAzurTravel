@@ -1,5 +1,4 @@
-Symfony Polyfill / Php85
-========================
+# Symfony Polyfill / Php85
 
 This component provides features added to PHP 8.5 core:
 
@@ -14,7 +13,6 @@ This component provides features added to PHP 8.5 core:
 More information can be found in the
 [main Polyfill README](https://github.com/symfony/polyfill/blob/main/README.md).
 
-License
-=======
+# License
 
 This library is released under the [MIT license](LICENSE).

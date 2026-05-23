@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
+use App\Models\Amenity;
 use App\Models\Category;
 use App\Models\Hotel;
 use App\Models\HotelRoom;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -30,7 +32,7 @@ class AdminHotelController extends Controller
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.hotels', now()->addMinutes(5), function () {
-            return Hotel::query()->with('rooms', 'amenities')->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
+            return Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
         });
 
         return response()->json(['data' => $data]);
@@ -38,28 +40,36 @@ class AdminHotelController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $item = Hotel::create($this->attributes($request));
-        $this->syncRooms($item, $request->input('rooms', []));
+        $data = $this->attributes($request);
+        $rooms = $data['rooms'] ?? [];
+        unset($data['rooms']);
+        $item = Hotel::create($data);
+        $this->syncAmenities($item, $request->input('amenities', []));
+        $this->syncRooms($item, $rooms);
         $this->flushAdminCache('hotels', $item->slug ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item->refresh()->load('rooms', 'amenities'))], 201);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['rooms.featureItems', 'rooms.imageItems', 'amenities']))], 201);
     }
 
     public function show(int|string $id): JsonResponse
     {
-        $item = Hotel::query()->with('rooms', 'amenities')->findOrFail($id);
+        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->findOrFail($id);
 
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
     public function update(Request $request, int|string $id): JsonResponse
     {
-        $item = Hotel::query()->with('rooms', 'amenities')->findOrFail($id);
-        $item->update($this->attributes($request, $item));
-        $this->syncRooms($item, $request->input('rooms', []));
+        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->findOrFail($id);
+        $data = $this->attributes($request, $item);
+        $rooms = $data['rooms'] ?? [];
+        unset($data['rooms']);
+        $item->update($data);
+        $this->syncAmenities($item, $request->input('amenities', []));
+        $this->syncRooms($item, $rooms);
         $this->flushAdminCache('hotels', $item->slug ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item->refresh()->load('rooms', 'amenities'))]);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['rooms.featureItems', 'rooms.imageItems', 'amenities']))]);
     }
 
     public function destroy(int|string $id): JsonResponse
@@ -69,7 +79,7 @@ class AdminHotelController extends Controller
         $item->delete();
         $this->flushAdminCache('hotels', $identifier);
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function attributes(Request $request, ?Model $existing = null): array
@@ -115,12 +125,24 @@ class AdminHotelController extends Controller
             'gallery' => ['sometimes', 'nullable'],
             'gallery_files' => ['sometimes', 'array'],
             'gallery_files.*' => ['file', 'image', 'max:4096'],
-            'amenities' => ['sometimes', 'nullable'],
+            'amenities' => ['sometimes', 'array'],
             'amenities.*.id' => ['sometimes', 'nullable', 'string', 'max:255'],
             'amenities.*.name' => ['sometimes', 'array'],
             'amenities.*.name.en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'amenities.*.name.fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'amenities.*.name.ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'rooms' => ['sometimes', 'array'],
+            'rooms.*.id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'rooms.*.name' => ['sometimes', 'array'],
+            'rooms.*.name.en' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'rooms.*.name.fr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'rooms.*.name.ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'rooms.*.description' => ['sometimes', 'array'],
+            'rooms.*.description.en' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'rooms.*.description.fr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'rooms.*.description.ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'rooms.*.features' => ['sometimes', 'array'],
+            'rooms.*.images' => ['sometimes', 'array'],
             'destination_slug' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
 
@@ -158,14 +180,9 @@ class AdminHotelController extends Controller
             'stars' => (int) ($data['stars'] ?? $existing->stars ?? 0),
             'reviews' => (int) ($data['reviews'] ?? $existing->reviews ?? 0),
             'image' => $this->handleMainImage($request, $existing?->image, 'uploads/hotels'),
-            'amenities' => array_values(array_filter($data['amenities'] ?? $existing->amenities ?? [], function ($amenity) {
-                if (!isset($amenity['name']) || !is_array($amenity['name'])) {
-                    return false;
-                }
-                return !empty($amenity['name']['en']) || !empty($amenity['name']['fr']) || !empty($amenity['name']['ar']);
-            })),
             'tags' => array_values(array_filter([Str::slug($categoryKey !== '' ? $categoryKey : ($data['category_en'] ?? $data['category'] ?? $existing?->details['category']['en'] ?? ''))])),
             'details' => $this->hotelDetails($request, $data, $existing, $gallery, $categoryName),
+            'rooms' => $data['rooms'] ?? [],
         ];
     }
 
@@ -188,11 +205,11 @@ class AdminHotelController extends Controller
             'stars' => $item->stars,
             'reviews' => $item->reviews,
             'image' => $this->normalizeApiOutputPath($item->image),
-            'amenities' => $item->relationLoaded('amenities') && is_iterable($item->amenities) ? $item->amenities->map(fn (\App\Models\Amenity $amenity) => [
+            'amenities' => collect($item->amenities ?? [])->map(fn (Amenity $amenity) => [
                 'id' => (string) $amenity->id,
                 'name' => $amenity->name,
                 'icon' => $amenity->icon,
-            ]) : [],
+            ])->values(),
             'tags' => $item->tags ?? [],
             'gallery' => $gallery,
             'city' => $item->details['city'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
@@ -204,16 +221,24 @@ class AdminHotelController extends Controller
             ...$this->flatLocalized('city', $item->details['city'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
             ...$this->flatLocalized('country', $item->details['country'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
             ...$this->flatLocalized('description', $item->details['description'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
-            'rooms' => $item->relationLoaded('rooms') ? $item->rooms->map(fn (HotelRoom $room) => [
+            'rooms' => collect($item->rooms ?? [])->map(fn (HotelRoom $room) => [
                 'id' => (string) $room->id,
-                'name' => $room->name,
-                'description' => $room->description,
+                'name' => [
+                    'en' => $room->name_en ?? '',
+                    'fr' => $room->name_fr ?? '',
+                    'ar' => $room->name_ar ?? '',
+                ],
+                'description' => [
+                    'en' => $room->description_en ?? '',
+                    'fr' => $room->description_fr ?? '',
+                    'ar' => $room->description_ar ?? '',
+                ],
                 'pricePerNight' => (float) $room->price_per_night,
                 'capacity' => (int) $room->capacity,
                 'size' => (float) $room->size,
-                'features' => $room->features,
-                'images' => array_map(fn ($img) => $this->normalizeApiOutputPath($img), $room->images ?? []),
-            ]) : [],
+                'features' => $room->featureItems->pluck('label')->all(),
+                'images' => $room->imageItems->map(fn ($img) => $this->normalizeApiOutputPath($img->path))->all(),
+            ])->values(),
         ];
     }
 
@@ -273,7 +298,6 @@ class AdminHotelController extends Controller
     {
         $details = $existing?->details ?? [];
 
-
         if (array_key_exists('category', $data) || array_key_exists('category_en', $data) || array_key_exists('category_fr', $data) || array_key_exists('category_ar', $data)) {
             $details['category'] = $this->localized($data, 'category', $existing?->details['category'] ?? $category);
         } elseif (! empty($category['en']) || ! empty($category['fr']) || ! empty($category['ar'])) {
@@ -309,30 +333,201 @@ class AdminHotelController extends Controller
         return $details;
     }
 
+    private function syncAmenities(Hotel $hotel, array $amenities): void
+    {
+        $amenityIds = [];
+
+        foreach ($amenities as $amenityData) {
+            if (! is_array($amenityData)) {
+                continue;
+            }
+
+            $name = $this->normalizeLocalizedValue($amenityData['name'] ?? null);
+            $name = [
+                'en' => trim((string) ($name['en'] ?? '')),
+                'fr' => trim((string) ($name['fr'] ?? '')),
+                'ar' => trim((string) ($name['ar'] ?? '')),
+            ];
+
+            if ($name['en'] === '' && $name['fr'] === '' && $name['ar'] === '') {
+                continue;
+            }
+
+            $icon = isset($amenityData['icon']) && is_string($amenityData['icon'])
+                ? trim($amenityData['icon'])
+                : null;
+
+            $amenity = null;
+
+            if (isset($amenityData['id']) && is_numeric($amenityData['id'])) {
+                $amenity = Amenity::query()->find((int) $amenityData['id']);
+                if ($amenity) {
+                    $amenity->fill([
+                        'name' => $name,
+                        'icon' => $icon,
+                    ]);
+                    $amenity->save();
+                }
+            }
+
+            if (! $amenity) {
+                $amenity = Amenity::query()->updateOrCreate(
+                    ['name' => $name],
+                    ['icon' => $icon]
+                );
+            }
+
+            $amenityIds[] = $amenity->id;
+        }
+
+        $hotel->amenities()->sync(array_values(array_unique($amenityIds)));
+    }
+
     private function syncRooms(Hotel $hotel, array $rooms): void
     {
         $existingIds = [];
 
         foreach ($rooms as $index => $roomData) {
+            if (! is_array($roomData) || ! $this->roomHasContent($roomData)) {
+                continue;
+            }
+
             $room = isset($roomData['id']) && is_numeric($roomData['id'])
                 ? $hotel->rooms()->find($roomData['id'])
-                : new HotelRoom();
+                : new HotelRoom(['hotel_id' => $hotel->id]);
 
+            $roomImages = $this->normalizeRoomImages($roomData['images'] ?? []);
+
+            // Map localized name/description into explicit columns
             $room->fill([
-                'hotel_id' => $hotel->id,
-                'name' => $roomData['name'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
-                'description' => $roomData['description'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+                'name_en' => is_array($roomData['name'] ?? null) ? ($roomData['name']['en'] ?? '') : ($roomData['name'] ?? ''),
+                'name_fr' => is_array($roomData['name'] ?? null) ? ($roomData['name']['fr'] ?? '') : '',
+                'name_ar' => is_array($roomData['name'] ?? null) ? ($roomData['name']['ar'] ?? '') : '',
+                'description_en' => is_array($roomData['description'] ?? null) ? ($roomData['description']['en'] ?? '') : ($roomData['description'] ?? ''),
+                'description_fr' => is_array($roomData['description'] ?? null) ? ($roomData['description']['fr'] ?? '') : '',
+                'description_ar' => is_array($roomData['description'] ?? null) ? ($roomData['description']['ar'] ?? '') : '',
                 'price_per_night' => (float) ($roomData['pricePerNight'] ?? 0),
                 'capacity' => (int) ($roomData['capacity'] ?? 1),
                 'size' => (float) ($roomData['size'] ?? 0),
-                'features' => $roomData['features'] ?? [],
-                'images' => $roomData['images'] ?? [],
             ]);
             $room->save();
+
+            // Sync features (simple labels) and images
+            $features = is_array($roomData['features'] ?? null) ? $roomData['features'] : [];
+            $room->featureItems()->delete();
+            foreach (array_values($features) as $i => $feature) {
+                $label = is_array($feature) ? ($feature['name']['en'] ?? $feature['name'] ?? '') : (string) $feature;
+                if ($label === '') {
+                    continue;
+                }
+                $room->featureItems()->create([
+                    'label' => $label,
+                    'sort_order' => $i,
+                ]);
+            }
+
+            $room->imageItems()->delete();
+            foreach (array_values($roomImages) as $i => $path) {
+                if (! $path) {
+                    continue;
+                }
+                $room->imageItems()->create([
+                    'path' => $path,
+                    'sort_order' => $i,
+                ]);
+            }
             $existingIds[] = $room->id;
         }
 
         $hotel->rooms()->whereNotIn('id', $existingIds)->delete();
+    }
+
+    private function roomHasContent(array $roomData): bool
+    {
+        foreach (['name', 'description'] as $field) {
+            $value = $roomData[$field] ?? null;
+
+            if (is_string($value) && trim($value) !== '') {
+                return true;
+            }
+
+            if (is_array($value)) {
+                foreach (['en', 'fr', 'ar'] as $lang) {
+                    if (isset($value[$lang]) && trim((string) $value[$lang]) !== '') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        foreach (['pricePerNight', 'capacity', 'size'] as $field) {
+            if (! array_key_exists($field, $roomData)) {
+                continue;
+            }
+
+            $value = $roomData[$field];
+
+            if (is_numeric($value) && (float) $value > 0) {
+                return true;
+            }
+        }
+
+        foreach (['features', 'images'] as $field) {
+            $value = $roomData[$field] ?? [];
+
+            if (! is_array($value)) {
+                continue;
+            }
+
+            foreach ($value as $item) {
+                if (is_string($item) && trim($item) !== '') {
+                    return true;
+                }
+
+                if (is_array($item)) {
+                    foreach ($item as $nested) {
+                        if (is_string($nested) && trim($nested) !== '') {
+                            return true;
+                        }
+
+                        if (is_array($nested)) {
+                            foreach ($nested as $leaf) {
+                                if (is_string($leaf) && trim($leaf) !== '') {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Normalize room image items to stored paths.
+     *
+     * @param  array<int, mixed>  $images
+     * @return array<int, string>
+     */
+    private function normalizeRoomImages(array $images): array
+    {
+        return array_values(array_filter(array_map(function (mixed $image): string {
+            if ($image instanceof UploadedFile) {
+                return '/storage/'.$image->store('uploads/hotels/rooms', 'public');
+            }
+
+            if (is_array($image) && isset($image['path']) && is_string($image['path'])) {
+                return $this->normalizeStoredMediaPath($image['path']);
+            }
+
+            if (is_string($image)) {
+                return $this->normalizeStoredMediaPath($image);
+            }
+
+            return '';
+        }, $images)));
     }
 
     private function splitLines(string $value): array

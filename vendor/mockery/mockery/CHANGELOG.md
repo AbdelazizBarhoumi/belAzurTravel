@@ -301,7 +301,7 @@ constraint, see [#1266](https://github.com/mockery/mockery/issues/1266)
 ## 1.2.3 (2019-08-07)
 
 - Allow mocking classes that have allows and expects methods (#868)
-- Allow passing thru __call method in all mock types (experimental) (#969)
+- Allow passing thru \_\_call method in all mock types (experimental) (#969)
 - Add support for `!` to blacklist methods (#959)
 - Added `withSomeOfArgs` to partial match a list of args (#967)
 - Fix chained demeter calls with type hint (#956)
@@ -382,7 +382,7 @@ constraint, see [#1266](https://github.com/mockery/mockery/issues/1266)
 - Some support for variadic parameters
 - Hamcrest is now a required dependency
 - Instance mocks now respect `shouldIgnoreMissing` call on control instance
-- This will be the *last version to support PHP 5.3*
+- This will be the _last version to support PHP 5.3_
 - Added `Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration` trait
 - Added `makePartial` to `Mockery\MockInterface` as it was missing
 
@@ -411,7 +411,7 @@ constraint, see [#1266](https://github.com/mockery/mockery/issues/1266)
 
 ## 0.9.0 (2014-02-05)
 
-- Allow mocking classes with final __wakeup() method
+- Allow mocking classes with final \_\_wakeup() method
 - Quick definitions are now always `byDefault`
 - Allow mocking of protected methods with `shouldAllowMockingProtectedMethods`
 - Support official Hamcrest package

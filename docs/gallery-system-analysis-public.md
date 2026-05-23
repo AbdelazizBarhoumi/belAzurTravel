@@ -11,12 +11,12 @@ This document analyzes the consistency of the public-facing gallery system, incl
 
 ## 2. Inconsistency Audit
 
-| Feature | Database Schema | Model Definition | Frontend Interface (`gallery.api.ts`) | Consistency Status |
-| :--- | :--- | :--- | :--- | :--- |
-| `id` | `id` (bigint) | Implicit | `id` (number) | Consistent |
-| `url` | `url` (string) | `url` (fillable) | `url` (string) | Consistent |
-| `caption` | `caption` (json) | `caption` (array) | `caption` (Record<string, string>) | Consistent |
-| `sort_order` | `sort_order` (int, default 0) | `sort_order` (fillable) | `sort_order` (number) | Consistent |
+| Feature      | Database Schema               | Model Definition        | Frontend Interface (`gallery.api.ts`) | Consistency Status |
+| :----------- | :---------------------------- | :---------------------- | :------------------------------------ | :----------------- |
+| `id`         | `id` (bigint)                 | Implicit                | `id` (number)                         | Consistent         |
+| `url`        | `url` (string)                | `url` (fillable)        | `url` (string)                        | Consistent         |
+| `caption`    | `caption` (json)              | `caption` (array)       | `caption` (Record<string, string>)    | Consistent         |
+| `sort_order` | `sort_order` (int, default 0) | `sort_order` (fillable) | `sort_order` (number)                 | Consistent         |
 
 ## 3. Observations & Recommendations
 

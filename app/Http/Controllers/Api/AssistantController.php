@@ -116,7 +116,7 @@ class AssistantController extends Controller
         $this->notifyOperations($booking->refresh(), 'booking.confirmed');
         Cache::forget('assistant.summary');
 
-        return response()->json(['message' => 'confirmed']);
+        return response()->json(['message' => __('messages.confirmed')]);
     }
 
     public function cancelBooking(Booking $booking): JsonResponse
@@ -130,7 +130,7 @@ class AssistantController extends Controller
         $this->notifyOperations($booking->refresh(), 'booking.cancelled');
         Cache::forget('assistant.summary');
 
-        return response()->json(['message' => 'cancelled']);
+        return response()->json(['message' => __('messages.cancelled')]);
     }
 
     public function clients(): JsonResponse

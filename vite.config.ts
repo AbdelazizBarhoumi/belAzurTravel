@@ -26,13 +26,13 @@ export default defineConfig({
     },
     server: {
         watch: {
-                // On Windows, polling at 100ms can cause frequent rebuilds when tools
-                // touch files or the OS reports noisy FS events. Use the default
-                // non-polling watcher in dev to avoid spurious full-page reloads.
-                usePolling: false,
-                // If polling is required in some CI/dev setups, increase the
-                // interval to a less aggressive value to avoid reload storms.
-                interval: 1000,
+            // On Windows, polling at 100ms can cause frequent rebuilds when tools
+            // touch files or the OS reports noisy FS events. Use the default
+            // non-polling watcher in dev to avoid spurious full-page reloads.
+            usePolling: false,
+            // If polling is required in some CI/dev setups, increase the
+            // interval to a less aggressive value to avoid reload storms.
+            interval: 1000,
         },
         hmr: {
             host: 'localhost',

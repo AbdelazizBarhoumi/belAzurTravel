@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Concerns\HandlesLocalization;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
@@ -21,7 +22,7 @@ use Illuminate\Support\Str;
  */
 class AdminEventController extends Controller
 {
-    use \App\Concerns\HandlesAdminMedia, HandlesLocalization;
+    use HandlesAdminMedia, HandlesLocalization;
 
     public function index(): JsonResponse
     {
@@ -67,7 +68,7 @@ class AdminEventController extends Controller
         $item->delete();
         $this->flushAdminCache('events', $identifier);
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function attributes(Request $request, ?Model $existing = null): array

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\GalleryImage;
 use App\Models\Tour;
 use Illuminate\Database\Eloquent\Model;
@@ -69,7 +70,7 @@ class AdminTourController extends Controller
         $item->delete();
         $this->flushAdminCache('tours', $identifier);
 
-        return response()->json(['message' => 'deleted']);
+        return response()->json(['message' => __('messages.deleted')]);
     }
 
     private function attributes(Request $request, ?Model $existing = null): array
@@ -115,7 +116,7 @@ class AdminTourController extends Controller
 
         $localized = fn (string $key, string $fallback = ''): array => $this->localized($data, $key, $fallback);
         $name = $localized('name');
-        
+
         $categoryKey = (string) (
             $data['category_key']
             ?? $existing?->category_key
@@ -123,7 +124,7 @@ class AdminTourController extends Controller
             ?? ''
         );
         $category = $categoryKey !== ''
-            ? \App\Models\Category::query()
+            ? Category::query()
                 ->where('entity_type', 'tours')
                 ->where('key', $categoryKey)
                 ->first()
@@ -230,9 +231,10 @@ class AdminTourController extends Controller
 
     private function flatLocalized(string $key, array|string|null $value): array
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             $value = ['en' => (string) $value, 'fr' => (string) $value, 'ar' => (string) $value];
         }
+
         return [$key => $value['en'] ?? '', $key.'_fr' => $value['fr'] ?? '', $key.'_ar' => $value['ar'] ?? '', $key.'_en' => $value['en'] ?? ''];
     }
 
