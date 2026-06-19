@@ -18,6 +18,21 @@ export interface AdminGalleryItem {
     image: string;
 }
 
+export interface AdminPartner {
+    id: string;
+    name: string;
+    name_en: string;
+    name_fr: string;
+    name_ar: string;
+    description: string;
+    description_en: string;
+    description_fr: string;
+    description_ar: string;
+    website: string | null;
+    category: string;
+    image: string;
+}
+
 export interface AdminState {
     destinations: AdminDestination[];
     hotels: AdminHotel[];

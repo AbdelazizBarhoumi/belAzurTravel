@@ -35,6 +35,7 @@ import AdminEvents from './pages/admin/AdminEvents';
 import AdminFlights from './pages/admin/AdminFlights';
 import AdminGallery from './pages/admin/AdminGallery';
 import AdminHotels from './pages/admin/AdminHotels';
+import AdminPartners from './pages/admin/AdminPartners';
 import AdminPromos from './pages/admin/AdminPromos';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSiteSettings from './pages/admin/AdminSiteSettings';
@@ -70,6 +71,7 @@ import Team from './pages/general/Team';
 import Unauthorized from './pages/general/Unauthorized';
 import Hotels from './pages/hotels';
 import HotelDetail from './pages/hotels/show';
+import Partners from './pages/partners/index';
 import Promos from './pages/promos';
 import PromoDetail from './pages/promos/show';
 import Tours from './pages/tours';
@@ -244,6 +246,10 @@ const LayoutWrapper = () => {
                         element={adminGuard(<AdminTeam />)}
                     />
                     <Route
+                        path="/admin/partners"
+                        element={adminGuard(<AdminPartners />)}
+                    />
+                    <Route
                         path="/admin/blog"
                         element={adminGuard(<AdminBlog />)}
                     />
@@ -408,6 +414,14 @@ const LayoutWrapper = () => {
                         element={
                             <NavRouteGuard pageKey="team">
                                 <Team />
+                            </NavRouteGuard>
+                        }
+                    />
+                    <Route
+                        path="/partners"
+                        element={
+                            <NavRouteGuard pageKey="partners">
+                                <Partners />
                             </NavRouteGuard>
                         }
                     />

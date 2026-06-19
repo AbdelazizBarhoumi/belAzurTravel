@@ -12,6 +12,7 @@ import EventController from './EventController'
 import DealController from './DealController'
 import PromoController from './PromoController'
 import TeamController from './TeamController'
+import PartnerController from './PartnerController'
 import BlogPostController from './BlogPostController'
 import NotificationController from './NotificationController'
 import BookingController from './BookingController'
@@ -27,6 +28,7 @@ import AdminPromoController from './AdminPromoController'
 import AdminBlogPostController from './AdminBlogPostController'
 import AdminUserController from './AdminUserController'
 import AdminTeamController from './AdminTeamController'
+import AdminPartnerController from './AdminPartnerController'
 const Api = {
     SiteSettingsController: Object.assign(SiteSettingsController, SiteSettingsController),
 AuthUserController: Object.assign(AuthUserController, AuthUserController),
@@ -42,6 +44,7 @@ EventController: Object.assign(EventController, EventController),
 DealController: Object.assign(DealController, DealController),
 PromoController: Object.assign(PromoController, PromoController),
 TeamController: Object.assign(TeamController, TeamController),
+PartnerController: Object.assign(PartnerController, PartnerController),
 BlogPostController: Object.assign(BlogPostController, BlogPostController),
 NotificationController: Object.assign(NotificationController, NotificationController),
 BookingController: Object.assign(BookingController, BookingController),
@@ -57,6 +60,7 @@ AdminPromoController: Object.assign(AdminPromoController, AdminPromoController),
 AdminBlogPostController: Object.assign(AdminBlogPostController, AdminBlogPostController),
 AdminUserController: Object.assign(AdminUserController, AdminUserController),
 AdminTeamController: Object.assign(AdminTeamController, AdminTeamController),
+AdminPartnerController: Object.assign(AdminPartnerController, AdminPartnerController),
 }
 
 export default Api

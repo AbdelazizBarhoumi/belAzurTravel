@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { buildRequestHeaders } from '@/api/requestHeaders';
 import { BrandLogo } from '@/components/layout/BrandLogo';
@@ -16,7 +16,6 @@ const Register = () => {
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPass, setShowPass] = useState(false);
-    const navigate = useNavigate();
     const { t } = useLanguage();
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -60,9 +59,8 @@ const Register = () => {
             }
 
             toast.success(t('register.success'));
-            // After registration, Fortify typically logs the user in automatically
-            // Redirect to dashboard
-            navigate('/dashboard');
+            // Fortify auto-logs in after registration; reload for fresh session + CSRF
+            window.location.href = '/dashboard';
         } catch (error: unknown) {
             console.error('Registration catch:', error);
             const msg =

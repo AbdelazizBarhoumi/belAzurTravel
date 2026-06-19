@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AdminDestinationController;
 use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminFlightController;
 use App\Http\Controllers\Api\AdminHotelController;
+use App\Http\Controllers\Api\AdminPartnerController;
 use App\Http\Controllers\Api\AdminPromoController;
 use App\Http\Controllers\Api\AdminTeamController;
 use App\Http\Controllers\Api\AdminTourController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\HotelController;
 use App\Http\Controllers\Api\InteractionController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\PromoController;
 use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\TeamController;
@@ -67,6 +69,8 @@ Route::get('promos', [PromoController::class, 'index'])->middleware(['check-nav-
 Route::get('promos/{code}', [PromoController::class, 'show'])->middleware(['check-nav-page:promos']);
 
 Route::get('team', [TeamController::class, 'index'])->middleware(['check-nav-page:team']);
+
+Route::get('partners', [PartnerController::class, 'index']);
 
 Route::get('blog-posts', [BlogPostController::class, 'index'])->middleware(['check-nav-page:blog-posts']);
 Route::get('blog-posts/{slug}', [BlogPostController::class, 'show'])->middleware(['check-nav-page:blog-posts']);
@@ -172,5 +176,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/team/{id}', [AdminTeamController::class, 'show']);
         Route::put('/admin/team/{id}', [AdminTeamController::class, 'update']);
         Route::delete('/admin/team/{id}', [AdminTeamController::class, 'destroy']);
+
+        Route::get('/admin/partners', [AdminPartnerController::class, 'index']);
+        Route::post('/admin/partners', [AdminPartnerController::class, 'store']);
+        Route::get('/admin/partners/{id}', [AdminPartnerController::class, 'show']);
+        Route::put('/admin/partners/{id}', [AdminPartnerController::class, 'update']);
+        Route::delete('/admin/partners/{id}', [AdminPartnerController::class, 'destroy']);
     });
 });

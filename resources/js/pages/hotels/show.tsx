@@ -153,7 +153,6 @@ export default function HotelDetail() {
     const _country = detail.country
         ? localizeText(detail.country, lang)
         : location;
-    const whatsapp = detail.whatsapp ?? '';
 
     const handleReserve = () => {
         const roomsElement = document.getElementById('rooms-list');
@@ -169,15 +168,6 @@ export default function HotelDetail() {
 
     const handleWhatsAppInquiry = () => {
         notifyInteraction('whatsapp');
-        const message = encodeURIComponent(
-            `Hello, I want to reserve:\nHotel: ${title}\nPlease confirm availability.`,
-        );
-
-        if (whatsapp) {
-            window.open(`https://wa.me/${whatsapp}?text=${message}`, '_blank');
-            return;
-        }
-
         window.open('/contact', '_self');
     };
 
@@ -236,8 +226,6 @@ export default function HotelDetail() {
                                 : ''
                         }
                         amenities={amenities}
-                        address={detail.address}
-                        phone={detail.phone}
                     />
 
                     {rooms.length > 0 && (

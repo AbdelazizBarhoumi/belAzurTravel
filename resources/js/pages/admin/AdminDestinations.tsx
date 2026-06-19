@@ -35,10 +35,10 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type { AdminDestination } from '@/hooks/useAdminStore';
 import {
     categoryLabels,
-    countryLabels,
     destinationLabels,
     localizeKnown,
 } from '@/lib/adminI18n';
+import { CountrySelect } from '@/components/ui/CountrySelect';
 
 type DestinationFormValues = AdminDestination &
     Record<string, unknown> & {
@@ -351,11 +351,9 @@ const AdminDestinations = () => {
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {localizeKnown(
-                                            destination.country,
-                                            countryLabels,
-                                            lang,
-                                        )}
+                                        {typeof destination.country === 'object' && destination.country !== null
+                                            ? (destination.country as any)[lang] || (destination.country as any).en || ''
+                                            : asText(destination.country)}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">
@@ -453,180 +451,129 @@ const AdminDestinations = () => {
                         render: ({ values, setField, activeLang, errors }) => (
                             <div className="space-y-4">
                                 <div className="grid gap-4 md:grid-cols-2">
-                                    {[
-                                        {
-                                            key: 'name',
-                                            label: t(
-                                                'admin.destinationForm.name',
-                                            ),
-                                            type: 'text' as const,
-                                            required: true,
-                                            helpText: t(
-                                                'admin.destinationForm.nameHelp',
-                                            ),
-                                            placeholder: t(
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor={`name_${activeLang}`}
+                                            className={
+                                                errors?.[`name_${activeLang}`]
+                                                    ? 'text-destructive'
+                                                    : 'text-muted-foreground'
+                                            }
+                                        >
+                                            {t('admin.destinationForm.name')}
+                                            <LangBadge lang={activeLang} />
+                                        </Label>
+                                        <Input
+                                            id={`name_${activeLang}`}
+                                            value={asText(
+                                                values[`name_${activeLang}`],
+                                            )}
+                                            onChange={(e) =>
+                                                setField(
+                                                    `name_${activeLang}`,
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder={t(
                                                 'admin.destinationForm.namePlaceholder',
-                                            ),
-                                        },
-                                        {
-                                            key: 'country',
-                                            label: t(
-                                                'admin.destinationForm.country',
-                                            ),
-                                            type: 'text' as const,
-                                            required: true,
-                                            helpText: t(
-                                                'admin.destinationForm.countryHelp',
-                                            ),
-                                            placeholder: t(
-                                                'admin.destinationForm.countryPlaceholder',
-                                            ),
-                                        },
-                                        {
-                                            key: 'category_key',
-                                            label: t(
-                                                'admin.destinationForm.category',
-                                            ),
-                                            type: 'select' as const,
-                                            required: true,
-                                            helpText: t(
-                                                'admin.destinationForm.categoryHelp',
-                                            ),
-                                            options:
-                                                dbCategories.length > 0
-                                                    ? dbCategories.map((c) => ({
-                                                          label:
-                                                              c.name[
-                                                                  activeLang
-                                                              ] || c.name.en,
-                                                          value: c.key,
-                                                      }))
-                                                    : Object.keys(
-                                                          categoryLabels,
-                                                      ).map((k) => ({
-                                                          label:
-                                                              categoryLabels[
-                                                                  k as keyof typeof categoryLabels
-                                                              ][activeLang] ??
-                                                              String(k),
-                                                          value: String(k),
-                                                      })),
-                                        },
-                                    ].map((field) => {
-                                        const valueKey =
-                                            field.key === 'category_key'
-                                                ? 'category_key'
-                                                : localizedKey(
-                                                      field.key,
-                                                      activeLang,
-                                                  );
-                                        const error = errors?.[valueKey];
+                                            )}
+                                        />
+                                        {errors?.[`name_${activeLang}`] && (
+                                            <p className="text-[10px] text-destructive">
+                                                {errors[`name_${activeLang}`]}
+                                            </p>
+                                        )}
+                                    </div>
 
-                                        return (
-                                            <div
-                                                key={valueKey}
-                                                className="space-y-2"
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor={`country_${activeLang}`}
+                                            className={
+                                                errors?.[`country_${activeLang}`]
+                                                    ? 'text-destructive'
+                                                    : 'text-muted-foreground'
+                                            }
+                                        >
+                                            {t('admin.destinationForm.country')}
+                                            <LangBadge lang={activeLang} />
+                                        </Label>
+                                        <CountrySelect
+                                            value={asText(
+                                                values[`country_${activeLang}`],
+                                            )}
+                                            onChange={(_code, names) => {
+                                                setField(
+                                                    'country_en',
+                                                    names.en,
+                                                );
+                                                setField(
+                                                    'country_fr',
+                                                    names.fr,
+                                                );
+                                                setField(
+                                                    'country_ar',
+                                                    names.ar,
+                                                );
+                                            }}
+                                        />
+                                        {errors?.[`country_${activeLang}`] && (
+                                            <p className="text-[10px] text-destructive">
+                                                {errors[`country_${activeLang}`]}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label
+                                            htmlFor="category_key"
+                                            className={
+                                                errors?.category_key
+                                                    ? 'text-destructive'
+                                                    : 'text-muted-foreground'
+                                            }
+                                        >
+                                            {t('admin.destinationForm.category')}
+                                        </Label>
+                                        <Select
+                                            value={String(
+                                                values.category_key ?? '',
+                                            )}
+                                            onValueChange={(val) =>
+                                                setField('category_key', val)
+                                            }
+                                        >
+                                            <SelectTrigger
+                                                id="category_key"
+                                                className={
+                                                    errors?.category_key
+                                                        ? 'border-destructive ring-1 ring-destructive'
+                                                        : ''
+                                                }
                                             >
-                                                <Label
-                                                    htmlFor={valueKey}
-                                                    className={
-                                                        error
-                                                            ? 'text-destructive'
-                                                            : 'text-muted-foreground'
-                                                    }
-                                                >
-                                                    {field.label}
-                                                    {field.key !==
-                                                        'category_key' && (
-                                                        <LangBadge
-                                                            lang={activeLang}
-                                                        />
+                                                <SelectValue
+                                                    placeholder={t(
+                                                        'actions.select',
                                                     )}
-                                                </Label>
-                                                {field.type === 'select' ? (
-                                                    <Select
-                                                        value={String(
-                                                            values[valueKey] ??
-                                                                '',
-                                                        )}
-                                                        onValueChange={(val) =>
-                                                            setField(
-                                                                valueKey,
-                                                                val,
-                                                            )
-                                                        }
+                                                />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {dbCategories.map((c) => (
+                                                    <SelectItem
+                                                        key={c.key}
+                                                        value={c.key}
                                                     >
-                                                        <SelectTrigger
-                                                            id={valueKey}
-                                                            className={
-                                                                error
-                                                                    ? 'border-destructive ring-1 ring-destructive'
-                                                                    : ''
-                                                            }
-                                                        >
-                                                            <SelectValue
-                                                                placeholder={t(
-                                                                    'actions.select',
-                                                                )}
-                                                            />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {field.options?.map(
-                                                                (option) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            option.value
-                                                                        }
-                                                                        value={
-                                                                            option.value
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            option.label
-                                                                        }
-                                                                    </SelectItem>
-                                                                ),
-                                                            )}
-                                                        </SelectContent>
-                                                    </Select>
-                                                ) : (
-                                                    <Input
-                                                        id={valueKey}
-                                                        value={String(
-                                                            values[valueKey] ??
-                                                                '',
-                                                        )}
-                                                        onChange={(e) =>
-                                                            setField(
-                                                                valueKey,
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        required={
-                                                            field.required
-                                                        }
-                                                        placeholder={
-                                                            field.placeholder
-                                                        }
-                                                        className={
-                                                            error
-                                                                ? 'border-destructive ring-1 ring-destructive'
-                                                                : ''
-                                                        }
-                                                    />
-                                                )}
-                                                {error ? (
-                                                    <p className="text-xs text-destructive">
-                                                        {error}
-                                                    </p>
-                                                ) : field.helpText ? (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {field.helpText}
-                                                    </p>
-                                                ) : null}
-                                            </div>
-                                        );
-                                    })}
+                                                        {c.name[activeLang] ||
+                                                            c.name.en}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {errors?.category_key && (
+                                            <p className="text-[10px] text-destructive">
+                                                {errors.category_key}
+                                            </p>
+                                        )}
+                                    </div>
 
                                     <div className="space-y-2 md:col-span-2">
                                         <Label

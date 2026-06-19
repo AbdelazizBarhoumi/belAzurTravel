@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SiteSettingsController extends Controller
 {
+    use HandlesAdminMedia;
+
     /** Disabled pages that should never be exposed through nav settings. */
     private const DISABLED_NAV_PAGE_KEYS = ['design-trip', 'favorites'];
 
@@ -221,6 +225,11 @@ class SiteSettingsController extends Controller
 
     public function update(Request $request)
     {
+        // Decode JSON fields that may arrive as strings in multipart/form-data requests
+        if ($request->hasFile('video')) {
+            $this->decodeJsonFields($request, ['content', 'socialLinks', 'legalSections', 'hours', 'navLinks']);
+        }
+
         $data = $request->validate([
             // Allow partial updates (e.g. admin nav settings page only sends content)
             'companyName' => ['nullable', 'string', 'max:255'],
@@ -241,6 +250,7 @@ class SiteSettingsController extends Controller
             'hours.*.value' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'array'],
             'navLinks' => ['nullable', 'array'],
+            'video' => ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:51200'],
         ]);
 
         // write to DB (create or update first row)
@@ -313,6 +323,24 @@ class SiteSettingsController extends Controller
                         }
                     }
                 }
+            }
+
+            // Handle video upload
+            if ($request->hasFile('video')) {
+                $oldVideo = $content['landing_video']['url'] ?? null;
+                if ($oldVideo) {
+                    $oldPath = str_replace('/storage/', '', $oldVideo);
+                    Storage::disk('public')->delete($oldPath);
+                }
+                $path = $request->file('video')->store('uploads/site', 'public');
+                $content['landing_video'] = ['url' => '/storage/'.$path];
+            } elseif (array_key_exists('landing_video', $content) && is_null($content['landing_video'])) {
+                $oldVideo = $row?->content['landing_video']['url'] ?? null;
+                if ($oldVideo) {
+                    $oldPath = str_replace('/storage/', '', $oldVideo);
+                    Storage::disk('public')->delete($oldPath);
+                }
+                unset($content['landing_video']);
             }
 
             $hours = $this->normalizeHoursPayload($data['hours'] ?? ($row?->hours ?? []));

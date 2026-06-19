@@ -44,12 +44,9 @@ export interface HotelDetailData {
     city: LocalizedText;
     country: LocalizedText;
     location: LocalizedText;
-    address: string;
     stars: number;
     rating: number;
     reviews: number;
-    phone: string;
-    whatsapp: string;
     description: LocalizedText;
     images: string[];
     amenities: Array<{ id: string; name: LocalizedText; icon: typeof Phone }>;

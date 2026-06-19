@@ -11,6 +11,7 @@ export type AdminRow = Record<string, string | number | boolean | null>;
 export type AdminEntityType =
     | 'destinations'
     | 'team'
+    | 'partners'
     | 'hotels'
     | 'tours'
     | 'cars'

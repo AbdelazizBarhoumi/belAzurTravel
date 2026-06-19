@@ -38,10 +38,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import {
     categoryLabels,
-    countryLabels,
     hotelLabels,
     localizeKnown,
 } from '@/lib/adminI18n';
+import { CountrySelect } from '@/components/ui/CountrySelect';
+import { CitySelect } from '@/components/ui/CitySelect';
+import { useCountryByCode } from '@/hooks/useCountries';
 
 type HotelCategory = {
     key: string;
@@ -391,9 +393,6 @@ const AdminHotels = () => {
               rooms: Array.isArray((editing as any).rooms)
                   ? (editing as any).rooms
                   : [],
-              address: asText(editing.address),
-              phone: asText(editing.phone),
-              whatsapp: asText(editing.whatsapp),
               city_en: asText(editing.city_en),
               city_fr: asText(editing.city_fr),
               city_ar: asText(editing.city_ar),
@@ -419,195 +418,239 @@ const AdminHotels = () => {
             title: t('admin.hotelForm.coreDetails'),
             column: 'main',
             description: t('admin.hotelForm.coreDetailsHint'),
-            render: ({ values, setField, activeLang, errors }) => (
-                <div className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {[
-                            {
-                                key: 'name',
-                                label: t('admin.name'),
-                                placeholder: t(
-                                    'admin.hotelForm.namePlaceholder',
-                                ),
-                                helpText: t('admin.hotelForm.nameHelp'),
-                            },
-                            {
-                                key: 'location',
-                                label: t('admin.location'),
-                                placeholder: t(
-                                    'admin.hotelForm.locationPlaceholder',
-                                ),
-                                helpText: t('admin.hotelForm.locationHelp'),
-                            },
-                            {
-                                key: 'category',
-                                label: t('admin.category'),
-                                helpText: t('admin.hotelForm.categoryHelp'),
-                            },
-                            {
-                                key: 'city',
-                                label: t('admin.city'),
-                                placeholder: t(
-                                    'admin.hotelForm.cityPlaceholder',
-                                ),
-                            },
-                            {
-                                key: 'country',
-                                label: t('admin.country'),
-                                placeholder: t(
-                                    'admin.hotelForm.countryPlaceholder',
-                                ),
-                            },
-                        ].map((field) => {
-                            const localizedKey = `${field.key}_${activeLang}`;
-                            const categoryKey = resolveCategoryKey(
-                                values.category_key,
-                                values.category,
-                                values.category_en,
-                                values.category_fr,
-                                values.category_ar,
-                            );
-                            const value =
-                                field.key === 'category'
-                                    ? categoryKey
-                                    : asText(values[localizedKey]);
-                            const error =
-                                field.key === 'category'
-                                    ? errors?.category_key
-                                    : errors?.[localizedKey];
+            render: ({ values, setField, activeLang, errors }) => {
+                const selectedCountryCode = asText(values.country_en);
+                const country = useCountryByCode(selectedCountryCode || null);
 
-                            return (
-                                <div key={localizedKey} className="space-y-2">
-                                    <label
-                                        htmlFor={localizedKey}
-                                        className={`flex items-center gap-2 text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
-                                    >
-                                        {field.label}
-                                        {field.key !== 'category' && (
-                                            <LangBadge lang={activeLang} />
-                                        )}
-                                    </label>
-                                    {field.key === 'category' &&
-                                    dbCategories.length > 0 ? (
-                                        <Select
-                                            value={String(value)}
-                                            onValueChange={(val) =>
-                                                syncCategoryFields(
-                                                    setField,
-                                                    dbCategories.find(
-                                                        (c) => c.key === val,
-                                                    ),
-                                                    val,
-                                                )
-                                            }
+                return (
+                    <div className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {[
+                                {
+                                    key: 'name',
+                                    label: t('admin.name'),
+                                    placeholder: t(
+                                        'admin.hotelForm.namePlaceholder',
+                                    ),
+                                    helpText: t('admin.hotelForm.nameHelp'),
+                                },
+                                {
+                                    key: 'location',
+                                    label: t('admin.location'),
+                                    placeholder: t(
+                                        'admin.hotelForm.locationPlaceholder',
+                                    ),
+                                    helpText: t('admin.hotelForm.locationHelp'),
+                                },
+                                {
+                                    key: 'category',
+                                    label: t('admin.category'),
+                                    helpText: t('admin.hotelForm.categoryHelp'),
+                                },
+                            ].map((field) => {
+                                const localizedKey = `${field.key}_${activeLang}`;
+                                const categoryKey = resolveCategoryKey(
+                                    values.category_key,
+                                    values.category,
+                                    values.category_en,
+                                    values.category_fr,
+                                    values.category_ar,
+                                );
+                                const value =
+                                    field.key === 'category'
+                                        ? categoryKey
+                                        : asText(values[localizedKey]);
+                                const error =
+                                    field.key === 'category'
+                                        ? errors?.category_key
+                                        : errors?.[localizedKey];
+
+                                return (
+                                    <div key={localizedKey} className="space-y-2">
+                                        <label
+                                            htmlFor={localizedKey}
+                                            className={`flex items-center gap-2 text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
                                         >
-                                            <SelectTrigger
-                                                id={localizedKey}
-                                                className={baseFieldClass(
-                                                    Boolean(error),
-                                                )}
-                                                aria-invalid={Boolean(error)}
-                                            >
-                                                <SelectValue
-                                                    placeholder={t(
-                                                        'actions.select',
-                                                    )}
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {dbCategories.map((c) => (
-                                                    <SelectItem
-                                                        key={c.key}
-                                                        value={c.key}
-                                                    >
-                                                        {getCategoryLabel(
-                                                            c,
-                                                            activeLang,
-                                                        )}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    ) : (
-                                        <div className="space-y-1">
-                                            <input
-                                                id={localizedKey}
-                                                value={value}
-                                                placeholder={field.placeholder}
-                                                onChange={(event) =>
-                                                    setField(
-                                                        localizedKey,
-                                                        event.target.value,
+                                            {field.label}
+                                            {field.key !== 'category' && (
+                                                <LangBadge lang={activeLang} />
+                                            )}
+                                        </label>
+                                        {field.key === 'category' &&
+                                        dbCategories.length > 0 ? (
+                                            <Select
+                                                value={String(value)}
+                                                onValueChange={(val) =>
+                                                    syncCategoryFields(
+                                                        setField,
+                                                        dbCategories.find(
+                                                            (c) => c.key === val,
+                                                        ),
+                                                        val,
                                                     )
                                                 }
-                                                className={baseFieldClass(
-                                                    Boolean(error),
-                                                )}
-                                                aria-invalid={Boolean(error)}
-                                                required={
-                                                    field.key !== 'city' &&
-                                                    field.key !== 'country'
-                                                }
-                                            />
-                                            {error ? (
-                                                <p
-                                                    id={`${localizedKey}-error`}
-                                                    className="text-[10px] text-destructive"
+                                            >
+                                                <SelectTrigger
+                                                    id={localizedKey}
+                                                    className={baseFieldClass(
+                                                        Boolean(error),
+                                                    )}
+                                                    aria-invalid={Boolean(error)}
                                                 >
-                                                    {error}
-                                                </p>
-                                            ) : field.helpText ? (
-                                                <p className="text-[10px] text-muted-foreground">
-                                                    {field.helpText}
-                                                </p>
-                                            ) : null}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                                    <SelectValue
+                                                        placeholder={t(
+                                                            'actions.select',
+                                                        )}
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {dbCategories.map((c) => (
+                                                        <SelectItem
+                                                            key={c.key}
+                                                            value={c.key}
+                                                        >
+                                                            {getCategoryLabel(
+                                                                c,
+                                                                activeLang,
+                                                            )}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <div className="space-y-1">
+                                                <input
+                                                    id={localizedKey}
+                                                    value={value}
+                                                    placeholder={field.placeholder}
+                                                    onChange={(event) =>
+                                                        setField(
+                                                            localizedKey,
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    className={baseFieldClass(
+                                                        Boolean(error),
+                                                    )}
+                                                    aria-invalid={Boolean(error)}
+                                                    required
+                                                />
+                                                {error ? (
+                                                    <p
+                                                        id={`${localizedKey}-error`}
+                                                        className="text-[10px] text-destructive"
+                                                    >
+                                                        {error}
+                                                    </p>
+                                                ) : field.helpText ? (
+                                                    <p className="text-[10px] text-muted-foreground">
+                                                        {field.helpText}
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
 
-                        <div className="space-y-2 md:col-span-2">
-                            <label
-                                htmlFor={`description_${activeLang}`}
-                                className={`text-xs font-semibold ${errors?.[`description_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
-                            >
-                                {t('admin.description')}
-                                <LangBadge lang={activeLang} />
-                            </label>
-                            <textarea
-                                id={`description_${activeLang}`}
-                                value={asText(
-                                    values[`description_${activeLang}`],
-                                )}
-                                onChange={(event) =>
-                                    setField(
-                                        `description_${activeLang}`,
-                                        event.target.value,
-                                    )
-                                }
-                                rows={5}
-                                className={baseFieldClass(
-                                    Boolean(
-                                        errors?.[`description_${activeLang}`],
-                                    ),
-                                )}
-                                aria-invalid={Boolean(
-                                    errors?.[`description_${activeLang}`],
-                                )}
-                            />
-                            {errors?.[`description_${activeLang}`] ? (
-                                <p
-                                    id={`description_${activeLang}-error`}
-                                    className="text-[10px] text-destructive"
+                            <div className="space-y-2">
+                                <label
+                                    htmlFor={`country_${activeLang}`}
+                                    className={`flex items-center gap-2 text-xs font-semibold ${errors?.[`country_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                                 >
-                                    {errors[`description_${activeLang}`]}
-                                </p>
-                            ) : null}
+                                    {t('admin.country')}
+                                    <LangBadge lang={activeLang} />
+                                </label>
+                                <CountrySelect
+                                    value={selectedCountryCode}
+                                    onChange={(_code, names) => {
+                                        setField('country_en', names.en);
+                                        setField('country_fr', names.fr);
+                                        setField('country_ar', names.ar);
+                                        setField('city_en', '');
+                                        setField('city_fr', '');
+                                        setField('city_ar', '');
+                                    }}
+                                    className={baseFieldClass(
+                                        Boolean(errors?.[`country_${activeLang}`]),
+                                    )}
+                                />
+                                {errors?.[`country_${activeLang}`] ? (
+                                    <p className="text-[10px] text-destructive">
+                                        {errors[`country_${activeLang}`]}
+                                    </p>
+                                ) : null}
+                            </div>
+
+                            <div className="space-y-2">
+                                <label
+                                    htmlFor={`city_${activeLang}`}
+                                    className={`flex items-center gap-2 text-xs font-semibold ${errors?.[`city_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
+                                >
+                                    {t('admin.city')}
+                                    <LangBadge lang={activeLang} />
+                                </label>
+                                <CitySelect
+                                    countryCode={selectedCountryCode || null}
+                                    value={asText(values[`city_${activeLang}`])}
+                                    onChange={(names) => {
+                                        setField('city_en', names.en);
+                                        setField('city_fr', names.fr);
+                                        setField('city_ar', names.ar);
+                                    }}
+                                    className={baseFieldClass(
+                                        Boolean(errors?.[`city_${activeLang}`]),
+                                    )}
+                                />
+                                {errors?.[`city_${activeLang}`] ? (
+                                    <p className="text-[10px] text-destructive">
+                                        {errors[`city_${activeLang}`]}
+                                    </p>
+                                ) : null}
+                            </div>
+
+                            <div className="space-y-2 md:col-span-2">
+                                <label
+                                    htmlFor={`description_${activeLang}`}
+                                    className={`text-xs font-semibold ${errors?.[`description_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
+                                >
+                                    {t('admin.description')}
+                                    <LangBadge lang={activeLang} />
+                                </label>
+                                <textarea
+                                    id={`description_${activeLang}`}
+                                    value={asText(
+                                        values[`description_${activeLang}`],
+                                    )}
+                                    onChange={(event) =>
+                                        setField(
+                                            `description_${activeLang}`,
+                                            event.target.value,
+                                        )
+                                    }
+                                    rows={5}
+                                    className={baseFieldClass(
+                                        Boolean(
+                                            errors?.[`description_${activeLang}`],
+                                        ),
+                                    )}
+                                    aria-invalid={Boolean(
+                                        errors?.[`description_${activeLang}`],
+                                    )}
+                                />
+                                {errors?.[`description_${activeLang}`] ? (
+                                    <p
+                                        id={`description_${activeLang}-error`}
+                                        className="text-[10px] text-destructive"
+                                    >
+                                        {errors[`description_${activeLang}`]}
+                                    </p>
+                                ) : null}
+                            </div>
                         </div>
                     </div>
-                </div>
-            ),
+                );
+            },
         },
         {
             title: t('admin.hotelForm.pricing'),
@@ -649,103 +692,6 @@ const AdminHotels = () => {
                     helpText: t('admin.hotelForm.reviewsHelp'),
                 },
             ],
-        },
-        {
-            title: t('admin.hotelForm.contact'),
-            column: 'main',
-            description: t('admin.hotelForm.contactHint'),
-            render: ({ values, setField, activeLang, errors }) => (
-                <div className="grid gap-4 md:grid-cols-2">
-                    {(
-                        [
-                            {
-                                key: 'address',
-                                label: t('admin.address'),
-                                placeholder: t(
-                                    'admin.hotelForm.addressPlaceholder',
-                                ),
-                                helpText: t('admin.hotelForm.addressHelp'),
-                                colSpan: 2 as const,
-                            },
-                            {
-                                key: 'phone',
-                                label: t('admin.phone'),
-                                placeholder: t(
-                                    'admin.hotelForm.phonePlaceholder',
-                                ),
-                                helpText: t('admin.hotelForm.phoneHelp'),
-                            },
-                            {
-                                key: 'whatsapp',
-                                label: t('admin.whatsapp'),
-                                placeholder: t(
-                                    'admin.hotelForm.whatsappPlaceholder',
-                                ),
-                                helpText: t('admin.hotelForm.whatsappHelp'),
-                            },
-                        ] as Array<{
-                            key: string;
-                            label: string;
-                            placeholder: string;
-                            helpText?: string;
-                            colSpan?: 2;
-                            localized?: boolean;
-                        }>
-                    ).map((field) => {
-                        const localizedKey = field.localized
-                            ? `${field.key}_${activeLang}`
-                            : field.key;
-                        const error = errors?.[localizedKey];
-                        const value = asText(values[localizedKey]);
-
-                        return (
-                            <div
-                                key={localizedKey}
-                                className={`space-y-2 ${field.colSpan ? 'md:col-span-2' : ''}`}
-                            >
-                                <label
-                                    htmlFor={localizedKey}
-                                    className={`flex items-center gap-2 text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
-                                >
-                                    {field.label}
-                                    {field.localized ? (
-                                        <LangBadge lang={activeLang} />
-                                    ) : null}
-                                </label>
-                                <div className="space-y-1">
-                                    <input
-                                        id={localizedKey}
-                                        value={value}
-                                        placeholder={field.placeholder}
-                                        onChange={(event) =>
-                                            setField(
-                                                localizedKey,
-                                                event.target.value,
-                                            )
-                                        }
-                                        className={baseFieldClass(
-                                            Boolean(error),
-                                        )}
-                                        aria-invalid={Boolean(error)}
-                                    />
-                                    {error ? (
-                                        <p
-                                            id={`${localizedKey}-error`}
-                                            className="text-[10px] text-destructive"
-                                        >
-                                            {error}
-                                        </p>
-                                    ) : field.helpText ? (
-                                        <p className="text-[10px] text-muted-foreground">
-                                            {field.helpText}
-                                        </p>
-                                    ) : null}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            ),
         },
         {
             title: t('admin.hotelForm.media'),
@@ -848,10 +794,6 @@ const AdminHotels = () => {
             errs.price = t('admin.invalidPrice');
         if (!values.destinationSlug) errs.destinationSlug = t('admin.required');
 
-        if (!values.address) errs.address = t('admin.required');
-        if (!values.phone) errs.phone = t('admin.required');
-        if (!values.whatsapp) errs.whatsapp = t('admin.required');
-
         return errs;
     };
 
@@ -880,9 +822,6 @@ const AdminHotels = () => {
             galleryPaths,
             amenities,
             rooms,
-            address,
-            phone,
-            whatsapp,
             ...rest
         } = values;
 
@@ -942,9 +881,6 @@ const AdminHotels = () => {
                       }))
                 : [],
             gallery: galleryPaths ?? [],
-            address,
-            phone,
-            whatsapp,
             description_en: values.description_en,
             description_fr: values.description_fr,
             description_ar: values.description_ar,
@@ -1058,11 +994,7 @@ const AdminHotels = () => {
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {localizeKnown(
-                                            asText(d.location),
-                                            countryLabels,
-                                            lang,
-                                        )}
+                                        {asText(d.location)}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">

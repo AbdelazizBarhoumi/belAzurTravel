@@ -47,6 +47,7 @@ export const translations: Record<string, TranslationEntry> = {
     'nav.flights': { fr: 'Vols', ar: 'الرحلات', en: 'Flights' },
     'nav.promos': { fr: 'Promotions', ar: 'العروض الترويجية', en: 'Promos' },
     'nav.team': { fr: 'Notre Équipe', ar: 'فريقنا', en: 'Our Team' },
+    'nav.partners': { fr: 'Partenaires', ar: 'الشركاء', en: 'Partners' },
     'nav.contact': { fr: 'Contact', ar: 'اتصل بنا', en: 'Contact Us' },
     'nav.legal': {
         fr: 'Mentions Légales',
@@ -440,6 +441,8 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الوجهة',
         en: 'Destination',
     },
+    'search.fields.country': { fr: 'Pays', ar: 'البلد', en: 'Country' },
+    'search.placeholders.country': { fr: 'Sélectionner un pays', ar: 'اختر البلد', en: 'Select country' },
     'search.fields.dates': { fr: 'Dates', ar: 'التواريخ', en: 'Dates' },
     'search.fields.guests': {
         fr: 'BelAzurTravels',
@@ -654,9 +657,44 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Human support',
     },
     'home.trust.supportDescription': {
-        fr: 'Un conseiller reste disponible si l’utilisateur a besoin d’aide avant de finaliser son choix.',
+        fr: 'Un conseiller reste disponible si l\u2019utilisateur a besoin d\u2019aide avant de finaliser son choix.',
         ar: 'يبقى المستشار متاحًا إذا احتاج المستخدم للمساعدة قبل اتخاذ القرار النهائي.',
         en: 'A travel advisor is available when a user needs help before making the final choice.',
+    },
+    'home.showcase.title': {
+        fr: 'Moments de nos voyageurs',
+        ar: 'لحظات من مسافرينا',
+        en: 'Moments from Our Travelers',
+    },
+    'home.showcase.subtitle': {
+        fr: 'Une galerie vivante de destinations sélectionnées par notre communauté.',
+        ar: 'معرض حي للوجهات يختارها مجتمعنا.',
+        en: 'A living gallery of destinations curated by our community.',
+    },
+    'home.showcase.partners': {
+        fr: 'Approuvé par des partenaires de classe mondiale',
+        ar: 'موثوق من شركاء عالميين',
+        en: 'Trusted by World-Class Partners',
+    },
+    'partners.title': {
+        fr: 'Nos Partenaires',
+        ar: 'شركاؤنا',
+        en: 'Our Partners',
+    },
+    'partners.subtitle': {
+        fr: 'Des marques de classe mondiale avec lesquelles nous collaborons pour concevoir vos voyages.',
+        ar: 'علامات تجارية عالمية نتعاون معها لتصميم رحلاتك.',
+        en: 'World-class brands we collaborate with to craft your journeys.',
+    },
+    'partners.searchPlaceholder': {
+        fr: 'Rechercher des partenaires...',
+        ar: 'البحث عن شركاء...',
+        en: 'Search partners...',
+    },
+    'partners.noResults': {
+        fr: 'Aucun partenaire ne correspond à votre recherche.',
+        ar: 'لا يوجد شركاء يطابقون بحثك.',
+        en: 'No partners match your search.',
     },
     // Home steps
     'home.steps.eyebrow': {
@@ -1374,6 +1412,11 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'لا توجد فنادق تطابق معايير الفلتر الخاصة بك.',
         en: 'No hotels match your filter criteria.',
     },
+    'hotels.filters': {
+        fr: 'Filtres',
+        ar: 'الفلاتر',
+        en: 'Filters',
+    },
 
     // Hotel Detail Page
     'hotelDetail.startingFrom': {
@@ -1391,11 +1434,6 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'À propos de l’hôtel',
         ar: 'حول الفندق',
         en: 'About the hotel',
-    },
-    'hotelDetail.contactInfo': {
-        fr: 'Informations de contact',
-        ar: 'معلومات الاتصال',
-        en: 'Contact information',
     },
     'hotelDetail.amenities': {
         fr: 'Équipements',
@@ -1971,9 +2009,15 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.team': { fr: 'Équipe', ar: 'الفريق', en: 'Team' },
     'admin.teamSubtitle': {
-        fr: 'Gérer les membres de l’équipe',
+        fr: 'Gérer les membres de l\u2019équipe',
         ar: 'إدارة أعضاء الفريق',
         en: 'Manage team members',
+    },
+    'admin.partners': { fr: 'Partenaires', ar: 'الشركاء', en: 'Partners' },
+    'admin.partnerSubtitle': {
+        fr: 'Gérer vos partenaires',
+        ar: 'إدارة شركائك',
+        en: 'Manage your partners',
     },
     'admin.image': { fr: 'Image', ar: 'الصورة', en: 'Image' },
     'admin.galleryForm.general': {
@@ -2186,11 +2230,6 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'التسعير والبنية',
         en: 'Pricing and structure',
     },
-    'admin.hotelForm.contactHint': {
-        fr: 'Informations de contact et adresse.',
-        ar: 'معلومات الاتصال والعنوان.',
-        en: 'Contact information and address.',
-    },
     'admin.hotelForm.mediaHint': {
         fr: 'Images et listes d’équipements.',
         ar: 'الصور وقوائم المرافق.',
@@ -2342,11 +2381,6 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'إدارة المعلومات الأساسية للفندق.',
         en: 'Manage core hotel information.',
     },
-    'admin.hotelForm.contact': {
-        fr: 'Contact et profil',
-        ar: 'الاتصال والملف الشخصي',
-        en: 'Contact and profile',
-    },
     'admin.hotelForm.features': {
         fr: 'Caractéristiques',
         ar: 'المميزات',
@@ -2460,6 +2494,66 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'لم يتم اختيار ملف',
         en: 'No file chosen',
     },
+    'admin.partnerForm.coreDetails': {
+        fr: 'Détails du partenaire',
+        ar: 'تفاصيل الشريك',
+        en: 'Partner Details',
+    },
+    'admin.partnerForm.coreDetailsHint': {
+        fr: 'Informations de base du partenaire.',
+        ar: 'معلومات الشريك الأساسية.',
+        en: 'Basic partner information.',
+    },
+    'admin.partnerForm.name': {
+        fr: 'Nom',
+        ar: 'الاسم',
+        en: 'Name',
+    },
+    'admin.partnerForm.namePlaceholder': {
+        fr: 'Ex: Emirates',
+        ar: 'مثال: الاتحاد للطيران',
+        en: 'E.g., Emirates',
+    },
+    'admin.partnerForm.description': {
+        fr: 'Description',
+        ar: 'الوصف',
+        en: 'Description',
+    },
+    'admin.partnerForm.descriptionPlaceholder': {
+        fr: 'Description du partenaire...',
+        ar: 'وصف الشريك...',
+        en: 'Partner description...',
+    },
+    'admin.partnerForm.website': {
+        fr: 'Site web',
+        ar: 'الموقع الإلكتروني',
+        en: 'Website',
+    },
+    'admin.partnerForm.logo': {
+        fr: 'Logo',
+        ar: 'الشعار',
+        en: 'Logo',
+    },
+    'admin.partnerTable.logo': {
+        fr: 'Logo',
+        ar: 'الشعار',
+        en: 'Logo',
+    },
+    'admin.partnerTable.name': {
+        fr: 'Nom',
+        ar: 'الاسم',
+        en: 'Name',
+    },
+    'admin.partnerTable.website': {
+        fr: 'Site web',
+        ar: 'الموقع',
+        en: 'Website',
+    },
+    'admin.partnerTable.actions': {
+        fr: 'Actions',
+        ar: 'الإجراءات',
+        en: 'Actions',
+    },
 
     'admin.teamEditTitle': {
         fr: 'Modifier le membre',
@@ -2470,6 +2564,16 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Ajouter un membre',
         ar: 'إضافة عضو',
         en: 'Add Team Member',
+    },
+    'admin.partnerEditTitle': {
+        fr: 'Modifier le partenaire',
+        ar: 'تعديل الشريك',
+        en: 'Edit Partner',
+    },
+    'admin.partnerAddTitle': {
+        fr: 'Ajouter un partenaire',
+        ar: 'إضافة شريك',
+        en: 'Add Partner',
     },
     'admin.destinationAddTitle': {
         fr: 'Ajouter une destination',
@@ -2565,6 +2669,16 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Membre mis à jour',
         ar: 'تم تحديث العضو',
         en: 'Member updated',
+    },
+    'admin.partnerAdded': {
+        fr: 'Partenaire ajouté',
+        ar: 'تم إضافة الشريك',
+        en: 'Partner added',
+    },
+    'admin.partnerUpdated': {
+        fr: 'Partenaire mis à jour',
+        ar: 'تم تحديث الشريك',
+        en: 'Partner updated',
     },
     'admin.invalidUrl': {
         fr: 'URL invalide',
@@ -4263,36 +4377,6 @@ translations['admin.hotelForm.reviewsHelp'] = {
     ar: 'إجمالي عدد المراجعات.',
     en: 'Total number of reviews.',
 };
-translations['admin.hotelForm.addressPlaceholder'] = {
-    fr: 'Adresse complète',
-    ar: 'العنوان الكامل',
-    en: 'Full address',
-};
-translations['admin.hotelForm.addressHelp'] = {
-    fr: 'Rue, bâtiment ou zone.',
-    ar: 'الشارع أو المبنى أو المنطقة.',
-    en: 'Street, building, or area.',
-};
-translations['admin.hotelForm.phonePlaceholder'] = {
-    fr: '+1 234 567 890',
-    ar: '+1 234 567 890',
-    en: '+1 234 567 890',
-};
-translations['admin.hotelForm.phoneHelp'] = {
-    fr: 'Numéro de téléphone officiel.',
-    ar: 'رقم الهاتف الرسمي.',
-    en: 'Official phone number.',
-};
-translations['admin.hotelForm.whatsappPlaceholder'] = {
-    fr: '+1 234 567 890',
-    ar: '+1 234 567 890',
-    en: '+1 234 567 890',
-};
-translations['admin.hotelForm.whatsappHelp'] = {
-    fr: 'Numéro WhatsApp professionnel.',
-    ar: 'رقم واتساب للأعمال.',
-    en: 'WhatsApp business number.',
-};
 translations['admin.hotelForm.coreDetails'] = {
     fr: 'Détails de l’hôtel',
     ar: 'تفاصيل الفندق',
@@ -4307,16 +4391,6 @@ translations['admin.hotelForm.pricing'] = {
     fr: 'Tarification et structure',
     ar: 'التسعير والبنية',
     en: 'Pricing and structure',
-};
-translations['admin.hotelForm.contact'] = {
-    fr: 'Contact et profil',
-    ar: 'الاتصال والملف الشخصي',
-    en: 'Contact and profile',
-};
-translations['admin.hotelForm.contactHint'] = {
-    fr: 'Informations de contact et adresse.',
-    ar: 'معلومات الاتصال والعنوان.',
-    en: 'Contact information and address.',
 };
 translations['admin.hotelForm.media'] = {
     fr: 'Médias',

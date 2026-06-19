@@ -24,12 +24,9 @@ export type HotelDetailLookupData = {
     location: Record<string, string>;
     category_key?: string;
     category?: Record<string, string>;
-    address?: string;
     stars: number;
     rating: number;
     reviews: number;
-    phone?: string;
-    whatsapp?: string;
     description?: Record<string, string>;
     about?: Record<string, string>;
     images?: string[];

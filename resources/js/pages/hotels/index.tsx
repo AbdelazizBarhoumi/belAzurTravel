@@ -1,12 +1,20 @@
 import { motion } from 'framer-motion';
 import { Wifi, Car, Coffee, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useCountries, useCities } from '@/hooks/useCountries';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { DatePicker } from '@/components/ui/DatePicker';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { StarRating } from '@/components/ui/StarRating';
 import { TagFilter, type Tag } from '@/components/ui/TagFilter';
@@ -27,6 +35,8 @@ export default function Hotels() {
     // Accept landing widget params as fallback (destination -> q)
     const initialSearch = params.get('q') || params.get('destination') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || '';
+    const initialCountry = params.get('country') || '';
+    const initialCity = params.get('city') || '';
     const initialGuests = Number(params.get('guests') || 2);
     const initialFromDate = params.get('from') || '';
     const initialToDate = params.get('to') || '';
@@ -35,6 +45,8 @@ export default function Hotels() {
     void showMobileFilter;
     void setShowMobileFilter;
     const [searchQuery, setSearchQuery] = useState(initialSearch);
+    const [selectedCountry, setSelectedCountry] = useState(initialCountry);
+    const [selectedCity, setSelectedCity] = useState(initialCity);
     const [selectedTags, setSelectedTags] = useState<string[]>(
         initialCategory ? [initialCategory] : [],
     );
@@ -77,7 +89,16 @@ export default function Hotels() {
     const { data: hotels = [] } = useHotels();
     const { data: dynamicCategories = [] } = useCategories('hotels');
 
-    // Initial state populated via useState initializers; no synchronous effect required
+    const allCountries = useCountries();
+    const allCities = useCities(selectedCountry || null);
+
+    const countries = useMemo(() => {
+        return allCountries.map((c) => c.name[lang] || c.name.en);
+    }, [allCountries, lang]);
+
+    const cities = useMemo(() => {
+        return allCities.map((c) => c.name[lang] || c.name.en);
+    }, [allCities, lang]);
 
     const HOTEL_TAGS: Tag[] = dynamicCategories.map((c) => ({
         id: c.key,
@@ -103,6 +124,8 @@ export default function Hotels() {
         searchQuery.trim().length === 0 &&
         selectedTags.length === 0 &&
         selectedStars.length === 0 &&
+        selectedCountry === '' &&
+        selectedCity === '' &&
         activePriceRange[0] === minPrice &&
         activePriceRange[1] === maxPrice
             ? hotels
@@ -110,6 +133,8 @@ export default function Hotels() {
                   const matchesSearch = matchesSearchText(searchQuery, [
                       localizeText(hotel.name, lang),
                       localizeText(hotel.location, lang),
+                      localizeText(hotel.country, lang),
+                      localizeText(hotel.city, lang),
                       (hotel.tags ?? []).join(' '),
                   ]);
                   const matchesTags =
@@ -127,12 +152,20 @@ export default function Hotels() {
                   const matchesPrice =
                       hotel.price >= activePriceRange[0] &&
                       hotel.price <= activePriceRange[1];
+                  const matchesCountry =
+                      !selectedCountry ||
+                      localizeText(hotel.country, lang) === selectedCountry;
+                  const matchesCity =
+                      !selectedCity ||
+                      localizeText(hotel.city, lang) === selectedCity;
                   return (
                       matchesSearch &&
                       matchesTags &&
                       matchesStars &&
                       matchesRoomType &&
-                      matchesPrice
+                      matchesPrice &&
+                      matchesCountry &&
+                      matchesCity
                   );
               });
 
@@ -156,6 +189,8 @@ export default function Hotels() {
         setSearchQuery('');
         setSelectedTags([]);
         setSelectedStars([]);
+        setSelectedCountry('');
+        setSelectedCity('');
         setPriceRange(null);
     };
 
@@ -196,6 +231,8 @@ export default function Hotels() {
                             searchQuery.trim().length > 0 ||
                             selectedTags.length > 0 ||
                             selectedStars.length > 0 ||
+                            selectedCountry !== '' ||
+                            selectedCity !== '' ||
                             priceRange !== null ||
                             hasLandingDateOrGuestFilters
                         }
@@ -289,10 +326,12 @@ export default function Hotels() {
                             <div className="sticky top-24 rounded-3xl border border-border bg-card p-6">
                                 <div className="mb-6 flex items-center justify-between gap-4">
                                     <h2 className="font-serif text-lg font-bold text-foreground">
-                                        {t('hotels.filterByStars')}
+                                        {t('hotels.filters')}
                                     </h2>
                                     {(selectedTags.length > 0 ||
                                         selectedStars.length > 0 ||
+                                        selectedCountry !== '' ||
+                                        selectedCity !== '' ||
                                         activePriceRange[0] !== minPrice ||
                                         activePriceRange[1] !== maxPrice) && (
                                         <button
@@ -305,7 +344,60 @@ export default function Hotels() {
                                     )}
                                 </div>
 
-                                <div className="mb-6 flex flex-wrap gap-2">
+                                <div className="mb-6">
+                                    <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                        {t('admin.country')}
+                                    </label>
+                                    <Select
+                                        value={selectedCountry}
+                                        onValueChange={(val) => {
+                                            setSelectedCountry(val);
+                                            setSelectedCity('');
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full rounded-lg border-border bg-background">
+                                            <SelectValue placeholder={t('common.all')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="">{t('common.all')}</SelectItem>
+                                            {countries.map((c) => (
+                                                <SelectItem key={c} value={c}>
+                                                    {c}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {selectedCountry && cities.length > 0 && (
+                                    <div className="mb-6">
+                                        <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                            {t('admin.city')}
+                                        </label>
+                                        <Select
+                                            value={selectedCity}
+                                            onValueChange={setSelectedCity}
+                                        >
+                                            <SelectTrigger className="w-full rounded-lg border-border bg-background">
+                                                <SelectValue placeholder={t('common.all')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="">{t('common.all')}</SelectItem>
+                                                {cities.map((c) => (
+                                                    <SelectItem key={c} value={c}>
+                                                        {c}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+
+                                <div className="mb-6 border-t border-border pt-6">
+                                    <h3 className="mb-4 font-serif text-base font-bold text-foreground">
+                                        {t('hotels.filterByStars')}
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
                                     {[5, 4, 3, 2, 1].map((stars) => (
                                         <button
                                             key={stars}
@@ -320,6 +412,7 @@ export default function Hotels() {
                                             </span>
                                         </button>
                                     ))}
+                                </div>
                                 </div>
 
                                 <div className="border-t border-border py-6">

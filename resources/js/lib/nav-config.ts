@@ -77,6 +77,7 @@ export const AVAILABLE_PAGES: PageDef[] = [
     },
     { key: 'promos', label: 'Promos', href: '/promos', filterParam: 'type' },
     { key: 'team', label: 'Team', href: '/team' },
+    { key: 'partners', label: 'Partners', href: '/partners' },
     { key: 'legal', label: 'Legal', href: '/legal' },
     { key: 'contact', label: 'Contact', href: '/contact' },
 ];
@@ -130,7 +131,7 @@ export const DEFAULT_FOOTER_COLUMNS: {
         defaultKeys: ['destinations', 'hotels', 'tours', 'deals'],
     },
     { title: 'Discover', defaultKeys: ['gallery', 'events', 'blog'] },
-    { title: 'Support', defaultKeys: ['team', 'legal', 'promos', 'contact'] },
+    { title: 'Support', defaultKeys: ['team', 'partners', 'legal', 'promos', 'contact'] },
 ];
 
 export const DEFAULT_NAV_SETTINGS: NavSettings = {
@@ -146,6 +147,7 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'flights',
             'promos',
             'team',
+            'partners',
             'legal',
             'contact',
         ].includes(p.key),
@@ -156,6 +158,7 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'flights',
             'promos',
             'team',
+            'partners',
             'legal',
             'contact',
         ].includes(p.key)

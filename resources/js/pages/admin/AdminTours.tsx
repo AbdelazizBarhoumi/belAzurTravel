@@ -34,7 +34,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { AdminTour } from '@/hooks/useAdminStore';
 import type { Lang } from '@/i18n/translations';
-import { countryLabels, localizeKnown, tourLabels } from '@/lib/adminI18n';
+import { localizeKnown, tourLabels } from '@/lib/adminI18n';
 
 type TourCategory = {
     key: string;
@@ -849,11 +849,9 @@ const AdminTours = () => {
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {localizeKnown(
-                                            d.location,
-                                            countryLabels,
-                                            lang,
-                                        )}
+                                        {typeof d.location === 'object' && d.location !== null
+                                            ? (d.location as any)[lang] || (d.location as any).en || ''
+                                            : String(d.location ?? '')}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {(() => {

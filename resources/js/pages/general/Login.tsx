@@ -94,7 +94,8 @@ const Login = () => {
                 toast.success(t('auth.welcomeBack'));
             }
 
-            navigate(redirectAfterLogin(user.role), { replace: true });
+            // Full reload so the new session's CSRF token is embedded in the page
+            window.location.href = redirectAfterLogin(user.role);
         } catch (error) {
             console.error('Login catch:', error);
             toast.error(

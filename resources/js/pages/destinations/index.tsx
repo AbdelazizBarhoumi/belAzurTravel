@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Search, MapPin, Star } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
@@ -17,9 +17,17 @@ import {
     NavigationMenuTrigger,
     NavigationMenuViewport,
 } from '@/components/ui/navigation-menu';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDestinations, useCategories } from '@/hooks/usePublicData';
+import { useCountries } from '@/hooks/useCountries';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 
 const SORT_OPTIONS = [
@@ -34,17 +42,28 @@ const Destinations = () => {
     const navigate = useNavigate();
     const initialSearch = params.get('q') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || 'all';
+    const initialCountry = params.get('country') || 'all';
 
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+    const [selectedCountry, setSelectedCountry] = useState(initialCountry);
     const [sortBy, setSortBy] = useState<
         'featured' | 'price-asc' | 'price-desc' | 'rating'
     >('featured');
     const { t, lang } = useLanguage();
     const { data: allDestinations = [] } = useDestinations();
     const { data: dynamicCategories = [] } = useCategories('destinations');
+    const allCountries = useCountries();
 
-    // Initial state is set from URL params via useState above; no effect required
+    const countries = useMemo(() => {
+        return [
+            { value: 'all', label: t('common.all') },
+            ...allCountries.map((c) => ({
+                value: c.name.en,
+                label: c.name[lang] || c.name.en,
+            })),
+        ];
+    }, [allCountries, lang, t]);
 
     const categories = [
         { value: 'all', label: t('common.all') },
@@ -66,7 +85,10 @@ const Destinations = () => {
             const matchesCategory =
                 selectedCategory === 'all' ||
                 (d.categoryKey ?? '').toLowerCase() === selectedCategory;
-            return matchesSearch && matchesCategory;
+            const matchesCountry =
+                selectedCountry === 'all' ||
+                localizeText(d.country, lang) === selectedCountry;
+            return matchesSearch && matchesCategory && matchesCountry;
         })
         .sort((a, b) => {
             if (sortBy === 'price-asc') return a.price - b.price;
@@ -119,6 +141,21 @@ const Destinations = () => {
                                 className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                             />
                         </div>
+                        <Select
+                            value={selectedCountry}
+                            onValueChange={setSelectedCountry}
+                        >
+                            <SelectTrigger className="w-[180px] rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground">
+                                <SelectValue placeholder={t('common.all')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {countries.map((c) => (
+                                    <SelectItem key={c.value} value={c.value}>
+                                        {c.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <div className="flex gap-2">
                             {categories.map((cat) => (
                                 <button

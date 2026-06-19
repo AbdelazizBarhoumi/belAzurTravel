@@ -4,13 +4,17 @@ import { FeaturedDestinationsWrapper } from '@/components/sections/FeaturedDesti
 import { HeroSection } from '@/components/sections/HeroSection';
 import { LandingCtaSection } from '@/components/sections/LandingCtaSection';
 import { LandingTrustStrip } from '@/components/sections/LandingTrustStrip';
+import { LandingVideoModal } from '@/components/sections/LandingVideoModal';
+import { MarqueeShowcase } from '@/components/ui/MarqueeShowcase';
 
 const Index = () => {
     return (
         <main id="main-content" className="min-h-screen bg-background">
+            <LandingVideoModal />
             <HeroSection />
             <FeaturedDestinationsWrapper />
             <LandingTrustStrip />
+            <MarqueeShowcase />
             <DealsSectionWrapper />
             <BlogSectionWrapper previewCount={3} />
             <LandingCtaSection />

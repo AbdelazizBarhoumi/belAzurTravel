@@ -3,13 +3,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
     Calendar as CalendarIcon,
     ChevronDown,
+    Globe,
     MapPin,
     Minus,
     Plus,
     Search,
     Users,
 } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountries } from '@/hooks/useCountries';
 import { cn } from '@/lib/utils';
 
 type SearchTab = 'hotels' | 'tours' | 'flights';
@@ -39,6 +41,7 @@ interface SearchWidgetProps {
 
 interface SearchFormValues {
     destination: string;
+    country: string;
     dateRange: DateRange | undefined;
     guests: number;
     extras: Record<string, string>;
@@ -149,6 +152,7 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
 const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
     hotels: {
         destination: '',
+        country: '',
         dateRange: undefined,
         guests: 2,
         extras: {
@@ -158,6 +162,7 @@ const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
     },
     tours: {
         destination: '',
+        country: '',
         dateRange: undefined,
         guests: 2,
         extras: {
@@ -167,6 +172,7 @@ const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
     },
     flights: {
         destination: '',
+        country: '',
         dateRange: undefined,
         guests: 1,
         extras: {
@@ -188,6 +194,7 @@ interface ActiveSearchFormProps {
     tab: SearchTab;
     values: SearchFormValues;
     onDestinationChange: (value: string) => void;
+    onCountryChange: (value: string) => void;
     onDateRangeChange: (value: DateRange | undefined) => void;
     onGuestChange: (value: number) => void;
     onExtraChange: (key: string, value: string) => void;
@@ -233,6 +240,57 @@ function DestinationInput({
                         isRtl && 'text-right',
                     )}
                 />
+            </div>
+        </label>
+    );
+}
+
+function CountryFilter({
+    label,
+    value,
+    onChange,
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+}) {
+    const { t, lang, dir } = useLanguage();
+    const isRtl = dir === 'rtl';
+    const countries = useCountries();
+
+    const selectedCountry = countries.find((c) => c.code === value);
+
+    return (
+        <label className="flex min-w-0 flex-col gap-2">
+            <SearchFieldLabel>{label}</SearchFieldLabel>
+            <div
+                className={cn(
+                    'flex h-12 items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm',
+                    isRtl && 'flex-row-reverse',
+                )}
+            >
+                <Globe className="h-5 w-5 shrink-0 text-primary" />
+                <Select value={value} onValueChange={onChange}>
+                    <SelectTrigger
+                        className={cn(
+                            'border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0',
+                            isRtl && 'text-right',
+                        )}
+                    >
+                        <SelectValue placeholder={t('search.placeholders.country')}>
+                            {selectedCountry
+                                ? selectedCountry.name[lang] || selectedCountry.name.en
+                                : null}
+                        </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                        {countries.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                                {country.name[lang] || country.name.en}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
         </label>
     );
@@ -482,6 +540,7 @@ function ActiveSearchForm({
     tab,
     values,
     onDestinationChange,
+    onCountryChange,
     onDateRangeChange,
     onGuestChange,
     onExtraChange,
@@ -491,6 +550,12 @@ function ActiveSearchForm({
     const config = SEARCH_TABS[tab];
 
     const topFields = [
+        <CountryFilter
+            key="country"
+            label={t('search.fields.country')}
+            value={values.country}
+            onChange={onCountryChange}
+        />,
         <DestinationInput
             key="destination"
             label={t('search.fields.destination')}
@@ -515,7 +580,7 @@ function ActiveSearchForm({
 
     return (
         <div className="grid gap-3">
-            <div className="grid gap-3 xl:grid-cols-3 xl:items-end">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 xl:items-end">
                 {orderedTopFields}
             </div>
 
@@ -585,6 +650,10 @@ export function SearchWidget({ className }: SearchWidgetProps) {
 
         if (values.destination.trim()) {
             params.set('q', values.destination.trim());
+        }
+
+        if (values.country) {
+            params.set('country', values.country);
         }
 
         if (values.dateRange?.from) {
@@ -746,6 +815,13 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                                         updateForm(
                                             activeTab,
                                             'destination',
+                                            value,
+                                        )
+                                    }
+                                    onCountryChange={(value) =>
+                                        updateForm(
+                                            activeTab,
+                                            'country',
                                             value,
                                         )
                                     }

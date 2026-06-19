@@ -258,7 +258,7 @@ export default function Contact() {
                                                 key={idx}
                                                 className="flex justify-between gap-3"
                                             >
-                                                <span>{row.dayKey}</span>
+                                                <span>{t(row.dayKey)}</span>
                                                 <span className="text-foreground">
                                                     {formatHourRanges(
                                                         row,

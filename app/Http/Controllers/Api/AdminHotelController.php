@@ -108,9 +108,6 @@ class AdminHotelController extends Controller
             'country_en' => ['sometimes', 'nullable', 'string', 'max:255'],
             'country_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'country_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'address' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'phone' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'whatsapp' => ['sometimes', 'nullable', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
             'description_en' => ['sometimes', 'nullable', 'string'],
             'description_fr' => ['sometimes', 'nullable', 'string'],
@@ -214,9 +211,6 @@ class AdminHotelController extends Controller
             'gallery' => $gallery,
             'city' => $item->details['city'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'country' => $item->details['country'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
-            'address' => $item->details['address'] ?? '',
-            'phone' => $item->details['phone'] ?? '',
-            'whatsapp' => $item->details['whatsapp'] ?? '',
             'description' => $item->details['description'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             ...$this->flatLocalized('city', $item->details['city'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
             ...$this->flatLocalized('country', $item->details['country'] ?? ['en' => '', 'fr' => '', 'ar' => '']),
@@ -310,18 +304,6 @@ class AdminHotelController extends Controller
 
         if (array_key_exists('country', $data) || array_key_exists('country_en', $data) || array_key_exists('country_fr', $data) || array_key_exists('country_ar', $data)) {
             $details['country'] = $this->localized($data, 'country', $existing?->details['country'] ?? ['en' => '', 'fr' => '', 'ar' => '']);
-        }
-
-        if (array_key_exists('address', $data)) {
-            $details['address'] = $data['address'] ?? '';
-        }
-
-        if (array_key_exists('phone', $data)) {
-            $details['phone'] = $data['phone'] ?? '';
-        }
-
-        if (array_key_exists('whatsapp', $data)) {
-            $details['whatsapp'] = $data['whatsapp'] ?? '';
         }
 
         if (array_key_exists('description', $data) || array_key_exists('description_en', $data) || array_key_exists('description_fr', $data) || array_key_exists('description_ar', $data)) {

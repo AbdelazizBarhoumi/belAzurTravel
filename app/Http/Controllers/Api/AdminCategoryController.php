@@ -98,9 +98,12 @@ class AdminCategoryController extends Controller
         $count = $this->getEntityCount($type, $key);
 
         if ($request->query('force') !== 'true' && $count > 0) {
+            $affected = $this->getAffectedEntities($type, $key);
+
             return response()->json([
-                'message' => "This category is assigned to {$count} items. Deleting it will set their category to null.",
+                'message' => "This category is assigned to {$count} item(s). Deleting it will set their category to null.",
                 'count' => $count,
+                'affected_items' => $affected,
                 'requires_confirmation' => true,
             ], 409);
         }
@@ -180,6 +183,44 @@ class AdminCategoryController extends Controller
         return DB::table($table)->where('category_key', $key)->count();
     }
 
+    private function getAffectedEntities(string $type, string $key): array
+    {
+        $table = $this->getTableName($type);
+        if (! $table) {
+            return [];
+        }
+
+        $nameColumn = in_array($table, ['events', 'deals', 'blog_posts']) ? 'title' : 'name';
+
+        return DB::table($table)
+            ->where('category_key', $key)
+            ->select('slug', $nameColumn)
+            ->get()
+            ->map(fn ($row) => [
+                'name' => $this->extractLocalizedName($row->$nameColumn, 'en'),
+                'slug' => $row->slug,
+            ])
+            ->toArray();
+    }
+
+    private function extractLocalizedName($columnValue, string $locale = 'en'): string
+    {
+        if (is_array($columnValue) && isset($columnValue[$locale])) {
+            return $columnValue[$locale];
+        }
+
+        if (is_string($columnValue)) {
+            $decoded = json_decode($columnValue, true);
+            if (is_array($decoded) && isset($decoded[$locale])) {
+                return $decoded[$locale];
+            }
+
+            return $columnValue;
+        }
+
+        return '';
+    }
+
     private function nullifyEntities(string $type, string $key): void
     {
         $table = $this->getTableName($type);
@@ -187,10 +228,13 @@ class AdminCategoryController extends Controller
             return;
         }
 
-        DB::table($table)->where('category_key', $key)->update([
-            'category_key' => null,
-            'category' => null,
-        ]);
+        $update = ['category_key' => null];
+
+        if (Schema::hasColumn($table, 'category')) {
+            $update['category'] = null;
+        }
+
+        DB::table($table)->where('category_key', $key)->update($update);
     }
 
     private function syncEntities(Category $category, string $oldKey): void

@@ -15,9 +15,10 @@ import {
     Bell,
     Image as ImageIcon,
     Menu,
+    Handshake,
 } from 'lucide-react';
 import { type ReactNode } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
@@ -56,6 +57,7 @@ const links = [
     { to: '/admin/deals', icon: TicketPercent, labelKey: 'admin.deals' },
     { to: '/admin/promos', icon: TicketPercent, labelKey: 'admin.promos' },
     { to: '/admin/team', icon: Users, labelKey: 'admin.team' },
+    { to: '/admin/partners', icon: Handshake, labelKey: 'admin.partners' },
     { to: '/admin/blog', icon: Newspaper, labelKey: 'admin.blog' },
     { to: '/admin/bookings', icon: Calendar, labelKey: 'admin.bookings' },
     { to: '/admin/notifications', icon: Bell, labelKey: 'notifications.title' },
@@ -78,7 +80,6 @@ interface Props {
 }
 
 export function AdminLayout({ children, title, subtitle, actions }: Props) {
-    const navigate = useNavigate();
     const { pathname } = useLocation();
     const { t, dir } = useLanguage();
     const { data: user } = useAuthUser();
@@ -86,7 +87,6 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login', { replace: true });
     };
 
     const filteredLinks = links.filter((link) => {

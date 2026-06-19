@@ -505,6 +505,8 @@ export default function AdminSiteSettings() {
     const lastSavedLegalRef = useRef<string>('');
     const autosaveReadyRef = useRef(false);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    const [landingVideoFile, setLandingVideoFile] = useState<File | null>(null);
+    const [landingVideoUrl, setLandingVideoUrl] = useState<string | null>(null);
 
     const { data: destinationCategories = [] } = useCategories('destinations');
     const { data: hotelCategories = [] } = useCategories('hotels');
@@ -603,6 +605,8 @@ export default function AdminSiteSettings() {
                 };
             }) ?? [],
         );
+        setLandingVideoUrl(siteSettings.landingVideo?.url ?? null);
+        setLandingVideoFile(null);
         const snapshot = JSON.stringify(
             siteSettings.legalSections?.map((s) => ({
                 title: s.title || { en: '', fr: '', ar: '' },
@@ -953,38 +957,93 @@ export default function AdminSiteSettings() {
                 siteSettings.content ?? {},
             );
 
-            await apiFetch('/api/site-settings', {
-                method: 'PUT',
-                body: JSON.stringify({
-                    companyName: companyName.trim(),
-                    email: email.trim(),
-                    phone: phone.trim(),
-                    whatsapp: whatsapp.trim(),
-                    address: address.trim(),
-                    plusCode: plusCode.trim(),
-                    year,
-                    socialLinks: socialLinks.filter(
-                        (entry) =>
-                            entry.label.trim().length > 0 &&
-                            entry.href.trim().length > 0,
+            const payloadContent: Record<string, unknown> = {
+                ...normalizedContent,
+                nav: {
+                    ...(normalizedContent.nav as
+                        | Record<string, unknown>
+                        | undefined),
+                    settings: sanitizedDraft,
+                },
+            };
+
+            // Handle landing video state
+            if (landingVideoFile) {
+                // New video file selected — handled via FormData below
+            } else if (!landingVideoUrl && siteSettings.landingVideo?.url) {
+                // Video was removed
+                payloadContent.landing_video = null;
+            }
+
+            if (landingVideoFile) {
+                const formData = new FormData();
+                formData.append('video', landingVideoFile);
+                formData.append('companyName', companyName.trim());
+                formData.append('email', email.trim());
+                formData.append('phone', phone.trim());
+                formData.append('whatsapp', whatsapp.trim());
+                formData.append('address', address.trim());
+                formData.append('plusCode', plusCode.trim());
+                formData.append('year', String(year));
+                formData.append(
+                    'socialLinks',
+                    JSON.stringify(
+                        socialLinks.filter(
+                            (entry) =>
+                                entry.label.trim().length > 0 &&
+                                entry.href.trim().length > 0,
+                        ),
                     ),
-                    hours: serializeHourRows(hours).filter(
-                        (entry) =>
-                            entry.dayKey.trim().length > 0 &&
-                            (entry.closed || entry.ranges.length > 0),
+                );
+                formData.append(
+                    'hours',
+                    JSON.stringify(
+                        serializeHourRows(hours).filter(
+                            (entry) =>
+                                entry.dayKey.trim().length > 0 &&
+                                (entry.closed || entry.ranges.length > 0),
+                        ),
                     ),
-                    content: {
-                        ...normalizedContent,
-                        nav: {
-                            ...(normalizedContent.nav as
-                                | Record<string, unknown>
-                                | undefined),
-                            settings: sanitizedDraft,
-                        },
-                    },
-                    legalSections: buildLegalPayload(),
-                }),
-            });
+                );
+                formData.append('content', JSON.stringify(payloadContent));
+                formData.append(
+                    'legalSections',
+                    JSON.stringify(buildLegalPayload()),
+                );
+                formData.append('_method', 'PUT');
+
+                await apiFetch('/api/site-settings', {
+                    method: 'POST',
+                    body: formData,
+                });
+            } else {
+                await apiFetch('/api/site-settings', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        companyName: companyName.trim(),
+                        email: email.trim(),
+                        phone: phone.trim(),
+                        whatsapp: whatsapp.trim(),
+                        address: address.trim(),
+                        plusCode: plusCode.trim(),
+                        year,
+                        socialLinks: socialLinks.filter(
+                            (entry) =>
+                                entry.label.trim().length > 0 &&
+                                entry.href.trim().length > 0,
+                        ),
+                        hours: serializeHourRows(hours).filter(
+                            (entry) =>
+                                entry.dayKey.trim().length > 0 &&
+                                (entry.closed || entry.ranges.length > 0),
+                        ),
+                        content: payloadContent,
+                        legalSections: buildLegalPayload(),
+                    }),
+                });
+            }
+
+            setLandingVideoFile(null);
             try {
                 window.dispatchEvent(new CustomEvent('site-settings-updated'));
             } catch {}
@@ -1296,6 +1355,61 @@ export default function AdminSiteSettings() {
                             </div>
                         </Card>
                     </div>
+                </section>
+
+                <section>
+                    <h2 className="mb-3 font-serif text-xl font-bold">
+                        Landing Video
+                    </h2>
+                    <p className="mb-4 text-sm text-muted-foreground">
+                        Video that appears as a modal when visitors open the homepage.
+                    </p>
+
+                    <Card className="space-y-4 p-4">
+                        {landingVideoUrl && (
+                            <div className="space-y-2">
+                                <video
+                                    src={landingVideoUrl}
+                                    controls
+                                    className="max-h-48 w-full rounded-lg"
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => {
+                                        setLandingVideoUrl(null);
+                                        setLandingVideoFile(null);
+                                    }}
+                                >
+                                    <Trash2 className="mr-1 h-3.5 w-3.5" />
+                                    Remove Video
+                                </Button>
+                            </div>
+                        )}
+                        {!landingVideoUrl && (
+                            <div className="space-y-2">
+                                <Label htmlFor="landing-video-input">
+                                    Upload Video
+                                </Label>
+                                <input
+                                    id="landing-video-input"
+                                    type="file"
+                                    accept="video/mp4,video/webm,video/quicktime"
+                                    className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-foreground hover:file:bg-primary/90"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0] ?? null;
+                                        if (file) {
+                                            setLandingVideoFile(file);
+                                            setLandingVideoUrl(URL.createObjectURL(file));
+                                        }
+                                    }}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Max 50MB. Formats: MP4, WebM, MOV.
+                                </p>
+                            </div>
+                        )}
+                    </Card>
                 </section>
 
                 <section>

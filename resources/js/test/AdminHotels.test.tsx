@@ -118,16 +118,6 @@ describe('AdminHotels', () => {
         expect(screen.getAllByText('Location').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Description').length).toBeGreaterThan(0);
         expect(screen.getByText('Pricing and structure')).toBeInTheDocument();
-        expect(screen.getByText('Contact and profile')).toBeInTheDocument();
-        expect(
-            screen.getByRole('textbox', { name: /City en/i }),
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole('textbox', { name: /Country en/i }),
-        ).toBeInTheDocument();
-        expect(screen.getByText('Address')).toBeInTheDocument();
-        expect(screen.getByText('Phone')).toBeInTheDocument();
-        expect(screen.getByText('WhatsApp')).toBeInTheDocument();
         expect(screen.getByText('Media')).toBeInTheDocument();
         expect(screen.getByText('Hotel Amenities')).toBeInTheDocument();
         expect(screen.getByText('Hotel Rooms')).toBeInTheDocument();
@@ -183,9 +173,6 @@ describe('AdminHotels', () => {
                 rating: 4.8,
                 image: '/hotel.jpg',
                 details: {
-                    address: 'Main road',
-                    phone: '123',
-                    whatsapp: '123',
                     category: {
                         en: 'Beach',
                         fr: 'Plage',
@@ -303,20 +290,7 @@ describe('AdminHotels', () => {
             ) || dialogs[0];
 
         const fill = (id: string, value: string) => {
-            const pretty =
-                id === 'destinationSlug'
-                    ? 'Destination slug'
-                    : id === 'price'
-                      ? 'Price/night'
-                      : id === 'category'
-                        ? 'Category'
-                        : id
-                              .replace(/_/g, ' ')
-                              .replace(/([a-z])([A-Z])/g, '$1 $2');
-            const role = id === 'price' ? 'spinbutton' : 'textbox';
-            const input = screen.getByRole(role, {
-                name: new RegExp(pretty, 'i'),
-            }) as HTMLInputElement;
+            const input = (dialog.querySelector(`[id="${id}"]`) || document.getElementById(id)) as HTMLInputElement;
             fireEvent.change(input, {
                 target: { value },
             });
@@ -342,7 +316,7 @@ describe('AdminHotels', () => {
 
             Object.entries(values).forEach(([field, value]) => {
                 if (field === 'category') {
-                    fill('category', value);
+                    fill(`category_${lang}`, value);
                     return;
                 }
 
@@ -376,9 +350,6 @@ describe('AdminHotels', () => {
         });
         fill('price', '200');
         fill('destinationSlug', 'lisbon');
-        fill('address', 'Rua Augusta 100');
-        fill('phone', '+351-213-000-000');
-        fill('whatsapp', '+351-213-000-001');
 
         fireEvent.click(screen.getByRole('button', { name: /add room/i }));
         fireEvent.click(screen.getByRole('button', { name: /save/i }));

@@ -18,7 +18,7 @@ import {
     Trash2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
     cancelBooking,
@@ -66,7 +66,6 @@ const sidebarLinks = [
 ];
 
 const ClientDashboard = () => {
-    const navigate = useNavigate();
     const { pathname } = useLocation();
     const [activeTab, setActiveTab] = useState(() => {
         if (pathname.includes('/payments')) return 'dashboard.payments';
@@ -99,7 +98,6 @@ const ClientDashboard = () => {
 
     const handleLogout = async () => {
         await logout();
-        navigate('/login', { replace: true });
     };
     const { data: dashboard } = useQuery({
         queryKey: ['client', 'dashboard'],

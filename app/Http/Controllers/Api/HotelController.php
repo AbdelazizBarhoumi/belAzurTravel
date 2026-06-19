@@ -83,7 +83,9 @@ class HotelController extends Controller
                 'features' => is_object($room) ? $room->featureItems->pluck('label')->all() : ($room['features'] ?? []),
                 'images' => is_object($room) ? array_map(fn ($img) => $this->normalizeApiOutputPath($img->path), $room->imageItems->all()) : (array) ($room['images'] ?? []),
             ])->values(),
-            ...$details,
+            'city' => $details['city'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'country' => $details['country'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'description' => $details['description'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
         ];
     }
 }

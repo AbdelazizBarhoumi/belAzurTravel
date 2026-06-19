@@ -11,16 +11,12 @@ interface HotelInfoProps {
     description: string;
     category?: string;
     amenities: Amenity[];
-    address?: string;
-    phone?: string;
 }
 
 export function HotelInfo({
     description,
     category: _category,
     amenities,
-    address,
-    phone,
 }: HotelInfoProps) {
     const { t } = useLanguage();
 
@@ -33,33 +29,6 @@ export function HotelInfo({
                         {t('hotelDetail.aboutHotel')}
                     </h2>
                     <p className="text-muted-foreground">{description}</p>
-                </div>
-            )}
-
-            {/* Contact Info */}
-            {(address || phone) && (
-                <div className="rounded-2xl border border-border bg-card p-6">
-                    <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
-                        {t('hotelDetail.contactInfo')}
-                    </h3>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {address && (
-                            <div>
-                                <span className="block text-xs font-medium uppercase text-muted-foreground">
-                                    {t('admin.address')}
-                                </span>
-                                <p className="text-sm">{address}</p>
-                            </div>
-                        )}
-                        {phone && (
-                            <div>
-                                <span className="block text-xs font-medium uppercase text-muted-foreground">
-                                    {t('admin.phone')}
-                                </span>
-                                <p className="text-sm">{phone}</p>
-                            </div>
-                        )}
-                    </div>
                 </div>
             )}
 

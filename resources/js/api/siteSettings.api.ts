@@ -40,6 +40,9 @@ interface SiteSettingsContent {
         ctaTitle?: LocalizedText;
         ctaDescription?: LocalizedText;
     };
+    landing_video?: {
+        url: string;
+    } | null;
 }
 
 export interface SiteSettings {
@@ -63,6 +66,9 @@ export interface SiteSettings {
     hours: SiteHourEntry[];
     content: SiteSettingsContent;
     gallery?: string[];
+    landingVideo?: {
+        url: string;
+    } | null;
     config?: {
         navigation?: {
             enabled_dropdowns?: string[];
@@ -84,6 +90,7 @@ export const defaultSiteSettings: SiteSettings = {
     hours: [],
     content: {},
     gallery: [],
+    landingVideo: null,
     config: {
         navigation: {
             enabled_dropdowns: [],
@@ -115,6 +122,9 @@ function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
         gallery:
             (json.gallery as SiteSettings['gallery']) ??
             defaultSiteSettings.gallery,
+        landingVideo:
+            ((json.content as SiteSettingsContent)?.landing_video as SiteSettings['landingVideo']) ??
+            null,
         config:
             (json.config as SiteSettings['config']) ??
             defaultSiteSettings.config,

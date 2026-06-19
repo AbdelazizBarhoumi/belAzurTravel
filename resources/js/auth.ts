@@ -41,7 +41,8 @@ export function clearAuthUser(): void {
 }
 
 /**
- * Logout: destroy server session and clear client state
+ * Logout: destroy server session, clear client state, then reload
+ * so a fresh session and CSRF token are created for the next visit.
  */
 export async function logout(): Promise<void> {
     try {
@@ -50,7 +51,6 @@ export async function logout(): Promise<void> {
                 .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
                 ?.getAttribute('content') ?? '';
 
-        // Call server to destroy session
         await fetch('/logout', {
             method: 'POST',
             credentials: 'include',
@@ -64,7 +64,8 @@ export async function logout(): Promise<void> {
     } catch (error) {
         console.error('Logout error:', error);
     } finally {
-        // Always clear client state
         clearAuthUser();
+        // Full page reload to create a fresh session + CSRF token
+        window.location.href = '/login';
     }
 }

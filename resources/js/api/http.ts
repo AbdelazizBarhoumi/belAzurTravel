@@ -74,7 +74,6 @@ export async function apiFetch<T>(
             );
         }
         if (res.status === 401 || res.status === 419) {
-            // Clear client-side auth state
             try {
                 clearAuthUser();
             } catch {
@@ -82,9 +81,9 @@ export async function apiFetch<T>(
             }
 
             if (res.status === 419) {
-                // For CSRF mismatch/session expiration, show the dedicated error page
+                // CSRF mismatch / session expired — reload to get a fresh session + CSRF token
                 if (typeof window !== 'undefined') {
-                    window.location.href = '/session-expired';
+                    window.location.reload();
                 }
             }
 

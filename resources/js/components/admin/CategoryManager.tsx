@@ -6,6 +6,16 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +47,12 @@ export function CategoryManager({
     const [editingId, setEditingId] = useState<number | null>(null);
     const [newName, setNewName] = useState({ en: '', fr: '', ar: '' });
     const [isCreating, setIsCreating] = useState(false);
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        message: string;
+        affectedItems: { name: string; slug: string }[];
+        onDelete: () => void;
+    }>({ open: false, message: '', affectedItems: [], onDelete: () => {} });
 
     const loadCategories = async () => {
         setLoading(true);
@@ -101,17 +117,20 @@ export function CategoryManager({
     const handleDelete = async (id: number, force = false) => {
         try {
             const res = await deleteCategory(id, force);
-            if (res.requires_confirmation) {
-                if (confirm(`${res.message} Are you sure?`)) {
-                    handleDelete(id, true);
-                }
-                return;
-            }
             clearCachedCategories();
             queryClient.invalidateQueries({ queryKey: ['categories'] });
             toast.success('Category deleted');
             loadCategories();
-        } catch (err) {
+        } catch (err: any) {
+            if (err?.status === 409 && err?.data?.requires_confirmation) {
+                setConfirmDialog({
+                    open: true,
+                    message: err.data.message,
+                    affectedItems: err.data.affected_items || [],
+                    onDelete: () => handleDelete(id, true),
+                });
+                return;
+            }
             toast.error('Failed to delete category');
         }
     };
@@ -123,6 +142,7 @@ export function CategoryManager({
     };
 
     return (
+        <>
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
@@ -344,5 +364,57 @@ export function CategoryManager({
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <AlertDialog
+            open={confirmDialog.open}
+            onOpenChange={(open) =>
+                setConfirmDialog((prev) => ({ ...prev, open }))
+            }
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                        <div>
+                            <p>{confirmDialog.message}</p>
+                            {confirmDialog.affectedItems.length > 0 && (
+                                <div className="mt-3 max-h-48 overflow-y-auto rounded border p-2 text-sm">
+                                    <p className="mb-1 font-medium">
+                                        Affected items:
+                                    </p>
+                                    <ul className="space-y-1 pl-4 list-disc">
+                                        {confirmDialog.affectedItems.map(
+                                            (item) => (
+                                                <li key={item.slug}>
+                                                    {item.name}{' '}
+                                                    <span className="text-muted-foreground">
+                                                        ({item.slug})
+                                                    </span>
+                                                </li>
+                                            ),
+                                        )}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={() => {
+                            confirmDialog.onDelete();
+                            setConfirmDialog((prev) => ({
+                                ...prev,
+                                open: false,
+                            }));
+                        }}
+                    >
+                        Delete Anyway
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+        </>
     );
 }
