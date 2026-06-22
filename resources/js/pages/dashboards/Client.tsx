@@ -16,6 +16,11 @@ import {
     Globe,
     Mail,
     Trash2,
+    AlertCircle,
+    RotateCcw,
+    ChevronDown,
+    ChevronUp,
+    MessageSquare,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -29,6 +34,11 @@ import {
     updateClientProfile,
     type ClientBookingRow,
 } from '@/api/booking.api';
+import {
+    getClientComplaints,
+    createComplaint,
+    type Complaint,
+} from '@/api/complaint.api';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
@@ -62,6 +72,8 @@ const sidebarLinks = [
         to: '/client/payments',
     },
     { icon: User, labelKey: 'dashboard.profile', to: '/client/profile' },
+    { icon: AlertCircle, labelKey: 'client.complaints', to: '/client/complaints' },
+    { icon: RotateCcw, labelKey: 'client.refunds', to: '/client/refunds' },
     { icon: Settings, labelKey: 'dashboard.settings', to: '/client/support' },
 ];
 
@@ -72,10 +84,18 @@ const ClientDashboard = () => {
         if (pathname.includes('/profile')) return 'dashboard.profile';
         if (pathname.includes('/support')) return 'dashboard.settings';
         if (pathname.includes('/notifications')) return 'notifications.title';
+        if (pathname.includes('/complaints')) return 'client.complaints';
+        if (pathname.includes('/refunds')) return 'client.refunds';
         return 'dashboard.myBookings';
     });
     const [supportSubject, setSupportSubject] = useState('');
     const [supportMessage, setSupportMessage] = useState('');
+    const [complaintSubject, setComplaintSubject] = useState('');
+    const [complaintDescription, setComplaintDescription] = useState('');
+    const [refundBookingId, setRefundBookingId] = useState<number | ''>('');
+    const [refundSubject, setRefundSubject] = useState('');
+    const [refundDescription, setRefundDescription] = useState('');
+    const [expandedComplaint, setExpandedComplaint] = useState<number | null>(null);
 
     const { data: user } = useAuthUser();
     const [profileName, setProfileName] = useState('');
@@ -112,6 +132,11 @@ const ClientDashboard = () => {
         queryFn: getClientPayments,
         enabled: activeTab === 'dashboard.payments',
     });
+    const { data: complaints = [] } = useQuery<Complaint[]>({
+        queryKey: ['client', 'complaints'],
+        queryFn: getClientComplaints,
+        enabled: activeTab === 'client.complaints' || activeTab === 'client.refunds',
+    });
     const cancelMutation = useMutation({
         mutationFn: (id: number) => cancelBooking(id),
         onSuccess: () =>
@@ -128,6 +153,38 @@ const ClientDashboard = () => {
             setSupportMessage('');
             queryClient.invalidateQueries({ queryKey: ['client'] });
             toast.success(t('client.supportSuccess') || 'Message sent.');
+        },
+    });
+
+    const complaintMutation = useMutation({
+        mutationFn: () =>
+            createComplaint({
+                type: 'complaint',
+                subject: complaintSubject,
+                description: complaintDescription,
+            }),
+        onSuccess: () => {
+            setComplaintSubject('');
+            setComplaintDescription('');
+            queryClient.invalidateQueries({ queryKey: ['client', 'complaints'] });
+            toast.success(t('client.complaintSuccess') || 'Complaint submitted.');
+        },
+    });
+
+    const refundMutation = useMutation({
+        mutationFn: () =>
+            createComplaint({
+                type: 'refund_request',
+                subject: refundSubject,
+                description: refundDescription,
+                booking_id: Number(refundBookingId),
+            }),
+        onSuccess: () => {
+            setRefundBookingId('');
+            setRefundSubject('');
+            setRefundDescription('');
+            queryClient.invalidateQueries({ queryKey: ['client', 'complaints'] });
+            toast.success(t('client.refundSuccess') || 'Refund request submitted.');
         },
     });
 
@@ -162,6 +219,10 @@ const ClientDashboard = () => {
                 setActiveTab('dashboard.settings');
             else if (pathname.includes('/notifications'))
                 setActiveTab('notifications.title');
+            else if (pathname.includes('/complaints'))
+                setActiveTab('client.complaints');
+            else if (pathname.includes('/refunds'))
+                setActiveTab('client.refunds');
             else if (pathname.includes('/dashboard'))
                 setActiveTab('dashboard.myBookings');
         }, 0);
@@ -492,6 +553,271 @@ const ClientDashboard = () => {
                                 >
                                     {t('assistant.send')}
                                 </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'client.complaints' && (
+                        <div className="space-y-6">
+                            <div className="rounded-2xl border border-border bg-card p-6">
+                                <h2 className="font-serif text-xl font-bold text-foreground">
+                                    {t('client.newComplaint')}
+                                </h2>
+                                <div className="mt-4 space-y-3">
+                                    <input
+                                        value={complaintSubject}
+                                        onChange={(e) =>
+                                            setComplaintSubject(e.target.value)
+                                        }
+                                        placeholder={t('client.complaintSubject')}
+                                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                    />
+                                    <textarea
+                                        value={complaintDescription}
+                                        onChange={(e) =>
+                                            setComplaintDescription(e.target.value)
+                                        }
+                                        placeholder={t('client.complaintDescription')}
+                                        className="min-h-32 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                    />
+                                    <Button
+                                        disabled={
+                                            !complaintSubject.trim() ||
+                                            !complaintDescription.trim() ||
+                                            complaintMutation.isPending
+                                        }
+                                        onClick={() => complaintMutation.mutate()}
+                                    >
+                                        {t('actions.submit')}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-border bg-card">
+                                <div className="border-b border-border p-5">
+                                    <h2 className="font-serif text-xl font-bold text-foreground">
+                                        {t('client.complaints')}
+                                    </h2>
+                                </div>
+                                <div className="divide-y divide-border">
+                                    {complaints
+                                        .filter((c) => c.type === 'complaint')
+                                        .map((complaint) => (
+                                            <div key={complaint.id} className="p-5">
+                                                <div
+                                                    className="flex cursor-pointer items-center justify-between"
+                                                    onClick={() =>
+                                                        setExpandedComplaint(
+                                                            expandedComplaint === complaint.id
+                                                                ? null
+                                                                : complaint.id,
+                                                        )
+                                                    }
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                                                        <div>
+                                                            <p className="font-medium text-foreground">
+                                                                {complaint.subject[lang] || complaint.subject.en}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                #{complaint.id} &middot;{' '}
+                                                                {new Date(complaint.created_at).toLocaleDateString()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span
+                                                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                                                complaint.status === 'resolved'
+                                                                    ? 'bg-primary/10 text-primary'
+                                                                    : complaint.status === 'rejected'
+                                                                      ? 'bg-destructive/10 text-destructive'
+                                                                      : 'bg-secondary/10 text-secondary'
+                                                            }`}
+                                                        >
+                                                            {complaint.status}
+                                                        </span>
+                                                        {expandedComplaint === complaint.id ? (
+                                                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                                        ) : (
+                                                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {expandedComplaint === complaint.id && (
+                                                    <div className="mt-4 space-y-3 rounded-xl border border-border bg-background p-4">
+                                                        <p className="text-sm text-foreground">
+                                                            {complaint.description[lang] || complaint.description.en}
+                                                        </p>
+                                                        {complaint.admin_reply && (
+                                                            <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                                                                <div className="mb-2 flex items-center gap-2">
+                                                                    <MessageSquare className="h-4 w-4 text-primary" />
+                                                                    <span className="text-xs font-semibold text-primary">
+                                                                        {t('client.adminReply')}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-sm text-foreground">
+                                                                    {complaint.admin_reply[lang] || complaint.admin_reply.en}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    {complaints.filter((c) => c.type === 'complaint').length === 0 && (
+                                        <p className="p-8 text-center text-muted-foreground">
+                                            {t('client.complaintsEmpty')}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'client.refunds' && (
+                        <div className="space-y-6">
+                            <div className="rounded-2xl border border-border bg-card p-6">
+                                <h2 className="font-serif text-xl font-bold text-foreground">
+                                    {t('client.requestRefund')}
+                                </h2>
+                                <div className="mt-4 space-y-3">
+                                    <select
+                                        value={refundBookingId}
+                                        onChange={(e) =>
+                                            setRefundBookingId(
+                                                e.target.value ? Number(e.target.value) : '',
+                                            )
+                                        }
+                                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                    >
+                                        <option value="">{t('client.selectBooking')}</option>
+                                        {bookings
+                                            .filter((b) => b.status !== 'Cancelled')
+                                            .map((b) => (
+                                                <option key={b.id} value={b.id}>
+                                                    #{b.id} - {b.type} ({b.total_amount} TND)
+                                                </option>
+                                            ))}
+                                    </select>
+                                    <input
+                                        value={refundSubject}
+                                        onChange={(e) =>
+                                            setRefundSubject(e.target.value)
+                                        }
+                                        placeholder={t('client.complaintSubject')}
+                                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                    />
+                                    <textarea
+                                        value={refundDescription}
+                                        onChange={(e) =>
+                                            setRefundDescription(e.target.value)
+                                        }
+                                        placeholder={t('client.refundReason')}
+                                        className="min-h-32 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                    />
+                                    <Button
+                                        disabled={
+                                            !refundBookingId ||
+                                            !refundSubject.trim() ||
+                                            !refundDescription.trim() ||
+                                            refundMutation.isPending
+                                        }
+                                        onClick={() => refundMutation.mutate()}
+                                    >
+                                        {t('actions.submit')}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-border bg-card">
+                                <div className="border-b border-border p-5">
+                                    <h2 className="font-serif text-xl font-bold text-foreground">
+                                        {t('client.refunds')}
+                                    </h2>
+                                </div>
+                                <div className="divide-y divide-border">
+                                    {complaints
+                                        .filter((c) => c.type === 'refund_request')
+                                        .map((complaint) => (
+                                            <div key={complaint.id} className="p-5">
+                                                <div
+                                                    className="flex cursor-pointer items-center justify-between"
+                                                    onClick={() =>
+                                                        setExpandedComplaint(
+                                                            expandedComplaint === complaint.id
+                                                                ? null
+                                                                : complaint.id,
+                                                        )
+                                                    }
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <RotateCcw className="h-4 w-4 text-muted-foreground" />
+                                                        <div>
+                                                            <p className="font-medium text-foreground">
+                                                                {complaint.subject[lang] || complaint.subject.en}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                #{complaint.id} &middot;{' '}
+                                                                Booking #{complaint.booking_id} &middot;{' '}
+                                                                {new Date(complaint.created_at).toLocaleDateString()}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span
+                                                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                                                complaint.status === 'refunded'
+                                                                    ? 'bg-primary/10 text-primary'
+                                                                    : complaint.status === 'rejected'
+                                                                      ? 'bg-destructive/10 text-destructive'
+                                                                      : 'bg-secondary/10 text-secondary'
+                                                            }`}
+                                                        >
+                                                            {complaint.status}
+                                                        </span>
+                                                        {expandedComplaint === complaint.id ? (
+                                                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                                        ) : (
+                                                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {expandedComplaint === complaint.id && (
+                                                    <div className="mt-4 space-y-3 rounded-xl border border-border bg-background p-4">
+                                                        <p className="text-sm text-foreground">
+                                                            {complaint.description[lang] || complaint.description.en}
+                                                        </p>
+                                                        {complaint.refund_amount && (
+                                                            <p className="text-sm font-semibold text-primary">
+                                                                {t('client.refundAmount')}: {complaint.refund_amount} TND
+                                                            </p>
+                                                        )}
+                                                        {complaint.admin_reply && (
+                                                            <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                                                                <div className="mb-2 flex items-center gap-2">
+                                                                    <MessageSquare className="h-4 w-4 text-primary" />
+                                                                    <span className="text-xs font-semibold text-primary">
+                                                                        {t('client.adminReply')}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-sm text-foreground">
+                                                                    {complaint.admin_reply[lang] || complaint.admin_reply.en}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    {complaints.filter((c) => c.type === 'refund_request').length === 0 && (
+                                        <p className="p-8 text-center text-muted-foreground">
+                                            {t('client.refundsEmpty')}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}

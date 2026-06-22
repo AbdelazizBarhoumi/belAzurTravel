@@ -3492,6 +3492,151 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Explore now',
     },
 
+    // Complaints & Refunds
+    'client.complaints': {
+        fr: 'Réclamations',
+        ar: 'الشكاوى',
+        en: 'Complaints',
+    },
+    'client.newComplaint': {
+        fr: 'Nouvelle Réclamation',
+        ar: 'شكوى جديدة',
+        en: 'New Complaint',
+    },
+    'client.complaintSubject': {
+        fr: 'Sujet de la réclamation',
+        ar: 'موضوع الشكوى',
+        en: 'Complaint Subject',
+    },
+    'client.complaintDescription': {
+        fr: 'Description de la réclamation',
+        ar: 'وصف الشكوى',
+        en: 'Complaint Description',
+    },
+    'client.complaintSuccess': {
+        fr: 'Réclamation soumise avec succès.',
+        ar: 'تم تقديم الشكوى بنجاح.',
+        en: 'Complaint submitted successfully.',
+    },
+    'client.complaintsEmpty': {
+        fr: 'Aucune réclamation pour le moment.',
+        ar: 'لا توجد شكاوى حتى الآن.',
+        en: 'No complaints yet.',
+    },
+    'client.refunds': {
+        fr: 'Remboursements',
+        ar: 'المبالغ المستردة',
+        en: 'Refund Requests',
+    },
+    'client.requestRefund': {
+        fr: 'Demander un Remboursement',
+        ar: 'طلب استرداد',
+        en: 'Request a Refund',
+    },
+    'client.selectBooking': {
+        fr: 'Sélectionner une réservation',
+        ar: 'اختر حجزاً',
+        en: 'Select a booking',
+    },
+    'client.refundReason': {
+        fr: 'Raison du remboursement',
+        ar: 'سبب الاسترداد',
+        en: 'Reason for refund',
+    },
+    'client.refundSuccess': {
+        fr: 'Demande de remboursement soumise avec succès.',
+        ar: 'تم تقديم طلب الاسترداد بنجاح.',
+        en: 'Refund request submitted successfully.',
+    },
+    'client.refundsEmpty': {
+        fr: 'Aucune demande de remboursement.',
+        ar: 'لا توجد طلبات استرداد.',
+        en: 'No refund requests yet.',
+    },
+    'client.refundAmount': {
+        fr: 'Montant du remboursement',
+        ar: 'مبلغ الاسترداد',
+        en: 'Refund Amount',
+    },
+    'client.adminReply': {
+        fr: 'Réponse de l\'administrateur',
+        ar: 'رد المدير',
+        en: 'Admin Reply',
+    },
+    'client.adminReplySent': {
+        fr: 'Réponse envoyée.',
+        ar: 'تم إرسال الرد.',
+        en: 'Reply sent.',
+    },
+
+    // Complaint statuses
+    'complaint.status.pending': {
+        fr: 'En attente',
+        ar: 'قيد الانتظار',
+        en: 'Pending',
+    },
+    'complaint.status.in_review': {
+        fr: 'En cours d\'examen',
+        ar: 'قيد المراجعة',
+        en: 'In Review',
+    },
+    'complaint.status.resolved': {
+        fr: 'Résolu',
+        ar: 'تم الحل',
+        en: 'Resolved',
+    },
+    'complaint.status.rejected': {
+        fr: 'Rejeté',
+        ar: 'مرفوض',
+        en: 'Rejected',
+    },
+    'complaint.status.refunded': {
+        fr: 'Remboursé',
+        ar: 'تم الاسترداد',
+        en: 'Refunded',
+    },
+
+    // Complaint types
+    'complaint.type.complaint': {
+        fr: 'Réclamation',
+        ar: 'شكوى',
+        en: 'Complaint',
+    },
+    'complaint.type.refund_request': {
+        fr: 'Demande de remboursement',
+        ar: 'طلب استرداد',
+        en: 'Refund Request',
+    },
+
+    // Complaint priorities
+    'complaint.priority.low': {
+        fr: 'Faible',
+        ar: 'منخفضة',
+        en: 'Low',
+    },
+    'complaint.priority.medium': {
+        fr: 'Moyen',
+        ar: 'متوسطة',
+        en: 'Medium',
+    },
+    'complaint.priority.high': {
+        fr: 'Élevé',
+        ar: 'عالية',
+        en: 'High',
+    },
+
+    // Admin complaint labels
+    'admin.complaints': {
+        fr: 'Réclamations',
+        ar: 'الشكاوى',
+        en: 'Complaints',
+    },
+    'admin.complaintManage': {
+        fr: 'Gérer les réclamations et remboursements',
+        ar: 'إدارة الشكاوى والمبالغ المستردة',
+        en: 'Manage complaints and refund requests',
+    },
+
     // Assistant Dashboard
     'assistant.panel': {
         fr: 'Panneau Assistant',
@@ -3668,6 +3813,21 @@ translations['actions.select'] = {
     fr: 'Sélectionner',
     ar: 'تحديد',
     en: 'Select',
+};
+translations['actions.submit'] = {
+    fr: 'Soumettre',
+    ar: 'إرسال',
+    en: 'Submit',
+};
+translations['actions.resolved'] = {
+    fr: 'Résolu',
+    ar: 'تم الحل',
+    en: 'Resolved',
+};
+translations['actions.updated'] = {
+    fr: 'Mis à jour',
+    ar: 'تم التحديث',
+    en: 'Updated',
 };
 translations['admin.actions'] = {
     fr: 'Actions',

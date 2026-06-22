@@ -18,6 +18,8 @@ use App\Http\Controllers\Api\BlogPostController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\ComplaintController;
+use App\Http\Controllers\Api\AdminComplaintController;
 use App\Http\Controllers\Api\DealController;
 use App\Http\Controllers\Api\DestinationController;
 use App\Http\Controllers\Api\EventController;
@@ -95,6 +97,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/client/profile', [ClientController::class, 'updateProfile']);
     Route::patch('/user/language', [ClientController::class, 'updateLanguage']);
 
+    // Complaints & Refunds
+    Route::get('/client/complaints', [ComplaintController::class, 'index']);
+    Route::get('/client/complaints/{id}', [ComplaintController::class, 'show']);
+    Route::post('/client/complaints', [ComplaintController::class, 'store']);
+
     // Assistant API surface disabled for now.
 
     // Admin endpoints
@@ -165,6 +172,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/bookings', [BookingController::class, 'index']);
         Route::post('/admin/bookings/{id}/confirm', [BookingController::class, 'confirm']);
         Route::post('/admin/bookings/{id}/cancel', [BookingController::class, 'adminCancel']);
+
+        // Complaints & Refunds
+        Route::get('/admin/complaints', [AdminComplaintController::class, 'index']);
+        Route::get('/admin/complaints/{id}', [AdminComplaintController::class, 'show']);
+        Route::put('/admin/complaints/{id}', [AdminComplaintController::class, 'update']);
+        Route::post('/admin/complaints/{id}/reply', [AdminComplaintController::class, 'reply']);
+        Route::post('/admin/complaints/{id}/resolve', [AdminComplaintController::class, 'resolve']);
 
         Route::get('/admin/categories', [AdminCategoryController::class, 'index']);
         Route::post('/admin/categories', [AdminCategoryController::class, 'store']);

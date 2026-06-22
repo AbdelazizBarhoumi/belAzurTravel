@@ -29,6 +29,7 @@ import AdminDashboard from './pages/admin';
 import AdminBlog from './pages/admin/AdminBlog';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminCars from './pages/admin/AdminCars';
+import AdminComplaints from './pages/admin/AdminComplaints';
 import AdminDeals from './pages/admin/AdminDeals';
 import AdminDestinations from './pages/admin/AdminDestinations';
 import AdminEvents from './pages/admin/AdminEvents';
@@ -198,6 +199,14 @@ const LayoutWrapper = () => {
                         element={clientGuard(<ClientDashboard />)}
                     />
                     <Route
+                        path="/client/complaints"
+                        element={clientGuard(<ClientDashboard />)}
+                    />
+                    <Route
+                        path="/client/refunds"
+                        element={clientGuard(<ClientDashboard />)}
+                    />
+                    <Route
                         path="/client/payments"
                         element={clientGuard(<ClientDashboard />)}
                     />
@@ -229,6 +238,10 @@ const LayoutWrapper = () => {
                     <Route
                         path="/admin/bookings"
                         element={adminGuard(<AdminBookings />)}
+                    />
+                    <Route
+                        path="/admin/complaints"
+                        element={adminGuard(<AdminComplaints />)}
                     />
                     <Route
                         path="/admin/cars"

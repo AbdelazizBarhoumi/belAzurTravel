@@ -17,6 +17,7 @@ import BlogPostController from './BlogPostController'
 import NotificationController from './NotificationController'
 import BookingController from './BookingController'
 import ClientController from './ClientController'
+import ComplaintController from './ComplaintController'
 import AdminDestinationController from './AdminDestinationController'
 import AdminHotelController from './AdminHotelController'
 import AdminTourController from './AdminTourController'
@@ -27,6 +28,7 @@ import AdminDealController from './AdminDealController'
 import AdminPromoController from './AdminPromoController'
 import AdminBlogPostController from './AdminBlogPostController'
 import AdminUserController from './AdminUserController'
+import AdminComplaintController from './AdminComplaintController'
 import AdminTeamController from './AdminTeamController'
 import AdminPartnerController from './AdminPartnerController'
 const Api = {
@@ -49,6 +51,7 @@ BlogPostController: Object.assign(BlogPostController, BlogPostController),
 NotificationController: Object.assign(NotificationController, NotificationController),
 BookingController: Object.assign(BookingController, BookingController),
 ClientController: Object.assign(ClientController, ClientController),
+ComplaintController: Object.assign(ComplaintController, ComplaintController),
 AdminDestinationController: Object.assign(AdminDestinationController, AdminDestinationController),
 AdminHotelController: Object.assign(AdminHotelController, AdminHotelController),
 AdminTourController: Object.assign(AdminTourController, AdminTourController),
@@ -59,6 +62,7 @@ AdminDealController: Object.assign(AdminDealController, AdminDealController),
 AdminPromoController: Object.assign(AdminPromoController, AdminPromoController),
 AdminBlogPostController: Object.assign(AdminBlogPostController, AdminBlogPostController),
 AdminUserController: Object.assign(AdminUserController, AdminUserController),
+AdminComplaintController: Object.assign(AdminComplaintController, AdminComplaintController),
 AdminTeamController: Object.assign(AdminTeamController, AdminTeamController),
 AdminPartnerController: Object.assign(AdminPartnerController, AdminPartnerController),
 }

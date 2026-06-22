@@ -24,6 +24,7 @@ import {
     Shield,
     ShoppingCart,
     Video,
+    AlertCircle,
 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -83,6 +84,7 @@ const links = [
     { to: '/admin/partners', icon: Handshake, labelKey: 'admin.partners' },
     { to: '/admin/blog', icon: Newspaper, labelKey: 'admin.blog' },
     { to: '/admin/bookings', icon: Calendar, labelKey: 'admin.bookings' },
+    { to: '/admin/complaints', icon: AlertCircle, labelKey: 'admin.complaints' },
     { to: '/admin/notifications', icon: Bell, labelKey: 'notifications.title' },
     { to: '/admin/users', icon: Users, labelKey: 'admin.users' },
     { to: '/admin/reports', icon: BarChart3, labelKey: 'admin.reports' },
