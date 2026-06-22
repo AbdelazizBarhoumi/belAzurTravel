@@ -102,7 +102,7 @@ export default function DestinationDetail() {
                     <div className="mt-8 lg:hidden">
                         <StickyBookingCard
                             price={destination.price}
-                            currency="DT"
+                            currency="TND"
                             title={localize(destination.name, lang)}
                             location={localize(destination.country, lang)}
                             description={localize(
@@ -271,7 +271,7 @@ export default function DestinationDetail() {
                 <aside className="hidden lg:block">
                     <StickyBookingCard
                         price={destination.price}
-                        currency="DT"
+                        currency="TND"
                         title={localize(destination.name, lang)}
                         location={localize(destination.country, lang)}
                         description={localize(destination.description, lang)}
@@ -366,7 +366,7 @@ export default function DestinationDetail() {
                                     </h3>
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         {t('destinationDetail.startingFrom')}{' '}
-                                        {hotel.price} DT/night
+                                        {hotel.price} TND/night
                                     </p>
                                 </div>
                             </Link>
@@ -401,7 +401,7 @@ export default function DestinationDetail() {
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         {localize(tour.duration, lang)} ·{' '}
                                         {t('destinationDetail.startingFrom')}{' '}
-                                        {tour.price.toLocaleString()} DT
+                                        {tour.price.toLocaleString()} TND
                                     </p>
                                 </div>
                             </Link>

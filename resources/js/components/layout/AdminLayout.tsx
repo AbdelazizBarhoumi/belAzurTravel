@@ -14,10 +14,18 @@ import {
     PartyPopper,
     Bell,
     Image as ImageIcon,
-    Menu,
     Handshake,
+    Settings,
+    ChevronRight,
+    Globe,
+    Link2,
+    Navigation,
+    FileText,
+    Shield,
+    ShoppingCart,
+    Video,
 } from 'lucide-react';
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
@@ -34,12 +42,27 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { cn } from '@/lib/utils';
+
+const SITE_SETTINGS_SUB_LINKS = [
+    { to: '/admin/site-settings', icon: Globe, labelKey: 'admin.settings.companyContact', exact: true },
+    { to: '/admin/site-settings/social-hours', icon: Link2, labelKey: 'admin.settings.socialMedia' },
+    { to: '/admin/site-settings/navigation', icon: Navigation, labelKey: 'admin.settings.headerLinks' },
+    { to: '/admin/site-settings/footer', icon: FileText, labelKey: 'admin.settings.footerColumns' },
+    { to: '/admin/site-settings/legal', icon: Shield, labelKey: 'admin.settings.legalSectionsTitle' },
+    { to: '/admin/site-settings/privacy-policy', icon: Shield, labelKey: 'nav.privacy-policy' },
+    { to: '/admin/site-settings/purchase-policy', icon: ShoppingCart, labelKey: 'nav.purchase-policy' },
+    { to: '/admin/site-settings/video', icon: Video, labelKey: 'admin.settings.landingVideo' },
+];
 
 const links = [
     {
@@ -66,9 +89,11 @@ const links = [
     { to: '/admin/gallery', icon: ImageIcon, labelKey: 'nav.gallery' },
     {
         to: '/admin/site-settings',
-        icon: Menu,
+        icon: Settings,
         labelKey: 'admin.siteSettings',
         roles: ['owner', 'superadmin'],
+        isGroup: true,
+        subLinks: SITE_SETTINGS_SUB_LINKS,
     },
 ];
 
@@ -84,6 +109,9 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
     const { t, dir } = useLanguage();
     const { data: user } = useAuthUser();
     const isRtl = dir === 'rtl';
+    const [settingsOpen, setSettingsOpen] = useState(() =>
+        pathname.startsWith('/admin/site-settings'),
+    );
 
     const handleLogout = async () => {
         await logout();
@@ -141,6 +169,59 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
 
                         <SidebarMenu>
                             {filteredLinks.map((link) => {
+                                if ((link as any).isGroup) {
+                                    const isSettingsActive = pathname.startsWith(link.to);
+                                    return (
+                                        <Collapsible
+                                            key={link.to}
+                                            open={settingsOpen}
+                                            onOpenChange={setSettingsOpen}
+                                        >
+                                            <SidebarMenuItem>
+                                                <CollapsibleTrigger asChild>
+                                                    <SidebarMenuButton
+                                                        isActive={isSettingsActive}
+                                                        tooltip={t(link.labelKey)}
+                                                    >
+                                                        <link.icon className="h-4 w-4" />
+                                                        <span>{t(link.labelKey)}</span>
+                                                        <ChevronRight
+                                                            className={cn(
+                                                                'ml-auto h-4 w-4 transition-transform duration-200',
+                                                                settingsOpen && 'rotate-90',
+                                                            )}
+                                                        />
+                                                    </SidebarMenuButton>
+                                                </CollapsibleTrigger>
+                                                <CollapsibleContent>
+                                                    <SidebarMenuSub>
+                                                        {(link as any).subLinks.map(
+                                                            (sub: any) => {
+                                                                const subActive = sub.exact
+                                                                    ? pathname === sub.to
+                                                                    : pathname.startsWith(sub.to);
+                                                                return (
+                                                                    <SidebarMenuSubItem key={sub.to}>
+                                                                        <SidebarMenuSubButton
+                                                                            asChild
+                                                                            isActive={subActive}
+                                                                        >
+                                                                            <Link to={sub.to}>
+                                                                                <sub.icon className="h-3.5 w-3.5" />
+                                                                                <span>{t(sub.labelKey)}</span>
+                                                                            </Link>
+                                                                        </SidebarMenuSubButton>
+                                                                    </SidebarMenuSubItem>
+                                                                );
+                                                            },
+                                                        )}
+                                                    </SidebarMenuSub>
+                                                </CollapsibleContent>
+                                            </SidebarMenuItem>
+                                        </Collapsible>
+                                    );
+                                }
+
                                 const active = link.exact
                                     ? pathname === link.to
                                     : pathname.startsWith(link.to);
@@ -218,6 +299,27 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                 {/* Mobile/Tablet Navigation */}
                 <div className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 lg:hidden">
                     {filteredLinks.map((link) => {
+                        if ((link as any).isGroup) {
+                            const isSettingsActive = pathname.startsWith(link.to);
+                            return (
+                                <Link
+                                    key={link.to}
+                                    to={link.to}
+                                    className={cn(
+                                        'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                                        isSettingsActive
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-muted text-muted-foreground hover:bg-muted hover:text-foreground',
+                                    )}
+                                >
+                                    <link.icon className="h-3.5 w-3.5" />
+                                    <span className="xs:inline hidden">
+                                        {t(link.labelKey)}
+                                    </span>
+                                </Link>
+                            );
+                        }
+
                         const active = link.exact
                             ? pathname === link.to
                             : pathname.startsWith(link.to);

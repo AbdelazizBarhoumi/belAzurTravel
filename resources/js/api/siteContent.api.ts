@@ -384,20 +384,20 @@ export const designTripTransports: OptionItem[] = [
 ];
 
 export const designTripBudgets: OptionItem[] = [
-    { id: 'eco', label: 'Eco', icon: Phone, desc: 'Under 2,000 DT' },
+    { id: 'eco', label: 'Eco', icon: Phone, desc: 'Under 2,000 TND' },
     {
         id: 'comfort',
         label: 'Comfort',
         icon: Phone,
-        desc: '2,000 DT – 4,500 DT',
+        desc: '2,000 TND – 4,500 TND',
     },
     {
         id: 'premium',
         label: 'Premium',
         icon: Phone,
-        desc: '4,500 DT – 8,000 DT',
+        desc: '4,500 TND – 8,000 TND',
     },
-    { id: 'luxury', label: 'Luxury', icon: Phone, desc: '8,000 DT+' },
+    { id: 'luxury', label: 'Luxury', icon: Phone, desc: '8,000 TND+' },
 ];
 
 export const designTripSteps: StepItem[] = [

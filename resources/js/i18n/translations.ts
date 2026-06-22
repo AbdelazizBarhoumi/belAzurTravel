@@ -54,6 +54,16 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الإشعارات القانونية',
         en: 'Legal',
     },
+    'nav.privacy-policy': {
+        fr: 'Politique de confidentialité',
+        ar: 'سياسة الخصوصية',
+        en: 'Privacy Policy',
+    },
+    'nav.purchase-policy': {
+        fr: "Politique d'achat",
+        ar: 'سياسة الشراء',
+        en: 'Purchase Policy',
+    },
     'nav.dashboard': {
         fr: 'Tableau de bord',
         ar: 'لوحة القيادة',
@@ -863,9 +873,9 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'deals.categoryLabel': { fr: 'Catégorie', ar: 'الفئة', en: 'Category' },
     'admin.priceHint': {
-        fr: 'Prix par personne en DT.',
+        fr: 'Prix par personne en TND.',
         ar: 'السعر للشخص الواحد بالدينار التونسي.',
-        en: 'Price per person in DT.',
+        en: 'Price per person in TND.',
     },
     'admin.descriptionPlaceholder': {
         fr: 'Saisissez une description détaillée de l’événement...',
@@ -2793,9 +2803,9 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Transmission type (e.g. Automatic, Manual).',
     },
     'admin.carForm.priceHint': {
-        fr: 'Prix de location par jour en DT.',
+        fr: 'Prix de location par jour en TND.',
         ar: 'سعر الإيجار اليومي بالدينار التونسي.',
-        en: 'Daily rental price in DT.',
+        en: 'Daily rental price in TND.',
     },
     'admin.carForm.seatsHint': {
         fr: 'Nombre total de sièges passagers.',
@@ -3235,9 +3245,9 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'e.g. French, English',
     },
     'admin.destinationForm.currencyPlaceholder': {
-        fr: 'Par exemple : EUR, DT',
-        ar: 'مثلاً: EUR, DT',
-        en: 'e.g. EUR, DT',
+        fr: 'Par exemple : EUR, TND',
+        ar: 'مثلاً: EUR, TND',
+        en: 'e.g. EUR, TND',
     },
     'admin.destinationForm.weatherPlaceholder': {
         fr: 'Par exemple : Méditerranéen, Ensoleillé',
@@ -3305,9 +3315,9 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'e.g. Dubai, UAE',
     },
     'admin.priceCurrency': {
-        fr: 'Prix (DT)',
+        fr: 'Prix (TND)',
         ar: 'السعر (بالدينار)',
-        en: 'Price (DT)',
+        en: 'Price (TND)',
     },
     'admin.pricePlaceholder': { fr: '0.00', ar: '0.00', en: '0.00' },
     'admin.datePlaceholder': {
@@ -3682,6 +3692,26 @@ translations['admin.siteSettings'] = {
     fr: 'Paramètres du site',
     ar: 'إعدادات الموقع',
     en: 'Site Settings',
+};
+translations['admin.settings.companyContact'] = {
+    fr: 'Entreprise & Contact',
+    ar: 'الشركة والتواصل',
+    en: 'Company & Contact',
+};
+translations['admin.settings.headerLinks'] = {
+    fr: 'Liens de navigation',
+    ar: 'روابط التنقل',
+    en: 'Navigation',
+};
+translations['admin.settings.footerColumns'] = {
+    fr: 'Colonnes de pied de page',
+    ar: 'أعمدة تذييل الصفحة',
+    en: 'Footer',
+};
+translations['admin.settings.landingVideo'] = {
+    fr: "Vidéo d'accueil",
+    ar: 'فيديو الصفحة الرئيسية',
+    en: 'Landing Video',
 };
 translations['admin.activated'] = { fr: 'activé', ar: 'مفعل', en: 'activated' };
 translations['admin.deactivated'] = {
@@ -4204,7 +4234,7 @@ translations['admin.settings.add_section'] = {
     en: 'Add Section',
 };
 translations['admin.settings.no_legal_sections'] = {
-    fr: 'Aucune section légale pour l’instant. Ajoutez une politique de confidentialité ou des conditions d’utilisation.',
+    fr: "Aucune section légale pour l'instant. Ajoutez une politique de confidentialité ou des conditions d'utilisation.",
     ar: 'لا توجد أقسام قانونية حتى الآن. أضف سياسة الخصوصية أو شروط الاستخدام.',
     en: 'No legal sections yet. Add Privacy Policy or Terms of Use.',
 };
@@ -4333,9 +4363,9 @@ translations['admin.hotelForm.pricePlaceholder'] = {
     en: 'e.g. 250',
 };
 translations['admin.hotelForm.priceHelp'] = {
-    fr: 'Prix de base par nuit en DT.',
+    fr: 'Prix de base par nuit en TND.',
     ar: 'السعر الأساسي لكل ليلة بالدينار التونسي.',
-    en: 'Base price per night in DT.',
+    en: 'Base price per night in TND.',
 };
 translations['admin.hotelForm.ratingPlaceholder'] = {
     fr: 'Ex. : 4.8',

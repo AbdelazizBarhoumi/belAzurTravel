@@ -41,6 +41,8 @@ class EnforceNavSettings
         'team' => 'team',
         'contact' => 'contact',
         'legal' => 'legal',
+        'privacy-policy' => 'privacy-policy',
+        'purchase-policy' => 'purchase-policy',
         'favorites' => 'favorites',
         // 'design-trip' => 'design-trip',
     ];

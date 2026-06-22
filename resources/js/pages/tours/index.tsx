@@ -425,7 +425,7 @@ const Tours = () => {
 
                                                         <span className="text-lg font-bold text-primary">
                                                             {tour.price.toLocaleString()}{' '}
-                                                            DT
+                                                            TND
                                                         </span>
 
                                                         <span className="ml-1 text-xs text-muted-foreground">

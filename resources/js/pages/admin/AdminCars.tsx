@@ -707,7 +707,7 @@ export default function AdminCars() {
                                             asText(row.category_key)}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
-                                        {Number(row.price).toLocaleString()} DT
+                                        {Number(row.price).toLocaleString()} TND
                                     </td>
                                     <td className="px-4 py-3 text-sm">
                                         {asText(row.seats)}

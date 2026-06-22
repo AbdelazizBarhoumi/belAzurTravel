@@ -90,7 +90,7 @@ const AdminReports = () => {
     const stats = [
         {
             label: 'Total Revenue',
-            value: `${totalRevenue.toLocaleString()} DT`,
+            value: `${totalRevenue.toLocaleString()} TND`,
             icon: Wallet,
         },
         {
@@ -189,7 +189,7 @@ const AdminReports = () => {
                                         </div>
                                     </div>
                                     <span className="text-sm font-semibold">
-                                        {amt.toLocaleString()} DT
+                                        {amt.toLocaleString()} TND
                                     </span>
                                 </div>
                             ))}

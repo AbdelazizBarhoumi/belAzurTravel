@@ -112,7 +112,7 @@ export function RoomsList({ rooms, onBookRoom }: RoomsListProps) {
                                                 {t('hotelDetail.pricePerNight')}
                                             </div>
                                             <div className="mb-4 font-serif text-3xl font-bold text-secondary">
-                                                {room.pricePerNight} DT
+                                                {room.pricePerNight} TND
                                             </div>
                                         </div>
 

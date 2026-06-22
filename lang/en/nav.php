@@ -15,6 +15,8 @@ return [
     'team' => 'Our Team',
     'contact' => 'Contact Us',
     'legal' => 'Legal',
+    'privacy-policy' => 'Privacy Policy',
+    'purchase-policy' => 'Purchase Policy',
     'dashboard' => 'Dashboard',
     'signin' => 'Sign in',
     'start' => 'Get Started',

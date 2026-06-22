@@ -321,7 +321,7 @@ function CarsContent() {
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-primary">
-                                            {c.price} DT
+                                            {c.price} TND
                                             <span className="text-xs font-normal text-muted-foreground">
                                                 {t('cars.perDay')}
                                             </span>

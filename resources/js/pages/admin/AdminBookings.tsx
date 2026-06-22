@@ -98,7 +98,7 @@ const AdminBookings = () => {
                                             ).toLocaleDateString()}
                                         </td>
                                         <td className="px-4 py-3 text-sm font-semibold">
-                                            {b.total_amount} DT
+                                            {b.total_amount} TND
                                         </td>
                                         <td className="px-4 py-3">
                                             <StatusSelect

@@ -15,6 +15,8 @@ return [
     'team' => 'فريقنا',
     'contact' => 'اتصل بنا',
     'legal' => 'الإشعارات القانونية',
+    'privacy-policy' => 'سياسة الخصوصية',
+    'purchase-policy' => 'سياسة الشراء',
     'dashboard' => 'لوحة التحكم',
     'signin' => 'تسجيل الدخول',
     'start' => 'ابدأ',

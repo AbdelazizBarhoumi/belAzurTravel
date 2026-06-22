@@ -15,6 +15,8 @@ return [
     'team' => 'Notre équipe',
     'contact' => 'Contactez-nous',
     'legal' => 'Mentions légales',
+    'privacy-policy' => 'Politique de confidentialité',
+    'purchase-policy' => "Politique d'achat",
     'dashboard' => 'Tableau de bord',
     'signin' => 'Connexion',
     'start' => 'Commencer',

@@ -201,7 +201,7 @@ export default function HotelDetail() {
                     <div className="lg:hidden">
                         <StickyBookingCard
                             minPrice={minPrice}
-                            currency="DT"
+                            currency="TND"
                             priceLabel={t('hotelDetail.startingFrom') || 'From'}
                             priceSuffix={t('hotelDetail.pernight')}
                             title={title}
@@ -243,7 +243,7 @@ export default function HotelDetail() {
                 <aside className="sticky top-24 hidden self-start lg:block">
                     <StickyBookingCard
                         minPrice={minPrice}
-                        currency="DT"
+                        currency="TND"
                         priceLabel={t('hotelDetail.startingFrom') || 'From'}
                         priceSuffix={t('hotelDetail.pernight')}
                         title={title}

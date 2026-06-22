@@ -55,7 +55,7 @@ interface StickyBookingCardProps {
 export function StickyBookingCard({
     price,
     minPrice,
-    currency = 'DT',
+    currency = 'TND',
     priceLabel,
     priceSuffix,
     badge,

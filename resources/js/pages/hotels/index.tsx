@@ -124,8 +124,8 @@ export default function Hotels() {
         searchQuery.trim().length === 0 &&
         selectedTags.length === 0 &&
         selectedStars.length === 0 &&
-        selectedCountry === '' &&
-        selectedCity === '' &&
+        (selectedCountry === '' || selectedCountry === 'all') &&
+        (selectedCity === '' || selectedCity === 'all') &&
         activePriceRange[0] === minPrice &&
         activePriceRange[1] === maxPrice
             ? hotels
@@ -154,9 +154,11 @@ export default function Hotels() {
                       hotel.price <= activePriceRange[1];
                   const matchesCountry =
                       !selectedCountry ||
+                      selectedCountry === 'all' ||
                       localizeText(hotel.country, lang) === selectedCountry;
                   const matchesCity =
                       !selectedCity ||
+                      selectedCity === 'all' ||
                       localizeText(hotel.city, lang) === selectedCity;
                   return (
                       matchesSearch &&
@@ -189,8 +191,8 @@ export default function Hotels() {
         setSearchQuery('');
         setSelectedTags([]);
         setSelectedStars([]);
-        setSelectedCountry('');
-        setSelectedCity('');
+        setSelectedCountry('all');
+        setSelectedCity('all');
         setPriceRange(null);
     };
 
@@ -231,8 +233,8 @@ export default function Hotels() {
                             searchQuery.trim().length > 0 ||
                             selectedTags.length > 0 ||
                             selectedStars.length > 0 ||
-                            selectedCountry !== '' ||
-                            selectedCity !== '' ||
+                            (selectedCountry !== '' && selectedCountry !== 'all') ||
+                            (selectedCity !== '' && selectedCity !== 'all') ||
                             priceRange !== null ||
                             hasLandingDateOrGuestFilters
                         }
@@ -330,8 +332,8 @@ export default function Hotels() {
                                     </h2>
                                     {(selectedTags.length > 0 ||
                                         selectedStars.length > 0 ||
-                                        selectedCountry !== '' ||
-                                        selectedCity !== '' ||
+                                        (selectedCountry !== '' && selectedCountry !== 'all') ||
+                                        (selectedCity !== '' && selectedCity !== 'all') ||
                                         activePriceRange[0] !== minPrice ||
                                         activePriceRange[1] !== maxPrice) && (
                                         <button
@@ -474,7 +476,7 @@ export default function Hotels() {
                                         </div>
                                     </div>
                                     <div className="mt-2 text-xs text-muted-foreground">
-                                        DT {activePriceRange[0]} - DT{' '}
+                                        TND {activePriceRange[0]} - TND{' '}
                                         {activePriceRange[1]}
                                     </div>
                                 </div>
@@ -550,7 +552,7 @@ export default function Hotels() {
 
                                                     <div className="absolute right-4 top-4 rounded-full bg-card/95 px-3 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur">
                                                         {t('hotels.priceFrom')}{' '}
-                                                        {hotel.price} DT
+                                                        {hotel.price} TND
                                                     </div>
                                                 </div>
 

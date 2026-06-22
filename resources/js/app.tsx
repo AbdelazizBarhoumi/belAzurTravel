@@ -38,7 +38,14 @@ import AdminHotels from './pages/admin/AdminHotels';
 import AdminPartners from './pages/admin/AdminPartners';
 import AdminPromos from './pages/admin/AdminPromos';
 import AdminReports from './pages/admin/AdminReports';
-import AdminSiteSettings from './pages/admin/AdminSiteSettings';
+import AdminSiteSettingsCompany from './pages/admin/site-settings/AdminSiteSettingsCompany';
+import AdminSiteSettingsSocial from './pages/admin/site-settings/AdminSiteSettingsSocial';
+import AdminSiteSettingsNav from './pages/admin/site-settings/AdminSiteSettingsNav';
+import AdminSiteSettingsFooter from './pages/admin/site-settings/AdminSiteSettingsFooter';
+import AdminSiteSettingsLegal from './pages/admin/site-settings/AdminSiteSettingsLegal';
+import AdminSiteSettingsPrivacyPolicy from './pages/admin/site-settings/AdminSiteSettingsPrivacyPolicy';
+import AdminSiteSettingsPurchasePolicy from './pages/admin/site-settings/AdminSiteSettingsPurchasePolicy';
+import AdminSiteSettingsVideo from './pages/admin/site-settings/AdminSiteSettingsVideo';
 import AdminTeam from './pages/admin/AdminTeam';
 import AdminTours from './pages/admin/AdminTours';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -66,6 +73,8 @@ import LegalDetail from './pages/general/LegalDetail';
 import Login from './pages/general/Login';
 import NotFound from './pages/general/NotFound';
 import NotificationsPage from './pages/general/NotificationsPage';
+import PrivacyPolicy from './pages/general/PrivacyPolicy';
+import PurchasePolicy from './pages/general/PurchasePolicy';
 import Register from './pages/general/Register';
 import Team from './pages/general/Team';
 import Unauthorized from './pages/general/Unauthorized';
@@ -275,7 +284,35 @@ const LayoutWrapper = () => {
                     />
                     <Route
                         path="/admin/site-settings"
-                        element={adminGuard(<AdminSiteSettings />)}
+                        element={adminGuard(<AdminSiteSettingsCompany />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/social-hours"
+                        element={adminGuard(<AdminSiteSettingsSocial />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/navigation"
+                        element={adminGuard(<AdminSiteSettingsNav />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/footer"
+                        element={adminGuard(<AdminSiteSettingsFooter />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/legal"
+                        element={adminGuard(<AdminSiteSettingsLegal />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/privacy-policy"
+                        element={adminGuard(<AdminSiteSettingsPrivacyPolicy />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/purchase-policy"
+                        element={adminGuard(<AdminSiteSettingsPurchasePolicy />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/video"
+                        element={adminGuard(<AdminSiteSettingsVideo />)}
                     />
                     <Route
                         path="/admin/notifications"
@@ -438,6 +475,22 @@ const LayoutWrapper = () => {
                         element={
                             <NavRouteGuard pageKey="legal">
                                 <LegalDetail />
+                            </NavRouteGuard>
+                        }
+                    />
+                    <Route
+                        path="/privacy-policy"
+                        element={
+                            <NavRouteGuard pageKey="privacy-policy">
+                                <PrivacyPolicy />
+                            </NavRouteGuard>
+                        }
+                    />
+                    <Route
+                        path="/purchase-policy"
+                        element={
+                            <NavRouteGuard pageKey="purchase-policy">
+                                <PurchasePolicy />
                             </NavRouteGuard>
                         }
                     />

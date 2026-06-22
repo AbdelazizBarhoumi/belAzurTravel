@@ -1039,7 +1039,7 @@ const AdminHotels = () => {
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        {String(d.price ?? 0)} DT
+                                        {String(d.price ?? 0)} TND
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {String(d.rating ?? '')}

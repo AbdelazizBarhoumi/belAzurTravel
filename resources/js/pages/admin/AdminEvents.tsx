@@ -529,7 +529,7 @@ export default function AdminEvents() {
                                         {row.date}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        {Number(row.price).toLocaleString()} DT
+                                        {Number(row.price).toLocaleString()} TND
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center justify-center gap-2">

@@ -319,7 +319,7 @@ const Destinations = () => {
                                                     <span className="font-bold text-primary">
                                                         From{' '}
                                                         {dest.price.toLocaleString()}{' '}
-                                                        DT
+                                                        TND
                                                     </span>
                                                     <Button
                                                         size="sm"

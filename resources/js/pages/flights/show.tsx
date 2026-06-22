@@ -136,7 +136,7 @@ export default function FlightDetail() {
                             <div className="mb-8 lg:hidden">
                                 <StickyBookingCard
                                     price={flight.price}
-                                    currency="DT"
+                                    currency="TND"
                                     title={routeLabel}
                                     description={`${localizeText(flight.airline, lang)} · ${localizeText(flight.stops, lang)}`}
                                     details={[
@@ -168,7 +168,7 @@ export default function FlightDetail() {
                         <aside className="hidden lg:block lg:pt-6">
                             <StickyBookingCard
                                 price={flight.price}
-                                currency="DT"
+                                currency="TND"
                                 title={routeLabel}
                                 description={`${localizeText(flight.airline, lang)} · ${localizeText(flight.stops, lang)}`}
                                 entityType="flight"

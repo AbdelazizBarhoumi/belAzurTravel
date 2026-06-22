@@ -66,7 +66,7 @@ export default function EventDetail() {
                     <div className="mt-8 lg:hidden">
                         <StickyBookingCard
                             price={event.price}
-                            currency="DT"
+                            currency="TND"
                             title={localizeText(event.title, lang)}
                             details={[
                                 {
@@ -164,7 +164,7 @@ export default function EventDetail() {
                 <aside className="hidden lg:block">
                     <StickyBookingCard
                         price={event.price}
-                        currency="DT"
+                        currency="TND"
                         title={localizeText(event.title, lang)}
                         entityType="tour"
                         itemSlug={event.slug}

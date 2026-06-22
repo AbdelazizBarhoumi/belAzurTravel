@@ -36,6 +36,8 @@ class CheckNavPageEnabled
         'promos',
         'team',
         'legal',
+        'privacy-policy',
+        'purchase-policy',
         'favorites',
         // 'design-trip',
     ];

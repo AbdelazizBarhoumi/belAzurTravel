@@ -79,6 +79,8 @@ export const AVAILABLE_PAGES: PageDef[] = [
     { key: 'team', label: 'Team', href: '/team' },
     { key: 'partners', label: 'Partners', href: '/partners' },
     { key: 'legal', label: 'Legal', href: '/legal' },
+    { key: 'privacy-policy', label: 'Privacy Policy', href: '/privacy-policy' },
+    { key: 'purchase-policy', label: 'Purchase Policy', href: '/purchase-policy' },
     { key: 'contact', label: 'Contact', href: '/contact' },
 ];
 
@@ -131,7 +133,7 @@ export const DEFAULT_FOOTER_COLUMNS: {
         defaultKeys: ['destinations', 'hotels', 'tours', 'deals'],
     },
     { title: 'Discover', defaultKeys: ['gallery', 'events', 'blog'] },
-    { title: 'Support', defaultKeys: ['team', 'partners', 'legal', 'promos', 'contact'] },
+    { title: 'Support', defaultKeys: ['team', 'partners', 'legal', 'privacy-policy', 'purchase-policy', 'promos', 'contact'] },
 ];
 
 export const DEFAULT_NAV_SETTINGS: NavSettings = {
@@ -149,6 +151,8 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'team',
             'partners',
             'legal',
+            'privacy-policy',
+            'purchase-policy',
             'contact',
         ].includes(p.key),
         isDropdown: ['destinations', 'hotels'].includes(p.key),
@@ -160,6 +164,8 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'team',
             'partners',
             'legal',
+            'privacy-policy',
+            'purchase-policy',
             'contact',
         ].includes(p.key)
             ? 'more'

@@ -16,7 +16,7 @@ const LegalDetail = () => {
     if (!section) {
         return (
             <PageShell title={t('nav.legal')} subtitle="">
-                <div className="mx-auto max-w-4xl">
+                <div className="mx-auto">
                     <p>{t('nav.legal')}</p>
                     <p className="mt-4">
                         <Link
@@ -33,7 +33,7 @@ const LegalDetail = () => {
 
     return (
         <PageShell title={section.title[lang]} subtitle="">
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto">
                 <div className="rounded-3xl border border-border/60 bg-card/80 p-6 shadow-sm">
                     <h2 className="mb-3 font-serif text-xl font-bold text-foreground md:text-2xl">
                         {section.title[lang]}

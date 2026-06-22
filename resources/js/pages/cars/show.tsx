@@ -55,7 +55,7 @@ export default function CarDetail() {
                     <div className="mt-8 lg:hidden">
                         <StickyBookingCard
                             price={car.price}
-                            currency="DT"
+                            currency="TND"
                             priceLabel={t('common.from')}
                             priceSuffix={t('cars.perDay')}
                             badge={localizeText(car.category, lang)}
@@ -130,7 +130,7 @@ export default function CarDetail() {
                 <aside className="hidden lg:block">
                     <StickyBookingCard
                         price={car.price}
-                        currency="DT"
+                        currency="TND"
                         priceLabel={t('common.from')}
                         priceSuffix={t('cars.perDay')}
                         badge={localizeText(car.category, lang)}

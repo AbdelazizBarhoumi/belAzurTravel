@@ -102,7 +102,7 @@ const AdminDashboard = () => {
     const stats = [
         {
             labelKey: 'admin.totalRevenue',
-            value: `${totalRevenue.toLocaleString()} DT`,
+            value: `${totalRevenue.toLocaleString()} TND`,
             change: '+12.5%',
             icon: Wallet,
             color: 'text-primary',
@@ -254,7 +254,7 @@ const AdminDashboard = () => {
                                             ).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm font-semibold">
-                                            {b.total_amount.toLocaleString()} DT
+                                            {b.total_amount.toLocaleString()} TND
                                         </td>
                                         <td className="px-6 py-4">
                                             <span

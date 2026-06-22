@@ -428,7 +428,7 @@ function FlightsContent() {
                                 className={`text-center md:${dir === 'rtl' ? 'text-left' : 'text-right'}`}
                             >
                                 <p className="text-2xl font-bold text-primary">
-                                    {f.price} DT
+                                    {f.price} TND
                                 </p>
                                 <Button
                                     size="sm"

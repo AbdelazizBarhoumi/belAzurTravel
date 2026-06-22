@@ -252,7 +252,7 @@ describe('AdminTours', () => {
         fireEvent.change(screen.getByLabelText(/Description \(EN\)/i), {
             target: { value: 'A scenic island tour.' },
         });
-        fireEvent.change(screen.getByLabelText(/Price \(DT\)/i), {
+        fireEvent.change(screen.getByLabelText(/Price \(TND\)/i), {
             target: { value: '2499' },
         });
 

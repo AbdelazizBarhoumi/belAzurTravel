@@ -867,7 +867,7 @@ const AdminTours = () => {
                                         {d.duration}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        {d.price.toLocaleString()} DT
+                                        {d.price.toLocaleString()} TND
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {d.rating}

@@ -169,7 +169,7 @@ function DayByDayAndIncludes({
             )}
 
             {(hasIncludes || hasExcludes) && (
-                <section className="grid max-w-4xl gap-6 md:grid-cols-2">
+                <section className="grid max-w-7xl gap-6 md:grid-cols-2">
                     {hasIncludes && (
                         <div className="rounded-2xl border border-border bg-card p-6">
                             <h3 className="mb-4 font-serif text-xl font-bold text-foreground">
@@ -317,7 +317,7 @@ export default function TourDetail() {
                     <div className="lg:hidden">
                         <StickyBookingCard
                             price={tour.price}
-                            currency="DT"
+                            currency="TND"
                             priceLabel={t('common.from')}
                             priceSuffix={t('tours.person')}
                             title={
@@ -346,7 +346,7 @@ export default function TourDetail() {
                 <aside className="hidden lg:block">
                     <StickyBookingCard
                         price={tour.price}
-                        currency="DT"
+                        currency="TND"
                         priceLabel={t('common.from')}
                         priceSuffix={t('tours.person')}
                         title={

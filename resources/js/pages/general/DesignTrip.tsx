@@ -70,20 +70,20 @@ const transports: Option[] = [
     { id: 'cruise', label: 'Cruise', icon: Ship },
 ];
 const budgets: Option[] = [
-    { id: 'eco', label: 'Economy', icon: Wallet, desc: '< 1,500 DT / pp' },
+    { id: 'eco', label: 'Economy', icon: Wallet, desc: '< 1,500 TND / pp' },
     {
         id: 'comfort',
         label: 'Comfort',
         icon: Hotel,
-        desc: '1,500 DT – 3,500 DT',
+        desc: '1,500 TND – 3,500 TND',
     },
     {
         id: 'premium',
         label: 'Premium',
         icon: Sparkles,
-        desc: '3,500 DT – 7,000 DT',
+        desc: '3,500 TND – 7,000 TND',
     },
-    { id: 'luxury', label: 'Luxury', icon: Heart, desc: '7,000 DT+' },
+    { id: 'luxury', label: 'Luxury', icon: Heart, desc: '7,000 TND+' },
 ];
 const steps = [
     {
