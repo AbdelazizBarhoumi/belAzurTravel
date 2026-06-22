@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('site_settings', function (Blueprint $table) {
             $table->id();
             $table->string('company_name')->default('BelAzurTravel');
-            $table->string('email')->default('hello@voyageur.com');
-            $table->string('phone')->default('+1 (555) 123-4567');
+            $table->string('email')->default('contact@belazurtravel.com');
+            $table->string('phone')->default('+216 23 777 771');
             $table->string('whatsapp')->nullable();
             $table->string('address')->nullable();
             $table->string('plus_code')->nullable();

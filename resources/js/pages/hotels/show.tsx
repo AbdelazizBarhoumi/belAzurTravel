@@ -17,7 +17,7 @@ import {
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 
-type AmenityIcon = typeof Wifi;
+type AmenityIcon = typeof Wifi | null;
 
 type RoomView = {
     id: string;
@@ -34,6 +34,7 @@ type AmenityView = {
     id: string;
     name: string;
     icon: AmenityIcon;
+    customSvg?: string | null;
 };
 
 const AMENITY_ICONS: Record<string, AmenityIcon> = {
@@ -62,15 +63,23 @@ function toAmenityView(
     const key = normalizeAmenityKey(name);
 
     let icon: AmenityIcon = (AMENITY_ICONS[key] ?? Wifi) as AmenityIcon;
+    let customSvg: string | null = null;
 
     if (amenity.icon) {
-        icon = (AMENITY_ICONS[String(amenity.icon)] ?? icon) as AmenityIcon;
+        const iconVal = String(amenity.icon);
+        if (iconVal.trim().startsWith('<svg')) {
+            customSvg = iconVal;
+            icon = null;
+        } else {
+            icon = (AMENITY_ICONS[iconVal] ?? icon) as AmenityIcon;
+        }
     }
 
     return {
         id: `amenity-${index + 1}`,
         name,
         icon,
+        customSvg,
     };
 }
 

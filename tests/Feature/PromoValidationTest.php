@@ -44,7 +44,7 @@ class PromoValidationTest extends TestCase
         $response = $this->actingAs($this->user)->postJson('/api/bookings', [
             'type' => 'hotel',
             'item_id' => 'hotel-1',
-            'client' => ['name' => 'John', 'email' => 'john@example.com'],
+            'client' => ['name' => 'John', 'email' => 'john@belazurtravel.com'],
             'amount' => 100,
             'promo_code' => 'SAVE10',
         ]);
@@ -65,7 +65,7 @@ class PromoValidationTest extends TestCase
         $response = $this->actingAs($this->user)->postJson('/api/bookings', [
             'type' => 'hotel',
             'item_id' => 'hotel-1',
-            'client' => ['name' => 'John', 'email' => 'john@example.com'],
+            'client' => ['name' => 'John', 'email' => 'john@belazurtravel.com'],
             'amount' => 100,
             'promo_code' => 'INACTIVE',
         ]);
@@ -87,7 +87,7 @@ class PromoValidationTest extends TestCase
         $response = $this->actingAs($this->user)->postJson('/api/bookings', [
             'type' => 'hotel',
             'item_id' => 'hotel-1',
-            'client' => ['name' => 'John', 'email' => 'john@example.com'],
+            'client' => ['name' => 'John', 'email' => 'john@belazurtravel.com'],
             'amount' => 100,
             'promo_code' => 'FLIGHTONLY',
         ]);
@@ -119,7 +119,7 @@ class PromoValidationTest extends TestCase
         $response = $this->actingAs($this->user)->postJson('/api/bookings', [
             'type' => 'hotel',
             'item_id' => 'hotel-1',
-            'client' => ['name' => 'John', 'email' => 'john@example.com'],
+            'client' => ['name' => 'John', 'email' => 'john@belazurtravel.com'],
             'amount' => 100,
             'promo_code' => 'LIMIT1',
         ]);
@@ -142,7 +142,7 @@ class PromoValidationTest extends TestCase
         Booking::create([
             'user_id' => $this->user->id,
             'type' => 'hotel',
-            'client' => ['name' => 'John', 'email' => 'john@example.com'],
+            'client' => ['name' => 'John', 'email' => 'john@belazurtravel.com'],
             'total_amount' => 100,
             'promo_code' => 'USERLIMIT',
             'status' => 'Pending',
@@ -151,7 +151,7 @@ class PromoValidationTest extends TestCase
         $response = $this->actingAs($this->user)->postJson('/api/bookings', [
             'type' => 'hotel',
             'item_id' => 'hotel-1',
-            'client' => ['name' => 'John', 'email' => 'john@example.com'],
+            'client' => ['name' => 'John', 'email' => 'john@belazurtravel.com'],
             'amount' => 100,
             'promo_code' => 'USERLIMIT',
         ]);

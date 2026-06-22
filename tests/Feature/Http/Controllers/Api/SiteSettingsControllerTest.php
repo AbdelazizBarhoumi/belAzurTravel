@@ -18,9 +18,9 @@ class SiteSettingsControllerTest extends TestCase
 
         SiteSetting::query()->create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@voyageur.com',
-            'phone' => '+1 (555) 123-4567',
-            'whatsapp' => '15551234567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
+            'whatsapp' => '21623777771',
             'address' => '123 Travel St, NY 10001',
             'plus_code' => '8FVC9G8F+5V',
             'year' => 2026,
@@ -158,7 +158,7 @@ class SiteSettingsControllerTest extends TestCase
 
         $updateData = [
             'companyName' => 'Updated Company',
-            'email' => 'updated@example.com',
+            'email' => 'updated@belazurtravel.com',
             'phone' => '+1 (555) 987-6543',
             'whatsapp' => '15559876543',
             'address' => '456 New St, CA 90001',
@@ -172,7 +172,7 @@ class SiteSettingsControllerTest extends TestCase
         $response->assertOk();
         $this->assertDatabaseHas('site_settings', [
             'company_name' => 'Updated Company',
-            'email' => 'updated@example.com',
+            'email' => 'updated@belazurtravel.com',
             'plus_code' => '8FVC9G8F+5V',
         ]);
     }
@@ -187,8 +187,8 @@ class SiteSettingsControllerTest extends TestCase
         $response = $this->actingAs($user)
             ->putJson('/api/site-settings', [
                 'companyName' => 'BelAzurTravel',
-                'email' => 'hello@example.com',
-                'phone' => '+1 (555) 123-4567',
+                'email' => 'contact@belazurtravel.com',
+                'phone' => '+216 23 777 771',
                 'plusCode' => '8FVC9G8F+5V',
             ]);
 
@@ -212,8 +212,8 @@ class SiteSettingsControllerTest extends TestCase
 
         $updateData = [
             'companyName' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 (555) 123-4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'navLinks' => [
                 [
                     'type' => 'simple',
@@ -249,8 +249,8 @@ class SiteSettingsControllerTest extends TestCase
 
         $payload = [
             'companyName' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 (555) 123-4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'simpleLinks' => [
@@ -288,8 +288,8 @@ class SiteSettingsControllerTest extends TestCase
 
         $payload = [
             'companyName' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 (555) 123-4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'simpleLinks' => [
@@ -325,8 +325,8 @@ class SiteSettingsControllerTest extends TestCase
 
         $payload = [
             'companyName' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 (555) 123-4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'simpleLinks' => [
@@ -362,8 +362,8 @@ class SiteSettingsControllerTest extends TestCase
 
         $payload = [
             'companyName' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 (555) 123-4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'hours' => [
                 [
                     'dayKey' => 'footer.mon',
@@ -416,12 +416,12 @@ class SiteSettingsControllerTest extends TestCase
 
         $response = $this->actingAs($user)
             ->putJson('/api/site-settings', [
-                'email' => 'incomplete@example.com',
+                'email' => 'incomplete@belazurtravel.com',
             ]);
 
         $response->assertOk();
         $this->assertDatabaseHas('site_settings', [
-            'email' => 'incomplete@example.com',
+            'email' => 'incomplete@belazurtravel.com',
         ]);
     }
 
@@ -437,7 +437,7 @@ class SiteSettingsControllerTest extends TestCase
 
         $updateData = [
             'companyName' => 'Cache Test',
-            'email' => 'cache@example.com',
+            'email' => 'cache@belazurtravel.com',
             'phone' => '+1 (555) 111-2222',
         ];
 

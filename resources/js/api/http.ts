@@ -37,14 +37,7 @@ export async function apiFetch<T>(
 
     // Debug: log the URL when running tests to help diagnose network issues
     if (typeof process !== 'undefined' && process.env && process.env.VITEST) {
-        console.debug('[apiFetch] GET', finalUrl);
     }
-
-    console.debug(
-        `[apiFetch #${reqId}]`,
-        finalUrl,
-        options && { method: options.method },
-    );
     const start = Date.now();
     const res = await fetch(finalUrl, {
         credentials: 'include',
@@ -52,26 +45,12 @@ export async function apiFetch<T>(
         headers,
     });
 
-    console.debug(
-        `[apiFetch #${reqId}] response`,
-        finalUrl,
-        'status:',
-        res.status,
-        'timeMs:',
-        Date.now() - start,
-    );
-
     if (!res.ok) {
         if (
             typeof process !== 'undefined' &&
             process.env &&
             process.env.VITEST
         ) {
-            console.debug(
-                '[apiFetch] response',
-                res.status,
-                await res.text().catch(() => ''),
-            );
         }
         if (res.status === 401 || res.status === 419) {
             try {

@@ -42,7 +42,7 @@ class NotificationE2ETest extends TestCase
             'end_date' => now()->addDays(15)->toDateString(),
             'client' => [
                 'name' => 'John Doe',
-                'email' => 'john@example.com',
+                'email' => 'john@belazurtravel.com',
             ],
             'amount' => 1000,
         ])->assertStatus(201);
@@ -61,7 +61,7 @@ class NotificationE2ETest extends TestCase
             'user_id' => $client->id,
             'type' => 'hotel',
             'item_slug' => 'luxury-resort',
-            'client' => ['name' => 'John Doe', 'email' => 'john@example.com'],
+            'client' => ['name' => 'John Doe', 'email' => 'john@belazurtravel.com'],
             'total_amount' => 1000,
             'status' => 'Pending',
         ]);
@@ -109,7 +109,7 @@ class NotificationE2ETest extends TestCase
             'user_id' => $client->id,
             'type' => 'hotel',
             'item_slug' => 'luxury-resort',
-            'client' => ['name' => 'John Doe', 'email' => 'john@example.com'],
+            'client' => ['name' => 'John Doe', 'email' => 'john@belazurtravel.com'],
             'total_amount' => 1000,
             'status' => 'Pending',
         ]);

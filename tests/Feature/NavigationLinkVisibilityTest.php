@@ -175,8 +175,8 @@ class NavigationLinkVisibilityTest extends TestCase
         // Start with all enabled
         $settings = SiteSetting::create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [
@@ -295,8 +295,8 @@ class NavigationLinkVisibilityTest extends TestCase
         // Disable tours in nav
         SiteSetting::create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [
@@ -353,8 +353,8 @@ class NavigationLinkVisibilityTest extends TestCase
     {
         SiteSetting::create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [
@@ -412,8 +412,8 @@ class NavigationLinkVisibilityTest extends TestCase
     {
         SiteSetting::create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [
@@ -462,8 +462,8 @@ class NavigationLinkVisibilityTest extends TestCase
     {
         SiteSetting::create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [
@@ -516,8 +516,8 @@ class NavigationLinkVisibilityTest extends TestCase
     {
         SiteSetting::create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [
@@ -561,8 +561,8 @@ class NavigationLinkVisibilityTest extends TestCase
     {
         SiteSetting::create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [
@@ -615,8 +615,8 @@ class NavigationLinkVisibilityTest extends TestCase
     {
         SiteSetting::create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [

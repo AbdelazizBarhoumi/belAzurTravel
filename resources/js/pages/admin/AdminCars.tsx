@@ -199,7 +199,6 @@ export default function AdminCars() {
                 'cars',
             )) as unknown as AdminRow[] | { data?: AdminRow[] };
             const result = Array.isArray(data) ? data : (data.data ?? []);
-            console.log('DEBUG: rows data', result);
             return result;
         },
     });

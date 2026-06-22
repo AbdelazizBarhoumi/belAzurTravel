@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\HotelController;
 use App\Http\Controllers\Api\InteractionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PartnerController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PromoController;
 use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\TeamController;
@@ -89,6 +90,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
+    Route::post('/bookings/{id}/pay', [PaymentController::class, 'initiate']);
+    Route::post('/bookings/{id}/retry-payment', [PaymentController::class, 'retry']);
+    Route::get('/payment/callback', [PaymentController::class, 'callback']);
     Route::get('/client/dashboard', [ClientController::class, 'dashboard']);
     Route::get('/client/bookings', [ClientController::class, 'bookings']);
     Route::get('/client/payments', [ClientController::class, 'payments']);
@@ -101,6 +105,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/client/complaints', [ComplaintController::class, 'index']);
     Route::get('/client/complaints/{id}', [ComplaintController::class, 'show']);
     Route::post('/client/complaints', [ComplaintController::class, 'store']);
+    Route::post('/client/complaints/{id}/reply', [ComplaintController::class, 'reply']);
 
     // Assistant API surface disabled for now.
 

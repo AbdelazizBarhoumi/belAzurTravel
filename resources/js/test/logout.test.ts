@@ -36,7 +36,7 @@ describe('logout', () => {
         const user: AuthUser = {
             id: 11,
             name: 'Nadia',
-            email: 'nadia@example.com',
+            email: 'nadia@belazurtravel.com',
             role: 'admin',
             email_verified_at: null,
             preferred_language: 'fr',
@@ -64,7 +64,7 @@ describe('logout', () => {
         const user: AuthUser = {
             id: 12,
             name: 'Youssef',
-            email: 'youssef@example.com',
+            email: 'youssef@belazurtravel.com',
             role: 'client',
             email_verified_at: null,
         };

@@ -16,6 +16,7 @@ import PartnerController from './PartnerController'
 import BlogPostController from './BlogPostController'
 import NotificationController from './NotificationController'
 import BookingController from './BookingController'
+import PaymentController from './PaymentController'
 import ClientController from './ClientController'
 import ComplaintController from './ComplaintController'
 import AdminDestinationController from './AdminDestinationController'
@@ -50,6 +51,7 @@ PartnerController: Object.assign(PartnerController, PartnerController),
 BlogPostController: Object.assign(BlogPostController, BlogPostController),
 NotificationController: Object.assign(NotificationController, NotificationController),
 BookingController: Object.assign(BookingController, BookingController),
+PaymentController: Object.assign(PaymentController, PaymentController),
 ClientController: Object.assign(ClientController, ClientController),
 ComplaintController: Object.assign(ComplaintController, ComplaintController),
 AdminDestinationController: Object.assign(AdminDestinationController, AdminDestinationController),

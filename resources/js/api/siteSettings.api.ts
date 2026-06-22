@@ -144,7 +144,6 @@ export async function fetchSiteSettings(): Promise<SiteSettings> {
 
     try {
         inFlightSiteSettingsRequest = (async () => {
-            console.debug('[fetchSiteSettings] calling /api/site-settings');
             const res = await fetch('/api/site-settings');
             if (!res.ok) throw new Error('Network response was not ok');
             const json = (await res.json()) as Record<string, unknown>;

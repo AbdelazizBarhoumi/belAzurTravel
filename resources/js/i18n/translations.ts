@@ -269,6 +269,11 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'فشل حفظ البيانات.',
         en: 'Failed to save data.',
     },
+    'admin.saveFailed': {
+        fr: "Échec de la sauvegarde",
+        ar: 'فشل الحفظ',
+        en: 'Failed to save',
+    },
 
     // Flights
     'admin.flights': { fr: 'Vols', ar: 'الرحلات', en: 'Flights' },
@@ -3768,6 +3773,83 @@ export const translations: Record<string, TranslationEntry> = {
     'common.language': { fr: 'Langue', ar: 'اللغة', en: 'Language' },
 };
 
+// Payment translations
+translations['payment.payNow'] = {
+    fr: 'Réserver et Payer',
+    ar: 'احجز وادفع',
+    en: 'Book & Pay',
+};
+translations['payment.processing'] = {
+    fr: 'Traitement du paiement...',
+    ar: 'جاري معالجة الدفع...',
+    en: 'Processing payment...',
+};
+translations['payment.redirecting'] = {
+    fr: 'Redirection vers la page de paiement...',
+    ar: 'جاري التحويل إلى صفحة الدفع...',
+    en: 'Redirecting to payment page...',
+};
+translations['payment.successTitle'] = {
+    fr: 'Paiement Réussi!',
+    ar: 'تم الدفع بنجاح!',
+    en: 'Payment Successful!',
+};
+translations['payment.successMessage'] = {
+    fr: 'Votre paiement a été traité avec succès. Votre réservation est confirmée.',
+    ar: 'تم معالجة دفعك بنجاح. تم تأكيد حجزك.',
+    en: 'Your payment has been processed successfully. Your booking is confirmed.',
+};
+translations['payment.failedTitle'] = {
+    fr: 'Paiement Échoué',
+    ar: 'فشل الدفع',
+    en: 'Payment Failed',
+};
+translations['payment.failedMessage'] = {
+    fr: 'Le paiement n\'a pas pu être traité. Veuillez réessayer depuis votre tableau de bord.',
+    ar: 'تعذر معالجة الدفع. يرجى المحاولة مرة أخرى من لوحة التحكم.',
+    en: 'Payment could not be processed. Please try again from your dashboard.',
+};
+translations['payment.errorTitle'] = {
+    fr: 'Erreur de Paiement',
+    ar: 'خطأ في الدفع',
+    en: 'Payment Error',
+};
+translations['payment.errorMessage'] = {
+    fr: 'Une erreur est survenue lors du traitement du paiement.',
+    ar: 'حدث خطأ أثناء معالجة الدفع.',
+    en: 'An error occurred while processing the payment.',
+};
+translations['payment.initError'] = {
+    fr: 'Échec de l\'initialisation du paiement. Veuillez payer depuis votre tableau de bord.',
+    ar: 'فشل تهيئة الدفع. يرجى الدفع من لوحة التحكم.',
+    en: 'Payment initiation failed. Please pay from your dashboard.',
+};
+translations['payment.retryNow'] = {
+    fr: 'Réessayer le paiement',
+    ar: 'إعادة محاولة الدفع',
+    en: 'Retry Payment',
+};
+translations['client.conversation'] = {
+    fr: 'Conversation',
+    ar: 'المحادثة',
+    en: 'Conversation',
+};
+translations['client.writeReply'] = {
+    fr: 'Écrire une réponse...',
+    ar: 'اكتب رد...',
+    en: 'Write a reply...',
+};
+translations['client.replySent'] = {
+    fr: 'Réponse envoyée.',
+    ar: 'تم إرسال الرد.',
+    en: 'Reply sent.',
+};
+translations['client.you'] = {
+    fr: 'Vous',
+    ar: 'أنت',
+    en: 'You',
+};
+
 // app-specific action/notification keys
 translations['actions.deleted'] = {
     fr: 'Supprimé',
@@ -4364,19 +4446,19 @@ translations['admin.settings.placeholder.plusCode'] = {
     en: '8FVC9G8F+5V',
 };
 translations['admin.settings.placeholder.email'] = {
-    fr: 'hello@example.com',
-    ar: 'hello@example.com',
-    en: 'hello@example.com',
+    fr: 'contact@belazurtravel.com',
+    ar: 'contact@belazurtravel.com',
+    en: 'contact@belazurtravel.com',
 };
 translations['admin.settings.placeholder.phone'] = {
-    fr: '+1 (555) 123-4567',
-    ar: '+1 (555) 123-4567',
-    en: '+1 (555) 123-4567',
+    fr: '+216 23 777 771',
+    ar: '+216 23 777 771',
+    en: '+216 23 777 771',
 };
 translations['admin.settings.placeholder.whatsapp'] = {
-    fr: '+15551234567',
-    ar: '+15551234567',
-    en: '+15551234567',
+    fr: '21623777771',
+    ar: '21623777771',
+    en: '21623777771',
 };
 translations['admin.settings.placeholder.titleEN'] = {
     fr: 'Titre (EN)',

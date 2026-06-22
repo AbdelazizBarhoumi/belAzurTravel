@@ -46,7 +46,7 @@ vi.mock('@/hooks/useAuthUser', () => ({
         data: {
             id: 5,
             name: 'Fatima',
-            email: 'fatima@example.com',
+            email: 'fatima@belazurtravel.com',
             role: 'client',
             email_verified_at: null,
         },

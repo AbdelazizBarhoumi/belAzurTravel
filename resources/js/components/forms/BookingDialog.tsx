@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { initiatePayment } from '@/api/payment.api';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/DatePicker';
 import {
@@ -39,6 +41,7 @@ export function BookingDialog({
 }: BookingDialogProps) {
     const { t } = useLanguage();
     const { data: user } = useAuthUser();
+    const { pathname } = useLocation();
     const queryClient = useQueryClient();
 
     const [name, setName] = useState('');
@@ -60,16 +63,28 @@ export function BookingDialog({
 
     const mutation = useMutation({
         mutationFn: (payload: Record<string, unknown>) =>
-            api.createBooking(payload),
-        onSuccess: () => {
+            api.createBooking(payload) as Promise<{ id: number }>,
+        onSuccess: async (data) => {
             toast.success(
                 t('booking.success') ||
-                    'Booking request submitted successfully!',
+                    'Booking created. Redirecting to payment...',
             );
             queryClient.invalidateQueries({
                 queryKey: ['client', 'dashboard'],
             });
-            onOpenChange(false);
+
+            // Initiate payment
+            try {
+                const paymentResult = await initiatePayment(data.id);
+                // Redirect to ClictoPay payment page
+                window.location.href = paymentResult.formUrl;
+            } catch {
+                toast.error(
+                    t('payment.initError') ||
+                        'Payment initiation failed. Please pay from your dashboard.',
+                );
+                onOpenChange(false);
+            }
         },
         onError: () => {
             toast.error(
@@ -82,9 +97,7 @@ export function BookingDialog({
         e.preventDefault();
 
         if (!user) {
-            toast.error(
-                t('auth.requiredToBook') || 'Please log in to make a booking.',
-            );
+            window.location.href = `/login?redirect=${encodeURIComponent(pathname)}`;
             return;
         }
 
@@ -188,7 +201,7 @@ export function BookingDialog({
                         <Button type="submit" disabled={mutation.isPending}>
                             {mutation.isPending
                                 ? t('common.processing') || 'Processing...'
-                                : t('booking.submit') || 'Request Booking'}
+                                : t('payment.payNow') || 'Book & Pay'}
                         </Button>
                     </DialogFooter>
                 </form>

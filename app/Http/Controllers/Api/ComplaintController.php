@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
+use App\Models\ComplaintReply;
 use App\Models\User;
 use App\Notifications\ComplaintNotification;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +16,7 @@ class ComplaintController extends Controller
     {
         $complaints = Complaint::query()
             ->where('user_id', $request->user()->id)
+            ->with('replies')
             ->latest()
             ->get()
             ->map(fn (Complaint $c) => $this->payload($c));
@@ -24,7 +26,7 @@ class ComplaintController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $complaint = Complaint::query()->findOrFail($id);
+        $complaint = Complaint::query()->with('replies')->findOrFail($id);
 
         abort_unless($complaint->user_id === $request->user()->id, 403);
 
@@ -72,6 +74,40 @@ class ComplaintController extends Controller
         return response()->json($this->payload($complaint), 201);
     }
 
+    /**
+     * Client adds a reply to their complaint.
+     */
+    public function reply(Request $request, int $id): JsonResponse
+    {
+        $complaint = Complaint::query()->findOrFail($id);
+
+        abort_unless($complaint->user_id === $request->user()->id, 403);
+        abort_if(in_array($complaint->status, ['resolved', 'rejected', 'refunded']), 422, 'This complaint is closed.');
+
+        $data = $request->validate([
+            'message' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $localized = fn (string $value): array => ['fr' => $value, 'ar' => $value, 'en' => $value];
+
+        ComplaintReply::create([
+            'complaint_id' => $complaint->id,
+            'sender' => 'client',
+            'message' => $localized($data['message']),
+        ]);
+
+        // Notify admin of client reply
+        User::query()
+            ->where('active', true)
+            ->whereIn('role', ['admin'])
+            ->get()
+            ->each(function (User $admin) use ($complaint): void {
+                $admin->notify(new ComplaintNotification($complaint));
+            });
+
+        return response()->json($this->payload($complaint->refresh()));
+    }
+
     private function payload(Complaint $complaint): array
     {
         return [
@@ -92,6 +128,12 @@ class ComplaintController extends Controller
             'status' => $complaint->status,
             'priority' => $complaint->priority,
             'admin_reply' => $complaint->admin_reply,
+            'replies' => $complaint->replies->map(fn ($reply) => [
+                'id' => $reply->id,
+                'sender' => $reply->sender,
+                'message' => $reply->message,
+                'created_at' => $reply->created_at?->toJSON(),
+            ]),
             'resolved_at' => $complaint->resolved_at?->toJSON(),
             'created_at' => $complaint->created_at?->toJSON(),
         ];

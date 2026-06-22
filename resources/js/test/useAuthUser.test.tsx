@@ -89,7 +89,7 @@ describe('useAuthUser', () => {
         const user = {
             id: 42,
             name: 'Amina',
-            email: 'amina@example.com',
+            email: 'amina@belazurtravel.com',
             role: 'admin',
             preferred_language: 'fr',
         } as const;

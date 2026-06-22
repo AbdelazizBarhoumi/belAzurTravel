@@ -68,7 +68,7 @@ describe('auth guards', () => {
             data: {
                 id: 1,
                 name: 'Admin',
-                email: 'admin@example.com',
+                email: 'admin@belazurtravel.com',
                 role: 'client',
             },
             isPending: false,

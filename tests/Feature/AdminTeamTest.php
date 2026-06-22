@@ -27,7 +27,7 @@ class AdminTeamTest extends TestCase
             'bio_en' => 'Bio EN',
             'bio_fr' => 'Bio FR',
             'bio_ar' => 'سيرة ذاتية AR',
-            'email' => 'john@example.com',
+            'email' => 'john@belazurtravel.com',
             'image' => '/images/team-member.jpg',
         ];
 

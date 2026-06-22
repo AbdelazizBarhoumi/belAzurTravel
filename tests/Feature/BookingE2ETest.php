@@ -31,7 +31,7 @@ class BookingE2ETest extends TestCase
             'end_date' => now()->addDays(14)->toDateString(),
             'client' => [
                 'name' => 'John Doe',
-                'email' => 'john@example.com',
+                'email' => 'john@belazurtravel.com',
                 'phone' => '123456789',
             ],
             'travelers' => [['name' => 'Jane Doe']],

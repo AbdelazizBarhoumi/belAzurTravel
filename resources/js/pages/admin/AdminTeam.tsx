@@ -233,7 +233,7 @@ const AdminTeam = () => {
                                     }}
                                     placeholder={
                                         field.key === 'email'
-                                            ? 'name@example.com'
+                                            ? 'contact@belazurtravel.com'
                                             : field.key === 'linkedin'
                                               ? 'https://linkedin.com/in/username'
                                               : 'https://x.com/username'

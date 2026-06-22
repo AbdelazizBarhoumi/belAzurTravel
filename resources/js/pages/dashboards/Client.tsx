@@ -37,8 +37,10 @@ import {
 import {
     getClientComplaints,
     createComplaint,
+    replyToClientComplaint,
     type Complaint,
 } from '@/api/complaint.api';
+import { retryPayment } from '@/api/payment.api';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
@@ -96,6 +98,7 @@ const ClientDashboard = () => {
     const [refundSubject, setRefundSubject] = useState('');
     const [refundDescription, setRefundDescription] = useState('');
     const [expandedComplaint, setExpandedComplaint] = useState<number | null>(null);
+    const [clientReplyMessage, setClientReplyMessage] = useState('');
 
     const { data: user } = useAuthUser();
     const [profileName, setProfileName] = useState('');
@@ -142,6 +145,12 @@ const ClientDashboard = () => {
         onSuccess: () =>
             queryClient.invalidateQueries({ queryKey: ['client'] }),
     });
+    const retryPayMutation = useMutation({
+        mutationFn: (id: number) => retryPayment(id),
+        onSuccess: (data) => {
+            window.location.href = data.formUrl;
+        },
+    });
     const supportMutation = useMutation({
         mutationFn: () =>
             createSupportInquiry({
@@ -185,6 +194,16 @@ const ClientDashboard = () => {
             setRefundDescription('');
             queryClient.invalidateQueries({ queryKey: ['client', 'complaints'] });
             toast.success(t('client.refundSuccess') || 'Refund request submitted.');
+        },
+    });
+
+    const clientReplyMutation = useMutation({
+        mutationFn: ({ id, message }: { id: number; message: string }) =>
+            replyToClientComplaint(id, message),
+        onSuccess: () => {
+            setClientReplyMessage('');
+            queryClient.invalidateQueries({ queryKey: ['client', 'complaints'] });
+            toast.success(t('client.replySent') || 'Reply sent.');
         },
     });
 
@@ -450,6 +469,22 @@ const ClientDashboard = () => {
                                                     booking.total_amount,
                                                 ).toLocaleString()}
                                             </span>
+                                            {booking.status === 'Pending' && (
+                                                <Button
+                                                    size="sm"
+                                                    disabled={retryPayMutation.isPending}
+                                                    onClick={() =>
+                                                        retryPayMutation.mutate(
+                                                            booking.id,
+                                                        )
+                                                    }
+                                                    className="gap-1"
+                                                >
+                                                    {retryPayMutation.isPending
+                                                        ? '...'
+                                                        : t('payment.retryNow') || 'Pay Now'}
+                                                </Button>
+                                            )}
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -650,7 +685,43 @@ const ClientDashboard = () => {
                                                         <p className="text-sm text-foreground">
                                                             {complaint.description[lang] || complaint.description.en}
                                                         </p>
-                                                        {complaint.admin_reply && (
+
+                                                        {/* Thread */}
+                                                        {complaint.replies && complaint.replies.length > 0 && (
+                                                            <div className="mt-4 space-y-3">
+                                                                <p className="text-xs font-semibold text-muted-foreground">
+                                                                    {t('client.conversation') || 'Conversation'}
+                                                                </p>
+                                                                {complaint.replies.map((reply) => (
+                                                                    <div
+                                                                        key={reply.id}
+                                                                        className={`rounded-xl p-4 ${
+                                                                            reply.sender === 'admin'
+                                                                                ? 'border border-primary/20 bg-primary/5'
+                                                                                : 'border border-border bg-card ml-8'
+                                                                        }`}
+                                                                    >
+                                                                        <div className="mb-2 flex items-center gap-2">
+                                                                            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                                                                            <span className="text-xs font-semibold text-muted-foreground">
+                                                                                {reply.sender === 'admin'
+                                                                                    ? t('admin.admin') || 'Admin'
+                                                                                    : t('client.you') || 'You'}
+                                                                            </span>
+                                                                            <span className="text-xs text-muted-foreground">
+                                                                                {new Date(reply.created_at).toLocaleString()}
+                                                                            </span>
+                                                                        </div>
+                                                                        <p className="text-sm text-foreground">
+                                                                            {reply.message[lang] || reply.message.en}
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Legacy admin_reply fallback */}
+                                                        {complaint.admin_reply && (!complaint.replies || complaint.replies.length === 0) && (
                                                             <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
                                                                 <div className="mb-2 flex items-center gap-2">
                                                                     <MessageSquare className="h-4 w-4 text-primary" />
@@ -661,6 +732,32 @@ const ClientDashboard = () => {
                                                                 <p className="text-sm text-foreground">
                                                                     {complaint.admin_reply[lang] || complaint.admin_reply.en}
                                                                 </p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Client Reply Input */}
+                                                        {complaint.status !== 'resolved' && complaint.status !== 'rejected' && complaint.status !== 'refunded' && (
+                                                            <div className="mt-4 flex gap-2">
+                                                                <input
+                                                                    value={expandedComplaint === complaint.id ? clientReplyMessage : ''}
+                                                                    onChange={(e) => setClientReplyMessage(e.target.value)}
+                                                                    placeholder={t('client.writeReply') || 'Write a reply...'}
+                                                                    className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                />
+                                                                <Button
+                                                                    size="sm"
+                                                                    disabled={!clientReplyMessage.trim() || clientReplyMutation.isPending}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        clientReplyMutation.mutate({
+                                                                            id: complaint.id,
+                                                                            message: clientReplyMessage,
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    {t('assistant.send')}
+                                                                </Button>
                                                             </div>
                                                         )}
                                                     </div>
@@ -795,7 +892,43 @@ const ClientDashboard = () => {
                                                                 {t('client.refundAmount')}: {complaint.refund_amount} TND
                                                             </p>
                                                         )}
-                                                        {complaint.admin_reply && (
+
+                                                        {/* Thread */}
+                                                        {complaint.replies && complaint.replies.length > 0 && (
+                                                            <div className="mt-4 space-y-3">
+                                                                <p className="text-xs font-semibold text-muted-foreground">
+                                                                    {t('client.conversation') || 'Conversation'}
+                                                                </p>
+                                                                {complaint.replies.map((reply) => (
+                                                                    <div
+                                                                        key={reply.id}
+                                                                        className={`rounded-xl p-4 ${
+                                                                            reply.sender === 'admin'
+                                                                                ? 'border border-primary/20 bg-primary/5'
+                                                                                : 'border border-border bg-card ml-8'
+                                                                        }`}
+                                                                    >
+                                                                        <div className="mb-2 flex items-center gap-2">
+                                                                            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                                                                            <span className="text-xs font-semibold text-muted-foreground">
+                                                                                {reply.sender === 'admin'
+                                                                                    ? t('admin.admin') || 'Admin'
+                                                                                    : t('client.you') || 'You'}
+                                                                            </span>
+                                                                            <span className="text-xs text-muted-foreground">
+                                                                                {new Date(reply.created_at).toLocaleString()}
+                                                                            </span>
+                                                                        </div>
+                                                                        <p className="text-sm text-foreground">
+                                                                            {reply.message[lang] || reply.message.en}
+                                                                        </p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Legacy admin_reply fallback */}
+                                                        {complaint.admin_reply && (!complaint.replies || complaint.replies.length === 0) && (
                                                             <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
                                                                 <div className="mb-2 flex items-center gap-2">
                                                                     <MessageSquare className="h-4 w-4 text-primary" />
@@ -806,6 +939,32 @@ const ClientDashboard = () => {
                                                                 <p className="text-sm text-foreground">
                                                                     {complaint.admin_reply[lang] || complaint.admin_reply.en}
                                                                 </p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Client Reply Input */}
+                                                        {complaint.status !== 'resolved' && complaint.status !== 'rejected' && complaint.status !== 'refunded' && (
+                                                            <div className="mt-4 flex gap-2">
+                                                                <input
+                                                                    value={expandedComplaint === complaint.id ? clientReplyMessage : ''}
+                                                                    onChange={(e) => setClientReplyMessage(e.target.value)}
+                                                                    placeholder={t('client.writeReply') || 'Write a reply...'}
+                                                                    className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                />
+                                                                <Button
+                                                                    size="sm"
+                                                                    disabled={!clientReplyMessage.trim() || clientReplyMutation.isPending}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        clientReplyMutation.mutate({
+                                                                            id: complaint.id,
+                                                                            message: clientReplyMessage,
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    {t('assistant.send')}
+                                                                </Button>
                                                             </div>
                                                         )}
                                                     </div>

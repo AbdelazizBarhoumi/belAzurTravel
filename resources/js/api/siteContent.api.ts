@@ -130,20 +130,20 @@ export interface LegalSection {
 export const contactMethods: ContactMethod[] = [
     {
         labelKey: 'contact.calls',
-        value: '+1 (555) 123-4567',
-        href: 'tel:+15551234567',
+        value: '+216 23 777 771',
+        href: 'tel:+21623777771',
         icon: Phone,
     },
     {
         labelKey: 'contact.whatsapp',
-        value: '+1 (555) 123-4567',
-        href: 'https://wa.me/15551234567',
+        value: '+216 23 777 771',
+        href: 'https://wa.me/21623777771',
         icon: MessageCircle,
     },
     {
         labelKey: 'contact.email',
-        value: 'hello@voyageur.com',
-        href: 'mailto:hello@voyageur.com',
+        value: 'contact@belazurtravel.com',
+        href: 'mailto:contact@belazurtravel.com',
         icon: Mail,
     },
 ];

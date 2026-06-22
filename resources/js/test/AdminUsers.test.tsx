@@ -55,7 +55,7 @@ describe('AdminUsers', () => {
             data: {
                 id: 1,
                 name: 'Owner',
-                email: 'owner@example.com',
+                email: 'owner@belazurtravel.com',
                 role: 'owner',
             },
             isPending: false,
@@ -68,7 +68,7 @@ describe('AdminUsers', () => {
                 {
                     id: '1',
                     name: 'Owner',
-                    email: 'owner@example.com',
+                    email: 'owner@belazurtravel.com',
                     role: 'owner',
                     active: true,
                     joined: '2026-05-22',
@@ -76,7 +76,7 @@ describe('AdminUsers', () => {
                 {
                     id: '2',
                     name: 'Admin Two',
-                    email: 'admin2@example.com',
+                    email: 'admin2@belazurtravel.com',
                     role: 'admin',
                     active: true,
                     joined: '2026-05-22',

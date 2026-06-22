@@ -74,6 +74,7 @@ import LegalDetail from './pages/general/LegalDetail';
 import Login from './pages/general/Login';
 import NotFound from './pages/general/NotFound';
 import NotificationsPage from './pages/general/NotificationsPage';
+import PaymentResult from './pages/general/PaymentResult';
 import PrivacyPolicy from './pages/general/PrivacyPolicy';
 import PurchasePolicy from './pages/general/PurchasePolicy';
 import Register from './pages/general/Register';
@@ -539,6 +540,7 @@ const LayoutWrapper = () => {
                             </NavRouteGuard>
                         }
                     />
+                    <Route path="/payment/result" element={<PaymentResult />} />
                     <Route path="/favorites" element={<Favorites />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>

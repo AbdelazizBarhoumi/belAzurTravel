@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::index
- * @see app/Http/Controllers/Api/AdminComplaintController.php:13
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:24
  * @route '/api/admin/complaints'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::index
- * @see app/Http/Controllers/Api/AdminComplaintController.php:13
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:24
  * @route '/api/admin/complaints'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::index
- * @see app/Http/Controllers/Api/AdminComplaintController.php:13
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:24
  * @route '/api/admin/complaints'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::index
- * @see app/Http/Controllers/Api/AdminComplaintController.php:13
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:24
  * @route '/api/admin/complaints'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::index
- * @see app/Http/Controllers/Api/AdminComplaintController.php:13
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:24
  * @route '/api/admin/complaints'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::index
- * @see app/Http/Controllers/Api/AdminComplaintController.php:13
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:24
  * @route '/api/admin/complaints'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::index
- * @see app/Http/Controllers/Api/AdminComplaintController.php:13
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:24
  * @route '/api/admin/complaints'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::show
- * @see app/Http/Controllers/Api/AdminComplaintController.php:30
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:41
  * @route '/api/admin/complaints/{id}'
  */
 export const show = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::show
- * @see app/Http/Controllers/Api/AdminComplaintController.php:30
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:41
  * @route '/api/admin/complaints/{id}'
  */
 show.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -122,7 +122,7 @@ show.url = (args: { id: string | number } | [id: string | number ] | string | nu
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::show
- * @see app/Http/Controllers/Api/AdminComplaintController.php:30
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:41
  * @route '/api/admin/complaints/{id}'
  */
 show.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -131,7 +131,7 @@ show.get = (args: { id: string | number } | [id: string | number ] | string | nu
 })
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::show
- * @see app/Http/Controllers/Api/AdminComplaintController.php:30
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:41
  * @route '/api/admin/complaints/{id}'
  */
 show.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -141,7 +141,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
     /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::show
- * @see app/Http/Controllers/Api/AdminComplaintController.php:30
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:41
  * @route '/api/admin/complaints/{id}'
  */
     const showForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -151,7 +151,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
             /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::show
- * @see app/Http/Controllers/Api/AdminComplaintController.php:30
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:41
  * @route '/api/admin/complaints/{id}'
  */
         showForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -160,7 +160,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
         })
             /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::show
- * @see app/Http/Controllers/Api/AdminComplaintController.php:30
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:41
  * @route '/api/admin/complaints/{id}'
  */
         showForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -176,7 +176,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::update
- * @see app/Http/Controllers/Api/AdminComplaintController.php:37
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:48
  * @route '/api/admin/complaints/{id}'
  */
 export const update = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -191,7 +191,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::update
- * @see app/Http/Controllers/Api/AdminComplaintController.php:37
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:48
  * @route '/api/admin/complaints/{id}'
  */
 update.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -219,7 +219,7 @@ update.url = (args: { id: string | number } | [id: string | number ] | string | 
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::update
- * @see app/Http/Controllers/Api/AdminComplaintController.php:37
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:48
  * @route '/api/admin/complaints/{id}'
  */
 update.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -229,7 +229,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::update
- * @see app/Http/Controllers/Api/AdminComplaintController.php:37
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:48
  * @route '/api/admin/complaints/{id}'
  */
     const updateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -244,7 +244,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::update
- * @see app/Http/Controllers/Api/AdminComplaintController.php:37
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:48
  * @route '/api/admin/complaints/{id}'
  */
         updateForm.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -260,7 +260,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::reply
- * @see app/Http/Controllers/Api/AdminComplaintController.php:56
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:126
  * @route '/api/admin/complaints/{id}/reply'
  */
 export const reply = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -275,7 +275,7 @@ reply.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::reply
- * @see app/Http/Controllers/Api/AdminComplaintController.php:56
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:126
  * @route '/api/admin/complaints/{id}/reply'
  */
 reply.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -303,7 +303,7 @@ reply.url = (args: { id: string | number } | [id: string | number ] | string | n
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::reply
- * @see app/Http/Controllers/Api/AdminComplaintController.php:56
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:126
  * @route '/api/admin/complaints/{id}/reply'
  */
 reply.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -313,7 +313,7 @@ reply.post = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::reply
- * @see app/Http/Controllers/Api/AdminComplaintController.php:56
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:126
  * @route '/api/admin/complaints/{id}/reply'
  */
     const replyForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -323,7 +323,7 @@ reply.post = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::reply
- * @see app/Http/Controllers/Api/AdminComplaintController.php:56
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:126
  * @route '/api/admin/complaints/{id}/reply'
  */
         replyForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -334,7 +334,7 @@ reply.post = (args: { id: string | number } | [id: string | number ] | string | 
     reply.form = replyForm
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::resolve
- * @see app/Http/Controllers/Api/AdminComplaintController.php:81
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:159
  * @route '/api/admin/complaints/{id}/resolve'
  */
 export const resolve = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -349,7 +349,7 @@ resolve.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::resolve
- * @see app/Http/Controllers/Api/AdminComplaintController.php:81
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:159
  * @route '/api/admin/complaints/{id}/resolve'
  */
 resolve.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -377,7 +377,7 @@ resolve.url = (args: { id: string | number } | [id: string | number ] | string |
 
 /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::resolve
- * @see app/Http/Controllers/Api/AdminComplaintController.php:81
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:159
  * @route '/api/admin/complaints/{id}/resolve'
  */
 resolve.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -387,7 +387,7 @@ resolve.post = (args: { id: string | number } | [id: string | number ] | string 
 
     /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::resolve
- * @see app/Http/Controllers/Api/AdminComplaintController.php:81
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:159
  * @route '/api/admin/complaints/{id}/resolve'
  */
     const resolveForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -397,7 +397,7 @@ resolve.post = (args: { id: string | number } | [id: string | number ] | string 
 
             /**
 * @see \App\Http\Controllers\Api\AdminComplaintController::resolve
- * @see app/Http/Controllers/Api/AdminComplaintController.php:81
+ * @see app/Http/Controllers/Api/AdminComplaintController.php:159
  * @route '/api/admin/complaints/{id}/resolve'
  */
         resolveForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

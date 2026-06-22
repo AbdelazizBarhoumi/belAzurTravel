@@ -20,7 +20,7 @@ class BackendLocalizationTest extends TestCase
     public function test_login_validation_message_is_localized_in_french(): void
     {
         $this->postJson('/login', [
-            'email' => 'missing@example.com',
+            'email' => 'missing@belazurtravel.com',
             'password' => 'wrong-password',
             'remember' => true,
         ], ['Accept-Language' => 'fr'])
@@ -38,7 +38,7 @@ class BackendLocalizationTest extends TestCase
                 'item_slug' => 'any-destination',
                 'client' => [
                     'name' => 'Jean Dupont',
-                    'email' => 'jean@example.com',
+                    'email' => 'jean@belazurtravel.com',
                 ],
                 'promo_code' => 'invalid-code',
                 'amount' => 100,

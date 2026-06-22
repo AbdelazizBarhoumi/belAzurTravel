@@ -15,15 +15,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         foreach ([
-            ['The Owner', 'owner@example.com', 'owner', true],
-            ['Super Admin', 'super@example.com', 'superadmin', true],
-            ['Anna Admin', 'admin@example.com', 'admin', true],
-            ['Sarah Johnson', 'sarah@example.com', 'client', true],
-            ['Mike Chen', 'mike@example.com', 'client', true],
-            ['Emma Davis', 'emma@example.com', 'client', true],
-            ['James Wilson', 'james@example.com', 'client', false],
-            ['Lisa Brown', 'lisa@example.com', 'client', true],
-            ['Test User', 'test@example.com', 'client', true],
+            ['The Owner', 'direction@belazurtravel.com', 'owner', true],
+            ['Super Admin', 'management@belazurtravel.com', 'superadmin', true],
+            ['Anna Admin', 'contact@belazurtravel.com', 'admin', true],
+            ['Sarah Johnson', 'booking@belazurtravel.com', 'client', true],
+            ['Mike Chen', 'commercial@belazurtravel.com', 'client', true],
+            ['Emma Davis', 'noreply@belazurtravel.com', 'client', true],
         ] as [$name, $email, $role, $active]) {
             User::query()->updateOrCreate(['email' => $email], [
                 'name' => $name,
@@ -36,7 +33,7 @@ class DatabaseSeeder extends Seeder
 
         // Add 20 more clients for pagination testing
         for ($i = 1; $i <= 20; $i++) {
-            User::query()->updateOrCreate(['email' => "client{$i}@example.com"], [
+            User::query()->updateOrCreate(['email' => "client{$i}@belazurtravel.com"], [
                 'name' => "Client User {$i}",
                 'password' => 'password',
                 'role' => 'client',

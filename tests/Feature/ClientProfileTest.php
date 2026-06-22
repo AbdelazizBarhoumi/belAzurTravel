@@ -14,34 +14,34 @@ class ClientProfileTest extends TestCase
     {
         $user = User::factory()->create([
             'name' => 'Original Name',
-            'email' => 'original@example.com',
+            'email' => 'original@belazurtravel.com',
             'role' => 'client',
         ]);
 
         $response = $this->actingAs($user)
             ->putJson('/api/client/profile', [
                 'name' => 'Updated Name',
-                'email' => 'updated@example.com',
+                'email' => 'updated@belazurtravel.com',
             ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'name' => 'Updated Name',
-            'email' => 'updated@example.com',
+            'email' => 'updated@belazurtravel.com',
         ]);
     }
 
     public function test_profile_update_validation()
     {
         $user = User::factory()->create(['role' => 'client']);
-        $otherUser = User::factory()->create(['email' => 'taken@example.com']);
+        $otherUser = User::factory()->create(['email' => 'taken@belazurtravel.com']);
 
         // Test empty name
         $response = $this->actingAs($user)
             ->putJson('/api/client/profile', [
                 'name' => '',
-                'email' => 'new@example.com',
+                'email' => 'new@belazurtravel.com',
             ]);
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['name']);
@@ -59,7 +59,7 @@ class ClientProfileTest extends TestCase
         $response = $this->actingAs($user)
             ->putJson('/api/client/profile', [
                 'name' => 'New Name',
-                'email' => 'taken@example.com',
+                'email' => 'taken@belazurtravel.com',
             ]);
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['email']);

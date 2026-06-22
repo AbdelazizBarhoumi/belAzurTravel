@@ -323,10 +323,6 @@ const AdminHotels = () => {
         onError: (err: any) => {
             console.error('[AdminHotels] Save failed:', err);
             if (err.status === 422 && err.data?.errors) {
-                console.log(
-                    '[AdminHotels] Validation errors:',
-                    err.data.errors,
-                );
                 setErrors(err.data.errors);
                 toast.error(t('admin.pleaseFixErrors'));
             } else {

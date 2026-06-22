@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { buildRequestHeaders } from '@/api/requestHeaders';
 import type { AuthUser } from '@/auth';
@@ -19,6 +19,8 @@ const Login = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPass, setShowPass] = useState(false);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const redirectTo = searchParams.get('redirect');
     const { t } = useLanguage();
     const { data: currentUser, isPending, isFetching } = useAuthUser();
     const [consentChecked, setConsentChecked] = useState(false);
@@ -36,9 +38,10 @@ const Login = () => {
 
     useEffect(() => {
         if (currentUser) {
-            navigate(redirectAfterLogin(currentUser.role), { replace: true });
+            const destination = redirectTo || redirectAfterLogin(currentUser.role);
+            navigate(destination, { replace: true });
         }
-    }, [currentUser, navigate]);
+    }, [currentUser, navigate, redirectTo]);
 
     if (isPending || isFetching) {
         return null;
@@ -95,7 +98,7 @@ const Login = () => {
             }
 
             // Full reload so the new session's CSRF token is embedded in the page
-            window.location.href = redirectAfterLogin(user.role);
+            window.location.href = redirectTo || redirectAfterLogin(user.role);
         } catch (error) {
             console.error('Login catch:', error);
             toast.error(

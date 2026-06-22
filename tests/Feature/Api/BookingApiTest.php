@@ -25,7 +25,7 @@ class BookingApiTest extends TestCase
             'items' => [['slug' => 'grand-hotel', 'id' => null, 'qty' => 1]],
             'client' => [
                 'name' => 'Test Client',
-                'email' => 'client@example.com',
+                'email' => 'client@belazurtravel.com',
             ],
             'total_amount' => 250,
             'status' => 'Pending',

@@ -32,8 +32,8 @@ class PublicEntitiesApiTest extends TestCase
     {
         SiteSetting::query()->create([
             'company_name' => 'BelAzurTravel',
-            'email' => 'hello@example.com',
-            'phone' => '+1 555 123 4567',
+            'email' => 'contact@belazurtravel.com',
+            'phone' => '+216 23 777 771',
             'content' => [
                 'nav' => [
                     'settings' => [

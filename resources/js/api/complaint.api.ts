@@ -1,5 +1,12 @@
 import { apiFetch } from './http';
 
+export interface ComplaintReply {
+    id: number;
+    sender: 'admin' | 'client';
+    message: Record<string, string>;
+    created_at: string;
+}
+
 export interface Complaint {
     id: number;
     type: 'complaint' | 'refund_request';
@@ -18,6 +25,7 @@ export interface Complaint {
     status: 'pending' | 'in_review' | 'resolved' | 'rejected' | 'refunded';
     priority: 'low' | 'medium' | 'high';
     admin_reply: Record<string, string> | null;
+    replies: ComplaintReply[];
     resolved_at: string | null;
     created_at: string;
     user?: {
@@ -44,6 +52,13 @@ export async function createComplaint(payload: {
     return apiFetch<Complaint>('/api/client/complaints', {
         method: 'POST',
         body: JSON.stringify(payload),
+    });
+}
+
+export async function replyToClientComplaint(id: number, message: string) {
+    return apiFetch<Complaint>(`/api/client/complaints/${id}/reply`, {
+        method: 'POST',
+        body: JSON.stringify({ message }),
     });
 }
 

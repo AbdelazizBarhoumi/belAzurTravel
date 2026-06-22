@@ -4,7 +4,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 interface Amenity {
     id: string;
     name: string;
-    icon: typeof Wifi;
+    icon: typeof Wifi | null;
+    customSvg?: string | null;
 }
 
 interface HotelInfoProps {
@@ -47,7 +48,16 @@ export function HotelInfo({
                                     className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted"
                                 >
                                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                                        <Icon className="h-5 w-5 flex-shrink-0 text-primary" />
+                                        {amenity.customSvg ? (
+                                            <span
+                                                className="h-5 w-5 flex-shrink-0 [&>svg]:h-5 [&>svg]:w-5"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: amenity.customSvg,
+                                                }}
+                                            />
+                                        ) : Icon ? (
+                                            <Icon className="h-5 w-5 flex-shrink-0 text-primary" />
+                                        ) : null}
                                     </div>
                                     <span className="text-sm font-medium">
                                         {amenity.name}

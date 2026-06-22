@@ -17,7 +17,7 @@ describe('auth cache synchronization', () => {
         const user: AuthUser = {
             id: 7,
             name: 'Leila',
-            email: 'leila@example.com',
+            email: 'leila@belazurtravel.com',
             role: 'assistant',
             email_verified_at: null,
             preferred_language: 'en',
@@ -33,7 +33,7 @@ describe('auth cache synchronization', () => {
         storeAuthUser({
             id: 8,
             name: 'Omar',
-            email: 'omar@example.com',
+            email: 'omar@belazurtravel.com',
             role: 'client',
             email_verified_at: null,
         });

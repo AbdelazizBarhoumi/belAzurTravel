@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    protected $fillable = ['booking_id', 'user_id', 'amount', 'currency', 'status', 'paid_at', 'reference'];
+    protected $fillable = ['booking_id', 'user_id', 'amount', 'currency', 'status', 'paid_at', 'reference', 'clictopay_order_id'];
 
     protected $casts = [
         'amount' => 'integer',
