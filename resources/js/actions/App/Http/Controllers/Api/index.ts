@@ -1,6 +1,7 @@
 import SiteSettingsController from './SiteSettingsController'
 import AuthUserController from './AuthUserController'
 import InteractionController from './InteractionController'
+import VisaController from './VisaController'
 import AdminCategoryController from './AdminCategoryController'
 import GalleryController from './GalleryController'
 import DestinationController from './DestinationController'
@@ -30,12 +31,15 @@ import AdminPromoController from './AdminPromoController'
 import AdminBlogPostController from './AdminBlogPostController'
 import AdminUserController from './AdminUserController'
 import AdminComplaintController from './AdminComplaintController'
+import AdminCategoryTypeController from './AdminCategoryTypeController'
 import AdminTeamController from './AdminTeamController'
+import AdminVisaController from './AdminVisaController'
 import AdminPartnerController from './AdminPartnerController'
 const Api = {
     SiteSettingsController: Object.assign(SiteSettingsController, SiteSettingsController),
 AuthUserController: Object.assign(AuthUserController, AuthUserController),
 InteractionController: Object.assign(InteractionController, InteractionController),
+VisaController: Object.assign(VisaController, VisaController),
 AdminCategoryController: Object.assign(AdminCategoryController, AdminCategoryController),
 GalleryController: Object.assign(GalleryController, GalleryController),
 DestinationController: Object.assign(DestinationController, DestinationController),
@@ -65,7 +69,9 @@ AdminPromoController: Object.assign(AdminPromoController, AdminPromoController),
 AdminBlogPostController: Object.assign(AdminBlogPostController, AdminBlogPostController),
 AdminUserController: Object.assign(AdminUserController, AdminUserController),
 AdminComplaintController: Object.assign(AdminComplaintController, AdminComplaintController),
+AdminCategoryTypeController: Object.assign(AdminCategoryTypeController, AdminCategoryTypeController),
 AdminTeamController: Object.assign(AdminTeamController, AdminTeamController),
+AdminVisaController: Object.assign(AdminVisaController, AdminVisaController),
 AdminPartnerController: Object.assign(AdminPartnerController, AdminPartnerController),
 }
 

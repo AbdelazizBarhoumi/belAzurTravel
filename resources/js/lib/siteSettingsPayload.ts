@@ -28,23 +28,30 @@ export function normalizeLocalizedText(value: unknown): LocalizedText {
     };
 }
 
+function normalizeDropdownItem(item: Record<string, unknown>): Record<string, unknown> {
+    const { activeLang: _activeLang, ...rest } = item;
+
+    if (Object.prototype.hasOwnProperty.call(rest, 'label')) {
+        rest.label = normalizeLocalizedText(rest.label);
+    }
+
+    if (Array.isArray(rest.children)) {
+        rest.children = rest.children.map((child) =>
+            child && typeof child === 'object' && !Array.isArray(child)
+                ? normalizeDropdownItem(child as Record<string, unknown>)
+                : child,
+        );
+    }
+
+    return rest;
+}
+
 function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
     return {
         header: nav.header.map((entry) => ({
             ...entry,
-            items: entry.items.map((item) => {
-                const { activeLang: _activeLang, ...rest } =
-                    item as typeof item & { activeLang?: unknown };
-
-                if (!Object.prototype.hasOwnProperty.call(rest, 'label')) {
-                    return rest;
-                }
-
-                return {
-                    ...rest,
-                    label: normalizeLocalizedText(rest.label),
-                };
-            }),
+            ...(entry.label ? { label: normalizeLocalizedText(entry.label) } : {}),
+            items: entry.items.map((item) => normalizeDropdownItem(item as Record<string, unknown>) as any),
         })),
         footer: nav.footer.map((column) => ({ ...column })),
     };
@@ -127,6 +134,13 @@ export function normalizeSiteSettingsContentForSave(
 
                 const nextEntry = { ...(entry as Record<string, unknown>) };
 
+                if (
+                    Object.prototype.hasOwnProperty.call(nextEntry, 'label') &&
+                    nextEntry.label
+                ) {
+                    nextEntry.label = normalizeLocalizedText(nextEntry.label);
+                }
+
                 if (Array.isArray(nextEntry.items)) {
                     nextEntry.items = nextEntry.items.map((item) => {
                         if (
@@ -137,23 +151,7 @@ export function normalizeSiteSettingsContentForSave(
                             return item;
                         }
 
-                        const nextItem = {
-                            ...(item as Record<string, unknown>),
-                        };
-                        delete nextItem.activeLang;
-
-                        if (
-                            Object.prototype.hasOwnProperty.call(
-                                nextItem,
-                                'label',
-                            )
-                        ) {
-                            nextItem.label = normalizeLocalizedText(
-                                nextItem.label,
-                            );
-                        }
-
-                        return nextItem;
+                        return normalizeDropdownItem(item as Record<string, unknown>);
                     });
                 }
 

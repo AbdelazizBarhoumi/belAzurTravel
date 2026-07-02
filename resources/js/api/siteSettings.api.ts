@@ -5,6 +5,17 @@ import type { SiteHourEntry } from '@/lib/site-hours';
 
 type LocalizedText = Record<string, string>;
 
+export interface PageHeroSlide {
+    url: string;
+    title: LocalizedText;
+    subtitle: LocalizedText;
+}
+
+export interface PageHeroConfig {
+    images: PageHeroSlide[];
+    interval?: number;
+}
+
 export type LegalSectionBody =
     | LocalizedText
     | {
@@ -43,12 +54,14 @@ interface SiteSettingsContent {
     landing_video?: {
         url: string;
     } | null;
+    page_heroes?: Record<string, PageHeroConfig>;
 }
 
 export interface SiteSettings {
     companyName: string;
     email: string;
     phone: string;
+    phone2: string;
     whatsapp: string;
     address: string;
     plusCode: string;
@@ -80,6 +93,7 @@ export const defaultSiteSettings: SiteSettings = {
     companyName: '',
     email: '',
     phone: '',
+    phone2: '',
     whatsapp: '',
     address: '',
     plusCode: '',
@@ -109,6 +123,7 @@ function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
             (json.companyName as string) ?? defaultSiteSettings.companyName,
         email: (json.email as string) ?? defaultSiteSettings.email,
         phone: (json.phone as string) ?? defaultSiteSettings.phone,
+        phone2: (json.phone2 as string) ?? defaultSiteSettings.phone2,
         whatsapp: (json.whatsapp as string) ?? defaultSiteSettings.whatsapp,
         address: (json.address as string) ?? defaultSiteSettings.address,
         plusCode: (json.plusCode as string) ?? defaultSiteSettings.plusCode,

@@ -28,6 +28,7 @@ class SiteSettingsController extends Controller
                     'companyName' => null,
                     'email' => null,
                     'phone' => null,
+                    'phone2' => null,
                     'whatsapp' => null,
                     'address' => null,
                     'plusCode' => null,
@@ -48,6 +49,7 @@ class SiteSettingsController extends Controller
                 'companyName' => $row->company_name,
                 'email' => $row->email,
                 'phone' => $row->phone,
+                'phone2' => $row->phone2,
                 'whatsapp' => $row->whatsapp,
                 'address' => $row->address,
                 'plusCode' => $row->plus_code,
@@ -142,14 +144,18 @@ class SiteSettingsController extends Controller
         return array_values(array_map(function (array $entry): array {
             $pageKey = (string) ($entry['pageKey'] ?? '');
             $isDropdown = (bool) ($entry['isDropdown'] ?? false);
+            $label = $entry['label'] ?? [
+                'en' => $pageKey,
+                'fr' => $pageKey,
+                'ar' => $pageKey,
+            ];
+            if (is_string($label)) {
+                $label = ['en' => $label, 'fr' => $label, 'ar' => $label];
+            }
 
             return [
                 'type' => $isDropdown ? 'dropdown' : 'simple',
-                'label' => [
-                    'en' => $pageKey,
-                    'fr' => $pageKey,
-                    'ar' => $pageKey,
-                ],
+                'label' => $label,
                 'href' => '/'.ltrim($pageKey, '/'),
                 'items' => $isDropdown ? ($entry['items'] ?? []) : [],
             ];
@@ -235,6 +241,7 @@ class SiteSettingsController extends Controller
             'companyName' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:64'],
+            'phone2' => ['nullable', 'string', 'max:64'],
             'whatsapp' => ['nullable', 'string', 'max:64'],
             'address' => ['nullable', 'string', 'max:512'],
             'plusCode' => ['nullable', 'string', 'max:100'],
@@ -260,6 +267,7 @@ class SiteSettingsController extends Controller
                 'company_name' => config('site.company_name'),
                 'email' => config('site.email'),
                 'phone' => config('site.phone'),
+                'phone2' => config('site.phone2'),
                 'whatsapp' => config('site.whatsapp'),
                 'address' => config('site.address'),
                 'year' => (int) config('site.year'),
@@ -349,6 +357,7 @@ class SiteSettingsController extends Controller
                 'company_name' => $data['companyName'] ?? ($row?->company_name ?? $defaults['company_name']),
                 'email' => $data['email'] ?? ($row?->email ?? $defaults['email']),
                 'phone' => $data['phone'] ?? ($row?->phone ?? $defaults['phone']),
+                'phone2' => $data['phone2'] ?? ($row?->phone2 ?? $defaults['phone2']),
                 'whatsapp' => $data['whatsapp'] ?? ($row?->whatsapp ?? $defaults['whatsapp']),
                 'address' => $data['address'] ?? ($row?->address ?? $defaults['address']),
                 'plus_code' => $data['plusCode'] ?? ($row?->plus_code ?? null),
@@ -446,6 +455,28 @@ class SiteSettingsController extends Controller
         return $navContent;
     }
 
+    protected function normalizeNavItemLabels(array &$items): void
+    {
+        foreach ($items as &$item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            if (isset($item['label']) && is_string($item['label'])) {
+                $item['label'] = [
+                    'en' => $item['label'],
+                    'fr' => $item['label'],
+                    'ar' => $item['label'],
+                ];
+            }
+
+            if (isset($item['children']) && is_array($item['children'])) {
+                $this->normalizeNavItemLabels($item['children']);
+            }
+        }
+        unset($item);
+    }
+
     protected function normalizeNavLabelShapes(array $content): array
     {
         if (isset($content['nav']) && is_array($content['nav'])) {
@@ -464,20 +495,7 @@ class SiteSettingsController extends Controller
                     }
 
                     if (isset($entry['items']) && is_array($entry['items'])) {
-                        foreach ($entry['items'] as &$item) {
-                            if (! is_array($item)) {
-                                continue;
-                            }
-
-                            if (isset($item['label']) && is_string($item['label'])) {
-                                $item['label'] = [
-                                    'en' => $item['label'],
-                                    'fr' => $item['label'],
-                                    'ar' => $item['label'],
-                                ];
-                            }
-                        }
-                        unset($item);
+                        $this->normalizeNavItemLabels($entry['items']);
                     }
                 }
                 unset($entry);
@@ -490,21 +508,16 @@ class SiteSettingsController extends Controller
                             continue;
                         }
 
-                        if (isset($entry['items']) && is_array($entry['items'])) {
-                            foreach ($entry['items'] as &$item) {
-                                if (! is_array($item)) {
-                                    continue;
-                                }
+                        if (isset($entry['label']) && is_string($entry['label'])) {
+                            $entry['label'] = [
+                                'en' => $entry['label'],
+                                'fr' => $entry['label'],
+                                'ar' => $entry['label'],
+                            ];
+                        }
 
-                                if (isset($item['label']) && is_string($item['label'])) {
-                                    $item['label'] = [
-                                        'en' => $item['label'],
-                                        'fr' => $item['label'],
-                                        'ar' => $item['label'],
-                                    ];
-                                }
-                            }
-                            unset($item);
+                        if (isset($entry['items']) && is_array($entry['items'])) {
+                            $this->normalizeNavItemLabels($entry['items']);
                         }
                     }
                     unset($entry);

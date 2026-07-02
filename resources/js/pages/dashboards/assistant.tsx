@@ -239,7 +239,7 @@ const AssistantDashboard = () => {
                             isRtl && 'justify-end',
                         )}
                     >
-                        <BrandLogo imageClassName="h-7 w-auto" />
+                        <BrandLogo imageClassName="h-12 w-auto" />
                     </Link>
                     <span className="mt-1 block text-xs text-muted-foreground">
                         {t('assistant.panel')}

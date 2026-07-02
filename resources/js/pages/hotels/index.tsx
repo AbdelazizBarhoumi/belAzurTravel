@@ -4,6 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useCountries, useCities } from '@/hooks/useCountries';
 import { Link, useSearchParams } from 'react-router-dom';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
@@ -20,7 +21,8 @@ import { StarRating } from '@/components/ui/StarRating';
 import { TagFilter, type Tag } from '@/components/ui/TagFilter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useHotels, useCategories } from '@/hooks/usePublicData';
+import { useHotels, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
 import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
 
 const AMENITY_ICONS: Record<string, LucideIcon> = {
@@ -88,6 +90,21 @@ export default function Hotels() {
     const [toDate, setToDate] = useState(initialToDate);
     const { data: hotels = [] } = useHotels();
     const { data: dynamicCategories = [] } = useCategories('hotels');
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
+
+    // Initialize category type filters from URL params
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
     const allCountries = useCountries();
     const allCities = useCities(selectedCountry || null);
@@ -160,6 +177,13 @@ export default function Hotels() {
                       !selectedCity ||
                       selectedCity === 'all' ||
                       localizeText(hotel.city, lang) === selectedCity;
+                  const entity = hotel as unknown as Record<string, unknown>;
+                  const assignments = entity.category_assignments as Record<string, string> | undefined;
+                  const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
+                      ([typeKey, values]) =>
+                          values.length === 0 ||
+                          (assignments && values.includes(assignments[typeKey])),
+                  );
                   return (
                       matchesSearch &&
                       matchesTags &&
@@ -167,7 +191,8 @@ export default function Hotels() {
                       matchesRoomType &&
                       matchesPrice &&
                       matchesCountry &&
-                      matchesCity
+                      matchesCity &&
+                      matchesCategoryTypes
                   );
               });
 
@@ -194,11 +219,13 @@ export default function Hotels() {
         setSelectedCountry('all');
         setSelectedCity('all');
         setPriceRange(null);
+        setCategoryTypeFilters({});
     };
 
     return (
         <div key={params.toString()} className="min-h-screen bg-background">
-            <main className="pb-16 pt-24">
+            <PageHeroCarousel pageKey="hotels" />
+            <main className="pb-16 pt-8">
                 <div className="container mx-auto px-4">
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -416,6 +443,22 @@ export default function Hotels() {
                                     ))}
                                 </div>
                                 </div>
+
+                                {categoryTypes.length > 0 && (
+                                    <div className="border-t border-border pt-6 pb-4">
+                                        <CategoryTypeFilter
+                                            categoryTypes={categoryTypes as never}
+                                            selectedFilters={categoryTypeFilters}
+                                            onFilterChange={(typeKey, values) =>
+                                                setCategoryTypeFilters((prev) => ({
+                                                    ...prev,
+                                                    [typeKey]: values,
+                                                }))
+                                            }
+                                            lang={lang}
+                                        />
+                                    </div>
+                                )}
 
                                 <div className="border-t border-border py-6">
                                     <div className="mb-4">

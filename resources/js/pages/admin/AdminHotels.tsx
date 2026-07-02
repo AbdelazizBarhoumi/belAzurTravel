@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Edit, Plus, Trash2, Settings, Image, Save } from 'lucide-react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import type { Lang } from '@/i18n/translations';
 
-import { CategoryManager } from '@/components/admin/CategoryManager';
+import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { toast } from 'sonner';
 
@@ -13,6 +15,8 @@ import {
     saveAdminEntity,
     type AdminRow,
 } from '@/api/admin.api';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
+import { apiFetch } from '@/api/http';
 import {
     Select,
     SelectContent,
@@ -32,7 +36,6 @@ import {
     type JsonFieldDef,
 } from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
-import { fetchCategories } from '@/api/categories.api';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -44,11 +47,6 @@ import {
 import { CountrySelect } from '@/components/ui/CountrySelect';
 import { CitySelect } from '@/components/ui/CitySelect';
 import { useCountryByCode } from '@/hooks/useCountries';
-
-type HotelCategory = {
-    key: string;
-    name: Record<string, string>;
-};
 
 type HotelFormValues = AdminRow & {
     category_key?: string;
@@ -241,20 +239,9 @@ function resolveCategoryKey(...values: Array<unknown>): string {
     return '';
 }
 
-function getCategoryLabel(
-    category: HotelCategory | undefined,
-    lang: Lang,
-): string {
-    if (!category) {
-        return '';
-    }
-
-    return category.name[lang] || category.name.en || category.key;
-}
-
 function syncCategoryFields(
     setField: (field: string, value: unknown) => void,
-    category: HotelCategory | undefined,
+    category: { key: string; name: Record<string, string> } | undefined,
     fallbackKey: string,
 ) {
     const selectedKey = category?.key ?? fallbackKey;
@@ -291,23 +278,9 @@ const AdminHotels = () => {
         queryKey,
         queryFn: () => listAdminEntities<AdminRow>('hotels'),
     });
-    const { data: dbCategories = [] } = useQuery<HotelCategory[]>({
-        queryKey: ['admin', 'categories', 'hotels'],
-        queryFn: () => fetchCategories('hotels'),
-    });
+    const { data: categoryTypes = [] } = useCategoryTypes('hotels');
 
     const { lang, t } = useLanguage();
-    const categoryLabelByKey = useMemo(
-        () =>
-            new Map(
-                dbCategories.map((category) => [
-                    category.key,
-                    getCategoryLabel(category, lang),
-                ]),
-            ),
-        [dbCategories, lang],
-    );
-
     const saveMutation = useMutation({
         mutationFn: (item: HotelFormValues) =>
             saveAdminEntity('hotels', item as unknown as AdminRow),
@@ -344,6 +317,41 @@ const AdminHotels = () => {
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
+    // Hero images state
+    const existingHeroConfig =
+        siteSettings?.content?.page_heroes?.hotels;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    hotels: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
+
     const dialogInitial: HotelFormValues | null = editing
         ? ({
               ...editing,
@@ -377,6 +385,12 @@ const AdminHotels = () => {
                       ? (editing as any).category.ar
                       : '') ??
                   '',
+              ...Object.fromEntries(
+                  categoryTypes.map((ct) => [
+                      `category_${ct.key}`,
+                      (editing as any).category_assignments?.[ct.key] || '',
+                  ]),
+              ),
               imagePath: asText(editing.image),
               imageFile: null,
               galleryPaths: Array.isArray(editing.gallery)
@@ -421,45 +435,27 @@ const AdminHotels = () => {
                 return (
                     <div className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">
-                            {[
-                                {
-                                    key: 'name',
-                                    label: t('admin.name'),
-                                    placeholder: t(
-                                        'admin.hotelForm.namePlaceholder',
-                                    ),
-                                    helpText: t('admin.hotelForm.nameHelp'),
-                                },
-                                {
-                                    key: 'location',
-                                    label: t('admin.location'),
-                                    placeholder: t(
-                                        'admin.hotelForm.locationPlaceholder',
-                                    ),
-                                    helpText: t('admin.hotelForm.locationHelp'),
-                                },
-                                {
-                                    key: 'category',
-                                    label: t('admin.category'),
-                                    helpText: t('admin.hotelForm.categoryHelp'),
-                                },
-                            ].map((field) => {
+                        {[
+                            {
+                                key: 'name',
+                                label: t('admin.name'),
+                                placeholder: t(
+                                    'admin.hotelForm.namePlaceholder',
+                                ),
+                                helpText: t('admin.hotelForm.nameHelp'),
+                            },
+                            {
+                                key: 'location',
+                                label: t('admin.location'),
+                                placeholder: t(
+                                    'admin.hotelForm.locationPlaceholder',
+                                ),
+                                helpText: t('admin.hotelForm.locationHelp'),
+                            },
+                        ].map((field) => {
                                 const localizedKey = `${field.key}_${activeLang}`;
-                                const categoryKey = resolveCategoryKey(
-                                    values.category_key,
-                                    values.category,
-                                    values.category_en,
-                                    values.category_fr,
-                                    values.category_ar,
-                                );
-                                const value =
-                                    field.key === 'category'
-                                        ? categoryKey
-                                        : asText(values[localizedKey]);
-                                const error =
-                                    field.key === 'category'
-                                        ? errors?.category_key
-                                        : errors?.[localizedKey];
+                                const value = asText(values[localizedKey]);
+                                const error = errors?.[localizedKey];
 
                                 return (
                                     <div key={localizedKey} className="space-y-2">
@@ -468,83 +464,38 @@ const AdminHotels = () => {
                                             className={`flex items-center gap-2 text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
                                         >
                                             {field.label}
-                                            {field.key !== 'category' && (
-                                                <LangBadge lang={activeLang} />
-                                            )}
+                                            <LangBadge lang={activeLang} />
                                         </label>
-                                        {field.key === 'category' &&
-                                        dbCategories.length > 0 ? (
-                                            <Select
-                                                value={String(value)}
-                                                onValueChange={(val) =>
-                                                    syncCategoryFields(
-                                                        setField,
-                                                        dbCategories.find(
-                                                            (c) => c.key === val,
-                                                        ),
-                                                        val,
+                                        <div className="space-y-1">
+                                            <input
+                                                id={localizedKey}
+                                                value={value}
+                                                placeholder={field.placeholder}
+                                                onChange={(event) =>
+                                                    setField(
+                                                        localizedKey,
+                                                        event.target.value,
                                                     )
                                                 }
-                                            >
-                                                <SelectTrigger
-                                                    id={localizedKey}
-                                                    className={baseFieldClass(
-                                                        Boolean(error),
-                                                    )}
-                                                    aria-invalid={Boolean(error)}
+                                                className={baseFieldClass(
+                                                    Boolean(error),
+                                                )}
+                                                aria-invalid={Boolean(error)}
+                                                required
+                                            />
+                                            {error ? (
+                                                <p
+                                                    id={`${localizedKey}-error`}
+                                                    className="text-[10px] text-destructive"
                                                 >
-                                                    <SelectValue
-                                                        placeholder={t(
-                                                            'actions.select',
-                                                        )}
-                                                    />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {dbCategories.map((c) => (
-                                                        <SelectItem
-                                                            key={c.key}
-                                                            value={c.key}
-                                                        >
-                                                            {getCategoryLabel(
-                                                                c,
-                                                                activeLang,
-                                                            )}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        ) : (
-                                            <div className="space-y-1">
-                                                <input
-                                                    id={localizedKey}
-                                                    value={value}
-                                                    placeholder={field.placeholder}
-                                                    onChange={(event) =>
-                                                        setField(
-                                                            localizedKey,
-                                                            event.target.value,
-                                                        )
-                                                    }
-                                                    className={baseFieldClass(
-                                                        Boolean(error),
-                                                    )}
-                                                    aria-invalid={Boolean(error)}
-                                                    required
-                                                />
-                                                {error ? (
-                                                    <p
-                                                        id={`${localizedKey}-error`}
-                                                        className="text-[10px] text-destructive"
-                                                    >
-                                                        {error}
-                                                    </p>
-                                                ) : field.helpText ? (
-                                                    <p className="text-[10px] text-muted-foreground">
-                                                        {field.helpText}
-                                                    </p>
-                                                ) : null}
-                                            </div>
-                                        )}
+                                                    {error}
+                                                </p>
+                                            ) : field.helpText ? (
+                                                <p className="text-[10px] text-muted-foreground">
+                                                    {field.helpText}
+                                                </p>
+                                            ) : null}
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -644,6 +595,36 @@ const AdminHotels = () => {
                                 ) : null}
                             </div>
                         </div>
+
+                        {/* Category Types - dynamic dropdowns */}
+                        {categoryTypes.map((catType) => (
+                            <div key={catType.key} className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <label
+                                        className="text-xs font-semibold text-muted-foreground"
+                                    >
+                                        {catType.label[activeLang] || catType.label.en}
+                                    </label>
+                                </div>
+                                <Select
+                                    value={String(values[`category_${catType.key}`] || '')}
+                                    onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                >
+                                    <SelectTrigger
+                                        className={baseFieldClass(false)}
+                                    >
+                                        <SelectValue placeholder={t('actions.select')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {catType.values.map((v) => (
+                                            <SelectItem key={v.key} value={v.key}>
+                                                {v.name[activeLang] || v.name.en}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        ))}
                     </div>
                 );
             },
@@ -829,33 +810,23 @@ const AdminHotels = () => {
             values.category_ar,
         );
 
-        const selectedCategory = dbCategories.find(
-            (category) => category.key === categoryKey,
-        );
-        const selectedCategoryLabel =
-            selectedCategory?.name.en ??
-            selectedCategory?.name.fr ??
-            selectedCategory?.name.ar ??
-            values.category_en ??
-            '';
+        const categoryAssignments: Record<string, string> = {};
+        categoryTypes.forEach((ct) => {
+            const val = values[`category_${ct.key}`];
+            if (val && typeof val === 'string' && val !== '') {
+                categoryAssignments[ct.key] = val;
+            }
+        });
 
         const payload = {
             ...rest,
             id: editing?.id || '',
-            category_key: selectedCategory?.key ?? categoryKey ?? '',
-            category: selectedCategoryLabel,
-            category_en:
-                selectedCategory?.name.en ??
-                values.category_en ??
-                selectedCategoryLabel,
-            category_fr:
-                selectedCategory?.name.fr ??
-                values.category_fr ??
-                selectedCategoryLabel,
-            category_ar:
-                selectedCategory?.name.ar ??
-                values.category_ar ??
-                selectedCategoryLabel,
+            category_key: categoryKey || '',
+            category: values.category_en ?? values.category ?? '',
+            category_en: values.category_en ?? '',
+            category_fr: values.category_fr ?? '',
+            category_ar: values.category_ar ?? '',
+            category_assignments: categoryAssignments,
             image: imageFile ?? imagePath?.trim() ?? asText(editing?.image),
             amenities: Array.isArray(amenities) ? amenities : [],
             rooms: Array.isArray(rooms)
@@ -924,6 +895,32 @@ const AdminHotels = () => {
                 </div>
             }
         >
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="hotels"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
+
             <div
                 className="overflow-hidden rounded-2xl border border-border bg-card"
                 dir={lang === 'ar' ? 'rtl' : 'ltr'}
@@ -995,24 +992,6 @@ const AdminHotels = () => {
                                     <td className="px-4 py-3 text-center">
                                         <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">
                                             {(() => {
-                                                const catKey =
-                                                    resolveCategoryKey(
-                                                        (d as any).category_key,
-                                                        d.category,
-                                                        d.category_en,
-                                                        d.category_fr,
-                                                        d.category_ar,
-                                                    );
-                                                const cat = dbCategories.find(
-                                                    (c) => c.key === catKey,
-                                                );
-                                                if (cat) {
-                                                    return getCategoryLabel(
-                                                        cat,
-                                                        lang,
-                                                    );
-                                                }
-                                                // Fallback to hotel object fields if not in dbCategories
                                                 const category = (d as any)
                                                     .category;
                                                 if (
@@ -1119,13 +1098,13 @@ const AdminHotels = () => {
                 isSubmitting={saveMutation.isPending}
             />
 
-            <CategoryManager
-                type="hotels"
+            <CategoryTypeManager
+                entityType="hotels"
                 isOpen={catManagerOpen}
                 onClose={() => {
                     setCatManagerOpen(false);
                     queryClient.invalidateQueries({
-                        queryKey: ['admin', 'categories', 'hotels'],
+                        queryKey: ['admin', 'category-types', 'hotels'],
                     });
                 }}
             />

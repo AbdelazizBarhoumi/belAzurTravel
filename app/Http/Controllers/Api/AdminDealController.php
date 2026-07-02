@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\CategoryType;
+use App\Models\CategoryValue;
 use App\Models\Deal;
+use App\Models\EntityCategoryAssignment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -37,9 +41,10 @@ class AdminDealController extends Controller
     public function store(Request $request): JsonResponse
     {
         $item = Deal::create($this->attributes($request));
+        $this->syncCategoryAssignments($item, 'deals', $request->input('category_assignments', []));
         $this->flushAdminCache('deals', $item->slug ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item)], 201);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue']))], 201);
     }
 
     public function show(int|string $id): JsonResponse
@@ -53,9 +58,10 @@ class AdminDealController extends Controller
     {
         $item = Deal::query()->findOrFail($id);
         $item->update($this->attributes($request, $item));
+        $this->syncCategoryAssignments($item, 'deals', $request->input('category_assignments', []));
         $this->flushAdminCache('deals', $item->slug ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item->refresh())]);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue']))]);
     }
 
     public function destroy(int|string $id): JsonResponse
@@ -152,6 +158,17 @@ class AdminDealController extends Controller
 
     private function adminPayload(Deal $item): array
     {
+        $categoryAssignments = [];
+        if ($item->relationLoaded('categoryAssignments')) {
+            foreach ($item->categoryAssignments as $assignment) {
+                $typeKey = $assignment->categoryType?->key;
+                $valueKey = $assignment->categoryValue?->key;
+                if ($typeKey && $valueKey) {
+                    $categoryAssignments[$typeKey] = $valueKey;
+                }
+            }
+        }
+
         return [
             'id' => (string) $item->id,
             ...$this->flatLocalized('title', $item->title),
@@ -160,6 +177,7 @@ class AdminDealController extends Controller
             ...$this->flatLocalized('expires', $item->expires),
             ...$this->flatLocalized('category', $this->getCategoryName($item)),
             'category_key' => $item->category_key,
+            'category_assignments' => $categoryAssignments,
             'highlights_en' => $item->details['highlights']['en'] ?? [],
             'highlights_fr' => $item->details['highlights']['fr'] ?? [],
             'highlights_ar' => $item->details['highlights']['ar'] ?? [],
@@ -263,5 +281,43 @@ class AdminDealController extends Controller
         }
 
         return $item->category;
+    }
+
+    private function syncCategoryAssignments(Model $entity, string $entityType, array $assignments): void
+    {
+        EntityCategoryAssignment::where('entity_type', $entityType)
+            ->where('entity_id', $entity->id)
+            ->delete();
+
+        $firstValue = null;
+
+        foreach ($assignments as $typeKey => $valueKey) {
+            $type = CategoryType::where('entity_type', $entityType)->where('key', $typeKey)->first();
+            if (! $type) {
+                continue;
+            }
+            $value = $type->values()->where('key', $valueKey)->first();
+            if (! $value) {
+                continue;
+            }
+
+            EntityCategoryAssignment::create([
+                'entity_type' => $entityType,
+                'entity_id' => $entity->id,
+                'category_type_id' => $type->id,
+                'category_value_id' => $value->id,
+            ]);
+
+            if (! $firstValue) {
+                $firstValue = $value;
+            }
+        }
+
+        if ($firstValue && Schema::hasColumn('deals', 'category_key')) {
+            $entity->update([
+                'category_key' => $firstValue->key,
+                'category' => $firstValue->name,
+            ]);
+        }
     }
 }

@@ -38,4 +38,10 @@ class Hotel extends Model
     {
         return $this->hasMany(HotelRoom::class);
     }
+
+    public function categoryAssignments()
+    {
+        return $this->hasMany(EntityCategoryAssignment::class, 'entity_id')
+            ->where('entity_type', 'hotels');
+    }
 }

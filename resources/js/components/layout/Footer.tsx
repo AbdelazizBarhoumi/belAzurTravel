@@ -1,10 +1,21 @@
-import { Link2, Mail, Phone, MapPin, Clock } from 'lucide-react';
+import type React from 'react';
+import { Mail, Phone, MapPin, Clock, Link2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { notifyInteraction } from '@/api/interactions.api';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { socialLinks as socialLinks } from '@/data';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import {
+    FacebookIcon,
+    InstagramIcon,
+    TwitterIcon,
+    LinkedinIcon,
+    YoutubeIcon,
+    TiktokIcon,
+} from '@/components/ui/SocialIcons';
+import { PaymentLogos } from '@/components/ui/PaymentIcons';
+import { ShieldCheck } from 'lucide-react';
 import {
     getFooterPage,
     DEFAULT_NAV_SETTINGS,
@@ -38,10 +49,15 @@ export function Footer() {
     };
 
     const resolveSocialIcon = (label: string) => {
-        const link = socialLinks.find(
-            (c) => c.label.toLowerCase() === label.toLowerCase(),
-        );
-        return link?.icon || Link2;
+        const brandIcons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+            facebook: FacebookIcon,
+            instagram: InstagramIcon,
+            twitter: TwitterIcon,
+            linkedin: LinkedinIcon,
+            youtube: YoutubeIcon,
+            tiktok: TiktokIcon,
+        };
+        return brandIcons[label.toLowerCase()] || Link2;
     };
 
     const getDayLabel = (dayKey: string) =>
@@ -88,7 +104,7 @@ export function Footer() {
                 <div className="lg:col-span-2">
                     <BrandLogo
                         className="mb-4 flex items-center gap-2"
-                        imageClassName="h-7 w-auto"
+                        imageClassName="h-12 w-auto"
                         textClassName="font-serif text-xl font-bold text-primary-foreground"
                     />
                     <p className="max-w-sm text-sm leading-relaxed text-primary-foreground/60">
@@ -161,16 +177,19 @@ export function Footer() {
                 </div>
             </div>
 
-            {/* ===== ROW 3: Social + Copyright ===== */}
+            {/* ===== ROW 4: Social + Secure Payment +  Copyright ===== */}
             <div className="mt-12 border-t border-primary-foreground/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-center sm:text-left text-sm text-primary-foreground/40">
                     © {settings.year ?? new Date().getFullYear()} {settings.companyName}. {t('footer.rights')}
+                </div>
+                <div className="flex flex-col items-center gap-4">
+                    <PaymentLogos />
                 </div>
                 <div className="flex gap-3">
                     {settings.socialLinks.map((link, i) => {
                         const Icon = resolveSocialIcon(link.label);
                         return (
-                            <a key={i} href={link.href} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/10 transition-colors hover:bg-secondary hover:text-secondary-foreground">
+                            <a key={i} href={link.href} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-white transition-transform hover:scale-110">
                                 <Icon className="h-4 w-4" />
                             </a>
                         );

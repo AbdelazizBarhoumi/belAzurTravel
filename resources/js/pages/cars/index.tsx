@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Users, Fuel, Settings2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
@@ -15,7 +16,8 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useCars, useCategories } from '@/hooks/usePublicData';
+import { useCars, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
@@ -35,6 +37,21 @@ function CarsContent() {
 
     const { data: cars = [] } = useCars();
     const { data: dynamicCategories = [] } = useCategories('cars');
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('cars');
+
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [selectedFuel, setSelectedFuel] = useState(ALL);
@@ -107,13 +124,21 @@ function CarsContent() {
                 const matchesSeats =
                     selectedSeats === ALL ||
                     String(car.seats) === selectedSeats;
+                const carEntity = car as unknown as Record<string, unknown>;
+                const carAssignments = carEntity.category_assignments as Record<string, string> | undefined;
+                const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
+                    ([typeKey, values]) =>
+                        values.length === 0 ||
+                        (carAssignments && values.includes(carAssignments[typeKey])),
+                );
 
                 return (
                     matchesSearch &&
                     matchesCategory &&
                     matchesFuel &&
                     matchesTransmission &&
-                    matchesSeats
+                    matchesSeats &&
+                    matchesCategoryTypes
                 );
             }),
         [
@@ -124,6 +149,7 @@ function CarsContent() {
             selectedFuel,
             selectedTransmission,
             selectedSeats,
+            categoryTypeFilters,
         ],
     );
 
@@ -132,7 +158,8 @@ function CarsContent() {
         selectedCategory !== ALL ||
         selectedFuel !== ALL ||
         selectedTransmission !== ALL ||
-        selectedSeats !== ALL;
+        selectedSeats !== ALL ||
+        Object.values(categoryTypeFilters).some((v) => v.length > 0);
 
     const clearFilters = () => {
         setSearchQuery('');
@@ -140,9 +167,12 @@ function CarsContent() {
         setSelectedFuel(ALL);
         setSelectedTransmission(ALL);
         setSelectedSeats(ALL);
+        setCategoryTypeFilters({});
     };
 
     return (
+        <>
+        <PageHeroCarousel pageKey="cars" />
         <PageShell
             key={params.toString()}
             titleKey="cars.title"
@@ -269,6 +299,21 @@ function CarsContent() {
                         </Select>
                     </label>
                 </div>
+                {categoryTypes.length > 0 && (
+                    <div className="border-t border-border/50 pt-4">
+                        <CategoryTypeFilter
+                            categoryTypes={categoryTypes as never}
+                            selectedFilters={categoryTypeFilters}
+                            onFilterChange={(typeKey, values) =>
+                                setCategoryTypeFilters((prev) => ({
+                                    ...prev,
+                                    [typeKey]: values,
+                                }))
+                            }
+                            lang={lang}
+                        />
+                    </div>
+                )}
             </ListFilterBar>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -340,5 +385,6 @@ function CarsContent() {
                 )}
             </div>
         </PageShell>
+        </>
     );
 }

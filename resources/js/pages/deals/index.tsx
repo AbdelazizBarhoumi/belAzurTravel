@@ -2,13 +2,15 @@ import { motion } from 'framer-motion';
 import { CalendarClock, Tag } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useDeals, useCategories } from '@/hooks/usePublicData';
+import { useDeals, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 
@@ -22,6 +24,21 @@ export default function Deals() {
 
     const { data: deals = [] } = useDeals();
     const { data: dynamicCategories = [] } = useCategories('deals');
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('deals');
+
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+
     const [activeCategory, setActiveCategory] = useState<'all' | string>(
         initialCategory,
     );
@@ -51,22 +68,33 @@ export default function Deals() {
                 const matchesCategory =
                     activeCategory === ALL ||
                     deal.category_key === activeCategory;
-                return matchesSearch && matchesCategory;
+                const dealEntity = deal as unknown as Record<string, unknown>;
+                const dealAssignments = dealEntity.category_assignments as Record<string, string> | undefined;
+                const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
+                    ([typeKey, values]) =>
+                        values.length === 0 ||
+                        (dealAssignments && values.includes(dealAssignments[typeKey])),
+                );
+                return matchesSearch && matchesCategory && matchesCategoryTypes;
             }),
-        [activeCategory, deals, lang, searchQuery],
+        [activeCategory, deals, lang, searchQuery, categoryTypeFilters],
     );
 
     const hasActiveFilters =
-        searchQuery.trim().length > 0 || activeCategory !== ALL;
+        searchQuery.trim().length > 0 ||
+        activeCategory !== ALL ||
+        Object.values(categoryTypeFilters).some((v) => v.length > 0);
 
     const clearFilters = () => {
         setSearchQuery('');
         setActiveCategory(ALL);
+        setCategoryTypeFilters({});
     };
 
     return (
         <div key={params.toString()} className="min-h-screen bg-background">
-            <main className="pb-16 pt-24">
+            <PageHeroCarousel pageKey="deals" />
+            <main className="pb-16 pt-8">
                 <div className="container mx-auto px-4">
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -115,6 +143,21 @@ export default function Deals() {
                                 </button>
                             ))}
                         </div>
+                        {categoryTypes.length > 0 && (
+                            <div className="border-t border-border/50 pt-4">
+                                <CategoryTypeFilter
+                                    categoryTypes={categoryTypes as never}
+                                    selectedFilters={categoryTypeFilters}
+                                    onFilterChange={(typeKey, values) =>
+                                        setCategoryTypeFilters((prev) => ({
+                                            ...prev,
+                                            [typeKey]: values,
+                                        }))
+                                    }
+                                    lang={lang}
+                                />
+                            </div>
+                        )}
                     </ListFilterBar>
 
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">

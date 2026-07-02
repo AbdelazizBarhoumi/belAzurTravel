@@ -6,6 +6,9 @@ use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use App\Models\Category;
+use App\Models\CategoryType;
+use App\Models\CategoryValue;
+use App\Models\EntityCategoryAssignment;
 use App\Models\Hotel;
 use App\Models\HotelRoom;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +16,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -46,9 +51,10 @@ class AdminHotelController extends Controller
         $item = Hotel::create($data);
         $this->syncAmenities($item, $request->input('amenities', []));
         $this->syncRooms($item, $rooms);
+        $this->syncCategoryAssignments($item, 'hotels', $request->input('category_assignments', []));
         $this->flushAdminCache('hotels', $item->slug ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['rooms.featureItems', 'rooms.imageItems', 'amenities']))], 201);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue']))], 201);
     }
 
     public function show(int|string $id): JsonResponse
@@ -67,9 +73,10 @@ class AdminHotelController extends Controller
         $item->update($data);
         $this->syncAmenities($item, $request->input('amenities', []));
         $this->syncRooms($item, $rooms);
+        $this->syncCategoryAssignments($item, 'hotels', $request->input('category_assignments', []));
         $this->flushAdminCache('hotels', $item->slug ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['rooms.featureItems', 'rooms.imageItems', 'amenities']))]);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue']))]);
     }
 
     public function destroy(int|string $id): JsonResponse
@@ -188,6 +195,18 @@ class AdminHotelController extends Controller
         $gallery = array_map(fn ($img) => $this->normalizeApiOutputPath($img), $item->details['gallery'] ?? [$item->image]);
         $category = $item->category ?? $item->details['category'] ?? ['en' => '', 'fr' => '', 'ar' => ''];
 
+        // Build category_assignments map from relationships
+        $categoryAssignments = [];
+        if ($item->relationLoaded('categoryAssignments')) {
+            foreach ($item->categoryAssignments as $assignment) {
+                $typeKey = $assignment->categoryType?->key;
+                $valueKey = $assignment->categoryValue?->key;
+                if ($typeKey && $valueKey) {
+                    $categoryAssignments[$typeKey] = $valueKey;
+                }
+            }
+        }
+
         return [
             'id' => (string) $item->id,
             'slug' => $item->slug,
@@ -197,6 +216,7 @@ class AdminHotelController extends Controller
             ...$this->flatLocalized('location', $item->location),
             'category_key' => $item->category_key,
             ...$this->flatLocalized('category', $category),
+            'category_assignments' => $categoryAssignments,
             'price' => $item->price,
             'rating' => $item->rating,
             'stars' => $item->stars,
@@ -534,6 +554,46 @@ class AdminHotelController extends Controller
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("entity.{$type}.{$identifier}");
             Cache::forget("{$type}.{$identifier}"); // Public API cache key
+        }
+    }
+
+    private function syncCategoryAssignments(Model $entity, string $entityType, array $assignments): void
+    {
+        // Delete existing assignments for this entity
+        EntityCategoryAssignment::where('entity_type', $entityType)
+            ->where('entity_id', $entity->id)
+            ->delete();
+
+        $firstValue = null;
+
+        foreach ($assignments as $typeKey => $valueKey) {
+            $type = CategoryType::where('entity_type', $entityType)->where('key', $typeKey)->first();
+            if (! $type) {
+                continue;
+            }
+            $value = $type->values()->where('key', $valueKey)->first();
+            if (! $value) {
+                continue;
+            }
+
+            EntityCategoryAssignment::create([
+                'entity_type' => $entityType,
+                'entity_id' => $entity->id,
+                'category_type_id' => $type->id,
+                'category_value_id' => $value->id,
+            ]);
+
+            if (! $firstValue) {
+                $firstValue = $value;
+            }
+        }
+
+        // Update legacy columns from first assignment
+        if ($firstValue && Schema::hasColumn('hotels', 'category_key')) {
+            $entity->update([
+                'category_key' => $firstValue->key,
+                'category' => $firstValue->name,
+            ]);
         }
     }
 }

@@ -1,3 +1,4 @@
+import type React from 'react';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -22,6 +23,23 @@ import {
     normalizeHours,
     type SiteHourEntry,
 } from '@/lib/site-hours';
+import {
+    FacebookIcon,
+    InstagramIcon,
+    TwitterIcon,
+    LinkedinIcon,
+    YoutubeIcon,
+    TiktokIcon,
+} from '@/components/ui/SocialIcons';
+
+const SOCIAL_PLATFORMS: Array<{ label: string; placeholder: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }> = [
+    { label: 'Facebook', placeholder: 'https://facebook.com/...', icon: FacebookIcon },
+    { label: 'Instagram', placeholder: 'https://instagram.com/...', icon: InstagramIcon },
+    { label: 'Twitter', placeholder: 'https://x.com/...', icon: TwitterIcon },
+    { label: 'LinkedIn', placeholder: 'https://linkedin.com/...', icon: LinkedinIcon },
+    { label: 'YouTube', placeholder: 'https://youtube.com/...', icon: YoutubeIcon },
+    { label: 'TikTok', placeholder: 'https://tiktok.com/...', icon: TiktokIcon },
+];
 
 interface SocialLink {
     label: string;
@@ -57,6 +75,11 @@ export default function AdminSiteSettingsSocial() {
     const { t } = useLanguage();
     const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
     const [hours, setHours] = useState<HourRow[]>([]);
+
+    const usedLabels = socialLinks.map((s) => s.label.toLowerCase());
+    const allPlatformsUsed = SOCIAL_PLATFORMS.every((p) =>
+        usedLabels.includes(p.label.toLowerCase()),
+    );
 
     useEffect(() => {
         setSocialLinks(settings.socialLinks || []);
@@ -115,30 +138,64 @@ export default function AdminSiteSettingsSocial() {
                 <Card className="space-y-3 p-4">
                     <div className="flex items-center justify-between">
                         <h3 className="font-medium">{t('admin.settings.socialMedia')}</h3>
-                        <Button size="sm" variant="outline" onClick={addSocial}>
+                        <Button size="sm" variant="outline" onClick={addSocial} disabled={allPlatformsUsed}>
                             <Plus className="mr-1 h-3.5 w-3.5" /> {t('admin.settings.addLink')}
                         </Button>
                     </div>
+                    {allPlatformsUsed && (
+                        <p className="text-xs text-muted-foreground">{t('admin.settings.allPlatformsUsed') ?? 'All platforms added.'}</p>
+                    )}
                     {socialLinks.length === 0 && (
                         <p className="text-xs text-muted-foreground">{t('admin.settings.noSocialLinks')}</p>
                     )}
-                    {socialLinks.map((entry, idx) => (
-                        <div key={idx} className="grid grid-cols-1 items-end gap-2 rounded-md bg-muted/40 p-2 md:grid-cols-12">
-                            <div className="md:col-span-4">
-                                <Label className="text-xs">Label</Label>
-                                <Input value={entry.label} onChange={(e) => updateSocial(idx, { label: e.target.value })} placeholder="Instagram" />
-                            </div>
-                            <div className="md:col-span-7">
-                                <Label className="text-xs">URL</Label>
-                                <Input value={entry.href} onChange={(e) => updateSocial(idx, { href: e.target.value })} placeholder="https://instagram.com/..." />
-                            </div>
-                            <div className="flex items-end justify-center md:col-span-1">
+                    {socialLinks.map((entry, idx) => {
+                        const platform = SOCIAL_PLATFORMS.find((p) => p.label.toLowerCase() === entry.label.toLowerCase());
+                        const Icon = platform?.icon;
+                        const usedLabels = socialLinks
+                            .filter((_, i) => i !== idx)
+                            .map((s) => s.label.toLowerCase());
+                        return (
+                            <div key={idx} className="flex items-end gap-2 rounded-md bg-muted/40 p-2">
+
+                                <div className="flex-1">
+                                    <Label className="text-xs">Platform</Label>
+                                    <Select
+                                        value={entry.label}
+                                        onValueChange={(v) => updateSocial(idx, { label: v })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select platform" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {SOCIAL_PLATFORMS.map((p) => (
+                                                <SelectItem
+                                                    key={p.label}
+                                                    value={p.label}
+                                                    disabled={usedLabels.includes(p.label.toLowerCase())}
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        <p.icon className="h-4 w-4" />
+                                                        {p.label}
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex-1">
+                                    <Label className="text-xs">URL</Label>
+                                    <Input
+                                        value={entry.href}
+                                        onChange={(e) => updateSocial(idx, { href: e.target.value })}
+                                        placeholder={platform?.placeholder ?? 'https://...'}
+                                    />
+                                </div>
                                 <Button size="icon" variant="ghost" onClick={() => removeSocial(idx)}>
                                     <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </Card>
 
                 <Card className="space-y-3 p-4">

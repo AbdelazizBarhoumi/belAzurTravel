@@ -1,15 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Settings } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { CategoryManager } from '@/components/admin/CategoryManager';
+import { Plus, Edit, Trash2, Settings, Image, Save } from 'lucide-react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { fetchCategories } from '@/api/categories.api';
 import { toast } from 'sonner';
 import {
     deleteAdminEntity,
     listAdminEntities,
     saveAdminEntity,
 } from '@/api/admin.api';
+import { apiFetch } from '@/api/http';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
 import {
     Select,
     SelectContent,
@@ -35,11 +38,6 @@ import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { AdminTour } from '@/hooks/useAdminStore';
 import type { Lang } from '@/i18n/translations';
 import { localizeKnown, tourLabels } from '@/lib/adminI18n';
-
-type TourCategory = {
-    key: string;
-    name: Record<string, string>;
-};
 
 type TourFormValues = AdminTour &
     Record<string, unknown> & {
@@ -90,7 +88,7 @@ function resolveCategoryKey(...values: Array<unknown>): string {
 
 function syncCategoryFields(
     setField: (field: string, value: unknown) => void,
-    category: TourCategory | undefined,
+    category: { key: string; name: Record<string, string> } | undefined,
     fallbackKey: string,
 ) {
     const selectedKey = category?.key ?? fallbackKey;
@@ -173,10 +171,41 @@ const AdminTours = () => {
         queryFn: () => listAdminEntities<AdminTour>('tours'),
     });
 
-    const { data: dbCategories = [] } = useQuery({
-        queryKey: ['admin', 'categories', 'tours'],
-        queryFn: () => fetchCategories('tours'),
-    });
+    const { data: categoryTypes = [] } = useCategoryTypes('tours');
+
+    // Hero images state
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.tours;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    tours: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
 
     const saveMutation = useMutation({
         mutationFn: (item: AdminTour) => saveAdminEntity('tours', item),
@@ -255,10 +284,13 @@ const AdminTours = () => {
             ...rest
         } = values;
 
-        const selectedCategory = dbCategories.find(
-            (category) =>
-                category.key === resolveCategoryKey(values.category_key),
-        );
+        const categoryAssignments: Record<string, string> = {};
+        categoryTypes.forEach((ct) => {
+            const val = values[`category_${ct.key}`];
+            if (val && typeof val === 'string' && val !== '') {
+                categoryAssignments[ct.key] = val;
+            }
+        });
 
         const payload: Record<string, unknown> = {
             ...rest,
@@ -271,10 +303,11 @@ const AdminTours = () => {
             itinerary: Array.isArray(values.itinerary) ? values.itinerary : [],
             includes: Array.isArray(values.includes) ? values.includes : [],
             excludes: Array.isArray(values.excludes) ? values.excludes : [],
-            category_key: selectedCategory?.key ?? values.category_key ?? '',
-            category_en: selectedCategory?.name.en ?? category_en ?? '',
-            category_fr: selectedCategory?.name.fr ?? category_fr ?? '',
-            category_ar: selectedCategory?.name.ar ?? category_ar ?? '',
+            category_key: values.category_key ?? '',
+            category_en: category_en ?? '',
+            category_fr: category_fr ?? '',
+            category_ar: category_ar ?? '',
+            category_assignments: categoryAssignments,
         };
 
         if (Array.isArray(galleryFiles) && galleryFiles.length > 0) {
@@ -315,6 +348,12 @@ const AdminTours = () => {
               category_en: (editing as any).category_en ?? '',
               category_fr: (editing as any).category_fr ?? '',
               category_ar: (editing as any).category_ar ?? '',
+              ...Object.fromEntries(
+                  categoryTypes.map((ct) => [
+                      `category_${ct.key}`,
+                      (editing as any).category_assignments?.[ct.key] || '',
+                  ]),
+              ),
           } as unknown as TourFormValues)
         : ({} as TourFormValues);
 
@@ -348,10 +387,6 @@ const AdminTours = () => {
                                     'admin.tourForm.durationPlaceholder',
                                 ),
                             },
-                            {
-                                key: 'category',
-                                label: t('admin.category'),
-                            },
                         ].map((k) => (
                             <div key={k.key} className="space-y-2">
                                 <label
@@ -359,102 +394,23 @@ const AdminTours = () => {
                                     className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"
                                 >
                                     {k.label}
-                                    {k.key !== 'category' && (
-                                        <LangBadge lang={activeLang} />
-                                    )}
+                                    <LangBadge lang={activeLang} />
                                 </label>
-                                {k.key === 'category' ? (
-                                    <>
-                                        <Select
-                                            value={String(
-                                                values.category_key ?? '',
-                                            )}
-                                            onValueChange={(val) =>
-                                                syncCategoryFields(
-                                                    setField,
-                                                    dbCategories.find(
-                                                        (c) => c.key === val,
-                                                    ),
-                                                    val,
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                id="tour-category-key"
-                                                className={`${errors.category_key ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                                            >
-                                                <SelectValue
-                                                    placeholder={t(
-                                                        'admin.tourForm.selectCategory',
-                                                    )}
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {dbCategories.map((cat) => (
-                                                    <SelectItem
-                                                        key={cat.key}
-                                                        value={cat.key}
-                                                    >
-                                                        {cat.name[activeLang] ||
-                                                            cat.name.en}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <input
-                                            type="hidden"
-                                            value={String(
-                                                values.category_en ?? '',
-                                            )}
-                                            onChange={(e) =>
-                                                setField(
-                                                    'category_en',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                        <input
-                                            type="hidden"
-                                            value={String(
-                                                values.category_fr ?? '',
-                                            )}
-                                            onChange={(e) =>
-                                                setField(
-                                                    'category_fr',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                        <input
-                                            type="hidden"
-                                            value={String(
-                                                values.category_ar ?? '',
-                                            )}
-                                            onChange={(e) =>
-                                                setField(
-                                                    'category_ar',
-                                                    e.target.value,
-                                                )
-                                            }
-                                        />
-                                    </>
-                                ) : (
-                                    <input
-                                        id={`${k.key}_${activeLang}`}
-                                        value={String(
-                                            values[`${k.key}_${activeLang}`] ??
-                                                '',
-                                        )}
-                                        placeholder={k.placeholder}
-                                        onChange={(e) =>
-                                            setField(
-                                                `${k.key}_${activeLang}`,
-                                                e.target.value,
-                                            )
-                                        }
-                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors[`${k.key}_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                                    />
-                                )}
+                                <input
+                                    id={`${k.key}_${activeLang}`}
+                                    value={String(
+                                        values[`${k.key}_${activeLang}`] ??
+                                            '',
+                                    )}
+                                    placeholder={k.placeholder}
+                                    onChange={(e) =>
+                                        setField(
+                                            `${k.key}_${activeLang}`,
+                                            e.target.value,
+                                        )
+                                    }
+                                    className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors[`${k.key}_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                />
                                 {errors[`${k.key}_${activeLang}`] && (
                                     <p className="text-xs text-destructive">
                                         {errors[`${k.key}_${activeLang}`]}
@@ -647,6 +603,36 @@ const AdminTours = () => {
                             )}
                         </div>
                     </div>
+
+                    {/* Category Types - dynamic dropdowns */}
+                    {categoryTypes.map((catType) => (
+                        <div key={catType.key} className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <label
+                                    className="text-xs font-semibold text-muted-foreground"
+                                >
+                                    {catType.label[activeLang] || catType.label.en}
+                                </label>
+                            </div>
+                            <Select
+                                value={String(values[`category_${catType.key}`] || '')}
+                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                            >
+                                <SelectTrigger
+                                    className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20`}
+                                >
+                                    <SelectValue placeholder={t('actions.select')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {catType.values.map((v) => (
+                                        <SelectItem key={v.key} value={v.key}>
+                                            {v.name[activeLang] || v.name.en}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ))}
                 </div>
             ),
         },
@@ -762,16 +748,41 @@ const AdminTours = () => {
                 </div>
             }
         >
-            <CategoryManager
-                type="tours"
+            <CategoryTypeManager
+                entityType="tours"
                 isOpen={catManagerOpen}
                 onClose={() => {
                     setCatManagerOpen(false);
                     queryClient.invalidateQueries({
-                        queryKey: ['admin', 'categories', 'tours'],
+                        queryKey: ['admin', 'category-types', 'tours'],
                     });
                 }}
             />
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="tours"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -855,12 +866,11 @@ const AdminTours = () => {
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {(() => {
-                                            const cat = dbCategories.find(
-                                                (c) => c.key === d.category_key,
-                                            );
-                                            return cat
-                                                ? cat.name[lang] || cat.name.en
-                                                : (d as any).category_en || '';
+                                            const category = (d as any).category;
+                                            if (typeof category === 'object' && category !== null) {
+                                                return category[lang] || category.en || '';
+                                            }
+                                            return (d as any).category_en || '';
                                         })()}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">

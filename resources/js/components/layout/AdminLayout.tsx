@@ -25,6 +25,7 @@ import {
     ShoppingCart,
     Video,
     AlertCircle,
+    FileCheck,
 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -80,6 +81,7 @@ const links = [
     { to: '/admin/events', icon: PartyPopper, labelKey: 'admin.events' },
     { to: '/admin/deals', icon: TicketPercent, labelKey: 'admin.deals' },
     { to: '/admin/promos', icon: TicketPercent, labelKey: 'admin.promos' },
+    { to: '/admin/visas', icon: FileCheck, labelKey: 'admin.visas' },
     { to: '/admin/team', icon: Users, labelKey: 'admin.team' },
     { to: '/admin/partners', icon: Handshake, labelKey: 'admin.partners' },
     { to: '/admin/blog', icon: Newspaper, labelKey: 'admin.blog' },

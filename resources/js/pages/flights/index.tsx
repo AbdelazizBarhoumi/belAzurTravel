@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Plane, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
@@ -188,6 +189,8 @@ function FlightsContent() {
     };
 
     return (
+        <>
+        <PageHeroCarousel pageKey="flights" />
         <PageShell
             titleKey="flights.title"
             subtitleKey="flights.subtitle"
@@ -443,6 +446,7 @@ function FlightsContent() {
                 )}
             </div>
         </PageShell>
+        </>
     );
 }
 

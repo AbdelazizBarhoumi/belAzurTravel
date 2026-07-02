@@ -1,17 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2, Image, Save, Settings } from 'lucide-react';
 import { format } from 'date-fns';
-import { useMemo, useState } from 'react';
-import { Settings } from 'lucide-react';
-import { CategoryManager } from '@/components/admin/CategoryManager';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { toast } from 'sonner';
 import {
     deleteAdminEntity,
     listAdminEntities,
     saveAdminEntity,
     type AdminRow,
-} from '@/api/admin.api';
-import { fetchCategories } from '@/api/categories.api';
+    } from '@/api/admin.api';
+import { apiFetch } from '@/api/http';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
 import {
     Select,
     SelectContent,
@@ -107,11 +110,54 @@ export default function AdminBlog() {
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
+    const { data: categoryTypes = [] } = useCategoryTypes('blog');
+
+    // Hero images state
+    const { settings: siteSettings } = useSiteSettings();
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.blog;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    blog: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
+
     const dialogInitial: BlogFormValues | null = editing
         ? ({
               ...editing,
               imagePath: asText(editing.image ?? editing.imagePath),
               imageFile: null,
+              ...Object.fromEntries(
+                  categoryTypes.map((ct) => [
+                      `category_${ct.key}`,
+                      (editing as any).category_assignments?.[ct.key] || '',
+                  ]),
+              ),
           } as BlogFormValues)
         : null;
 
@@ -119,11 +165,6 @@ export default function AdminBlog() {
     const { data: rows = [] } = useQuery<AdminRow[]>({
         queryKey,
         queryFn: () => listAdminEntities<AdminRow>('blog-posts'),
-    });
-
-    const { data: dbCategories = [] } = useQuery({
-        queryKey: ['admin', 'categories', 'blog'],
-        queryFn: () => fetchCategories('blog'),
     });
 
     const saveMutation = useMutation({
@@ -165,6 +206,14 @@ export default function AdminBlog() {
             return;
         }
 
+        const categoryAssignments: Record<string, string> = {};
+        categoryTypes.forEach((ct) => {
+            const val = values[`category_${ct.key}`];
+            if (val && typeof val === 'string' && val !== '') {
+                categoryAssignments[ct.key] = val;
+            }
+        });
+
         const payload: Record<string, unknown> = {
             ...values,
             id: editing?.id ?? '',
@@ -172,6 +221,7 @@ export default function AdminBlog() {
                 values.imageFile instanceof File
                     ? values.imageFile
                     : (values.imagePath ?? values.image ?? ''),
+            category_assignments: categoryAssignments,
         };
 
         saveMutation.mutate(payload, {
@@ -212,6 +262,31 @@ export default function AdminBlog() {
                 </div>
             }
         >
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="blog"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -359,165 +434,60 @@ export default function AdminBlog() {
                         description: t('admin.blogForm.coreInformationHint'),
                         render: ({ values, setField, activeLang }) => (
                             <div className="space-y-4">
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    {[
-                                        {
-                                            key: 'title',
-                                            label: t('admin.title'),
-                                            placeholder: t(
-                                                'admin.blogForm.titlePlaceholder',
-                                            ),
-                                        },
-                                        {
-                                            key: 'category_key',
-                                            label: t('admin.category'),
-                                        },
-                                    ].map((field) => {
-                                        const isCategoryKey =
-                                            field.key === 'category_key';
-                                        const fieldKey = isCategoryKey
-                                            ? 'category_key'
-                                            : `${field.key}_${activeLang}`;
-                                        const error = errors[fieldKey];
-
-                                        return (
-                                            <div
-                                                key={fieldKey}
-                                                className="space-y-2"
+                                {/* Category Types - dynamic dropdowns */}
+                                {categoryTypes.map((catType) => (
+                                    <div key={catType.key} className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <label
+                                                className="text-xs font-semibold text-muted-foreground"
                                             >
-                                                <label
-                                                    htmlFor={fieldKey}
-                                                    className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
-                                                >
-                                                    {field.label}
-                                                    {!isCategoryKey && (
-                                                        <LangBadge
-                                                            lang={activeLang}
-                                                        />
-                                                    )}
-                                                </label>
-                                                {isCategoryKey &&
-                                                dbCategories.length > 0 ? (
-                                                    <div className="space-y-1">
-                                                        <Select
-                                                            value={String(
-                                                                values.category_key ??
-                                                                    '',
-                                                            )}
-                                                            onValueChange={(
-                                                                val,
-                                                            ) => {
-                                                                const category =
-                                                                    dbCategories.find(
-                                                                        (
-                                                                            item: any,
-                                                                        ) =>
-                                                                            item.key ===
-                                                                            val,
-                                                                    ) as any;
-                                                                setField(
-                                                                    'category_key',
-                                                                    val,
-                                                                );
-                                                                setField(
-                                                                    'category',
-                                                                    val,
-                                                                );
-                                                                setField(
-                                                                    'category_en',
-                                                                    category
-                                                                        ?.name
-                                                                        ?.en ??
-                                                                        '',
-                                                                );
-                                                                setField(
-                                                                    'category_fr',
-                                                                    category
-                                                                        ?.name
-                                                                        ?.fr ??
-                                                                        '',
-                                                                );
-                                                                setField(
-                                                                    'category_ar',
-                                                                    category
-                                                                        ?.name
-                                                                        ?.ar ??
-                                                                        '',
-                                                                );
-                                                            }}
-                                                        >
-                                                            <SelectTrigger
-                                                                id={fieldKey}
-                                                                className={`w-full rounded-xl border ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'} bg-background px-3 py-2 text-sm`}
-                                                            >
-                                                                <SelectValue
-                                                                    placeholder={t(
-                                                                        'admin.blogForm.selectCategory',
-                                                                    )}
-                                                                />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {dbCategories.map(
-                                                                    (
-                                                                        c: any,
-                                                                    ) => (
-                                                                        <SelectItem
-                                                                            key={
-                                                                                c.key
-                                                                            }
-                                                                            value={
-                                                                                c.key
-                                                                            }
-                                                                        >
-                                                                            {c
-                                                                                .name[
-                                                                                activeLang
-                                                                            ] ||
-                                                                                c
-                                                                                    .name
-                                                                                    .en}
-                                                                        </SelectItem>
-                                                                    ),
-                                                                )}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        {error && (
-                                                            <p className="text-xs text-destructive">
-                                                                {error}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-1">
-                                                        <input
-                                                            id={fieldKey}
-                                                            placeholder={
-                                                                field.placeholder
-                                                            }
-                                                            value={String(
-                                                                values[
-                                                                    fieldKey
-                                                                ] ?? '',
-                                                            )}
-                                                            onChange={(event) =>
-                                                                setField(
-                                                                    fieldKey,
-                                                                    event.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            className={`w-full rounded-lg border ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'} bg-background px-3 py-2 text-sm`}
-                                                        />
-                                                        {error && (
-                                                            <p className="text-xs text-destructive">
-                                                                {error}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
+                                                {catType.label[activeLang] || catType.label.en}
+                                            </label>
+                                        </div>
+                                        <Select
+                                            value={String(values[`category_${catType.key}`] || '')}
+                                            onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                        >
+                                            <SelectTrigger
+                                                className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm`}
+                                            >
+                                                <SelectValue placeholder={t('actions.select')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {catType.values.map((v) => (
+                                                    <SelectItem key={v.key} value={v.key}>
+                                                        {v.name[activeLang] || v.name.en}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                ))}
+
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <label
+                                            htmlFor="blog-title"
+                                            className="text-xs font-semibold text-muted-foreground"
+                                        >
+                                            {t('admin.title')}
+                                            <LangBadge lang={activeLang} />
+                                        </label>
+                                        <input
+                                            id="blog-title"
+                                            placeholder={t('admin.blogForm.titlePlaceholder')}
+                                            value={String(values[`title_${activeLang}`] ?? '')}
+                                            onChange={(event) =>
+                                                setField(`title_${activeLang}`, event.target.value)
+                                            }
+                                            className={`w-full rounded-lg border ${errors[`title_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : 'border-border'} bg-background px-3 py-2 text-sm`}
+                                        />
+                                        {errors[`title_${activeLang}`] && (
+                                            <p className="text-xs text-destructive">
+                                                {errors[`title_${activeLang}`]}
+                                            </p>
+                                        )}
+                                    </div>
 
                                     <div className="space-y-2">
                                         <label
@@ -903,13 +873,13 @@ export default function AdminBlog() {
                 languages={['en', 'fr', 'ar']}
             />
 
-            <CategoryManager
-                type="blog"
+            <CategoryTypeManager
+                entityType="blog"
                 isOpen={catManagerOpen}
                 onClose={() => {
                     setCatManagerOpen(false);
                     queryClient.invalidateQueries({
-                        queryKey: ['admin', 'categories', 'blog'],
+                        queryKey: ['admin', 'category-types', 'blog'],
                     });
                 }}
             />

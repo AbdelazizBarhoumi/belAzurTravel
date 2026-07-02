@@ -14,6 +14,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { RouteLoader } from '@/components/layout/RouteLoader';
 import { NavRouteGuard } from '@/components/nav/NavRouteGuard';
 import CookieConsent from '@/components/ui/CookieConsent';
+import { SocialSidebar } from '@/components/layout/SocialSidebar';
 import { RoleGuard } from '@/components/ui/RoleGuard';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import { Toaster as Sonner } from '@/components/ui/sonner';
@@ -47,6 +48,7 @@ import AdminSiteSettingsLegal from './pages/admin/site-settings/AdminSiteSetting
 import AdminSiteSettingsPrivacyPolicy from './pages/admin/site-settings/AdminSiteSettingsPrivacyPolicy';
 import AdminSiteSettingsPurchasePolicy from './pages/admin/site-settings/AdminSiteSettingsPurchasePolicy';
 import AdminSiteSettingsVideo from './pages/admin/site-settings/AdminSiteSettingsVideo';
+import AdminVisas from './pages/admin/AdminVisas';
 import AdminTeam from './pages/admin/AdminTeam';
 import AdminTours from './pages/admin/AdminTours';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -87,6 +89,7 @@ import Promos from './pages/promos';
 import PromoDetail from './pages/promos/show';
 import Tours from './pages/tours';
 import TourDetail from './pages/tours/show';
+import Visa from "./pages/visa/index";
 
 const adminGuard = (element: JSX.Element) => (
     <RoleGuard role="admin">{element}</RoleGuard>
@@ -153,6 +156,7 @@ const LayoutWrapper = () => {
     return (
         <div className="flex min-h-screen flex-col">
             {!isSpecialLayoutRoute && <Navbar />}
+            {!isSpecialLayoutRoute && <SocialSidebar />}
             <ScrollToTop />
             <motion.div
                 className={
@@ -295,6 +299,10 @@ const LayoutWrapper = () => {
                     <Route
                         path="/admin/clients/:id"
                         element={adminGuard(<AdminUsers />)}
+                    />
+                    <Route
+                        path="/admin/visas"
+                        element={adminGuard(<AdminVisas />)}
                     />
                     <Route
                         path="/admin/site-settings"
@@ -537,6 +545,14 @@ const LayoutWrapper = () => {
                         element={
                             <NavRouteGuard pageKey="contact">
                                 <Contact />
+                            </NavRouteGuard>
+                        }
+                    />
+                    <Route
+                        path="/visa"
+                        element={
+                            <NavRouteGuard pageKey="visa">
+                                <Visa />
                             </NavRouteGuard>
                         }
                     />

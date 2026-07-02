@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminBlogPostController;
 use App\Http\Controllers\Api\AdminCarController;
 use App\Http\Controllers\Api\AdminCategoryController;
+use App\Http\Controllers\Api\AdminCategoryTypeController;
 use App\Http\Controllers\Api\AdminDealController;
 use App\Http\Controllers\Api\AdminDestinationController;
 use App\Http\Controllers\Api\AdminEventController;
@@ -13,7 +14,9 @@ use App\Http\Controllers\Api\AdminPromoController;
 use App\Http\Controllers\Api\AdminTeamController;
 use App\Http\Controllers\Api\AdminTourController;
 use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\AdminVisaController;
 use App\Http\Controllers\Api\AuthUserController;
+use App\Http\Controllers\Api\VisaController;
 use App\Http\Controllers\Api\BlogPostController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CarController;
@@ -42,7 +45,9 @@ Route::get('/auth/user', [AuthUserController::class, 'show']);
 
 Route::post('/interactions/notify', [InteractionController::class, 'notify']);
 
+Route::get('/visas', [VisaController::class, 'index']);
 Route::get('/categories', [AdminCategoryController::class, 'index']);
+Route::get('/categories/types', [AdminCategoryController::class, 'typesByEntity']);
 Route::get('/gallery', [GalleryController::class, 'index'])
     ->middleware(['check-nav-page:gallery']);
 
@@ -190,11 +195,28 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/categories/{category}', [AdminCategoryController::class, 'update']);
         Route::delete('/admin/categories/{category}', [AdminCategoryController::class, 'destroy']);
 
+        // Category Types (multi-type system)
+        Route::get('/admin/category-types', [AdminCategoryTypeController::class, 'index']);
+        Route::post('/admin/category-types', [AdminCategoryTypeController::class, 'store']);
+        Route::put('/admin/category-types/{categoryType}', [AdminCategoryTypeController::class, 'update']);
+        Route::delete('/admin/category-types/{categoryType}', [AdminCategoryTypeController::class, 'destroy']);
+
+        Route::get('/admin/category-types/{categoryType}/values', [AdminCategoryTypeController::class, 'values']);
+        Route::post('/admin/category-types/{categoryType}/values', [AdminCategoryTypeController::class, 'storeValue']);
+        Route::put('/admin/category-types/{categoryType}/values/{value}', [AdminCategoryTypeController::class, 'updateValue']);
+        Route::delete('/admin/category-types/{categoryType}/values/{value}', [AdminCategoryTypeController::class, 'destroyValue']);
+
         Route::get('/admin/team', [AdminTeamController::class, 'index']);
         Route::post('/admin/team', [AdminTeamController::class, 'store']);
         Route::get('/admin/team/{id}', [AdminTeamController::class, 'show']);
         Route::put('/admin/team/{id}', [AdminTeamController::class, 'update']);
         Route::delete('/admin/team/{id}', [AdminTeamController::class, 'destroy']);
+
+        Route::get('/admin/visas', [AdminVisaController::class, 'index']);
+        Route::post('/admin/visas', [AdminVisaController::class, 'store']);
+        Route::get('/admin/visas/{id}', [AdminVisaController::class, 'show']);
+        Route::put('/admin/visas/{id}', [AdminVisaController::class, 'update']);
+        Route::delete('/admin/visas/{id}', [AdminVisaController::class, 'destroy']);
 
         Route::get('/admin/partners', [AdminPartnerController::class, 'index']);
         Route::post('/admin/partners', [AdminPartnerController::class, 'store']);

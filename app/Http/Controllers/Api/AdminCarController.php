@@ -6,10 +6,14 @@ use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Car;
 use App\Models\Category;
+use App\Models\CategoryType;
+use App\Models\CategoryValue;
+use App\Models\EntityCategoryAssignment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
@@ -38,9 +42,10 @@ class AdminCarController extends Controller
     {
         $attrs = $this->attributes($request);
         $item = Car::create($attrs);
+        $this->syncCategoryAssignments($item, 'cars', $request->input('category_assignments', []));
         $this->flushAdminCache('cars', $item->slug ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item)], 201);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue']))], 201);
     }
 
     public function show(int|string $id): JsonResponse
@@ -54,9 +59,10 @@ class AdminCarController extends Controller
     {
         $item = Car::query()->findOrFail($id);
         $item->update($this->attributes($request, $item));
+        $this->syncCategoryAssignments($item, 'cars', $request->input('category_assignments', []));
         $this->flushAdminCache('cars', $item->slug ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item->refresh())]);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue']))]);
     }
 
     public function destroy(int|string $id): JsonResponse
@@ -142,11 +148,23 @@ class AdminCarController extends Controller
         $gallery = array_map(fn ($img) => $this->normalizeApiOutputPath($img), $item->details['gallery'] ?? [$item->image]);
         $category = $this->resolveCategory([], $item);
 
+        $categoryAssignments = [];
+        if ($item->relationLoaded('categoryAssignments')) {
+            foreach ($item->categoryAssignments as $assignment) {
+                $typeKey = $assignment->categoryType?->key;
+                $valueKey = $assignment->categoryValue?->key;
+                if ($typeKey && $valueKey) {
+                    $categoryAssignments[$typeKey] = $valueKey;
+                }
+            }
+        }
+
         return [
             'id' => (string) $item->id,
             ...$this->flatLocalized('name', $item->name),
             'category_key' => $category['key'] !== '' ? $category['key'] : null,
             ...$this->flatLocalized('category', $category['name']),
+            'category_assignments' => $categoryAssignments,
             'price' => $item->price,
             'seats' => $item->seats,
             ...$this->flatLocalized('fuel', $item->fuel),
@@ -334,6 +352,44 @@ class AdminCarController extends Controller
         Cache::forget("{$type}.index");
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("{$type}.{$identifier}");
+        }
+    }
+
+    private function syncCategoryAssignments(Model $entity, string $entityType, array $assignments): void
+    {
+        EntityCategoryAssignment::where('entity_type', $entityType)
+            ->where('entity_id', $entity->id)
+            ->delete();
+
+        $firstValue = null;
+
+        foreach ($assignments as $typeKey => $valueKey) {
+            $type = CategoryType::where('entity_type', $entityType)->where('key', $typeKey)->first();
+            if (! $type) {
+                continue;
+            }
+            $value = $type->values()->where('key', $valueKey)->first();
+            if (! $value) {
+                continue;
+            }
+
+            EntityCategoryAssignment::create([
+                'entity_type' => $entityType,
+                'entity_id' => $entity->id,
+                'category_type_id' => $type->id,
+                'category_value_id' => $value->id,
+            ]);
+
+            if (! $firstValue) {
+                $firstValue = $value;
+            }
+        }
+
+        if ($firstValue && Schema::hasColumn('cars', 'category_key')) {
+            $entity->update([
+                'category_key' => $firstValue->key,
+                'category' => $firstValue->name,
+            ]);
         }
     }
 }

@@ -15,4 +15,10 @@ class BlogPost extends Model
         'content' => 'array',
         'date' => 'date',
     ];
+
+    public function categoryAssignments()
+    {
+        return $this->hasMany(EntityCategoryAssignment::class, 'entity_id')
+            ->where('entity_type', 'blog');
+    }
 }

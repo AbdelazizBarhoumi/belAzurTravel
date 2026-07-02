@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::index
- * @see app/Http/Controllers/Api/AdminCarController.php:28
+ * @see app/Http/Controllers/Api/AdminCarController.php:32
  * @route '/api/admin/cars'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::index
- * @see app/Http/Controllers/Api/AdminCarController.php:28
+ * @see app/Http/Controllers/Api/AdminCarController.php:32
  * @route '/api/admin/cars'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::index
- * @see app/Http/Controllers/Api/AdminCarController.php:28
+ * @see app/Http/Controllers/Api/AdminCarController.php:32
  * @route '/api/admin/cars'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::index
- * @see app/Http/Controllers/Api/AdminCarController.php:28
+ * @see app/Http/Controllers/Api/AdminCarController.php:32
  * @route '/api/admin/cars'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminCarController::index
- * @see app/Http/Controllers/Api/AdminCarController.php:28
+ * @see app/Http/Controllers/Api/AdminCarController.php:32
  * @route '/api/admin/cars'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminCarController::index
- * @see app/Http/Controllers/Api/AdminCarController.php:28
+ * @see app/Http/Controllers/Api/AdminCarController.php:32
  * @route '/api/admin/cars'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\AdminCarController::index
- * @see app/Http/Controllers/Api/AdminCarController.php:28
+ * @see app/Http/Controllers/Api/AdminCarController.php:32
  * @route '/api/admin/cars'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::store
- * @see app/Http/Controllers/Api/AdminCarController.php:37
+ * @see app/Http/Controllers/Api/AdminCarController.php:41
  * @route '/api/admin/cars'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::store
- * @see app/Http/Controllers/Api/AdminCarController.php:37
+ * @see app/Http/Controllers/Api/AdminCarController.php:41
  * @route '/api/admin/cars'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::store
- * @see app/Http/Controllers/Api/AdminCarController.php:37
+ * @see app/Http/Controllers/Api/AdminCarController.php:41
  * @route '/api/admin/cars'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminCarController::store
- * @see app/Http/Controllers/Api/AdminCarController.php:37
+ * @see app/Http/Controllers/Api/AdminCarController.php:41
  * @route '/api/admin/cars'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminCarController::store
- * @see app/Http/Controllers/Api/AdminCarController.php:37
+ * @see app/Http/Controllers/Api/AdminCarController.php:41
  * @route '/api/admin/cars'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::show
- * @see app/Http/Controllers/Api/AdminCarController.php:46
+ * @see app/Http/Controllers/Api/AdminCarController.php:51
  * @route '/api/admin/cars/{id}'
  */
 export const show = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -149,7 +149,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::show
- * @see app/Http/Controllers/Api/AdminCarController.php:46
+ * @see app/Http/Controllers/Api/AdminCarController.php:51
  * @route '/api/admin/cars/{id}'
  */
 show.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -177,7 +177,7 @@ show.url = (args: { id: string | number } | [id: string | number ] | string | nu
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::show
- * @see app/Http/Controllers/Api/AdminCarController.php:46
+ * @see app/Http/Controllers/Api/AdminCarController.php:51
  * @route '/api/admin/cars/{id}'
  */
 show.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -186,7 +186,7 @@ show.get = (args: { id: string | number } | [id: string | number ] | string | nu
 })
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::show
- * @see app/Http/Controllers/Api/AdminCarController.php:46
+ * @see app/Http/Controllers/Api/AdminCarController.php:51
  * @route '/api/admin/cars/{id}'
  */
 show.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -196,7 +196,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
     /**
 * @see \App\Http\Controllers\Api\AdminCarController::show
- * @see app/Http/Controllers/Api/AdminCarController.php:46
+ * @see app/Http/Controllers/Api/AdminCarController.php:51
  * @route '/api/admin/cars/{id}'
  */
     const showForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -206,7 +206,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
             /**
 * @see \App\Http\Controllers\Api\AdminCarController::show
- * @see app/Http/Controllers/Api/AdminCarController.php:46
+ * @see app/Http/Controllers/Api/AdminCarController.php:51
  * @route '/api/admin/cars/{id}'
  */
         showForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -215,7 +215,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
         })
             /**
 * @see \App\Http\Controllers\Api\AdminCarController::show
- * @see app/Http/Controllers/Api/AdminCarController.php:46
+ * @see app/Http/Controllers/Api/AdminCarController.php:51
  * @route '/api/admin/cars/{id}'
  */
         showForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -231,7 +231,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::update
- * @see app/Http/Controllers/Api/AdminCarController.php:53
+ * @see app/Http/Controllers/Api/AdminCarController.php:58
  * @route '/api/admin/cars/{id}'
  */
 export const update = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -246,7 +246,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::update
- * @see app/Http/Controllers/Api/AdminCarController.php:53
+ * @see app/Http/Controllers/Api/AdminCarController.php:58
  * @route '/api/admin/cars/{id}'
  */
 update.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -274,7 +274,7 @@ update.url = (args: { id: string | number } | [id: string | number ] | string | 
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::update
- * @see app/Http/Controllers/Api/AdminCarController.php:53
+ * @see app/Http/Controllers/Api/AdminCarController.php:58
  * @route '/api/admin/cars/{id}'
  */
 update.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -284,7 +284,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Api\AdminCarController::update
- * @see app/Http/Controllers/Api/AdminCarController.php:53
+ * @see app/Http/Controllers/Api/AdminCarController.php:58
  * @route '/api/admin/cars/{id}'
  */
     const updateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -299,7 +299,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Api\AdminCarController::update
- * @see app/Http/Controllers/Api/AdminCarController.php:53
+ * @see app/Http/Controllers/Api/AdminCarController.php:58
  * @route '/api/admin/cars/{id}'
  */
         updateForm.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -315,7 +315,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::destroy
- * @see app/Http/Controllers/Api/AdminCarController.php:62
+ * @see app/Http/Controllers/Api/AdminCarController.php:68
  * @route '/api/admin/cars/{id}'
  */
 export const destroy = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -330,7 +330,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::destroy
- * @see app/Http/Controllers/Api/AdminCarController.php:62
+ * @see app/Http/Controllers/Api/AdminCarController.php:68
  * @route '/api/admin/cars/{id}'
  */
 destroy.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -358,7 +358,7 @@ destroy.url = (args: { id: string | number } | [id: string | number ] | string |
 
 /**
 * @see \App\Http\Controllers\Api\AdminCarController::destroy
- * @see app/Http/Controllers/Api/AdminCarController.php:62
+ * @see app/Http/Controllers/Api/AdminCarController.php:68
  * @route '/api/admin/cars/{id}'
  */
 destroy.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -368,7 +368,7 @@ destroy.delete = (args: { id: string | number } | [id: string | number ] | strin
 
     /**
 * @see \App\Http\Controllers\Api\AdminCarController::destroy
- * @see app/Http/Controllers/Api/AdminCarController.php:62
+ * @see app/Http/Controllers/Api/AdminCarController.php:68
  * @route '/api/admin/cars/{id}'
  */
     const destroyForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -383,7 +383,7 @@ destroy.delete = (args: { id: string | number } | [id: string | number ] | strin
 
             /**
 * @see \App\Http\Controllers\Api\AdminCarController::destroy
- * @see app/Http/Controllers/Api/AdminCarController.php:62
+ * @see app/Http/Controllers/Api/AdminCarController.php:68
  * @route '/api/admin/cars/{id}'
  */
         destroyForm.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

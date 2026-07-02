@@ -4,6 +4,7 @@ return [
     'company_name' => env('SITE_COMPANY_NAME', 'BelAzurTravel'),
     'email' => env('SITE_EMAIL', 'contact@belazurtravel.com'),
     'phone' => env('SITE_PHONE', '+216 23 777 771'),
+    'phone2' => env('SITE_PHONE2', ''),
     'whatsapp' => env('SITE_WHATSAPP', '21623777771'),
     'address' => env('SITE_ADDRESS', '123 Travel St, NY 10001'),
     'year' => env('SITE_YEAR', date('Y')),

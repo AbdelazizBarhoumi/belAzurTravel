@@ -1,4 +1,4 @@
-import type { PublicCategory } from '@/hooks/usePublicData';
+import type { PublicCategory, PublicCategoryType } from '@/hooks/usePublicData';
 
 let inFlightRequest: Promise<PublicCategory[]> | null = null;
 
@@ -18,4 +18,24 @@ export async function fetchAllCategories(
     }
 
     return inFlightRequest;
+}
+
+let inFlightCategoryTypes: Promise<PublicCategoryType[]> | null = null;
+
+export function clearCachedCategoryTypes(): void {
+    inFlightCategoryTypes = null;
+}
+
+export async function fetchAllCategoryTypes(
+    fetcher: () => Promise<PublicCategoryType[]>,
+): Promise<PublicCategoryType[]> {
+    if (!inFlightCategoryTypes) {
+        inFlightCategoryTypes = fetcher()
+            .then((data) => data)
+            .finally(() => {
+                inFlightCategoryTypes = null;
+            });
+    }
+
+    return inFlightCategoryTypes;
 }

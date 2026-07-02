@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { BlogListing } from '@/components/sections/blog/BlogListing';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -8,7 +9,8 @@ const Blog = () => {
 
     return (
         <div className="min-h-screen bg-background">
-            <div className="pt-24">
+            <PageHeroCarousel pageKey="blog" />
+            <div className="pt-8">
                 <div className="container mx-auto px-4">
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}

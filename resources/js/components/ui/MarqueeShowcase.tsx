@@ -104,18 +104,19 @@ const partnerList = partners;
                                 "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
                         }}
                     >
-                        <div className="flex w-max gap-16 items-center animate-marquee-right hover:[animation-play-state:paused] py-4">
+                        <div className="flex w-max gap-6 animate-marquee-right hover:[animation-play-state:paused]">
                             {partnerList.map((p, i) => (
                                 <div
                                     key={`p-${i}`}
-                                    className="h-16 w-40 shrink-0 flex items-center justify-center grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"
+                                    className=" h-56 w-80  shrink-0 flex items-center justify-center transition-all"
                                 >
                                     <img
                                         src={p.logo}
                                         alt={typeof p.name === 'string' ? p.name : p.name?.en ?? ''}
                                         loading="lazy"
-                                        className="max-h-12 max-w-full object-contain"
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
                             ))}
                         </div>

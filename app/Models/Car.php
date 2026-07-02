@@ -12,4 +12,10 @@ class Car extends Model
     protected $fillable = ['slug', 'name', 'category_key', 'category', 'price', 'seats', 'fuel', 'transmission', 'image', 'details'];
 
     protected $casts = ['name' => 'array', 'category' => 'array', 'fuel' => 'array', 'transmission' => 'array', 'details' => 'array', 'price' => 'integer', 'seats' => 'integer'];
+
+    public function categoryAssignments()
+    {
+        return $this->hasMany(EntityCategoryAssignment::class, 'entity_id')
+            ->where('entity_type', 'cars');
+    }
 }

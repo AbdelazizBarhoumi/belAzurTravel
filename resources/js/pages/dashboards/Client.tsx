@@ -281,7 +281,7 @@ const ClientDashboard = () => {
                             isRtl && 'justify-end',
                         )}
                     >
-                        <BrandLogo imageClassName="h-7 w-auto" />
+                        <BrandLogo imageClassName="h-12 w-auto" />
                     </Link>
                 </div>
 

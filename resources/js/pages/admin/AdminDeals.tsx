@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, X } from 'lucide-react';
+import { Edit, Plus, Trash2, Settings, X, Image, Save } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { useMemo, useState } from 'react';
-import { CategoryManager } from '@/components/admin/CategoryManager';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { toast } from 'sonner';
 import {
@@ -12,6 +14,8 @@ import {
     saveAdminEntity,
     type AdminRow,
 } from '@/api/admin.api';
+import { apiFetch } from '@/api/http';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
 import {
     Select,
     SelectContent,
@@ -26,7 +30,6 @@ import {
     type SectionDef,
 } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
-import { fetchCategories } from '@/api/categories.api';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -85,11 +88,42 @@ export default function AdminDeals() {
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
+    // Hero images state
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.deals;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    deals: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
+
     const queryKey = useMemo(() => ['admin', 'deals'], []);
-    const { data: dbCategories = [] } = useQuery({
-        queryKey: ['admin', 'categories', 'deals'],
-        queryFn: () => fetchCategories('deals'),
-    });
+    const { data: categoryTypes = [] } = useCategoryTypes('deals');
     const { data: rows = [] } = useQuery<AdminRow[]>({
         queryKey,
         queryFn: async () => {
@@ -157,36 +191,21 @@ export default function AdminDeals() {
             })
             .filter(Boolean);
 
-        for (const candidate of candidates) {
-            const matchByKey = dbCategories.find((c) => c.key === candidate);
-            if (matchByKey) return matchByKey.key;
-
-            const matchByName = dbCategories.find((c) =>
-                [c.name.en, c.name.fr, c.name.ar].some(
-                    (name) =>
-                        typeof name === 'string' && name.trim() === candidate,
-                ),
-            );
-            if (matchByName) return matchByName.key;
-        }
-
-        return '';
+        return candidates[0] ?? '';
     }
 
     const dialogInitial = useMemo<AdminRow | null>(() => {
         if (!editing) return null;
 
-        const categoryKey = resolveCategoryKey(
-            editing.category_key,
-            editing.category,
-            editing.category_en,
-            editing.category_fr,
-            editing.category_ar,
-        );
-
         return {
             ...editing,
-            category_key: categoryKey || editing.category_key || '',
+            category_key: resolveCategoryKey(
+                editing.category_key,
+                editing.category,
+                editing.category_en,
+                editing.category_fr,
+                editing.category_ar,
+            ) || editing.category_key || '',
             category_en:
                 editing.category_en ??
                 (editing.category && (editing.category as any).en) ??
@@ -199,8 +218,14 @@ export default function AdminDeals() {
                 editing.category_ar ??
                 (editing.category && (editing.category as any).ar) ??
                 '',
+            ...Object.fromEntries(
+                categoryTypes.map((ct) => [
+                    `category_${ct.key}`,
+                    (editing as any).category_assignments?.[ct.key] || '',
+                ]),
+            ),
         } as AdminRow;
-    }, [editing, dbCategories]);
+    }, [editing, categoryTypes]);
 
     const validate = (values: AdminRow) => {
         const errs: Record<string, string> = {};
@@ -267,33 +292,15 @@ export default function AdminDeals() {
 
         normalized.category_key = resolvedCategoryKey;
 
-        if (normalized.category_key && dbCategories.length > 0) {
-            const cat = dbCategories.find(
-                (c) => c.key === String(normalized.category_key),
-            );
-            if (cat) {
-                normalized.category_en =
-                    cat.name.en ?? String(normalized.category_en ?? '');
-                normalized.category_fr =
-                    cat.name.fr ?? String(normalized.category_fr ?? '');
-                normalized.category_ar =
-                    cat.name.ar ?? String(normalized.category_ar ?? '');
-                normalized.category = String(normalized.category_key ?? '');
-            } else {
-                // fallback: propagate single value into all locales
-                normalized.category_en =
-                    normalized.category_en ?? String(normalized.category ?? '');
-                normalized.category_fr =
-                    normalized.category_fr ??
-                    String(normalized.category_en ?? '');
-                normalized.category_ar =
-                    normalized.category_ar ??
-                    String(normalized.category_en ?? '');
-                normalized.category = String(
-                    normalized.category_key ?? normalized.category_en ?? '',
-                );
+        // Add category assignments
+        const categoryAssignments: Record<string, string> = {};
+        categoryTypes.forEach((ct) => {
+            const val = values[`category_${ct.key}`];
+            if (val && typeof val === 'string' && val !== '') {
+                categoryAssignments[ct.key] = val;
             }
-        }
+        });
+        normalized.category_assignments = categoryAssignments;
 
         saveMutation.mutate(
             { ...(normalized as AdminRow), id: editing?.id ?? '' } as AdminRow,
@@ -420,6 +427,36 @@ export default function AdminDeals() {
             description: t('deals.promotionDescription'),
             render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
+                    {/* Category Types - dynamic dropdowns */}
+                    {categoryTypes.map((catType) => (
+                        <div key={catType.key} className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <label
+                                    className="text-xs font-semibold text-muted-foreground"
+                                >
+                                    {catType.label[activeLang] || catType.label.en}
+                                </label>
+                            </div>
+                            <Select
+                                value={String(values[`category_${catType.key}`] || '')}
+                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                            >
+                                <SelectTrigger
+                                    className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm`}
+                                >
+                                    <SelectValue placeholder={t('actions.select')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {catType.values.map((v) => (
+                                        <SelectItem key={v.key} value={v.key}>
+                                            {v.name[activeLang] || v.name.en}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ))}
+
                     <div className="grid gap-4 md:grid-cols-2">
                         {[
                             {
@@ -434,10 +471,6 @@ export default function AdminDeals() {
                                 key: `expires_${activeLang}`,
                                 label: t('deals.expiresLabel'),
                             },
-                            {
-                                key: `category_${activeLang}`,
-                                label: t('deals.categoryLabel'),
-                            },
                         ].map((f) => (
                             <div key={f.key} className="space-y-2">
                                 <label
@@ -445,114 +478,29 @@ export default function AdminDeals() {
                                     className={`text-xs font-semibold ${errors[f.key] ? 'text-destructive' : 'text-muted-foreground'}`}
                                 >
                                     {f.label}
-                                    {/* Category is shared across languages — hide the language badge for it */}
-                                    {!(
-                                        f.key.startsWith('category_') &&
-                                        dbCategories.length > 0
-                                    ) && <LangBadge lang={activeLang} />}
-                                    {/* Provide a hidden native input for automated tests and assistive tech
-                                        so changing the labelled control via fireEvent.change still works
-                                        when the visible control is a custom Select. */}
-                                    {f.key.startsWith('category_') &&
-                                        dbCategories.length > 0 && (
-                                            <input
-                                                aria-label={String(f.label)}
-                                                value={String(
-                                                    values['category_en'] ??
-                                                        values['category'] ??
-                                                        '',
-                                                )}
-                                                onChange={(e) =>
-                                                    setField(
-                                                        `category_${activeLang}`,
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                style={{
-                                                    position: 'absolute',
-                                                    left: '-9999px',
-                                                    width: '1px',
-                                                    height: '1px',
-                                                    overflow: 'hidden',
-                                                }}
-                                            />
-                                        )}
+                                    <LangBadge lang={activeLang} />
                                 </label>
-                                {f.key.startsWith('category_') &&
-                                dbCategories.length > 0 ? (
-                                    <Select
-                                        value={String(
-                                            values['category_key'] ?? '',
-                                        )}
-                                        onValueChange={(val) => {
-                                            const c = dbCategories.find(
-                                                (d) => d.key === val,
-                                            );
-                                            setField('category_key', val);
-                                            setField('category', val);
-                                            setField(
-                                                'category_en',
-                                                c?.name?.en ?? val,
-                                            );
-                                            setField(
-                                                'category_fr',
-                                                c?.name?.fr ??
-                                                    c?.name?.en ??
-                                                    '',
-                                            );
-                                            setField(
-                                                'category_ar',
-                                                c?.name?.ar ??
-                                                    c?.name?.en ??
-                                                    '',
-                                            );
-                                        }}
-                                    >
-                                        <SelectTrigger
-                                            id={f.key}
-                                            className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm ${errors[f.key] ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                                        >
-                                            <SelectValue
-                                                placeholder={t(
-                                                    'deals.selectCategory',
-                                                )}
-                                            />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {dbCategories.map((c) => (
-                                                <SelectItem
-                                                    key={c.key}
-                                                    value={c.key}
-                                                >
-                                                    {c.name[activeLang] ||
-                                                        c.name.en}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                ) : (
-                                    <input
-                                        id={f.key}
-                                        placeholder={
-                                            f.key.startsWith('title_')
-                                                ? t('deals.placeholder.title')
-                                                : f.key.startsWith('discount_')
-                                                  ? t(
-                                                        'deals.placeholder.discount',
-                                                    )
-                                                  : f.key.startsWith('expires_')
-                                                    ? t(
-                                                          'deals.placeholder.expires',
-                                                      )
-                                                    : ''
-                                        }
-                                        value={String(values[f.key] ?? '')}
-                                        onChange={(e) =>
-                                            setField(f.key, e.target.value)
-                                        }
-                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${errors[f.key] ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                                    />
-                                )}
+                                <input
+                                    id={f.key}
+                                    placeholder={
+                                        f.key.startsWith('title_')
+                                            ? t('deals.placeholder.title')
+                                            : f.key.startsWith('discount_')
+                                              ? t(
+                                                    'deals.placeholder.discount',
+                                                )
+                                              : f.key.startsWith('expires_')
+                                                ? t(
+                                                      'deals.placeholder.expires',
+                                                  )
+                                                : ''
+                                    }
+                                    value={String(values[f.key] ?? '')}
+                                    onChange={(e) =>
+                                        setField(f.key, e.target.value)
+                                    }
+                                    className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${errors[f.key] ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                />
                                 {errors[f.key] && (
                                     <p className="text-xs text-destructive">
                                         {errors[f.key]}
@@ -657,6 +605,31 @@ export default function AdminDeals() {
                 </div>
             }
         >
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="deals"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -725,33 +698,6 @@ export default function AdminDeals() {
                 </div>
             </div>
 
-            <EntityFormDialog<AdminRow>
-                open={open}
-                onOpenChange={(val) => {
-                    setOpen(val);
-                    if (!val) setErrors({});
-                }}
-                title={
-                    editing
-                        ? `${t('actions.edit')} ${title[lang]}`
-                        : `${t('actions.add')} ${title[lang]}`
-                }
-                sections={dealSections}
-                initial={dialogInitial ?? editing}
-                onSubmit={handleSave}
-                languages={['en', 'fr', 'ar']}
-                preserveArrayKeys={[
-                    'highlights_en',
-                    'highlights_fr',
-                    'highlights_ar',
-                    'terms_en',
-                    'terms_fr',
-                    'terms_ar',
-                ]}
-                isSubmitting={saveMutation.isPending}
-                errors={errors}
-            />
-
             <ConfirmDialog
                 open={!!pendingDelete}
                 onOpenChange={(isOpen) => {
@@ -774,13 +720,13 @@ export default function AdminDeals() {
                 }}
             />
 
-            <CategoryManager
-                type="deals"
+            <CategoryTypeManager
+                entityType="deals"
                 isOpen={catManagerOpen}
                 onClose={() => {
                     setCatManagerOpen(false);
                     queryClient.invalidateQueries({
-                        queryKey: ['admin', 'categories', 'deals'],
+                        queryKey: ['admin', 'category-types', 'deals'],
                     });
                 }}
             />

@@ -47,4 +47,10 @@ class Tour extends Model
         'price' => 'integer',
         'rating' => 'float',
     ];
+
+    public function categoryAssignments()
+    {
+        return $this->hasMany(EntityCategoryAssignment::class, 'entity_id')
+            ->where('entity_type', 'tours');
+    }
 }

@@ -19,6 +19,7 @@ export default function AdminSiteSettingsCompany() {
     const [year, setYear] = useState<number>(new Date().getFullYear());
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
+    const [phone2, setPhone2] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
 
     useEffect(() => {
@@ -28,6 +29,7 @@ export default function AdminSiteSettingsCompany() {
         setYear(settings.year || new Date().getFullYear());
         setEmail(settings.email || '');
         setPhone(settings.phone || '');
+        setPhone2(settings.phone2 || '');
         setWhatsapp(settings.whatsapp || '');
     }, [settings]);
 
@@ -55,6 +57,7 @@ export default function AdminSiteSettingsCompany() {
                     companyName: companyName.trim(),
                     email: email.trim(),
                     phone: phone.trim(),
+                    phone2: phone2.trim(),
                     whatsapp: whatsapp.trim(),
                     address: address.trim(),
                     plusCode: plusCode.trim(),
@@ -133,6 +136,14 @@ export default function AdminSiteSettingsCompany() {
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             placeholder={t('admin.settings.placeholder.phone')}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>{t('admin.settings.phone2')}</Label>
+                        <Input
+                            value={phone2}
+                            onChange={(e) => setPhone2(e.target.value)}
+                            placeholder={t('admin.settings.placeholder.phone2')}
                         />
                     </div>
                     <div className="space-y-2">

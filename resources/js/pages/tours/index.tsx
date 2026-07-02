@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Clock, Users, MapPin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
@@ -17,7 +18,8 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useTours, useCategories } from '@/hooks/usePublicData';
+import { useTours, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
 
@@ -36,6 +38,21 @@ const Tours = () => {
 
     const { data: tours = [] } = useTours();
     const { data: dynamicCategories = [] } = useCategories('tours');
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('tours');
+
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedLocation, setSelectedLocation] = useState(ALL);
     const [selectedDuration, setSelectedDuration] = useState(initialDuration);
@@ -94,13 +111,21 @@ const Tours = () => {
                     (tour.category_key ?? '').toLowerCase() ===
                         selectedCategory;
                 const matchesTravelers = tour.maxGroup >= travelers;
+                const tourEntity = tour as unknown as Record<string, unknown>;
+                const tourAssignments = tourEntity.category_assignments as Record<string, string> | undefined;
+                const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
+                    ([typeKey, values]) =>
+                        values.length === 0 ||
+                        (tourAssignments && values.includes(tourAssignments[typeKey])),
+                );
 
                 return (
                     matchesSearch &&
                     matchesLocation &&
                     matchesDuration &&
                     matchesCategory &&
-                    matchesTravelers
+                    matchesTravelers &&
+                    matchesCategoryTypes
                 );
             }),
         [
@@ -111,6 +136,7 @@ const Tours = () => {
             selectedDuration,
             selectedCategory,
             travelers,
+            categoryTypeFilters,
         ],
     );
 
@@ -121,7 +147,8 @@ const Tours = () => {
         selectedCategory !== ALL ||
         travelers !== 2 ||
         fromDate !== '' ||
-        toDate !== '';
+        toDate !== '' ||
+        Object.values(categoryTypeFilters).some((v) => v.length > 0);
 
     const clearFilters = () => {
         setSearchQuery('');
@@ -131,6 +158,7 @@ const Tours = () => {
         setTravelers(2);
         setFromDate('');
         setToDate('');
+        setCategoryTypeFilters({});
     };
 
     return (
@@ -138,7 +166,8 @@ const Tours = () => {
             key={params.toString()}
             className="flex min-h-screen flex-col bg-background"
         >
-            <div className="flex-1 pb-16 pt-24">
+            <PageHeroCarousel pageKey="tours" />
+            <div className="flex-1 pb-16 pt-8">
                 <div className="container mx-auto px-4">
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -321,6 +350,21 @@ const Tours = () => {
                                 </Select>
                             </label>
                         </div>
+                        {categoryTypes.length > 0 && (
+                            <div className="border-t border-border/50 pt-4">
+                                <CategoryTypeFilter
+                                    categoryTypes={categoryTypes as never}
+                                    selectedFilters={categoryTypeFilters}
+                                    onFilterChange={(typeKey, values) =>
+                                        setCategoryTypeFilters((prev) => ({
+                                            ...prev,
+                                            [typeKey]: values,
+                                        }))
+                                    }
+                                    lang={lang}
+                                />
+                            </div>
+                        )}
                     </ListFilterBar>
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

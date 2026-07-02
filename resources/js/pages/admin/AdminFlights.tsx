@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Edit, Plus, Trash2, Image, Save } from 'lucide-react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
     deleteAdminEntity,
@@ -8,6 +8,10 @@ import {
     saveAdminEntity,
     type AdminRow,
 } from '@/api/admin.api';
+import { apiFetch } from '@/api/http';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { format } from 'date-fns';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -69,6 +73,41 @@ export default function AdminFlights() {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const localizedLanguages: Lang[] = ['en', 'fr', 'ar'];
+
+    // Hero images state
+    const { settings: siteSettings } = useSiteSettings();
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.flights;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    flights: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
 
     const getLocalizedValue = (
         row: AdminRow,
@@ -393,6 +432,31 @@ export default function AdminFlights() {
                 </Button>
             }
         >
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="flights"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -479,22 +543,6 @@ export default function AdminFlights() {
                     </table>
                 </div>
             </div>
-
-            <EntityFormDialog
-                open={open}
-                onOpenChange={(val) => {
-                    setOpen(val);
-                    if (!val) setErrors({});
-                }}
-                title={editing ? t('actions.edit') : t('actions.add')}
-                languages={['en', 'fr', 'ar']}
-                initial={editing ?? undefined}
-                sections={flightSections}
-                preserveArrayKeys={['gallery']}
-                onSubmit={handleSave}
-                errors={errors}
-                isSubmitting={saveMutation.isPending}
-            />
 
             <ConfirmDialog
                 open={!!pendingDelete}

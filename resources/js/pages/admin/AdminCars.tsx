@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { CategoryManager } from '@/components/admin/CategoryManager';
+import { Edit, Plus, Trash2, Settings, Image, Save } from 'lucide-react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { toast } from 'sonner';
 import {
@@ -10,6 +12,8 @@ import {
     saveAdminEntity,
     type AdminRow,
 } from '@/api/admin.api';
+import { apiFetch } from '@/api/http';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
 import {
     Select,
     SelectContent,
@@ -28,7 +32,6 @@ import {
     type JsonFieldDef,
 } from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
-import { fetchCategories, type Category } from '@/api/categories.api';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -47,7 +50,7 @@ function asText(value: unknown): string {
 }
 
 function getCategoryLabel(
-    category: Category | undefined,
+    category: { key: string; name: Record<string, string> } | undefined,
     locale: Lang,
 ): string {
     if (!category) return '';
@@ -56,7 +59,7 @@ function getCategoryLabel(
 }
 
 function resolveCategoryKey(
-    categories: Category[],
+    categories: Array<{ key: string; name: Record<string, string> }>,
     ...values: Array<unknown>
 ): string {
     const candidates = values
@@ -105,7 +108,7 @@ function resolveCategoryKey(
 
 function syncCategoryFields(
     setField: (key: string, value: unknown) => void,
-    category: Category | undefined,
+    category: { key: string; name: Record<string, string> } | undefined,
     fallbackKey: string,
 ) {
     const selectedKey = category?.key ?? fallbackKey;
@@ -176,21 +179,41 @@ export default function AdminCars() {
 
     const queryKey = useMemo(() => ['admin', 'cars'], []);
 
-    const { data: dbCategories = [] } = useQuery({
-        queryKey: ['admin', 'categories', 'cars'],
-        queryFn: () => fetchCategories('cars'),
-    });
+    const { data: categoryTypes = [] } = useCategoryTypes('cars');
 
-    const categoryLabelByKey = useMemo(
-        () =>
-            new Map(
-                dbCategories.map((category) => [
-                    category.key,
-                    category.name[lang] || category.name.en,
-                ]),
-            ),
-        [dbCategories, lang],
-    );
+    // Hero images state
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.cars;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    cars: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
 
     const { data: rows = [] } = useQuery<AdminRow[]>({
         queryKey,
@@ -224,39 +247,19 @@ export default function AdminCars() {
                 ? (editing.details as Record<string, unknown>)
                 : {};
 
-        const resolvedCategoryKey = resolveCategoryKey(
-            dbCategories,
-            (editing as Record<string, unknown>).category_key,
-            editing.category,
-            (editing as Record<string, unknown>).category_en,
-            (editing as Record<string, unknown>).category_fr,
-            (editing as Record<string, unknown>).category_ar,
-            details.category,
-        );
-        const resolvedCategory = dbCategories.find(
-            (category) => category.key === resolvedCategoryKey,
-        );
-
         return {
             ...editing,
-            category_key: resolvedCategoryKey,
-            category:
-                resolvedCategory?.name[lang] ??
-                resolvedCategory?.name.en ??
-                asText((editing as Record<string, unknown>).category) ??
-                '',
-            category_en:
-                resolvedCategory?.name.en ??
-                asText((editing as Record<string, unknown>).category_en) ??
-                '',
-            category_fr:
-                resolvedCategory?.name.fr ??
-                asText((editing as Record<string, unknown>).category_fr) ??
-                '',
-            category_ar:
-                resolvedCategory?.name.ar ??
-                asText((editing as Record<string, unknown>).category_ar) ??
-                '',
+            category_key: asText((editing as Record<string, unknown>).category_key),
+            category: asText((editing as Record<string, unknown>).category),
+            category_en: asText((editing as Record<string, unknown>).category_en),
+            category_fr: asText((editing as Record<string, unknown>).category_fr),
+            category_ar: asText((editing as Record<string, unknown>).category_ar),
+            ...Object.fromEntries(
+                categoryTypes.map((ct) => [
+                    `category_${ct.key}`,
+                    (editing as any).category_assignments?.[ct.key] || '',
+                ]),
+            ),
             imagePath: asText(editing.image),
             imageFile: null,
             galleryPaths: parseGallery(editing.gallery),
@@ -268,7 +271,7 @@ export default function AdminCars() {
                   ? details.policy
                   : [],
         };
-    }, [dbCategories, editing, lang]);
+    }, [categoryTypes, editing, lang]);
 
     // Reset errors when dialog toggles
     const handleOpenChange = (isOpen: boolean) => {
@@ -308,19 +311,23 @@ export default function AdminCars() {
             return;
         }
 
-        const selectedCategoryKey = asText(values.category_key);
-        const selectedCategory = dbCategories.find(
-            (category) => category.key === selectedCategoryKey,
-        );
+        const categoryAssignments: Record<string, string> = {};
+        categoryTypes.forEach((ct) => {
+            const val = values[`category_${ct.key}`];
+            if (val && typeof val === 'string' && val !== '') {
+                categoryAssignments[ct.key] = val;
+            }
+        });
 
         const payload: Record<string, unknown> = {
             ...values,
             id: editing?.id ?? '',
-            category_key: selectedCategoryKey,
-            category: selectedCategory?.name.en ?? values.category ?? '',
-            category_en: selectedCategory?.name.en ?? values.category_en ?? '',
-            category_fr: selectedCategory?.name.fr ?? values.category_fr ?? '',
-            category_ar: selectedCategory?.name.ar ?? values.category_ar ?? '',
+            category_key: asText(values.category_key),
+            category: asText(values.category_en) || asText(values.category),
+            category_en: asText(values.category_en),
+            category_fr: asText(values.category_fr),
+            category_ar: asText(values.category_ar),
+            category_assignments: categoryAssignments,
             image:
                 values.imageFile instanceof File
                     ? values.imageFile
@@ -363,50 +370,35 @@ export default function AdminCars() {
             description: t('admin.carForm.coreDetailsHint'),
             render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="category_key"
-                            className={`text-xs font-semibold ${errors.category_key ? 'text-destructive' : 'text-muted-foreground'}`}
-                        >
-                            {t('admin.category')}
-                        </label>
-                        <Select
-                            value={String(values.category_key ?? '')}
-                            onValueChange={(val) =>
-                                syncCategoryFields(
-                                    setField,
-                                    dbCategories.find(
-                                        (category) => category.key === val,
-                                    ),
-                                    val,
-                                )
-                            }
-                        >
-                            <SelectTrigger
-                                id="category_key"
-                                className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.category_key ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                    {/* Category Types - dynamic dropdowns */}
+                    {categoryTypes.map((catType) => (
+                        <div key={catType.key} className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <label
+                                    className={`text-xs font-semibold ${errors.category_key ? 'text-destructive' : 'text-muted-foreground'}`}
+                                >
+                                    {catType.label[activeLang] || catType.label.en}
+                                </label>
+                            </div>
+                            <Select
+                                value={String(values[`category_${catType.key}`] || '')}
+                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
                             >
-                                <SelectValue
-                                    placeholder={t('actions.select')}
-                                />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {dbCategories.map((category) => (
-                                    <SelectItem
-                                        key={category.key}
-                                        value={category.key}
-                                    >
-                                        {getCategoryLabel(category, activeLang)}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {errors.category_key && (
-                            <p className="text-xs text-destructive">
-                                {errors.category_key}
-                            </p>
-                        )}
-                    </div>
+                                <SelectTrigger
+                                    className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20`}
+                                >
+                                    <SelectValue placeholder={t('actions.select')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {catType.values.map((v) => (
+                                        <SelectItem key={v.key} value={v.key}>
+                                            {v.name[activeLang] || v.name.en}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ))}
 
                     <div className="grid gap-4 md:grid-cols-2">
                         {[
@@ -638,16 +630,41 @@ export default function AdminCars() {
                 </div>
             }
         >
-            <CategoryManager
-                type="cars"
+            <CategoryTypeManager
+                entityType="cars"
                 isOpen={catManagerOpen}
                 onClose={() => {
                     setCatManagerOpen(false);
                     queryClient.invalidateQueries({
-                        queryKey: ['admin', 'categories', 'cars'],
+                        queryKey: ['admin', 'category-types', 'cars'],
                     });
                 }}
             />
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="cars"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
 
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
@@ -700,9 +717,6 @@ export default function AdminCars() {
                                         {asText(row[`category_${lang}`]) ||
                                             asText(row.category_en) ||
                                             asText(row.category) ||
-                                            categoryLabelByKey.get(
-                                                asText(row.category_key),
-                                            ) ||
                                             asText(row.category_key)}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">

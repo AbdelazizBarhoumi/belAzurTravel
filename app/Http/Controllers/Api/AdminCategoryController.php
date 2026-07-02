@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\CategoryType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -33,6 +34,31 @@ class AdminCategoryController extends Controller
 
         return response()
             ->json(['data' => $categories])
+            ->header('Cache-Control', 'no-cache, must-revalidate');
+    }
+
+    public function typesByEntity(Request $request): JsonResponse
+    {
+        $entityType = $request->query('entity_type');
+
+        $cacheKey = $entityType ? "category-types-nested:{$entityType}" : 'category-types-nested:all';
+
+        $types = Cache::remember(
+            $cacheKey,
+            now()->addMinutes(5),
+            function () use ($entityType) {
+                $query = CategoryType::with('values');
+
+                if ($entityType) {
+                    $query->where('entity_type', $entityType);
+                }
+
+                return $query->orderBy('sort_order')->get();
+            },
+        );
+
+        return response()
+            ->json(['data' => $types])
             ->header('Cache-Control', 'no-cache, must-revalidate');
     }
 

@@ -79,7 +79,7 @@ show.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Api\SiteSettingsController::update
- * @see app/Http/Controllers/Api/SiteSettingsController.php:226
+ * @see app/Http/Controllers/Api/SiteSettingsController.php:232
  * @route '/api/site-settings'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -94,7 +94,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\SiteSettingsController::update
- * @see app/Http/Controllers/Api/SiteSettingsController.php:226
+ * @see app/Http/Controllers/Api/SiteSettingsController.php:232
  * @route '/api/site-settings'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\SiteSettingsController::update
- * @see app/Http/Controllers/Api/SiteSettingsController.php:226
+ * @see app/Http/Controllers/Api/SiteSettingsController.php:232
  * @route '/api/site-settings'
  */
 update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -113,7 +113,7 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\SiteSettingsController::update
- * @see app/Http/Controllers/Api/SiteSettingsController.php:226
+ * @see app/Http/Controllers/Api/SiteSettingsController.php:232
  * @route '/api/site-settings'
  */
     const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -128,7 +128,7 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\SiteSettingsController::update
- * @see app/Http/Controllers/Api/SiteSettingsController.php:226
+ * @see app/Http/Controllers/Api/SiteSettingsController.php:232
  * @route '/api/site-settings'
  */
         updateForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

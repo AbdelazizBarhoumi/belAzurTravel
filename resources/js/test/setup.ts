@@ -378,6 +378,7 @@ const fixtures: Record<string, unknown> = {
     },
     '/api/site-settings': {
         phone: '+1234567890',
+        phone2: '+0987654321',
         whatsapp: '+1234567890',
         companyName: 'BelAzurTravel',
         content: { nav: { settings: { header: [] } } },

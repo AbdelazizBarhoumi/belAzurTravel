@@ -81,6 +81,7 @@ export const AVAILABLE_PAGES: PageDef[] = [
     { key: 'legal', label: 'Legal', href: '/legal' },
     { key: 'privacy-policy', label: 'Privacy Policy', href: '/privacy-policy' },
     { key: 'purchase-policy', label: 'Purchase Policy', href: '/purchase-policy' },
+    { key: 'visa', label: 'Visa', href: '/visa' },
     { key: 'contact', label: 'Contact', href: '/contact' },
 ];
 
@@ -97,8 +98,10 @@ export type DropdownItemMode = 'filter' | 'search' | 'categories';
 export interface DropdownItemConfig {
     label: LocalizedText;
     mode: DropdownItemMode;
-    /** filter -> value of filterParam; search -> the q= keyword */
+    /** filter -> "typeKey:valueKey"; search -> the q= keyword; categories -> category type key */
     value: string;
+    /** Nested sub-items (optional, enables 2-level nesting) */
+    children?: DropdownItemConfig[];
 }
 
 export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
@@ -109,9 +112,11 @@ export interface HeaderEntry {
     isDropdown: boolean;
     /** When isDropdown=true: does clicking the trigger itself navigate to the page index, or only open the menu on hover? */
     linkSelf: boolean;
-    /** "top" = own button in nav. "more" = grouped under the global "+ More" dropdown. */
-    placement: 'top' | 'more';
+    /** "topbar" = shown in the upper info bar. "top" = own button in main nav. "more" = grouped under the global "+ More" dropdown. */
+    placement: 'topbar' | 'top' | 'more';
     items: DropdownItemConfig[];
+    /** Admin-customizable display name (en/fr/ar). Falls back to translation key if unset. */
+    label?: LocalizedText;
 }
 
 export interface FooterColumn {
@@ -153,23 +158,28 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'legal',
             'privacy-policy',
             'purchase-policy',
+            'visa',
             'contact',
         ].includes(p.key),
         isDropdown: ['destinations', 'hotels'].includes(p.key),
         linkSelf: true,
         placement: [
-            'cars',
-            'flights',
-            'promos',
-            'team',
-            'partners',
-            'legal',
-            'privacy-policy',
-            'purchase-policy',
+            'blog',
             'contact',
         ].includes(p.key)
-            ? 'more'
-            : 'top',
+            ? 'topbar'
+            : [
+                'cars',
+                'flights',
+                'promos',
+                'team',
+                'partners',
+                'legal',
+                'privacy-policy',
+                'purchase-policy',
+            ].includes(p.key)
+                ? 'more'
+                : 'top',
         items: [
             'destinations',
             'hotels',
@@ -208,6 +218,11 @@ export function buildItemHref(
     if (item.mode === 'search') {
         const query = item.label[lang] ?? item.label.en ?? '';
         return `${page.href}?q=${encodeURIComponent(query)}`;
+    }
+    // Filter mode: value format is "typeKey:valueKey"
+    if (item.mode === 'filter' && item.value.includes(':')) {
+        const [typeKey, valueKey] = item.value.split(':');
+        return `${page.href}?category_${typeKey}=${encodeURIComponent(valueKey)}`;
     }
     const param = page.filterParam || 'cat';
     return `${page.href}?${param}=${encodeURIComponent(item.value)}`;

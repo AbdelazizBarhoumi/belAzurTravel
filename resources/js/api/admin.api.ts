@@ -19,7 +19,8 @@ export type AdminEntityType =
     | 'events'
     | 'deals'
     | 'promos'
-    | 'blog-posts';
+    | 'blog-posts'
+    | 'visas';
 
 export function listAdminEntities<T = AdminRow>(type: AdminEntityType) {
     return apiFetch<unknown>(`/api/admin/${type}`).then((res) => {

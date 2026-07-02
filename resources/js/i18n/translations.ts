@@ -64,6 +64,7 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'سياسة الشراء',
         en: 'Purchase Policy',
     },
+    'nav.visa': { fr: 'Visa', ar: 'تأشيرة', en: 'Visa' },
     'nav.dashboard': {
         fr: 'Tableau de bord',
         ar: 'لوحة القيادة',
@@ -1055,6 +1056,21 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Tous droits réservés.',
         ar: 'جميع الحقوق محفوظة.',
         en: 'All rights reserved.',
+    },
+    'footer.securePayment': {
+        fr: 'Paiement sécurisé',
+        ar: 'دفع آمن',
+        en: 'Secure Payment',
+    },
+    'footer.securePaymentDesc': {
+        fr: 'Transactions protégées et cryptées',
+        ar: 'معاملات مشفرة ومحفوظة',
+        en: 'Protected and encrypted transactions',
+    },
+    'footer.virementBancaire': {
+        fr: 'Virement Bancaire',
+        ar: 'تحويل بنكي',
+        en: 'Bank Transfer',
     },
 
     // Contact Page
@@ -2685,6 +2701,40 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'تم تحديث العضو',
         en: 'Member updated',
     },
+    'admin.visas': { fr: 'Visa', ar: 'التأشيرات', en: 'Visas' },
+    'admin.visasSubtitle': {
+        fr: 'Gérer les pays et tarifs de visa',
+        ar: 'إدارة بلدان وأسعار التأشيرات',
+        en: 'Manage visa countries and pricing',
+    },
+    'admin.visaTable.flag': { fr: 'Drapeau', ar: 'العلم', en: 'Flag' },
+    'admin.visaTable.name': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
+    'admin.visaTable.region': { fr: 'Région', ar: 'المنطقة', en: 'Region' },
+    'admin.visaTable.processing': { fr: 'Délai', ar: 'مدة المعالجة', en: 'Processing' },
+    'admin.visaTable.price': { fr: 'Prix', ar: 'السعر', en: 'Price' },
+    'admin.visaTable.active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
+    'admin.visaTable.actions': { fr: 'Actions', ar: 'الإجراءات', en: 'Actions' },
+    'admin.visaForm.details': { fr: 'Détails du visa', ar: 'تفاصيل التأشيرة', en: 'Visa Details' },
+    'admin.visaForm.detailsHint': { fr: 'Informations sur le pays et les tarifs', ar: 'معلومات البلد والأسعار', en: 'Country and pricing information' },
+    'admin.visaForm.helper': { fr: 'Remplissez les informations du visa pour chaque langue', ar: 'املأ معلومات التأشيرة لكل لغة', en: 'Fill in visa information for each language' },
+    'admin.visaForm.code': { fr: 'Code pays', ar: 'رمز الدولة', en: 'Country Code' },
+    'admin.visaForm.name': { fr: 'Nom du pays', ar: 'اسم الدولة', en: 'Country Name' },
+    'admin.visaForm.namePlaceholder': { fr: 'France', ar: 'فرنسا', en: 'France' },
+    'admin.visaForm.flag': { fr: 'Drapeau (emoji)', ar: 'العلم (إيموجي)', en: 'Flag (emoji)' },
+    'admin.visaForm.region': { fr: 'Région', ar: 'المنطقة', en: 'Region' },
+    'admin.visaForm.regionPlaceholder': { fr: 'Europe', ar: 'أوروبا', en: 'Europe' },
+    'admin.visaForm.processing': { fr: 'Délai de traitement', ar: 'مدة المعالجة', en: 'Processing Time' },
+    'admin.visaForm.processingPlaceholder': { fr: '10-15 jours', ar: '10-15 يوم', en: '10-15 days' },
+    'admin.visaForm.price': { fr: 'Prix (DT)', ar: 'السعر (د.ت)', en: 'Price (DT)' },
+    'admin.visaForm.sortOrder': { fr: 'Ordre', ar: 'الترتيب', en: 'Sort Order' },
+    'admin.visaForm.active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
+    'admin.visaForm.inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
+    'admin.visaForm.pricingAndSettings': { fr: 'Prix et paramètres', ar: 'السعر والإعدادات', en: 'Pricing & Settings' },
+    'admin.visaForm.pricingAndSettingsHint': { fr: 'Définir le prix et l\'état du visa', ar: 'تحديد سعر وحالة التأشيرة', en: 'Set visa price and status' },
+    'admin.visaAddTitle': { fr: 'Ajouter un visa', ar: 'إضافة تأشيرة', en: 'Add Visa' },
+    'admin.visaEditTitle': { fr: 'Modifier le visa', ar: 'تعديل التأشيرة', en: 'Edit Visa' },
+    'admin.visaAdded': { fr: 'Visa ajouté', ar: 'تمت إضافة التأشيرة', en: 'Visa added' },
+    'admin.visaUpdated': { fr: 'Visa mis à jour', ar: 'تم تحديث التأشيرة', en: 'Visa updated' },
     'admin.partnerAdded': {
         fr: 'Partenaire ajouté',
         ar: 'تم إضافة الشريك',
@@ -3955,6 +4005,51 @@ translations['admin.settings.landingVideo'] = {
     ar: 'فيديو الصفحة الرئيسية',
     en: 'Landing Video',
 };
+translations['admin.heroImages'] = {
+    fr: 'Images Héros de Page',
+    ar: 'صور البطل للصفحة',
+    en: 'Page Hero Images',
+};
+translations['admin.heroImagesCount'] = {
+    fr: '{count} image(s) héros',
+    ar: '{count} صورة(صور) بطل',
+    en: '{count} hero image(s)',
+};
+translations['admin.noHeroImages'] = {
+    fr: 'Aucune image héros configurée',
+    ar: 'لم يتم تكوين صور البطل',
+    en: 'No hero images configured',
+};
+translations['admin.heroInterval'] = {
+    fr: 'Intervalle (ms)',
+    ar: 'الفاصل (مللي ثانية)',
+    en: 'Interval (ms)',
+};
+translations['admin.heroTitle'] = {
+    fr: 'Titre ({lang})',
+    ar: 'العنوان ({lang})',
+    en: 'Title ({lang})',
+};
+translations['admin.heroSubtitle'] = {
+    fr: 'Sous-titre ({lang})',
+    ar: 'العنوان الفرعي ({lang})',
+    en: 'Subtitle ({lang})',
+};
+translations['admin.heroUpload'] = {
+    fr: 'Télécharger',
+    ar: 'تحميل',
+    en: 'Upload',
+};
+translations['admin.heroAddImage'] = {
+    fr: "Ajouter une image héros",
+    ar: 'إضافة صورة بطل',
+    en: 'Add Hero Image',
+};
+translations['admin.heroUploadFailed'] = {
+    fr: "Échec du téléchargement de l'image",
+    ar: 'فشل تحميل الصورة',
+    en: 'Failed to upload image',
+};
 translations['admin.activated'] = { fr: 'activé', ar: 'مفعل', en: 'activated' };
 translations['admin.deactivated'] = {
     fr: 'désactivé',
@@ -4269,6 +4364,11 @@ translations['admin.settings.phone'] = {
     ar: 'الهاتف',
     en: 'Phone',
 };
+translations['admin.settings.phone2'] = {
+    fr: 'Téléphone 2',
+    ar: 'الهاتف 2',
+    en: 'Phone 2',
+};
 translations['admin.settings.whatsapp'] = {
     fr: 'WhatsApp',
     ar: 'واتساب',
@@ -4430,6 +4530,91 @@ translations['admin.settings.topBar'] = {
     ar: 'الشريط العلوي',
     en: 'Top bar',
 };
+translations['admin.settings.filter'] = {
+    fr: 'Filtre',
+    ar: 'فلتر',
+    en: 'Filter',
+};
+translations['admin.settings.dynamicCategories'] = {
+    fr: 'Catégories dynamiques',
+    ar: 'فئات ديناميكية',
+    en: 'Dynamic Categories',
+};
+translations['admin.settings.searchKeyword'] = {
+    fr: 'Mot-clé de recherche',
+    ar: 'كلمة بحث',
+    en: 'Search keyword',
+};
+translations['admin.settings.categoryType'] = {
+    fr: 'Type de catégorie',
+    ar: 'نوع الفئة',
+    en: 'Category Type',
+};
+translations['admin.settings.selectCategoryType'] = {
+    fr: 'Sélectionner un type de catégorie',
+    ar: 'اختر نوع الفئة',
+    en: 'Select a category type',
+};
+translations['admin.settings.category'] = {
+    fr: 'Catégorie',
+    ar: 'فئة',
+    en: 'Category',
+};
+translations['admin.settings.addSubItem'] = {
+    fr: 'Ajouter un sous-élément',
+    ar: 'إضافة عنصر فرعي',
+    en: 'Add sub-item',
+};
+translations['admin.settings.provideTranslations'] = {
+    fr: 'Fournir les traductions',
+    ar: 'أدخل الترجمات',
+    en: 'Provide translations',
+};
+translations['admin.settings.addPage'] = {
+    fr: 'Ajouter une page',
+    ar: 'إضافة صفحة',
+    en: 'Add a page',
+};
+translations['admin.settings.selectPageToAdd'] = {
+    fr: 'Sélectionner une page à ajouter...',
+    ar: 'اختر صفحة للإضافة...',
+    en: 'Select a page to add...',
+};
+translations['admin.settings.noPagesAdded'] = {
+    fr: "Aucune page ajoutée. Utilisez le menu ci-dessus pour ajouter des pages.",
+    ar: 'لم تتم إضافة أي صفحة. استخدم القائمة أعلاه لإضافة الصفحات.',
+    en: 'No pages added yet. Use the dropdown above to add pages.',
+};
+translations['admin.settings.topbarPlacement'] = {
+    fr: 'Barre supérieure',
+    ar: 'الشريط العلوي',
+    en: 'Top bar (upper)',
+};
+translations['admin.settings.mainNav'] = {
+    fr: 'Navigation principale',
+    ar: 'التنقل الرئيسي',
+    en: 'Main nav',
+};
+translations['admin.settings.plusMore'] = {
+    fr: '+ Plus',
+    ar: '+ المزيد',
+    en: '+ More',
+};
+translations['admin.settings.removePage'] = {
+    fr: 'Supprimer la page',
+    ar: 'إزالة الصفحة',
+    en: 'Remove page',
+};
+translations['admin.settings.dropdownItems'] = {
+    fr: 'Éléments du menu déroulant',
+    ar: 'عناصر القائمة المنسدلة',
+    en: 'Dropdown items',
+};
+translations['admin.settings.noItemsYet'] = {
+    fr: 'Aucun élément pour le moment',
+    ar: 'لا توجد عناصر بعد',
+    en: 'No items yet',
+};
 translations['admin.settings.placeholder.companyName'] = {
     fr: 'BelAzur Travel',
     ar: 'بل أزور للسفر',
@@ -4454,6 +4639,11 @@ translations['admin.settings.placeholder.phone'] = {
     fr: '+216 23 777 771',
     ar: '+216 23 777 771',
     en: '+216 23 777 771',
+};
+translations['admin.settings.placeholder.phone2'] = {
+    fr: '+216 71 123 456',
+    ar: '+216 71 123 456',
+    en: '+216 71 123 456',
 };
 translations['admin.settings.placeholder.whatsapp'] = {
     fr: '21623777771',
@@ -4670,7 +4860,164 @@ translations['admin.hotelForm.media'] = {
     en: 'Media',
 };
 translations['admin.hotelForm.mediaHint'] = {
-    fr: 'Images et listes d’équipements.',
+    fr: 'Images et listes d\'équipements.',
     ar: 'الصور وقوائم المرافق.',
     en: 'Images and amenity lists.',
+};
+
+// Category Type Manager translations
+translations['admin.categoryTypeManager.title'] = {
+    fr: 'Gérer les types de catégories',
+    ar: 'إدارة أنواع الفئات',
+    en: 'Manage Category Types',
+};
+translations['admin.categoryTypeManager.valuesTitle'] = {
+    fr: 'Gérer les valeurs de',
+    ar: 'إدارة قيم',
+    en: 'Manage',
+};
+translations['admin.categoryTypeManager.valuesTitleSuffix'] = {
+    fr: 'valeurs',
+    ar: 'قيم',
+    en: 'Values',
+};
+translations['admin.categoryTypeManager.addType'] = {
+    fr: 'Ajouter un type de catégorie',
+    ar: 'إضافة نوع فئة',
+    en: 'Add Category Type',
+};
+translations['admin.categoryTypeManager.createType'] = {
+    fr: 'Créer le type',
+    ar: 'إنشاء النوع',
+    en: 'Create Type',
+};
+translations['admin.categoryTypeManager.addValue'] = {
+    fr: 'Ajouter une valeur',
+    ar: 'إضافة قيمة',
+    en: 'Add Value',
+};
+translations['admin.categoryTypeManager.addValueBtn'] = {
+    fr: 'Ajouter une valeur',
+    ar: 'إضافة قيمة',
+    en: 'Add Value',
+};
+translations['admin.categoryTypeManager.backToTypes'] = {
+    fr: 'Retour aux types',
+    ar: 'العودة للأنواع',
+    en: 'Back to Types',
+};
+translations['admin.categoryTypeManager.done'] = {
+    fr: 'Terminé',
+    ar: 'تم',
+    en: 'Done',
+};
+translations['admin.categoryTypeManager.deleteTitle'] = {
+    fr: 'Supprimer ?',
+    ar: 'حذف؟',
+    en: 'Delete?',
+};
+translations['admin.categoryTypeManager.deleteAnyway'] = {
+    fr: 'Supprimer quand même',
+    ar: 'حذف على أي حال',
+    en: 'Delete Anyway',
+};
+translations['admin.categoryTypeManager.affectedItems'] = {
+    fr: 'Éléments affectés :',
+    ar: 'العناصر المتأثرة:',
+    en: 'Affected items:',
+};
+translations['admin.categoryTypeManager.manageValues'] = {
+    fr: 'Gérer les valeurs',
+    ar: 'إدارة القيم',
+    en: 'Manage values',
+};
+translations['admin.categoryTypeManager.valueCount'] = {
+    fr: 'valeur(s)',
+    ar: 'قيمة(قيم)',
+    en: 'value(s)',
+};
+translations['admin.categoryTypeManager.langEnglish'] = {
+    fr: 'Anglais',
+    ar: 'الإنجليزية',
+    en: 'English',
+};
+translations['admin.categoryTypeManager.langFrench'] = {
+    fr: 'Français',
+    ar: 'الفرنسية',
+    en: 'French',
+};
+translations['admin.categoryTypeManager.langArabic'] = {
+    fr: 'Arabe',
+    ar: 'العربية',
+    en: 'Arabic',
+};
+translations['admin.categoryTypeManager.errorLoad'] = {
+    fr: 'Échec du chargement des types de catégories',
+    ar: 'فشل تحميل أنواع الفئات',
+    en: 'Failed to load category types',
+};
+translations['admin.categoryTypeManager.errorCreate'] = {
+    fr: 'Échec de la création du type de catégorie',
+    ar: 'فشل إنشاء نوع الفئة',
+    en: 'Failed to create category type',
+};
+translations['admin.categoryTypeManager.errorUpdate'] = {
+    fr: 'Échec de la mise à jour du type de catégorie',
+    ar: 'فشل تحديث نوع الفئة',
+    en: 'Failed to update category type',
+};
+translations['admin.categoryTypeManager.errorDelete'] = {
+    fr: 'Échec de la suppression du type de catégorie',
+    ar: 'فشل حذف نوع الفئة',
+    en: 'Failed to delete category type',
+};
+translations['admin.categoryTypeManager.errorAddValue'] = {
+    fr: 'Échec de l\'ajout de la valeur',
+    ar: 'فشل إضافة القيمة',
+    en: 'Failed to add value',
+};
+translations['admin.categoryTypeManager.errorUpdateValue'] = {
+    fr: 'Échec de la mise à jour de la valeur',
+    ar: 'فشل تحديث القيمة',
+    en: 'Failed to update value',
+};
+translations['admin.categoryTypeManager.errorDeleteValue'] = {
+    fr: 'Échec de la suppression de la valeur',
+    ar: 'فشل حذف القيمة',
+    en: 'Failed to delete value',
+};
+translations['admin.categoryTypeManager.successTypeCreated'] = {
+    fr: 'Type de catégorie créé',
+    ar: 'تم إنشاء نوع الفئة',
+    en: 'Category type created',
+};
+translations['admin.categoryTypeManager.successTypeUpdated'] = {
+    fr: 'Type de catégorie mis à jour',
+    ar: 'تم تحديث نوع الفئة',
+    en: 'Category type updated',
+};
+translations['admin.categoryTypeManager.successTypeDeleted'] = {
+    fr: 'Type de catégorie supprimé',
+    ar: 'تم حذف نوع الفئة',
+    en: 'Category type deleted',
+};
+translations['admin.categoryTypeManager.successValueAdded'] = {
+    fr: 'Valeur ajoutée',
+    ar: 'تمت إضافة القيمة',
+    en: 'Value added',
+};
+translations['admin.categoryTypeManager.successValueUpdated'] = {
+    fr: 'Valeur mise à jour',
+    ar: 'تم تحديث القيمة',
+    en: 'Value updated',
+};
+translations['admin.categoryTypeManager.successValueDeleted'] = {
+    fr: 'Valeur supprimée',
+    ar: 'تم حذف القيمة',
+    en: 'Value deleted',
+};
+translations['admin.categoryTypeManager.validationAllLangs'] = {
+    fr: 'Veuillez fournir des traductions dans toutes les langues',
+    ar: 'يرجى تقديم الترجمات بجميع اللغات',
+    en: 'Please provide translations in all languages',
 };

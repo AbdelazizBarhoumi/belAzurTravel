@@ -42,7 +42,7 @@ export default function NotificationsPage() {
             <header className="border-b border-border bg-card">
                 <div className="container mx-auto flex items-center justify-between px-4 py-4">
                     <Link to="/" className="flex items-center gap-2">
-                        <BrandLogo imageClassName="h-7 w-auto" />
+                        <BrandLogo imageClassName="h-12 w-auto" />
                     </Link>
                     <Link to={backTo}>
                         <Button variant="ghost" size="sm" className="gap-2">

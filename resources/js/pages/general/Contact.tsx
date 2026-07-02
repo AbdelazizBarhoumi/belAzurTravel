@@ -1,5 +1,6 @@
+import type React from 'react';
 import { motion } from 'framer-motion';
-import { Link2, MapPin, Mail } from 'lucide-react';
+import { MapPin, Mail, Link2 } from 'lucide-react';
 import { notifyInteraction } from '@/api/interactions.api';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
@@ -7,10 +8,17 @@ import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     contactMethods as contactMethodDefs,
-    socialLinks as socialLinkDefs,
 } from '@/data';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { formatHourRanges } from '@/lib/site-hours';
+import {
+    FacebookIcon,
+    InstagramIcon,
+    TwitterIcon,
+    LinkedinIcon,
+    YoutubeIcon,
+    TiktokIcon,
+} from '@/components/ui/SocialIcons';
 
 export default function Contact() {
     const { lang, t } = useLanguage();
@@ -88,10 +96,15 @@ export default function Contact() {
     ];
 
     const getSocialIcon = (label: string) => {
-        const link = socialLinkDefs.find(
-            (c) => c.label.toLowerCase() === label.toLowerCase(),
-        );
-        return link?.icon || Link2;
+        const brandIcons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+            facebook: FacebookIcon,
+            instagram: InstagramIcon,
+            twitter: TwitterIcon,
+            linkedin: LinkedinIcon,
+            youtube: YoutubeIcon,
+            tiktok: TiktokIcon,
+        };
+        return brandIcons[label.toLowerCase()] || Link2;
     };
 
     return (

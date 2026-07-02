@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Edit, Plus, Trash2, Settings, Image, Save } from 'lucide-react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
     deleteAdminEntity,
@@ -8,6 +8,10 @@ import {
     saveAdminEntity,
     type AdminRow,
 } from '@/api/admin.api';
+import { apiFetch } from '@/api/http';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import {
     EntityFormDialog,
@@ -31,17 +35,54 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
-import { useCategories } from '@/hooks/usePublicData';
+import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
+import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
 
 export default function AdminEvents() {
     useAdminGuard();
     const { t, lang } = useLanguage();
     const queryClient = useQueryClient();
-    const { data: eventCategories = [] } = useCategories('events');
+    const { data: categoryTypes = [] } = useCategoryTypes('events');
+    const [catManagerOpen, setCatManagerOpen] = useState(false);
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Hero images state
+    const { settings: siteSettings } = useSiteSettings();
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.events;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    events: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
 
     const validate = (values: AdminRow) => {
         const errs: Record<string, string> = {};
@@ -57,17 +98,6 @@ export default function AdminEvents() {
             errs.price = t('admin.error.invalidPrice');
         return errs;
     };
-
-    const categoryLabelByKey = useMemo(
-        () =>
-            new Map(
-                eventCategories.map((category) => [
-                    category.key,
-                    category.name[lang] || category.name.en,
-                ]),
-            ),
-        [eventCategories, lang],
-    );
 
     const scheduleSchema = useMemo(
         (): JsonFieldDef[] => [
@@ -151,8 +181,14 @@ export default function AdminEvents() {
                 : [],
             galleryFiles: [],
             schedule,
+            ...Object.fromEntries(
+                categoryTypes.map((ct) => [
+                    `category_${ct.key}`,
+                    (editing as any).category_assignments?.[ct.key] || '',
+                ]),
+            ),
         };
-    }, [editing]);
+    }, [editing, categoryTypes]);
 
     function handleSave(values: AdminRow) {
         const errs = validate(values);
@@ -161,6 +197,14 @@ export default function AdminEvents() {
             toast.error(t('admin.pleaseFixErrors'));
             return;
         }
+
+        const categoryAssignments: Record<string, string> = {};
+        categoryTypes.forEach((ct) => {
+            const val = values[`category_${ct.key}`];
+            if (val && typeof val === 'string' && val !== '') {
+                categoryAssignments[ct.key] = val;
+            }
+        });
 
         const payload = {
             ...(values || {}),
@@ -172,6 +216,7 @@ export default function AdminEvents() {
                 : Array.isArray(values.gallery)
                   ? (values.gallery as string[])
                   : [],
+            category_assignments: categoryAssignments,
             details: {
                 schedule: values.schedule ?? [],
             },
@@ -194,55 +239,35 @@ export default function AdminEvents() {
             render: ({ values, setField, activeLang, errors }) => (
                 <div className="space-y-6">
                     <EntityMediaInputs values={values} setField={setField} />
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="category_key"
-                            className={`text-xs font-semibold ${errors?.category_key ? 'text-destructive' : 'text-muted-foreground'}`}
-                        >
-                            {t('admin.categoryKey')}
-                        </label>
-                        <Select
-                            value={String(values.category_key ?? '')}
-                            onValueChange={(val) =>
-                                setField('category_key', val)
-                            }
-                        >
-                            <SelectTrigger
-                                id="category_key"
-                                className={`w-full rounded-lg border ${errors?.category_key ? 'border-destructive ring-1 ring-destructive' : 'border-border'} bg-background px-3 py-2 text-sm`}
+                    {/* Category Types - dynamic dropdowns */}
+                    {categoryTypes.map((catType) => (
+                        <div key={catType.key} className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <label
+                                    className="text-xs font-semibold text-muted-foreground"
+                                >
+                                    {catType.label[activeLang] || catType.label.en}
+                                </label>
+                            </div>
+                            <Select
+                                value={String(values[`category_${catType.key}`] || '')}
+                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
                             >
-                                <SelectValue
-                                    placeholder={t('admin.category')}
-                                />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {eventCategories.map((category) => {
-                                    const label =
-                                        (
-                                            category.name as Record<
-                                                string,
-                                                string
-                                            >
-                                        )[activeLang] ||
-                                        category.name.en ||
-                                        category.key;
-                                    return (
-                                        <SelectItem
-                                            key={category.key}
-                                            value={category.key}
-                                        >
-                                            {label}
+                                <SelectTrigger
+                                    className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm`}
+                                >
+                                    <SelectValue placeholder={t('actions.select')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {catType.values.map((v) => (
+                                        <SelectItem key={v.key} value={v.key}>
+                                            {v.name[activeLang] || v.name.en}
                                         </SelectItem>
-                                    );
-                                })}
-                            </SelectContent>
-                        </Select>
-                        {errors?.category_key && (
-                            <p className="text-xs text-destructive">
-                                {errors.category_key}
-                            </p>
-                        )}
-                    </div>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ))}
                     <div className="grid gap-4 md:grid-cols-2">
                         {[
                             { key: 'title', label: t('admin.title') },
@@ -444,17 +469,62 @@ export default function AdminEvents() {
             title={t('admin.events')}
             subtitle={t('admin.eventsSubtitle')}
             actions={
-                <Button
-                    onClick={() => {
-                        setEditing(null);
-                        setOpen(true);
-                    }}
-                    className="gap-2 bg-primary text-primary-foreground"
-                >
-                    <Plus className="h-4 w-4" /> {t('actions.add')}
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => setCatManagerOpen(true)}
+                        className="gap-2"
+                    >
+                        <Settings className="h-4 w-4" />{' '}
+                        {t('admin.manageCategories')}
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            setEditing(null);
+                            setOpen(true);
+                        }}
+                        className="gap-2 bg-primary text-primary-foreground"
+                    >
+                        <Plus className="h-4 w-4" /> {t('actions.add')}
+                    </Button>
+                </div>
             }
         >
+            <CategoryTypeManager
+                entityType="events"
+                isOpen={catManagerOpen}
+                onClose={() => {
+                    setCatManagerOpen(false);
+                    queryClient.invalidateQueries({
+                        queryKey: ['admin', 'category-types', 'events'],
+                    });
+                }}
+            />
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="events"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -510,9 +580,9 @@ export default function AdminEvents() {
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {String(
-                                            categoryLabelByKey.get(
-                                                String(row.category_key ?? ''),
-                                            ) ??
+                                            (typeof row.category === 'object' && row.category !== null
+                                                ? (row.category as any)[lang] || (row.category as any).en
+                                                : null) ??
                                                 row.category_key ??
                                                 '',
                                         )}
@@ -558,18 +628,6 @@ export default function AdminEvents() {
                     </table>
                 </div>
             </div>
-
-            <EntityFormDialog
-                open={open}
-                onOpenChange={setOpen}
-                title={editing ? t('actions.edit') : t('actions.add')}
-                languages={['en', 'fr', 'ar']}
-                initial={dialogInitial as any}
-                sections={eventSections}
-                onSubmit={handleSave}
-                errors={errors}
-                isSubmitting={saveMutation.isPending}
-            />
 
             <ConfirmDialog
                 open={!!pendingDelete}

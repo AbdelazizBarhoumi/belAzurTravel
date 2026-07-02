@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
@@ -15,7 +16,8 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useEvents, useCategories } from '@/hooks/usePublicData';
+import { useEvents, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
@@ -35,6 +37,21 @@ function EventsContent() {
 
     const { data: events = [] } = useEvents();
     const { data: dynamicCategories = [] } = useCategories('events');
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('events');
+
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedLocation, setSelectedLocation] = useState(ALL);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -75,23 +92,34 @@ function EventsContent() {
                 const matchesCategory =
                     selectedCategory === ALL ||
                     event.category_key === selectedCategory;
-                return matchesSearch && matchesLocation && matchesCategory;
+                const eventEntity = event as unknown as Record<string, unknown>;
+                const eventAssignments = eventEntity.category_assignments as Record<string, string> | undefined;
+                const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
+                    ([typeKey, values]) =>
+                        values.length === 0 ||
+                        (eventAssignments && values.includes(eventAssignments[typeKey])),
+                );
+                return matchesSearch && matchesLocation && matchesCategory && matchesCategoryTypes;
             }),
-        [events, lang, searchQuery, selectedLocation, selectedCategory],
+        [events, lang, searchQuery, selectedLocation, selectedCategory, categoryTypeFilters],
     );
 
     const hasActiveFilters =
         searchQuery.trim().length > 0 ||
         selectedLocation !== ALL ||
-        selectedCategory !== ALL;
+        selectedCategory !== ALL ||
+        Object.values(categoryTypeFilters).some((v) => v.length > 0);
 
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedLocation(ALL);
         setSelectedCategory(ALL);
+        setCategoryTypeFilters({});
     };
 
     return (
+        <>
+        <PageHeroCarousel pageKey="events" />
         <PageShell
             key={params.toString()}
             titleKey="events.title"
@@ -149,6 +177,21 @@ function EventsContent() {
                         </Select>
                     </label>
                 </div>
+                {categoryTypes.length > 0 && (
+                    <div className="border-t border-border/50 pt-4">
+                        <CategoryTypeFilter
+                            categoryTypes={categoryTypes as never}
+                            selectedFilters={categoryTypeFilters}
+                            onFilterChange={(typeKey, values) =>
+                                setCategoryTypeFilters((prev) => ({
+                                    ...prev,
+                                    [typeKey]: values,
+                                }))
+                            }
+                            lang={lang}
+                        />
+                    </div>
+                )}
             </ListFilterBar>
 
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -209,5 +252,6 @@ function EventsContent() {
                 )}
             </div>
         </PageShell>
+        </>
     );
 }

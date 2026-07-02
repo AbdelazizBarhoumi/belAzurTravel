@@ -14,6 +14,7 @@ class SiteSetting extends Model
         'company_name',
         'email',
         'phone',
+        'phone2',
         'whatsapp',
         'address',
         'plus_code',

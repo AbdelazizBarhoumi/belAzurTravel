@@ -3,6 +3,7 @@ import { Search, MapPin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,8 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useDestinations, useCategories } from '@/hooks/usePublicData';
+import { useDestinations, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
 import { useCountries } from '@/hooks/useCountries';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 
@@ -53,7 +55,21 @@ const Destinations = () => {
     const { t, lang } = useLanguage();
     const { data: allDestinations = [] } = useDestinations();
     const { data: dynamicCategories = [] } = useCategories('destinations');
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('destinations');
     const allCountries = useCountries();
+
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
     const countries = useMemo(() => {
         return [
@@ -88,7 +104,14 @@ const Destinations = () => {
             const matchesCountry =
                 selectedCountry === 'all' ||
                 localizeText(d.country, lang) === selectedCountry;
-            return matchesSearch && matchesCategory && matchesCountry;
+            const destEntity = d as unknown as Record<string, unknown>;
+            const destAssignments = destEntity.category_assignments as Record<string, string> | undefined;
+            const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
+                ([typeKey, values]) =>
+                    values.length === 0 ||
+                    (destAssignments && values.includes(destAssignments[typeKey])),
+            );
+            return matchesSearch && matchesCategory && matchesCountry && matchesCategoryTypes;
         })
         .sort((a, b) => {
             if (sortBy === 'price-asc') return a.price - b.price;
@@ -103,7 +126,8 @@ const Destinations = () => {
 
     return (
         <div key={params.toString()} className="min-h-screen bg-background">
-            <div className="pb-16 pt-24">
+            <PageHeroCarousel pageKey="destinations" />
+            <div className="pb-16 pt-8">
                 <div className="container mx-auto px-4">
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -233,6 +257,22 @@ const Destinations = () => {
                             <NavigationMenuViewport />
                         </NavigationMenu>
                     </div>
+
+                    {categoryTypes.length > 0 && (
+                        <div className="mb-10">
+                            <CategoryTypeFilter
+                                categoryTypes={categoryTypes as never}
+                                selectedFilters={categoryTypeFilters}
+                                onFilterChange={(typeKey, values) =>
+                                    setCategoryTypeFilters((prev) => ({
+                                        ...prev,
+                                        [typeKey]: values,
+                                    }))
+                                }
+                                lang={lang}
+                            />
+                        </div>
+                    )}
 
                     <div className="mb-4 text-sm text-muted-foreground">
                         {filtered.length} results

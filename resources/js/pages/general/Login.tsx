@@ -118,7 +118,7 @@ const Login = () => {
                     className="w-full max-w-md"
                 >
                     <Link to="/" className="mb-10 flex items-center gap-2">
-                        <BrandLogo imageClassName="h-7 w-auto" />
+                        <BrandLogo imageClassName="h-12 w-auto" />
                     </Link>
 
                     <div className="mb-6 flex justify-end">
@@ -268,9 +268,7 @@ const Login = () => {
                 />
                 <div className="absolute inset-0 bg-primary/30" />
                 <div className="absolute bottom-12 left-12 right-12">
-                    <p className="font-serif text-3xl font-bold leading-tight text-primary-foreground">
-                        {t('auth.loginQuote')}
-                    </p>
+
                     <p className="mt-3 text-sm text-primary-foreground/70">
                         — {t('auth.loginQuoteAuthor')}
                     </p>

@@ -277,6 +277,33 @@ export function useCategories(type?: string) {
     });
 }
 
+export type PublicCategoryType = {
+    id: number;
+    entity_type: string;
+    key: string;
+    label: Record<string, string>;
+    sort_order: number;
+    values: {
+        id: number;
+        category_type_id: number;
+        key: string;
+        name: Record<string, string>;
+    }[];
+};
+
+export function useCategoryTypesPublic(entityType?: string) {
+    return useQuery({
+        queryKey: ['category-types-public', entityType ?? 'all'],
+        queryFn: async () => {
+            const url = entityType
+                ? `/api/categories/types?entity_type=${entityType}`
+                : '/api/categories/types';
+            const resp = await apiFetch<{ data: PublicCategoryType[] }>(url);
+            return resp.data;
+        },
+    });
+}
+
 export function useBlogPostBySlug(slug?: string) {
     return useEntityQuery<BlogPostItem | null>({
         queryKey: ['blog-posts', slug],

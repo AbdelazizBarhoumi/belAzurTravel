@@ -1,13 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Edit, Plus, Trash2, Settings, Image, Save } from 'lucide-react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
     deleteAdminEntity,
     listAdminEntities,
     saveAdminEntity,
 } from '@/api/admin.api';
-import { fetchCategories } from '@/api/categories.api';
+import { apiFetch } from '@/api/http';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
+import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import {
     Select,
     SelectContent,
@@ -22,7 +26,6 @@ import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import LangBadge from '@/components/forms/LangBadge';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
-import { CategoryManager } from '@/components/admin/CategoryManager';
 import {
     JsonListEditor,
     type JsonFieldDef,
@@ -106,27 +109,14 @@ function parseGallery(value: unknown): string[] {
 }
 
 function resolveCategoryKey(
-    categories: Array<{
+    _categories: Array<{
         key: string;
         name: { en: string; fr: string; ar: string };
     }>,
     ...values: Array<unknown>
 ): string {
     const resolveFromCandidate = (candidate: string): string => {
-        const trimmed = candidate.trim();
-        if (!trimmed) return '';
-
-        const byKey = categories.find((category) => category.key === trimmed);
-        if (byKey) return byKey.key;
-
-        const byName = categories.find((category) =>
-            [category.name.en, category.name.fr, category.name.ar].some(
-                (name) => typeof name === 'string' && name.trim() === trimmed,
-            ),
-        );
-        if (byName) return byName.key;
-
-        return categories.length === 0 ? trimmed : '';
+        return candidate.trim();
     };
 
     for (const value of values) {
@@ -211,10 +201,41 @@ const AdminDestinations = () => {
         queryFn: () => listAdminEntities<AdminDestination>('destinations'),
     });
 
-    const { data: dbCategories = [] } = useQuery({
-        queryKey: ['admin', 'categories', 'destinations'],
-        queryFn: () => fetchCategories('destinations'),
-    });
+    const { data: categoryTypes = [] } = useCategoryTypes('destinations');
+
+    // Hero images state
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.destinations;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    destinations: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
 
     const dialogInitial = useMemo<DestinationFormValues | null>(() => {
         if (!editing) return null;
@@ -224,12 +245,18 @@ const AdminDestinations = () => {
         return {
             ...editing,
             category_key: resolveCategoryKey(
-                dbCategories,
+                [],
                 editingRecord.category_key,
                 editingRecord.category,
                 editingRecord.category_en,
                 editingRecord.category_fr,
                 editingRecord.category_ar,
+            ),
+            ...Object.fromEntries(
+                categoryTypes.map((ct) => [
+                    `category_${ct.key}`,
+                    (editing as any).category_assignments?.[ct.key] || '',
+                ]),
             ),
             imagePath: asText(editingRecord.image),
             imageFile: null,
@@ -239,7 +266,7 @@ const AdminDestinations = () => {
                 ? editingRecord.highlights
                 : [],
         } as DestinationFormValues;
-    }, [editing, dbCategories]);
+    }, [editing, categoryTypes]);
 
     const saveMutation = useMutation({
         mutationFn: (item: AdminDestination) =>
@@ -283,16 +310,41 @@ const AdminDestinations = () => {
                 </div>
             }
         >
-            <CategoryManager
-                type="destinations"
+            <CategoryTypeManager
+                entityType="destinations"
                 isOpen={catManagerOpen}
                 onClose={() => {
                     setCatManagerOpen(false);
                     queryClient.invalidateQueries({
-                        queryKey: ['admin', 'categories', 'destinations'],
+                        queryKey: ['admin', 'category-types', 'destinations'],
                     });
                 }}
             />
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="destinations"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -523,57 +575,41 @@ const AdminDestinations = () => {
                                         )}
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label
-                                            htmlFor="category_key"
-                                            className={
-                                                errors?.category_key
-                                                    ? 'text-destructive'
-                                                    : 'text-muted-foreground'
-                                            }
-                                        >
-                                            {t('admin.destinationForm.category')}
-                                        </Label>
-                                        <Select
-                                            value={String(
-                                                values.category_key ?? '',
-                                            )}
-                                            onValueChange={(val) =>
-                                                setField('category_key', val)
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                id="category_key"
-                                                className={
-                                                    errors?.category_key
-                                                        ? 'border-destructive ring-1 ring-destructive'
-                                                        : ''
-                                                }
+                                    {/* Category Types - dynamic dropdowns */}
+                                    {categoryTypes.map((catType) => (
+                                        <div key={catType.key} className="space-y-2">
+                                            <Label
+                                                className="text-muted-foreground"
                                             >
-                                                <SelectValue
-                                                    placeholder={t(
-                                                        'actions.select',
-                                                    )}
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {dbCategories.map((c) => (
-                                                    <SelectItem
-                                                        key={c.key}
-                                                        value={c.key}
-                                                    >
-                                                        {c.name[activeLang] ||
-                                                            c.name.en}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {errors?.category_key && (
-                                            <p className="text-[10px] text-destructive">
-                                                {errors.category_key}
-                                            </p>
-                                        )}
-                                    </div>
+                                                {catType.label[activeLang] || catType.label.en}
+                                            </Label>
+                                            <Select
+                                                value={String(values[`category_${catType.key}`] || '')}
+                                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                            >
+                                                <SelectTrigger
+                                                    className={
+                                                        errors?.category_key
+                                                            ? 'border-destructive ring-1 ring-destructive'
+                                                            : ''
+                                                    }
+                                                >
+                                                    <SelectValue
+                                                        placeholder={t(
+                                                            'actions.select',
+                                                        )}
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {catType.values.map((v) => (
+                                                        <SelectItem key={v.key} value={v.key}>
+                                                            {v.name[activeLang] || v.name.en}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    ))}
 
                                     <div className="space-y-2 md:col-span-2">
                                         <Label
@@ -950,7 +986,7 @@ const AdminDestinations = () => {
                         values.country,
                     );
                     const categoryKey = resolveCategoryKey(
-                        dbCategories,
+                        [],
                         values.category_key,
                         values.category,
                         values.category_en,
@@ -976,6 +1012,14 @@ const AdminDestinations = () => {
                         values.about_ar,
                         values.about,
                     );
+
+                    const categoryAssignments: Record<string, string> = {};
+                    categoryTypes.forEach((ct) => {
+                        const val = values[`category_${ct.key}`];
+                        if (val && typeof val === 'string' && val !== '') {
+                            categoryAssignments[ct.key] = val;
+                        }
+                    });
 
                     const item = {
                         ...values,
@@ -1019,6 +1063,7 @@ const AdminDestinations = () => {
                         highlights: Array.isArray(values.highlights)
                             ? values.highlights
                             : [],
+                        category_assignments: categoryAssignments,
                         gallery,
                         gallery_files: values.galleryFiles ?? undefined,
                     } as unknown as AdminDestination;
