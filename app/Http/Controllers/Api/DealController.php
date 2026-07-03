@@ -15,7 +15,9 @@ class DealController extends Controller
             'deals.index',
             now()->addMinutes(10),
             function () {
-                return Deal::query()->oldest('id')->get()->map(
+                return Deal::query()->oldest('id')
+                    ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+                    ->get()->map(
                     fn (Deal $item) => $this->payload($item)
                 );
             }
@@ -26,7 +28,9 @@ class DealController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $item = Deal::query()->where('slug', $slug)->firstOrFail();
+        $item = Deal::query()->where('slug', $slug)
+            ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+            ->firstOrFail();
 
         return response()->json(Cache::remember(
             "deals.{$slug}",
@@ -50,6 +54,9 @@ class DealController extends Controller
             'category' => $item->category,
             'highlights' => $this->flattenLocalizedList($details['highlights'] ?? []),
             'terms' => $this->flattenLocalizedList($details['terms'] ?? []),
+            'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
+                fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
+            )->toArray(),
         ];
     }
 

@@ -20,6 +20,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     fetchCategoryTypes,
     createCategoryType,
     updateCategoryType,
@@ -29,7 +36,10 @@ import {
     deleteCategoryValue,
     type CategoryType,
     type CategoryTypeValue,
+    type FilterStyle,
 } from '@/api/categoryTypes.api';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
+import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { queryClient } from '@/lib/queryClient';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -70,11 +80,13 @@ export function CategoryTypeManager({
         fr: '',
         ar: '',
     });
+    const [newTypeFilterStyle, setNewTypeFilterStyle] = useState<FilterStyle>('pills');
     const [isCreatingType, setIsCreatingType] = useState(false);
 
     // Value editing state
     const [editingValueId, setEditingValueId] = useState<number | null>(null);
     const [newValueName, setNewValueName] = useState({ en: '', fr: '', ar: '' });
+    const [newValueColor, setNewValueColor] = useState('#000000');
     const [isCreatingValue, setIsCreatingValue] = useState(false);
 
     // Delete confirmation
@@ -110,9 +122,11 @@ export function CategoryTypeManager({
     const resetState = () => {
         setEditingTypeId(null);
         setNewTypeLabel({ en: '', fr: '', ar: '' });
+        setNewTypeFilterStyle('pills');
         setIsCreatingType(false);
         setEditingValueId(null);
         setNewValueName({ en: '', fr: '', ar: '' });
+        setNewValueColor('#000000');
         setIsCreatingValue(false);
         setView('types');
         setSelectedType(null);
@@ -129,6 +143,7 @@ export function CategoryTypeManager({
             await createCategoryType({
                 entity_type: entityType,
                 label: newTypeLabel,
+                filter_style: newTypeFilterStyle,
             });
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successTypeCreated'));
@@ -146,7 +161,7 @@ export function CategoryTypeManager({
             return;
         }
         try {
-            await updateCategoryType(id, { label: newTypeLabel });
+            await updateCategoryType(id, { label: newTypeLabel, filter_style: newTypeFilterStyle });
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successTypeUpdated'));
             setEditingTypeId(null);
@@ -186,10 +201,11 @@ export function CategoryTypeManager({
         }
         if (!selectedType) return;
         try {
-            await createCategoryValue(selectedType.id, newValueName);
+            await createCategoryValue(selectedType.id, newValueName, selectedType.filter_style === 'colors' ? newValueColor : undefined);
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successValueAdded'));
             setNewValueName({ en: '', fr: '', ar: '' });
+            setNewValueColor('#000000');
             setIsCreatingValue(false);
             loadTypes();
         } catch {
@@ -204,11 +220,12 @@ export function CategoryTypeManager({
         }
         if (!selectedType) return;
         try {
-            await updateCategoryValue(selectedType.id, valueId, newValueName);
+            await updateCategoryValue(selectedType.id, valueId, newValueName, selectedType.filter_style === 'colors' ? newValueColor : undefined);
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successValueUpdated'));
             setEditingValueId(null);
             setNewValueName({ en: '', fr: '', ar: '' });
+            setNewValueColor('#000000');
             loadTypes();
         } catch {
             toast.error(t('admin.categoryTypeManager.errorUpdateValue'));
@@ -319,6 +336,20 @@ export function CategoryTypeManager({
                                                     setNewTypeLabel,
                                                     { en: 'Category', fr: 'Catégorie', ar: 'فئة' },
                                                 )}
+                                                <div className="space-y-1">
+                                                    <Label className="text-xs">{t('admin.settings.filterStyle')}</Label>
+                                                    <Select value={newTypeFilterStyle} onValueChange={(v: FilterStyle) => setNewTypeFilterStyle(v)}>
+                                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="pills">{t('filters.style.pills')}</SelectItem>
+                                                            <SelectItem value="checkbox">{t('filters.style.checkbox')}</SelectItem>
+                                                            <SelectItem value="dropdown">{t('filters.style.dropdown')}</SelectItem>
+                                                            <SelectItem value="slider">{t('filters.style.slider')}</SelectItem>
+                                                            <SelectItem value="radio">{t('filters.style.radio')}</SelectItem>
+                                                            <SelectItem value="colors">{t('filters.style.colors')}</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
                                                 <div className="flex justify-end gap-2">
                                                     <Button
                                                         size="sm"
@@ -347,6 +378,9 @@ export function CategoryTypeManager({
                                                     <span className="text-[10px] text-muted-foreground">
                                                         {type.values.length} {t('admin.categoryTypeManager.valueCount')}
                                                     </span>
+                                                    <span className="inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                                                        {type.filter_style || 'pills'}
+                                                    </span>
                                                 </div>
                                                 <div className="flex gap-1">
                                                     <Button
@@ -366,6 +400,7 @@ export function CategoryTypeManager({
                                                         onClick={() => {
                                                             setEditingTypeId(type.id);
                                                             setNewTypeLabel(type.label);
+                                                            setNewTypeFilterStyle(type.filter_style || 'pills');
                                                             setIsCreatingType(false);
                                                         }}
                                                     >
@@ -391,6 +426,44 @@ export function CategoryTypeManager({
                                             setNewTypeLabel,
                                             { en: 'Star Rating', fr: 'Classement', ar: 'تصنيف' },
                                         )}
+                                        <div className="space-y-1">
+                                            <Label className="text-xs">{t('admin.settings.filterStyle')}</Label>
+                                            <Select value={newTypeFilterStyle} onValueChange={(v: FilterStyle) => setNewTypeFilterStyle(v)}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="pills">{t('filters.style.pills')}</SelectItem>
+                                                    <SelectItem value="checkbox">{t('filters.style.checkbox')}</SelectItem>
+                                                    <SelectItem value="dropdown">{t('filters.style.dropdown')}</SelectItem>
+                                                    <SelectItem value="slider">{t('filters.style.slider')}</SelectItem>
+                                                    <SelectItem value="radio">{t('filters.style.radio')}</SelectItem>
+                                                    <SelectItem value="colors">{t('filters.style.colors')}</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="mt-3 rounded-lg border border-dashed border-border p-3">
+                                            <Label className="text-xs text-muted-foreground">{t('admin.settings.preview')}</Label>
+                                            <div className="mt-2">
+                                                <FilterRenderer
+                                                    categoryType={{
+                                                        id: 0,
+                                                        entity_type: entityType,
+                                                        key: 'preview',
+                                                        label: newTypeLabel.en ? newTypeLabel : { en: 'Sample', fr: 'Exemple', ar: 'نموذج' },
+                                                        sort_order: 0,
+                                                        filter_style: newTypeFilterStyle,
+                                                        values: [
+                                                            { id: 1, category_type_id: 0, key: 'val1', name: { en: 'Value 1', fr: 'Valeur 1', ar: 'قيمة 1' } },
+                                                            { id: 2, category_type_id: 0, key: 'val2', name: { en: 'Value 2', fr: 'Valeur 2', ar: 'قيمة 2' } },
+                                                            { id: 3, category_type_id: 0, key: 'val3', name: { en: 'Value 3', fr: 'Valeur 3', ar: 'قيمة 3' } },
+                                                        ],
+                                                    } as PublicCategoryType}
+                                                    selectedValues={[]}
+                                                    onChange={() => {}}
+                                                    lang="en"
+                                                    preview
+                                                />
+                                            </div>
+                                        </div>
                                         <div className="flex justify-end gap-2">
                                             <Button
                                                 size="sm"
@@ -446,6 +519,25 @@ export function CategoryTypeManager({
                                                     setNewValueName,
                                                     { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
                                                 )}
+                                                {selectedType?.filter_style === 'colors' && (
+                                                    <div className="space-y-1">
+                                                        <Label className="text-xs">{t('admin.settings.color')}</Label>
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="color"
+                                                                value={newValueColor}
+                                                                onChange={(e) => setNewValueColor(e.target.value)}
+                                                                className="h-8 w-8 cursor-pointer rounded border"
+                                                            />
+                                                            <Input
+                                                                value={newValueColor}
+                                                                onChange={(e) => setNewValueColor(e.target.value)}
+                                                                placeholder="#000000"
+                                                                className="flex-1"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 <div className="flex justify-end gap-2">
                                                     <Button
                                                         size="sm"
@@ -479,6 +571,7 @@ export function CategoryTypeManager({
                                                         onClick={() => {
                                                             setEditingValueId(val.id);
                                                             setNewValueName(val.name);
+                                                            setNewValueColor(val.color || '#000000');
                                                             setIsCreatingValue(false);
                                                         }}
                                                     >
@@ -504,6 +597,25 @@ export function CategoryTypeManager({
                                             setNewValueName,
                                             { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
                                         )}
+                                        {selectedType?.filter_style === 'colors' && (
+                                            <div className="space-y-1">
+                                                <Label className="text-xs">{t('admin.settings.color')}</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="color"
+                                                        value={newValueColor}
+                                                        onChange={(e) => setNewValueColor(e.target.value)}
+                                                        className="h-8 w-8 cursor-pointer rounded border"
+                                                    />
+                                                    <Input
+                                                        value={newValueColor}
+                                                        onChange={(e) => setNewValueColor(e.target.value)}
+                                                        placeholder="#000000"
+                                                        className="flex-1"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="flex justify-end gap-2">
                                             <Button
                                                 size="sm"
@@ -524,6 +636,7 @@ export function CategoryTypeManager({
                                         onClick={() => {
                                             setIsCreatingValue(true);
                                             setNewValueName({ en: '', fr: '', ar: '' });
+                                            setNewValueColor('#000000');
                                             setEditingValueId(null);
                                         }}
                                     >

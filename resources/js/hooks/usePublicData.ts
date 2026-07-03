@@ -283,11 +283,13 @@ export type PublicCategoryType = {
     key: string;
     label: Record<string, string>;
     sort_order: number;
+    filter_style: string;
     values: {
         id: number;
         category_type_id: number;
         key: string;
         name: Record<string, string>;
+        color?: string;
     }[];
 };
 

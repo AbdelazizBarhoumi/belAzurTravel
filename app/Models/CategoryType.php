@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CategoryType extends Model
 {
-    protected $fillable = ['entity_type', 'key', 'label', 'sort_order'];
+    protected $fillable = ['entity_type', 'key', 'label', 'sort_order', 'filter_style'];
 
     protected $casts = [
         'label' => 'array',

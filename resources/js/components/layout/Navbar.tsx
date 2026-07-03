@@ -74,7 +74,7 @@ function DesktopFlyoutItems({
     hover: { schedule: (fn: () => void) => void; clear: () => void };
 }) {
     return (
-        <ul className="min-w-56 space-y-1 rounded-lg border border-border bg-card p-2 shadow-lg">
+        <ul className="min-w-56 space-y-1 rounded-lg border border-border bg-card p-2">
             {items.map((item, idx) => {
                 const itemPath = `${entry.pageKey}:${idx}`;
                 const hasChildren = item.children && item.children.length > 0;
@@ -566,7 +566,7 @@ export function Navbar() {
                                             return (
                                                 <li key={entry.pageKey}>
                                                     {entry.isDropdown && dropdownItems.length > 0 ? (
-                                                        <div className="rounded-md border border-border/60 bg-background/40">
+                                                        <div className="rounded-md border border-border/60 bg-background/40 shadow-lg">
                                                             <button
                                                                 type="button"
                                                                 aria-expanded={isExpanded}

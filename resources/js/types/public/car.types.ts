@@ -20,4 +20,5 @@ export interface CarItem {
     description?: LocalizedText;
     features: LocalizedText[];
     policy: LocalizedText[];
+    category_assignments?: Record<string, string>;
 }

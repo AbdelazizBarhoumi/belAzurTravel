@@ -20,4 +20,5 @@ export interface HotelItem {
     image: string;
     tags: string[];
     amenities: string[];
+    category_assignments?: Record<string, string>;
 }

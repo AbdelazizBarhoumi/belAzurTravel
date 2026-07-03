@@ -22,6 +22,7 @@ export interface DestinationItem {
     language?: LocalizedText;
     currency?: LocalizedText;
     weather?: LocalizedText;
+    category_assignments?: Record<string, string>;
 }
 
 /**
@@ -71,4 +72,5 @@ export interface TourItem {
     category_key?: string;
     image: string;
     description: LocalizedText;
+    category_assignments?: Record<string, string>;
 }

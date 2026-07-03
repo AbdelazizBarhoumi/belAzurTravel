@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDeals, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
-import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
+
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 
@@ -68,8 +69,7 @@ export default function Deals() {
                 const matchesCategory =
                     activeCategory === ALL ||
                     deal.category_key === activeCategory;
-                const dealEntity = deal as unknown as Record<string, unknown>;
-                const dealAssignments = dealEntity.category_assignments as Record<string, string> | undefined;
+                const dealAssignments = deal.category_assignments;
                 const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
                     ([typeKey, values]) =>
                         values.length === 0 ||
@@ -144,18 +144,21 @@ export default function Deals() {
                             ))}
                         </div>
                         {categoryTypes.length > 0 && (
-                            <div className="border-t border-border/50 pt-4">
-                                <CategoryTypeFilter
-                                    categoryTypes={categoryTypes as never}
-                                    selectedFilters={categoryTypeFilters}
-                                    onFilterChange={(typeKey, values) =>
-                                        setCategoryTypeFilters((prev) => ({
-                                            ...prev,
-                                            [typeKey]: values,
-                                        }))
-                                    }
-                                    lang={lang}
-                                />
+                            <div className="space-y-2">
+                                {categoryTypes.map((catType) => (
+                                    <FilterRenderer
+                                        key={catType.key}
+                                        categoryType={catType as never}
+                                        selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                        onChange={(values) =>
+                                            setCategoryTypeFilters((prev) => ({
+                                                ...prev,
+                                                [catType.key]: values,
+                                            }))
+                                        }
+                                        lang={lang}
+                                    />
+                                ))}
                             </div>
                         )}
                     </ListFilterBar>

@@ -6,14 +6,18 @@ export interface CategoryType {
     key: string;
     label: { en: string; fr: string; ar: string };
     sort_order: number;
+    filter_style: FilterStyle;
     values: CategoryTypeValue[];
 }
+
+export type FilterStyle = 'pills' | 'checkbox' | 'dropdown' | 'slider' | 'radio' | 'colors';
 
 export interface CategoryTypeValue {
     id: number;
     category_type_id: number;
     key: string;
     name: { en: string; fr: string; ar: string };
+    color?: string;
 }
 
 // --- Category Types ---
@@ -32,6 +36,7 @@ export async function createCategoryType(data: {
     entity_type: string;
     label: { en: string; fr: string; ar: string };
     sort_order?: number;
+    filter_style?: FilterStyle;
 }): Promise<CategoryType> {
     const res = await apiFetch<{ data: CategoryType }>(
         '/api/admin/category-types',
@@ -48,6 +53,7 @@ export async function updateCategoryType(
     data: {
         label: { en: string; fr: string; ar: string };
         sort_order?: number;
+        filter_style?: FilterStyle;
     },
 ): Promise<CategoryType> {
     const res = await apiFetch<{ data: CategoryType }>(
@@ -87,12 +93,13 @@ export async function fetchCategoryValues(
 export async function createCategoryValue(
     typeId: number,
     name: { en: string; fr: string; ar: string },
+    color?: string,
 ): Promise<CategoryTypeValue> {
     const res = await apiFetch<{ data: CategoryTypeValue }>(
         `/api/admin/category-types/${typeId}/values`,
         {
             method: 'POST',
-            body: JSON.stringify({ name }),
+            body: JSON.stringify({ name, ...(color ? { color } : {}) }),
         },
     );
     return res.data;
@@ -102,12 +109,13 @@ export async function updateCategoryValue(
     typeId: number,
     valueId: number,
     name: { en: string; fr: string; ar: string },
+    color?: string,
 ): Promise<CategoryTypeValue> {
     const res = await apiFetch<{ data: CategoryTypeValue }>(
         `/api/admin/category-types/${typeId}/values/${valueId}`,
         {
             method: 'PUT',
-            body: JSON.stringify({ name }),
+            body: JSON.stringify({ name, ...(color ? { color } : {}) }),
         },
     );
     return res.data;

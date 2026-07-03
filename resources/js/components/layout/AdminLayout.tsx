@@ -64,6 +64,7 @@ const SITE_SETTINGS_SUB_LINKS = [
     { to: '/admin/site-settings/privacy-policy', icon: Shield, labelKey: 'nav.privacy-policy' },
     { to: '/admin/site-settings/purchase-policy', icon: ShoppingCart, labelKey: 'nav.purchase-policy' },
     { to: '/admin/site-settings/video', icon: Video, labelKey: 'admin.settings.landingVideo' },
+    { to: '/admin/site-settings/hero-images', icon: ImageIcon, labelKey: 'admin.settings.landingHero' },
 ];
 
 const links = [

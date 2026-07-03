@@ -18,7 +18,9 @@ class CarController extends Controller
             'cars.index',
             now()->addMinutes(10),
             function () {
-                return Car::query()->oldest('id')->get()->map(
+                return Car::query()->oldest('id')
+                    ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+                    ->get()->map(
                     fn (Car $item) => $this->payload($item)
                 );
             }
@@ -29,7 +31,9 @@ class CarController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $item = Car::query()->where('slug', $slug)->firstOrFail();
+        $item = Car::query()->where('slug', $slug)
+            ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+            ->firstOrFail();
 
         return response()->json(Cache::remember(
             "cars.{$slug}",
@@ -57,6 +61,9 @@ class CarController extends Controller
             'description' => $details['description'] ?? null,
             'features' => $details['features'] ?? [],
             'policy' => $details['policy'] ?? [],
+            'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
+                fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
+            )->toArray(),
         ];
     }
 }

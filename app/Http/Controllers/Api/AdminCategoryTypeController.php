@@ -46,6 +46,7 @@ class AdminCategoryTypeController extends Controller
             'label.fr' => ['required', 'string'],
             'label.ar' => ['required', 'string'],
             'sort_order' => ['nullable', 'integer'],
+            'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio,colors'],
         ]);
 
         $key = Str::slug($data['label']['en']);
@@ -61,6 +62,7 @@ class AdminCategoryTypeController extends Controller
             'key' => $key,
             'label' => $data['label'],
             'sort_order' => $data['sort_order'] ?? 0,
+            'filter_style' => $data['filter_style'] ?? 'pills',
         ]);
 
         $this->clearCache($data['entity_type']);
@@ -76,11 +78,15 @@ class AdminCategoryTypeController extends Controller
             'label.fr' => ['required', 'string'],
             'label.ar' => ['required', 'string'],
             'sort_order' => ['nullable', 'integer'],
+            'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio,colors'],
         ]);
 
         $updateData = ['label' => $data['label']];
         if (isset($data['sort_order'])) {
             $updateData['sort_order'] = $data['sort_order'];
+        }
+        if (isset($data['filter_style'])) {
+            $updateData['filter_style'] = $data['filter_style'];
         }
 
         $categoryType->update($updateData);
@@ -129,6 +135,7 @@ class AdminCategoryTypeController extends Controller
             'name.en' => ['required', 'string'],
             'name.fr' => ['required', 'string'],
             'name.ar' => ['required', 'string'],
+            'color' => ['nullable', 'string', 'max:7'],
         ]);
 
         $key = Str::slug($data['name']['en']);
@@ -143,6 +150,7 @@ class AdminCategoryTypeController extends Controller
             'category_type_id' => $categoryType->id,
             'key' => $key,
             'name' => $data['name'],
+            'color' => $data['color'] ?? null,
         ]);
 
         $this->clearCache($categoryType->entity_type);
@@ -157,9 +165,14 @@ class AdminCategoryTypeController extends Controller
             'name.en' => ['required', 'string'],
             'name.fr' => ['required', 'string'],
             'name.ar' => ['required', 'string'],
+            'color' => ['nullable', 'string', 'max:7'],
         ]);
 
-        $value->update(['name' => $data['name']]);
+        $updateData = ['name' => $data['name']];
+        if (array_key_exists('color', $data)) {
+            $updateData['color'] = $data['color'];
+        }
+        $value->update($updateData);
 
         // Sync denormalized data on entities using this value
         $this->syncEntityCategoryNames($value);

@@ -19,7 +19,9 @@ class TourController extends Controller
             'tours.index',
             now()->addMinutes(10),
             function () {
-                return Tour::query()->oldest('id')->get()->map(
+                return Tour::query()->oldest('id')
+                    ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+                    ->get()->map(
                     fn (Tour $item) => $this->payload($item)
                 );
             }
@@ -30,7 +32,9 @@ class TourController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $item = Tour::query()->where('slug', $slug)->firstOrFail();
+        $item = Tour::query()->where('slug', $slug)
+            ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+            ->firstOrFail();
 
         return response()->json(Cache::remember(
             "tours.{$slug}",
@@ -65,6 +69,9 @@ class TourController extends Controller
             'itinerary' => $item->itinerary,
             'inclusions' => $item->includes,
             'excludes' => $item->excludes,
+            'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
+                fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
+            )->toArray(),
             ...($item->details ?? []),
         ];
     }

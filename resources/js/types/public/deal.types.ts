@@ -14,4 +14,5 @@ export interface DealItem {
     expires?: LocalizedText;
     highlights?: LocalizedText[];
     terms?: LocalizedText[];
+    category_assignments?: Record<string, string>;
 }

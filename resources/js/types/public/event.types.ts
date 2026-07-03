@@ -16,6 +16,7 @@ export interface EventItem {
     image?: string;
     gallery?: string[];
     price?: number;
+    category_assignments?: Record<string, string>;
     schedule?: Array<{
         day: LocalizedText;
         activity: LocalizedText;

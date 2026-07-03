@@ -125,6 +125,11 @@ export function Footer() {
                                 <Phone className="h-4 w-4 shrink-0 text-secondary" /> {settings.phone}
                             </a>
                         )}
+                        {settings.phone2 && (
+                            <a href={`tel:${settings.phone2.replace(/\D/g, '')}`} onClick={() => notifyInteraction('call')} className="flex items-center gap-3 hover:text-secondary">
+                                <Phone className="h-4 w-4 shrink-0 text-secondary" /> {settings.phone2}
+                            </a>
+                        )}
                         {settings.address && (
                             <a href={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}`} target="_blank" rel="noreferrer" className="flex items-start gap-3 hover:text-secondary">
                                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />

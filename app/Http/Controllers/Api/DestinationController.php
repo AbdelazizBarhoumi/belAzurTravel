@@ -19,7 +19,9 @@ class DestinationController extends Controller
             'destinations.index',
             now()->addMinutes(10),
             function () {
-                return Destination::query()->oldest('id')->get()->map(
+                return Destination::query()->oldest('id')
+                    ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+                    ->get()->map(
                     fn (Destination $item) => $this->payload($item)
                 );
             }
@@ -30,7 +32,9 @@ class DestinationController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $item = Destination::query()->where('slug', $slug)->firstOrFail();
+        $item = Destination::query()->where('slug', $slug)
+            ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+            ->firstOrFail();
 
         return response()->json(Cache::remember(
             "destinations.{$slug}",
@@ -64,6 +68,9 @@ class DestinationController extends Controller
                     'ar' => $item->category_key,
                 ],
             'description' => $item->description,
+            'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
+                fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
+            )->toArray(),
             ...($item->details ?? []),
         ];
     }

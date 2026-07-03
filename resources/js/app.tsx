@@ -48,6 +48,7 @@ import AdminSiteSettingsLegal from './pages/admin/site-settings/AdminSiteSetting
 import AdminSiteSettingsPrivacyPolicy from './pages/admin/site-settings/AdminSiteSettingsPrivacyPolicy';
 import AdminSiteSettingsPurchasePolicy from './pages/admin/site-settings/AdminSiteSettingsPurchasePolicy';
 import AdminSiteSettingsVideo from './pages/admin/site-settings/AdminSiteSettingsVideo';
+import AdminSiteSettingsHeroImages from './pages/admin/site-settings/AdminSiteSettingsHeroImages';
 import AdminVisas from './pages/admin/AdminVisas';
 import AdminTeam from './pages/admin/AdminTeam';
 import AdminTours from './pages/admin/AdminTours';
@@ -335,6 +336,10 @@ const LayoutWrapper = () => {
                     <Route
                         path="/admin/site-settings/video"
                         element={adminGuard(<AdminSiteSettingsVideo />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/hero-images"
+                        element={adminGuard(<AdminSiteSettingsHeroImages />)}
                     />
                     <Route
                         path="/admin/notifications"

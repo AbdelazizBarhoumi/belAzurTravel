@@ -4005,6 +4005,11 @@ translations['admin.settings.landingVideo'] = {
     ar: 'فيديو الصفحة الرئيسية',
     en: 'Landing Video',
 };
+translations['admin.settings.landingHero'] = {
+    fr: "Héros d'accueil",
+    ar: 'بطل الصفحة الرئيسية',
+    en: 'Landing Hero',
+};
 translations['admin.heroImages'] = {
     fr: 'Images Héros de Page',
     ar: 'صور البطل للصفحة',
@@ -4489,6 +4494,11 @@ translations['admin.settings.dropdown'] = {
     fr: 'Menu déroulant',
     ar: 'قائمة منسدلة',
     en: 'Dropdown',
+};
+translations['admin.settings.enabled'] = {
+    fr: 'Activé',
+    ar: 'مفعّل',
+    en: 'Enabled',
 };
 translations['admin_settings_triggerLinks'] = {
     fr: 'Déclencher des liens vers la page',
@@ -5020,4 +5030,75 @@ translations['admin.categoryTypeManager.validationAllLangs'] = {
     fr: 'Veuillez fournir des traductions dans toutes les langues',
     ar: 'يرجى تقديم الترجمات بجميع اللغات',
     en: 'Please provide translations in all languages',
+};
+
+// Filter component translations
+translations['filters.clear'] = {
+    fr: 'Effacer',
+    ar: 'مسح',
+    en: 'Clear',
+};
+translations['filters.selected'] = {
+    fr: 'sélectionné(s)',
+    ar: 'محدد',
+    en: 'selected',
+};
+translations['filters.all'] = {
+    fr: 'Tout',
+    ar: 'الكل',
+    en: 'All',
+};
+translations['filters.selectPlaceholder'] = {
+    fr: 'Sélectionner',
+    ar: 'تحديد',
+    en: 'Select',
+};
+
+// Filter style names
+translations['filters.style.pills'] = {
+    fr: 'Boutons pilules',
+    ar: 'أزرار حبوب',
+    en: 'Pill Buttons',
+};
+translations['filters.style.checkbox'] = {
+    fr: 'Liste à cocher',
+    ar: 'قائمة اختيار',
+    en: 'Checkbox List',
+};
+translations['filters.style.dropdown'] = {
+    fr: 'Sélection déroulante',
+    ar: 'قائمة منسدلة',
+    en: 'Dropdown Select',
+};
+translations['filters.style.slider'] = {
+    fr: 'Curseur',
+    ar: 'شريط التمرير',
+    en: 'Slider',
+};
+translations['filters.style.radio'] = {
+    fr: 'Groupe radio',
+    ar: 'مجموعة أزرار الراديو',
+    en: 'Radio Group',
+};
+translations['filters.style.colors'] = {
+    fr: 'Échantillons de couleurs',
+    ar: 'عينات الألوان',
+    en: 'Color Swatches',
+};
+
+// Admin filter config
+translations['admin.settings.filterStyle'] = {
+    fr: 'Style de filtre',
+    ar: 'نمط الفلتر',
+    en: 'Filter Style',
+};
+translations['admin.settings.preview'] = {
+    fr: 'Aperçu',
+    ar: 'معاينة',
+    en: 'Preview',
+};
+translations['admin.settings.color'] = {
+    fr: 'Couleur',
+    ar: 'لون',
+    en: 'Color',
 };

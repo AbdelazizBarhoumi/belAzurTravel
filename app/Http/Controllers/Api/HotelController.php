@@ -19,7 +19,7 @@ class HotelController extends Controller
             'hotels.index',
             now()->addMinutes(10),
             function () {
-                return Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->oldest('id')->get()->map(
+                return Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->oldest('id')->get()->map(
                     fn (Hotel $item) => $this->payload($item)
                 );
             }
@@ -30,7 +30,7 @@ class HotelController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->where('slug', $slug)->firstOrFail();
+        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->where('slug', $slug)->firstOrFail();
 
         return response()->json(Cache::remember(
             "hotels.{$slug}",
@@ -56,6 +56,9 @@ class HotelController extends Controller
             'location' => $item->location,
             'category_key' => $item->category_key,
             'category' => $category,
+            'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
+                fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
+            )->toArray(),
             'price' => $item->price,
             'rating' => $item->rating,
             'stars' => $item->stars,

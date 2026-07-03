@@ -22,7 +22,8 @@ import { TagFilter, type Tag } from '@/components/ui/TagFilter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useHotels, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
-import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
+
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
 
 const AMENITY_ICONS: Record<string, LucideIcon> = {
@@ -177,8 +178,7 @@ export default function Hotels() {
                       !selectedCity ||
                       selectedCity === 'all' ||
                       localizeText(hotel.city, lang) === selectedCity;
-                  const entity = hotel as unknown as Record<string, unknown>;
-                  const assignments = entity.category_assignments as Record<string, string> | undefined;
+                  const assignments = hotel.category_assignments;
                   const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
                       ([typeKey, values]) =>
                           values.length === 0 ||
@@ -445,18 +445,21 @@ export default function Hotels() {
                                 </div>
 
                                 {categoryTypes.length > 0 && (
-                                    <div className="border-t border-border pt-6 pb-4">
-                                        <CategoryTypeFilter
-                                            categoryTypes={categoryTypes as never}
-                                            selectedFilters={categoryTypeFilters}
-                                            onFilterChange={(typeKey, values) =>
-                                                setCategoryTypeFilters((prev) => ({
-                                                    ...prev,
-                                                    [typeKey]: values,
-                                                }))
-                                            }
-                                            lang={lang}
-                                        />
+                                    <div>
+                                        {categoryTypes.map((catType) => (
+                                            <FilterRenderer
+                                                key={catType.key}
+                                                categoryType={catType as never}
+                                                selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                                onChange={(values) =>
+                                                    setCategoryTypeFilters((prev) => ({
+                                                        ...prev,
+                                                        [catType.key]: values,
+                                                    }))
+                                                }
+                                                lang={lang}
+                                            />
+                                        ))}
                                     </div>
                                 )}
 

@@ -18,7 +18,9 @@ class EventController extends Controller
             'events.index',
             now()->addMinutes(10),
             function () {
-                return Event::query()->oldest('id')->get()->map(
+                return Event::query()->oldest('id')
+                    ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+                    ->get()->map(
                     fn (Event $item) => $this->payload($item)
                 );
             }
@@ -29,7 +31,9 @@ class EventController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $item = Event::query()->where('slug', $slug)->firstOrFail();
+        $item = Event::query()->where('slug', $slug)
+            ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
+            ->firstOrFail();
 
         return response()->json(Cache::remember(
             "events.{$slug}",
@@ -50,6 +54,9 @@ class EventController extends Controller
             'image' => $this->normalizeApiOutputPath($item->image),
             'description' => $item->description,
             'price' => $item->price,
+            'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
+                fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
+            )->toArray(),
             ...($item->details ?? []),
         ];
     }

@@ -10,9 +10,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Middleware that enforces nav visibility on server-side for SPA routes.
  *
- * It maps known frontend paths to page keys and returns 404 only for
- * authenticated client users when a page has been disabled in site settings.
- * Admin users may still access disabled pages.
+ * It maps known frontend paths to page keys and returns 404 for
+ * guests/clients when a page is not enabled in the header AND not
+ * present in any footer column. Admin users may still access disabled pages.
  */
 class EnforceNavSettings
 {
@@ -99,18 +99,27 @@ class EnforceNavSettings
             return $next($request);
         }
 
-        // For guests and clients, check if page is enabled in header (visibility control)
+        // For guests and clients, check if page is enabled in header or footer
         $headerEntries = $navSettings['header'] ?? [];
+        $footerColumns = $navSettings['footer'] ?? [];
 
-        $isEnabled = false;
+        $isInHeader = false;
         foreach ($headerEntries as $entry) {
             if (($entry['pageKey'] ?? null) === $matchedKey && ($entry['enabled'] ?? false)) {
-                $isEnabled = true;
+                $isInHeader = true;
                 break;
             }
         }
 
-        if (! $isEnabled) {
+        $isInFooter = false;
+        foreach ($footerColumns as $column) {
+            if (in_array($matchedKey, $column['pageKeys'] ?? [], true)) {
+                $isInFooter = true;
+                break;
+            }
+        }
+
+        if (! $isInHeader && ! $isInFooter) {
             abort(404, __('messages.page_not_available'));
         }
 

@@ -64,6 +64,7 @@ class CheckNavPageEnabled
         }
 
         $headerEntries = $navSettings['header'] ?? [];
+        $footerColumns = $navSettings['footer'] ?? [];
         $pageEnabled = false;
 
         // Check if page is enabled in header (must have enabled=true)
@@ -71,6 +72,16 @@ class CheckNavPageEnabled
             if ($entry['pageKey'] === $pageKey && ($entry['enabled'] ?? false)) {
                 $pageEnabled = true;
                 break;
+            }
+        }
+
+        // Also check if page is in any footer column
+        if (! $pageEnabled) {
+            foreach ($footerColumns as $column) {
+                if (in_array($pageKey, $column['pageKeys'] ?? [], true)) {
+                    $pageEnabled = true;
+                    break;
+                }
             }
         }
 

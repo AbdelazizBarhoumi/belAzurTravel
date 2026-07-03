@@ -552,6 +552,10 @@ export default function AdminSiteSettingsNav() {
                                                     </Select>
                                                 </div>
                                                 <div className="flex items-center gap-2">
+                                                    <Label className="text-xs">{t('admin.settings.enabled')}</Label>
+                                                    <Switch checked={entry.enabled} onCheckedChange={(v) => setHeader(idx, { enabled: v })} />
+                                                </div>
+                                                <div className="flex items-center gap-2">
                                                     <Label className="text-xs">{t('admin.settings.dropdown')}</Label>
                                                     <Switch checked={entry.isDropdown} onCheckedChange={(v) => setHeader(idx, { isDropdown: v })} />
                                                 </div>

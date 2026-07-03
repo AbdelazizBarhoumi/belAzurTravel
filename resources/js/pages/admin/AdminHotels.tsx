@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, Image, Save } from 'lucide-react';
+import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save } from 'lucide-react';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import type { Lang } from '@/i18n/translations';
 
@@ -898,7 +898,7 @@ const AdminHotels = () => {
             <div className="rounded-2xl border border-border bg-card p-5">
                 <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Image className="h-4 w-4 text-muted-foreground" />
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
                         <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
                             {t('admin.heroImages')}
                         </h3>

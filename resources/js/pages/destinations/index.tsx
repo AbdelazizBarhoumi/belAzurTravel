@@ -28,8 +28,9 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDestinations, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
-import { CategoryTypeFilter } from '@/components/lists/CategoryTypeFilter';
+
 import { useCountries } from '@/hooks/useCountries';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 
 const SORT_OPTIONS = [
@@ -104,8 +105,7 @@ const Destinations = () => {
             const matchesCountry =
                 selectedCountry === 'all' ||
                 localizeText(d.country, lang) === selectedCountry;
-            const destEntity = d as unknown as Record<string, unknown>;
-            const destAssignments = destEntity.category_assignments as Record<string, string> | undefined;
+            const destAssignments = d.category_assignments;
             const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
                 ([typeKey, values]) =>
                     values.length === 0 ||
@@ -259,18 +259,21 @@ const Destinations = () => {
                     </div>
 
                     {categoryTypes.length > 0 && (
-                        <div className="mb-10">
-                            <CategoryTypeFilter
-                                categoryTypes={categoryTypes as never}
-                                selectedFilters={categoryTypeFilters}
-                                onFilterChange={(typeKey, values) =>
-                                    setCategoryTypeFilters((prev) => ({
-                                        ...prev,
-                                        [typeKey]: values,
-                                    }))
-                                }
-                                lang={lang}
-                            />
+                        <div className="mb-4 flex flex-wrap gap-3">
+                            {categoryTypes.map((catType) => (
+                                <FilterRenderer
+                                    key={catType.key}
+                                    categoryType={catType as never}
+                                    selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                    onChange={(values) =>
+                                        setCategoryTypeFilters((prev) => ({
+                                            ...prev,
+                                            [catType.key]: values,
+                                        }))
+                                    }
+                                    lang={lang}
+                                />
+                            ))}
                         </div>
                     )}
 

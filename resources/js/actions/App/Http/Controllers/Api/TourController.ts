@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\TourController::show
- * @see app/Http/Controllers/Api/TourController.php:31
+ * @see app/Http/Controllers/Api/TourController.php:33
  * @route '/api/tours/{slug}'
  */
 export const show = (args: { slug: string | number } | [slug: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\TourController::show
- * @see app/Http/Controllers/Api/TourController.php:31
+ * @see app/Http/Controllers/Api/TourController.php:33
  * @route '/api/tours/{slug}'
  */
 show.url = (args: { slug: string | number } | [slug: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -122,7 +122,7 @@ show.url = (args: { slug: string | number } | [slug: string | number ] | string 
 
 /**
 * @see \App\Http\Controllers\Api\TourController::show
- * @see app/Http/Controllers/Api/TourController.php:31
+ * @see app/Http/Controllers/Api/TourController.php:33
  * @route '/api/tours/{slug}'
  */
 show.get = (args: { slug: string | number } | [slug: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -131,7 +131,7 @@ show.get = (args: { slug: string | number } | [slug: string | number ] | string 
 })
 /**
 * @see \App\Http\Controllers\Api\TourController::show
- * @see app/Http/Controllers/Api/TourController.php:31
+ * @see app/Http/Controllers/Api/TourController.php:33
  * @route '/api/tours/{slug}'
  */
 show.head = (args: { slug: string | number } | [slug: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -141,7 +141,7 @@ show.head = (args: { slug: string | number } | [slug: string | number ] | string
 
     /**
 * @see \App\Http\Controllers\Api\TourController::show
- * @see app/Http/Controllers/Api/TourController.php:31
+ * @see app/Http/Controllers/Api/TourController.php:33
  * @route '/api/tours/{slug}'
  */
     const showForm = (args: { slug: string | number } | [slug: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -151,7 +151,7 @@ show.head = (args: { slug: string | number } | [slug: string | number ] | string
 
             /**
 * @see \App\Http\Controllers\Api\TourController::show
- * @see app/Http/Controllers/Api/TourController.php:31
+ * @see app/Http/Controllers/Api/TourController.php:33
  * @route '/api/tours/{slug}'
  */
         showForm.get = (args: { slug: string | number } | [slug: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -160,7 +160,7 @@ show.head = (args: { slug: string | number } | [slug: string | number ] | string
         })
             /**
 * @see \App\Http\Controllers\Api\TourController::show
- * @see app/Http/Controllers/Api/TourController.php:31
+ * @see app/Http/Controllers/Api/TourController.php:33
  * @route '/api/tours/{slug}'
  */
         showForm.head = (args: { slug: string | number } | [slug: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
