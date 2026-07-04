@@ -33,9 +33,13 @@ import {
 } from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { FUEL_TYPES, TRANSMISSION_TYPES, getLocalizedLabel } from '@/data/adminSelectOptions';
 
 function LangBadge({ lang }: { lang: Lang }) {
     return (
@@ -247,6 +251,28 @@ export default function AdminCars() {
                 ? (editing.details as Record<string, unknown>)
                 : {};
 
+        // Convert fuel/transmission labels to keys if needed
+        const resolveCarFieldKey = (
+            value: string,
+            options: typeof FUEL_TYPES,
+        ): string => {
+            if (!value) return '';
+            if (options.some((o) => o.value === value)) return value;
+            const match = options.find(
+                (o) => o.label.en === value || o.label.fr === value || o.label.ar === value,
+            );
+            return match?.value || value;
+        };
+
+        const fuelKey = resolveCarFieldKey(
+            asText(editing.fuel_en) || asText(editing.fuel),
+            FUEL_TYPES,
+        );
+        const transmissionKey = resolveCarFieldKey(
+            asText(editing.transmission_en) || asText(editing.transmission),
+            TRANSMISSION_TYPES,
+        );
+
         return {
             ...editing,
             category_key: asText((editing as Record<string, unknown>).category_key),
@@ -270,6 +296,12 @@ export default function AdminCars() {
                 : Array.isArray(details.policy)
                   ? details.policy
                   : [],
+            fuel_en: fuelKey,
+            fuel_fr: fuelKey,
+            fuel_ar: fuelKey,
+            transmission_en: transmissionKey,
+            transmission_fr: transmissionKey,
+            transmission_ar: transmissionKey,
         };
     }, [categoryTypes, editing, lang]);
 
@@ -290,10 +322,6 @@ export default function AdminCars() {
                 errs[`name_${locale}`] = t('admin.fieldRequired');
             }
         });
-
-        if (!values.category_key) {
-            errs.category_key = t('admin.fieldRequired');
-        }
 
         if (!values.price || Number(values.price) <= 0)
             errs.price = t('admin.invalidPrice');
@@ -328,6 +356,37 @@ export default function AdminCars() {
             category_fr: asText(values.category_fr),
             category_ar: asText(values.category_ar),
             category_assignments: categoryAssignments,
+            // Convert fuel/transmission keys to labels
+            fuel_en: (() => {
+                const key = asText(values.fuel_en);
+                const opt = FUEL_TYPES.find((o) => o.value === key);
+                return opt?.label.en || key;
+            })(),
+            fuel_fr: (() => {
+                const key = asText(values.fuel_fr);
+                const opt = FUEL_TYPES.find((o) => o.value === key);
+                return opt?.label.fr || key;
+            })(),
+            fuel_ar: (() => {
+                const key = asText(values.fuel_ar);
+                const opt = FUEL_TYPES.find((o) => o.value === key);
+                return opt?.label.ar || key;
+            })(),
+            transmission_en: (() => {
+                const key = asText(values.transmission_en);
+                const opt = TRANSMISSION_TYPES.find((o) => o.value === key);
+                return opt?.label.en || key;
+            })(),
+            transmission_fr: (() => {
+                const key = asText(values.transmission_fr);
+                const opt = TRANSMISSION_TYPES.find((o) => o.value === key);
+                return opt?.label.fr || key;
+            })(),
+            transmission_ar: (() => {
+                const key = asText(values.transmission_ar);
+                const opt = TRANSMISSION_TYPES.find((o) => o.value === key);
+                return opt?.label.ar || key;
+            })(),
             image:
                 values.imageFile instanceof File
                     ? values.imageFile
@@ -375,7 +434,7 @@ export default function AdminCars() {
                         <div key={catType.key} className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <label
-                                    className={`text-xs font-semibold ${errors.category_key ? 'text-destructive' : 'text-muted-foreground'}`}
+                                    className="text-xs font-semibold text-muted-foreground"
                                 >
                                     {catType.label[activeLang] || catType.label.en}
                                 </label>
@@ -401,67 +460,99 @@ export default function AdminCars() {
                     ))}
 
                     <div className="grid gap-4 md:grid-cols-2">
-                        {[
-                            {
-                                key: 'name',
-                                label: t('admin.name'),
-                                placeholder: t('admin.carForm.namePlaceholder'),
-                                helpText: t('admin.carForm.nameHint'),
-                            },
-                            {
-                                key: 'fuel',
-                                label: t('admin.carForm.fuel'),
-                                placeholder: t('admin.carForm.fuelPlaceholder'),
-                                helpText: t('admin.carForm.fuelHint'),
-                            },
-                            {
-                                key: 'transmission',
-                                label: t('admin.carForm.transmission'),
-                                placeholder: t(
-                                    'admin.carForm.transmissionPlaceholder',
-                                ),
-                                helpText: t('admin.carForm.transmissionHint'),
-                            },
-                        ].map((field) => {
-                            const localizedKey = `${field.key}_${activeLang}`;
-                            const error = errors[localizedKey];
+                        {/* Name field - text input */}
+                        <div className="space-y-2">
+                            <label
+                                htmlFor={`name_${activeLang}`}
+                                className={`flex items-center gap-2 text-xs font-semibold ${errors[`name_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
+                            >
+                                {t('admin.name')}
+                                <LangBadge lang={activeLang} />
+                            </label>
+                            <input
+                                id={`name_${activeLang}`}
+                                value={String(values[`name_${activeLang}`] ?? '')}
+                                placeholder={t('admin.carForm.namePlaceholder')}
+                                onChange={(event) => setField(`name_${activeLang}`, event.target.value)}
+                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors[`name_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                                {t('admin.carForm.nameHint')}
+                            </p>
+                            {errors[`name_${activeLang}`] && (
+                                <p className="text-xs text-destructive">
+                                    {errors[`name_${activeLang}`]}
+                                </p>
+                            )}
+                        </div>
 
-                            return (
-                                <div key={localizedKey} className="space-y-2">
-                                    <label
-                                        htmlFor={localizedKey}
-                                        className={`flex items-center gap-2 text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
-                                    >
-                                        {field.label}
-                                        <LangBadge lang={activeLang} />
-                                    </label>
-                                    <input
-                                        id={localizedKey}
-                                        value={String(
-                                            values[localizedKey] ?? '',
-                                        )}
-                                        placeholder={field.placeholder}
-                                        onChange={(event) =>
-                                            setField(
-                                                localizedKey,
-                                                event.target.value,
-                                            )
-                                        }
-                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                                    />
-                                    {field.helpText && !error && (
-                                        <p className="text-[10px] text-muted-foreground">
-                                            {field.helpText}
-                                        </p>
-                                    )}
-                                    {error && (
-                                        <p className="text-xs text-destructive">
-                                            {error}
-                                        </p>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        {/* Fuel type - radio group */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.carForm.fuel')}
+                            </label>
+                            <RadioGroup
+                                value={String(values[`fuel_${activeLang}`] ?? '')}
+                                onValueChange={(val) => {
+                                    setField('fuel_en', val);
+                                    setField('fuel_fr', val);
+                                    setField('fuel_ar', val);
+                                }}
+                                className="flex flex-wrap gap-3"
+                            >
+                                {FUEL_TYPES.map((fuel) => (
+                                    <div key={fuel.value} className="flex items-center space-x-2">
+                                        <RadioGroupItem
+                                            value={fuel.value}
+                                            id={`fuel-${fuel.value}`}
+                                        />
+                                        <Label
+                                            htmlFor={`fuel-${fuel.value}`}
+                                            className="cursor-pointer text-sm font-normal"
+                                        >
+                                            {getLocalizedLabel(fuel, activeLang)}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </RadioGroup>
+                            <p className="text-[10px] text-muted-foreground">
+                                {t('admin.carForm.fuelHint')}
+                            </p>
+                        </div>
+
+                        {/* Transmission type - radio group */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.carForm.transmission')}
+                            </label>
+                            <RadioGroup
+                                value={String(values[`transmission_${activeLang}`] ?? '')}
+                                onValueChange={(val) => {
+                                    setField('transmission_en', val);
+                                    setField('transmission_fr', val);
+                                    setField('transmission_ar', val);
+                                }}
+                                className="flex flex-wrap gap-3"
+                            >
+                                {TRANSMISSION_TYPES.map((trans) => (
+                                    <div key={trans.value} className="flex items-center space-x-2">
+                                        <RadioGroupItem
+                                            value={trans.value}
+                                            id={`transmission-${trans.value}`}
+                                        />
+                                        <Label
+                                            htmlFor={`transmission-${trans.value}`}
+                                            className="cursor-pointer text-sm font-normal"
+                                        >
+                                            {getLocalizedLabel(trans, activeLang)}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </RadioGroup>
+                            <p className="text-[10px] text-muted-foreground">
+                                {t('admin.carForm.transmissionHint')}
+                            </p>
+                        </div>
 
                         <div className="space-y-2">
                             <label
@@ -470,15 +561,15 @@ export default function AdminCars() {
                             >
                                 {t('admin.price')}
                             </label>
-                            <input
+                            <Input
                                 id="car-price"
                                 type="number"
-                                placeholder="0.00"
+                                min={0}
+                                step={1}
+                                placeholder="0"
                                 value={String(values.price ?? '')}
-                                onChange={(event) =>
-                                    setField('price', event.target.value)
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.price ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                onChange={(e) => setField('price', e.target.value)}
+                                className={errors.price ? 'border-destructive ring-1 ring-destructive' : ''}
                             />
                             {errors.price && (
                                 <p className="text-xs text-destructive">
@@ -500,6 +591,9 @@ export default function AdminCars() {
                             <input
                                 id="car-seats"
                                 type="number"
+                                min="1"
+                                max="15"
+                                step="1"
                                 placeholder={t(
                                     'admin.carForm.seatsPlaceholder',
                                 )}

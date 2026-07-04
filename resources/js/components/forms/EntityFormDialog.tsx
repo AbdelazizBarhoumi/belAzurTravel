@@ -20,11 +20,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
 // import removed: uniqueNonEmptySelectOptions not used in this file
 
-export type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'checkbox';
+export type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'checkbox' | 'radio';
 
 export interface FieldOption {
     label: string;
@@ -231,6 +232,34 @@ function FieldControl({
                     />
                     <span>{field.placeholder ?? field.label}</span>
                 </label>
+            ) : field.type === 'radio' ? (
+                <RadioGroup
+                    value={stringValue}
+                    onValueChange={(val) => onChange(val)}
+                    disabled={field.disabled}
+                    className="flex flex-wrap gap-3"
+                >
+                    {(field.options ?? [])
+                        .map((option) => ({
+                            value: optionToValue(option),
+                            label: optionToLabel(option),
+                        }))
+                        .filter(({ value }) => value.trim().length > 0)
+                        .map(({ value, label }) => (
+                            <div key={value} className="flex items-center space-x-2">
+                                <RadioGroupItem
+                                    value={value}
+                                    id={`${field.key}-${value}`}
+                                />
+                                <Label
+                                    htmlFor={`${field.key}-${value}`}
+                                    className="cursor-pointer text-sm font-normal"
+                                >
+                                    {label}
+                                </Label>
+                            </div>
+                        ))}
+                </RadioGroup>
             ) : (
                 <Input
                     id={field.key}

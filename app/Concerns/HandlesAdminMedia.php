@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 trait HandlesAdminMedia
@@ -31,6 +32,7 @@ trait HandlesAdminMedia
     protected function handleMainImage(Request $request, ?string $existingImage = null, string $folder = 'uploads'): string
     {
         if ($request->hasFile('image')) {
+            File::ensureDirectoryExists(storage_path("app/public/{$folder}"));
             $path = $request->file('image')->store($folder, 'public');
 
             // Store with a leading slash so saved values are '/storage/...'
@@ -110,7 +112,10 @@ trait HandlesAdminMedia
         if ($request->hasFile('gallery_files')) {
             $uploads = collect($request->file('gallery_files'))
                 ->filter()
-                ->map(fn ($file) => '/storage/'.$file->store($folder, 'public'))
+                ->map(function ($file) use ($folder) {
+                    File::ensureDirectoryExists(storage_path("app/public/{$folder}"));
+                    return '/storage/'.$file->store($folder, 'public');
+                })
                 ->all();
 
             $gallery = array_merge($gallery, $uploads);

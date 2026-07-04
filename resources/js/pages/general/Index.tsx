@@ -10,7 +10,7 @@ const Index = () => {
     return (
         <main id="main-content" className="min-h-screen bg-background">
             <LandingVideoModal />
-            <PageHeroCarousel pageKey="home" />
+            <PageHeroCarousel pageKey="home" height="400px" />
             <HeroSection />
             <LandingSections />
             <LandingTrustStrip />

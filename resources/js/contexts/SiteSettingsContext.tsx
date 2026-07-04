@@ -10,7 +10,7 @@ import {
     type SetStateAction,
 } from 'react';
 import type { SiteSettings } from '@/api/siteSettings.api';
-import { defaultSiteSettings, fetchSiteSettings } from '@/api/siteSettings.api';
+import { clearSiteSettingsCache, defaultSiteSettings, fetchSiteSettings } from '@/api/siteSettings.api';
 
 interface SiteSettingsContextValue {
     settings: SiteSettings;
@@ -63,6 +63,16 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
             mounted = false;
         };
     }, []);
+
+    // Refetch when admin saves site settings
+    useEffect(() => {
+        const handler = () => {
+            clearSiteSettingsCache();
+            reload();
+        };
+        window.addEventListener('site-settings-updated', handler);
+        return () => window.removeEventListener('site-settings-updated', handler);
+    }, [reload]);
 
     const value = useMemo(
         () => ({ settings, loading, setSettings, reload }),

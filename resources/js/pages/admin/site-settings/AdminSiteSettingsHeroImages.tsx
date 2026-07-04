@@ -1,4 +1,4 @@
-import { Save, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Save, Image as ImageIcon } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
@@ -17,6 +17,7 @@ export default function AdminSiteSettingsHeroImages() {
     const existingHeroConfig = settings.content?.page_heroes?.home;
     const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
     const [heroInterval, setHeroInterval] = useState(6000);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         setHeroSlides(existingHeroConfig?.images ?? []);
@@ -24,6 +25,7 @@ export default function AdminSiteSettingsHeroImages() {
     }, [existingHeroConfig]);
 
     const saveHeroImages = useCallback(async () => {
+        setIsSaving(true);
         try {
             const filteredSlides = heroSlides.filter((s) => s.url);
             const content = {
@@ -44,6 +46,8 @@ export default function AdminSiteSettingsHeroImages() {
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
             toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsSaving(false);
         }
     }, [heroSlides, heroInterval, settings.content, t]);
 
@@ -62,8 +66,8 @@ export default function AdminSiteSettingsHeroImages() {
             title={t('admin.settings.landingHeroTitle')}
             subtitle={t('admin.settings.landingHeroSubtitle')}
             actions={
-                <Button size="sm" onClick={saveHeroImages}>
-                    <Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}
+                <Button size="sm" onClick={saveHeroImages} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}
                 </Button>
             }
         >

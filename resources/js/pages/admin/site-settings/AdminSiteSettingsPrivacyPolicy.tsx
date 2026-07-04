@@ -1,4 +1,4 @@
-import { Save } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
@@ -38,6 +38,7 @@ export default function AdminSiteSettingsPrivacyPolicy() {
     const [preview, setPreview] = useState<Record<string, boolean>>({});
     const [activeLang, setActiveLang] = useState<'en' | 'fr' | 'ar'>('en');
     const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [isSaving, setIsSaving] = useState(false);
     const autosaveTimerRef = useRef<number | null>(null);
     const lastSavedRef = useRef<string>('');
     const autosaveReadyRef = useRef(false);
@@ -78,6 +79,7 @@ export default function AdminSiteSettingsPrivacyPolicy() {
     }, [data, settings.content]);
 
     const save = async () => {
+        setIsSaving(true);
         try {
             const content = (settings.content as any) ?? {};
             await apiFetch('/api/site-settings', {
@@ -89,6 +91,8 @@ export default function AdminSiteSettingsPrivacyPolicy() {
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
             toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -111,7 +115,7 @@ export default function AdminSiteSettingsPrivacyPolicy() {
                             {autosaveStatus === 'saving' ? 'Autosaving...' : autosaveStatus === 'saved' ? 'Saved' : 'Autosave failed'}
                         </span>
                     )}
-                    <Button size="sm" onClick={save}><Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}</Button>
+                    <Button size="sm" onClick={save} disabled={isSaving}>{isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}</Button>
                 </div>
             }
         >

@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils';
 interface PageHeroCarouselProps {
     pageKey: string;
     className?: string;
+    height?: string;
 }
 
-export function PageHeroCarousel({ pageKey, className }: PageHeroCarouselProps) {
+export function PageHeroCarousel({ pageKey, className, height = '300px' }: PageHeroCarouselProps) {
     const { settings } = useSiteSettings();
     const { lang, dir } = useLanguage();
     const heroConfig = settings.content?.page_heroes?.[pageKey];
@@ -47,7 +48,7 @@ export function PageHeroCarousel({ pageKey, className }: PageHeroCarouselProps) 
             onMouseLeave={() => setIsPaused(false)}
         >
             <div className="relative w-full overflow-hidden">
-                <div className="relative w-full h-[300px]">
+                <div className="relative w-full" style={{ height }}>
                     <AnimatePresence mode="wait">
                         <motion.img
                             key={currentIdx}

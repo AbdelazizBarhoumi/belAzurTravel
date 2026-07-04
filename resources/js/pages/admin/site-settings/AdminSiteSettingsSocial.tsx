@@ -1,5 +1,5 @@
 import type React from 'react';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
@@ -75,6 +75,7 @@ export default function AdminSiteSettingsSocial() {
     const { t } = useLanguage();
     const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
     const [hours, setHours] = useState<HourRow[]>([]);
+    const [isSaving, setIsSaving] = useState(false);
 
     const usedLabels = socialLinks.map((s) => s.label.toLowerCase());
     const allPlatformsUsed = SOCIAL_PLATFORMS.every((p) =>
@@ -97,6 +98,7 @@ export default function AdminSiteSettingsSocial() {
     }
 
     const save = async () => {
+        setIsSaving(true);
         try {
             await apiFetch('/api/site-settings', {
                 method: 'PUT',
@@ -108,6 +110,8 @@ export default function AdminSiteSettingsSocial() {
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
             toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -129,8 +133,8 @@ export default function AdminSiteSettingsSocial() {
             title={t('admin.settings.socialMedia')}
             subtitle={t('admin.settings.businessHours')}
             actions={
-                <Button size="sm" onClick={save}>
-                    <Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}
+                <Button size="sm" onClick={save} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}
                 </Button>
             }
         >

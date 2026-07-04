@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save } from 'lucide-react';
+import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save, Star } from 'lucide-react';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import type { Lang } from '@/i18n/translations';
 
@@ -37,6 +37,8 @@ import {
 } from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LocationSelect } from '@/components/ui/LocationSelect';
+import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import {
@@ -44,9 +46,7 @@ import {
     hotelLabels,
     localizeKnown,
 } from '@/lib/adminI18n';
-import { CountrySelect } from '@/components/ui/CountrySelect';
-import { CitySelect } from '@/components/ui/CitySelect';
-import { useCountryByCode } from '@/hooks/useCountries';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 type HotelFormValues = AdminRow & {
     category_key?: string;
@@ -412,6 +412,8 @@ const AdminHotels = () => {
               description_en: asText(editing.description_en),
               description_fr: asText(editing.description_fr),
               description_ar: asText(editing.description_ar),
+              stars: String(editing.stars ?? ''),
+              rating: String(editing.rating ?? ''),
           } as unknown as HotelFormValues)
         : null;
 
@@ -429,9 +431,6 @@ const AdminHotels = () => {
             column: 'main',
             description: t('admin.hotelForm.coreDetailsHint'),
             render: ({ values, setField, activeLang, errors }) => {
-                const selectedCountryCode = asText(values.country_en);
-                const country = useCountryByCode(selectedCountryCode || null);
-
                 return (
                     <div className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">
@@ -443,14 +442,6 @@ const AdminHotels = () => {
                                     'admin.hotelForm.namePlaceholder',
                                 ),
                                 helpText: t('admin.hotelForm.nameHelp'),
-                            },
-                            {
-                                key: 'location',
-                                label: t('admin.location'),
-                                placeholder: t(
-                                    'admin.hotelForm.locationPlaceholder',
-                                ),
-                                helpText: t('admin.hotelForm.locationHelp'),
                             },
                         ].map((field) => {
                                 const localizedKey = `${field.key}_${activeLang}`;
@@ -501,59 +492,15 @@ const AdminHotels = () => {
                             })}
 
                             <div className="space-y-2">
-                                <label
-                                    htmlFor={`country_${activeLang}`}
-                                    className={`flex items-center gap-2 text-xs font-semibold ${errors?.[`country_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
-                                >
-                                    {t('admin.country')}
-                                    <LangBadge lang={activeLang} />
+                                <label className="text-xs font-semibold text-muted-foreground">
+                                    {t('admin.location')}
                                 </label>
-                                <CountrySelect
-                                    value={selectedCountryCode}
-                                    onChange={(_code, names) => {
-                                        setField('country_en', names.en);
-                                        setField('country_fr', names.fr);
-                                        setField('country_ar', names.ar);
-                                        setField('city_en', '');
-                                        setField('city_fr', '');
-                                        setField('city_ar', '');
-                                    }}
-                                    className={baseFieldClass(
-                                        Boolean(errors?.[`country_${activeLang}`]),
-                                    )}
+                                <LocationSelect
+                                    value={String(values.location ?? '')}
+                                    onChange={(val) => setField('location', val)}
+                                    lang={activeLang}
+                                    placeholder={t('admin.hotelForm.locationPlaceholder')}
                                 />
-                                {errors?.[`country_${activeLang}`] ? (
-                                    <p className="text-[10px] text-destructive">
-                                        {errors[`country_${activeLang}`]}
-                                    </p>
-                                ) : null}
-                            </div>
-
-                            <div className="space-y-2">
-                                <label
-                                    htmlFor={`city_${activeLang}`}
-                                    className={`flex items-center gap-2 text-xs font-semibold ${errors?.[`city_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
-                                >
-                                    {t('admin.city')}
-                                    <LangBadge lang={activeLang} />
-                                </label>
-                                <CitySelect
-                                    countryCode={selectedCountryCode || null}
-                                    value={asText(values[`city_${activeLang}`])}
-                                    onChange={(names) => {
-                                        setField('city_en', names.en);
-                                        setField('city_fr', names.fr);
-                                        setField('city_ar', names.ar);
-                                    }}
-                                    className={baseFieldClass(
-                                        Boolean(errors?.[`city_${activeLang}`]),
-                                    )}
-                                />
-                                {errors?.[`city_${activeLang}`] ? (
-                                    <p className="text-[10px] text-destructive">
-                                        {errors[`city_${activeLang}`]}
-                                    </p>
-                                ) : null}
                             </div>
 
                             <div className="space-y-2 md:col-span-2">
@@ -633,42 +580,68 @@ const AdminHotels = () => {
             title: t('admin.hotelForm.pricing'),
             columns: 2,
             column: 'main',
-            fields: [
-                {
-                    key: 'price',
-                    label: t('admin.pricePerNight'),
-                    type: 'number',
-                    placeholder: t('admin.hotelForm.pricePlaceholder'),
-                    helpText: t('admin.hotelForm.priceHelp'),
-                },
-                {
-                    key: 'rating',
-                    label: t('admin.rating'),
-                    type: 'number',
-                    placeholder: t('admin.hotelForm.ratingPlaceholder'),
-                    helpText: t('admin.hotelForm.ratingHelp'),
-                },
-                {
-                    key: 'destinationSlug',
-                    label: t('admin.destinationSlug'),
-                    placeholder: t('admin.hotelForm.slugPlaceholder'),
-                    helpText: t('admin.hotelForm.slugHelp'),
-                },
-                {
-                    key: 'stars',
-                    label: t('admin.stars'),
-                    type: 'number',
-                    placeholder: t('admin.hotelForm.starsPlaceholder'),
-                    helpText: t('admin.hotelForm.starsHelp'),
-                },
-                {
-                    key: 'reviews',
-                    label: t('admin.reviews'),
-                    type: 'number',
-                    placeholder: t('admin.hotelForm.reviewsPlaceholder'),
-                    helpText: t('admin.hotelForm.reviewsHelp'),
-                },
-            ],
+            render: ({ values, setField }) => (
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.pricePerNight')}
+                        </label>
+                        <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={String(values.price ?? '')}
+                            placeholder={t('admin.hotelForm.pricePlaceholder')}
+                            onChange={(e) => setField('price', e.target.value)}
+                            className={errors?.price ? 'border-destructive ring-1 ring-destructive' : ''}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            {t('admin.hotelForm.priceHelp')}
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.stars')}
+                        </label>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center">
+                                {Array.from({ length: 5 }, (_, i) => {
+                                    const starNum = i + 1;
+                                    const currentStars = Number(values.stars ?? 0);
+                                    const fillLevel = currentStars >= starNum ? 1 : 0;
+                                    return (
+                                        <div key={starNum} className="relative h-5 w-5">
+                                            <Star className="absolute inset-0 h-5 w-5 text-muted stroke-muted-foreground/30" />
+                                            {fillLevel === 1 && (
+                                                <Star className="absolute inset-0 h-5 w-5 fill-amber-400 text-amber-400" />
+                                            )}
+                                            <button
+                                                type="button"
+                                                className="absolute inset-0 z-10 cursor-pointer"
+                                                onClick={() => setField('stars', currentStars === starNum ? starNum - 1 : starNum)}
+                                                aria-label={`${starNum} stars`}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <Input
+                                type="number"
+                                min={0}
+                                max={5}
+                                step={1}
+                                value={String(values.stars ?? '')}
+                                onChange={(e) => setField('stars', e.target.value === '' ? null : Number(e.target.value))}
+                                className="w-20"
+                            />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                            {t('admin.hotelForm.starsHelp')}
+                        </p>
+                    </div>
+                </div>
+            ),
         },
         {
             title: t('admin.hotelForm.media'),
@@ -744,9 +717,7 @@ const AdminHotels = () => {
         if (!values.name_fr) errs.name_fr = t('admin.required');
         if (!values.name_ar) errs.name_ar = t('admin.required');
 
-        if (!values.location_en) errs.location_en = t('admin.required');
-        if (!values.location_fr) errs.location_fr = t('admin.required');
-        if (!values.location_ar) errs.location_ar = t('admin.required');
+        if (!values.location) errs.location = t('admin.required');
 
         if (!values.city_en) errs.city_en = t('admin.required');
         if (!values.city_fr) errs.city_fr = t('admin.required');
@@ -935,7 +906,7 @@ const AdminHotels = () => {
                                     t('admin.location'),
                                     t('admin.category'),
                                     t('admin.pricePerNight'),
-                                    t('admin.rating'),
+                                    t('admin.stars'),
                                     t('admin.actions'),
                                 ].map((h, i) => (
                                     <th
@@ -1017,7 +988,7 @@ const AdminHotels = () => {
                                         {String(d.price ?? 0)} TND
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
-                                        {String(d.rating ?? '')}
+                                        {String(d.stars ?? '')}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-2">

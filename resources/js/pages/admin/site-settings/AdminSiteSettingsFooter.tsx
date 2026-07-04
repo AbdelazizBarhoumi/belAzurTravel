@@ -2,7 +2,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Save, GripVertical, ArrowUp, ArrowDown, Trash2, Plus } from 'lucide-react';
+import { Loader2, Save, GripVertical, ArrowUp, ArrowDown, Trash2, Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
@@ -59,6 +59,7 @@ export default function AdminSiteSettingsFooter() {
     const { settings, loading } = useSiteSettings();
     const { t } = useLanguage();
     const [draft, setDraft] = useState<NavSettings>(DEFAULT_NAV_SETTINGS);
+    const [isSaving, setIsSaving] = useState(false);
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
     useEffect(() => {
@@ -110,6 +111,7 @@ export default function AdminSiteSettingsFooter() {
     };
 
     const save = async () => {
+        setIsSaving(true);
         try {
             const sanitizedDraft = normalizeNavSettingsDraft(sanitizeNavSettings(draft));
             const normalizedContent = settings.content ?? {};
@@ -122,6 +124,8 @@ export default function AdminSiteSettingsFooter() {
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
             toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -137,7 +141,7 @@ export default function AdminSiteSettingsFooter() {
         <AdminLayout
             title={t('admin.settings.footerColumns')}
             subtitle="Configure footer columns and page links"
-            actions={<Button size="sm" onClick={save}><Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}</Button>}
+            actions={<Button size="sm" onClick={save} disabled={isSaving}>{isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}</Button>}
         >
             <div className="grid gap-4 md:grid-cols-3">
                 {draft.footer.map((col, colIdx) => (

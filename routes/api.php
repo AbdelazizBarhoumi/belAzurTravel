@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Api\AdminBlogPostController;
 use App\Http\Controllers\Api\AdminCarController;
 use App\Http\Controllers\Api\AdminCategoryController;
@@ -125,6 +126,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/gallery', [GalleryController::class, 'store']);
         Route::put('/admin/gallery/{galleryImage}', [GalleryController::class, 'update']);
         Route::delete('/admin/gallery/{galleryImage}', [GalleryController::class, 'destroy']);
+
+        Route::post('/admin/upload', [UploadController::class, 'store']);
 
         // Per-entity admin controllers (per-entity admin)
         Route::get('/admin/destinations', [AdminDestinationController::class, 'index']);

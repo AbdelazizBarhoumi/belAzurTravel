@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, User, Heart, ChevronDown, ChevronRight, FileCheck, Phone } from 'lucide-react';
+import { Menu, X, User, Heart, ChevronDown, ChevronRight, FileCheck, Phone, Star } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { redirectAfterLogin } from '@/auth';
@@ -17,7 +17,7 @@ import {
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
-import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
+import { useCategoryTypesPublic, type PublicCategoryType } from '@/hooks/usePublicData';
 import { useCategories } from '@/hooks/usePublicData';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { getLocalizedCategoryLabelByKey } from '@/lib/categoryLabels';
@@ -206,7 +206,7 @@ function DesktopGroupDropdown({
     hoveredPath: string | null;
     setHoveredPath: (path: string | null) => void;
     hover: { schedule: (fn: () => void) => void; clear: () => void };
-    categoryTypesByPage: Record<string, CategoryType[]>;
+    categoryTypesByPage: Record<string, PublicCategoryType[]>;
 }) {
     const triggerPath = `group:${group.key}`;
     const isHovered = hoveredPath === triggerPath || hoveredPath?.startsWith(triggerPath + ':');
@@ -215,7 +215,7 @@ function DesktopGroupDropdown({
         items.flatMap((item): DropdownItemConfig[] => {
             if (item.mode === 'categories' && item.value) {
                 const categoryTypes = categoryTypesByPage[pageKey] ?? [];
-                const selectedType = categoryTypes.find((ct: CategoryType) => ct.key === item.value);
+                const selectedType = categoryTypes.find((ct: PublicCategoryType) => ct.key === item.value);
                 if (selectedType && selectedType.values) {
                     return selectedType.values.map((val) => ({
                         label: val.name as unknown as LocalizedText,
@@ -444,13 +444,13 @@ function MobileGroupSection({
     resolveLabel: (label: string | LocalizedText | null | undefined) => string;
     resolveDropdownItemLabel: (entry: HeaderEntry, item: DropdownItemConfig) => string;
     onClose: () => void;
-    categoryTypesByPage: Record<string, CategoryType[]>;
+    categoryTypesByPage: Record<string, PublicCategoryType[]>;
 }) {
     const resolveDropdownItems = (items: DropdownItemConfig[], pageKey: string): DropdownItemConfig[] =>
         items.flatMap((item): DropdownItemConfig[] => {
             if (item.mode === 'categories' && item.value) {
                 const categoryTypes = categoryTypesByPage[pageKey] ?? [];
-                const selectedType = categoryTypes.find((ct: CategoryType) => ct.key === item.value);
+                const selectedType = categoryTypes.find((ct: PublicCategoryType) => ct.key === item.value);
                 if (selectedType && selectedType.values) {
                     return selectedType.values.map((val) => ({
                         label: val.name as unknown as LocalizedText,
@@ -587,12 +587,12 @@ export function Navbar() {
     const { data: eventCategories = [] } = useCategories('events');
     const { data: dealCategories = [] } = useCategories('deals');
 
-    const { data: destinationCategoryTypes = [] } = useCategoryTypes('destinations');
-    const { data: hotelCategoryTypes = [] } = useCategoryTypes('hotels');
-    const { data: tourCategoryTypes = [] } = useCategoryTypes('tours');
-    const { data: carCategoryTypes = [] } = useCategoryTypes('cars');
-    const { data: eventCategoryTypes = [] } = useCategoryTypes('events');
-    const { data: dealCategoryTypes = [] } = useCategoryTypes('deals');
+    const { data: destinationCategoryTypes = [] } = useCategoryTypesPublic('destinations');
+    const { data: hotelCategoryTypes = [] } = useCategoryTypesPublic('hotels');
+    const { data: tourCategoryTypes = [] } = useCategoryTypesPublic('tours');
+    const { data: carCategoryTypes = [] } = useCategoryTypesPublic('cars');
+    const { data: eventCategoryTypes = [] } = useCategoryTypesPublic('events');
+    const { data: dealCategoryTypes = [] } = useCategoryTypesPublic('deals');
 
     const isActiveSection = (path: string) =>
         location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -669,7 +669,7 @@ export function Navbar() {
                 const categoryTypes =
                     categoryTypesByPage[entry.pageKey as keyof typeof categoryTypesByPage] ?? [];
                 const selectedType = categoryTypes.find(
-                    (ct: CategoryType) => ct.key === typeKey,
+                    (ct: PublicCategoryType) => ct.key === typeKey,
                 );
                 if (selectedType) {
                     const value = selectedType.values?.find(
@@ -705,7 +705,7 @@ export function Navbar() {
                 const categoryTypes =
                     categoryTypesByPage[entry.pageKey as keyof typeof categoryTypesByPage] ?? [];
                 const selectedType = categoryTypes.find(
-                    (ct: CategoryType) => ct.key === item.value,
+                    (ct: PublicCategoryType) => ct.key === item.value,
                 );
 
                 if (selectedType && selectedType.values) {
@@ -1031,6 +1031,15 @@ export function Navbar() {
                 </div>
 
                 <div className="hidden items-center gap-2 md:flex">
+                    <Link to="/promos?special=true">
+                        <Button
+                            size="sm"
+                            className="relative gap-1.5 bg-blue-600 text-white shadow-md shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/40"
+                        >
+                            <Star className="h-4 w-4 fill-current" />
+                            <span className="hidden xl:inline">{t('admin.promos.special') || 'Special Offers'}</span>
+                        </Button>
+                    </Link>
                     <LanguageSwitcher />
                     <Link to="/favorites">
                         <Button
@@ -1249,6 +1258,15 @@ export function Navbar() {
                             )}
 
                             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+                                <Link to="/promos?special=true" onClick={() => setOpen(false)}>
+                                    <Button
+                                        size="sm"
+                                        className="gap-1.5 bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                                    >
+                                        <Star className="h-4 w-4 fill-current" />
+                                        {t('admin.promos.special') || 'Special Offers'}
+                                    </Button>
+                                </Link>
                                 <LanguageSwitcher />
                                 <Link
                                     to="/favorites"

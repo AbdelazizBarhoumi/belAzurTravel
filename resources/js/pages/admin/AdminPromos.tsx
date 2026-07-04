@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Edit, Plus, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
     deleteAdminEntity,
@@ -27,13 +27,16 @@ import {
     JsonListEditor,
     type JsonFieldDef,
 } from '@/components/forms/JsonListEditor';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/DatePicker';
+import { Switch } from '@/components/ui/switch';
+import { format } from 'date-fns';
 import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
 import { isHexColor } from '@/lib/promoColor';
-import { localizeAdminValue } from '@/lib/adminI18n';
-import { useEffect } from 'react';
 
 type Copy = Record<Lang, string>;
 
@@ -42,14 +45,10 @@ const copy = (en: string, fr: string, ar: string): Copy => ({ en, fr, ar });
 const columns: Array<{ key: string; label: Copy }> = [
     { key: 'code', label: copy('Code', 'Code', 'الرمز') },
     { key: 'title', label: copy('Title', 'Titre', 'العنوان') },
-    {
-        key: 'discount',
-        label: copy('Discount', 'Remise', 'الخصم'),
-    },
-    {
-        key: 'expires',
-        label: copy('Expires', 'Expiration', 'ينتهي'),
-    },
+    { key: 'discount', label: copy('Discount', 'Remise', 'الخصم') },
+    { key: 'expires', label: copy('Expires', 'Expiration', 'ينتهي') },
+    { key: 'active', label: copy('Active', 'Actif', 'نشط') },
+    { key: 'is_special', label: copy('Special', 'Spécial', 'مميز') },
 ];
 
 const simpleLocalizedSchema: JsonFieldDef[] = [
@@ -171,7 +170,12 @@ export default function AdminPromos() {
     const saveMutation = useMutation({
         mutationFn: (row: Record<string, unknown>) =>
             saveAdminEntity('promos', row as { id?: string | number | null }),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey });
+        },
+        onError: () => {
+            toast.error(t('admin.saveError') || 'Failed to save');
+        },
     });
 
     const deleteMutation = useMutation({
@@ -219,6 +223,8 @@ export default function AdminPromos() {
         const errs: Record<string, string> = {};
         if (!values.code) errs.code = t('admin.errors.required');
         if (!values.title_en) errs.title_en = t('admin.errors.required');
+        if (!values.discount) errs.discount = t('admin.errors.required');
+        if (!values.expires) errs.expires = t('admin.errors.required');
         return errs;
     };
 
@@ -244,6 +250,7 @@ export default function AdminPromos() {
                 ? Number(values.per_user_limit)
                 : null,
             active: values.active === '1',
+            is_special: values.is_special === true || values.is_special === '1',
             eligibility: Array.isArray(values.eligibility)
                 ? values.eligibility
                 : [],
@@ -286,19 +293,13 @@ export default function AdminPromos() {
                             <label className="text-xs font-semibold text-muted-foreground">
                                 {t('admin.promos.code')}
                             </label>
-                            <input
+                            <Input
                                 value={String(values.code ?? '')}
-                                onChange={(e) =>
-                                    setField('code', e.target.value)
-                                }
+                                onChange={(e) => setField('code', e.target.value)}
                                 placeholder={t('admin.promos.codePlaceholder')}
-                                className={`w-full rounded-lg border px-3 py-2 text-sm ${errors?.code ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
+                                className={errors?.code ? 'border-destructive ring-1 ring-destructive' : ''}
                             />
-                            {errors?.code && (
-                                <p className="text-xs text-destructive">
-                                    {errors.code}
-                                </p>
-                            )}
+                            {errors?.code && <p className="text-xs text-destructive">{errors.code}</p>}
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-muted-foreground">
@@ -309,62 +310,48 @@ export default function AdminPromos() {
                                 onChange={(next) => setField('color', next)}
                             />
                         </div>
-                        {[
-                            {
-                                key: 'title',
-                                label: t('admin.promos.titleLabel'),
-                                placeholder: t('admin.promos.titlePlaceholder'),
-                            },
-                            {
-                                key: 'discount',
-                                label: t('admin.promos.discount'),
-                                placeholder: t(
-                                    'admin.promos.discountPlaceholder',
-                                ),
-                            },
-                            {
-                                key: 'expires',
-                                label: t('admin.promos.expires'),
-                                placeholder: t(
-                                    'admin.promos.expiresPlaceholder',
-                                ),
-                            },
-                        ].map((field) => {
-                            const fieldKey = `${field.key}_${activeLang}`;
-                            const isTitle = field.key === 'title';
-                            const fieldError = errors?.[fieldKey] as
-                                | string
-                                | undefined;
-
-                            return (
-                                <div key={fieldKey} className="space-y-2">
-                                    <label
-                                        htmlFor={fieldKey}
-                                        className="text-xs font-semibold text-muted-foreground"
-                                    >
-                                        {field.label}
-                                        <LangBadge lang={activeLang} />
-                                    </label>
-                                    <input
-                                        id={fieldKey}
-                                        value={String(values[fieldKey] ?? '')}
-                                        placeholder={field.placeholder}
-                                        onChange={(event) =>
-                                            setField(
-                                                fieldKey,
-                                                event.target.value,
-                                            )
-                                        }
-                                        className={`w-full rounded-lg border px-3 py-2 text-sm ${fieldError ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
-                                    />
-                                    {fieldError && (
-                                        <p className="text-xs text-destructive">
-                                            {fieldError}
-                                        </p>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.promos.titleLabel')} <LangBadge lang={activeLang} />
+                            </label>
+                            <Input
+                                value={String(values[`title_${activeLang}`] ?? '')}
+                                placeholder={t('admin.promos.titlePlaceholder')}
+                                onChange={(e) => setField(`title_${activeLang}`, e.target.value)}
+                                className={errors?.[`title_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
+                            />
+                            {errors?.[`title_${activeLang}`] && <p className="text-xs text-destructive">{errors[`title_${activeLang}`]}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.promos.discount')}
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    max={100}
+                                    step={1}
+                                    value={String(values.discount ?? '')}
+                                    placeholder="0"
+                                    onChange={(e) => setField('discount', e.target.value)}
+                                    className={errors?.discount ? 'border-destructive ring-1 ring-destructive' : ''}
+                                />
+                                <span className="text-sm font-medium text-muted-foreground">%</span>
+                            </div>
+                            {errors?.discount && <p className="text-xs text-destructive">{errors.discount}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.promos.expires')}
+                            </label>
+                            <DatePicker
+                                placeholder={t('admin.promos.expiresPlaceholder')}
+                                date={values.expires ? new Date(String(values.expires)) : undefined}
+                                onDateChange={(date) => setField('expires', date ? format(date, 'yyyy-MM-dd') : '')}
+                            />
+                            {errors?.expires && <p className="text-xs text-destructive">{errors.expires}</p>}
+                        </div>
                     </div>
                 </div>
             ),
@@ -376,115 +363,60 @@ export default function AdminPromos() {
                 <div className="space-y-6">
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-muted-foreground">
-                            {t('admin.promos.description')}{' '}
-                            <LangBadge lang={activeLang} />
+                            {t('admin.promos.description')} <LangBadge lang={activeLang} />
                         </label>
-                        <textarea
-                            value={String(
-                                values[`description_${activeLang}`] ?? '',
-                            )}
-                            onChange={(e) =>
-                                setField(
-                                    `description_${activeLang}`,
-                                    e.target.value,
-                                )
-                            }
+                        <Textarea
+                            value={String(values[`description_${activeLang}`] ?? '')}
+                            onChange={(e) => setField(`description_${activeLang}`, e.target.value)}
                             rows={3}
-                            placeholder={t(
-                                'admin.promos.descriptionPlaceholder',
-                            )}
-                            className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${errors?.[`description_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                            placeholder={t('admin.promos.descriptionPlaceholder')}
+                            className={errors?.[`description_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
                         />
-                        {errors?.[`description_${activeLang}`] && (
-                            <p className="text-xs text-destructive">
-                                {errors[`description_${activeLang}`]}
-                            </p>
-                        )}
+                        {errors?.[`description_${activeLang}`] && <p className="text-xs text-destructive">{errors[`description_${activeLang}`]}</p>}
                     </div>
 
                     <div className="space-y-4">
                         <div className="rounded-xl border border-border bg-muted/20 p-4">
-                            <p className="text-xs text-muted-foreground">
-                                {t('admin.promos.eligibilityHint')}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{t('admin.promos.eligibilityHint')}</p>
                         </div>
                         <JsonListEditor
                             title={t('admin.promos.eligibility')}
-                            items={
-                                Array.isArray(values.eligibility)
-                                    ? values.eligibility
-                                    : []
-                            }
-                            onItemsChange={(items) =>
-                                setField('eligibility', items)
-                            }
+                            items={Array.isArray(values.eligibility) ? values.eligibility : []}
+                            onItemsChange={(items) => setField('eligibility', items)}
                             schema={simpleLocalizedSchema}
                             activeLang={activeLang}
                             addButtonLabel={t('admin.promos.addRule')}
-                            itemLabel={(item, index) =>
-                                (
-                                    item.name as
-                                        | Record<string, string>
-                                        | undefined
-                                )?.[activeLang] ||
-                                `${t('admin.promos.rule')} ${index + 1}`
-                            }
+                            itemLabel={(item, index) => (item.name as Record<string, string> | undefined)?.[activeLang] || `${t('admin.promos.rule')} ${index + 1}`}
                         />
                     </div>
 
                     <div className="space-y-4 border-t border-border pt-6">
                         <div className="rounded-xl border border-border bg-muted/20 p-4">
-                            <p className="text-xs text-muted-foreground">
-                                {t('admin.promos.howToUseHint')}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{t('admin.promos.howToUseHint')}</p>
                         </div>
                         <JsonListEditor
                             title={t('admin.promos.howToUse')}
-                            items={
-                                Array.isArray(values.howToUse)
-                                    ? values.howToUse
-                                    : []
-                            }
-                            onItemsChange={(items) =>
-                                setField('howToUse', items)
-                            }
+                            items={Array.isArray(values.howToUse) ? values.howToUse : []}
+                            onItemsChange={(items) => setField('howToUse', items)}
                             schema={simpleLocalizedSchema}
                             activeLang={activeLang}
                             addButtonLabel={t('admin.promos.addStep')}
-                            itemLabel={(item, index) =>
-                                (
-                                    item.name as
-                                        | Record<string, string>
-                                        | undefined
-                                )?.[activeLang] ||
-                                `${t('admin.promos.step')} ${index + 1}`
-                            }
+                            itemLabel={(item, index) => (item.name as Record<string, string> | undefined)?.[activeLang] || `${t('admin.promos.step')} ${index + 1}`}
                         />
                     </div>
 
                     <div className="space-y-4 border-t border-border pt-6">
                         <div className="rounded-xl border border-border bg-muted/20 p-4">
-                            <p className="text-xs text-muted-foreground">
-                                {t('admin.promos.termsHint')}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{t('admin.promos.termsHint')}</p>
                         </div>
                         <JsonListEditor
                             title={t('admin.promos.terms')}
-                            items={
-                                Array.isArray(values.terms) ? values.terms : []
-                            }
+                            items={Array.isArray(values.terms) ? values.terms : []}
                             onItemsChange={(items) => setField('terms', items)}
                             schema={simpleLocalizedSchema}
                             activeLang={activeLang}
                             addButtonLabel={t('admin.promos.addTerm')}
-                            itemLabel={(item, index) =>
-                                (
-                                    item.name as
-                                        | Record<string, string>
-                                        | undefined
-                                )?.[activeLang] ||
-                                `${t('admin.promos.term')} ${index + 1}`
-                            }
+                            itemLabel={(item, index) => (item.name as Record<string, string> | undefined)?.[activeLang] || `${t('admin.promos.term')} ${index + 1}`}
                         />
                     </div>
                 </div>
@@ -497,150 +429,74 @@ export default function AdminPromos() {
                 <div className="space-y-6">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <label
-                                htmlFor="promo-usage_limit"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
+                            <label className="text-xs font-semibold text-muted-foreground">
                                 {t('admin.promos.usageLimit')}
                             </label>
-                            <input
-                                id="promo-usage_limit"
+                            <Input
                                 type="number"
-                                min="0"
+                                min={0}
                                 placeholder="0"
                                 value={String(values.usage_limit ?? '')}
-                                onChange={(event) =>
-                                    setField('usage_limit', event.target.value)
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${/* show errors if any */ ''}`}
+                                onChange={(e) => setField('usage_limit', e.target.value)}
                             />
-                            <p className="text-[10px] text-muted-foreground">
-                                {t('admin.promos.usageLimitHelp')}
-                            </p>
+                            <p className="text-[10px] text-muted-foreground">{t('admin.promos.usageLimitHelp')}</p>
                         </div>
                         <div className="space-y-2">
-                            <label
-                                htmlFor="promo-per_user_limit"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
+                            <label className="text-xs font-semibold text-muted-foreground">
                                 {t('admin.promos.perUserLimit')}
                             </label>
-                            <input
-                                id="promo-per_user_limit"
+                            <Input
                                 type="number"
-                                min="0"
+                                min={0}
                                 placeholder="1"
                                 value={String(values.per_user_limit ?? '')}
-                                onChange={(event) =>
-                                    setField(
-                                        'per_user_limit',
-                                        event.target.value,
-                                    )
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${/* show errors if any */ ''}`}
+                                onChange={(e) => setField('per_user_limit', e.target.value)}
                             />
-                            <p className="text-[10px] text-muted-foreground">
-                                {t('admin.promos.perUserLimitHelp')}
-                            </p>
+                            <p className="text-[10px] text-muted-foreground">{t('admin.promos.perUserLimitHelp')}</p>
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                            <label
-                                htmlFor="promo-applicable_to"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
+                            <label className="text-xs font-semibold text-muted-foreground">
                                 {t('admin.promos.applicableTo')}
                             </label>
-                            {(() => {
-                                const applicableToError = (
-                                    errors as Record<string, string> | undefined
-                                )?.applicable_to;
-                                return (
-                                    <>
-                                        <Select
-                                            value={String(
-                                                values.applicable_to ?? '',
-                                            )}
-                                            onValueChange={(val) =>
-                                                setField('applicable_to', val)
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                id="promo-applicable_to"
-                                                className={`w-full rounded-lg ${applicableToError ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
-                                            >
-                                                <SelectValue
-                                                    placeholder={t(
-                                                        'admin.promos.applicableToPlaceholder',
-                                                    )}
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {APPLICABLE_TO_OPTIONS.map(
-                                                    (option) => (
-                                                        <SelectItem
-                                                            key={option.value}
-                                                            value={option.value}
-                                                        >
-                                                            {t(option.labelKey)}
-                                                        </SelectItem>
-                                                    ),
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                        {applicableToError && (
-                                            <p className="text-xs text-destructive">
-                                                {applicableToError}
-                                            </p>
-                                        )}
-                                    </>
-                                );
-                            })()}
-                            <p className="text-[10px] text-muted-foreground">
-                                {t('admin.promos.applicableToHelp')}
-                            </p>
+                            <Select value={String(values.applicable_to ?? '')} onValueChange={(val) => setField('applicable_to', val)}>
+                                <SelectTrigger className={errors?.applicable_to ? 'border-destructive ring-1 ring-destructive' : ''}>
+                                    <SelectValue placeholder={t('admin.promos.applicableToPlaceholder')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {APPLICABLE_TO_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>{t(option.labelKey)}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-[10px] text-muted-foreground">{t('admin.promos.applicableToHelp')}</p>
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                            <label
-                                htmlFor="promo-active"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
+                            <label className="text-xs font-semibold text-muted-foreground">
                                 {t('admin.promos.active')}
                             </label>
-                            {(() => {
-                                const activeError = (
-                                    errors as Record<string, string> | undefined
-                                )?.active;
-                                return (
-                                    <>
-                                        <StatusSelect
-                                            value={String(values.active ?? '1')}
-                                            onValueChange={(val) =>
-                                                setField('active', val)
-                                            }
-                                            options={[
-                                                {
-                                                    value: '1',
-                                                    label: t(
-                                                        'admin.promos.active',
-                                                    ),
-                                                },
-                                                {
-                                                    value: '0',
-                                                    label: t(
-                                                        'admin.promos.inactive',
-                                                    ),
-                                                },
-                                            ]}
-                                            className={`w-full rounded-xl ${activeError ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                                        />
-                                        {activeError && (
-                                            <p className="text-xs text-destructive">
-                                                {activeError}
-                                            </p>
-                                        )}
-                                    </>
-                                );
-                            })()}
+                            <StatusSelect
+                                value={String(values.active ?? '1')}
+                                onValueChange={(val) => setField('active', val)}
+                                options={[
+                                    { value: '1', label: t('admin.promos.active') },
+                                    { value: '0', label: t('admin.promos.inactive') },
+                                ]}
+                                className={errors?.active ? 'border-destructive ring-1 ring-destructive' : ''}
+                            />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.promos.special') || 'Special'}
+                            </label>
+                            <div className="flex items-center gap-3">
+                                <Switch
+                                    checked={values.is_special === true || values.is_special === '1'}
+                                    onCheckedChange={(v) => setField('is_special', v)}
+                                />
+                                <span className="text-sm text-muted-foreground">
+                                    {values.is_special ? (t('admin.promos.yes') || 'Yes') : (t('admin.promos.no') || 'No')}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -695,11 +551,15 @@ export default function AdminPromos() {
                                         >
                                             {column.key === 'code'
                                                 ? String(row[column.key] ?? '')
-                                                : localizeAdminValue(
-                                                      row,
-                                                      column.key,
-                                                      lang,
-                                                  )}
+                                                : column.key === 'discount'
+                                                  ? (row.discount ? `${row.discount}%` : '—')
+                                                  : column.key === 'expires'
+                                                    ? (row.expires ? String(row.expires) : '—')
+                                                    : column.key === 'active'
+                                                      ? <button onClick={() => saveMutation.mutate({ ...row, active: !row.active } as any)} className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${row.active ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{row.active ? t('admin.promos.active') : t('admin.promos.inactive')}</button>
+                                                      : column.key === 'is_special'
+                                                        ? <button onClick={() => saveMutation.mutate({ ...row, is_special: !(row as any).is_special } as any)} className={`cursor-pointer rounded-full px-2 py-0.5 text-xs font-medium transition-colors ${(row as any).is_special ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>{(row as any).is_special ? t('admin.promos.special') : t('admin.promos.notSpecial')}</button>
+                                                        : String((row as any)[`${column.key}_${lang}`] ?? row[`${column.key}_en`] ?? '')}
                                         </td>
                                     ))}
                                     <td className="px-4 py-3 text-center">

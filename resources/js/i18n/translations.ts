@@ -250,6 +250,8 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.promos.active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
     'admin.promos.inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
+    'admin.promos.special': { fr: 'Offres spéciales', ar: 'عروض مميزة', en: 'Special Offers' },
+    'admin.promos.notSpecial': { fr: 'Normal', ar: 'عادي', en: 'Normal' },
     'admin.promos.limitsTitle': {
         fr: 'Limites et portée',
         ar: 'الحدود والنطاق',
@@ -260,11 +262,13 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'بيانات استخدام الحملة وحالة النشاط.',
         en: 'Campaign usage metadata and active state.',
     },
+    'admin.promos.no': { fr: 'Non', ar: 'لا', en: 'No' },
     'admin.errors.required': {
         fr: 'Ce champ est requis.',
         ar: 'هذا الحقل مطلوب.',
         en: 'This field is required.',
     },
+    'admin.promos.yes': { fr: 'Oui', ar: 'نعم', en: 'Yes' },
     'admin.saveError': {
         fr: "Échec de l'enregistrement des données.",
         ar: 'فشل حفظ البيانات.',
@@ -829,17 +833,17 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'deals.viewDeal': { fr: "Voir l'Offre", ar: 'شاهد العرض', en: 'View Deal' },
     'deals.placeholder.title': {
-        fr: 'p.ex. Évasion estivale',
+        fr: 'ex.Évasion estivale',
         ar: 'مثلاً: رحلة الصيف',
         en: 'E.g., Summer Escape',
     },
     'deals.placeholder.discount': {
-        fr: 'p.ex. 20%',
+        fr: 'ex.20%',
         ar: 'مثلاً: 20%',
         en: 'E.g., 20%',
     },
     'deals.placeholder.expires': {
-        fr: 'p.ex. 2026-12-31',
+        fr: 'ex.2026-12-31',
         ar: 'مثلاً: 2026-12-31',
         en: 'E.g., 2026-12-31',
     },
@@ -889,12 +893,12 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Enter a detailed description of the event...',
     },
     'admin.titlePlaceholder': {
-        fr: 'p.ex. Festival de musique d’été',
+        fr: 'ex.Festival de musique d’été',
         ar: 'مثلاً: مهرجان الصيف الموسيقي',
         en: 'e.g. Summer Music Festival',
     },
     'admin.locationPlaceholder': {
-        fr: 'p.ex. Paris, France',
+        fr: 'ex.Paris, France',
         ar: 'مثلاً: باريس، فرنسا',
         en: 'e.g. Paris, France',
     },
@@ -2816,18 +2820,18 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Flight updated',
     },
     'admin.carForm.fuelPlaceholder': {
-        fr: 'p.ex. Essence, Diesel, Électrique',
+        fr: 'ex.Essence, Diesel, Électrique',
         ar: 'مثلاً: بنزين، ديزل، كهرباء',
         en: 'e.g. Petrol, Diesel, Electric',
     },
     'admin.carForm.transmissionPlaceholder': {
-        fr: 'p.ex. Automatique, Manuel',
+        fr: 'ex.Automatique, Manuel',
         ar: 'مثلاً: أوتوماتيكي، يدوي',
         en: 'e.g. Automatic, Manual',
     },
     'admin.carForm.pricePlaceholder': { fr: '0.00', ar: '0.00', en: '0.00' },
     'admin.carForm.seatsPlaceholder': {
-        fr: 'p.ex. 5',
+        fr: 'ex.5',
         ar: 'مثلاً: 5',
         en: 'e.g. 5',
     },
@@ -2838,7 +2842,7 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.carForm.rule': { fr: 'Règle', ar: 'قاعدة', en: 'Rule' },
     'admin.carForm.namePlaceholder': {
-        fr: 'p.ex. Berline de Luxe',
+        fr: 'ex.Berline de Luxe',
         ar: 'مثلاً: سيارة سيدان فاخرة',
         en: 'e.g. Luxury Sedan',
     },
@@ -2933,12 +2937,12 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Color token',
     },
     'admin.promos.colorPlaceholder': {
-        fr: 'p.ex. #FF5733 ou blue',
+        fr: 'ex.#FF5733 ou blue',
         ar: 'مثلاً #FF5733 أو أزرق',
         en: 'e.g. #FF5733 or blue',
     },
     'admin.promos.codePlaceholder': {
-        fr: 'p.ex. SUMMER2026',
+        fr: 'ex.SUMMER2026',
         ar: 'مثلاً SUMMER2026',
         en: 'e.g. SUMMER2026',
     },
@@ -3310,12 +3314,12 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'e.g. Mediterranean, Sunny',
     },
     'admin.destinationForm.namePlaceholder': {
-        fr: 'p.ex. Bali',
+        fr: 'ex.Bali',
         ar: 'مثلاً: بالي',
         en: 'e.g. Bali',
     },
     'admin.destinationForm.countryPlaceholder': {
-        fr: 'p.ex. Indonésie',
+        fr: 'ex.Indonésie',
         ar: 'مثلاً: إندونيسيا',
         en: 'e.g. Indonesia',
     },
@@ -3360,12 +3364,12 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Add destination highlights.',
     },
     'admin.airlinePlaceholder': {
-        fr: 'p.ex. Emirates',
+        fr: 'ex.Emirates',
         ar: 'مثلاً: طيران الإمارات',
         en: 'e.g. Emirates',
     },
     'admin.toPlaceholder': {
-        fr: 'p.ex. Dubaï, EAU',
+        fr: 'ex.Dubaï, EAU',
         ar: 'مثلاً: دبي، الإمارات',
         en: 'e.g. Dubai, UAE',
     },
@@ -3381,12 +3385,12 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Pick a date',
     },
     'admin.codePlaceholder': {
-        fr: 'p.ex. EK-204',
+        fr: 'ex.EK-204',
         ar: 'مثلاً: EK-204',
         en: 'e.g. EK-204',
     },
     'admin.fromPlaceholder': {
-        fr: 'p.ex. LHR',
+        fr: 'ex.LHR',
         ar: 'مثلاً: LHR',
         en: 'e.g. LHR',
     },
@@ -3396,12 +3400,12 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Destination images',
     },
     'label.aircraftPlaceholder': {
-        fr: 'p.ex. Airbus A380',
+        fr: 'ex.Airbus A380',
         ar: 'مثلاً: إيرباص A380',
         en: 'e.g. Airbus A380',
     },
     'label.cabinPlaceholder': {
-        fr: 'p.ex. Business',
+        fr: 'ex.Business',
         ar: 'مثلاً: درجة رجال الأعمال',
         en: 'e.g. Business',
     },
@@ -4535,17 +4539,17 @@ translations['admin.settings.addLink'] = {
     en: 'Add link',
 };
 translations['admin.tourForm.namePlaceholder'] = {
-    fr: 'p. ex. Tour au coucher du soleil à Bali',
+    fr: 'ex. Tour au coucher du soleil à Bali',
     ar: 'مثلاً: جولة غروب الشمس في بالي',
     en: 'e.g. Bali Sunset Tour',
 };
 translations['admin.tourForm.locationPlaceholder'] = {
-    fr: 'p. ex. Bali, Indonésie',
+    fr: 'ex. Bali, Indonésie',
     ar: 'مثلاً: بالي، إندونيسيا',
     en: 'e.g. Bali, Indonesia',
 };
 translations['admin.tourForm.durationPlaceholder'] = {
-    fr: 'p. ex. 5 jours / 4 nuits',
+    fr: 'ex. 5 jours / 4 nuits',
     ar: 'مثلاً: 5 أيام / 4 ليالٍ',
     en: 'e.g. 5 days / 4 nights',
 };
@@ -4555,17 +4559,17 @@ translations['admin.tourForm.descriptionPlaceholder'] = {
     en: 'Describe the tour highlights, pace, and unique experiences...',
 };
 translations['admin.tourForm.pricePlaceholder'] = {
-    fr: 'p. ex. 500',
+    fr: 'ex. 500',
     ar: 'مثلاً: 500',
     en: 'e.g. 500',
 };
 translations['admin.tourForm.durationDaysPlaceholder'] = {
-    fr: 'p. ex. 5',
+    fr: 'ex. 5',
     ar: 'مثلاً: 5',
     en: 'e.g. 5',
 };
 translations['admin.tourForm.maxGroupPlaceholder'] = {
-    fr: 'p. ex. 12',
+    fr: 'ex. 12',
     ar: 'مثلاً: 12',
     en: 'e.g. 12',
 };

@@ -217,7 +217,7 @@ export default function HotelDetail() {
                             location={location}
                             entityType="hotel"
                             itemId={detail.id}
-                            rating={detail.rating}
+                            rating={detail.stars}
                             reviews={detail.reviews}
                             primaryButtonLabel={
                                 t('hotelDetail.reserveNow') || 'Book now'
@@ -259,7 +259,7 @@ export default function HotelDetail() {
                         location={location}
                         entityType="hotel"
                         itemId={detail.id}
-                        rating={detail.rating}
+                        rating={detail.stars}
                         reviews={detail.reviews}
                         primaryButtonLabel={
                             t('hotelDetail.reserveNow') || 'Book now'

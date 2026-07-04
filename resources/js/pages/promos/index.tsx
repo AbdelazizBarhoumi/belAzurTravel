@@ -31,8 +31,10 @@ function PromosContent() {
     const { data: promos = [] } = usePromos();
     const initialSearch = params.get('q') || '';
     const initialType = params.get('type') || ALL;
+    const initialSpecial = params.get('special') === 'true';
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedType, setSelectedType] = useState(initialType);
+    const [specialOnly, setSpecialOnly] = useState(initialSpecial);
 
     const filteredPromos = useMemo(
         () =>
@@ -48,17 +50,19 @@ function PromosContent() {
                     selectedType === ALL ||
                     getPromoType(localizeText(promo.discount, lang)) ===
                         selectedType;
-                return matchesSearch && matchesType;
+                const matchesSpecial = !specialOnly || (promo as any).is_special === true;
+                return matchesSearch && matchesType && matchesSpecial;
             }),
-        [lang, promos, searchQuery, selectedType],
+        [lang, promos, searchQuery, selectedType, specialOnly],
     );
 
     const hasActiveFilters =
-        searchQuery.trim().length > 0 || selectedType !== ALL;
+        searchQuery.trim().length > 0 || selectedType !== ALL || specialOnly;
 
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedType(ALL);
+        setSpecialOnly(false);
     };
 
     return (
@@ -105,6 +109,22 @@ function PromosContent() {
                                 </SelectItem>
                             </SelectContent>
                         </Select>
+                    </label>
+                    <label className="grid gap-2 text-sm">
+                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                            {t('admin.promos.special') || 'Special'}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => setSpecialOnly(!specialOnly)}
+                            className={`h-12 rounded-2xl border px-4 text-sm font-medium transition-all ${
+                                specialOnly
+                                    ? 'border-amber-400 bg-amber-50 text-amber-700 shadow-sm dark:bg-amber-900/20 dark:text-amber-400'
+                                    : 'border-border/70 bg-background/90 text-muted-foreground hover:border-amber-300 hover:text-amber-600'
+                            }`}
+                        >
+                            {specialOnly ? (t('admin.promos.special') || 'Special') : (t('admin.promos.notSpecial') || 'All')}
+                        </button>
                     </label>
                 </div>
             </ListFilterBar>

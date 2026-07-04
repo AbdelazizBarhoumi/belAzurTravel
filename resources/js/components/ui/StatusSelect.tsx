@@ -70,7 +70,6 @@ export function StatusSelect({
           className
         )}
       >
-        <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", indicatorColorClass)} />
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="rounded-xl">

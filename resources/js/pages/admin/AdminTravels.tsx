@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Settings, Image as ImageIcon, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, Settings, Image as ImageIcon, Save, Star, Loader2 } from 'lucide-react';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
 import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
-import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
+import { useCategoryTypes } from '@/hooks/useCategoryTypes';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { toast } from 'sonner';
 import {
@@ -32,6 +32,9 @@ import {
 } from '@/components/forms/JsonListEditor';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { LocationSelect } from '@/components/ui/LocationSelect';
 import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -46,8 +49,7 @@ type TourFormValues = AdminTravel &
         gallery?: string;
         galleryPaths?: string[];
         galleryFiles?: File[];
-        duration_days?: number;
-        duration_nights?: number;
+        duration_value?: number | null;
         max_group?: number;
         rating?: number;
         category_key?: string;
@@ -55,6 +57,8 @@ type TourFormValues = AdminTravel &
         category_fr?: string;
         category_ar?: string;
     };
+
+const PRESERVE_ARRAY_KEYS = ['images'];
 
 function resolveCategoryKey(...values: Array<unknown>): string {
     for (const value of values) {
@@ -178,6 +182,7 @@ const AdminTravels = () => {
     const existingHeroConfig = siteSettings?.content?.page_heroes?.travels;
     const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
     const [heroInterval, setHeroInterval] = useState(6000);
+    const [isHeroSaving, setIsHeroSaving] = useState(false);
 
     useEffect(() => {
         setHeroSlides(existingHeroConfig?.images ?? []);
@@ -185,6 +190,7 @@ const AdminTravels = () => {
     }, [existingHeroConfig]);
 
     const saveHeroImages = useCallback(async () => {
+        setIsHeroSaving(true);
         try {
             const filteredSlides = heroSlides.filter((s) => s.url);
             const content = {
@@ -205,6 +211,8 @@ const AdminTravels = () => {
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
             toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsHeroSaving(false);
         }
     }, [heroSlides, heroInterval, siteSettings?.content, t]);
 
@@ -245,12 +253,10 @@ const AdminTravels = () => {
                 errs[`name_${lang}`] = t('admin.required');
         });
 
+        if (!values.location)
+            errs.location = t('admin.required');
         if (!values.price || Number(values.price) <= 0)
             errs.price = t('admin.invalidPrice');
-        if (!values.duration_days || Number(values.duration_days) <= 0)
-            errs.duration_days = t('admin.invalidDays');
-        if (!values.duration_nights || Number(values.duration_nights) <= 0)
-            errs.duration_nights = t('admin.invalidNights');
         if (!values.max_group || Number(values.max_group) <= 0)
             errs.max_group = t('admin.invalidGroup');
         if (
@@ -326,36 +332,56 @@ const AdminTravels = () => {
         });
     };
 
-    const dialogInitial: TourFormValues | null = editing
-        ? ({
-              ...editing,
-              imagePath: asText(editing.image),
-              imageFile: null,
-              gallery: '',
-              galleryPaths: parseGallery(
-                  (editing as unknown as Record<string, unknown>).gallery ??
-                      (editing as unknown as Record<string, unknown>).images,
-              ),
-              galleryFiles: [],
-              itinerary: Array.isArray(editing.itinerary)
-                  ? editing.itinerary
-                  : [],
-              includes: Array.isArray(editing.includes) ? editing.includes : [],
-              excludes: Array.isArray(editing.excludes) ? editing.excludes : [],
-              duration_nights: (editing as any).duration_nights ?? undefined,
-              rating: (editing as any).rating ?? undefined,
-              category_key: (editing as any).category_key ?? '',
-              category_en: (editing as any).category_en ?? '',
-              category_fr: (editing as any).category_fr ?? '',
-              category_ar: (editing as any).category_ar ?? '',
-              ...Object.fromEntries(
-                  categoryTypes.map((ct) => [
-                      `category_${ct.key}`,
-                      (editing as any).category_assignments?.[ct.key] || '',
-                  ]),
-              ),
-          } as unknown as TourFormValues)
-        : ({} as TourFormValues);
+    const dialogInitial: TourFormValues | null = useMemo(() => {
+        if (!editing) return {} as TourFormValues;
+
+        const rawDuration = String((editing as any).duration ?? '').trim();
+        let durationValue: number | null = null;
+        if (rawDuration) {
+            const match = rawDuration.match(/^(\d+)\s*days?\s*\/\s*(\d+)\s*nights?$/i);
+            if (match) {
+                durationValue = Number(match[1]);
+            } else {
+                const singleMatch = rawDuration.match(/^(\d+)\s*(days?|nights?)$/i);
+                if (singleMatch) {
+                    durationValue = Number(singleMatch[1]);
+                }
+            }
+        }
+
+        return {
+            ...editing,
+            imagePath: asText(editing.image),
+            imageFile: null,
+            gallery: '',
+            galleryPaths: parseGallery(
+                (editing as unknown as Record<string, unknown>).gallery ??
+                    (editing as unknown as Record<string, unknown>).images,
+            ),
+            galleryFiles: [],
+            itinerary: Array.isArray(editing.itinerary)
+                ? editing.itinerary
+                : [],
+            includes: Array.isArray(editing.includes) ? editing.includes : [],
+            excludes: Array.isArray(editing.excludes) ? editing.excludes : [],
+            duration_value: durationValue,
+            duration: rawDuration || (durationValue != null && durationValue > 0 ? `${durationValue} ${t('common.days')} / ${durationValue - 1} ${t('common.nights')}` : ''),
+            duration_nights: (editing as any).duration_nights ?? undefined,
+            rating: (editing as any).rating ?? undefined,
+            category_key: (editing as any).category_key ?? '',
+            category_en: (editing as any).category_en ?? '',
+            category_fr: (editing as any).category_fr ?? '',
+            category_ar: (editing as any).category_ar ?? '',
+            ...Object.fromEntries(
+                categoryTypes.map((ct) => [
+                    `category_${ct.key}`,
+                    (editing as any).category_assignments?.[ct.key] || '',
+                ]),
+            ),
+        } as unknown as TourFormValues;
+    },
+        [editing, categoryTypes],
+    );
 
     const tourSections: SectionDef[] = [
         {
@@ -365,59 +391,72 @@ const AdminTravels = () => {
             render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
-                        {[
-                            {
-                                key: 'name',
-                                label: t('admin.name'),
-                                placeholder: t(
-                                    'admin.travelForm.namePlaceholder',
-                                ),
-                            },
-                            {
-                                key: 'location',
-                                label: t('admin.location'),
-                                placeholder: t(
-                                    'admin.travelForm.locationPlaceholder',
-                                ),
-                            },
-                            {
-                                key: 'duration',
-                                label: t('admin.duration'),
-                                placeholder: t(
-                                    'admin.travelForm.durationPlaceholder',
-                                ),
-                            },
-                        ].map((k) => (
-                            <div key={k.key} className="space-y-2">
-                                <label
-                                    htmlFor={`${k.key}_${activeLang}`}
-                                    className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"
-                                >
-                                    {k.label}
-                                    <LangBadge lang={activeLang} />
-                                </label>
-                                <input
-                                    id={`${k.key}_${activeLang}`}
-                                    value={String(
-                                        values[`${k.key}_${activeLang}`] ??
-                                            '',
-                                    )}
-                                    placeholder={k.placeholder}
-                                    onChange={(e) =>
-                                        setField(
-                                            `${k.key}_${activeLang}`,
-                                            e.target.value,
-                                        )
-                                    }
-                                    className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors[`${k.key}_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                        <div className="space-y-2">
+                            <label
+                                htmlFor={`name_${activeLang}`}
+                                className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"
+                            >
+                                {t('admin.name')}
+                                <LangBadge lang={activeLang} />
+                            </label>
+                            <Input
+                                id={`name_${activeLang}`}
+                                value={String(values[`name_${activeLang}`] ?? '')}
+                                placeholder={t('admin.travelForm.namePlaceholder')}
+                                onChange={(e) => setField(`name_${activeLang}`, e.target.value)}
+                                className={errors[`name_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
+                            />
+                            {errors[`name_${activeLang}`] && (
+                                <p className="text-xs text-destructive">
+                                    {errors[`name_${activeLang}`]}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.duration')}
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    value={String(values.duration_value ?? '')}
+                                    placeholder="0"
+                                    onChange={(e) => {
+                                        const days = e.target.value === '' ? null : Number(e.target.value);
+                                        setField('duration_value', days);
+                                        setField('duration', days != null && days > 0 ? `${days} ${t('common.days')} / ${days - 1} ${t('common.nights')}` : '');
+                                    }}
+                                    className={`w-24 ${errors.duration ? 'border-destructive ring-1 ring-destructive' : ''}`}
                                 />
-                                {errors[`${k.key}_${activeLang}`] && (
-                                    <p className="text-xs text-destructive">
-                                        {errors[`${k.key}_${activeLang}`]}
-                                    </p>
-                                )}
+                                <span className="text-sm text-muted-foreground">
+                                    {String(values.duration || '—')}
+                                </span>
                             </div>
-                        ))}
+                            {errors.duration && (
+                                <p className="text-xs text-destructive">
+                                    {errors.duration}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.location')}
+                            </label>
+                            <LocationSelect
+                                value={String(values.location ?? '')}
+                                onChange={(val) => setField('location', val)}
+                                lang={activeLang}
+                                placeholder={t('admin.travelForm.locationPlaceholder')}
+                            />
+                            {errors.location && (
+                                <p className="text-xs text-destructive">
+                                    {errors.location}
+                                </p>
+                            )}
+                        </div>
 
                         <div className="space-y-2 md:col-span-2">
                             <label
@@ -427,21 +466,13 @@ const AdminTravels = () => {
                                 {t('admin.description')}
                                 <LangBadge lang={activeLang} />
                             </label>
-                            <textarea
+                            <Textarea
                                 id={`description_${activeLang}`}
-                                value={String(
-                                    values[`description_${activeLang}`] ?? '',
-                                )}
-                                placeholder={t(
-                                    'admin.travelForm.descriptionPlaceholder',
-                                )}
-                                onChange={(e) =>
-                                    setField(
-                                        `description_${activeLang}`,
-                                        e.target.value,
-                                    )
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors[`description_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                value={String(values[`description_${activeLang}`] ?? '')}
+                                placeholder={t('admin.travelForm.descriptionPlaceholder')}
+                                onChange={(e) => setField(`description_${activeLang}`, e.target.value)}
+                                rows={4}
+                                className={errors[`description_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
                             />
                             {errors[`description_${activeLang}`] && (
                                 <p className="text-xs text-destructive">
@@ -451,155 +482,93 @@ const AdminTravels = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label
-                                htmlFor="travel-price"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
-                                {t('admin.price')} (
-                                {t('admin.travelForm.priceUnit')})
+                            <label htmlFor="travel-price" className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.price')} ({t('admin.travelForm.priceUnit')})
                             </label>
-                            <input
+                            <Input
                                 id="travel-price"
                                 type="number"
-                                placeholder={t(
-                                    'admin.travelForm.pricePlaceholder',
-                                )}
+                                placeholder={t('admin.travelForm.pricePlaceholder')}
                                 value={String(values.price ?? '')}
-                                onChange={(e) =>
-                                    setField('price', e.target.value)
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.price ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                onChange={(e) => setField('price', e.target.value)}
+                                className={errors.price ? 'border-destructive ring-1 ring-destructive' : ''}
                             />
                             {errors.price && (
-                                <p className="text-xs text-destructive">
-                                    {errors.price}
-                                </p>
+                                <p className="text-xs text-destructive">{errors.price}</p>
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <label
-                                htmlFor="travel-rating"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
+                            <label className="text-xs font-semibold text-muted-foreground">
                                 {t('admin.rating')} (0-5)
                             </label>
-                            <input
-                                id="travel-rating"
-                                type="number"
-                                min="0"
-                                max="5"
-                                step="0.1"
-                                placeholder={t(
-                                    'admin.travelForm.ratingPlaceholder',
-                                )}
-                                value={String(values.rating ?? '')}
-                                onChange={(e) =>
-                                    setField(
-                                        'rating',
-                                        e.target.value === ''
-                                            ? null
-                                            : Number(e.target.value),
-                                    )
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.rating ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                            />
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center">
+                                    {Array.from({ length: 5 }, (_, i) => {
+                                        const starNum = i + 1;
+                                        const currentRating = Number(values.rating ?? 0);
+                                        const fillLevel = currentRating >= starNum ? 1 : currentRating >= starNum - 0.5 ? 0.5 : 0;
+                                        return (
+                                            <div key={starNum} className="relative h-5 w-5">
+                                                <Star className="absolute inset-0 h-5 w-5 text-muted stroke-muted-foreground/30" />
+                                                {fillLevel === 1 && (
+                                                    <Star className="absolute inset-0 h-5 w-5 fill-amber-400 text-amber-400" />
+                                                )}
+                                                {fillLevel === 0.5 && (
+                                                    <span className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+                                                        <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                                                    </span>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className="absolute inset-0 z-10 cursor-pointer"
+                                                    style={{ clipPath: 'inset(0 50% 0 0)' }}
+                                                    onClick={() => setField('rating', currentRating === starNum - 0.5 ? starNum - 0.5 : starNum - 0.5)}
+                                                    aria-label={`${starNum - 0.5} stars`}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="absolute inset-0 z-10 cursor-pointer"
+                                                    style={{ clipPath: 'inset(0 0 0 50%)' }}
+                                                    onClick={() => setField('rating', currentRating === starNum ? starNum : starNum)}
+                                                    aria-label={`${starNum} stars`}
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <Input
+                                    type="number"
+                                    min={0}
+                                    max={5}
+                                    step={0.5}
+                                    value={String(values.rating ?? '')}
+                                    onChange={(e) => setField('rating', e.target.value === '' ? null : Number(e.target.value))}
+                                    className={`w-20 ${errors.rating ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                />
+                            </div>
                             {errors.rating && (
-                                <p className="text-xs text-destructive">
-                                    {errors.rating}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="travel-duration-days"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
-                                {t('admin.travelForm.durationDays')}
-                            </label>
-                            <input
-                                id="travel-duration-days"
-                                type="number"
-                                placeholder={t(
-                                    'admin.travelForm.durationDaysPlaceholder',
-                                )}
-                                value={String(values.duration_days ?? '')}
-                                onChange={(e) =>
-                                    setField(
-                                        'duration_days',
-                                        e.target.value === ''
-                                            ? null
-                                            : Number(e.target.value),
-                                    )
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.duration_days ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                            />
-                            {errors.duration_days && (
-                                <p className="text-xs text-destructive">
-                                    {errors.duration_days}
-                                </p>
+                                <p className="text-xs text-destructive">{errors.rating}</p>
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <label
-                                htmlFor="travel-duration-nights"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
-                                {t('admin.travelForm.durationNights')}
-                            </label>
-                            <input
-                                id="travel-duration-nights"
-                                type="number"
-                                placeholder={t(
-                                    'admin.travelForm.durationNightsPlaceholder',
-                                )}
-                                value={String(values.duration_nights ?? '')}
-                                onChange={(e) =>
-                                    setField(
-                                        'duration_nights',
-                                        e.target.value === ''
-                                            ? null
-                                            : Number(e.target.value),
-                                    )
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.duration_nights ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                            />
-                            {errors.duration_nights && (
-                                <p className="text-xs text-destructive">
-                                    {errors.duration_nights}
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <label
-                                htmlFor="travel-max-group"
-                                className="text-xs font-semibold text-muted-foreground"
-                            >
+                            <label htmlFor="travel-max-group" className="text-xs font-semibold text-muted-foreground">
                                 {t('admin.travelForm.maxGroup')}
                             </label>
-                            <input
+                            <Input
                                 id="travel-max-group"
                                 type="number"
-                                placeholder={t(
-                                    'admin.travelForm.maxGroupPlaceholder',
-                                )}
+                                min={1}
+                                max={50}
+                                step={1}
+                                placeholder="0"
                                 value={String(values.max_group ?? '')}
-                                onChange={(e) =>
-                                    setField(
-                                        'max_group',
-                                        e.target.value === ''
-                                            ? null
-                                            : Number(e.target.value),
-                                    )
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors.max_group ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                onChange={(e) => setField('max_group', e.target.value === '' ? null : Number(e.target.value))}
+                                className={errors.max_group ? 'border-destructive ring-1 ring-destructive' : ''}
                             />
                             {errors.max_group && (
-                                <p className="text-xs text-destructive">
-                                    {errors.max_group}
-                                </p>
+                                <p className="text-xs text-destructive">{errors.max_group}</p>
                             )}
                         </div>
                     </div>
@@ -608,9 +577,7 @@ const AdminTravels = () => {
                     {categoryTypes.map((catType) => (
                         <div key={catType.key} className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <label
-                                    className="text-xs font-semibold text-muted-foreground"
-                                >
+                                <label className="text-xs font-semibold text-muted-foreground">
                                     {catType.label[activeLang] || catType.label.en}
                                 </label>
                             </div>
@@ -618,9 +585,7 @@ const AdminTravels = () => {
                                 value={String(values[`category_${catType.key}`] || '')}
                                 onValueChange={(val) => setField(`category_${catType.key}`, val)}
                             >
-                                <SelectTrigger
-                                    className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20`}
-                                >
+                                <SelectTrigger className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
                                     <SelectValue placeholder={t('actions.select')} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -769,9 +734,10 @@ const AdminTravels = () => {
                     <Button
                         size="sm"
                         onClick={saveHeroImages}
+                        disabled={isHeroSaving}
                         className="bg-primary text-primary-foreground"
                     >
-                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {isHeroSaving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}{' '}
                         {t('admin.settings.save')}
                     </Button>
                 </div>
@@ -951,7 +917,7 @@ const AdminTravels = () => {
                 languages={['en', 'fr', 'ar']}
                 activeLang={modalLang}
                 onActiveLangChange={setModalLang}
-                preserveArrayKeys={['images']}
+                preserveArrayKeys={PRESERVE_ARRAY_KEYS}
             />
         </AdminLayout>
     );

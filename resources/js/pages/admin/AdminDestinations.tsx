@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save } from 'lucide-react';
+import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save, Star } from 'lucide-react';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
@@ -41,7 +41,14 @@ import {
     destinationLabels,
     localizeKnown,
 } from '@/lib/adminI18n';
-import { CountrySelect } from '@/components/ui/CountrySelect';
+import { LocationSelect } from '@/components/ui/LocationSelect';
+import {
+    BEST_TIME_OPTIONS,
+    LANGUAGES,
+    CURRENCIES,
+    WEATHER_OPTIONS,
+    getLocalizedLabel,
+} from '@/data/adminSelectOptions';
 
 type DestinationFormValues = AdminDestination &
     Record<string, unknown> & {
@@ -242,6 +249,32 @@ const AdminDestinations = () => {
 
         const editingRecord = editing as unknown as Record<string, unknown>;
 
+        // Convert fact labels to keys if needed
+        const resolveFactKey = (
+            value: string,
+            options: typeof BEST_TIME_OPTIONS,
+        ): string => {
+            if (!value) return '';
+            if (options.some((o) => o.value === value)) return value;
+            const match = options.find(
+                (o) => o.label.en === value || o.label.fr === value || o.label.ar === value,
+            );
+            return match?.value || value;
+        };
+
+        const bestTimeKey = resolveFactKey(
+            asText(editingRecord.bestTime_en),
+            BEST_TIME_OPTIONS,
+        );
+        const languageKey = resolveFactKey(
+            asText(editingRecord.language_en),
+            LANGUAGES,
+        );
+        const currencyKey = resolveFactKey(
+            asText(editingRecord.currency_en),
+            CURRENCIES,
+        );
+
         return {
             ...editing,
             category_key: resolveCategoryKey(
@@ -265,6 +298,15 @@ const AdminDestinations = () => {
             highlights: Array.isArray(editingRecord.highlights)
                 ? editingRecord.highlights
                 : [],
+            bestTime_en: bestTimeKey,
+            bestTime_fr: bestTimeKey,
+            bestTime_ar: bestTimeKey,
+            language_en: languageKey,
+            language_fr: languageKey,
+            language_ar: languageKey,
+            currency_en: currencyKey,
+            currency_fr: currencyKey,
+            currency_ar: currencyKey,
         } as DestinationFormValues;
     }, [editing, categoryTypes]);
 
@@ -549,24 +591,17 @@ const AdminDestinations = () => {
                                             {t('admin.destinationForm.country')}
                                             <LangBadge lang={activeLang} />
                                         </Label>
-                                        <CountrySelect
+                                        <LocationSelect
                                             value={asText(
                                                 values[`country_${activeLang}`],
                                             )}
-                                            onChange={(_code, names) => {
-                                                setField(
-                                                    'country_en',
-                                                    names.en,
-                                                );
-                                                setField(
-                                                    'country_fr',
-                                                    names.fr,
-                                                );
-                                                setField(
-                                                    'country_ar',
-                                                    names.ar,
-                                                );
+                                            onChange={(val) => {
+                                                setField('country_en', val);
+                                                setField('country_fr', val);
+                                                setField('country_ar', val);
                                             }}
+                                            lang={activeLang}
+                                            countryOnly
                                         />
                                         {errors?.[`country_${activeLang}`] && (
                                             <p className="text-[10px] text-destructive">
@@ -760,7 +795,7 @@ const AdminDestinations = () => {
                                         )}
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         <Label
                                             htmlFor="destination-price"
                                             className={
@@ -774,20 +809,12 @@ const AdminDestinations = () => {
                                         <Input
                                             id="destination-price"
                                             type="number"
+                                            min={0}
+                                            step={0.01}
                                             value={String(values.price ?? '')}
-                                            onChange={(e) =>
-                                                setField(
-                                                    'price',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            required
                                             placeholder="0.00"
-                                            className={
-                                                errors?.price
-                                                    ? 'border-destructive ring-1 ring-destructive'
-                                                    : ''
-                                            }
+                                            onChange={(e) => setField('price', e.target.value)}
+                                            className={errors?.price ? 'border-destructive ring-1 ring-destructive' : ''}
                                         />
                                         {errors?.price && (
                                             <p className="text-xs text-destructive">
@@ -801,29 +828,59 @@ const AdminDestinations = () => {
                                         </p>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         <Label
-                                            htmlFor="destination-rating"
                                             className="text-muted-foreground"
                                         >
                                             {t('admin.destinationForm.rating')}
                                         </Label>
-                                        <Input
-                                            id="destination-rating"
-                                            type="number"
-                                            value={String(values.rating ?? '')}
-                                            onChange={(e) =>
-                                                setField(
-                                                    'rating',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="5.0"
-                                        />
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center">
+                                                {Array.from({ length: 5 }, (_, i) => {
+                                                    const starNum = i + 1;
+                                                    const currentRating = Number(values.rating ?? 0);
+                                                    const fillLevel = currentRating >= starNum ? 1 : currentRating >= starNum - 0.5 ? 0.5 : 0;
+                                                    return (
+                                                        <div key={starNum} className="relative h-5 w-5">
+                                                            <Star className="absolute inset-0 h-5 w-5 text-muted stroke-muted-foreground/30" />
+                                                            {fillLevel === 1 && (
+                                                                <Star className="absolute inset-0 h-5 w-5 fill-amber-400 text-amber-400" />
+                                                            )}
+                                                            {fillLevel === 0.5 && (
+                                                                <span className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+                                                                    <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                                                                </span>
+                                                            )}
+                                                            <button
+                                                                type="button"
+                                                                className="absolute inset-0 z-10 cursor-pointer"
+                                                                style={{ clipPath: 'inset(0 50% 0 0)' }}
+                                                                onClick={() => setField('rating', currentRating === starNum - 0.5 ? starNum - 0.5 : starNum - 0.5)}
+                                                                aria-label={`${starNum - 0.5} stars`}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="absolute inset-0 z-10 cursor-pointer"
+                                                                style={{ clipPath: 'inset(0 0 0 50%)' }}
+                                                                onClick={() => setField('rating', currentRating === starNum ? starNum : starNum)}
+                                                                aria-label={`${starNum} stars`}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                max={5}
+                                                step={0.5}
+                                                value={String(values.rating ?? '')}
+                                                onChange={(e) => setField('rating', e.target.value === '' ? null : Number(e.target.value))}
+                                                className="w-20"
+                                            />
+                                        </div>
                                         <p className="text-xs text-muted-foreground">
-                                            {t(
-                                                'admin.destinationForm.ratingHelp',
-                                            )}
+                                            {t('admin.destinationForm.ratingHelp')}
                                         </p>
                                     </div>
                                 </div>
@@ -902,66 +959,113 @@ const AdminDestinations = () => {
                         columns: 2,
                         render: ({ values, setField, activeLang }) => (
                             <div className="grid gap-4 md:grid-cols-2">
-                                {[
-                                    {
-                                        key: 'bestTime',
-                                        placeholder: t(
-                                            'admin.destinationForm.bestTimePlaceholder',
-                                        ),
-                                    },
-                                    {
-                                        key: 'language',
-                                        placeholder: t(
-                                            'admin.destinationForm.languagePlaceholder',
-                                        ),
-                                    },
-                                    {
-                                        key: 'currency',
-                                        placeholder: t(
-                                            'admin.destinationForm.currencyPlaceholder',
-                                        ),
-                                    },
-                                    {
-                                        key: 'weather',
-                                        placeholder: t(
-                                            'admin.destinationForm.weatherPlaceholder',
-                                        ),
-                                    },
-                                ].map((field) => {
-                                    const fieldKey = localizedKey(
-                                        field.key,
-                                        activeLang,
-                                    );
-                                    return (
-                                        <div
-                                            key={fieldKey}
-                                            className="space-y-2"
-                                        >
-                                            <Label
-                                                htmlFor={fieldKey}
-                                                className="text-muted-foreground"
-                                            >
-                                                {t(
-                                                    `admin.destinationForm.${field.key}`,
-                                                )}
-                                                <LangBadge lang={activeLang} />
-                                            </Label>
-                                            <Input
-                                                id={fieldKey}
-                                                value={String(
-                                                    values[fieldKey] ?? '',
-                                                )}
-                                                onChange={(e) =>
-                                                    setField(
-                                                        fieldKey,
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder={field.placeholder}
-                                            />
-                                        </div>
-                                    );
-                                })}
+                                {/* Best Time - dropdown */}
+                                <div className="space-y-2">
+                                    <Label className="text-muted-foreground">
+                                        {t('admin.destinationForm.bestTime')}
+                                        <LangBadge lang={activeLang} />
+                                    </Label>
+                                    <Select
+                                        value={String(values[`bestTime_${activeLang}`] ?? '')}
+                                        onValueChange={(val) => {
+                                            setField('bestTime_en', val);
+                                            setField('bestTime_fr', val);
+                                            setField('bestTime_ar', val);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('admin.destinationForm.bestTimePlaceholder')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {BEST_TIME_OPTIONS.map((opt) => (
+                                                <SelectItem key={opt.value} value={opt.value}>
+                                                    {getLocalizedLabel(opt, activeLang)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Language - dropdown */}
+                                <div className="space-y-2">
+                                    <Label className="text-muted-foreground">
+                                        {t('admin.destinationForm.language')}
+                                        <LangBadge lang={activeLang} />
+                                    </Label>
+                                    <Select
+                                        value={String(values[`language_${activeLang}`] ?? '')}
+                                        onValueChange={(val) => {
+                                            setField('language_en', val);
+                                            setField('language_fr', val);
+                                            setField('language_ar', val);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('admin.destinationForm.languagePlaceholder')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {LANGUAGES.map((lang) => (
+                                                <SelectItem key={lang.value} value={lang.value}>
+                                                    {getLocalizedLabel(lang, activeLang)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Currency - dropdown */}
+                                <div className="space-y-2">
+                                    <Label className="text-muted-foreground">
+                                        {t('admin.destinationForm.currency')}
+                                        <LangBadge lang={activeLang} />
+                                    </Label>
+                                    <Select
+                                        value={String(values[`currency_${activeLang}`] ?? '')}
+                                        onValueChange={(val) => {
+                                            setField('currency_en', val);
+                                            setField('currency_fr', val);
+                                            setField('currency_ar', val);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('admin.destinationForm.currencyPlaceholder')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {CURRENCIES.map((curr) => (
+                                                <SelectItem key={curr.value} value={curr.value}>
+                                                    {getLocalizedLabel(curr, activeLang)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                {/* Weather - dropdown */}
+                                <div className="space-y-2">
+                                    <Label className="text-muted-foreground">
+                                        {t('admin.destinationForm.weather')}
+                                        <LangBadge lang={activeLang} />
+                                    </Label>
+                                    <Select
+                                        value={String(values[`weather_${activeLang}`] ?? '')}
+                                        onValueChange={(val) => {
+                                            setField('weather_en', val);
+                                            setField('weather_fr', val);
+                                            setField('weather_ar', val);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('admin.destinationForm.weatherPlaceholder')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {WEATHER_OPTIONS.map((opt) => (
+                                                <SelectItem key={opt.value} value={opt.value}>
+                                                    {getLocalizedLabel(opt, activeLang)}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         ),
                     },
@@ -1013,6 +1117,21 @@ const AdminDestinations = () => {
                         values.about,
                     );
 
+                    // Resolve bestTime, language, currency keys to labels
+                    const resolveFactLabel = (
+                        key: string,
+                        options: typeof BEST_TIME_OPTIONS,
+                    ): { en: string; fr: string; ar: string } => {
+                        const match = options.find((o) => o.value === key);
+                        return match?.label ?? { en: key, fr: key, ar: key };
+                    };
+                    const bestTimeKey = String(values.bestTime_en ?? '').trim();
+                    const languageKey = String(values.language_en ?? '').trim();
+                    const currencyKey = String(values.currency_en ?? '').trim();
+                    const bestTimeLabels = resolveFactLabel(bestTimeKey, BEST_TIME_OPTIONS);
+                    const languageLabels = resolveFactLabel(languageKey, LANGUAGES);
+                    const currencyLabels = resolveFactLabel(currencyKey, CURRENCIES);
+
                     const categoryAssignments: Record<string, string> = {};
                     categoryTypes.forEach((ct) => {
                         const val = values[`category_${ct.key}`];
@@ -1060,6 +1179,15 @@ const AdminDestinations = () => {
                         about_en: firstNonEmpty(values.about_en, values.about),
                         about_fr: values.about_fr ?? '',
                         about_ar: values.about_ar ?? '',
+                        bestTime_en: bestTimeLabels.en,
+                        bestTime_fr: bestTimeLabels.fr,
+                        bestTime_ar: bestTimeLabels.ar,
+                        language_en: languageLabels.en,
+                        language_fr: languageLabels.fr,
+                        language_ar: languageLabels.ar,
+                        currency_en: currencyLabels.en,
+                        currency_fr: currencyLabels.fr,
+                        currency_ar: currencyLabels.ar,
                         highlights: Array.isArray(values.highlights)
                             ? values.highlights
                             : [],

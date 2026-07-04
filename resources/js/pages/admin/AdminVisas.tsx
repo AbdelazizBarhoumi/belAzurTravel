@@ -19,6 +19,9 @@ import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { cn } from '@/lib/utils';
+import { LocationSelect } from '@/components/ui/LocationSelect';
+import { countryCodeToFlag } from '@/lib/flagEmoji';
+import { VISA_REGIONS, getLocalizedLabel } from '@/data/adminSelectOptions';
 
 type VisaLang = 'en' | 'fr' | 'ar';
 
@@ -98,6 +101,16 @@ const AdminVisas = () => {
 
     const dialogInitial = useMemo<VisaFormValues | null>(() => {
         if (!editing) return null;
+
+        const regionKey = (() => {
+            const raw = editing.region_en || editing.region || '';
+            if (VISA_REGIONS.some((r) => r.value === raw)) return raw;
+            const match = VISA_REGIONS.find(
+                (r) => r.label.en === raw || r.label.fr === raw || r.label.ar === raw,
+            );
+            return match?.value || raw;
+        })();
+
         return {
             id: editing.id,
             code: editing.code,
@@ -105,12 +118,8 @@ const AdminVisas = () => {
             name_fr: editing.name_fr,
             name_ar: editing.name_ar,
             flag: editing.flag,
-            region_en: editing.region_en,
-            region_fr: editing.region_fr,
-            region_ar: editing.region_ar,
-            processing_en: editing.processing_en,
-            processing_fr: editing.processing_fr,
-            processing_ar: editing.processing_ar,
+            region: regionKey,
+            processing: editing.processing_en || editing.processing || '',
             price: editing.price,
             is_active: editing.is_active,
             sort_order: editing.sort_order,
@@ -123,12 +132,12 @@ const AdminVisas = () => {
 
         langs.forEach((l) => {
             if (!values[`name_${l}`]) errs[`name_${l}`] = t('admin.errors.required');
-            if (!values[`region_${l}`]) errs[`region_${l}`] = t('admin.errors.required');
-            if (!values[`processing_${l}`]) errs[`processing_${l}`] = t('admin.errors.required');
         });
 
         if (!values.code) errs.code = t('admin.errors.required');
         if (!values.flag) errs.flag = t('admin.errors.required');
+        if (!values.region) errs.region = t('admin.errors.required');
+        if (!values.processing) errs.processing = t('admin.errors.required');
         if (!values.price || Number(values.price) < 0) errs.price = t('admin.errors.required');
 
         return errs;
@@ -142,6 +151,9 @@ const AdminVisas = () => {
             return;
         }
 
+        const regionKey = String(values.region || '').trim();
+        const regionOption = VISA_REGIONS.find((r) => r.value === regionKey);
+
         const payload: AdminVisa = {
             id: (values.id as string) || (editing?.id ?? ''),
             code: String(values.code).trim(),
@@ -150,14 +162,14 @@ const AdminVisas = () => {
             name_fr: firstNonEmpty(values.name_fr),
             name_ar: firstNonEmpty(values.name_ar),
             flag: String(values.flag).trim(),
-            region: firstNonEmpty(values.region_en, values.region_fr, values.region_ar),
-            region_en: firstNonEmpty(values.region_en),
-            region_fr: firstNonEmpty(values.region_fr),
-            region_ar: firstNonEmpty(values.region_ar),
-            processing: firstNonEmpty(values.processing_en, values.processing_fr, values.processing_ar),
-            processing_en: firstNonEmpty(values.processing_en),
-            processing_fr: firstNonEmpty(values.processing_fr),
-            processing_ar: firstNonEmpty(values.processing_ar),
+            region: regionOption?.label.en || regionKey,
+            region_en: regionOption?.label.en || regionKey,
+            region_fr: regionOption?.label.fr || regionKey,
+            region_ar: regionOption?.label.ar || regionKey,
+            processing: firstNonEmpty(values.processing),
+            processing_en: firstNonEmpty(values.processing),
+            processing_fr: firstNonEmpty(values.processing),
+            processing_ar: firstNonEmpty(values.processing),
             price: Number(values.price),
             is_active: values.is_active !== false,
             sort_order: Number(values.sort_order) || 0,
@@ -183,18 +195,22 @@ const AdminVisas = () => {
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label
-                                htmlFor="visa-code"
                                 className={dialogErrors?.code ? 'text-destructive' : 'text-muted-foreground'}
                             >
-                                {t('admin.visaForm.code')}
+                                {t('admin.visaForm.country')}
                             </Label>
-                            <Input
-                                id="visa-code"
+                            <LocationSelect
                                 value={String(values.code ?? '')}
-                                onChange={(e) => setField('code', e.target.value.toUpperCase())}
-                                placeholder="FR"
-                                maxLength={10}
-                                className={dialogErrors?.code ? 'border-destructive ring-1 ring-destructive' : ''}
+                                onChange={(val) => {
+                                    setField('code', val);
+                                    setField('flag', countryCodeToFlag(val));
+                                    setField('name_en', val);
+                                    setField('name_fr', val);
+                                    setField('name_ar', val);
+                                }}
+                                lang={lang}
+                                placeholder={t('admin.visaForm.selectCountry')}
+                                countryOnly
                             />
                             {dialogErrors?.code && (
                                 <p className="text-[10px] text-destructive">{dialogErrors.code}</p>
@@ -208,14 +224,12 @@ const AdminVisas = () => {
                             >
                                 {t('admin.visaForm.flag')}
                             </Label>
-                            <Input
-                                id="visa-flag"
-                                value={String(values.flag ?? '')}
-                                onChange={(e) => setField('flag', e.target.value)}
-                                placeholder="🇫🇷"
-                                maxLength={10}
-                                className={dialogErrors?.flag ? 'border-destructive ring-1 ring-destructive' : ''}
-                            />
+                            <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                                <span className="text-2xl">{String(values.flag ?? '')}</span>
+                                <span className="text-muted-foreground text-xs">
+                                    {values.code ? `${values.code}` : t('admin.visaForm.flagAuto')}
+                                </span>
+                            </div>
                             {dialogErrors?.flag && (
                                 <p className="text-[10px] text-destructive">{dialogErrors.flag}</p>
                             )}
@@ -243,41 +257,44 @@ const AdminVisas = () => {
 
                         <div className="space-y-2">
                             <Label
-                                htmlFor={localizedKey('region', activeLang as VisaLang)}
-                                className={dialogErrors?.[`region_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}
+                                className={dialogErrors?.region ? 'text-destructive' : 'text-muted-foreground'}
                             >
                                 {t('admin.visaForm.region')}
-                                <LangBadge lang={activeLang} />
                             </Label>
-                            <Input
-                                id={localizedKey('region', activeLang as VisaLang)}
-                                value={asText(values[`region_${activeLang}`])}
-                                onChange={(e) => setField(`region_${activeLang}`, e.target.value)}
-                                placeholder={t('admin.visaForm.regionPlaceholder')}
-                                className={dialogErrors?.[`region_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
-                            />
-                            {dialogErrors?.[`region_${activeLang}`] && (
-                                <p className="text-[10px] text-destructive">{dialogErrors[`region_${activeLang}`]}</p>
+                            <Select
+                                value={String(values.region ?? '')}
+                                onValueChange={(val) => setField('region', val)}
+                            >
+                                <SelectTrigger className={dialogErrors?.region ? 'border-destructive ring-1 ring-destructive' : ''}>
+                                    <SelectValue placeholder={t('admin.visaForm.regionPlaceholder')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {VISA_REGIONS.map((region) => (
+                                        <SelectItem key={region.value} value={region.value}>
+                                            {getLocalizedLabel(region, lang as 'en' | 'fr' | 'ar')}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {dialogErrors?.region && (
+                                <p className="text-[10px] text-destructive">{dialogErrors.region}</p>
                             )}
                         </div>
 
                         <div className="space-y-2 md:col-span-2">
                             <Label
-                                htmlFor={localizedKey('processing', activeLang as VisaLang)}
-                                className={dialogErrors?.[`processing_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}
+                                className={dialogErrors?.processing ? 'text-destructive' : 'text-muted-foreground'}
                             >
                                 {t('admin.visaForm.processing')}
-                                <LangBadge lang={activeLang} />
                             </Label>
                             <Input
-                                id={localizedKey('processing', activeLang as VisaLang)}
-                                value={asText(values[`processing_${activeLang}`])}
-                                onChange={(e) => setField(`processing_${activeLang}`, e.target.value)}
+                                value={String(values.processing ?? '')}
+                                onChange={(e) => setField('processing', e.target.value)}
                                 placeholder={t('admin.visaForm.processingPlaceholder')}
-                                className={dialogErrors?.[`processing_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
+                                className={dialogErrors?.processing ? 'border-destructive ring-1 ring-destructive' : ''}
                             />
-                            {dialogErrors?.[`processing_${activeLang}`] && (
-                                <p className="text-[10px] text-destructive">{dialogErrors[`processing_${activeLang}`]}</p>
+                            {dialogErrors?.processing && (
+                                <p className="text-[10px] text-destructive">{dialogErrors.processing}</p>
                             )}
                         </div>
                     </div>
@@ -403,7 +420,11 @@ const AdminVisas = () => {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {v[`${lang}_region`] || v.region}
+                                        {(() => {
+                                            const regionKey = v.region_en || v.region || '';
+                                            const regionOption = VISA_REGIONS.find((r) => r.value === regionKey);
+                                            return regionOption ? getLocalizedLabel(regionOption, lang as 'en' | 'fr' | 'ar') : regionKey;
+                                        })()}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
                                         {v[`${lang}_processing`] || v.processing}

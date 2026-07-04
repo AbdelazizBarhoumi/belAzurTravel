@@ -130,6 +130,11 @@ let cachedSiteSettings: SiteSettings | null = null;
 let cachedAtMs = 0;
 let inFlightSiteSettingsRequest: Promise<SiteSettings> | null = null;
 
+export function clearSiteSettingsCache(): void {
+    cachedSiteSettings = null;
+    cachedAtMs = 0;
+}
+
 function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
     return {
         companyName:

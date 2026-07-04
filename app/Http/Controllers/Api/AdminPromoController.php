@@ -109,6 +109,7 @@ class AdminPromoController extends Controller
             'per_user_limit' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'applicable_to' => ['sometimes', 'nullable', 'string', 'max:255'],
             'active' => ['sometimes', 'nullable', 'boolean'],
+            'is_special' => ['sometimes', 'nullable', 'boolean'],
             'gallery' => ['sometimes', 'nullable'],
             'gallery_files' => ['sometimes', 'array'],
             'gallery_files.*' => ['file', 'image', 'max:4096'],
@@ -145,6 +146,7 @@ class AdminPromoController extends Controller
                 'per_user_limit' => isset($data['per_user_limit']) ? (int) $data['per_user_limit'] : ($existing->details['per_user_limit'] ?? null),
                 'applicable_to' => $data['applicable_to'] ?? $existing->details['applicable_to'] ?? null,
                 'active' => isset($data['active']) ? (bool) $data['active'] : ($existing->details['active'] ?? true),
+                'is_special' => isset($data['is_special']) ? (bool) $data['is_special'] : ($existing->details['is_special'] ?? false),
             ]),
         ];
     }
@@ -169,6 +171,7 @@ class AdminPromoController extends Controller
         $payload['per_user_limit'] = $item->details['per_user_limit'] ?? null;
         $payload['applicable_to'] = $item->details['applicable_to'] ?? null;
         $payload['active'] = $item->details['active'] ?? true;
+        $payload['is_special'] = $item->details['is_special'] ?? false;
 
         return $payload;
     }

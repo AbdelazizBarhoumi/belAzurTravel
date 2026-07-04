@@ -1,4 +1,4 @@
-import { Save, Trash2 } from 'lucide-react';
+import { Loader2, Save, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
@@ -14,6 +14,7 @@ export default function AdminSiteSettingsVideo() {
     const { t } = useLanguage();
     const [videoFile, setVideoFile] = useState<File | null>(null);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         setVideoUrl(settings.landingVideo?.url ?? null);
@@ -29,24 +30,33 @@ export default function AdminSiteSettingsVideo() {
     }
 
     const save = async () => {
+        setIsSaving(true);
         try {
             if (videoFile) {
                 const formData = new FormData();
                 formData.append('video', videoFile);
                 formData.append('_method', 'PUT');
-                await apiFetch('/api/site-settings', { method: 'POST', body: formData });
+                const res = await apiFetch<{ content?: { landing_video?: { url: string } | null } }>(
+                    '/api/site-settings',
+                    { method: 'POST', body: formData },
+                );
+                const savedUrl = res?.content?.landing_video?.url ?? null;
+                setVideoUrl(savedUrl);
             } else if (!videoUrl && settings.landingVideo?.url) {
                 const content = (settings.content as any) ?? {};
                 await apiFetch('/api/site-settings', {
                     method: 'PUT',
                     body: JSON.stringify({ content: { ...content, landing_video: null } }),
                 });
+                setVideoUrl(null);
             }
             setVideoFile(null);
             window.dispatchEvent(new CustomEvent('site-settings-updated'));
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
             toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -54,7 +64,7 @@ export default function AdminSiteSettingsVideo() {
         <AdminLayout
             title={t('admin.settings.landingVideoTitle')}
             subtitle={t('admin.settings.landingVideoSubtitle')}
-            actions={<Button size="sm" onClick={save}><Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}</Button>}
+            actions={<Button size="sm" onClick={save} disabled={isSaving}>{isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}</Button>}
         >
             <Card className="space-y-4 p-4">
                 {videoUrl && (

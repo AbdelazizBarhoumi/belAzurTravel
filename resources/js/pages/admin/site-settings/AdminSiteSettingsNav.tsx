@@ -3,7 +3,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Save, GripVertical, ArrowUp, ArrowDown, Plus, Trash2, CornerDownRight,
+  Loader2, Save, GripVertical, ArrowUp, ArrowDown, Plus, Trash2, CornerDownRight,
   FolderPlus, Settings, ChevronDown, ChevronRight, Layers, Link2, Menu,
   AlertCircle, Info, X, CheckCircle2, MoveRight, Eye, EyeOff, FolderOpen,
   MoreHorizontal, Type, Globe, Search, Filter, Tag
@@ -960,6 +960,7 @@ export default function AdminSiteSettingsNav() {
   const [selectedPage, setSelectedPage] = useState<string>('');
   const [moveToGroupTarget, setMoveToGroupTarget] = useState<Record<number, string>>({});
   const [activeTab, setActiveTab] = useState<'header' | 'groups'>('header');
+  const [isSaving, setIsSaving] = useState(false);
 
   /* Data fetching */
   const { data: destinationCategories = [] } = useCategories('destinations');
@@ -1280,6 +1281,7 @@ export default function AdminSiteSettingsNav() {
     }
     if (Object.keys(errors).length > 0) { setFormErrors(errors); toast.error(Object.values(errors)[0]); return; }
     setFormErrors({});
+    setIsSaving(true);
     try {
       const sanitizedDraft = normalizeNavSettingsDraft(sanitizeNavSettings(draft));
       const normalizedContent = settings.content ?? {};
@@ -1295,6 +1297,8 @@ export default function AdminSiteSettingsNav() {
       toast.success(t('admin.settings.saveSuccess'));
     } catch {
       toast.error(t('admin.settings.saveError'));
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1312,8 +1316,8 @@ export default function AdminSiteSettingsNav() {
         title={t('admin.settings.headerLinks')}
         subtitle={t('admin.settings.reorder')}
         actions={
-          <Button size="sm" onClick={save} className="gap-1.5">
-            <Save className="h-4 w-4" />
+          <Button size="sm" onClick={save} className="gap-1.5" disabled={isSaving}>
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {t('admin.settings.save')}
           </Button>
         }

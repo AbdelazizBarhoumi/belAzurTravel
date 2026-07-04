@@ -1,4 +1,4 @@
-import { Save } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
@@ -21,6 +21,7 @@ export default function AdminSiteSettingsCompany() {
     const [phone, setPhone] = useState('');
     const [phone2, setPhone2] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         setCompanyName(settings.companyName || '');
@@ -50,6 +51,7 @@ export default function AdminSiteSettingsCompany() {
     }
 
     const save = async () => {
+        setIsSaving(true);
         try {
             await apiFetch('/api/site-settings', {
                 method: 'PUT',
@@ -67,6 +69,8 @@ export default function AdminSiteSettingsCompany() {
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
             toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -75,8 +79,8 @@ export default function AdminSiteSettingsCompany() {
             title={t('admin.settings.companyContact')}
             subtitle={t('admin.settings.brandIdentity')}
             actions={
-                <Button size="sm" onClick={save}>
-                    <Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}
+                <Button size="sm" onClick={save} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}
                 </Button>
             }
         >

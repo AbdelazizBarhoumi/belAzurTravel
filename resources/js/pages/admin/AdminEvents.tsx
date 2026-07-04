@@ -19,6 +19,8 @@ import {
 } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LocationSelect } from '@/components/ui/LocationSelect';
+import { Input } from '@/components/ui/input';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 import LangBadge from '@/components/forms/LangBadge';
 import {
@@ -99,9 +101,9 @@ export default function AdminEvents() {
         ['en', 'fr', 'ar'].forEach((lang) => {
             if (!values[`title_${lang}`])
                 errs[`title_${lang}`] = t('admin.error.required');
-            if (!values[`location_${lang}`])
-                errs[`location_${lang}`] = t('admin.error.required');
         });
+        if (!values.location)
+            errs.location = t('admin.error.required');
         if (!values.category_key) errs.category_key = t('admin.error.required');
         if (!values.date) errs.date = t('admin.error.required');
         if (!values.price || Number(values.price) <= 0)
@@ -279,10 +281,7 @@ export default function AdminEvents() {
                         </div>
                     ))}
                     <div className="grid gap-4 md:grid-cols-2">
-                        {[
-                            { key: 'title', label: t('admin.title') },
-                            { key: 'location', label: t('admin.location') },
-                        ].map((field) => {
+                        {[{ key: 'title', label: t('admin.title') }].map((field) => {
                             const fieldKey = `${field.key}_${activeLang}`;
                             const error = errors?.[fieldKey];
                             return (
@@ -300,11 +299,7 @@ export default function AdminEvents() {
                                         onChange={(e) =>
                                             setField(fieldKey, e.target.value)
                                         }
-                                        placeholder={
-                                            field.key === 'title'
-                                                ? t('admin.titlePlaceholder')
-                                                : t('admin.locationPlaceholder')
-                                        }
+                                        placeholder={t('admin.titlePlaceholder')}
                                         className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}
                                     />
                                     {error && (
@@ -315,6 +310,18 @@ export default function AdminEvents() {
                                 </div>
                             );
                         })}
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {t('admin.location')}
+                            </label>
+                            <LocationSelect
+                                value={String(values.location ?? '')}
+                                onChange={(val) => setField('location', val)}
+                                lang={activeLang}
+                                placeholder={t('admin.locationPlaceholder')}
+                            />
+                        </div>
 
                         <div className="space-y-2">
                             <label
@@ -351,16 +358,14 @@ export default function AdminEvents() {
                             >
                                 {t('admin.price')}
                             </label>
-                            <input
+                            <Input
                                 type="number"
-                                min="0"
-                                step="0.01"
+                                min={0}
+                                step={0.01}
                                 placeholder="0.00"
                                 value={String(values.price ?? '')}
-                                onChange={(e) =>
-                                    setField('price', e.target.value)
-                                }
-                                className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${errors?.price ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                onChange={(e) => setField('price', e.target.value)}
+                                className={errors?.price ? 'border-destructive ring-1 ring-destructive' : ''}
                             />
                             <p className="text-[10px] text-muted-foreground">
                                 {t('admin.priceHint')}

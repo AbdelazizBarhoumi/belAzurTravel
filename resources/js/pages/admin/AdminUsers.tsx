@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit2, Search, Trash2, UserCog } from 'lucide-react';
+import { Edit2, Loader2, Search, Trash2, UserCog } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import {
@@ -345,6 +345,7 @@ const AdminUsers = () => {
                     }
                 }}
                 currentUserRole={currentUser?.role ?? 'client'}
+                isSaving={updateMutation.isPending}
             />
 
             <ConfirmDialog
@@ -378,6 +379,7 @@ interface EditDialogProps {
     onClose: () => void;
     onSave: (data: Partial<AdminUser>) => void;
     currentUserRole: UserRole;
+    isSaving?: boolean;
 }
 
 const UserEditDialog = ({
@@ -386,6 +388,7 @@ const UserEditDialog = ({
     onClose,
     onSave,
     currentUserRole,
+    isSaving = false,
 }: EditDialogProps) => {
     const { t } = useLanguage();
     const [name, setName] = useState('');
@@ -492,7 +495,10 @@ const UserEditDialog = ({
                         <Button type="button" variant="ghost" onClick={onClose}>
                             {t('actions.cancel')}
                         </Button>
-                        <Button type="submit">{t('admin.saveChanges')}</Button>
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                            {t('admin.saveChanges')}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

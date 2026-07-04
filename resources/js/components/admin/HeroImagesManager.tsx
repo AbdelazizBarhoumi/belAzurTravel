@@ -63,9 +63,10 @@ function SortableSlide({
         if (!file) return;
         const formData = new FormData();
         formData.append('image', file);
+        formData.append('folder', 'heroes');
         try {
             const data = await apiFetch<{ url: string }>(
-                '/api/admin/gallery',
+                '/api/admin/upload',
                 { method: 'POST', body: formData },
             );
             onChange({ ...slide, url: data.url });

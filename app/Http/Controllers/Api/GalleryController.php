@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\GalleryImage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
@@ -25,6 +26,7 @@ class GalleryController extends Controller
 
         // Store uploaded image on the public disk and save a publicly
         // accessible URL in the `url` column (via the storage symlink).
+        File::ensureDirectoryExists(storage_path('app/public/uploads/gallery'));
         $path = $request->file('image')->store('uploads/gallery', 'public');
         $url = '/storage/'.$path;
 
@@ -53,6 +55,7 @@ class GalleryController extends Controller
             $oldPath = str_replace('/storage/', '', $galleryImage->url);
             Storage::disk('public')->delete($oldPath);
 
+            File::ensureDirectoryExists(storage_path('app/public/uploads/gallery'));
             $path = $request->file('image')->store('uploads/gallery', 'public');
             $data['url'] = '/storage/'.$path;
         }

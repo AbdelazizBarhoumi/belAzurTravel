@@ -623,10 +623,6 @@ export default function Hotels() {
                                                             rating={hotel.stars}
                                                             size="sm"
                                                         />
-                                                        <span className="text-sm font-semibold text-secondary">
-                                                            {hotel.rating}
-                                                        </span>
-
                                                     </div>
 
                                                     <div className="mb-4">

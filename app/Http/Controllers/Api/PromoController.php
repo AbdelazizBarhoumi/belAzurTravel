@@ -65,6 +65,7 @@ class PromoController extends Controller
             'per_user_limit' => $details['per_user_limit'] ?? null,
             'applicable_to' => $details['applicable_to'] ?? null,
             'active' => $details['active'] ?? true,
+            'is_special' => $details['is_special'] ?? false,
         ];
     }
 

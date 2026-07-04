@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 class SiteSettingsController extends Controller
@@ -340,6 +341,7 @@ class SiteSettingsController extends Controller
                     $oldPath = str_replace('/storage/', '', $oldVideo);
                     Storage::disk('public')->delete($oldPath);
                 }
+                File::ensureDirectoryExists(storage_path('app/public/uploads/site'));
                 $path = $request->file('video')->store('uploads/site', 'public');
                 $content['landing_video'] = ['url' => '/storage/'.$path];
             } elseif (array_key_exists('landing_video', $content) && is_null($content['landing_video'])) {
@@ -385,7 +387,10 @@ class SiteSettingsController extends Controller
         }
         Cache::forget('site_settings_nav');
 
-        return response()->json(['message' => __('messages.ok')]);
+        return response()->json([
+            'message' => __('messages.ok'),
+            'content' => $content,
+        ]);
     }
 
     protected function sanitizeNavSettings(array $settings): array

@@ -2,7 +2,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Save, GripVertical, ChevronDown, ChevronUp, Eye, Trash2, Image as ImageIcon, Video } from 'lucide-react';
+import { Loader2, Save, GripVertical, ChevronDown, ChevronUp, Eye, Trash2, Image as ImageIcon, Video } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
@@ -143,6 +143,8 @@ export default function AdminSiteSettingsLandingSections() {
     const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
     const [heroInterval, setHeroInterval] = useState(6000);
 
+    const [isSaving, setIsSaving] = useState(false);
+
     useEffect(() => {
         if (loading) return;
 
@@ -196,24 +198,29 @@ export default function AdminSiteSettingsLandingSections() {
     };
 
     const saveAll = async () => {
+        setIsSaving(true);
         try {
+            // Determine the video URL to persist (may change if uploading a new file)
+            let savedVideoUrl = settings.landingVideo?.url ?? null;
+
             // Save video
             if (videoFile) {
                 const formData = new FormData();
                 formData.append('video', videoFile);
                 formData.append('_method', 'PUT');
-                await apiFetch('/api/site-settings', { method: 'POST', body: formData });
+                const res = await apiFetch<{ content?: { landing_video?: { url: string } | null } }>(
+                    '/api/site-settings',
+                    { method: 'POST', body: formData },
+                );
+                // Grab the URL from the response so the next save doesn't overwrite it
+                savedVideoUrl = res?.content?.landing_video?.url ?? savedVideoUrl;
             } else if (!videoUrl && settings.landingVideo?.url) {
-                const content = (settings.content as any) ?? {};
-                await apiFetch('/api/site-settings', {
-                    method: 'PUT',
-                    body: JSON.stringify({ content: { ...content, landing_video: null } }),
-                });
+                savedVideoUrl = null;
             }
 
-            // Save hero images
+            // Build the full content to save in one shot (hero + sections + video)
             const filteredSlides = heroSlides.filter((s) => s.url);
-            const heroContent = {
+            const content: Record<string, any> = {
                 ...(settings.content ?? {}),
                 page_heroes: {
                     ...(settings.content?.page_heroes ?? {}),
@@ -222,12 +229,8 @@ export default function AdminSiteSettingsLandingSections() {
                         interval: heroInterval,
                     },
                 },
-            };
-
-            // Save sections
-            const content = {
-                ...heroContent,
                 landing_sections: { order, sections },
+                landing_video: savedVideoUrl ? { url: savedVideoUrl } : null,
             };
 
             await apiFetch('/api/site-settings', {
@@ -236,10 +239,13 @@ export default function AdminSiteSettingsLandingSections() {
             });
 
             setVideoFile(null);
+            setVideoUrl(savedVideoUrl);
             window.dispatchEvent(new CustomEvent('site-settings-updated'));
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
             toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -256,8 +262,8 @@ export default function AdminSiteSettingsLandingSections() {
             title={t('admin.settings.landingSectionsTitle')}
             subtitle={t('admin.settings.landingSectionsSubtitle')}
             actions={
-                <Button size="sm" onClick={saveAll}>
-                    <Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}
+                <Button size="sm" onClick={saveAll} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}
                 </Button>
             }
         >

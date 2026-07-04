@@ -21,46 +21,29 @@ import {
 } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import LangBadge from '@/components/forms/LangBadge';
+import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
-import type { Lang } from '@/i18n/translations';
-
-const FLIGHT_NESTED_OBJECT_FIELDS = new Set([
-    'airline',
-    'to',
-    'duration',
-    'stops',
-    'cabin',
-    'aircraft',
-    'baggage',
-    'refund',
-]);
-
-function normalizeFlightPayload(
-    values: Record<string, unknown>,
-): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(values).filter(([key, value]) => {
-            if (!FLIGHT_NESTED_OBJECT_FIELDS.has(key)) {
-                return true;
-            }
-
-            return (
-                value === null ||
-                typeof value !== 'object' ||
-                Array.isArray(value)
-            );
-        }),
-    );
-}
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { AIRPORTS } from '@/data/airports';
+import {
+    AIRLINE_NAMES,
+    CABIN_CLASSES,
+    FLIGHT_STOPS,
+    getLocalizedLabel,
+} from '@/data/adminSelectOptions';
 
 export default function AdminFlights() {
     useAdminGuard();
     const { t, lang } = useLanguage();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
-    const [modalLang, setModalLang] = useState<Lang>('en');
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
@@ -81,9 +64,7 @@ export default function AdminFlights() {
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const localizedLanguages: Lang[] = ['en', 'fr', 'ar'];
 
-    // Hero images state
     const { settings: siteSettings } = useSiteSettings();
     const existingHeroConfig = siteSettings?.content?.page_heroes?.flights;
     const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
@@ -118,29 +99,6 @@ export default function AdminFlights() {
         }
     }, [heroSlides, heroInterval, siteSettings?.content, t]);
 
-    const getLocalizedValue = (
-        row: AdminRow,
-        key: string,
-        locale: Lang,
-    ): string => {
-        const direct = row[`${key}_${locale}`];
-        if (typeof direct === 'string' && direct.trim().length > 0) {
-            return direct;
-        }
-
-        const nested = row[key];
-        if (nested && typeof nested === 'object') {
-            const localized = nested as Record<string, unknown>;
-            const candidate = localized[locale] ?? localized.en;
-            if (typeof candidate === 'string') {
-                return candidate;
-            }
-        }
-
-        const english = row[`${key}_en`];
-        return typeof english === 'string' ? english : '';
-    };
-
     const saveMutation = useMutation({
         mutationFn: (row: AdminRow) => saveAdminEntity('flights', row),
         onSuccess: () => {
@@ -160,116 +118,23 @@ export default function AdminFlights() {
         },
     });
 
-    const validate = (
-        values: Record<string, unknown>,
-    ): Record<string, string> => {
+    const validate = (values: Record<string, unknown>): Record<string, string> => {
         const errs: Record<string, string> = {};
-
         if (!values.code) errs.code = t('validation.required');
         if (!values.from) errs.from = t('validation.required');
+        if (!values.to) errs.to = t('validation.required');
+        if (!values.airline) errs.airline = t('validation.required');
         if (!values.departure) errs.departure = t('validation.required');
         if (!values.arrival) errs.arrival = t('validation.required');
         if (!values.date) errs.date = t('validation.required');
-
-        localizedLanguages.forEach((locale) => {
-            if (!values[`airline_${locale}`]) {
-                errs[`airline_${locale}`] = t('validation.required');
-            }
-            if (!values[`to_${locale}`]) {
-                errs[`to_${locale}`] = t('validation.required');
-            }
-            if (!values[`duration_${locale}`]) {
-                errs[`duration_${locale}`] = t('validation.required');
-            }
-            if (!values[`stops_${locale}`]) {
-                errs[`stops_${locale}`] = t('validation.required');
-            }
-            if (!values[`cabin_${locale}`]) {
-                errs[`cabin_${locale}`] = t('validation.required');
-            }
-        });
-
-        if (
-            values.price !== null &&
-            values.price !== undefined &&
-            Number(values.price) < 0
-        ) {
+        if (!values.duration) errs.duration = t('validation.required');
+        if (!values.stops) errs.stops = t('validation.required');
+        if (!values.cabin) errs.cabin = t('validation.required');
+        if (values.price !== null && values.price !== undefined && Number(values.price) < 0) {
             errs.price = t('validation.invalidPrice');
         }
-
-        if (
-            values.seats !== null &&
-            values.seats !== undefined &&
-            values.seats !== '' &&
-            Number(values.seats) < 0
-        ) {
-            errs.seats = t('admin.invalidSeats');
-        }
-
         return errs;
     };
-
-    function renderLocalizedInputs(
-        values: Record<string, unknown>,
-        setField: (key: string, value: unknown) => void,
-        activeLang: Lang,
-        fields: Array<{ key: string; label: string; placeholder: string }>,
-        sectionErrors: Record<string, string>,
-    ) {
-        return (
-            <div className="grid gap-6 md:grid-cols-2">
-                {localizedLanguages.map((locale) => (
-                    <div
-                        key={locale}
-                        className={
-                            activeLang === locale ? 'contents' : 'hidden'
-                        }
-                    >
-                        {fields.map((field) => {
-                            const fieldKey = `${field.key}_${locale}`;
-                            const error = sectionErrors?.[fieldKey];
-
-                            return (
-                                <div key={fieldKey} className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label
-                                            htmlFor={fieldKey}
-                                            className={`text-xs font-semibold ${
-                                                error
-                                                    ? 'text-destructive'
-                                                    : 'text-muted-foreground'
-                                            }`}
-                                        >
-                                            {field.label}
-                                        </label>
-                                        <LangBadge lang={locale} />
-                                    </div>
-                                    <input
-                                        id={fieldKey}
-                                        value={String(values[fieldKey] ?? '')}
-                                        placeholder={field.placeholder}
-                                        onChange={(e) =>
-                                            setField(fieldKey, e.target.value)
-                                        }
-                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                                            error
-                                                ? 'border-destructive ring-1 ring-destructive'
-                                                : ''
-                                        }`}
-                                    />
-                                    {error ? (
-                                        <p className="text-xs text-destructive">
-                                            {error}
-                                        </p>
-                                    ) : null}
-                                </div>
-                            );
-                        })}
-                    </div>
-                ))}
-            </div>
-        );
-    }
 
     function handleSave(values: AdminRow) {
         const errs = validate(values);
@@ -278,149 +143,251 @@ export default function AdminFlights() {
             toast.error(t('admin.pleaseFixErrors'));
             return;
         }
-
-        saveMutation.mutate(
-            normalizeFlightPayload({
-                ...values,
-                id: editing?.id ?? '',
-            }) as AdminRow,
-        );
+        saveMutation.mutate({ ...values, id: editing?.id ?? '' } as AdminRow);
     }
 
     const flightSections: SectionDef[] = [
         {
             title: t('admin.flightForm.coreDetails'),
             description: t('admin.flightForm.coreDetailsHint'),
-            render: ({ values, setField, activeLang, errors: sectionErrors }) =>
-                renderLocalizedInputs(
-                    values,
-                    setField,
-                    activeLang,
-                    [
-                        {
-                            key: 'airline',
-                            label: t('admin.airline'),
-                            placeholder: t('admin.airlinePlaceholder'),
-                        },
-                        {
-                            key: 'to',
-                            label: t('admin.to'),
-                            placeholder: t('admin.toPlaceholder'),
-                        },
-                        {
-                            key: 'duration',
-                            label: t('admin.duration'),
-                            placeholder: t('label.duration'),
-                        },
-                        {
-                            key: 'stops',
-                            label: t('admin.stops'),
-                            placeholder: t('admin.stops'),
-                        },
-                    ],
-                    sectionErrors ?? {},
-                ),
+            columns: 2,
+            render: ({ values, setField, errors: sectionErrors }) => (
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.airline')}
+                        </label>
+                        <Select
+                            value={String(values.airline ?? '')}
+                            onValueChange={(val) => setField('airline', val)}
+                        >
+                            <SelectTrigger className={sectionErrors?.airline ? 'border-destructive ring-1 ring-destructive' : ''}>
+                                <SelectValue placeholder={t('admin.airlinePlaceholder')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {AIRLINE_NAMES.map((a) => (
+                                    <SelectItem key={a.value} value={a.value}>
+                                        {getLocalizedLabel(a, lang)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.to')}
+                        </label>
+                        <Select
+                            value={String(values.to ?? '')}
+                            onValueChange={(val) => setField('to', val)}
+                        >
+                            <SelectTrigger className={sectionErrors?.to ? 'border-destructive ring-1 ring-destructive' : ''}>
+                                <SelectValue placeholder={t('admin.toPlaceholder')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {AIRPORTS.map((a) => (
+                                    <SelectItem key={a.iata} value={`${a.city} (${a.iata})`}>
+                                        {a.city} - {a.iata}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.duration')}
+                        </label>
+                        <Input
+                            value={String(values.duration ?? '')}
+                            placeholder={t('label.duration')}
+                            onChange={(e) => setField('duration', e.target.value)}
+                            className={sectionErrors?.duration ? 'border-destructive ring-1 ring-destructive' : ''}
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.stops')}
+                        </label>
+                        <Select
+                            value={String(values.stops ?? '')}
+                            onValueChange={(val) => setField('stops', val)}
+                        >
+                            <SelectTrigger className={sectionErrors?.stops ? 'border-destructive ring-1 ring-destructive' : ''}>
+                                <SelectValue placeholder={t('admin.stops')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {FLIGHT_STOPS.map((s) => (
+                                    <SelectItem key={s.value} value={s.value}>
+                                        {getLocalizedLabel(s, lang)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            ),
         },
         {
             title: t('admin.flightForm.routeAndAirline'),
             description: t('admin.flightForm.technicalInfo'),
-            fields: [
-                {
-                    key: 'code',
-                    label: t('admin.code'),
-                    placeholder: t('admin.codePlaceholder'),
-                },
-                {
-                    key: 'from',
-                    label: t('admin.from'),
-                    placeholder: t('admin.fromPlaceholder'),
-                },
-                {
-                    key: 'price',
-                    type: 'number',
-                    label: t('admin.price'),
-                    placeholder: t('admin.pricePlaceholder'),
-                },
-            ],
+            columns: 2,
+            render: ({ values, setField }) => (
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.code')}
+                        </label>
+                        <Input
+                            value={String(values.code ?? '')}
+                            placeholder={t('admin.codePlaceholder')}
+                            onChange={(e) => setField('code', e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.from')}
+                        </label>
+                        <Select
+                            value={String(values.from ?? '')}
+                            onValueChange={(val) => setField('from', val)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder={t('admin.fromPlaceholder')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {AIRPORTS.map((a) => (
+                                    <SelectItem key={a.iata} value={`${a.city} (${a.iata})`}>
+                                        {a.city} - {a.iata}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.price')}
+                        </label>
+                        <Input
+                            type="number"
+                            min={0}
+                            value={String(values.price ?? '')}
+                            placeholder={t('admin.pricePlaceholder')}
+                            onChange={(e) => setField('price', e.target.value)}
+                        />
+                    </div>
+                </div>
+            ),
         },
         {
             title: t('admin.flightForm.schedule'),
-            fields: [
-                {
-                    key: 'departure',
-                    label: t('admin.flightForm.departureTime'),
-                    placeholder: t('admin.flightForm.departurePlaceholder'),
-                },
-                {
-                    key: 'arrival',
-                    label: t('admin.flightForm.arrivalTime'),
-                    placeholder: t('admin.flightForm.arrivalPlaceholder'),
-                },
-                {
-                    key: 'seats',
-                    type: 'number',
-                    label: t('admin.flightForm.seats'),
-                    placeholder: t('admin.flightForm.seatsPlaceholder'),
-                },
-            ],
+            columns: 2,
             render: ({ values, setField }) => (
-                <div className="space-y-2">
-                    <label
-                        htmlFor="flight-date"
-                        className="text-xs font-semibold text-muted-foreground"
-                    >
-                        {t('admin.flightForm.travelDate')}
-                    </label>
-                    <DatePicker
-                        placeholder={t('admin.datePlaceholder')}
-                        date={
-                            values.date
-                                ? new Date(String(values.date))
-                                : undefined
-                        }
-                        onDateChange={(date) =>
-                            setField(
-                                'date',
-                                date ? format(date, 'yyyy-MM-dd') : '',
-                            )
-                        }
-                    />
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.flightForm.travelDate')}
+                        </label>
+                        <DatePicker
+                            placeholder={t('admin.datePlaceholder')}
+                            date={values.date ? new Date(String(values.date)) : undefined}
+                            onDateChange={(date) => setField('date', date ? format(date, 'yyyy-MM-dd') : '')}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.flightForm.departureTime')}
+                        </label>
+                        <Input
+                            value={String(values.departure ?? '')}
+                            placeholder={t('admin.flightForm.departurePlaceholder')}
+                            onChange={(e) => setField('departure', e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.flightForm.arrivalTime')}
+                        </label>
+                        <Input
+                            value={String(values.arrival ?? '')}
+                            placeholder={t('admin.flightForm.arrivalPlaceholder')}
+                            onChange={(e) => setField('arrival', e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.flightForm.seats')}
+                        </label>
+                        <Input
+                            type="number"
+                            min={0}
+                            value={String(values.seats ?? '')}
+                            placeholder={t('admin.flightForm.seatsPlaceholder')}
+                            onChange={(e) => setField('seats', e.target.value)}
+                        />
+                    </div>
                 </div>
             ),
         },
         {
             title: t('admin.flightForm.cabinAndServiceDetails'),
-            render: ({ values, setField, activeLang, errors: sectionErrors }) =>
-                renderLocalizedInputs(
-                    values,
-                    setField,
-                    activeLang,
-                    [
-                        {
-                            key: 'cabin',
-                            label: t('label.cabin'),
-                            placeholder: t('label.cabinPlaceholder'),
-                        },
-                        {
-                            key: 'aircraft',
-                            label: t('label.aircraft'),
-                            placeholder: t('label.aircraftPlaceholder'),
-                        },
-                        {
-                            key: 'baggage',
-                            label: t('label.baggage'),
-                            placeholder: t('label.baggage'),
-                        },
-                        {
-                            key: 'refund',
-                            label: t('admin.flightForm.refund'),
-                            placeholder: t(
-                                'admin.flightForm.refundPlaceholder',
-                            ),
-                        },
-                    ],
-                    sectionErrors ?? {},
-                ),
+            columns: 2,
+            render: ({ values, setField, errors: sectionErrors }) => (
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('label.cabin')}
+                        </label>
+                        <Select
+                            value={String(values.cabin ?? '')}
+                            onValueChange={(val) => setField('cabin', val)}
+                        >
+                            <SelectTrigger className={sectionErrors?.cabin ? 'border-destructive ring-1 ring-destructive' : ''}>
+                                <SelectValue placeholder={t('label.cabinPlaceholder')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {CABIN_CLASSES.map((c) => (
+                                    <SelectItem key={c.value} value={c.value}>
+                                        {getLocalizedLabel(c, lang)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('label.aircraft')}
+                        </label>
+                        <Input
+                            value={String(values.aircraft ?? '')}
+                            placeholder={t('label.aircraftPlaceholder')}
+                            onChange={(e) => setField('aircraft', e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('label.baggage')}
+                        </label>
+                        <Input
+                            value={String(values.baggage ?? '')}
+                            placeholder={t('label.baggage')}
+                            onChange={(e) => setField('baggage', e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.flightForm.refund')}
+                        </label>
+                        <Input
+                            value={String(values.refund ?? '')}
+                            placeholder={t('admin.flightForm.refundPlaceholder')}
+                            onChange={(e) => setField('refund', e.target.value)}
+                        />
+                    </div>
+                </div>
+            ),
         },
     ];
 
@@ -430,11 +397,7 @@ export default function AdminFlights() {
             subtitle={t('admin.flightsSubtitle')}
             actions={
                 <Button
-                    onClick={() => {
-                        setEditing(null);
-                        setOpen(true);
-                        setErrors({});
-                    }}
+                    onClick={() => { setEditing(null); setOpen(true); setErrors({}); }}
                     className="gap-2 bg-primary text-primary-foreground"
                 >
                     <Plus className="h-4 w-4" /> {t('actions.add')}
@@ -449,13 +412,8 @@ export default function AdminFlights() {
                             {t('admin.heroImages')}
                         </h3>
                     </div>
-                    <Button
-                        size="sm"
-                        onClick={saveHeroImages}
-                        className="bg-primary text-primary-foreground"
-                    >
-                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
-                        {t('admin.settings.save')}
+                    <Button size="sm" onClick={saveHeroImages} className="bg-primary text-primary-foreground">
+                        <Save className="mr-1 h-3.5 w-3.5" /> {t('admin.settings.save')}
                     </Button>
                 </div>
                 <HeroImagesManager
@@ -471,77 +429,33 @@ export default function AdminFlights() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
-                                {[
-                                    { key: 'code', label: t('admin.code') },
-                                    {
-                                        key: 'airline',
-                                        label: t('admin.airline'),
-                                    },
-                                    { key: 'from', label: t('admin.from') },
-                                    { key: 'to', label: t('admin.to') },
-                                    { key: 'price', label: t('admin.price') },
-                                    {
-                                        key: 'actions',
-                                        label: t('admin.actions'),
-                                    },
-                                ].map((column) => (
-                                    <th
-                                        key={column.key}
-                                        className="px-4 py-3 text-center text-xs font-semibold uppercase text-muted-foreground"
-                                    >
-                                        {column.label}
+                                {[t('admin.code'), t('admin.airline'), t('admin.from'), t('admin.to'), t('admin.price'), t('admin.actions')].map((label) => (
+                                    <th key={label} className="px-4 py-3 text-center text-xs font-semibold uppercase text-muted-foreground">
+                                        {label}
                                     </th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
                             {rows.map((row) => (
-                                <tr
-                                    key={row.id}
-                                    className="border-b border-border last:border-0 hover:bg-muted/20"
-                                >
+                                <tr key={row.id} className="border-b border-border last:border-0 hover:bg-muted/20">
+                                    <td className="px-4 py-3 text-center text-sm">{row.code}</td>
                                     <td className="px-4 py-3 text-center text-sm">
-                                        {row.code}
+                                        {AIRLINE_NAMES.find((a) => a.value === row.airline)
+                                            ? getLocalizedLabel(AIRLINE_NAMES.find((a) => a.value === row.airline)!, lang)
+                                            : String(row.airline ?? '')}
                                     </td>
-                                    <td
-                                        className={`px-4 py-3 text-sm font-semibold ${lang === 'ar' ? 'text-right' : 'text-left'}`}
-                                    >
-                                        {getLocalizedValue(
-                                            row,
-                                            'airline',
-                                            lang,
-                                        )}
-                                    </td>
-                                    <td
-                                        className={`px-4 py-3 text-sm ${lang === 'ar' ? 'text-right' : 'text-left'}`}
-                                    >
-                                        {getLocalizedValue(row, 'from', lang)}
-                                    </td>
-                                    <td
-                                        className={`px-4 py-3 text-sm ${lang === 'ar' ? 'text-right' : 'text-left'}`}
-                                    >
-                                        {getLocalizedValue(row, 'to', lang)}
-                                    </td>
+                                    <td className="px-4 py-3 text-center text-sm">{String(row.from ?? '')}</td>
+                                    <td className="px-4 py-3 text-center text-sm">{String(row.to ?? '')}</td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
                                         {Number(row.price).toLocaleString()} TND
                                     </td>
-                                    <td className="flex justify-center px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setEditing(row);
-                                                    setOpen(true);
-                                                }}
-                                                className="rounded-lg p-1.5 hover:bg-muted"
-                                            >
+                                    <td className="px-4 py-3 text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button onClick={() => { setEditing(row); setOpen(true); }} className="rounded-lg p-1.5 hover:bg-muted">
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
-                                            <button
-                                                onClick={() =>
-                                                    setPendingDelete(row)
-                                                }
-                                                className="rounded-lg p-1.5 hover:bg-destructive/10"
-                                            >
+                                            <button onClick={() => setPendingDelete(row)} className="rounded-lg p-1.5 hover:bg-destructive/10">
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </button>
                                         </div>
@@ -555,9 +469,7 @@ export default function AdminFlights() {
 
             <ConfirmDialog
                 open={!!pendingDelete}
-                onOpenChange={(isOpen) => {
-                    if (!isOpen) setPendingDelete(null);
-                }}
+                onOpenChange={(isOpen) => { if (!isOpen) setPendingDelete(null); }}
                 onConfirm={() => {
                     if (!pendingDelete) return;
                     deleteMutation.mutate(String(pendingDelete.id));
@@ -568,18 +480,11 @@ export default function AdminFlights() {
             <EntityFormDialog
                 open={open}
                 onOpenChange={handleOpenChange}
-                title={
-                    editing
-                        ? `${t('actions.edit')} ${t('admin.flights')}`
-                        : `${t('actions.add')} ${t('admin.flights')}`
-                }
+                title={editing ? `${t('actions.edit')} ${t('admin.flights')}` : `${t('actions.add')} ${t('admin.flights')}`}
                 sections={flightSections}
                 initial={editing ? { ...editing } : null}
                 onSubmit={(values) => handleSave(values as AdminRow)}
                 errors={errors}
-                languages={['en', 'fr', 'ar']}
-                activeLang={modalLang}
-                onActiveLangChange={setModalLang}
                 isSubmitting={saveMutation.isPending}
             />
         </AdminLayout>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\File;
 use App\Models\Amenity;
 use App\Models\Category;
 use App\Models\CategoryType;
@@ -517,6 +518,7 @@ class AdminHotelController extends Controller
     {
         return array_values(array_filter(array_map(function (mixed $image): string {
             if ($image instanceof UploadedFile) {
+                File::ensureDirectoryExists(storage_path('app/public/uploads/hotels/rooms'));
                 return '/storage/'.$image->store('uploads/hotels/rooms', 'public');
             }
 
