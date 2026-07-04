@@ -34,6 +34,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
+import type { Lang } from '@/i18n/translations';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
@@ -45,9 +46,18 @@ export default function AdminEvents() {
     const { data: categoryTypes = [] } = useCategoryTypes('events');
     const [catManagerOpen, setCatManagerOpen] = useState(false);
     const [open, setOpen] = useState(false);
+    const [modalLang, setModalLang] = useState<Lang>('en');
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!nextOpen) {
+            setErrors({});
+            setEditing(null);
+        }
+        setOpen(nextOpen);
+    };
 
     // Hero images state
     const { settings: siteSettings } = useSiteSettings();
@@ -637,7 +647,7 @@ export default function AdminEvents() {
                 title={t('admin.deleteItemTitle')}
                 description={
                     pendingDelete
-                        ? `${t('admin.deleteItemPrompt')} “${String(pendingDelete.title_en ?? '')}”? ${t('admin.deleteItemWarning')}`
+                        ? `${t('admin.deleteItemPrompt')} "${String(pendingDelete.title_en ?? '')}"? ${t('admin.deleteItemWarning')}`
                         : t('admin.deleteItemFallback')
                 }
                 confirmText={t('actions.delete')}
@@ -647,6 +657,24 @@ export default function AdminEvents() {
                     deleteMutation.mutate(String(pendingDelete.id));
                     setPendingDelete(null);
                 }}
+            />
+
+            <EntityFormDialog
+                open={open}
+                onOpenChange={handleOpenChange}
+                title={
+                    editing
+                        ? `${t('actions.edit')} ${t('admin.events')}`
+                        : `${t('actions.add')} ${t('admin.events')}`
+                }
+                sections={eventSections}
+                initial={dialogInitial}
+                onSubmit={(values) => handleSave(values as AdminRow)}
+                errors={errors}
+                languages={['en', 'fr', 'ar']}
+                activeLang={modalLang}
+                onActiveLangChange={setModalLang}
+                isSubmitting={saveMutation.isPending}
             />
         </AdminLayout>
     );

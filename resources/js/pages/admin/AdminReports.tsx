@@ -29,6 +29,7 @@ const COLORS = [
 const AdminReports = () => {
     useAdminGuard();
     const { lang } = useLanguage();
+    const { t } = useLanguage();
     const { data: bookings = [] } = useAdminBookings();
 
     const totalRevenue = bookings
@@ -89,29 +90,29 @@ const AdminReports = () => {
 
     const stats = [
         {
-            label: 'Total Revenue',
+            label: t('admin.totalRevenue'),
             value: `${totalRevenue.toLocaleString()} TND`,
             icon: Wallet,
         },
         {
-            label: 'Total Bookings',
+            label: t('admin.totalBookingsCount'),
             value: bookings.length,
             icon: Calendar,
         },
-        { label: 'Confirmed', value: confirmed, icon: CheckCircle2 },
-        { label: 'Cancelled', value: cancelled, icon: XCircle },
+        { label: t('admin.confirmed'), value: confirmed, icon: CheckCircle2 },
+        { label: t('admin.cancelled'), value: cancelled, icon: XCircle },
     ];
 
     return (
         <AdminLayout
-            title="Reports"
-            subtitle="Revenue and booking insights"
+            title={t('admin.reports')}
+            subtitle={t('admin.reportsSubtitle')}
             actions={
                 <Button
                     onClick={exportCSV}
                     className="gap-2 bg-primary text-primary-foreground"
                 >
-                    <Download className="h-4 w-4" /> Export CSV
+                    <Download className="h-4 w-4" /> {t('admin.exportCSV')}
                 </Button>
             }
         >
@@ -136,7 +137,7 @@ const AdminReports = () => {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <div className="rounded-2xl border border-border bg-card p-6">
                         <h2 className="mb-4 font-serif text-lg font-bold text-foreground">
-                            Bookings by Status
+                            {t('admin.bookingsByStatus')}
                         </h2>
                         <div className="h-72">
                             <ResponsiveContainer width="100%" height="100%">
@@ -164,7 +165,7 @@ const AdminReports = () => {
 
                     <div className="rounded-2xl border border-border bg-card p-6">
                         <h2 className="mb-4 font-serif text-lg font-bold text-foreground">
-                            Top Items by Revenue
+                            {t('admin.topItemsByRevenue')}
                         </h2>
                         <div className="space-y-3">
                             {topItems.map(([item, amt], i) => (

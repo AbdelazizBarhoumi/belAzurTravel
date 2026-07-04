@@ -43,8 +43,8 @@ const AdminBookings = () => {
 
     return (
         <AdminLayout
-            title="Bookings"
-            subtitle="Review and update booking statuses"
+            title={t('admin.bookings')}
+            subtitle={t('admin.bookingsSubtitle')}
         >
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
@@ -53,13 +53,13 @@ const AdminBookings = () => {
                             <tr className="border-b border-border bg-muted/30">
                                 {[
                                     'ID',
-                                    'Client',
-                                    'Type',
-                                    'Item',
-                                    'Date',
-                                    'Amount',
-                                    'Status',
-                                    'Actions',
+                                    t('admin.table.client'),
+                                    t('admin.type'),
+                                    t('admin.table.item'),
+                                    t('admin.date'),
+                                    t('admin.amount'),
+                                    t('admin.status'),
+                                    t('admin.actions'),
                                 ].map((h) => (
                                     <th
                                         key={h}
@@ -81,7 +81,7 @@ const AdminBookings = () => {
                                             {b.id}
                                         </td>
                                         <td className="px-4 py-3 text-sm">
-                                            {b.user_id || 'Guest'}
+                                            {b.user_id || t('admin.table.guest')}
                                         </td>
                                         <td className="px-4 py-3 text-sm text-muted-foreground">
                                             {b.type}

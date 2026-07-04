@@ -2,11 +2,12 @@ import type {
     AdminDestination,
     AdminHotel,
     AdminTour,
+    AdminTravel,
     AdminUser,
 } from '@/hooks/useAdminStore';
 import { apiFetch } from './http';
 
-export type AdminEntity = AdminDestination | AdminHotel | AdminTour;
+export type AdminEntity = AdminDestination | AdminHotel | AdminTour | AdminTravel;
 export type AdminRow = Record<string, string | number | boolean | null>;
 export type AdminEntityType =
     | 'destinations'
@@ -14,6 +15,7 @@ export type AdminEntityType =
     | 'partners'
     | 'hotels'
     | 'tours'
+    | 'travels'
     | 'cars'
     | 'flights'
     | 'events'

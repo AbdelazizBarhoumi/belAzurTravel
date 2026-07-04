@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\AdminPromoController;
 use App\Http\Controllers\Api\AdminTeamController;
 use App\Http\Controllers\Api\AdminTourController;
 use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\AdminTravelController;
 use App\Http\Controllers\Api\AdminVisaController;
 use App\Http\Controllers\Api\AuthUserController;
 use App\Http\Controllers\Api\VisaController;
@@ -37,6 +38,7 @@ use App\Http\Controllers\Api\PromoController;
 use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TourController;
+use App\Http\Controllers\Api\TravelController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/site-settings', [SiteSettingsController::class, 'show']);
@@ -60,6 +62,9 @@ Route::get('hotels/{slug}', [HotelController::class, 'show'])->middleware(['chec
 
 Route::get('tours', [TourController::class, 'index'])->middleware(['check-nav-page:tours']);
 Route::get('tours/{slug}', [TourController::class, 'show'])->middleware(['check-nav-page:tours']);
+
+Route::get('travels', [TravelController::class, 'index'])->middleware(['check-nav-page:travels']);
+Route::get('travels/{slug}', [TravelController::class, 'show'])->middleware(['check-nav-page:travels']);
 
 Route::get('cars', [CarController::class, 'index'])->middleware(['check-nav-page:cars']);
 Route::get('cars/{slug}', [CarController::class, 'show'])->middleware(['check-nav-page:cars']);
@@ -139,6 +144,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/tours/{id}', [AdminTourController::class, 'show']);
         Route::put('/admin/tours/{id}', [AdminTourController::class, 'update']);
         Route::delete('/admin/tours/{id}', [AdminTourController::class, 'destroy']);
+
+        Route::get('/admin/travels', [AdminTravelController::class, 'index']);
+        Route::post('/admin/travels', [AdminTravelController::class, 'store']);
+        Route::get('/admin/travels/{id}', [AdminTravelController::class, 'show']);
+        Route::put('/admin/travels/{id}', [AdminTravelController::class, 'update']);
+        Route::delete('/admin/travels/{id}', [AdminTravelController::class, 'destroy']);
 
         Route::get('/admin/cars', [AdminCarController::class, 'index']);
         Route::post('/admin/cars', [AdminCarController::class, 'store']);

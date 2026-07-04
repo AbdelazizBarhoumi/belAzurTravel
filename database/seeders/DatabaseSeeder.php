@@ -42,10 +42,11 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Seed categories first so hotels/tours can reference real category rows.
+        // Seed categories first so hotels/tours/travels can reference real category rows.
         $this->call([
             CategorySeeder::class,
             SeedJsDataSeeder::class,
+            TravelSeeder::class,
         ]);
     }
 }

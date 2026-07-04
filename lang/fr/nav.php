@@ -5,6 +5,7 @@ return [
     'destinations' => 'Destinations',
     'hotels' => 'Hôtels',
     'tours' => 'Circuits',
+    'travels' => 'Voyages à l\'étranger',
     'deals' => 'Offres',
     'gallery' => 'Galerie',
     'events' => 'Événements',

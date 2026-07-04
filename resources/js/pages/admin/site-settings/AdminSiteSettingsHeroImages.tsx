@@ -49,7 +49,7 @@ export default function AdminSiteSettingsHeroImages() {
 
     if (loading) {
         return (
-            <AdminLayout title="Landing Hero" subtitle={t('nav.settings')}>
+            <AdminLayout title={t('admin.settings.landingHeroTitle')} subtitle={t('nav.settings')}>
                 <Card className="p-4">
                     <div className="h-48 animate-pulse rounded bg-muted/70" />
                 </Card>
@@ -59,8 +59,8 @@ export default function AdminSiteSettingsHeroImages() {
 
     return (
         <AdminLayout
-            title="Landing Hero"
-            subtitle="Manage hero image carousel for the home page"
+            title={t('admin.settings.landingHeroTitle')}
+            subtitle={t('admin.settings.landingHeroSubtitle')}
             actions={
                 <Button size="sm" onClick={saveHeroImages}>
                     <Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}

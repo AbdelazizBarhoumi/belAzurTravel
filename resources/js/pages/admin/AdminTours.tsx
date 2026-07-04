@@ -159,6 +159,7 @@ const itinerarySchema: JsonFieldDef[] = [
 
 const AdminTours = () => {
     useAdminGuard();
+    const { lang, t } = useLanguage();
     const queryClient = useQueryClient();
     const { settings: siteSettings } = useSiteSettings();
     const isCodeEnabled =
@@ -220,7 +221,6 @@ const AdminTours = () => {
         },
     });
 
-    const { lang, t } = useLanguage();
     const [modalLang, setModalLang] = useState<Lang>(lang);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [editing, setEditing] = useState<AdminTour | null>(null);

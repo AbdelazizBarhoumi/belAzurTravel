@@ -3,9 +3,10 @@ import { Search, MapPin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import CardMedia from '@/components/ui/CardMedia';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
@@ -27,10 +28,9 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
+import { useCountries } from '@/hooks/useCountries';
 import { useDestinations, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
 
-import { useCountries } from '@/hooks/useCountries';
-import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 
 const SORT_OPTIONS = [

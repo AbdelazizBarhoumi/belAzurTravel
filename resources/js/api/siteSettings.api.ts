@@ -16,6 +16,18 @@ export interface PageHeroConfig {
     interval?: number;
 }
 
+export interface LandingSectionConfig {
+    enabled: boolean;
+    title?: LocalizedText;
+    subtitle?: LocalizedText;
+    style?: string;
+}
+
+export interface LandingSections {
+    order: string[];
+    sections: Record<string, LandingSectionConfig>;
+}
+
 export type LegalSectionBody =
     | LocalizedText
     | {
@@ -55,6 +67,7 @@ interface SiteSettingsContent {
         url: string;
     } | null;
     page_heroes?: Record<string, PageHeroConfig>;
+    landing_sections?: LandingSections;
 }
 
 export interface SiteSettings {

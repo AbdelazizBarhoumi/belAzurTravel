@@ -9,6 +9,8 @@ import {
     type PromoItem,
     type TourDetailItem,
     type TourItem,
+    type TravelDetailItem,
+    type TravelItem,
     type BlogPostItem,
 } from '@/api/entities.api';
 import { normalizeCarDetailEntries } from '@/api/entities.api';
@@ -115,6 +117,29 @@ export function useTourDetailsBySlug(slug?: string) {
     return useEntityQuery<TourDetailItem | null>({
         queryKey: ['tour-details', slug],
         queryFn: () => fetchEntity('tours', slug),
+        enabled: Boolean(slug),
+    });
+}
+
+export function useTravels() {
+    return useEntityQuery<TravelItem[]>({
+        queryKey: ['travels'],
+        queryFn: () => fetchEntity('travels'),
+    });
+}
+
+export function useTravelBySlug(slug?: string) {
+    return useEntityQuery<TravelItem | null>({
+        queryKey: ['travels', slug],
+        queryFn: () => fetchEntity('travels', slug),
+        enabled: Boolean(slug),
+    });
+}
+
+export function useTravelDetailsBySlug(slug?: string) {
+    return useEntityQuery<TravelDetailItem | null>({
+        queryKey: ['travel-details', slug],
+        queryFn: () => fetchEntity('travels', slug),
         enabled: Boolean(slug),
     });
 }

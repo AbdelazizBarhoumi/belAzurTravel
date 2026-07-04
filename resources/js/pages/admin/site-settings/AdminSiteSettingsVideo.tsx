@@ -22,7 +22,7 @@ export default function AdminSiteSettingsVideo() {
 
     if (loading) {
         return (
-            <AdminLayout title="Landing Video" subtitle={t('nav.settings')}>
+            <AdminLayout title={t('admin.settings.landingVideoTitle')} subtitle={t('nav.settings')}>
                 <Card className="p-4"><div className="h-48 animate-pulse rounded bg-muted/70" /></Card>
             </AdminLayout>
         );
@@ -52,8 +52,8 @@ export default function AdminSiteSettingsVideo() {
 
     return (
         <AdminLayout
-            title="Landing Video"
-            subtitle="Video that appears as a modal when visitors open the homepage"
+            title={t('admin.settings.landingVideoTitle')}
+            subtitle={t('admin.settings.landingVideoSubtitle')}
             actions={<Button size="sm" onClick={save}><Save className="mr-1 h-4 w-4" /> {t('admin.settings.save')}</Button>}
         >
             <Card className="space-y-4 p-4">
@@ -65,13 +65,13 @@ export default function AdminSiteSettingsVideo() {
                             variant="destructive"
                             onClick={() => { setVideoUrl(null); setVideoFile(null); }}
                         >
-                            <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove Video
+                            <Trash2 className="mr-1 h-3.5 w-3.5" /> {t('admin.settings.removeVideo')}
                         </Button>
                     </div>
                 )}
                 {!videoUrl && (
                     <div className="space-y-2">
-                        <Label htmlFor="landing-video-input">Upload Video</Label>
+                        <Label htmlFor="landing-video-input">{t('admin.settings.uploadVideo')}</Label>
                         <input
                             id="landing-video-input"
                             type="file"
@@ -82,7 +82,7 @@ export default function AdminSiteSettingsVideo() {
                                 if (file) { setVideoFile(file); setVideoUrl(URL.createObjectURL(file)); }
                             }}
                         />
-                        <p className="text-xs text-muted-foreground">Max 50MB. Formats: MP4, WebM, MOV.</p>
+                        <p className="text-xs text-muted-foreground">{t('admin.settings.videoHint')}</p>
                     </div>
                 )}
             </Card>

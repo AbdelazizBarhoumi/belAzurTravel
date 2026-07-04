@@ -1,6 +1,6 @@
+import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 import type { CategoryType } from '@/hooks/useCategoryTypes';
 
 interface CategoryTypeFilterProps {
@@ -27,10 +27,6 @@ export function CategoryTypeFilter({
     const clearType = (typeKey: string) => {
         onFilterChange(typeKey, []);
     };
-
-    const hasAnyFilters = Object.values(selectedFilters).some(
-        (vals) => vals.length > 0,
-    );
 
     return (
         <div className="space-y-4">

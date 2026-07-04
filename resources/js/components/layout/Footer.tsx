@@ -1,11 +1,9 @@
-import type React from 'react';
 import { Mail, Phone, MapPin, Clock, Link2 } from 'lucide-react';
+import type React from 'react';
 import { Link } from 'react-router-dom';
 import { notifyInteraction } from '@/api/interactions.api';
 import { BrandLogo } from '@/components/layout/BrandLogo';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { socialLinks as socialLinks } from '@/data';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { PaymentLogos } from '@/components/ui/PaymentIcons';
 import {
     FacebookIcon,
     InstagramIcon,
@@ -14,8 +12,8 @@ import {
     YoutubeIcon,
     TiktokIcon,
 } from '@/components/ui/SocialIcons';
-import { PaymentLogos } from '@/components/ui/PaymentIcons';
-import { ShieldCheck } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import {
     getFooterPage,
     DEFAULT_NAV_SETTINGS,

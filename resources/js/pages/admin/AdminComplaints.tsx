@@ -100,7 +100,7 @@ const AdminComplaints = () => {
                         onChange={(e) => setTypeFilter(e.target.value)}
                         className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
                     >
-                        <option value="">{t('common.all')} Types</option>
+                        <option value="">{t('admin.allTypes')}</option>
                         <option value="complaint">{t('complaint.type.complaint')}</option>
                         <option value="refund_request">{t('complaint.type.refund_request')}</option>
                     </select>
@@ -109,7 +109,7 @@ const AdminComplaints = () => {
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
                     >
-                        <option value="">{t('common.all')} Status</option>
+                        <option value="">{t('admin.allStatuses')}</option>
                         <option value="pending">{t('complaint.status.pending')}</option>
                         <option value="in_review">{t('complaint.status.in_review')}</option>
                         <option value="resolved">{t('complaint.status.resolved')}</option>

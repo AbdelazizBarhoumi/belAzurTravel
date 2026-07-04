@@ -1,7 +1,7 @@
-import visaImg from '@/assets/visa.png';
-import mastercardImg from '@/assets/mastercard.png';
 import cibImg from '@/assets/Cib.png';
+import mastercardImg from '@/assets/mastercard.png';
 import virementImg from '@/assets/Virement bancaire.png';
+import visaImg from '@/assets/visa.png';
 
 const payments = [
     { src: visaImg, alt: 'Visa' },

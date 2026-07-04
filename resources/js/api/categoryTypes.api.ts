@@ -7,6 +7,7 @@ export interface CategoryType {
     label: { en: string; fr: string; ar: string };
     sort_order: number;
     filter_style: FilterStyle;
+    locked?: boolean;
     values: CategoryTypeValue[];
 }
 

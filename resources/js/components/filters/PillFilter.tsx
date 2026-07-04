@@ -1,5 +1,5 @@
-import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { useLanguage } from '@/contexts/LanguageContext';
+import type { PublicCategoryType } from '@/hooks/usePublicData';
 
 interface PillFilterProps {
     categoryType: PublicCategoryType;

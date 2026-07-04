@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { BlogListing } from '@/components/sections/blog/BlogListing';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Blog = () => {

@@ -2,13 +2,14 @@ import { motion } from 'framer-motion';
 import { Wifi, Car, Coffee, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useCountries, useCities } from '@/hooks/useCountries';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { DatePicker } from '@/components/ui/DatePicker';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import {
     Select,
     SelectContent,
@@ -16,14 +17,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { StarRating } from '@/components/ui/StarRating';
 import { TagFilter, type Tag } from '@/components/ui/TagFilter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
+import { useCountries, useCities } from '@/hooks/useCountries';
 import { useHotels, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
 
-import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
 
 const AMENITY_ICONS: Record<string, LucideIcon> = {

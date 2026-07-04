@@ -34,6 +34,13 @@ export const AVAILABLE_PAGES: PageDef[] = [
         canHaveDropdown: true,
     },
     {
+        key: 'travels',
+        label: 'International Travel',
+        href: '/travels',
+        filterParam: 'cat',
+        canHaveDropdown: true,
+    },
+    {
         key: 'deals',
         label: 'Deals',
         href: '/deals',
@@ -124,9 +131,27 @@ export interface FooterColumn {
     pageKeys: string[];
 }
 
+export interface GroupPageEntry {
+    pageKey: string;
+    label?: LocalizedText;
+    isDropdown: boolean;
+    linkSelf: boolean;
+    items: DropdownItemConfig[];
+}
+
+export interface NavGroup {
+    key: string;
+    label: LocalizedText;
+    enabled: boolean;
+    placement: 'topbar' | 'top' | 'more';
+    pages: GroupPageEntry[];
+    groups?: NavGroup[];
+}
+
 export interface NavSettings {
     header: HeaderEntry[];
     footer: FooterColumn[];
+    groups: NavGroup[];
 }
 
 export const DEFAULT_FOOTER_COLUMNS: {
@@ -135,7 +160,7 @@ export const DEFAULT_FOOTER_COLUMNS: {
 }[] = [
     {
         title: 'Quick Links',
-        defaultKeys: ['destinations', 'hotels', 'tours', 'deals'],
+        defaultKeys: ['destinations', 'hotels', 'tours', 'travels', 'deals'],
     },
     { title: 'Discover', defaultKeys: ['gallery', 'events', 'blog'] },
     { title: 'Support', defaultKeys: ['team', 'partners', 'legal', 'privacy-policy', 'purchase-policy', 'promos', 'contact'] },
@@ -148,6 +173,7 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'destinations',
             'hotels',
             'tours',
+            'travels',
             'deals',
             'blog',
             'cars',
@@ -184,6 +210,7 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
             'destinations',
             'hotels',
             'tours',
+            'travels',
             'deals',
             'blog',
             'cars',
@@ -206,6 +233,7 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
         title: c.title,
         pageKeys: c.defaultKeys,
     })),
+    groups: [],
 };
 
 export function buildItemHref(
@@ -226,4 +254,44 @@ export function buildItemHref(
     }
     const param = page.filterParam || 'cat';
     return `${page.href}?${param}=${encodeURIComponent(item.value)}`;
+}
+
+export function getNextGroupKey(groups: NavGroup[]): string {
+    let maxNum = 0;
+    const findMax = (list: NavGroup[]) => {
+        for (const g of list) {
+            const match = g.key.match(/^group-(\d+)$/);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (num > maxNum) maxNum = num;
+            }
+            if (g.groups?.length) findMax(g.groups);
+        }
+    };
+    findMax(groups);
+    return `group-${maxNum + 1}`;
+}
+
+export function getPagesInGroups(groups: NavGroup[]): Set<string> {
+    const result = new Set<string>();
+    for (const g of groups) {
+        for (const p of g.pages) {
+            result.add(p.pageKey);
+        }
+        if (g.groups?.length) {
+            for (const pk of getPagesInGroups(g.groups)) {
+                result.add(pk);
+            }
+        }
+    }
+    return result;
+}
+
+export function createGroupPageEntry(pageKey: string, t?: (key: string) => string): GroupPageEntry {
+    return {
+        pageKey,
+        isDropdown: false,
+        linkSelf: true,
+        items: [],
+    };
 }

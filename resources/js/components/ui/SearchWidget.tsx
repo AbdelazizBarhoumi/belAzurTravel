@@ -10,7 +10,7 @@ import {
     Search,
     Users,
 } from 'lucide-react';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';

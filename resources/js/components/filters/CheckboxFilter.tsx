@@ -1,6 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
-import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { useLanguage } from '@/contexts/LanguageContext';
+import type { PublicCategoryType } from '@/hooks/usePublicData';
 
 interface CheckboxFilterProps {
     categoryType: PublicCategoryType;

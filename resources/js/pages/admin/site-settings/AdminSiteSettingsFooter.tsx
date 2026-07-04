@@ -29,6 +29,7 @@ function sanitizeNavSettings(nav: NavSettings): NavSettings {
     return {
         header: nav.header.filter((e) => allowedPageKeys.has(e.pageKey)),
         footer: nav.footer.map((c) => ({ ...c, pageKeys: c.pageKeys.filter((k) => allowedPageKeys.has(k)) })),
+        groups: nav.groups ?? [],
     };
 }
 

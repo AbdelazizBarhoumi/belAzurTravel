@@ -1,16 +1,10 @@
-import type React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Mail, Link2 } from 'lucide-react';
+import type React from 'react';
 import { notifyInteraction } from '@/api/interactions.api';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
-import { useLanguage } from '@/contexts/LanguageContext';
-import {
-    contactMethods as contactMethodDefs,
-} from '@/data';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { formatHourRanges } from '@/lib/site-hours';
 import {
     FacebookIcon,
     InstagramIcon,
@@ -19,6 +13,12 @@ import {
     YoutubeIcon,
     TiktokIcon,
 } from '@/components/ui/SocialIcons';
+import { useLanguage } from '@/contexts/LanguageContext';
+import {
+    contactMethods as contactMethodDefs,
+} from '@/data';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { formatHourRanges } from '@/lib/site-hours';
 
 export default function Contact() {
     const { lang, t } = useLanguage();

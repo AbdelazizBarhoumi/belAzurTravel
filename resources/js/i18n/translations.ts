@@ -3418,6 +3418,46 @@ export const translations: Record<string, TranslationEntry> = {
 
     'admin.hotels': HOTELS,
     'admin.tours': TOURS,
+    'admin.travels': { fr: 'Voyages à l\'étranger', ar: 'رحلات دولية', en: 'International Travel' },
+    'admin.travelsSubtitle': { fr: 'Gérez les voyages internationaux', ar: 'إدارة الرحلات الدولية', en: 'Manage international travel packages' },
+    'admin.travelUpdated': { fr: 'Voyage mis à jour', ar: 'تم تحديث الرحلة', en: 'Travel updated' },
+    'admin.travelAdded': { fr: 'Voyage ajouté', ar: 'تمت إضافة الرحلة', en: 'Travel added' },
+    'admin.travelForm.coreDetails': { fr: 'Détails de base', ar: 'التفاصيل الأساسية', en: 'Core Details' },
+    'admin.travelForm.coreDetailsHint': { fr: 'Informations principales du voyage', ar: 'المعلومات الرئيسية للرحلة', en: 'Main information about the travel' },
+    'admin.travelForm.namePlaceholder': { fr: 'Nom du voyage', ar: 'اسم الرحلة', en: 'Travel name' },
+    'admin.travelForm.locationPlaceholder': { fr: 'Destination', ar: 'الوجهة', en: 'Destination' },
+    'admin.travelForm.durationPlaceholder': { fr: 'Ex: 7 jours / 6 nuits', ar: 'مثال: 7 أيام / 6 ليالٍ', en: 'Ex: 7 days / 6 nights' },
+    'admin.travelForm.descriptionPlaceholder': { fr: 'Décrivez le voyage...', ar: 'صف الرحلة...', en: 'Describe the travel...' },
+    'admin.travelForm.pricePlaceholder': { fr: 'Prix en DT', ar: 'السعر بالدينار', en: 'Price in DT' },
+    'admin.travelForm.ratingPlaceholder': { fr: 'Note (0-5)', ar: 'التقييم (0-5)', en: 'Rating (0-5)' },
+    'admin.travelForm.durationDays': { fr: 'Jours', ar: 'أيام', en: 'Days' },
+    'admin.travelForm.durationDaysPlaceholder': { fr: 'Nombre de jours', ar: 'عدد الأيام', en: 'Number of days' },
+    'admin.travelForm.durationNights': { fr: 'Nuits', ar: 'ليالٍ', en: 'Nights' },
+    'admin.travelForm.durationNightsPlaceholder': { fr: 'Nombre de nuits', ar: 'عدد الليالٍ', en: 'Number of nights' },
+    'admin.travelForm.maxGroup': { fr: 'Groupe max', ar: 'الحد الأقصى للمجموعة', en: 'Max Group' },
+    'admin.travelForm.maxGroupPlaceholder': { fr: 'Capacité max', ar: 'السعة القصوى', en: 'Max capacity' },
+    'admin.travelForm.priceUnit': { fr: 'DT/personne', ar: 'دينار/شخص', en: 'DT/person' },
+    'admin.travelForm.media': { fr: 'Médias', ar: 'الوسائط', en: 'Media' },
+    'admin.travelForm.mediaHint': { fr: 'Image principale et galerie', ar: 'الصورة الرئيسية والمعرض', en: 'Main image and gallery' },
+    'admin.travelForm.itinerary': { fr: 'Itinéraire', ar: 'خط السير', en: 'Itinerary' },
+    'admin.travelForm.itineraryHint': { fr: 'Journée par jour', ar: 'يوم بيوم', en: 'Day by day' },
+    'admin.travelForm.addDay': { fr: 'Ajouter une journée', ar: 'إضافة يوم', en: 'Add Day' },
+    'admin.travelForm.day': { fr: 'Jour', ar: 'يوم', en: 'Day' },
+    'admin.travelForm.inclusions': { fr: 'Inclusions / Exclusions', ar: 'اليشمل / لا يشمل', en: 'Inclusions / Exclusions' },
+    'admin.travelForm.inclusionsHint': { fr: 'Ce qui est inclus et non inclus', ar: 'ما هو مشمول وغير مشمول', en: 'What is included and excluded' },
+    'admin.travelForm.includes': { fr: 'Inclus', ar: 'مشمول', en: 'Included' },
+    'admin.travelForm.excludes': { fr: 'Non inclus', ar: 'غير مشمول', en: 'Not Included' },
+    'admin.travelForm.addInclusion': { fr: 'Ajouter une inclusion', ar: 'إضافة مشمول', en: 'Add Inclusion' },
+    'admin.travelForm.addExclusion': { fr: 'Ajouter une exclusion', ar: 'إضافة غير مشمول', en: 'Add Exclusion' },
+    'admin.travelForm.itemName': { fr: 'Nom de l\'élément', ar: 'اسم العنصر', en: 'Item name' },
+    'nav.travels': { fr: 'Voyages à l\'étranger', ar: 'رحلات دولية', en: 'International Travel' },
+    'travels.title': { fr: 'Voyages à l\'étranger', ar: 'رحلات دولية', en: 'International Travel' },
+    'travels.subtitle': { fr: 'Découvrez nos voyages internationaux', ar: 'اكتشف رحلاتنا الدولية', en: 'Discover our international travel packages' },
+    'travels.person': { fr: 'personne', ar: 'شخص', en: 'person' },
+    'travels.bookTravel': { fr: 'Réserver', ar: 'احجز', en: 'Book' },
+    'travels.filterByLocation': { fr: 'Filtrer par destination', ar: 'تصفية حسب الوجهة', en: 'Filter by destination' },
+    'travels.filterByDuration': { fr: 'Filtrer par durée', ar: 'تصفية حسب المدة', en: 'Filter by duration' },
+    'travels.max': { fr: 'Max', ar: 'الحد الأقصى', en: 'Max' },
     'admin.bookings': { fr: 'Réservations', ar: 'الحجوزات', en: 'Bookings' },
     'admin.users': { fr: 'Utilisateurs', ar: 'المستخدمون', en: 'Users' },
     'admin.reports': { fr: 'Rapports', ar: 'التقارير', en: 'Reports' },
@@ -4009,6 +4049,111 @@ translations['admin.settings.landingHero'] = {
     fr: "Héros d'accueil",
     ar: 'بطل الصفحة الرئيسية',
     en: 'Landing Hero',
+};
+translations['admin.settings.landingSections'] = {
+    fr: "Sections de la page d'accueil",
+    ar: 'أقسام الصفحة الرئيسية',
+    en: 'Landing Sections',
+};
+translations['nav.settings'] = {
+    fr: 'Paramètres',
+    ar: 'الإعدادات',
+    en: 'Settings',
+};
+translations['home.featuredDestinations'] = {
+    fr: 'Destinations Vedettes',
+    ar: 'الوجهات المميزة',
+    en: 'Featured Destinations',
+};
+translations['home.featuredDestinationsDesc'] = {
+    fr: 'Découvrez nos coups de coeur',
+    ar: 'استكشف اختياراتنا المميزة',
+    en: 'Discover our top picks',
+};
+translations['home.featuredHotels'] = {
+    fr: 'Hôtels Recommandés',
+    ar: 'الفنادق الموصى بها',
+    en: 'Recommended Hotels',
+};
+translations['home.featuredHotelsDesc'] = {
+    fr: 'Les meilleurs hébergements',
+    ar: 'أفضل أماكن الإقامة',
+    en: 'The best stays',
+};
+translations['home.featuredTours'] = {
+    fr: 'Circuits & Excursions',
+    ar: 'جولات ورحلات',
+    en: 'Tours & Excursions',
+};
+translations['home.featuredToursDesc'] = {
+    fr: 'Découvrez nos meilleurs circuits et excursions guidées',
+    ar: 'اكتشف أفضل جولاتنا ورحلاتنا المصحوبة بمرشدين',
+    en: 'Discover our best guided tours and excursions',
+};
+translations['home.featuredOrganized'] = {
+    fr: 'Voyages Organisés',
+    ar: 'رحلات منظمة',
+    en: 'Organized Travel',
+};
+translations['home.featuredOrganizedDesc'] = {
+    fr: 'Trouvez les meilleures destinations avec nos idées de voyage !',
+    ar: 'ابحث عن أفضل الوجهات مع أفكار رحلاتنا!',
+    en: 'Find the best destinations with our travel ideas!',
+};
+translations['home.ourBest'] = {
+    fr: 'Nos meilleurs',
+    ar: 'أفضل',
+    en: 'Our best',
+};
+translations['home.featuredCars'] = {
+    fr: 'Location de Voitures',
+    ar: 'تأجير السيارات',
+    en: 'Car Rentals',
+};
+translations['home.featuredCarsDesc'] = {
+    fr: 'Louez la voiture idéale',
+    ar: 'استأجر السيارة المثالية',
+    en: 'Rent the perfect car',
+};
+translations['home.featuredFlights'] = {
+    fr: 'Vols Disponibles',
+    ar: 'الرحلات المتاحة',
+    en: 'Available Flights',
+};
+translations['home.featuredFlightsDesc'] = {
+    fr: 'Trouvez les meilleurs vols',
+    ar: 'ابحث عن أفضل الرحلات',
+    en: 'Find the best flights',
+};
+translations['home.featuredEvents'] = {
+    fr: 'Événements à Venir',
+    ar: 'الأحداث القادمة',
+    en: 'Upcoming Events',
+};
+translations['home.featuredEventsDesc'] = {
+    fr: 'Ne manquez aucun événement',
+    ar: 'لا تفوّت أي حدث',
+    en: 'Don\'t miss any event',
+};
+translations['home.featuredDeals'] = {
+    fr: 'Offres Spéciales',
+    ar: 'العروض الخاصة',
+    en: 'Special Deals',
+};
+translations['home.featuredDealsDesc'] = {
+    fr: 'Profitez de nos meilleures offres',
+    ar: 'استمتع بأفضل عروضنا',
+    en: 'Enjoy our best offers',
+};
+translations['home.latestBlog'] = {
+    fr: 'Derniers Articles',
+    ar: 'أحدث المقالات',
+    en: 'Latest Blog Posts',
+};
+translations['home.latestBlogDesc'] = {
+    fr: 'Restez informé avec nos articles',
+    ar: 'اطلع على مقالاتنا الجديدة',
+    en: 'Stay informed with our articles',
 };
 translations['admin.heroImages'] = {
     fr: 'Images Héros de Page',
@@ -4941,6 +5086,11 @@ translations['admin.categoryTypeManager.manageValues'] = {
     ar: 'إدارة القيم',
     en: 'Manage values',
 };
+translations['admin.categoryTypeManager.system'] = {
+    fr: 'Système',
+    ar: 'نظام',
+    en: 'System',
+};
 translations['admin.categoryTypeManager.valueCount'] = {
     fr: 'valeur(s)',
     ar: 'قيمة(قيم)',
@@ -5101,4 +5251,602 @@ translations['admin.settings.color'] = {
     fr: 'Couleur',
     ar: 'لون',
     en: 'Color',
+};
+
+// Admin settings group section keys
+translations['admin.settings.mode'] = {
+    fr: 'Mode',
+    ar: 'الوضع',
+    en: 'Mode',
+};
+translations['admin.settings.headerGroups'] = {
+    fr: "Groupes d'en-tête",
+    ar: 'مجموعات الترويسة',
+    en: 'Header Groups',
+};
+translations['admin.settings.createGroup'] = {
+    fr: 'Créer un groupe',
+    ar: 'إنشاء مجموعة',
+    en: 'Create Group',
+};
+translations['admin.settings.noGroups'] = {
+    fr: 'Aucun groupe créé. Créez un groupe pour organiser les pages dans un menu déroulant.',
+    ar: 'لم يتم إنشاء مجموعات بعد. أنشئ مجموعة لتنظيم الصفحات في قائمة منسدلة.',
+    en: 'No groups created yet. Create a group to organize pages under a single dropdown.',
+};
+translations['admin.settings.removeGroup'] = {
+    fr: 'Supprimer le groupe',
+    ar: 'إزالة المجموعة',
+    en: 'Remove group',
+};
+translations['admin.settings.groupName'] = {
+    fr: 'Nom du groupe',
+    ar: 'اسم المجموعة',
+    en: 'Group Name',
+};
+translations['admin.settings.pagesInGroup'] = {
+    fr: 'Pages dans le groupe',
+    ar: 'الصفحات في المجموعة',
+    en: 'Pages in Group',
+};
+translations['admin.settings.noPagesInGroup'] = {
+    fr: 'Aucune page ajoutée à ce groupe.',
+    ar: 'لم تتم إضافة أي صفحة إلى هذه المجموعة.',
+    en: 'No pages added to this group yet.',
+};
+translations['admin.settings.subGroups'] = {
+    fr: 'Sous-groupes',
+    ar: 'مجموعات فرعية',
+    en: 'Sub-Groups',
+};
+translations['admin.settings.addSubGroup'] = {
+    fr: 'Ajouter un sous-groupe',
+    ar: 'إضافة مجموعة فرعية',
+    en: 'Add Sub-Group',
+};
+translations['admin.settings.subGroup'] = {
+    fr: '(sous-groupe)',
+    ar: '(مجموعة فرعية)',
+    en: '(sub-group)',
+};
+translations['admin.settings.noCategoriesAvailable'] = {
+    fr: 'Aucune catégorie disponible',
+    ar: 'لا توجد فئات متاحة',
+    en: 'No categories available',
+};
+translations['admin.settings.moveToGroup'] = {
+    fr: 'Déplacer vers un groupe',
+    ar: 'نقل إلى مجموعة',
+    en: 'Move to Group',
+};
+translations['admin.settings.untitledGroup'] = {
+    fr: 'Groupe sans titre',
+    ar: 'مجموعة بدون عنوان',
+    en: 'Untitled Group',
+};
+translations['admin.settings.groupNameTranslations'] = {
+    fr: 'Traductions du nom du groupe',
+    ar: 'ترجمات اسم المجموعة',
+    en: 'Group Name Translations',
+};
+translations['admin.settings.page'] = {
+    fr: 'page',
+    ar: 'صفحة',
+    en: 'page',
+};
+translations['admin.settings.pages'] = {
+    fr: 'pages',
+    ar: 'صفحات',
+    en: 'pages',
+};
+translations['admin.settings.addPageToGroup'] = {
+    fr: 'Ajouter une page au groupe',
+    ar: 'إضافة صفحة إلى المجموعة',
+    en: 'Add Page to Group',
+};
+translations['admin.settings.addPagesToGroupDescription'] = {
+    fr: 'Ajoutez des pages existantes à ce groupe pour les organiser sous un seul menu déroulant.',
+    ar: 'أضف صفحات موجودة إلى هذا مجموعة لتنظيمها تحت قائمة منسدلة واحدة.',
+    en: 'Add existing pages to this group to organize them under a single dropdown.',
+};
+translations['admin.settings.linkLabels'] = {
+    fr: 'Libellés des liens',
+    ar: 'تسميات الروابط',
+    en: 'Link Labels',
+};
+translations['admin.settings.dropdownEmptyDescription'] = {
+    fr: 'Ajoutez des éléments pour créer un menu déroulant.',
+    ar: 'أضف عناصر لإنشاء قائمة منسدلة.',
+    en: 'Add items to create a dropdown menu.',
+};
+translations['admin.settings.hasDropdown'] = {
+    fr: 'Ce lien a un menu déroulant',
+    ar: 'هذا الرابط يحتوي على قائمة منسدلة',
+    en: 'This link has a dropdown',
+};
+translations['admin.settings.noDropdown'] = {
+    fr: 'Ce lien n\'a pas de menu déroulant',
+    ar: 'هذا الرابط لا يحتوي على قائمة منسدلة',
+    en: 'This link has no dropdown',
+};
+translations['admin.settings.linkSelfEnabled'] = {
+    fr: 'Le clic sur le nom du lien navigue vers la page',
+    ar: 'النقر على اسم الرابط ينتقل إلى الصفحة',
+    en: 'Clicking the link name navigates to the page',
+};
+translations['admin.settings.linkSelfDisabled'] = {
+    fr: 'Le clic sur le nom du lien ouvre uniquement le menu déroulant',
+    ar: 'النقر على اسم الرابط يفتح القائمة المنسدلة فقط',
+    en: 'Clicking the link name only opens the dropdown',
+};
+translations['admin.settings.groupVisible'] = {
+    fr: 'Ce groupe est visible',
+    ar: 'هذا المجموعة مرئية',
+    en: 'This group is visible',
+};
+translations['admin.settings.groupHidden'] = {
+    fr: 'Ce groupe est masqué',
+    ar: 'هذا المجموعة مخفية',
+    en: 'This group is hidden',
+};
+translations['admin.settings.visible'] = {
+    fr: 'Visible',
+    ar: 'مرئي',
+    en: 'Visible',
+};
+translations['admin.settings.hidden'] = {
+    fr: 'Masqué',
+    ar: 'مخفي',
+    en: 'Hidden',
+};
+translations['admin.settings.linkVisible'] = {
+    fr: 'Ce lien est visible dans la navigation',
+    ar: 'هذا الرابط مرئي في التنقل',
+    en: 'This link is visible in navigation',
+};
+translations['admin.settings.linkHidden'] = {
+    fr: 'Ce lien est masqué dans la navigation',
+    ar: 'هذا الرابط مخفي في التنقل',
+    en: 'This link is hidden in navigation',
+};
+translations['admin.settings.navEditorGuide'] = {
+    fr: 'Guide de l\'éditeur de navigation',
+    ar: 'دليل محرر التنقل',
+    en: 'Navigation Editor Guide',
+};
+translations['admin.settings.navEditorDescription'] = {
+    fr: 'Glissez-déposez les pages pour les réordonner. Utilisez les boutons pour activer/désactiver les menus déroulants et les options de placement.',
+    ar: 'اسحب وأفلت الصفحات لإعادة ترتيبها. استخدم الأزرار لتفعيل/تعطيل القوائم المنسدلة وخيارات التعيين.',
+    en: 'Drag and drop pages to reorder. Use the buttons to enable/disable dropdowns and placement options.',
+};
+translations['admin.settings.addPageToHeader'] = {
+    fr: 'Ajouter une page à la navigation',
+    ar: 'إضافة صفحة إلى التنقل',
+    en: 'Add Page to Navigation',
+};
+translations['admin.settings.addPageDescription'] = {
+    fr: 'Sélectionnez une page pour l\'ajouter à la navigation principale.',
+    ar: 'اختر صفحة لإضافتها إلى التنقل الرئيسي.',
+    en: 'Select a page to add to the main navigation.',
+};
+translations['admin.settings.noHeaderLinks'] = {
+    fr: 'Aucun lien de navigation',
+    ar: 'لا توجد روابط تنقل',
+    en: 'No Navigation Links',
+};
+translations['admin.settings.noHeaderLinksDescription'] = {
+    fr: 'Commencez par ajouter des pages à votre navigation.',
+    ar: 'ابدأ بإضافة صفحات إلى التنقل الخاص بك.',
+    en: 'Start by adding pages to your navigation.',
+};
+translations['admin.settings.getStarted'] = {
+    fr: 'Commencer',
+    ar: 'ابدأ',
+    en: 'Get Started',
+};
+translations['admin.settings.groupsDescription'] = {
+    fr: 'Créez des groupes pour organiser les pages sous des menus déroulants.',
+    ar: 'أنشئ مجموعات لتنظيم الصفحات تحت قوائم منسدلة.',
+    en: 'Create groups to organize pages under dropdown menus.',
+};
+translations['admin.settings.noGroupsDescription'] = {
+    fr: 'Aucun groupe créé. Créez un groupe pour organiser les pages sous un menu déroulant unique.',
+    ar: 'لم يتم إنشاء أي مجموعات. أنشئ مجموعة لتنظيم الصفحات تحت قائمة منسدلة واحدة.',
+    en: 'No groups created. Create a group to organize pages under a single dropdown.',
+};
+translations['admin.settings.createFirstGroup'] = {
+    fr: 'Créer le premier groupe',
+    ar: 'إنشاء المجموعة الأولى',
+    en: 'Create First Group',
+};
+translations['admin.settings.moveUp'] = {
+    fr: 'Déplacer vers le haut',
+    ar: 'نقل إلى الأعلى',
+    en: 'Move Up',
+};
+translations['admin.settings.moveDown'] = {
+    fr: 'Déplacer vers le bas',
+    ar: 'نقل إلى الأسفل',
+    en: 'Move Down',
+};
+translations['admin.settings.removeItem'] = {
+    fr: 'Supprimer cet élément',
+    ar: 'إزالة هذا العنصر',
+    en: 'Remove Item',
+};
+translations['admin.settings.levelOneItem'] = {
+    fr: 'Élément de niveau 1',
+    ar: 'عنصر المستوى الأول',
+    en: 'Level 1 Item',
+};
+translations['admin.settings.subItem'] = {
+    fr: 'Sous-élément',
+    ar: 'عنصر فرعي',
+    en: 'Sub-Item',
+};
+translations['admin.settings.translationRequired'] = {
+    fr: 'Traduction requise',
+    ar: 'الترجمة مطلوبة',
+    en: 'Translation Required',
+};
+translations['admin.settings.noItemsYetDescription'] = {
+    fr: 'Aucun élément ajouté. Cliquez sur "Ajouter" pour créer des éléments de menu déroulant.',
+    ar: 'لم تتم إضافة أي عناصر. انقر على "إضافة" لإنشاء عناصر قائمة منسدلة.',
+    en: 'No items added yet. Click "Add" to create dropdown menu items.',
+};
+translations['admin.settings.add'] = {
+    fr: 'Ajouter',
+    ar: 'إضافة',
+    en: 'Add',
+};
+translations['admin.settings.dragToReorder'] = {
+    fr: 'Glisser pour réordonner',
+    ar: 'اسحب لإعادة الترتيب',
+    en: 'Drag to reorder',
+};
+translations['admin.settings.dragToReorderHeader'] = {
+    fr: 'Glisser pour réordonner le lien de navigation',
+    ar: 'اسحب لإعادة ترتيب رابط التنقل',
+    en: 'Drag to reorder header link',
+};
+translations['admin.settings.dragToReorderGroup'] = {
+    fr: 'Glisser pour réordonner le groupe',
+    ar: 'اسحب لإعادة ترتيب المجموعة',
+    en: 'Drag to reorder group',
+};
+translations['admin.settings.dragToReorderSubGroup'] = {
+    fr: 'Glisser pour réordonner le sous-groupe',
+    ar: 'اسحب لإعادة ترتيب المجموعة الفرعية',
+    en: 'Drag to reorder sub-group',
+};
+translations['admin.settings.navBadgeHeader'] = {
+    fr: 'Lien de navigation',
+    ar: 'رابط التنقل',
+    en: 'Header Link',
+};
+translations['admin.settings.navBadgeGroup'] = {
+    fr: 'Groupe',
+    ar: 'مجموعة',
+    en: 'Group',
+};
+translations['admin.settings.navBadgeSubGroup'] = {
+    fr: 'Sous-groupe',
+    ar: 'مجموعة فرعية',
+    en: 'Sub-Group',
+};
+translations['admin.settings.navBadgeDropdown'] = {
+    fr: 'Menu déroulant',
+    ar: 'قائمة منسدلة',
+    en: 'Dropdown',
+};
+translations['admin.settings.navBadgeItem'] = {
+    fr: 'Élément',
+    ar: 'عنصر',
+    en: 'Item',
+};
+
+// Admin complaints keys
+translations['admin.type'] = {
+    fr: 'Type',
+    ar: 'النوع',
+    en: 'Type',
+};
+translations['admin.subject'] = {
+    fr: 'Sujet',
+    ar: 'الموضوع',
+    en: 'Subject',
+};
+translations['admin.priority'] = {
+    fr: 'Priorité',
+    ar: 'الأولوية',
+    en: 'Priority',
+};
+translations['admin.allTypes'] = {
+    fr: 'Tous les types',
+    ar: 'جميع الأنواع',
+    en: 'All Types',
+};
+translations['admin.allStatuses'] = {
+    fr: 'Tous les statuts',
+    ar: 'جميع الحالات',
+    en: 'All Statuses',
+};
+
+// Admin bookings keys
+translations['admin.bookingsSubtitle'] = {
+    fr: 'Examiner et mettre à jour les statuts de réservation',
+    ar: 'مراجعة وتحديث حالات الحجز',
+    en: 'Review and update booking statuses',
+};
+translations['admin.table.client'] = {
+    fr: 'Client',
+    ar: 'العميل',
+    en: 'Client',
+};
+translations['admin.table.item'] = {
+    fr: 'Élément',
+    ar: 'العنصر',
+    en: 'Item',
+};
+translations['admin.table.guest'] = {
+    fr: 'Invité',
+    ar: 'ضيف',
+    en: 'Guest',
+};
+
+// Admin users keys
+translations['admin.usersSubtitle'] = {
+    fr: 'Gérer les comptes clients et le personnel',
+    ar: 'إدارة حسابات العملاء والموظفين',
+    en: 'Manage client and staff accounts',
+};
+translations['admin.searchPlaceholder'] = {
+    fr: 'Rechercher par nom ou email...',
+    ar: 'بحث بالاسم أو البريد الإلكتروني...',
+    en: 'Search by name or email...',
+};
+translations['admin.allRoles'] = {
+    fr: 'Tous les rôles',
+    ar: 'جميع الأدوار',
+    en: 'All Roles',
+};
+translations['admin.table.name'] = {
+    fr: 'Nom',
+    ar: 'الاسم',
+    en: 'Name',
+};
+translations['admin.table.email'] = {
+    fr: 'Email',
+    ar: 'البريد الإلكتروني',
+    en: 'Email',
+};
+translations['admin.table.joined'] = {
+    fr: 'Inscrit',
+    ar: 'تاريخ التسجيل',
+    en: 'Joined',
+};
+translations['admin.loadingUsers'] = {
+    fr: 'Chargement des utilisateurs...',
+    ar: 'جاري تحميل المستخدمين...',
+    en: 'Loading users...',
+};
+translations['admin.noUsersFound'] = {
+    fr: 'Aucun utilisateur trouvé.',
+    ar: 'لم يتم العثور على مستخدمين.',
+    en: 'No users found.',
+};
+translations['admin.deactivate'] = {
+    fr: 'Désactiver',
+    ar: 'تعطيل',
+    en: 'Deactivate',
+};
+translations['admin.activate'] = {
+    fr: 'Activer',
+    ar: 'تفعيل',
+    en: 'Activate',
+};
+translations['admin.editUser'] = {
+    fr: "Modifier l'utilisateur",
+    ar: 'تعديل المستخدم',
+    en: 'Edit User',
+};
+translations['admin.updateUserDesc'] = {
+    fr: 'Mettre à jour le profil et les permissions.',
+    ar: 'تحديث الملف الشخصي والصلاحيات.',
+    en: 'Update user profile and account permissions.',
+};
+translations['admin.fullName'] = {
+    fr: 'Nom complet',
+    ar: 'الاسم الكامل',
+    en: 'Full Name',
+};
+translations['admin.emailAddress'] = {
+    fr: 'Adresse e-mail',
+    ar: 'عنوان البريد الإلكتروني',
+    en: 'Email Address',
+};
+translations['admin.userRole'] = {
+    fr: 'Rôle',
+    ar: 'الدور',
+    en: 'User Role',
+};
+translations['admin.restricted'] = {
+    fr: '(Restreint)',
+    ar: '(مقيد)',
+    en: '(Restricted)',
+};
+translations['admin.roleManagementHint'] = {
+    fr: 'Seuls les Superadmins et les Owners peuvent gérer les rôles avancés.',
+    ar: 'يمكن فقط للمديرين العامين وأصحاب الحساب إدارة الأدوار المتقدمة.',
+    en: 'Only Superadmins and Owners can manage advanced roles.',
+};
+translations['admin.saveChanges'] = {
+    fr: 'Enregistrer',
+    ar: 'حفظ',
+    en: 'Save Changes',
+};
+translations['admin.permissionDenied'] = {
+    fr: 'Permission refusée',
+    ar: 'تم رفض الصلاحية',
+    en: 'Permission denied',
+};
+
+// Admin reports keys
+translations['admin.reportsSubtitle'] = {
+    fr: 'Aperçu des revenus et des réservations',
+    ar: 'نظرة عامة على الإيرادات والحجوزات',
+    en: 'Revenue and booking insights',
+};
+translations['admin.exportCSV'] = {
+    fr: 'Exporter CSV',
+    ar: 'تصدير CSV',
+    en: 'Export CSV',
+};
+translations['admin.totalRevenue'] = {
+    fr: 'Revenus totaux',
+    ar: 'إجمالي الإيرادات',
+    en: 'Total Revenue',
+};
+translations['admin.totalBookingsCount'] = {
+    fr: 'Total des réservations',
+    ar: 'إجمالي الحجوزات',
+    en: 'Total Bookings',
+};
+translations['admin.confirmed'] = {
+    fr: 'Confirmées',
+    ar: 'مؤكدة',
+    en: 'Confirmed',
+};
+translations['admin.cancelled'] = {
+    fr: 'Annulées',
+    ar: 'ملغاة',
+    en: 'Cancelled',
+};
+translations['admin.bookingsByStatus'] = {
+    fr: 'Réservations par statut',
+    ar: 'الحجوزات حسب الحالة',
+    en: 'Bookings by Status',
+};
+translations['admin.topItemsByRevenue'] = {
+    fr: 'Meilleurs éléments par revenu',
+    ar: 'أفضل العناصر حسب الإيرادات',
+    en: 'Top Items by Revenue',
+};
+
+// Landing Video keys
+translations['admin.settings.landingVideoTitle'] = {
+    fr: "Vidéo d'accueil",
+    ar: 'فيديو الصفحة الرئيسية',
+    en: 'Landing Video',
+};
+translations['admin.settings.landingVideoSubtitle'] = {
+    fr: "Vidéo qui apparaît en modale lorsque les visiteurs ouvrent la page d'accueil",
+    ar: 'فيديو يظهر كنافذة منبثقة عندما يفتح الزائرون الصفحة الرئيسية',
+    en: 'Video that appears as a modal when visitors open the homepage',
+};
+translations['admin.settings.removeVideo'] = {
+    fr: 'Supprimer la vidéo',
+    ar: 'إزالة الفيديو',
+    en: 'Remove Video',
+};
+translations['admin.settings.uploadVideo'] = {
+    fr: 'Télécharger la vidéo',
+    ar: 'تحميل الفيديو',
+    en: 'Upload Video',
+};
+translations['admin.settings.videoHint'] = {
+    fr: 'Max 50 Mo. Formats : MP4, WebM, MOV.',
+    ar: 'حد أقصى 50 ميغابايت. الصيغ: MP4, WebM, MOV.',
+    en: 'Max 50MB. Formats: MP4, WebM, MOV.',
+};
+
+// Landing Hero keys
+translations['admin.settings.landingHeroTitle'] = {
+    fr: "Héros d'accueil",
+    ar: 'بطل الصفحة الرئيسية',
+    en: 'Landing Hero',
+};
+translations['admin.settings.landingHeroSubtitle'] = {
+    fr: "Gérer le carrousel d'images héros de la page d'accueil",
+    ar: 'إدارة كاروسيل صور البطل للصفحة الرئيسية',
+    en: 'Manage hero image carousel for the home page',
+};
+
+// Landing Sections keys
+translations['admin.settings.landingSectionsTitle'] = {
+    fr: "Sections de la page d'accueil",
+    ar: 'أقسام الصفحة الرئيسية',
+    en: 'Landing Sections',
+};
+translations['admin.settings.landingSectionsSubtitle'] = {
+    fr: "Configurer les sections qui apparaissent sur la page d'accueil et leur ordre",
+    ar: 'تكوين الأقسام التي تظهر على الصفحة الرئيسية وترتيبها',
+    en: 'Configure which sections appear on the home page and their order',
+};
+translations['admin.settings.landingSectionsHint'] = {
+    fr: 'Activez/désactivez les sections. Glissez pour réordonner. Développez pour modifier les titres.',
+    ar: 'فعّل/عطّل الأقسام. اسحب لإعادة الترتيب. توسع لتعديل العناوين.',
+    en: 'Toggle to enable/disable sections. Drag to reorder. Expand to edit titles.',
+};
+translations['admin.settings.disabled'] = {
+    fr: '(désactivé)',
+    ar: '(معطل)',
+    en: '(disabled)',
+};
+translations['admin.settings.titleLang'] = {
+    fr: 'Titre ({lang})',
+    ar: 'العنوان ({lang})',
+    en: 'Title ({lang})',
+};
+translations['admin.settings.subtitleLang'] = {
+    fr: 'Sous-titre ({lang})',
+    ar: 'العنوان الفرعي ({lang})',
+    en: 'Subtitle ({lang})',
+};
+
+// Section labels
+translations['admin.section.destinations'] = {
+    fr: 'Destinations',
+    ar: 'الوجهات',
+    en: 'Destinations',
+};
+translations['admin.section.hotels'] = {
+    fr: 'Hôtels',
+    ar: 'الفنادق',
+    en: 'Hotels',
+};
+translations['admin.section.organized'] = {
+    fr: 'Circuits organisés',
+    ar: 'جولات منظمة',
+    en: 'Organized Tours',
+};
+translations['admin.section.tours'] = {
+    fr: 'Circuits',
+    ar: 'جولات',
+    en: 'Tours',
+};
+translations['admin.section.cars'] = {
+    fr: 'Voitures',
+    ar: 'السيارات',
+    en: 'Cars',
+};
+translations['admin.section.flights'] = {
+    fr: 'Vols',
+    ar: 'الرحلات',
+    en: 'Flights',
+};
+translations['admin.section.events'] = {
+    fr: 'Événements',
+    ar: 'الفعاليات',
+    en: 'Events',
+};
+translations['admin.section.deals'] = {
+    fr: 'Offres',
+    ar: 'العروض',
+    en: 'Deals',
+};
+translations['admin.section.blog'] = {
+    fr: 'Blog',
+    ar: 'المدونة',
+    en: 'Blog',
 };

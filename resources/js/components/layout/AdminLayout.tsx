@@ -1,5 +1,6 @@
 import {
     LayoutDashboard,
+    Layout,
     MapPin,
     Hotel,
     Users,
@@ -31,6 +32,7 @@ import { type ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import {
@@ -50,12 +52,41 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { cn } from '@/lib/utils';
 
-const SITE_SETTINGS_SUB_LINKS = [
+interface SubLink {
+    to: string;
+    icon: typeof Globe;
+    labelKey: string;
+    exact?: boolean;
+}
+
+interface GroupLink {
+    to: string;
+    icon: typeof Settings;
+    labelKey: string;
+    roles?: string[];
+    isGroup: true;
+    subLinks: SubLink[];
+}
+
+interface NavLink {
+    to: string;
+    icon: typeof LayoutDashboard;
+    labelKey: string;
+    exact?: boolean;
+    roles?: string[];
+}
+
+type LinkItem = GroupLink | NavLink;
+
+function isGroupLink(link: LinkItem): link is GroupLink {
+    return 'isGroup' in link && link.isGroup === true;
+}
+
+const SITE_SETTINGS_SUB_LINKS: SubLink[] = [
     { to: '/admin/site-settings', icon: Globe, labelKey: 'admin.settings.companyContact', exact: true },
     { to: '/admin/site-settings/social-hours', icon: Link2, labelKey: 'admin.settings.socialMedia' },
     { to: '/admin/site-settings/navigation', icon: Navigation, labelKey: 'admin.settings.headerLinks' },
@@ -63,11 +94,10 @@ const SITE_SETTINGS_SUB_LINKS = [
     { to: '/admin/site-settings/legal', icon: Shield, labelKey: 'admin.settings.legalSectionsTitle' },
     { to: '/admin/site-settings/privacy-policy', icon: Shield, labelKey: 'nav.privacy-policy' },
     { to: '/admin/site-settings/purchase-policy', icon: ShoppingCart, labelKey: 'nav.purchase-policy' },
-    { to: '/admin/site-settings/video', icon: Video, labelKey: 'admin.settings.landingVideo' },
-    { to: '/admin/site-settings/hero-images', icon: ImageIcon, labelKey: 'admin.settings.landingHero' },
+    { to: '/admin/site-settings/landing-sections', icon: Layout, labelKey: 'admin.settings.landingSections' },
 ];
 
-const links = [
+const links: LinkItem[] = [
     {
         to: '/admin/dashboard',
         icon: LayoutDashboard,
@@ -77,6 +107,7 @@ const links = [
     { to: '/admin/destinations', icon: MapPin, labelKey: 'admin.destinations' },
     { to: '/admin/hotels', icon: Hotel, labelKey: 'admin.hotels' },
     { to: '/admin/tours', icon: Compass, labelKey: 'admin.tours' },
+    { to: '/admin/travels', icon: Globe, labelKey: 'admin.travels' },
     { to: '/admin/cars', icon: Car, labelKey: 'admin.cars' },
     { to: '/admin/flights', icon: Plane, labelKey: 'admin.flights' },
     { to: '/admin/events', icon: PartyPopper, labelKey: 'admin.events' },
@@ -174,7 +205,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
 
                         <SidebarMenu>
                             {filteredLinks.map((link) => {
-                                if ((link as any).isGroup) {
+                                if (isGroupLink(link)) {
                                     const isSettingsActive = pathname.startsWith(link.to);
                                     return (
                                         <Collapsible
@@ -200,8 +231,8 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                                 </CollapsibleTrigger>
                                                 <CollapsibleContent>
                                                     <SidebarMenuSub>
-                                                        {(link as any).subLinks.map(
-                                                            (sub: any) => {
+                                                        {(link as GroupLink).subLinks.map(
+                                                            (sub) => {
                                                                 const subActive = sub.exact
                                                                     ? pathname === sub.to
                                                                     : pathname.startsWith(sub.to);
@@ -304,7 +335,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                 {/* Mobile/Tablet Navigation */}
                 <div className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 lg:hidden">
                     {filteredLinks.map((link) => {
-                        if ((link as any).isGroup) {
+                        if (isGroupLink(link)) {
                             const isSettingsActive = pathname.startsWith(link.to);
                             return (
                                 <Link

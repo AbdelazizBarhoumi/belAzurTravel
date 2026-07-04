@@ -13,6 +13,7 @@ export async function apiFetch<T>(
         g.__httpRequestCounter = 0;
     }
     const reqId = ++g.__httpRequestCounter;
+    void reqId;
     // Support running tests in Node where relative URLs need a full origin.
     // In browser, window.location.origin will be present; in Node (Vitest) it may not.
     const isRelative = url.startsWith('/');
@@ -37,8 +38,8 @@ export async function apiFetch<T>(
 
     // Debug: log the URL when running tests to help diagnose network issues
     if (typeof process !== 'undefined' && process.env && process.env.VITEST) {
+        void 0;
     }
-    const start = Date.now();
     const res = await fetch(finalUrl, {
         credentials: 'include',
         ...options,
@@ -51,6 +52,7 @@ export async function apiFetch<T>(
             process.env &&
             process.env.VITEST
         ) {
+            void 0;
         }
         if (res.status === 401 || res.status === 419) {
             try {

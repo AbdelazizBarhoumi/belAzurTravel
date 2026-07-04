@@ -2,10 +2,11 @@ import { motion } from 'framer-motion';
 import { Users, Fuel, Settings2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -18,7 +19,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCars, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
 
-import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';

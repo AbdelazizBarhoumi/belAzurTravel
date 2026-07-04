@@ -32,6 +32,8 @@ export {
     findFlightById,
     findTourBySlug,
     findTourDetailBySlug,
+    findTravelBySlug,
+    findTravelDetailBySlug,
     findPromoByCode,
     getCars,
     getDeals,
@@ -41,6 +43,7 @@ export {
     getHotels,
     getPromos,
     getTours,
+    getTravels,
     localizeText,
     searchDeals,
     type CarItem,
@@ -52,4 +55,6 @@ export {
     type PromoItem,
     type TourDetailItem,
     type TourItem,
+    type TravelDetailItem,
+    type TravelItem,
 } from '@/api/entities.api';

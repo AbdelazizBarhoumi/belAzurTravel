@@ -1,5 +1,4 @@
 import { MessageCircle, Phone, SearchX } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettingsContext } from '@/contexts/SiteSettingsContext';

@@ -140,6 +140,34 @@ export const tourLabels: Record<string, LocalizedText> = {
     },
 };
 
+export const travelLabels: Record<string, LocalizedText> = {
+    'Istanbul & Cappadocia Discovery': {
+        fr: 'Istanbul & Cappadoce Découverte',
+        ar: 'اكتشف إسطنبول و كابادوكيا',
+        en: 'Istanbul & Cappadocia Discovery',
+    },
+    'Dubai & Abu Dhabi Luxury': {
+        fr: 'Dubaï & Abu Dhabi Luxe',
+        ar: 'دبي وأبو ظبي الفاخرة',
+        en: 'Dubai & Abu Dhabi Luxury',
+    },
+    'Antalya – Pamukkale – Fethiye': {
+        fr: 'Antalya – Pamukkale – Fethiye',
+        ar: 'أنطاليا – باموكالي – فيتحية',
+        en: 'Antalya – Pamukkale – Fethiye',
+    },
+    'Kuala Lumpur – Bali ECO Pack': {
+        fr: 'Kuala Lumpur – Bali pack ECO',
+        ar: 'كوالالمبور – بالي البيئية',
+        en: 'Kuala Lumpur – Bali ECO Pack',
+    },
+    'Omra 2026': {
+        fr: 'Omra 2026',
+        ar: 'عمرة 2026',
+        en: 'Omra 2026',
+    },
+};
+
 export const bookingTypeLabels: Record<string, LocalizedText> = {
     Destination: { fr: 'Destination', ar: 'وجهة', en: 'Destination' },
     Hotel: { fr: 'Hôtel', ar: 'فندق', en: 'Hotel' },

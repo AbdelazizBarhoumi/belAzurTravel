@@ -1,6 +1,6 @@
 import { Slider } from '@/components/ui/slider';
-import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { useLanguage } from '@/contexts/LanguageContext';
+import type { PublicCategoryType } from '@/hooks/usePublicData';
 
 interface SliderFilterProps {
     categoryType: PublicCategoryType;

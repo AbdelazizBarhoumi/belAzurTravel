@@ -84,9 +84,18 @@ export default function AdminDeals() {
     const isCodeEnabled =
         siteSettings?.config?.navigation?.enabled_dropdowns?.includes('deals');
     const [open, setOpen] = useState(false);
+    const [modalLang, setModalLang] = useState<Lang>('en');
     const [catManagerOpen, setCatManagerOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!nextOpen) {
+            setErrors({});
+            setEditing(null);
+        }
+        setOpen(nextOpen);
+    };
 
     // Hero images state
     const existingHeroConfig = siteSettings?.content?.page_heroes?.deals;
@@ -729,6 +738,24 @@ export default function AdminDeals() {
                         queryKey: ['admin', 'category-types', 'deals'],
                     });
                 }}
+            />
+
+            <EntityFormDialog
+                open={open}
+                onOpenChange={handleOpenChange}
+                title={
+                    editing
+                        ? `${t('actions.edit')} ${t('admin.deals')}`
+                        : `${t('actions.add')} ${t('admin.deals')}`
+                }
+                sections={dealSections}
+                initial={dialogInitial}
+                onSubmit={(values) => handleSave(values as AdminRow)}
+                errors={errors}
+                languages={['en', 'fr', 'ar']}
+                activeLang={modalLang}
+                onActiveLangChange={setModalLang}
+                isSubmitting={saveMutation.isPending}
             />
         </AdminLayout>
     );

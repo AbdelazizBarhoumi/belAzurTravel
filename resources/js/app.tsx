@@ -5,6 +5,7 @@ import {
     BrowserRouter,
     Routes,
     Route,
+    Navigate,
     useLocation,
     useNavigate,
 } from 'react-router-dom';
@@ -12,9 +13,9 @@ import { redirectAfterLogin } from '@/auth';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { RouteLoader } from '@/components/layout/RouteLoader';
+import { SocialSidebar } from '@/components/layout/SocialSidebar';
 import { NavRouteGuard } from '@/components/nav/NavRouteGuard';
 import CookieConsent from '@/components/ui/CookieConsent';
-import { SocialSidebar } from '@/components/layout/SocialSidebar';
 import { RoleGuard } from '@/components/ui/RoleGuard';
 import ScrollToTop from '@/components/ui/ScrollToTop';
 import { Toaster as Sonner } from '@/components/ui/sonner';
@@ -40,19 +41,21 @@ import AdminHotels from './pages/admin/AdminHotels';
 import AdminPartners from './pages/admin/AdminPartners';
 import AdminPromos from './pages/admin/AdminPromos';
 import AdminReports from './pages/admin/AdminReports';
-import AdminSiteSettingsCompany from './pages/admin/site-settings/AdminSiteSettingsCompany';
-import AdminSiteSettingsSocial from './pages/admin/site-settings/AdminSiteSettingsSocial';
-import AdminSiteSettingsNav from './pages/admin/site-settings/AdminSiteSettingsNav';
-import AdminSiteSettingsFooter from './pages/admin/site-settings/AdminSiteSettingsFooter';
-import AdminSiteSettingsLegal from './pages/admin/site-settings/AdminSiteSettingsLegal';
-import AdminSiteSettingsPrivacyPolicy from './pages/admin/site-settings/AdminSiteSettingsPrivacyPolicy';
-import AdminSiteSettingsPurchasePolicy from './pages/admin/site-settings/AdminSiteSettingsPurchasePolicy';
-import AdminSiteSettingsVideo from './pages/admin/site-settings/AdminSiteSettingsVideo';
-import AdminSiteSettingsHeroImages from './pages/admin/site-settings/AdminSiteSettingsHeroImages';
-import AdminVisas from './pages/admin/AdminVisas';
 import AdminTeam from './pages/admin/AdminTeam';
 import AdminTours from './pages/admin/AdminTours';
+import AdminTravels from './pages/admin/AdminTravels';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminVisas from './pages/admin/AdminVisas';
+import AdminSiteSettingsCompany from './pages/admin/site-settings/AdminSiteSettingsCompany';
+import AdminSiteSettingsFooter from './pages/admin/site-settings/AdminSiteSettingsFooter';
+import AdminSiteSettingsHeroImages from './pages/admin/site-settings/AdminSiteSettingsHeroImages';
+import AdminSiteSettingsLandingSections from './pages/admin/site-settings/AdminSiteSettingsLandingSections';
+import AdminSiteSettingsLegal from './pages/admin/site-settings/AdminSiteSettingsLegal';
+import AdminSiteSettingsNav from './pages/admin/site-settings/AdminSiteSettingsNav';
+import AdminSiteSettingsPrivacyPolicy from './pages/admin/site-settings/AdminSiteSettingsPrivacyPolicy';
+import AdminSiteSettingsPurchasePolicy from './pages/admin/site-settings/AdminSiteSettingsPurchasePolicy';
+import AdminSiteSettingsSocial from './pages/admin/site-settings/AdminSiteSettingsSocial';
+import AdminSiteSettingsVideo from './pages/admin/site-settings/AdminSiteSettingsVideo';
 import VerifyEmail from './pages/auth/VerifyEmail';
 import Blog from './pages/blog';
 import BlogPostDetail from './pages/blog/show';
@@ -90,6 +93,8 @@ import Promos from './pages/promos';
 import PromoDetail from './pages/promos/show';
 import Tours from './pages/tours';
 import TourDetail from './pages/tours/show';
+import Travels from './pages/travels';
+import TravelDetail from './pages/travels/show';
 import Visa from "./pages/visa/index";
 
 const adminGuard = (element: JSX.Element) => (
@@ -242,6 +247,10 @@ const LayoutWrapper = () => {
                     />
                     {/* Tour creation/editing handled inline in AdminTours via EntityFormDialog */}
                     <Route
+                        path="/admin/travels"
+                        element={adminGuard(<AdminTravels />)}
+                    />
+                    <Route
                         path="/admin/bookings"
                         element={adminGuard(<AdminBookings />)}
                     />
@@ -335,11 +344,15 @@ const LayoutWrapper = () => {
                     />
                     <Route
                         path="/admin/site-settings/video"
-                        element={adminGuard(<AdminSiteSettingsVideo />)}
+                        element={adminGuard(<Navigate to="/admin/site-settings/landing-sections" replace />)}
                     />
                     <Route
                         path="/admin/site-settings/hero-images"
-                        element={adminGuard(<AdminSiteSettingsHeroImages />)}
+                        element={adminGuard(<Navigate to="/admin/site-settings/landing-sections" replace />)}
+                    />
+                    <Route
+                        path="/admin/site-settings/landing-sections"
+                        element={adminGuard(<AdminSiteSettingsLandingSections />)}
                     />
                     <Route
                         path="/admin/notifications"
@@ -390,6 +403,22 @@ const LayoutWrapper = () => {
                         element={
                             <NavRouteGuard pageKey="tours">
                                 <TourDetail />
+                            </NavRouteGuard>
+                        }
+                    />
+                    <Route
+                        path="/travels"
+                        element={
+                            <NavRouteGuard pageKey="travels">
+                                <Travels />
+                            </NavRouteGuard>
+                        }
+                    />
+                    <Route
+                        path="/travels/:slug"
+                        element={
+                            <NavRouteGuard pageKey="travels">
+                                <TravelDetail />
                             </NavRouteGuard>
                         }
                     />

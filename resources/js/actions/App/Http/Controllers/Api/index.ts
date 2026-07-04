@@ -7,6 +7,7 @@ import GalleryController from './GalleryController'
 import DestinationController from './DestinationController'
 import HotelController from './HotelController'
 import TourController from './TourController'
+import TravelController from './TravelController'
 import CarController from './CarController'
 import FlightController from './FlightController'
 import EventController from './EventController'
@@ -23,6 +24,7 @@ import ComplaintController from './ComplaintController'
 import AdminDestinationController from './AdminDestinationController'
 import AdminHotelController from './AdminHotelController'
 import AdminTourController from './AdminTourController'
+import AdminTravelController from './AdminTravelController'
 import AdminCarController from './AdminCarController'
 import AdminFlightController from './AdminFlightController'
 import AdminEventController from './AdminEventController'
@@ -45,6 +47,7 @@ GalleryController: Object.assign(GalleryController, GalleryController),
 DestinationController: Object.assign(DestinationController, DestinationController),
 HotelController: Object.assign(HotelController, HotelController),
 TourController: Object.assign(TourController, TourController),
+TravelController: Object.assign(TravelController, TravelController),
 CarController: Object.assign(CarController, CarController),
 FlightController: Object.assign(FlightController, FlightController),
 EventController: Object.assign(EventController, EventController),
@@ -61,6 +64,7 @@ ComplaintController: Object.assign(ComplaintController, ComplaintController),
 AdminDestinationController: Object.assign(AdminDestinationController, AdminDestinationController),
 AdminHotelController: Object.assign(AdminHotelController, AdminHotelController),
 AdminTourController: Object.assign(AdminTourController, AdminTourController),
+AdminTravelController: Object.assign(AdminTravelController, AdminTravelController),
 AdminCarController: Object.assign(AdminCarController, AdminCarController),
 AdminFlightController: Object.assign(AdminFlightController, AdminFlightController),
 AdminEventController: Object.assign(AdminEventController, AdminEventController),

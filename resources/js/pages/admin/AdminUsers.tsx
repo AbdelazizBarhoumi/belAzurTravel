@@ -120,20 +120,20 @@ const AdminUsers = () => {
 
     const handleToggleActive = (u: AdminUser) => {
         if (!canManage(u)) {
-            toast.error('Permission denied');
+            toast.error(t('admin.permissionDenied'));
             return;
         }
         toggleMutation.mutate(u.id);
     };
 
     return (
-        <AdminLayout title="Users" subtitle="Manage client and staff accounts">
+        <AdminLayout title={t('admin.users')} subtitle={t('admin.usersSubtitle')}>
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex max-w-md flex-1 items-center gap-2">
                     <div className="relative w-full">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
-                            placeholder="Search by name or email..."
+                            placeholder={t('admin.searchPlaceholder')}
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value);
@@ -153,16 +153,16 @@ const AdminUsers = () => {
                         }}
                     >
                         <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="All Roles" />
+                            <SelectValue placeholder={t('admin.allRoles')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Roles</SelectItem>
-                            <SelectItem value="client">Client</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="all">{t('admin.allRoles')}</SelectItem>
+                            <SelectItem value="client">{t('auth.client')}</SelectItem>
+                            <SelectItem value="admin">{t('auth.admin')}</SelectItem>
                             <SelectItem value="superadmin">
-                                Superadmin
+                                {t('auth.superadmin')}
                             </SelectItem>
-                            <SelectItem value="owner">Owner</SelectItem>
+                            <SelectItem value="owner">{t('auth.owner')}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -174,12 +174,12 @@ const AdminUsers = () => {
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
                                 {[
-                                    'Name',
-                                    'Email',
-                                    'Role',
-                                    'Joined',
-                                    'Status',
-                                    'Actions',
+                                    t('admin.table.name'),
+                                    t('admin.table.email'),
+                                    t('admin.role'),
+                                    t('admin.table.joined'),
+                                    t('admin.status'),
+                                    t('admin.actions'),
                                 ].map((h) => (
                                     <th
                                         key={h}
@@ -197,7 +197,7 @@ const AdminUsers = () => {
                                         colSpan={6}
                                         className="px-4 py-12 text-center text-muted-foreground"
                                     >
-                                        Loading users...
+                                        {t('admin.loadingUsers')}
                                     </td>
                                 </tr>
                             ) : users.length === 0 ? (
@@ -206,7 +206,7 @@ const AdminUsers = () => {
                                         colSpan={6}
                                         className="px-4 py-12 text-center text-muted-foreground"
                                     >
-                                        No users found.
+                                        {t('admin.noUsersFound')}
                                     </td>
                                 </tr>
                             ) : (
@@ -234,8 +234,8 @@ const AdminUsers = () => {
                                                 className={`rounded-full px-3 py-1 text-xs font-semibold ${u.active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}
                                             >
                                                 {u.active
-                                                    ? 'Active'
-                                                    : 'Inactive'}
+                                                    ? t('admin.active')
+                                                    : t('admin.inactive')}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3">
@@ -249,8 +249,8 @@ const AdminUsers = () => {
                                                     }
                                                 >
                                                     {u.active
-                                                        ? 'Deactivate'
-                                                        : 'Activate'}
+                                                        ? t('admin.deactivate')
+                                                        : t('admin.activate')}
                                                 </Button>
                                                 <button
                                                     disabled={!canManage(u)}
@@ -429,17 +429,17 @@ const UserEditDialog = ({
                     <DialogTitle>
                         <div className="flex items-center gap-2">
                             <UserCog className="h-5 w-5 text-primary" />
-                            <span>Edit User</span>
+                            <span>{t('admin.editUser')}</span>
                         </div>
                     </DialogTitle>
                     <DialogDescription>
-                        Update user profile and account permissions.
+                        {t('admin.updateUserDesc')}
                     </DialogDescription>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
+                        <Label htmlFor="name">{t('admin.fullName')}</Label>
                         <Input
                             id="name"
                             value={name}
@@ -448,7 +448,7 @@ const UserEditDialog = ({
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
+                        <Label htmlFor="email">{t('admin.emailAddress')}</Label>
                         <Input
                             id="email"
                             type="email"
@@ -458,7 +458,7 @@ const UserEditDialog = ({
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="role">User Role</Label>
+                        <Label htmlFor="role">{t('admin.userRole')}</Label>
                         <Select
                             value={role}
                             onValueChange={(val) => setRole(val as UserRole)}
@@ -474,8 +474,8 @@ const UserEditDialog = ({
                                 ))}
                                 {!availableRoles.includes(role) && (
                                     <SelectItem value={role} disabled>
-                                        <span className="capitalize">
-                                            {role} (Restricted)
+                                            <span className="capitalize">
+                                                {role} {t('admin.restricted')}
                                         </span>
                                     </SelectItem>
                                 )}
@@ -483,17 +483,16 @@ const UserEditDialog = ({
                         </Select>
                         {currentLevel < 3 && (
                             <p className="text-xs text-muted-foreground">
-                                Only Superadmins and Owners can manage advanced
-                                roles.
+                                {t('admin.roleManagementHint')}
                             </p>
                         )}
                     </div>
 
                     <DialogFooter className="pt-4">
                         <Button type="button" variant="ghost" onClick={onClose}>
-                            Cancel
+                            {t('actions.cancel')}
                         </Button>
-                        <Button type="submit">Save Changes</Button>
+                        <Button type="submit">{t('admin.saveChanges')}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

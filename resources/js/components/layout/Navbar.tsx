@@ -17,18 +17,20 @@ import {
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
-import { useCategories, type PublicCategory } from '@/hooks/usePublicData';
 import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
+import { useCategories } from '@/hooks/usePublicData';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { getLocalizedCategoryLabelByKey } from '@/lib/categoryLabels';
 import {
     type DropdownItemConfig,
     type HeaderEntry,
+    type NavGroup,
     getPage,
     buildItemHref,
     DEFAULT_NAV_SETTINGS,
     type NavSettings,
     type LocalizedText,
+    getPagesInGroups,
 } from '@/lib/nav-config';
 
 const SOCIAL_ICONS: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
@@ -85,8 +87,8 @@ function DesktopFlyoutItems({
                         key={idx}
                         className="relative"
                         onMouseEnter={() => {
+                            hover.clear();
                             if (hasChildren) {
-                                hover.clear();
                                 setHoveredPath(itemPath);
                             }
                         }}
@@ -97,7 +99,7 @@ function DesktopFlyoutItems({
                         }}
                     >
                         <Link
-                            to={buildItemHref(entry.pageKey, item, lang)}
+                            to={buildItemHref(entry.pageKey, item, lang as 'en' | 'fr' | 'ar')}
                             className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                             <span>{resolveDropdownItemLabel(entry, item)}</span>
@@ -185,6 +187,364 @@ function MobileNestedItems({
     );
 }
 
+function DesktopGroupDropdown({
+    group,
+    lang,
+    t,
+    resolveLabel,
+    resolveDropdownItemLabel,
+    hoveredPath,
+    setHoveredPath,
+    hover,
+    categoryTypesByPage,
+}: {
+    group: NavGroup;
+    lang: string;
+    t: (key: string) => string;
+    resolveLabel: (label: string | LocalizedText | null | undefined) => string;
+    resolveDropdownItemLabel: (entry: HeaderEntry, item: DropdownItemConfig) => string;
+    hoveredPath: string | null;
+    setHoveredPath: (path: string | null) => void;
+    hover: { schedule: (fn: () => void) => void; clear: () => void };
+    categoryTypesByPage: Record<string, CategoryType[]>;
+}) {
+    const triggerPath = `group:${group.key}`;
+    const isHovered = hoveredPath === triggerPath || hoveredPath?.startsWith(triggerPath + ':');
+
+    const resolveDropdownItems = (items: DropdownItemConfig[], pageKey: string): DropdownItemConfig[] =>
+        items.flatMap((item): DropdownItemConfig[] => {
+            if (item.mode === 'categories' && item.value) {
+                const categoryTypes = categoryTypesByPage[pageKey] ?? [];
+                const selectedType = categoryTypes.find((ct: CategoryType) => ct.key === item.value);
+                if (selectedType && selectedType.values) {
+                    return selectedType.values.map((val) => ({
+                        label: val.name as unknown as LocalizedText,
+                        mode: 'filter' as const,
+                        value: `${selectedType.key}:${val.key}`,
+                    }));
+                }
+            }
+            const resolvedChildren = item.children
+                ? resolveDropdownItems(item.children, pageKey)
+                : undefined;
+            return [{ ...item, children: resolvedChildren }];
+        });
+
+    return (
+        <div
+            className="relative"
+            onMouseEnter={() => {
+                hover.clear();
+                setHoveredPath(triggerPath);
+            }}
+            onMouseLeave={() => {
+                hover.schedule(() => setHoveredPath(null));
+            }}
+        >
+            <button className="inline-flex h-10 items-center gap-1 px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+                {resolveLabel(group.label) || group.key}
+                <ChevronDown className={`h-4 w-4 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-50'}`} />
+            </button>
+            {isHovered && (
+                <div className="absolute left-0 top-full -mt-1 pt-1">
+                    <ul className="min-w-56 space-y-1 rounded-lg border border-border bg-card p-2 shadow-lg">
+                        {group.pages.map((groupPage) => {
+                            const page = getPage(groupPage.pageKey);
+                            if (!page) return null;
+                            const itemPath = `${triggerPath}:${groupPage.pageKey}`;
+                            const isPageHovered = hoveredPath === itemPath || hoveredPath?.startsWith(itemPath + ':');
+                            const dropdownItems = groupPage.isDropdown ? resolveDropdownItems(groupPage.items, groupPage.pageKey) : [];
+
+                            if (groupPage.isDropdown && dropdownItems.length > 0) {
+                                return (
+                                    <li
+                                        key={groupPage.pageKey}
+                                        className="relative"
+                                        onMouseEnter={() => {
+                                            hover.clear();
+                                            setHoveredPath(itemPath);
+                                        }}
+                                        onMouseLeave={() => {
+                                            hover.schedule(() => setHoveredPath(null));
+                                        }}
+                                    >
+                                        {groupPage.linkSelf ? (
+                                            <Link
+                                                to={page.href}
+                                                className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                            >
+                                                <span>{groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}</span>
+                                                <ChevronDown className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`} />
+                                            </Link>
+                                        ) : (
+                                            <button className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                                <span>{groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}</span>
+                                                <ChevronDown className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`} />
+                                            </button>
+                                        )}
+                                        {isPageHovered && (
+                                            <div className="absolute left-[calc(100%+8px)] top-0">
+                                                <DesktopFlyoutItems
+                                                    items={dropdownItems}
+                                                    entry={{ pageKey: itemPath, label: groupPage.label } as HeaderEntry}
+                                                    lang={lang}
+                                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                    hoveredPath={hoveredPath}
+                                                    setHoveredPath={setHoveredPath}
+                                                    hover={hover}
+                                                />
+                                            </div>
+                                        )}
+                                    </li>
+                                );
+                            }
+
+                            return (
+                                <li
+                                    key={groupPage.pageKey}
+                                    onMouseEnter={() => {
+                                        hover.clear();
+                                        setHoveredPath(triggerPath);
+                                    }}
+                                >
+                                    <Link
+                                        to={page.href}
+                                        className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                    >
+                                        {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                        {group.groups?.filter((sg) => sg.enabled).map((subGroup) => {
+                            const subGroupPath = `${triggerPath}:sub:${subGroup.key}`;
+                            const isSubGroupHovered = hoveredPath === subGroupPath || hoveredPath?.startsWith(subGroupPath + ':');
+
+                            return (
+                                <li
+                                    key={subGroup.key}
+                                    className="relative"
+                                    onMouseEnter={() => {
+                                        hover.clear();
+                                        setHoveredPath(subGroupPath);
+                                    }}
+                                    onMouseLeave={() => {
+                                        hover.schedule(() => setHoveredPath(null));
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer">
+                                        <span>{resolveLabel(subGroup.label) || subGroup.key}</span>
+                                        <ChevronRight className="h-4 w-4 opacity-50" />
+                                    </div>
+                                    {isSubGroupHovered && (
+                                        <div
+                                            className="absolute left-[calc(100%+8px)] top-0"
+                                            onMouseEnter={() => {
+                                                hover.clear();
+                                                setHoveredPath(subGroupPath);
+                                            }}
+                                            onMouseLeave={() => {
+                                                hover.schedule(() => setHoveredPath(null));
+                                            }}
+                                        >
+                                            <ul className="min-w-48 space-y-1 rounded-lg border border-border bg-card p-2 shadow-lg">
+                                                {subGroup.pages.map((groupPage) => {
+                                                    const page = getPage(groupPage.pageKey);
+                                                    if (!page) return null;
+                                                    const pagePath = `${subGroupPath}:${groupPage.pageKey}`;
+                                                    const isPageHovered = hoveredPath === pagePath || hoveredPath?.startsWith(pagePath + ':');
+                                                    const dropdownItems = groupPage.isDropdown ? resolveDropdownItems(groupPage.items, groupPage.pageKey) : [];
+
+                                                    if (groupPage.isDropdown && dropdownItems.length > 0) {
+                                                        return (
+                                                            <li
+                                                                key={groupPage.pageKey}
+                                                                className="relative"
+                                                                onMouseEnter={() => {
+                                                                    hover.clear();
+                                                                    setHoveredPath(pagePath);
+                                                                }}
+                                                                onMouseLeave={() => {
+                                                                    hover.schedule(() => setHoveredPath(null));
+                                                                }}
+                                                            >
+                                                                {groupPage.linkSelf ? (
+                                                                    <Link
+                                                                        to={page.href}
+                                                                        className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                    >
+                                                                        <span>{groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}</span>
+                                                                        <ChevronDown className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`} />
+                                                                    </Link>
+                                                                ) : (
+                                                                    <button className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                                                        <span>{groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}</span>
+                                                                        <ChevronDown className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`} />
+                                                                    </button>
+                                                                )}
+                                                                {isPageHovered && (
+                                                                    <div className="absolute left-[calc(100%+8px)] top-0">
+                                                                        <DesktopFlyoutItems
+                                                                            items={dropdownItems}
+                                                                            entry={{ pageKey: pagePath, label: groupPage.label } as HeaderEntry}
+                                                                            lang={lang}
+                                                                            resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                                            hoveredPath={hoveredPath}
+                                                                            setHoveredPath={setHoveredPath}
+                                                                            hover={hover}
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                            </li>
+                                                        );
+                                                    }
+
+                                                    return (
+                                                        <li
+                                                            key={groupPage.pageKey}
+                                                            onMouseEnter={() => {
+                                                                hover.clear();
+                                                                setHoveredPath(subGroupPath);
+                                                            }}
+                                                        >
+                                                            <Link
+                                                                to={page.href}
+                                                                className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                            >
+                                                                {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                                            </Link>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function MobileGroupSection({
+    group,
+    lang,
+    t,
+    resolveLabel,
+    resolveDropdownItemLabel,
+    onClose,
+    categoryTypesByPage,
+}: {
+    group: NavGroup;
+    lang: string;
+    t: (key: string) => string;
+    resolveLabel: (label: string | LocalizedText | null | undefined) => string;
+    resolveDropdownItemLabel: (entry: HeaderEntry, item: DropdownItemConfig) => string;
+    onClose: () => void;
+    categoryTypesByPage: Record<string, CategoryType[]>;
+}) {
+    const resolveDropdownItems = (items: DropdownItemConfig[], pageKey: string): DropdownItemConfig[] =>
+        items.flatMap((item): DropdownItemConfig[] => {
+            if (item.mode === 'categories' && item.value) {
+                const categoryTypes = categoryTypesByPage[pageKey] ?? [];
+                const selectedType = categoryTypes.find((ct: CategoryType) => ct.key === item.value);
+                if (selectedType && selectedType.values) {
+                    return selectedType.values.map((val) => ({
+                        label: val.name as unknown as LocalizedText,
+                        mode: 'filter' as const,
+                        value: `${selectedType.key}:${val.key}`,
+                    }));
+                }
+            }
+            const resolvedChildren = item.children
+                ? resolveDropdownItems(item.children, pageKey)
+                : undefined;
+            return [{ ...item, children: resolvedChildren }];
+        });
+
+    return (
+        <details className="group">
+            <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
+                {resolveLabel(group.label) || group.key}
+                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="flex flex-col gap-1 pb-2 pl-3">
+                {group.pages.map((groupPage) => {
+                    const page = getPage(groupPage.pageKey);
+                    if (!page) return null;
+                    const dropdownItems = groupPage.isDropdown ? resolveDropdownItems(groupPage.items, groupPage.pageKey) : [];
+
+                    if (groupPage.isDropdown && dropdownItems.length > 0) {
+                        return (
+                            <details key={groupPage.pageKey} className="group/page">
+                                <summary className="flex cursor-pointer items-center justify-between py-1 text-sm text-muted-foreground">
+                                    {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                    <ChevronDown className="h-3 w-3 transition-transform group-open/page:rotate-180" />
+                                </summary>
+                                <div className="flex flex-col gap-0.5 pb-1 pl-3">
+                                    {groupPage.linkSelf && (
+                                        <Link
+                                            to={page.href}
+                                            onClick={onClose}
+                                            className="py-1 text-xs text-primary"
+                                        >
+                                            {t('common.all')}
+                                        </Link>
+                                    )}
+                                    <MobileNestedItems
+                                        items={dropdownItems}
+                                        entry={{ pageKey: groupPage.pageKey, label: groupPage.label } as HeaderEntry}
+                                        onClose={onClose}
+                                        resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                    />
+                                </div>
+                            </details>
+                        );
+                    }
+
+                    return (
+                        <Link
+                            key={groupPage.pageKey}
+                            to={page.href}
+                            onClick={onClose}
+                            className="py-1 text-sm text-muted-foreground"
+                        >
+                            {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                        </Link>
+                    );
+                })}
+                {group.groups?.filter((sg) => sg.enabled).map((subGroup) => (
+                    <details key={subGroup.key} className="group/nested">
+                        <summary className="flex cursor-pointer items-center justify-between py-1 text-xs font-semibold text-muted-foreground uppercase">
+                            {resolveLabel(subGroup.label) || subGroup.key}
+                            <ChevronDown className="h-3 w-3 transition-transform group-open/nested:rotate-180" />
+                        </summary>
+                        <div className="flex flex-col gap-0.5 pb-1 pl-3">
+                            {subGroup.pages.map((groupPage) => {
+                                const page = getPage(groupPage.pageKey);
+                                if (!page) return null;
+                                return (
+                                    <Link
+                                        key={groupPage.pageKey}
+                                        to={page.href}
+                                        onClick={onClose}
+                                        className="py-1 text-sm text-muted-foreground"
+                                    >
+                                        {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </details>
+                ))}
+            </div>
+        </details>
+    );
+}
+
 export function Navbar() {
     const [open, setOpen] = useState(false);
     const [openMoreSection, setOpenMoreSection] = useState<string | null>(null);
@@ -193,7 +553,6 @@ export function Navbar() {
     const hover = useHoverDelay(150);
     const lastScrollY = useRef(0);
     const location = useLocation();
-    const isHome = location.pathname === '/';
     const { t, lang } = useLanguage();
     const { data: user } = useAuthUser();
 
@@ -249,6 +608,15 @@ export function Navbar() {
     const topbarEntries = enabled.filter((e) => e.placement === 'topbar');
     const topEntries = enabled.filter((e) => e.placement === 'top');
     const moreEntries = enabled.filter((e) => e.placement === 'more');
+
+    const pagesInGroups = getPagesInGroups(navSettings.groups ?? []);
+    const topEntriesFiltered = topEntries.filter((e) => !pagesInGroups.has(e.pageKey));
+    const moreEntriesFiltered = moreEntries.filter((e) => !pagesInGroups.has(e.pageKey));
+
+    const enabledGroups = (navSettings.groups ?? []).filter((g) => g.enabled);
+    const topGroups = enabledGroups.filter((g) => g.placement === 'top');
+    const moreGroups = enabledGroups.filter((g) => g.placement === 'more');
+    const topbarGroups = enabledGroups.filter((g) => g.placement === 'topbar');
 
     const categoriesByPage = useMemo(
         () => ({
@@ -466,7 +834,7 @@ export function Navbar() {
 
                 {/* Desktop nav */}
                 <div className="hidden items-center gap-1 lg:flex">
-                    {topEntries.map((entry) => {
+                    {topEntriesFiltered.map((entry) => {
                         const page = getPage(entry.pageKey);
                         if (!page) return null;
                         const dropdownItems = resolveDropdownItems(entry);
@@ -539,7 +907,22 @@ export function Navbar() {
                         );
                     })}
 
-                    {moreEntries.length > 0 && (
+                    {topGroups.map((group) => (
+                        <DesktopGroupDropdown
+                            key={group.key}
+                            group={group}
+                            lang={lang}
+                            t={t}
+                            resolveLabel={resolveLabel}
+                            resolveDropdownItemLabel={resolveDropdownItemLabel}
+                            hoveredPath={hoveredPath}
+                            setHoveredPath={setHoveredPath}
+                            hover={hover}
+                            categoryTypesByPage={categoryTypesByPage}
+                        />
+                    ))}
+
+                    {(moreEntriesFiltered.length > 0 || moreGroups.length > 0) && (
                         <div
                             className="relative"
                             onMouseEnter={() => {
@@ -557,7 +940,7 @@ export function Navbar() {
                             {hoveredPath === '__more__' && (
                                 <div className="absolute left-0 top-full -mt-1 pt-1">
                                     <ul className="min-w-56 space-y-1 rounded-lg border border-border bg-card p-2 shadow-lg">
-                                        {moreEntries.map((entry) => {
+                                        {moreEntriesFiltered.map((entry) => {
                                             const page = getPage(entry.pageKey);
                                             if (!page) return null;
                                             const dropdownItems = resolveDropdownItems(entry);
@@ -617,6 +1000,29 @@ export function Navbar() {
                                                 </li>
                                             );
                                         })}
+                                        {moreGroups.map((group) => (
+                                            <li key={group.key} className="border-t border-border/60 pt-1 mt-1">
+                                                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase">
+                                                    {resolveLabel(group.label) || group.key}
+                                                </div>
+                                                <ul className="space-y-0.5">
+                                                    {group.pages.map((groupPage) => {
+                                                        const page = getPage(groupPage.pageKey);
+                                                        if (!page) return null;
+                                                        return (
+                                                            <li key={groupPage.pageKey}>
+                                                                <Link
+                                                                    to={page.href}
+                                                                    className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                >
+                                                                    {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                                                </Link>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             )}
@@ -670,7 +1076,7 @@ export function Navbar() {
                     >
                         <div className="container mx-auto flex flex-col gap-1 px-4 py-4">
                             {/* Top entries shown first */}
-                            {topEntries.map((entry) => {
+                            {topEntriesFiltered.map((entry) => {
                                 const page = getPage(entry.pageKey);
                                 if (!page) return null;
                                 const dropdownItems = resolveDropdownItems(entry);
@@ -732,15 +1138,29 @@ export function Navbar() {
                                 );
                             })}
 
+                            {/* Top groups */}
+                            {topGroups.map((group) => (
+                                <MobileGroupSection
+                                    key={group.key}
+                                    group={group}
+                                    lang={lang}
+                                    t={t}
+                                    resolveLabel={resolveLabel}
+                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                    onClose={() => setOpen(false)}
+                                    categoryTypesByPage={categoryTypesByPage}
+                                />
+                            ))}
+
                             {/* More entries grouped under a single "More" collapsible on mobile */}
-                            {moreEntries.length > 0 && (
+                            {(moreEntriesFiltered.length > 0 || moreGroups.length > 0) && (
                                 <details className="group/main">
                                     <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
                                         {t('nav.more')}
                                         <ChevronDown className="h-4 w-4 transition-transform group-open/main:rotate-180" />
                                     </summary>
                                     <div className="flex flex-col gap-2 pb-2 pl-3">
-                                        {moreEntries.map((entry) => {
+                                        {moreEntriesFiltered.map((entry) => {
                                             const page = getPage(entry.pageKey);
                                             if (!page) return null;
                                             const dropdownItems = resolveDropdownItems(entry);
@@ -801,6 +1221,29 @@ export function Navbar() {
                                                 </Link>
                                             );
                                         })}
+                                        {moreGroups.map((group) => (
+                                            <div key={group.key} className="border-t border-border/60 pt-2 mt-2">
+                                                <div className="px-1 py-1 text-xs font-semibold text-muted-foreground uppercase">
+                                                    {resolveLabel(group.label) || group.key}
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    {group.pages.map((groupPage) => {
+                                                        const page = getPage(groupPage.pageKey);
+                                                        if (!page) return null;
+                                                        return (
+                                                            <Link
+                                                                key={groupPage.pageKey}
+                                                                to={page.href}
+                                                                onClick={() => setOpen(false)}
+                                                                className="py-1 text-sm text-muted-foreground"
+                                                            >
+                                                                {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                                            </Link>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </details>
                             )}

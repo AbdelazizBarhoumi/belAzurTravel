@@ -15,7 +15,8 @@ import {
     PaginationPrevious,
 } from '@/components/ui/pagination';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useBlogPosts, useCategories } from '@/hooks/usePublicData';
+import { useBlogPosts, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import type { Lang } from '@/i18n/translations';
 import { matchesSearchText } from '@/lib/listFilters';
 
@@ -51,9 +52,23 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
 
     const { data: posts = [] } = useBlogPosts();
     const { data: dynamicCategories = [] } = useCategories('blog');
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('blog');
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [currentPage, setCurrentPage] = useState(1);
+
+    // Category type filters from URL params
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
     const categories = useMemo(
         () => [
@@ -78,9 +93,17 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
                     selectedCategory === 'all' ||
                     post.category_key === selectedCategory;
 
-                return matchesSearch && matchesCategory;
+                // Category type filters
+                const assignments = (post as unknown as Record<string, unknown>).category_assignments as Record<string, string> | undefined;
+                const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
+                    ([typeKey, values]) =>
+                        values.length === 0 ||
+                        (assignments && values.includes(assignments[typeKey])),
+                );
+
+                return matchesSearch && matchesCategory && matchesCategoryTypes;
             }),
-        [posts, lang, searchQuery, selectedCategory],
+        [posts, lang, searchQuery, selectedCategory, categoryTypeFilters],
     );
 
     const handleSearchChange = (value: string) => {
@@ -94,7 +117,7 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
     };
 
     const hasActiveFilters =
-        searchQuery.trim().length > 0 || selectedCategory !== 'all';
+        searchQuery.trim().length > 0 || selectedCategory !== 'all' || Object.values(categoryTypeFilters).some((v) => v.length > 0);
     const pageCount = Math.max(1, Math.ceil(filteredPosts.length / pageSize));
     const paginatedPosts = filteredPosts.slice(
         (currentPage - 1) * pageSize,
@@ -104,6 +127,7 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
     const clearFilters = () => {
         setSearchQuery('');
         setSelectedCategory('all');
+        setCategoryTypeFilters({});
     };
 
     return (
@@ -132,6 +156,24 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
                             </button>
                         ))}
                     </div>
+                    {categoryTypes.length > 0 && (
+                        <div className="mt-3 space-y-3">
+                            {categoryTypes.map((catType) => (
+                                <FilterRenderer
+                                    key={catType.key}
+                                    categoryType={catType as never}
+                                    selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                    onChange={(values) =>
+                                        setCategoryTypeFilters((prev) => ({
+                                            ...prev,
+                                            [catType.key]: values,
+                                        }))
+                                    }
+                                    lang={lang}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </ListFilterBar>
 
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-3">

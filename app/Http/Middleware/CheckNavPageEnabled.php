@@ -27,6 +27,8 @@ class CheckNavPageEnabled
         'destinations',
         'hotels',
         'tours',
+        'travels',
+        'visa',
         'deals',
         'gallery',
         'events',
@@ -39,7 +41,6 @@ class CheckNavPageEnabled
         'privacy-policy',
         'purchase-policy',
         'favorites',
-        // 'design-trip',
     ];
 
     public function handle(Request $request, Closure $next, string $pageKey): Response

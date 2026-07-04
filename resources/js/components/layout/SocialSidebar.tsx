@@ -1,5 +1,4 @@
 import type React from 'react';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
 import {
     FacebookIcon,
     InstagramIcon,
@@ -8,6 +7,7 @@ import {
     YoutubeIcon,
     TiktokIcon,
 } from '@/components/ui/SocialIcons';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 const brandIcons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
     facebook: FacebookIcon,

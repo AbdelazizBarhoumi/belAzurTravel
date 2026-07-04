@@ -7,7 +7,10 @@ import { apiFetch } from '@/api/http';
 import { fetchPartners, type PartnerItem } from '@/api/partners.api';
 import { PageShell } from '@/components/layout/PageShell';
 import { Input } from '@/components/ui/input';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
+import { useCategoryTypesPublic } from '@/hooks/usePublicData';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSearchParams } from 'react-router-dom';
 import type { Lang } from '@/i18n/translations';
 
 interface Category {
@@ -24,6 +27,7 @@ function getPartnerName(p: PartnerItem, lang: Lang): string {
 
 const Partners = () => {
     const { t, lang } = useLanguage();
+    const [params] = useSearchParams();
     const [q, setQ] = useState('');
     const [cat, setCat] = useState<string>('All');
 
@@ -38,6 +42,21 @@ const Partners = () => {
         queryFn: () => apiFetch<{ data: Category[] }>('/api/categories').then((res) => res.data?.filter((c: Category) => c.entity_type === 'partners') ?? []),
     });
 
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('partners');
+
+    // Category type filters from URL params
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>(initialCategoryTypeFilters);
+
     const categories = useMemo(() => {
         const keys = new Set(partners.map((p) => p.category).filter(Boolean) as string[]);
         return ['All', ...Array.from(keys)];
@@ -50,12 +69,21 @@ const Partners = () => {
     };
 
     const filtered = useMemo(() => {
-        return partners.filter(
-            (p) =>
-                (cat === 'All' || p.category === cat) &&
-                (!q || getPartnerName(p, lang).toLowerCase().includes(q.toLowerCase())),
-        );
-    }, [partners, cat, q, lang]);
+        return partners.filter((p) => {
+            const matchesCategory = cat === 'All' || p.category === cat;
+            const matchesSearch = !q || getPartnerName(p, lang).toLowerCase().includes(q.toLowerCase());
+
+            // Category type filters
+            const assignments = (p as unknown as Record<string, unknown>).category_assignments as Record<string, string> | undefined;
+            const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
+                ([typeKey, values]) =>
+                    values.length === 0 ||
+                    (assignments && values.includes(assignments[typeKey])),
+            );
+
+            return matchesCategory && matchesSearch && matchesCategoryTypes;
+        });
+    }, [partners, cat, q, lang, categoryTypeFilters]);
 
     return (
         <PageShell
@@ -92,6 +120,25 @@ const Partners = () => {
                     ))}
                 </div>
             </div>
+
+            {categoryTypes.length > 0 && (
+                <div className="mb-8 space-y-3">
+                    {categoryTypes.map((catType) => (
+                        <FilterRenderer
+                            key={catType.key}
+                            categoryType={catType as never}
+                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                            onChange={(values) =>
+                                setCategoryTypeFilters((prev) => ({
+                                    ...prev,
+                                    [catType.key]: values,
+                                }))
+                            }
+                            lang={lang}
+                        />
+                    ))}
+                </div>
+            )}
 
             {isLoading ? (
                 <div className="py-20 text-center text-muted-foreground">

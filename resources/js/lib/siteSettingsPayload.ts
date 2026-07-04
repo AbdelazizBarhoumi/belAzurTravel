@@ -46,14 +46,71 @@ function normalizeDropdownItem(item: Record<string, unknown>): Record<string, un
     return rest;
 }
 
+function normalizeNavGroupForSave(group: Record<string, unknown>): Record<string, unknown> {
+    const result: Record<string, unknown> = {
+        ...group,
+        label: normalizeLocalizedText(group.label),
+    };
+    // Handle backward compatibility: convert pageKeys to pages if needed
+    if (Array.isArray(result.pageKeys) && !Array.isArray(result.pages)) {
+        result.pages = result.pageKeys.map((pk: string) => ({
+            pageKey: pk,
+            isDropdown: false,
+            linkSelf: true,
+            items: [],
+        }));
+        delete result.pageKeys;
+    }
+    // Normalize pages array
+    if (Array.isArray(result.pages)) {
+        result.pages = result.pages.map((p: Record<string, unknown>) => {
+            if (!p || typeof p !== 'object' || Array.isArray(p)) return p;
+            const normalized: Record<string, unknown> = {
+                ...p,
+                isDropdown: !!p.isDropdown,
+                linkSelf: p.linkSelf !== false,
+            };
+            if (p.label) {
+                normalized.label = normalizeLocalizedText(p.label);
+            }
+            if (Array.isArray(p.items)) {
+                normalized.items = p.items.map((item: unknown) => {
+                    if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+                    return normalizeDropdownItem(item as Record<string, unknown>);
+                });
+            } else {
+                normalized.items = [];
+            }
+            return normalized;
+        });
+    } else {
+        result.pages = [];
+    }
+    if (Array.isArray(result.groups)) {
+        result.groups = result.groups.map((g) =>
+            g && typeof g === 'object' && !Array.isArray(g)
+                ? normalizeNavGroupForSave(g as Record<string, unknown>)
+                : g,
+        );
+    }
+    return result;
+}
+
 function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
+    const groups = Array.isArray(nav.groups)
+        ? nav.groups.map((g) =>
+            normalizeNavGroupForSave(g as unknown as Record<string, unknown>) as unknown as import('@/lib/nav-config').NavGroup,
+        )
+        : [];
+
     return {
         header: nav.header.map((entry) => ({
             ...entry,
             ...(entry.label ? { label: normalizeLocalizedText(entry.label) } : {}),
-            items: entry.items.map((item) => normalizeDropdownItem(item as Record<string, unknown>) as any),
+            items: entry.items.map((item) => normalizeDropdownItem(item as unknown as Record<string, unknown>) as unknown as (typeof entry.items)[number]),
         })),
         footer: nav.footer.map((column) => ({ ...column })),
+        groups,
     };
 }
 
@@ -157,6 +214,17 @@ export function normalizeSiteSettingsContentForSave(
 
                 return nextEntry;
             });
+        }
+
+        if (Array.isArray(settings.groups)) {
+            settings.groups = settings.groups.map((g) => {
+                if (!g || typeof g !== 'object' || Array.isArray(g)) {
+                    return g;
+                }
+                return normalizeNavGroupForSave(g as Record<string, unknown>);
+            });
+        } else {
+            settings.groups = [];
         }
 
         navContent.settings = settings;

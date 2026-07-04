@@ -11,6 +11,8 @@ import type {
     PromoItem,
     TourDetailItem,
     TourItem,
+    TravelDetailItem,
+    TravelItem,
 } from '@/types/public';
 import type { TeamMember } from '@/types/public';
 
@@ -24,6 +26,8 @@ export type {
     TourDetailStep,
     TourDetailItem,
     TourItem,
+    TravelDetailItem,
+    TravelItem,
     CarItem,
     DealItem,
     EventItem,
@@ -223,6 +227,22 @@ export function findTourDetailBySlug(
 ): Promise<TourDetailItem | null> {
     if (!slug) return Promise.resolve(null);
     return apiFetch<TourDetailItem | null>(`/api/tours/${slug}`);
+}
+
+export function getTravels(): Promise<TravelItem[]> {
+    return apiFetch<TravelItem[]>('/api/travels');
+}
+
+export function findTravelBySlug(slug?: string | null): Promise<TravelItem | null> {
+    if (!slug) return Promise.resolve(null);
+    return apiFetch<TravelItem | null>(`/api/travels/${slug}`);
+}
+
+export function findTravelDetailBySlug(
+    slug?: string | null,
+): Promise<TravelDetailItem | null> {
+    if (!slug) return Promise.resolve(null);
+    return apiFetch<TravelDetailItem | null>(`/api/travels/${slug}`);
 }
 
 export function getCars(): Promise<CarItem[]> {

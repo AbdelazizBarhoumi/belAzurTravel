@@ -51,6 +51,7 @@ import {
     Loader2,
     ChevronLeft,
     Settings,
+    Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -146,6 +147,7 @@ export function CategoryTypeManager({
                 filter_style: newTypeFilterStyle,
             });
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
+            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successTypeCreated'));
             setNewTypeLabel({ en: '', fr: '', ar: '' });
             setIsCreatingType(false);
@@ -163,6 +165,7 @@ export function CategoryTypeManager({
         try {
             await updateCategoryType(id, { label: newTypeLabel, filter_style: newTypeFilterStyle });
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
+            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successTypeUpdated'));
             setEditingTypeId(null);
             setNewTypeLabel({ en: '', fr: '', ar: '' });
@@ -176,6 +179,7 @@ export function CategoryTypeManager({
         try {
             await deleteCategoryType(id, force);
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
+            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successTypeDeleted'));
             loadTypes();
         } catch (err: any) {
@@ -203,6 +207,7 @@ export function CategoryTypeManager({
         try {
             await createCategoryValue(selectedType.id, newValueName, selectedType.filter_style === 'colors' ? newValueColor : undefined);
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
+            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successValueAdded'));
             setNewValueName({ en: '', fr: '', ar: '' });
             setNewValueColor('#000000');
@@ -222,6 +227,7 @@ export function CategoryTypeManager({
         try {
             await updateCategoryValue(selectedType.id, valueId, newValueName, selectedType.filter_style === 'colors' ? newValueColor : undefined);
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
+            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successValueUpdated'));
             setEditingValueId(null);
             setNewValueName({ en: '', fr: '', ar: '' });
@@ -237,6 +243,7 @@ export function CategoryTypeManager({
         try {
             await deleteCategoryValue(selectedType.id, valueId, force);
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
+            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successValueDeleted'));
             loadTypes();
         } catch (err: any) {
@@ -369,9 +376,17 @@ export function CategoryTypeManager({
                                         ) : (
                                             <div className="flex items-center justify-between">
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium">
-                                                        {type.label.en}
-                                                    </span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium">
+                                                            {type.label.en}
+                                                        </span>
+                                                        {type.locked && (
+                                                            <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                                                <Lock className="h-3 w-3" />
+                                                                {t('admin.categoryTypeManager.system')}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <span className="text-xs text-muted-foreground">
                                                         {type.label.fr} | {type.label.ar}
                                                     </span>
@@ -394,25 +409,29 @@ export function CategoryTypeManager({
                                                     >
                                                         <Settings className="h-4 w-4" />
                                                     </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => {
-                                                            setEditingTypeId(type.id);
-                                                            setNewTypeLabel(type.label);
-                                                            setNewTypeFilterStyle(type.filter_style || 'pills');
-                                                            setIsCreatingType(false);
-                                                        }}
-                                                    >
-                                                        <Edit2 className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() => handleDeleteType(type.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
+                                                    {!type.locked && (
+                                                        <>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                onClick={() => {
+                                                                    setEditingTypeId(type.id);
+                                                                    setNewTypeLabel(type.label);
+                                                                    setNewTypeFilterStyle(type.filter_style || 'pills');
+                                                                    setIsCreatingType(false);
+                                                                }}
+                                                            >
+                                                                <Edit2 className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                onClick={() => handleDeleteType(type.id)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}

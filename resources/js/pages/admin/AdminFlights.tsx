@@ -60,8 +60,17 @@ export default function AdminFlights() {
     const { t, lang } = useLanguage();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
+    const [modalLang, setModalLang] = useState<Lang>('en');
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        if (!nextOpen) {
+            setErrors({});
+            setEditing(null);
+        }
+        setOpen(nextOpen);
+    };
 
     const queryKey = useMemo(() => ['admin', 'flights'], []);
     const { data: rows = [] } = useQuery<AdminRow[] | any[]>({
@@ -554,6 +563,24 @@ export default function AdminFlights() {
                     deleteMutation.mutate(String(pendingDelete.id));
                     setPendingDelete(null);
                 }}
+            />
+
+            <EntityFormDialog
+                open={open}
+                onOpenChange={handleOpenChange}
+                title={
+                    editing
+                        ? `${t('actions.edit')} ${t('admin.flights')}`
+                        : `${t('actions.add')} ${t('admin.flights')}`
+                }
+                sections={flightSections}
+                initial={editing ? { ...editing } : null}
+                onSubmit={(values) => handleSave(values as AdminRow)}
+                errors={errors}
+                languages={['en', 'fr', 'ar']}
+                activeLang={modalLang}
+                onActiveLangChange={setModalLang}
+                isSubmitting={saveMutation.isPending}
             />
         </AdminLayout>
     );

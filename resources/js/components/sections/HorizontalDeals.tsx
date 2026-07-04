@@ -1,6 +1,7 @@
-import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 export interface HDeal {
   id: string;
   title: string;
@@ -19,6 +20,7 @@ interface Props {
   accent?: "primary" | "secondary";
 }
 export function HorizontalDeals({ eyebrow, title, description, ctaLabel, ctaHref, items, accent = "primary" }: Props) {
+  const { t } = useLanguage();
   const scroller = useRef<HTMLDivElement>(null);
   const scroll = (dir: "l" | "r") => {
     const el = scroller.current;
@@ -45,7 +47,7 @@ export function HorizontalDeals({ eyebrow, title, description, ctaLabel, ctaHref
               {ctaLabel}
             </Link>
           </div>
-          <div className="relative">
+          <div className="relative min-w-0">
             <div
               ref={scroller}
               className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -70,7 +72,7 @@ export function HorizontalDeals({ eyebrow, title, description, ctaLabel, ctaHref
                     <p className="text-secondary text-2xl font-bold drop-shadow">{it.price}</p>
                     <p className="text-primary-foreground/80 text-xs">{it.meta}</p>
                     <span className="inline-block mt-2 px-3 py-1 rounded-md bg-secondary text-secondary-foreground text-xs font-semibold">
-                      Voir détails
+                      {t('common.viewDetails')}
                     </span>
                   </div>
                 </Link>

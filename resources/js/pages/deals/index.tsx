@@ -2,16 +2,16 @@ import { motion } from 'framer-motion';
 import { CalendarClock, Tag } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
+import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDeals, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
 
-import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 

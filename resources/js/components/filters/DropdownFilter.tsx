@@ -6,8 +6,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { useLanguage } from '@/contexts/LanguageContext';
+import type { PublicCategoryType } from '@/hooks/usePublicData';
 
 interface DropdownFilterProps {
     categoryType: PublicCategoryType;

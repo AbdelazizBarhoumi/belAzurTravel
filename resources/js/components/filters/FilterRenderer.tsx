@@ -1,10 +1,10 @@
 import type { PublicCategoryType } from '@/hooks/usePublicData';
-import { PillFilter } from './PillFilter';
 import { CheckboxFilter } from './CheckboxFilter';
-import { DropdownFilter } from './DropdownFilter';
-import { SliderFilter } from './SliderFilter';
-import { RadioFilter } from './RadioFilter';
 import { ColorFilter } from './ColorFilter';
+import { DropdownFilter } from './DropdownFilter';
+import { PillFilter } from './PillFilter';
+import { RadioFilter } from './RadioFilter';
+import { SliderFilter } from './SliderFilter';
 
 interface FilterRendererProps {
     categoryType: PublicCategoryType;

@@ -74,3 +74,44 @@ export interface TourItem {
     description: LocalizedText;
     category_assignments?: Record<string, string>;
 }
+
+/**
+ * Travel item - brief view (international travel)
+ */
+export interface TravelItem {
+    slug: string;
+    name: LocalizedText;
+    location: LocalizedText;
+    duration: LocalizedText;
+    maxGroup: number;
+    price: number;
+    rating: number;
+    category_key?: string;
+    image: string;
+    description: LocalizedText;
+    category_assignments?: Record<string, string>;
+}
+
+/**
+ * Travel detail item - detailed view of a travel
+ */
+export interface TravelDetailItem {
+    slug: string;
+    name: LocalizedText;
+    type: LocalizedText;
+    location: LocalizedText[];
+    durationDays: number;
+    durationNights: number;
+    maxGroup: number;
+    rating: number;
+    price: number;
+    description: LocalizedText;
+    itinerary: TourDetailStep[];
+    includes?: LocalizedText[];
+    excludes?: LocalizedText[];
+    best?: LocalizedText;
+    image: string;
+    gallery?: string[];
+    images?: string[];
+    category_assignments?: Record<string, string>;
+}

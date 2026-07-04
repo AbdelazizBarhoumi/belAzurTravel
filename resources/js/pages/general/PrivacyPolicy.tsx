@@ -1,3 +1,4 @@
+import type { LegalSectionBody } from '@/api/siteSettings.api';
 import { PageShell } from '@/components/layout/PageShell';
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import { RichTextRenderer } from '@/components/ui/RichTextRenderer';
@@ -5,10 +6,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { normalizeLegalBody } from '@/lib/legal';
 
+interface StoredLegal {
+    title?: Record<string, string>;
+    body?: LegalSectionBody;
+}
+
 const PrivacyPolicy = () => {
     const { lang, t } = useLanguage();
     const { settings } = useSiteSettings();
-    const content = settings.content as any;
+    const content = settings.content as Record<string, unknown> & { privacy_policy?: StoredLegal };
     const stored = content?.privacy_policy;
 
     const title = stored?.title?.[lang] || t('nav.privacy-policy');
