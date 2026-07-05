@@ -69,6 +69,17 @@ class TourController extends Controller
             'itinerary' => $item->itinerary,
             'inclusions' => $item->includes,
             'excludes' => $item->excludes,
+            // Filter fields
+            'djerba' => $item->djerba,
+            'nord_tunisien' => $item->nord_tunisien,
+            'sud_tunisien' => $item->sud_tunisien,
+            'tunisia' => $item->tunisia,
+            'tranquille' => $item->tranquille,
+            'famille' => $item->famille,
+            'djerba_by_vol' => $item->djerba_by_vol,
+            'jeune' => $item->jeune,
+            'nord' => $item->nord,
+            'tranquille_groupe' => $item->tranquille_groupe,
             'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
                 fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
             )->toArray(),

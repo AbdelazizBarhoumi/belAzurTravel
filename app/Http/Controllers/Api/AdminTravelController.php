@@ -107,6 +107,13 @@ class AdminTravelController extends Controller
             'images' => ['sometimes', 'nullable', 'array'],
             'gallery' => ['sometimes', 'nullable'],
             'category_key' => ['sometimes', 'nullable', 'string', 'max:255'],
+            // Filter fields
+            'istanbul' => ['sometimes', 'boolean'],
+            'asie' => ['sometimes', 'boolean'],
+            'europe' => ['sometimes', 'boolean'],
+            'afrique_nord' => ['sometimes', 'boolean'],
+            'jeune' => ['sometimes', 'boolean'],
+            'tranquille' => ['sometimes', 'boolean'],
         ];
 
         $data = $request->validate($rules);

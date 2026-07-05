@@ -116,6 +116,17 @@ class AdminTourController extends Controller
             'images' => ['sometimes', 'nullable', 'array'],
             'gallery' => ['sometimes', 'nullable'],
             'category_key' => ['sometimes', 'nullable', 'string', 'max:255'],
+            // Filter fields
+            'djerba' => ['sometimes', 'boolean'],
+            'nord_tunisien' => ['sometimes', 'boolean'],
+            'sud_tunisien' => ['sometimes', 'boolean'],
+            'tunisia' => ['sometimes', 'boolean'],
+            'tranquille' => ['sometimes', 'boolean'],
+            'famille' => ['sometimes', 'boolean'],
+            'djerba_by_vol' => ['sometimes', 'boolean'],
+            'jeune' => ['sometimes', 'boolean'],
+            'nord' => ['sometimes', 'boolean'],
+            'tranquille_groupe' => ['sometimes', 'boolean'],
         ];
 
         $data = $request->validate($rules);

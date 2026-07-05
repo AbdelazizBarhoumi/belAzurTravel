@@ -3,10 +3,11 @@ import { Users, Fuel, Settings2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
-import { PageShell } from '@/components/layout/PageShell';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { FilterSidebar } from '@/components/lists/FilterSidebar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
+import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -31,7 +32,7 @@ export default function Cars() {
 }
 
 function CarsContent() {
-    const { t, lang } = useLanguage();
+    const { t, lang, dir } = useLanguage();
     const [params] = useSearchParams();
     const initialSearch = params.get('q') || '';
     const initialCategory = params.get('type')?.toLowerCase() || ALL;
@@ -126,11 +127,11 @@ function CarsContent() {
                     selectedSeats === ALL ||
                     String(car.seats) === selectedSeats;
                 const carAssignments = car.category_assignments;
-                const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
-                    ([typeKey, values]) =>
-                        values.length === 0 ||
-                        (carAssignments && values.includes(carAssignments[typeKey])),
-                );
+                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
+                    activeTypeFilters.some(([typeKey, values]) =>
+                        carAssignments && values.includes(carAssignments[typeKey]),
+                    );
 
                 return (
                     matchesSearch &&
@@ -171,223 +172,219 @@ function CarsContent() {
     };
 
     return (
-        <>
-        <PageHeroCarousel pageKey="cars" />
-        <PageShell
-            key={params.toString()}
-            titleKey="cars.title"
-            subtitleKey="cars.subtitle"
-            breadcrumbs={[
-                { label: t('common.home'), href: '/' },
-                { label: t('nav.cars'), active: true },
-            ]}
-        >
-            <ListFilterBar
-                searchValue={searchQuery}
-                onSearchChange={setSearchQuery}
-                resultCount={filteredCars.length}
-                hasActiveFilters={hasActiveFilters}
-                onClearFilters={clearFilters}
-                searchPlaceholder={t('common.search')}
-            >
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('cars.filterByCategory')}
-                        </span>
-                        <Select
-                            value={selectedCategory}
-                            onValueChange={setSelectedCategory}
-                        >
-                            <SelectTrigger
-                                aria-label={t('cars.filterByCategory')}
-                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
-                            >
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {categoryOptions.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </label>
+        <div key={params.toString()} className="min-h-screen bg-background">
+            <PageHeroCarousel pageKey="cars" />
+            <div className="pb-16 pt-8">
+                <div className="container mx-auto px-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 border-b border-border pb-6"
+                    >
+                        <Breadcrumb
+                            items={[
+                                { label: t('common.home'), href: '/' },
+                                { label: t('nav.cars'), active: true },
+                            ]}
+                        />
+                    </motion.div>
+                    <motion.header
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-10 text-center"
+                    >
+                        <h1 className="mb-3 font-serif text-4xl font-bold text-foreground md:text-5xl">
+                            {t('cars.title')}
+                        </h1>
+                        <p className="mx-auto max-w-2xl text-muted-foreground">
+                            {t('cars.subtitle')}
+                        </p>
+                    </motion.header>
 
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('cars.filterByFuel')}
-                        </span>
-                        <Select
-                            value={selectedFuel}
-                            onValueChange={setSelectedFuel}
-                        >
-                            <SelectTrigger
-                                aria-label={t('cars.filterByFuel')}
-                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
-                            >
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={ALL}>
-                                    {t('common.all')}
-                                </SelectItem>
-                                {fuelOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                        {option}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </label>
-
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('cars.filterByTransmission')}
-                        </span>
-                        <Select
-                            value={selectedTransmission}
-                            onValueChange={setSelectedTransmission}
-                        >
-                            <SelectTrigger
-                                aria-label={t('cars.filterByTransmission')}
-                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
-                            >
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={ALL}>
-                                    {t('common.all')}
-                                </SelectItem>
-                                {transmissionOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                        {option}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </label>
-
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('cars.filterBySeats')}
-                        </span>
-                        <Select
-                            value={selectedSeats}
-                            onValueChange={setSelectedSeats}
-                        >
-                            <SelectTrigger
-                                aria-label={t('cars.filterBySeats')}
-                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
-                            >
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={ALL}>
-                                    {t('common.all')}
-                                </SelectItem>
-                                {seatOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                        {option}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </label>
-                </div>
-                {categoryTypes.length > 0 && (
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                        {categoryTypes.map((catType) => (
-                            <FilterRenderer
-                                key={catType.key}
-                                categoryType={catType as never}
-                                selectedValues={categoryTypeFilters[catType.key] ?? []}
-                                onChange={(values) =>
-                                    setCategoryTypeFilters((prev) => ({
-                                        ...prev,
-                                        [catType.key]: values,
-                                    }))
-                                }
-                                lang={lang}
-                            />
-                        ))}
-                    </div>
-                )}
-            </ListFilterBar>
-
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredCars.length === 0 ? (
-                    <RequestThingEmptyState
-                        variant={cars.length === 0 ? 'empty' : 'no-results'}
-                        className="sm:col-span-2 lg:col-span-3"
+                    <ListFilterBar
+                        searchValue={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        resultCount={filteredCars.length}
+                        hasActiveFilters={hasActiveFilters}
+                        onClearFilters={clearFilters}
+                        searchPlaceholder={t('common.search')}
+                        className="mb-8"
                     />
-                ) : (
-                    filteredCars.map((c, i) => (
-                        <Link
-                            key={c.slug}
-                            to={`/cars/${c.slug}`}
-                            className="group block"
+
+                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <FilterSidebar
+                            title={t('hotels.filters')}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearAll={clearFilters}
+                            clearLabel={t('common.viewAll')}
+                            dir={dir}
                         >
-                            <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.08 }}
-                                className="card-elevated overflow-hidden rounded-2xl bg-card"
-                            >
-                                <div className="h-44 overflow-hidden">
-                                    <img
-                                        src={c.image}
-                                        alt={localizeText(c.name, lang)}
-                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        loading="lazy"
-                                    />
+                            <div>
+                                <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('cars.filterByCategory')}
+                                </label>
+                                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                    <SelectTrigger className="w-full rounded-lg border-border bg-background">
+                                        <SelectValue placeholder={t('common.all')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categoryOptions.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('cars.filterByFuel')}
+                                </label>
+                                <Select value={selectedFuel} onValueChange={setSelectedFuel}>
+                                    <SelectTrigger className="w-full rounded-lg border-border bg-background">
+                                        <SelectValue placeholder={t('common.all')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={ALL}>{t('common.all')}</SelectItem>
+                                        {fuelOptions.map((option) => (
+                                            <SelectItem key={option} value={option}>
+                                                {option}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('cars.filterByTransmission')}
+                                </label>
+                                <Select value={selectedTransmission} onValueChange={setSelectedTransmission}>
+                                    <SelectTrigger className="w-full rounded-lg border-border bg-background">
+                                        <SelectValue placeholder={t('common.all')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={ALL}>{t('common.all')}</SelectItem>
+                                        {transmissionOptions.map((option) => (
+                                            <SelectItem key={option} value={option}>
+                                                {option}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('cars.filterBySeats')}
+                                </label>
+                                <Select value={selectedSeats} onValueChange={setSelectedSeats}>
+                                    <SelectTrigger className="w-full rounded-lg border-border bg-background">
+                                        <SelectValue placeholder={t('common.all')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value={ALL}>{t('common.all')}</SelectItem>
+                                        {seatOptions.map((option) => (
+                                            <SelectItem key={option} value={option}>
+                                                {option}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {categoryTypes.length > 0 && (
+                                <div className="border-t border-border pt-6 space-y-4">
+                                    {categoryTypes.map((catType) => (
+                                        <FilterRenderer
+                                            key={catType.key}
+                                            categoryType={catType as never}
+                                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                            onChange={(values) =>
+                                                setCategoryTypeFilters((prev) => ({
+                                                    ...prev,
+                                                    [catType.key]: values,
+                                                }))
+                                            }
+                                            lang={lang}
+                                        />
+                                    ))}
                                 </div>
-                                <div className="p-5">
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-secondary">
-                                        {localizeText(c.category, lang)}
-                                    </span>
-                                    <h3 className="mb-3 mt-1 font-serif text-lg font-bold text-foreground">
-                                        {localizeText(c.name, lang)}
-                                    </h3>
-                                    <div className="mb-4 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-                                        <div className="flex items-center gap-1">
-                                            <Users className="h-3 w-3" />{' '}
-                                            {c.seats}
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <Fuel className="h-3 w-3" />{' '}
-                                            {localizeText(c.fuel, lang)}
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <Settings2 className="h-3 w-3" />{' '}
-                                            {localizeText(c.transmission, lang)}
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="font-bold text-primary">
-                                            {c.price} TND
-                                            <span className="text-xs font-normal text-muted-foreground">
-                                                {t('cars.perDay')}
-                                            </span>
-                                        </span>
-                                        <Button
-                                            size="sm"
-                                            className="bg-primary text-xs text-primary-foreground"
+                            )}
+                        </FilterSidebar>
+
+                        <div className="min-w-0 flex-1">
+                            {filteredCars.length === 0 ? (
+                                <RequestThingEmptyState
+                                    variant={cars.length === 0 ? 'empty' : 'no-results'}
+                                />
+                            ) : (
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                    {filteredCars.map((c, i) => (
+                                        <Link
+                                            key={c.slug}
+                                            to={`/cars/${c.slug}`}
+                                            className="group block"
                                         >
-                                            {t('cars.rentNow')}
-                                        </Button>
-                                    </div>
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 30 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.08 }}
+                                                className="card-elevated overflow-hidden rounded-2xl bg-card"
+                                            >
+                                                <div className="h-44 overflow-hidden">
+                                                    <img
+                                                        src={c.image}
+                                                        alt={localizeText(c.name, lang)}
+                                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        loading="lazy"
+                                                    />
+                                                </div>
+                                                <div className="p-5">
+                                                    <span className="text-xs font-semibold uppercase tracking-wider text-secondary">
+                                                        {localizeText(c.category, lang)}
+                                                    </span>
+                                                    <h3 className="mb-3 mt-1 font-serif text-lg font-bold text-foreground">
+                                                        {localizeText(c.name, lang)}
+                                                    </h3>
+                                                    <div className="mb-4 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                                                        <div className="flex items-center gap-1">
+                                                            <Users className="h-3 w-3" /> {c.seats}
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <Fuel className="h-3 w-3" />{' '}
+                                                            {localizeText(c.fuel, lang)}
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <Settings2 className="h-3 w-3" />{' '}
+                                                            {localizeText(c.transmission, lang)}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="font-bold text-primary">
+                                                            {c.price} TND
+                                                            <span className="text-xs font-normal text-muted-foreground">
+                                                                {t('cars.perDay')}
+                                                            </span>
+                                                        </span>
+                                                        <Button
+                                                            size="sm"
+                                                            className="bg-primary text-xs text-primary-foreground"
+                                                        >
+                                                            {t('cars.rentNow')}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        </Link>
+                                    ))}
                                 </div>
-                            </motion.div>
-                        </Link>
-                    ))
-                )}
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
-        </PageShell>
-        </>
+        </div>
     );
 }

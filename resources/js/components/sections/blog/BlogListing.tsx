@@ -95,11 +95,11 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
 
                 // Category type filters
                 const assignments = (post as unknown as Record<string, unknown>).category_assignments as Record<string, string> | undefined;
-                const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
-                    ([typeKey, values]) =>
-                        values.length === 0 ||
-                        (assignments && values.includes(assignments[typeKey])),
-                );
+                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
+                    activeTypeFilters.some(([typeKey, values]) =>
+                        assignments && values.includes(assignments[typeKey]),
+                    );
 
                 return matchesSearch && matchesCategory && matchesCategoryTypes;
             }),

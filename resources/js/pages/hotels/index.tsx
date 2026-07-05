@@ -3,13 +3,14 @@ import { Wifi, Car, Coffee, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FilterRenderer } from '@/components/filters/FilterRenderer';
+import { HotelFilters } from '@/components/filters/HotelFilters';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import { StarRating } from '@/components/ui/StarRating';
 import {
     Select,
     SelectContent,
@@ -17,12 +18,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { StarRating } from '@/components/ui/StarRating';
-import { TagFilter, type Tag } from '@/components/ui/TagFilter';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCountries, useCities } from '@/hooks/useCountries';
-import { useHotels, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { useHotels, useCategories } from '@/hooks/usePublicData';
+import { HOTEL_FILTER_KEYS } from '@/data/hotelFilters';
 
 import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
 
@@ -91,21 +91,19 @@ export default function Hotels() {
     const [toDate, setToDate] = useState(initialToDate);
     const { data: hotels = [] } = useHotels();
     const { data: dynamicCategories = [] } = useCategories('hotels');
-    const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
 
-    // Initialize category type filters from URL params
-    const initialCategoryTypeFilters = useMemo(() => {
-        const filters: Record<string, string[]> = {};
-        for (const [key, val] of params.entries()) {
-            if (key.startsWith('category_')) {
-                const typeKey = key.slice('category_'.length);
-                filters[typeKey] = val.split(',').filter(Boolean);
-            }
-        }
-        return filters;
-    }, [params]);
-    const [categoryTypeFilters, setCategoryTypeFilters] =
-        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+    // Hotel filter state
+    const [hotelFilters, setHotelFilters] = useState<Record<string, boolean>>({});
+    const [hotelPriceRange, setHotelPriceRange] = useState<[number, number]>([0, 1000]);
+
+    const HOTEL_TAGS = dynamicCategories.map((c) => ({
+        id: c.key,
+        name: {
+            en: c.name.en,
+            fr: c.name.fr || c.name.en,
+            ar: c.name.ar || c.name.en,
+        },
+    }));
 
     const allCountries = useCountries();
     const allCities = useCities(selectedCountry || null);
@@ -118,34 +116,25 @@ export default function Hotels() {
         return allCities.map((c) => c.name[lang] || c.name.en);
     }, [allCities, lang]);
 
-    const HOTEL_TAGS: Tag[] = dynamicCategories.map((c) => ({
-        id: c.key,
-        name: {
-            en: c.name.en,
-            fr: c.name.fr || c.name.en,
-            ar: c.name.ar || c.name.en,
-        },
-    }));
-
     const maxPrice =
-        hotels.length > 0 ? Math.max(...hotels.map((hotel) => hotel.price)) : 0;
+        hotels.length > 0 ? Math.max(...hotels.map((hotel) => hotel.price)) : 1000;
 
     const minPrice =
         hotels.length > 0 ? Math.min(...hotels.map((hotel) => hotel.price)) : 0;
-    const [priceRange, setPriceRange] = useState<[number, number] | null>(null);
-    const activePriceRange = priceRange ?? [minPrice, maxPrice];
 
     const hasLandingDateOrGuestFilters =
         guests !== 2 || fromDate !== '' || toDate !== '';
 
+    const hasActiveHotelFilters = Object.values(hotelFilters).some((v) => v);
     const filteredHotels =
         searchQuery.trim().length === 0 &&
         selectedTags.length === 0 &&
         selectedStars.length === 0 &&
         (selectedCountry === '' || selectedCountry === 'all') &&
         (selectedCity === '' || selectedCity === 'all') &&
-        activePriceRange[0] === minPrice &&
-        activePriceRange[1] === maxPrice
+        hotelPriceRange[0] === minPrice &&
+        hotelPriceRange[1] === maxPrice &&
+        !hasActiveHotelFilters
             ? hotels
             : hotels.filter((hotel) => {
                   const matchesSearch = matchesSearchText(searchQuery, [
@@ -167,9 +156,6 @@ export default function Hotels() {
                       !roomType ||
                       roomType === 'any' ||
                       (hotel.tags ?? []).includes(roomType);
-                  const matchesPrice =
-                      hotel.price >= activePriceRange[0] &&
-                      hotel.price <= activePriceRange[1];
                   const matchesCountry =
                       !selectedCountry ||
                       selectedCountry === 'all' ||
@@ -178,21 +164,41 @@ export default function Hotels() {
                       !selectedCity ||
                       selectedCity === 'all' ||
                       localizeText(hotel.city, lang) === selectedCity;
-                  const assignments = hotel.category_assignments;
-                  const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
-                      ([typeKey, values]) =>
-                          values.length === 0 ||
-                          (assignments && values.includes(assignments[typeKey])),
+                  const matchesPrice =
+                      hotel.price >= hotelPriceRange[0] &&
+                      hotel.price <= hotelPriceRange[1];
+                  // Check hotel filter fields (OR logic - match any active filter)
+                  const activeFilterKeys = HOTEL_FILTER_KEYS.filter(
+                      (key) => hotelFilters[key]
                   );
+                  const matchesStaticFilters =
+                      activeFilterKeys.length === 0 ||
+                      activeFilterKeys.some((key) => (hotel as any)[key] === true);
+                  // Check dynamic star filters
+                  const activeStarFilters = Object.entries(hotelFilters)
+                      .filter(([key, val]) => val && key.startsWith('star_'))
+                      .map(([key]) => parseInt(key.replace('star_', '')));
+                  const matchesStarFilters =
+                      activeStarFilters.length === 0 ||
+                      activeStarFilters.includes(hotel.stars);
+                  // Check dynamic country filters
+                  const activeCountryFilters = Object.entries(hotelFilters)
+                      .filter(([key, val]) => val && key.startsWith('country_'))
+                      .map(([key]) => key.replace('country_', ''));
+                  const hotelCountry = hotel.country && typeof hotel.country === 'object' ? hotel.country.en : '';
+                  const matchesCountryFilters =
+                      activeCountryFilters.length === 0 ||
+                      activeCountryFilters.includes(hotelCountry);
                   return (
                       matchesSearch &&
                       matchesTags &&
-                      matchesStars &&
                       matchesRoomType &&
-                      matchesPrice &&
                       matchesCountry &&
                       matchesCity &&
-                      matchesCategoryTypes
+                      matchesPrice &&
+                      matchesStaticFilters &&
+                      matchesStarFilters &&
+                      matchesCountryFilters
                   );
               });
 
@@ -218,8 +224,8 @@ export default function Hotels() {
         setSelectedStars([]);
         setSelectedCountry('all');
         setSelectedCity('all');
-        setPriceRange(null);
-        setCategoryTypeFilters({});
+        setHotelFilters({});
+        setHotelPriceRange([minPrice, maxPrice]);
     };
 
     return (
@@ -262,8 +268,8 @@ export default function Hotels() {
                             selectedStars.length > 0 ||
                             (selectedCountry !== '' && selectedCountry !== 'all') ||
                             (selectedCity !== '' && selectedCity !== 'all') ||
-                            priceRange !== null ||
-                            hasLandingDateOrGuestFilters
+                            hasLandingDateOrGuestFilters ||
+                            Object.values(hotelFilters).some((v) => v)
                         }
                         onClearFilters={handleClearAll}
                         searchPlaceholder={t('common.search')}
@@ -357,12 +363,7 @@ export default function Hotels() {
                                     <h2 className="font-serif text-lg font-bold text-foreground">
                                         {t('hotels.filters')}
                                     </h2>
-                                    {(selectedTags.length > 0 ||
-                                        selectedStars.length > 0 ||
-                                        (selectedCountry !== '' && selectedCountry !== 'all') ||
-                                        (selectedCity !== '' && selectedCity !== 'all') ||
-                                        activePriceRange[0] !== minPrice ||
-                                        activePriceRange[1] !== maxPrice) && (
+                                    {Object.values(hotelFilters).some((v) => v) && (
                                         <button
                                             type="button"
                                             onClick={handleClearAll}
@@ -373,175 +374,18 @@ export default function Hotels() {
                                     )}
                                 </div>
 
-                                <div className="mb-6">
-                                    <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                                        {t('admin.country')}
-                                    </label>
-                                    <Select
-                                        value={selectedCountry}
-                                        onValueChange={(val) => {
-                                            setSelectedCountry(val);
-                                            setSelectedCity('');
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-full rounded-lg border-border bg-background">
-                                            <SelectValue placeholder={t('common.all')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="">{t('common.all')}</SelectItem>
-                                            {countries.map((c) => (
-                                                <SelectItem key={c} value={c}>
-                                                    {c}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {selectedCountry && cities.length > 0 && (
-                                    <div className="mb-6">
-                                        <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                                            {t('admin.city')}
-                                        </label>
-                                        <Select
-                                            value={selectedCity}
-                                            onValueChange={setSelectedCity}
-                                        >
-                                            <SelectTrigger className="w-full rounded-lg border-border bg-background">
-                                                <SelectValue placeholder={t('common.all')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="">{t('common.all')}</SelectItem>
-                                                {cities.map((c) => (
-                                                    <SelectItem key={c} value={c}>
-                                                        {c}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-
-                                <div className="mb-6 border-t border-border pt-6">
-                                    <h3 className="mb-4 font-serif text-base font-bold text-foreground">
-                                        {t('hotels.filterByStars')}
-                                    </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                    {[5, 4, 3, 2, 1].map((stars) => (
-                                        <button
-                                            key={stars}
-                                            onClick={() =>
-                                                handleStarToggle(stars)
-                                            }
-                                            className={`flex items-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition-all ${selectedStars.includes(stars) ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}
-                                        >
-                                            {'★'.repeat(stars)}
-                                            <span className="text-[10px]">
-                                                ({stars})
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                                </div>
-
-                                {categoryTypes.length > 0 && (
-                                    <div>
-                                        {categoryTypes.map((catType) => (
-                                            <FilterRenderer
-                                                key={catType.key}
-                                                categoryType={catType as never}
-                                                selectedValues={categoryTypeFilters[catType.key] ?? []}
-                                                onChange={(values) =>
-                                                    setCategoryTypeFilters((prev) => ({
-                                                        ...prev,
-                                                        [catType.key]: values,
-                                                    }))
-                                                }
-                                                lang={lang}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-
-                                <div className="border-t border-border py-6">
-                                    <div className="mb-4">
-                                        <h3 className="font-serif text-base font-bold text-foreground">
-                                            {t('hotels.filterByPrice')}
-                                        </h3>
-                                    </div>
-                                    <div className="flex flex-col gap-3">
-                                        <div>
-                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                                {t('hotels.minPrice')}
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min={minPrice}
-                                                max={maxPrice}
-                                                value={activePriceRange[0]}
-                                                onChange={(e) => {
-                                                    const newMin = Math.min(
-                                                        parseInt(
-                                                            e.target.value,
-                                                            10,
-                                                        ) || minPrice,
-                                                        activePriceRange[1],
-                                                    );
-                                                    setPriceRange([
-                                                        newMin,
-                                                        activePriceRange[1],
-                                                    ]);
-                                                }}
-                                                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                                                {t('hotels.maxPrice')}
-                                            </label>
-                                            <input
-                                                type="number"
-                                                min={minPrice}
-                                                max={maxPrice}
-                                                value={activePriceRange[1]}
-                                                onChange={(e) => {
-                                                    const newMax = Math.max(
-                                                        parseInt(
-                                                            e.target.value,
-                                                            10,
-                                                        ) || maxPrice,
-                                                        activePriceRange[0],
-                                                    );
-                                                    setPriceRange([
-                                                        activePriceRange[0],
-                                                        newMax,
-                                                    ]);
-                                                }}
-                                                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="mt-2 text-xs text-muted-foreground">
-                                        TND {activePriceRange[0]} - TND{' '}
-                                        {activePriceRange[1]}
-                                    </div>
-                                </div>
-
-                                <div className="border-t border-border pt-6">
-                                    <div className="mb-4">
-                                        <h3 className="font-serif text-base font-bold text-foreground">
-                                            {t('hotels.filterByTags')}
-                                        </h3>
-                                    </div>
-
-                                    <TagFilter
-                                        tags={HOTEL_TAGS}
-                                        selectedTags={selectedTags}
-                                        onTagToggle={handleTagToggle}
-                                        onClearAll={handleClearAll}
-                                        locale={lang}
-                                    />
-                                </div>
+                                <HotelFilters
+                                    selectedFilters={hotelFilters}
+                                    priceRange={hotelPriceRange}
+                                    onFilterChange={(key, value) =>
+                                        setHotelFilters((prev) => ({ ...prev, [key]: value }))
+                                    }
+                                    onPriceChange={setHotelPriceRange}
+                                    maxPrice={maxPrice}
+                                    minPrice={minPrice}
+                                    hotels={hotels}
+                                    lang={lang}
+                                />
                             </div>
                         </motion.aside>
                         {/* Main Content */}

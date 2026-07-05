@@ -619,6 +619,144 @@ const AdminTours = () => {
             ),
         },
         {
+            title: 'Filters',
+            column: 'main',
+            description: 'Tour filter options',
+            render: ({ values, setField }) => (
+                <div className="space-y-6">
+                    {/* Destination */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Destination
+                        </h4>
+                        <div className="space-y-2">
+                            {[
+                                { key: 'djerba', label: 'Djerba' },
+                                { key: 'nord_tunisien', label: 'Nord Tunisien' },
+                                { key: 'sud_tunisien', label: 'Sud Tunisien' },
+                                { key: 'tunisia', label: 'Tunisia' },
+                            ].map((item) => (
+                                <label key={item.key} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(values[item.key])}
+                                        onChange={(e) => setField(item.key, e.target.checked)}
+                                        className="h-4 w-4 rounded border-border"
+                                    />
+                                    <span className="text-sm">{item.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Niveau physique */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Niveau physique
+                        </h4>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={Boolean(values.tranquille)}
+                                    onChange={(e) => setField('tranquille', e.target.checked)}
+                                    className="h-4 w-4 rounded border-border"
+                                />
+                                <span className="text-sm">Tranquille</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Famille */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Famille
+                        </h4>
+                        <div className="space-y-2">
+                            {[
+                                { key: 'famille', label: 'Famille' },
+                                { key: 'djerba_by_vol', label: 'DjerbaByVol' },
+                            ].map((item) => (
+                                <label key={item.key} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(values[item.key])}
+                                        onChange={(e) => setField(item.key, e.target.checked)}
+                                        className="h-4 w-4 rounded border-border"
+                                    />
+                                    <span className="text-sm">{item.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Jeunes */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Jeunes
+                        </h4>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={Boolean(values.jeune)}
+                                    onChange={(e) => setField('jeune', e.target.checked)}
+                                    className="h-4 w-4 rounded border-border"
+                                />
+                                <span className="text-sm">Jeune</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Region */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Région
+                        </h4>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={Boolean(values.nord)}
+                                    onChange={(e) => setField('nord', e.target.checked)}
+                                    className="h-4 w-4 rounded border-border"
+                                />
+                                <span className="text-sm">Nord</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Voyages en groupe */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Voyages en groupe
+                        </h4>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={Boolean(values.tranquille_groupe)}
+                                    onChange={(e) => setField('tranquille_groupe', e.target.checked)}
+                                    className="h-4 w-4 rounded border-border"
+                                />
+                                <span className="text-sm">Tranquille</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            ),
+        },
+        {
             title: t('admin.tourForm.media'),
             column: 'side',
             description: t('admin.tourForm.mediaHint'),

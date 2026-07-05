@@ -30,6 +30,9 @@ class Travel extends Model
         'includes',
         'excludes',
         'images',
+        // Filter fields
+        'istanbul', 'asie', 'europe', 'afrique_nord',
+        'jeune', 'tranquille',
     ];
 
     protected $casts = [
@@ -48,6 +51,13 @@ class Travel extends Model
         'max_group' => 'integer',
         'price' => 'integer',
         'rating' => 'float',
+        // Filter fields as boolean
+        'istanbul' => 'boolean',
+        'asie' => 'boolean',
+        'europe' => 'boolean',
+        'afrique_nord' => 'boolean',
+        'jeune' => 'boolean',
+        'tranquille' => 'boolean',
     ];
 
     public function categoryAssignments()

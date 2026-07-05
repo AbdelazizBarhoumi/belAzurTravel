@@ -68,6 +68,13 @@ class TravelController extends Controller
             'itinerary' => $item->itinerary,
             'inclusions' => $item->includes,
             'excludes' => $item->excludes,
+            // Filter fields
+            'istanbul' => $item->istanbul,
+            'asie' => $item->asie,
+            'europe' => $item->europe,
+            'afrique_nord' => $item->afrique_nord,
+            'jeune' => $item->jeune,
+            'tranquille' => $item->tranquille,
             'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
                 fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
             )->toArray(),

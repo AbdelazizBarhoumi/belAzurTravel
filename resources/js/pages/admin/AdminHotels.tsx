@@ -627,6 +627,143 @@ const AdminHotels = () => {
             ),
         },
         {
+            title: 'Filters',
+            column: 'main',
+            description: 'Hotel filter options',
+            render: ({ values, setField }) => (
+                <div className="space-y-6">
+                    {/* Tarifs et disponibilités */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Tarifs et disponibilités
+                        </h4>
+                        <div className="space-y-2">
+                            {[
+                                { key: 'htel_recommande', label: 'Hôtel recommandé' },
+                                { key: 'tarifs_promo', label: 'Tarifs en promotion' },
+                                { key: 'enfant_gratuit', label: 'Enfant gratuit' },
+                                { key: 'disponible_seulement', label: 'Disponible seulement' },
+                                { key: 'annulation_gratuite', label: 'Annulation gratuite' },
+                            ].map((item) => (
+                                <label key={item.key} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(values[item.key])}
+                                        onChange={(e) => setField(item.key, e.target.checked)}
+                                        className="h-4 w-4 rounded border-border"
+                                    />
+                                    <span className="text-sm">{item.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Arrangements */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Arrangements
+                        </h4>
+                        <div className="space-y-2">
+                            {[
+                                { key: 'logement_simple', label: 'Logement Simple' },
+                                { key: 'petit_dejeuner', label: 'Petit Déjeuner' },
+                                { key: 'demi_pension', label: 'Demi Pension' },
+                                { key: 'pension_complete', label: 'Pension Complète' },
+                            ].map((item) => (
+                                <label key={item.key} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(values[item.key])}
+                                        onChange={(e) => setField(item.key, e.target.checked)}
+                                        className="h-4 w-4 rounded border-border"
+                                    />
+                                    <span className="text-sm">{item.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Catégorie */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Catégorie
+                        </h4>
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={Boolean(values.categorie_4_etoiles)}
+                                    onChange={(e) => setField('categorie_4_etoiles', e.target.checked)}
+                                    className="h-4 w-4 rounded border-border"
+                                />
+                                <span className="text-sm">★★★★ (4 étoiles)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Type de chambres */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Type de chambres
+                        </h4>
+                        <div className="space-y-2">
+                            {[
+                                { key: 'chambre_double', label: 'Chambre Double' },
+                                { key: 'suite', label: 'Suite' },
+                                { key: 'chambre_standard', label: 'Chambre Standard' },
+                                { key: 'suite_junior', label: 'Suite Junior' },
+                            ].map((item) => (
+                                <label key={item.key} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(values[item.key])}
+                                        onChange={(e) => setField(item.key, e.target.checked)}
+                                        className="h-4 w-4 rounded border-border"
+                                    />
+                                    <span className="text-sm">{item.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Service */}
+                    <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                            Service
+                        </h4>
+                        <div className="space-y-2">
+                            {[
+                                { key: 'thalasso_spa', label: 'Thalasso & Spa' },
+                                { key: 'nature_aventure', label: 'Nature et Aventure' },
+                                { key: 'famille', label: 'Famille' },
+                                { key: 'affaires', label: 'Affaires' },
+                                { key: 'sport_loisir', label: 'Sport & Loisir' },
+                                { key: 'detente', label: 'Détente' },
+                            ].map((item) => (
+                                <label key={item.key} className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(values[item.key])}
+                                        onChange={(e) => setField(item.key, e.target.checked)}
+                                        className="h-4 w-4 rounded border-border"
+                                    />
+                                    <span className="text-sm">{item.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            ),
+        },
+        {
             title: t('admin.hotelForm.media'),
             column: 'side',
             description: t('admin.hotelForm.mediaHint'),

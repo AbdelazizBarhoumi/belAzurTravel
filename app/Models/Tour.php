@@ -28,6 +28,10 @@ class Tour extends Model
         'includes',
         'excludes',
         'images',
+        // Filter fields
+        'djerba', 'nord_tunisien', 'sud_tunisien', 'tunisia',
+        'tranquille', 'famille', 'djerba_by_vol', 'jeune',
+        'nord', 'tranquille_groupe',
     ];
 
     protected $casts = [
@@ -46,6 +50,17 @@ class Tour extends Model
         'max_group' => 'integer',
         'price' => 'integer',
         'rating' => 'float',
+        // Filter fields as boolean
+        'djerba' => 'boolean',
+        'nord_tunisien' => 'boolean',
+        'sud_tunisien' => 'boolean',
+        'tunisia' => 'boolean',
+        'tranquille' => 'boolean',
+        'famille' => 'boolean',
+        'djerba_by_vol' => 'boolean',
+        'jeune' => 'boolean',
+        'nord' => 'boolean',
+        'tranquille_groupe' => 'boolean',
     ];
 
     public function categoryAssignments()

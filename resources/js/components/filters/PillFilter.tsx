@@ -41,7 +41,7 @@ export function PillFilter({ categoryType, selectedValues, onChange, lang, previ
                         <button
                             key={val.key}
                             onClick={() => toggle(val.key)}
-                            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
                                 isActive
                                     ? 'border-primary bg-primary text-primary-foreground'
                                     : 'border-border bg-card text-muted-foreground hover:text-foreground'

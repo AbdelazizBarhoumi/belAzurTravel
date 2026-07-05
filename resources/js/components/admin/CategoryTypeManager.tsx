@@ -205,7 +205,7 @@ export function CategoryTypeManager({
         }
         if (!selectedType) return;
         try {
-            await createCategoryValue(selectedType.id, newValueName, selectedType.filter_style === 'colors' ? newValueColor : undefined);
+            await createCategoryValue(selectedType.id, newValueName);
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
             await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successValueAdded'));
@@ -225,7 +225,7 @@ export function CategoryTypeManager({
         }
         if (!selectedType) return;
         try {
-            await updateCategoryValue(selectedType.id, valueId, newValueName, selectedType.filter_style === 'colors' ? newValueColor : undefined);
+            await updateCategoryValue(selectedType.id, valueId, newValueName);
             queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
             await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
             toast.success(t('admin.categoryTypeManager.successValueUpdated'));
@@ -353,7 +353,6 @@ export function CategoryTypeManager({
                                                             <SelectItem value="dropdown">{t('filters.style.dropdown')}</SelectItem>
                                                             <SelectItem value="slider">{t('filters.style.slider')}</SelectItem>
                                                             <SelectItem value="radio">{t('filters.style.radio')}</SelectItem>
-                                                            <SelectItem value="colors">{t('filters.style.colors')}</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </div>

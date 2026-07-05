@@ -21,4 +21,25 @@ export interface HotelItem {
     tags: string[];
     amenities: string[];
     category_assignments?: Record<string, string>;
+    // Filter fields
+    htel_recommande?: boolean;
+    tarifs_promo?: boolean;
+    enfant_gratuit?: boolean;
+    disponible_seulement?: boolean;
+    annulation_gratuite?: boolean;
+    logement_simple?: boolean;
+    petit_dejeuner?: boolean;
+    demi_pension?: boolean;
+    pension_complete?: boolean;
+    categorie_4_etoiles?: boolean;
+    chambre_double?: boolean;
+    suite?: boolean;
+    chambre_standard?: boolean;
+    suite_junior?: boolean;
+    thalasso_spa?: boolean;
+    nature_aventure?: boolean;
+    famille?: boolean;
+    affaires?: boolean;
+    sport_loisir?: boolean;
+    detente?: boolean;
 }

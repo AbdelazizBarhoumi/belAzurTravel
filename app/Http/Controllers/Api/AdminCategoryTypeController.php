@@ -46,7 +46,7 @@ class AdminCategoryTypeController extends Controller
             'label.fr' => ['required', 'string'],
             'label.ar' => ['required', 'string'],
             'sort_order' => ['nullable', 'integer'],
-            'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio,colors'],
+            'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio'],
         ]);
 
         $key = Str::slug($data['label']['en']);
@@ -78,7 +78,7 @@ class AdminCategoryTypeController extends Controller
             'label.fr' => ['required', 'string'],
             'label.ar' => ['required', 'string'],
             'sort_order' => ['nullable', 'integer'],
-            'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio,colors'],
+            'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio'],
         ]);
 
         $updateData = ['label' => $data['label']];

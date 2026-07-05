@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
-import { Search, MapPin, Star } from 'lucide-react';
+import { MapPin, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { FilterSidebar } from '@/components/lists/FilterSidebar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
@@ -50,10 +52,8 @@ const Destinations = () => {
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [selectedCountry, setSelectedCountry] = useState(initialCountry);
-    const [sortBy, setSortBy] = useState<
-        'featured' | 'price-asc' | 'price-desc' | 'rating'
-    >('featured');
-    const { t, lang } = useLanguage();
+    const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured');
+    const { t, lang, dir } = useLanguage();
     const { data: allDestinations = [] } = useDestinations();
     const { data: dynamicCategories = [] } = useCategories('destinations');
     const { data: categoryTypes = [] } = useCategoryTypesPublic('destinations');
@@ -93,12 +93,8 @@ const Destinations = () => {
     const filtered = allDestinations
         .filter((d) => {
             const matchesSearch =
-                localizeText(d.name, lang)
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase()) ||
-                localizeText(d.country, lang)
-                    .toLowerCase()
-                    .includes(searchQuery.toLowerCase());
+                localizeText(d.name, lang).toLowerCase().includes(searchQuery.toLowerCase()) ||
+                localizeText(d.country, lang).toLowerCase().includes(searchQuery.toLowerCase());
             const matchesCategory =
                 selectedCategory === 'all' ||
                 (d.categoryKey ?? '').toLowerCase() === selectedCategory;
@@ -106,11 +102,11 @@ const Destinations = () => {
                 selectedCountry === 'all' ||
                 localizeText(d.country, lang) === selectedCountry;
             const destAssignments = d.category_assignments;
-            const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
-                ([typeKey, values]) =>
-                    values.length === 0 ||
-                    (destAssignments && values.includes(destAssignments[typeKey])),
-            );
+            const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
+            const matchesCategoryTypes = activeTypeFilters.length === 0 ||
+                activeTypeFilters.some(([typeKey, values]) =>
+                    destAssignments && values.includes(destAssignments[typeKey]),
+                );
             return matchesSearch && matchesCategory && matchesCountry && matchesCategoryTypes;
         })
         .sort((a, b) => {
@@ -119,6 +115,19 @@ const Destinations = () => {
             if (sortBy === 'rating') return b.rating - a.rating;
             return 0;
         });
+
+    const hasActiveFilters =
+        searchQuery.trim().length > 0 ||
+        selectedCategory !== 'all' ||
+        selectedCountry !== 'all' ||
+        Object.values(categoryTypeFilters).some((v) => v.length > 0);
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setSelectedCategory('all');
+        setSelectedCountry('all');
+        setCategoryTypeFilters({});
+    };
 
     const handleProceed = (slug: string) => {
         navigate(`/destinations/${slug}`);
@@ -141,248 +150,219 @@ const Destinations = () => {
                             ]}
                         />
                     </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                    <motion.header
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-12 text-center"
+                        className="mb-10 text-center"
                     >
-                        <h1 className="mb-4 font-serif text-4xl font-bold text-foreground md:text-5xl">
+                        <h1 className="mb-3 font-serif text-4xl font-bold text-foreground md:text-5xl">
                             {t('dest.title')}
                         </h1>
-                        <p className="mx-auto max-w-xl text-muted-foreground">
+                        <p className="mx-auto max-w-2xl text-muted-foreground">
                             {t('dest.subtitle')}
                         </p>
-                    </motion.div>
+                    </motion.header>
 
-                    {/* Filters */}
-                    <div className="mb-10 flex flex-col items-center gap-4 md:flex-row">
-                        <div className="relative max-w-md flex-1">
-                            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <input
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={t('dest.searchPlaceholder')}
-                                className="w-full rounded-xl border border-border bg-card py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                            />
-                        </div>
-                        <Select
-                            value={selectedCountry}
-                            onValueChange={setSelectedCountry}
+                    <ListFilterBar
+                        searchValue={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        resultCount={filtered.length}
+                        hasActiveFilters={hasActiveFilters}
+                        onClearFilters={clearFilters}
+                        searchPlaceholder={t('dest.searchPlaceholder')}
+                        className="mb-8"
+                    />
+
+                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <FilterSidebar
+                            title={t('hotels.filters')}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearAll={clearFilters}
+                            clearLabel={t('common.viewAll')}
+                            dir={dir}
                         >
-                            <SelectTrigger className="w-[180px] rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground">
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {countries.map((c) => (
-                                    <SelectItem key={c.value} value={c.value}>
-                                        {c.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <div className="flex gap-2">
-                            {categories.map((cat) => (
-                                <button
-                                    key={cat.value}
-                                    onClick={() =>
-                                        setSelectedCategory(cat.value)
-                                    }
-                                    className={`rounded-xl px-4 py-2 text-sm font-medium transition-all ${
-                                        selectedCategory === cat.value
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'border border-border bg-card text-muted-foreground hover:text-foreground'
-                                    }`}
-                                >
-                                    {cat.label}
-                                </button>
-                            ))}
-                        </div>
-                        <NavigationMenu className="relative z-10 w-full md:w-auto">
-                            <NavigationMenuList className="gap-0">
-                                <NavigationMenuItem>
-                                    <NavigationMenuTrigger
-                                        onClick={(e) => e.preventDefault()}
-                                        className="h-11 rounded-xl border border-border bg-card px-4 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:bg-muted data-[state=open]:bg-muted"
-                                    >
-                                        <span className="flex items-center gap-2">
-                                            {t('dest.sortBy')}:{' '}
-                                            {t(
-                                                SORT_OPTIONS.find(
-                                                    (opt) =>
-                                                        opt.value === sortBy,
-                                                )?.labelKey ??
-                                                    'dest.sort.featured',
-                                            )}
-                                        </span>
-                                    </NavigationMenuTrigger>
-                                    <NavigationMenuContent>
-                                        <ul className="grid w-64 gap-1 bg-card p-2 shadow-xl">
-                                            {SORT_OPTIONS.map((option) => {
-                                                const isActive =
-                                                    sortBy === option.value;
+                            <div>
+                                <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('admin.country')}
+                                </label>
+                                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                                    <SelectTrigger className="w-full rounded-lg border-border bg-background">
+                                        <SelectValue placeholder={t('common.all')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {countries.map((c) => (
+                                            <SelectItem key={c.value} value={c.value}>
+                                                {c.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
 
-                                                return (
-                                                    <li key={option.value}>
-                                                        <NavigationMenuLink
-                                                            asChild
-                                                        >
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setSortBy(
-                                                                        option.value,
-                                                                    )
-                                                                }
-                                                                className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
-                                                            >
-                                                                <span>
-                                                                    {t(
-                                                                        option.labelKey,
-                                                                    )}
-                                                                </span>
-                                                                {isActive && (
-                                                                    <span className="text-xs font-semibold">
-                                                                        ✓
-                                                                    </span>
-                                                                )}
-                                                            </button>
-                                                        </NavigationMenuLink>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    </NavigationMenuContent>
-                                </NavigationMenuItem>
-                            </NavigationMenuList>
-                            <NavigationMenuViewport />
-                        </NavigationMenu>
-                    </div>
+                            <div className="border-t border-border pt-6">
+                                <h3 className="mb-4 font-serif text-base font-bold text-foreground">
+                                    {t('hotels.filterByTags')}
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map((cat) => (
+                                        <button
+                                            key={cat.value}
+                                            onClick={() => setSelectedCategory(cat.value)}
+                                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                                                selectedCategory === cat.value
+                                                    ? 'bg-primary text-primary-foreground'
+                                                    : 'border border-border bg-card text-muted-foreground hover:text-foreground'
+                                            }`}
+                                        >
+                                            {cat.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                    {categoryTypes.length > 0 && (
-                        <div className="mb-4 flex flex-wrap gap-3">
-                            {categoryTypes.map((catType) => (
-                                <FilterRenderer
-                                    key={catType.key}
-                                    categoryType={catType as never}
-                                    selectedValues={categoryTypeFilters[catType.key] ?? []}
-                                    onChange={(values) =>
-                                        setCategoryTypeFilters((prev) => ({
-                                            ...prev,
-                                            [catType.key]: values,
-                                        }))
-                                    }
-                                    lang={lang}
+                            <div className="border-t border-border pt-6">
+                                <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                    {t('dest.sortBy')}
+                                </label>
+                                <NavigationMenu className="relative z-10 w-full">
+                                    <NavigationMenuList className="gap-0">
+                                        <NavigationMenuItem>
+                                            <NavigationMenuTrigger
+                                                onClick={(e) => e.preventDefault()}
+                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground"
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    {t(SORT_OPTIONS.find((opt) => opt.value === sortBy)?.labelKey ?? 'dest.sort.featured')}
+                                                </span>
+                                            </NavigationMenuTrigger>
+                                            <NavigationMenuContent>
+                                                <ul className="grid w-full gap-1 bg-card p-2 shadow-xl">
+                                                    {SORT_OPTIONS.map((option) => {
+                                                        const isActive = sortBy === option.value;
+                                                        return (
+                                                            <li key={option.value}>
+                                                                <NavigationMenuLink asChild>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setSortBy(option.value)}
+                                                                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                                                                            isActive
+                                                                                ? 'bg-primary text-primary-foreground'
+                                                                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                                                        }`}
+                                                                    >
+                                                                        <span>{t(option.labelKey)}</span>
+                                                                        {isActive && <span className="text-xs font-semibold">✓</span>}
+                                                                    </button>
+                                                                </NavigationMenuLink>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            </NavigationMenuContent>
+                                        </NavigationMenuItem>
+                                    </NavigationMenuList>
+                                    <NavigationMenuViewport />
+                                </NavigationMenu>
+                            </div>
+
+                            {categoryTypes.length > 0 && (
+                                <div className="border-t border-border pt-6 space-y-4">
+                                    {categoryTypes.map((catType) => (
+                                        <FilterRenderer
+                                            key={catType.key}
+                                            categoryType={catType as never}
+                                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                            onChange={(values) =>
+                                                setCategoryTypeFilters((prev) => ({
+                                                    ...prev,
+                                                    [catType.key]: values,
+                                                }))
+                                            }
+                                            lang={lang}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </FilterSidebar>
+
+                        <div className="min-w-0 flex-1">
+                            {filtered.length === 0 ? (
+                                <RequestThingEmptyState
+                                    variant={allDestinations.length === 0 ? 'empty' : 'no-results'}
                                 />
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="mb-4 text-sm text-muted-foreground">
-                        {filtered.length} results
-                    </div>
-
-                    {/* Grid */}
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {filtered.length === 0 ? (
-                            <RequestThingEmptyState
-                                variant={
-                                    allDestinations.length === 0
-                                        ? 'empty'
-                                        : 'no-results'
-                                }
-                                className="sm:col-span-2 lg:col-span-3"
-                            />
-                        ) : (
-                            filtered.map((dest, i) => (
-                                <Link
-                                    key={localizeText(dest.name, lang)}
-                                    to={`/destinations/${dest.slug}`}
-                                    className="group block"
-                                >
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 30 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.1 }}
-                                        className="cursor-pointer"
-                                    >
-                                        <div className="card-elevated overflow-hidden rounded-2xl bg-card">
-                                            <CardMedia
-                                                src={dest.image}
-                                                alt={localizeText(
-                                                    dest.name,
-                                                    lang,
-                                                )}
-                                                wrapperClass="relative h-56"
-                                                imgClass="transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                            <FavoriteButton
-                                                className="absolute right-3 top-3"
-                                                item={{
-                                                    id: `dest-${localizeText(dest.name, lang)}`,
-                                                    type: 'destination',
-                                                    name: localizeText(
-                                                        dest.name,
-                                                        lang,
-                                                    ),
-                                                    image: dest.image,
-                                                    price: dest.price,
-                                                    location: localizeText(
-                                                        dest.country,
-                                                        lang,
-                                                    ),
-                                                }}
-                                            />
-                                            <div className="p-5">
-                                                <div className="mb-2 flex items-center justify-between">
-                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                        <MapPin className="h-3 w-3" />{' '}
-                                                        {localizeText(
-                                                            dest.country,
-                                                            lang,
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-1 text-xs font-bold text-secondary">
-                                                        <Star className="h-3 w-3 fill-current" />{' '}
-                                                        {dest.rating}
-                                                    </div>
-                                                </div>
-                                                <h3 className="mb-1 font-serif text-xl font-bold text-foreground">
-                                                    {localizeText(
-                                                        dest.name,
-                                                        lang,
-                                                    )}
-                                                </h3>
-                                                <p className="mb-4 text-sm text-muted-foreground">
-                                                    {localizeText(
-                                                        dest.description,
-                                                        lang,
-                                                    )}
-                                                </p>
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <span className="font-bold text-primary">
-                                                        From{' '}
-                                                        {dest.price.toLocaleString()}{' '}
-                                                        TND
-                                                    </span>
-                                                    <Button
-                                                        size="sm"
-                                                        className="bg-primary text-xs text-primary-foreground"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            handleProceed(
-                                                                dest.slug,
-                                                            );
+                            ) : (
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                    {filtered.map((dest, i) => (
+                                        <Link
+                                            key={localizeText(dest.name, lang)}
+                                            to={`/destinations/${dest.slug}`}
+                                            className="group block"
+                                        >
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 30 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.1 }}
+                                                className="cursor-pointer"
+                                            >
+                                                <div className="card-elevated overflow-hidden rounded-2xl bg-card">
+                                                    <CardMedia
+                                                        src={dest.image}
+                                                        alt={localizeText(dest.name, lang)}
+                                                        wrapperClass="relative h-56"
+                                                        imgClass="transition-transform duration-500 group-hover:scale-105"
+                                                    />
+                                                    <FavoriteButton
+                                                        className="absolute right-3 top-3"
+                                                        item={{
+                                                            id: `dest-${localizeText(dest.name, lang)}`,
+                                                            type: 'destination',
+                                                            name: localizeText(dest.name, lang),
+                                                            image: dest.image,
+                                                            price: dest.price,
+                                                            location: localizeText(dest.country, lang),
                                                         }}
-                                                    >
-                                                        {t('common.bookNow')}
-                                                    </Button>
+                                                    />
+                                                    <div className="p-5">
+                                                        <div className="mb-2 flex items-center justify-between">
+                                                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                                <MapPin className="h-3 w-3" />{' '}
+                                                                {localizeText(dest.country, lang)}
+                                                            </div>
+                                                            <div className="flex items-center gap-1 text-xs font-bold text-secondary">
+                                                                <Star className="h-3 w-3 fill-current" />{' '}
+                                                                {dest.rating}
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="mb-1 font-serif text-xl font-bold text-foreground">
+                                                            {localizeText(dest.name, lang)}
+                                                        </h3>
+                                                        <p className="mb-4 text-sm text-muted-foreground">
+                                                            {localizeText(dest.description, lang)}
+                                                        </p>
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <span className="font-bold text-primary">
+                                                                From {dest.price.toLocaleString()} TND
+                                                            </span>
+                                                            <Button
+                                                                size="sm"
+                                                                className="bg-primary text-xs text-primary-foreground"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    handleProceed(dest.slug);
+                                                                }}
+                                                            >
+                                                                {t('common.bookNow')}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                </Link>
-                            ))
-                        )}
+                                            </motion.div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -11,7 +11,7 @@ export interface CategoryType {
     values: CategoryTypeValue[];
 }
 
-export type FilterStyle = 'pills' | 'checkbox' | 'dropdown' | 'slider' | 'radio' | 'colors';
+export type FilterStyle = 'pills' | 'checkbox' | 'dropdown' | 'slider' | 'radio';
 
 export interface CategoryTypeValue {
     id: number;

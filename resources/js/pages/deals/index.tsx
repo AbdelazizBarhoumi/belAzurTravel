@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
+import { FilterSidebar } from '@/components/lists/FilterSidebar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
@@ -18,7 +19,7 @@ import { matchesSearchText } from '@/lib/listFilters';
 const ALL = 'all';
 
 export default function Deals() {
-    const { t, lang } = useLanguage();
+    const { t, lang, dir } = useLanguage();
     const [params] = useSearchParams();
     const initialSearch = params.get('q') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || ALL;
@@ -40,9 +41,7 @@ export default function Deals() {
     const [categoryTypeFilters, setCategoryTypeFilters] =
         useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
-    const [activeCategory, setActiveCategory] = useState<'all' | string>(
-        initialCategory,
-    );
+    const [activeCategory, setActiveCategory] = useState<'all' | string>(initialCategory);
     const [searchQuery, setSearchQuery] = useState(initialSearch);
 
     const categories = useMemo(
@@ -70,11 +69,11 @@ export default function Deals() {
                     activeCategory === ALL ||
                     deal.category_key === activeCategory;
                 const dealAssignments = deal.category_assignments;
-                const matchesCategoryTypes = Object.entries(categoryTypeFilters).every(
-                    ([typeKey, values]) =>
-                        values.length === 0 ||
-                        (dealAssignments && values.includes(dealAssignments[typeKey])),
-                );
+                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
+                    activeTypeFilters.some(([typeKey, values]) =>
+                        dealAssignments && values.includes(dealAssignments[typeKey]),
+                    );
                 return matchesSearch && matchesCategory && matchesCategoryTypes;
             }),
         [activeCategory, deals, lang, searchQuery, categoryTypeFilters],
@@ -108,8 +107,8 @@ export default function Deals() {
                             ]}
                         />
                     </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                    <motion.header
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="mb-10 text-center"
                     >
@@ -119,7 +118,7 @@ export default function Deals() {
                         <p className="mx-auto max-w-2xl text-muted-foreground">
                             {t('deals.subtitle')}
                         </p>
-                    </motion.div>
+                    </motion.header>
 
                     <ListFilterBar
                         searchValue={searchQuery}
@@ -128,100 +127,107 @@ export default function Deals() {
                         hasActiveFilters={hasActiveFilters}
                         onClearFilters={clearFilters}
                         searchPlaceholder={t('common.search')}
-                    >
-                        <div className="flex flex-wrap gap-2">
-                            {categories.map((category) => (
-                                <button
-                                    key={category.value}
-                                    type="button"
-                                    onClick={() =>
-                                        setActiveCategory(category.value)
-                                    }
-                                    className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${activeCategory === category.value ? 'bg-primary text-primary-foreground' : 'border border-border bg-card text-muted-foreground hover:text-foreground'}`}
-                                >
-                                    {category.label}
-                                </button>
-                            ))}
-                        </div>
-                        {categoryTypes.length > 0 && (
-                            <div className="space-y-2">
-                                {categoryTypes.map((catType) => (
-                                    <FilterRenderer
-                                        key={catType.key}
-                                        categoryType={catType as never}
-                                        selectedValues={categoryTypeFilters[catType.key] ?? []}
-                                        onChange={(values) =>
-                                            setCategoryTypeFilters((prev) => ({
-                                                ...prev,
-                                                [catType.key]: values,
-                                            }))
-                                        }
-                                        lang={lang}
-                                    />
-                                ))}
+                        className="mb-8"
+                    />
+
+                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <FilterSidebar
+                            title={t('hotels.filters')}
+                            hasActiveFilters={hasActiveFilters}
+                            onClearAll={clearFilters}
+                            clearLabel={t('common.viewAll')}
+                            dir={dir}
+                        >
+                            <div className="border-t border-border pt-6">
+                                <h3 className="mb-4 font-serif text-base font-bold text-foreground">
+                                    {t('hotels.filterByTags')}
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map((category) => (
+                                        <button
+                                            key={category.value}
+                                            type="button"
+                                            onClick={() => setActiveCategory(category.value)}
+                                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                                                activeCategory === category.value
+                                                    ? 'bg-primary text-primary-foreground'
+                                                    : 'border border-border bg-card text-muted-foreground hover:text-foreground'
+                                            }`}
+                                        >
+                                            {category.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        )}
-                    </ListFilterBar>
 
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                        {filteredDeals.length === 0 ? (
-                            <RequestThingEmptyState
-                                variant={
-                                    deals.length === 0 ? 'empty' : 'no-results'
-                                }
-                                className="md:col-span-2 xl:col-span-3"
-                            />
-                        ) : (
-                            filteredDeals.map((deal, i) => (
-                                <motion.article
-                                    key={deal.slug}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.06 }}
-                                    className="rounded-2xl border border-border bg-card p-6 shadow-sm"
-                                >
-                                    <div className="mb-4 flex items-center justify-between">
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                            <Tag className="h-3 w-3" />{' '}
-                                            {localizeText(deal.discount, lang)}
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                                            <CalendarClock className="h-3.5 w-3.5" />{' '}
-                                            {localizeText(deal.expires, lang)}
-                                        </span>
-                                    </div>
+                            {categoryTypes.length > 0 && (
+                                <div className="border-t border-border pt-6 space-y-4">
+                                    {categoryTypes.map((catType) => (
+                                        <FilterRenderer
+                                            key={catType.key}
+                                            categoryType={catType as never}
+                                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                            onChange={(values) =>
+                                                setCategoryTypeFilters((prev) => ({
+                                                    ...prev,
+                                                    [catType.key]: values,
+                                                }))
+                                            }
+                                            lang={lang}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </FilterSidebar>
 
-                                    <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
-                                        {localizeText(deal.title, lang)}
-                                    </h3>
-                                    <p className="mb-6 text-sm text-muted-foreground">
-                                        {localizeText(deal.description, lang)}
-                                    </p>
-
-                                    <div className="flex gap-2">
-                                        <Link
-                                            to={`/deals/${deal.slug}`}
-                                            className="flex-1"
+                        <div className="min-w-0 flex-1">
+                            {filteredDeals.length === 0 ? (
+                                <RequestThingEmptyState
+                                    variant={deals.length === 0 ? 'empty' : 'no-results'}
+                                />
+                            ) : (
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                                    {filteredDeals.map((deal, i) => (
+                                        <motion.article
+                                            key={deal.slug}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.06 }}
+                                            className="rounded-2xl border border-border bg-card p-6 shadow-sm"
                                         >
-                                            <Button
-                                                variant="outline"
-                                                className="w-full"
-                                            >
-                                                {t('deals.viewDeal')}
-                                            </Button>
-                                        </Link>
-                                        <Link
-                                            to={`/deals/${deal.slug}`}
-                                            className="flex-1"
-                                        >
-                                            <Button className="w-full">
-                                                {t('common.bookNow')}
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                </motion.article>
-                            ))
-                        )}
+                                            <div className="mb-4 flex items-center justify-between">
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                                    <Tag className="h-3 w-3" />{' '}
+                                                    {localizeText(deal.discount, lang)}
+                                                </span>
+                                                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                                    <CalendarClock className="h-3.5 w-3.5" />{' '}
+                                                    {localizeText(deal.expires, lang)}
+                                                </span>
+                                            </div>
+                                            <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
+                                                {localizeText(deal.title, lang)}
+                                            </h3>
+                                            <p className="mb-6 text-sm text-muted-foreground">
+                                                {localizeText(deal.description, lang)}
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <Link to={`/deals/${deal.slug}`} className="flex-1">
+                                                    <Button variant="outline" className="w-full">
+                                                        {t('deals.viewDeal')}
+                                                    </Button>
+                                                </Link>
+                                                <Link to={`/deals/${deal.slug}`} className="flex-1">
+                                                    <Button className="w-full">
+                                                        {t('common.bookNow')}
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        </motion.article>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </main>

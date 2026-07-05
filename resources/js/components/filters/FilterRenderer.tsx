@@ -1,6 +1,5 @@
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { CheckboxFilter } from './CheckboxFilter';
-import { ColorFilter } from './ColorFilter';
 import { DropdownFilter } from './DropdownFilter';
 import { PillFilter } from './PillFilter';
 import { RadioFilter } from './RadioFilter';
@@ -44,8 +43,6 @@ export function FilterRenderer({
             return <SliderFilter {...commonProps} />;
         case 'radio':
             return <RadioFilter {...commonProps} />;
-        case 'colors':
-            return <ColorFilter {...commonProps} />;
         case 'pills':
         default:
             return <PillFilter {...commonProps} />;
