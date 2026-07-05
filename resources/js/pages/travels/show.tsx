@@ -340,7 +340,7 @@ export default function TravelDetail() {
                         />
                     </div>
 
-                    <DayByDayAndIncludes tour={tour} t={t} lang={lang} />
+                    <DayByDayAndIncludes tour={travel} t={t} lang={lang} />
                 </div>
 
                 <aside className="hidden lg:block">

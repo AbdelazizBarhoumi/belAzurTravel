@@ -2,9 +2,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plane } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useIsFetching } from '@tanstack/react-query';
 import { traceRoute } from '@/lib/routeTrace';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 
 export function RouteLoader() {
+    const { t } = useLanguage();
     const location = useLocation();
     const [loading, setLoading] = useState(false);
     const [firstLoad, setFirstLoad] = useState(true);
@@ -12,12 +16,32 @@ export function RouteLoader() {
     const fallbackTimeoutRef = useRef<number | null>(null);
     const rafOneRef = useRef<number | null>(null);
     const rafTwoRef = useRef<number | null>(null);
+    const maxWaitTimeoutRef = useRef<number | null>(null);
+
+    // Track React Query global fetching state - only count queries, not mutations
+    // Exclude background queries like notifications
+    const isFetching = useIsFetching({
+        predicate: (query) => {
+            // Exclude mutations - they have mutationKey in meta
+            if (query.meta?.mutationKey) return false;
+            // Exclude paused queries (e.g., inactive background refetches)
+            if (query.state.fetchStatus === 'paused') return false;
+            // Exclude specific query keys that shouldn't trigger overlay
+            const queryKey = query.queryKey;
+            if (Array.isArray(queryKey)) {
+                // Exclude notifications queries
+                if (queryKey[0] === 'notifications') return false;
+            }
+            return true;
+        },
+    });
 
     traceRoute('RouteLoader.render', {
         pathname: location.pathname,
         locationKey: location.key,
         loading,
         firstLoad,
+        isFetching,
     });
 
     useEffect(() => {
@@ -25,8 +49,9 @@ export function RouteLoader() {
             pathname: location.pathname,
             locationKey: location.key,
             loading,
+            isFetching,
         });
-    }, [loading, location.key, location.pathname]);
+    }, [loading, location.key, location.pathname, isFetching]);
 
     useLayoutEffect(() => {
         traceRoute('RouteLoader.useLayoutEffect.pathChanged.start', {
@@ -55,31 +80,79 @@ export function RouteLoader() {
             rafTwoRef.current = null;
         }
 
+        if (maxWaitTimeoutRef.current !== null) {
+            window.clearTimeout(maxWaitTimeoutRef.current);
+            maxWaitTimeoutRef.current = null;
+        }
+
         setLoading(true);
         // Allow new route to mount + images/data to start fetching before hiding
         const minDelay = firstLoad ? 600 : 450;
         const start = performance.now();
-        const finish = () => {
+
+        // Maximum time to wait for queries (safety net)
+        const MAX_WAIT_MS = 15000;
+
+        const waitForQueriesAndHide = () => {
             const elapsed = performance.now() - start;
-            const remaining = Math.max(0, minDelay - elapsed);
+            const remainingMinDelay = Math.max(0, minDelay - elapsed);
+
+            // If min delay not yet passed, wait for it
+            if (remainingMinDelay > 0) {
+                hideTimeoutRef.current = window.setTimeout(() => {
+                    waitForQueriesAndHide();
+                }, remainingMinDelay);
+                return;
+            }
+
+            // Min delay passed - now wait for React Query fetches to complete
+            if (isFetching > 0) {
+                traceRoute('RouteLoader.waitForQueries', {
+                    pathname: location.pathname,
+                    locationKey: location.key,
+                    isFetching,
+                });
+                // Poll every 100ms until queries complete
+                hideTimeoutRef.current = window.setTimeout(() => {
+                    waitForQueriesAndHide();
+                }, 100);
+                return;
+            }
+
+            // All queries complete and min delay passed - hide loader
+            traceRoute('RouteLoader.timeout.hide', {
+                pathname: location.pathname,
+                locationKey: location.key,
+                elapsed: performance.now() - start,
+            });
+
+            setLoading(false);
+            setFirstLoad(false);
+            hideTimeoutRef.current = null;
+        };
+
+        const finish = () => {
             traceRoute('RouteLoader.finish.scheduled', {
                 pathname: location.pathname,
                 locationKey: location.key,
-                elapsed,
-                remaining,
             });
-
-            hideTimeoutRef.current = window.setTimeout(() => {
-                traceRoute('RouteLoader.timeout.hide', {
-                    pathname: location.pathname,
-                    locationKey: location.key,
-                });
-
-                setLoading(false);
-                setFirstLoad(false);
-                hideTimeoutRef.current = null;
-            }, remaining);
+            waitForQueriesAndHide();
         };
+
+        // Safety timeout - force hide after MAX_WAIT_MS regardless
+        maxWaitTimeoutRef.current = window.setTimeout(() => {
+            traceRoute('RouteLoader.maxWaitTimeout', {
+                pathname: location.pathname,
+                locationKey: location.key,
+                isFetching,
+            });
+            setLoading(false);
+            setFirstLoad(false);
+            if (hideTimeoutRef.current !== null) {
+                window.clearTimeout(hideTimeoutRef.current);
+                hideTimeoutRef.current = null;
+            }
+        }, MAX_WAIT_MS);
 
         if (document.readyState === 'complete') {
             // Wait next frame so the new page has a chance to render & request assets
@@ -117,6 +190,11 @@ export function RouteLoader() {
                 fallbackTimeoutRef.current = null;
             }
 
+            if (maxWaitTimeoutRef.current !== null) {
+                window.clearTimeout(maxWaitTimeoutRef.current);
+                maxWaitTimeoutRef.current = null;
+            }
+
             if (rafOneRef.current !== null) {
                 cancelAnimationFrame(rafOneRef.current);
                 rafOneRef.current = null;
@@ -127,8 +205,7 @@ export function RouteLoader() {
                 rafTwoRef.current = null;
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.pathname]);
+    }, [location.pathname, isFetching]);
     return (
         <AnimatePresence initial={false}>
             {loading && (
@@ -165,7 +242,7 @@ export function RouteLoader() {
                         />
                     </div>
                     <p className="mt-4 font-serif text-sm tracking-wide text-muted-foreground">
-                        Preparing your journey…
+                        {t('your.journey.is.loading')}
                     </p>
                 </motion.div>
             )}

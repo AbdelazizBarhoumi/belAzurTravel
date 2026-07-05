@@ -91,10 +91,6 @@
     "file": "assets/dest-santorini-Dovs8nRZ.jpg",
     "src": "resources/js/assets/dest-santorini.jpg"
   },
-  "resources/js/assets/hero-travel.jpg": {
-    "file": "assets/hero-travel-C81jCcUX.jpg",
-    "src": "resources/js/assets/hero-travel.jpg"
-  },
   "resources/js/assets/mastercard.png": {
     "file": "assets/mastercard-CHBgXMZN.png",
     "src": "resources/js/assets/mastercard.png"
@@ -104,12 +100,12 @@
     "src": "resources/js/assets/visa.png"
   },
   "resources/js/main.tsx": {
-    "file": "assets/main-1-2GmtNy.js",
+    "file": "assets/main-BLWgqgfU.js",
     "name": "main",
     "src": "resources/js/main.tsx",
     "isEntry": true,
     "css": [
-      "assets/main-Dq4RCp0X.css"
+      "assets/main-Cjh9gFZ0.css"
     ],
     "assets": [
       "assets/dest-bali-NpOK_V95.jpg",
@@ -117,7 +113,6 @@
       "assets/mastercard-CHBgXMZN.png",
       "assets/Virement bancaire-ln8UhlX8.png",
       "assets/visa-BhdpHPtV.png",
-      "assets/hero-travel-C81jCcUX.jpg",
       "assets/tajawal-arabic-300-normal-By07C9pa.woff2",
       "assets/tajawal-arabic-300-normal-Bq0yWa0Z.woff",
       "assets/tajawal-latin-300-normal-CeEKeOxZ.woff2",

@@ -1034,7 +1034,7 @@ export function Navbar() {
                     <Link to="/promos?special=true">
                         <Button
                             size="sm"
-                            className="relative gap-1.5 bg-blue-600 text-white shadow-md shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/40"
+                            className="relative gap-1.5 bg-secondary text-white shadow-md shadow-secondary/30 transition-all hover:bg-secondary/80 hover:shadow-lg hover:shadow-secondary/40"
                         >
                             <Star className="h-4 w-4 fill-current" />
                             <span className="hidden xl:inline">{t('admin.promos.special') || 'Special Offers'}</span>
@@ -1261,7 +1261,7 @@ export function Navbar() {
                                 <Link to="/promos?special=true" onClick={() => setOpen(false)}>
                                     <Button
                                         size="sm"
-                                        className="gap-1.5 bg-blue-600 text-white shadow-md shadow-blue-500/30"
+                                        className="gap-1.5 bg-secondary text-white shadow-md shadow-secondary/30 transition-all hover:bg-secondary/80 hover:shadow-lg hover:shadow-secondary/40"
                                     >
                                         <Star className="h-4 w-4 fill-current" />
                                         {t('admin.promos.special') || 'Special Offers'}

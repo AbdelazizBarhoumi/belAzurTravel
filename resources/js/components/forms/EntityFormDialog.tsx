@@ -377,22 +377,18 @@ export function EntityFormDialog<T extends object>({
         () => JSON.stringify(toRecord(initial, preserveArrayKeys)),
         [initial, preserveArrayKeys],
     );
-    const formKey = initialSignature;
-
     useEffect(() => {
         if (open) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setValues(toRecord(initial, preserveArrayKeys));
             setLocalErrors({});
         } else {
             setValues({});
             setLocalErrors({});
         }
-    }, [open, initialSignature, initial, preserveArrayKeys]);
+    }, [open, initialSignature, preserveArrayKeys]);
 
     useEffect(() => {
         if (activeLangProp) return;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setInternalActiveLang(
             languages && languages.length > 0 ? languages[0] : ('en' as Lang),
         );
@@ -452,7 +448,6 @@ export function EntityFormDialog<T extends object>({
                     {title}
                 </DialogDescription>
                 <form
-                    key={formKey}
                     onSubmit={handleSubmit}
                     noValidate
                     className="flex max-h-[92vh] flex-col"

@@ -2184,43 +2184,25 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'اسم الميزة',
         en: 'Amenity Name',
     },
-    'admin.hotelForm.iconType': {
-        fr: 'Type d’icône',
-        ar: 'نوع الأيقونة',
-        en: 'Icon Type',
-    },
     'admin.hotelForm.icon': {
         fr: 'Icône',
         ar: 'الأيقونة',
         en: 'Icon',
     },
-    'admin.amenity.wifi': { fr: 'Wi-Fi', ar: 'واي فاي', en: 'Wi-Fi' },
-    'admin.amenity.parking': {
-        fr: 'Parking',
-        ar: 'مواقف سيارات',
-        en: 'Parking',
+    'admin.iconPicker.search': {
+        fr: 'Rechercher une icône...',
+        ar: 'بحث عن أيقونة...',
+        en: 'Search icons...',
     },
-    'admin.amenity.breakfast': {
-        fr: 'Petit-déjeuner',
-        ar: 'إفطار',
-        en: 'Breakfast',
+    'admin.iconPicker.noResults': {
+        fr: 'Aucune icône trouvée',
+        ar: 'لم يتم العثور على أيقونة',
+        en: 'No icons found',
     },
-    'admin.amenity.gym': { fr: 'Salle de sport', ar: 'نادي رياضي', en: 'Gym' },
-    'admin.amenity.restaurant': {
-        fr: 'Restaurant',
-        ar: 'مطعم',
-        en: 'Restaurant',
-    },
-    'admin.amenity.pool': { fr: 'Piscine', ar: 'مسبح', en: 'Pool' },
-    'admin.iconType.predefined': {
-        fr: 'Prédéfini',
-        ar: 'محدد مسبقاً',
-        en: 'Predefined',
-    },
-    'admin.iconType.custom': {
-        fr: 'SVG personnalisé',
-        ar: 'SVG مخصص',
-        en: 'Custom SVG',
+    'admin.iconPicker.selectIcon': {
+        fr: 'Sélectionner une icône',
+        ar: 'اختر أيقونة',
+        en: 'Select an icon',
     },
     'admin.select': { fr: 'Sélectionner...', ar: 'اختر...', en: 'Select...' },
     'admin.hotelForm.roomName': {
@@ -3735,7 +3717,11 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'إدارة الشكاوى والمبالغ المستردة',
         en: 'Manage complaints and refund requests',
     },
-
+    'your.journey.is.loading':{
+        fr: 'Votre voyage est en cours de chargement...',
+        ar: 'رحلتك قيد التحميل...',
+        en: 'Your journey is loading...',
+    },
     // Assistant Dashboard
     'assistant.panel': {
         fr: 'Panneau Assistant',
@@ -4161,7 +4147,7 @@ translations['home.latestBlogDesc'] = {
 };
 translations['admin.heroImages'] = {
     fr: 'Images Héros de Page',
-    ar: 'صور البطل للصفحة',
+    ar: 'صور الواجهة للصفحة',
     en: 'Page Hero Images',
 };
 translations['admin.heroImagesCount'] = {
@@ -4171,7 +4157,7 @@ translations['admin.heroImagesCount'] = {
 };
 translations['admin.noHeroImages'] = {
     fr: 'Aucune image héros configurée',
-    ar: 'لم يتم تكوين صور البطل',
+    ar: 'لم يتم تكوين صور الواجهة',
     en: 'No hero images configured',
 };
 translations['admin.heroInterval'] = {
@@ -4196,8 +4182,8 @@ translations['admin.heroUpload'] = {
 };
 translations['admin.heroAddImage'] = {
     fr: "Ajouter une image héros",
-    ar: 'إضافة صورة بطل',
-    en: 'Add Hero Image',
+    ar: 'إضافة صورة للواجهة',
+    en: 'Add an image to the hero section',
 };
 translations['admin.heroUploadFailed'] = {
     fr: "Échec du téléchargement de l'image",
@@ -5772,7 +5758,7 @@ translations['admin.settings.landingHeroTitle'] = {
 };
 translations['admin.settings.landingHeroSubtitle'] = {
     fr: "Gérer le carrousel d'images héros de la page d'accueil",
-    ar: 'إدارة كاروسيل صور البطل للصفحة الرئيسية',
+    ar: 'إدارة صور الواجهة للصفحة الرئيسية',
     en: 'Manage hero image carousel for the home page',
 };
 

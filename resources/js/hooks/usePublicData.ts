@@ -68,10 +68,11 @@ function useEntityQuery<TData>(options: {
     });
 }
 
-export function useDestinations() {
+export function useDestinations(enabled = true) {
     return useEntityQuery<DestinationItem[]>({
         queryKey: ['destinations'],
         queryFn: () => fetchEntity('destinations'),
+        enabled,
     });
 }
 
@@ -83,10 +84,11 @@ export function useDestinationBySlug(slug?: string) {
     });
 }
 
-export function useHotels() {
+export function useHotels(enabled = true) {
     return useEntityQuery<HotelItem[]>({
         queryKey: ['hotels'],
         queryFn: () => fetchEntity('hotels'),
+        enabled,
     });
 }
 
@@ -98,10 +100,11 @@ export function useHotelById(id?: string) {
     });
 }
 
-export function useTours() {
+export function useTours(enabled = true) {
     return useEntityQuery<TourItem[]>({
         queryKey: ['tours'],
         queryFn: () => fetchEntity('tours'),
+        enabled,
     });
 }
 
@@ -144,7 +147,7 @@ export function useTravelDetailsBySlug(slug?: string) {
     });
 }
 
-export function useCars() {
+export function useCars(enabled = true) {
     return useEntityQuery<CarItem[]>({
         queryKey: ['cars'],
         queryFn: () =>
@@ -155,6 +158,7 @@ export function useCars() {
                     policy: normalizeCarDetailEntries(car.policy),
                 })),
             ),
+        enabled,
     });
 }
 
@@ -175,10 +179,11 @@ export function useCarBySlug(slug?: string) {
     });
 }
 
-export function useFlights() {
+export function useFlights(enabled = true) {
     return useEntityQuery<FlightItem[]>({
         queryKey: ['flights'],
         queryFn: () => fetchEntity('flights'),
+        enabled,
     });
 }
 

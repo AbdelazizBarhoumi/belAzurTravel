@@ -1,3 +1,4 @@
+import { Icon as IconifyIcon } from '@iconify/react';
 import type { Wifi } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -6,6 +7,7 @@ interface Amenity {
     name: string;
     icon: typeof Wifi | null;
     customSvg?: string | null;
+    iconifyName?: string | null;
 }
 
 interface HotelInfoProps {
@@ -48,7 +50,12 @@ export function HotelInfo({
                                     className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted"
                                 >
                                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                                        {amenity.customSvg ? (
+                                        {amenity.iconifyName ? (
+                                            <IconifyIcon
+                                                icon={amenity.iconifyName}
+                                                className="h-5 w-5 flex-shrink-0 text-primary"
+                                            />
+                                        ) : amenity.customSvg ? (
                                             <span
                                                 className="h-5 w-5 flex-shrink-0 [&>svg]:h-5 [&>svg]:w-5"
                                                 dangerouslySetInnerHTML={{

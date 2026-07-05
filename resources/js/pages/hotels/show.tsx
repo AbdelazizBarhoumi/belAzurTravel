@@ -35,6 +35,7 @@ type AmenityView = {
     name: string;
     icon: AmenityIcon;
     customSvg?: string | null;
+    iconifyName?: string | null;
 };
 
 const AMENITY_ICONS: Record<string, AmenityIcon> = {
@@ -64,11 +65,15 @@ function toAmenityView(
 
     let icon: AmenityIcon = (AMENITY_ICONS[key] ?? Wifi) as AmenityIcon;
     let customSvg: string | null = null;
+    let iconifyName: string | null = null;
 
     if (amenity.icon) {
         const iconVal = String(amenity.icon);
         if (iconVal.trim().startsWith('<svg')) {
             customSvg = iconVal;
+            icon = null;
+        } else if (iconVal.includes(':')) {
+            iconifyName = iconVal;
             icon = null;
         } else {
             icon = (AMENITY_ICONS[iconVal] ?? icon) as AmenityIcon;
@@ -80,6 +85,7 @@ function toAmenityView(
         name,
         icon,
         customSvg,
+        iconifyName,
     };
 }
 

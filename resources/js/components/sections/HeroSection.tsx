@@ -7,26 +7,12 @@ export function HeroSection() {
     const { t } = useLanguage();
 
     return (
-        <section className="relative flex min-h-screen items-center justify-center overflow-hidden pb-8">
-            {/* Background */}
-            <div className="absolute inset-0">
-                <img
-                    src={heroImage}
-                    alt="Tropical paradise resort"
-                    className="h-full w-full object-cover"
-                />
-
-                <div
-                    className="absolute inset-0 bg-black/50"
-                    style={{
-                        background: 'var(--hero-overlay)',
-                    }}
-                />
-            </div>
-
+        <section className="relative -mt-[160px] flex items-center justify-center overflow-hidden pb-8">
             {/* Content */}
-            <div className="container relative z-10 mx-auto px-4 pt-20 text-center">
-                {/* Kicker */}
+            <div className="container relative z-10 mx-auto px-4 -pt-4 text-center">
+
+                {/* Kicker 
+            
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -42,8 +28,8 @@ export function HeroSection() {
                     transition={{ delay: 0.3 }}
                     className="mx-auto mb-4 max-w-3xl text-lg font-medium text-primary-foreground/90 md:text-xl"
                 ></motion.p>
-
-                {/* Heading */}
+*/}
+                {/* Heading 
                 <motion.h1
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -57,8 +43,8 @@ export function HeroSection() {
                     </span>{' '}
                     {t('hero.title3')}
                 </motion.h1>
-
-                {/* Description */}
+*/}
+                {/* Description 
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -66,14 +52,14 @@ export function HeroSection() {
                     className="mx-auto mb-10 max-w-2xl text-base text-primary-foreground/80 md:text-xl"
                 >
                     {t('hero.description')}
-                </motion.p>
+                </motion.p>*/}
 
                 {/* Search Box */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 }}
-                    className="mx-auto max-w-5xl"
+                    className="mx-auto max-w-6xl"
                 >
                     <SearchWidget />
                 </motion.div>

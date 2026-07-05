@@ -70,26 +70,9 @@ const amenitySchema = (t: any): JsonFieldDef[] => [
         translatable: true,
     },
     {
-        key: 'iconType',
-        labelKey: 'admin.hotelForm.iconType',
-        type: 'select',
-        options: [
-            { label: t('admin.iconType.predefined'), value: 'predefined' },
-            { label: t('admin.iconType.custom'), value: 'custom' },
-        ],
-    },
-    {
         key: 'icon',
         labelKey: 'admin.hotelForm.icon',
-        type: 'select',
-        options: [
-            { label: t('admin.amenity.wifi'), value: 'wifi' },
-            { label: t('admin.amenity.parking'), value: 'parking' },
-            { label: t('admin.amenity.breakfast'), value: 'breakfast' },
-            { label: t('admin.amenity.gym'), value: 'gym' },
-            { label: t('admin.amenity.restaurant'), value: 'restaurant' },
-            { label: t('admin.amenity.pool'), value: 'pool' },
-        ],
+        type: 'icon-picker',
     },
 ];
 

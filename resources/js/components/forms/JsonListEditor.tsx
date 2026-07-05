@@ -28,6 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { IconPicker } from '@/components/ui/IconPicker';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
@@ -39,7 +40,7 @@ export interface JsonFieldDef {
     key: string;
     label?: string;
     labelKey?: string;
-    type?: 'text' | 'number' | 'textarea' | 'file' | 'select';
+    type?: 'text' | 'number' | 'textarea' | 'file' | 'select' | 'icon-picker';
     options?: { label: string; value: string }[];
     translatable?: boolean;
     placeholder?: string;
@@ -173,39 +174,29 @@ const SortableItem: React.FC<SortableItemProps> = ({
                         : ((item[field.key] as string | number | undefined) ??
                           '');
 
-                    // Custom logic for icon handling
-                    if (field.key === 'icon') {
-                        const iconType = item.iconType;
-
-                        if (iconType === 'custom') {
-                            return (
-                                <div
-                                    key={field.key}
-                                    className="space-y-2 md:col-span-2"
-                                >
-                                    <Label className="text-xs font-semibold text-muted-foreground">
-                                        Custom SVG Code
-                                    </Label>
-                                    <Textarea
-                                        value={String(value)}
-                                        onChange={(e) =>
-                                            onUpdateField(
-                                                index,
-                                                field.key,
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="<svg>...</svg>"
-                                    />
-                                </div>
-                            );
-                        }
-                        if (iconType !== 'predefined') return null;
-                    }
-
                     const fieldLabel =
                         field.label ??
                         (field.labelKey ? t(field.labelKey) : '');
+
+                    // Custom logic for icon field — always use IconPicker
+                    if (field.key === 'icon') {
+                        return (
+                            <div
+                                key={field.key}
+                                className="space-y-2 md:col-span-2"
+                            >
+                                <Label className="text-xs font-semibold text-muted-foreground">
+                                    {fieldLabel}
+                                </Label>
+                                <IconPicker
+                                    value={String(value)}
+                                    onChange={(val) =>
+                                        onUpdateField(index, field.key, val)
+                                    }
+                                />
+                            </div>
+                        );
+                    }
 
                     return (
                         <div
@@ -272,6 +263,18 @@ const SortableItem: React.FC<SortableItemProps> = ({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            ) : field.type === 'icon-picker' ? (
+                                <IconPicker
+                                    value={String(value)}
+                                    onChange={(val) =>
+                                        onUpdateField(
+                                            index,
+                                            field.key,
+                                            val,
+                                            field.translatable,
+                                        )
+                                    }
+                                />
                             ) : (
                                 <Input
                                     type={

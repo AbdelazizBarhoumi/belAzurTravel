@@ -25,15 +25,15 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type { LandingSectionConfig, LandingSections, PageHeroSlide } from '@/api/siteSettings.api';
 
 const SECTION_META: Record<string, { labelKey: string; styles: string[] }> = {
-    destinations: { labelKey: 'admin.section.destinations', styles: ['grid', 'carousel', 'featured'] },
-    hotels: { labelKey: 'admin.section.hotels', styles: ['cards', 'grid', 'carousel'] },
-    organized: { labelKey: 'admin.section.organized', styles: ['auto'] },
-    tours: { labelKey: 'admin.section.tours', styles: ['auto'] },
-    cars: { labelKey: 'admin.section.cars', styles: ['grid', 'carousel'] },
-    flights: { labelKey: 'admin.section.flights', styles: ['cards', 'grid'] },
-    events: { labelKey: 'admin.section.events', styles: ['grid', 'carousel', 'list'] },
-    deals: { labelKey: 'admin.section.deals', styles: ['grid', 'carousel', 'featured'] },
-    blog: { labelKey: 'admin.section.blog', styles: ['grid', 'carousel'] },
+    destinations: { labelKey: 'admin.section.destinations', styles: ['carousel', 'cards', 'grid'] },
+    hotels: { labelKey: 'admin.section.hotels', styles: ['carousel', 'cards', 'grid'] },
+    organized: { labelKey: 'admin.section.organized', styles: ['carousel', 'cards', 'grid'] },
+    tours: { labelKey: 'admin.section.tours', styles: ['carousel', 'cards', 'grid'] },
+    cars: { labelKey: 'admin.section.cars', styles: ['carousel', 'cards', 'grid'] },
+    flights: { labelKey: 'admin.section.flights', styles: ['carousel', 'cards', 'grid'] },
+    events: { labelKey: 'admin.section.events', styles: ['carousel', 'cards', 'grid'] },
+    deals: { labelKey: 'admin.section.deals', styles: ['carousel', 'cards', 'grid'] },
+    blog: { labelKey: 'admin.section.blog', styles: ['carousel', 'cards', 'grid'] },
 };
 
 const DEFAULT_ORDER = ['destinations', 'hotels', 'organized', 'tours', 'cars', 'flights', 'events', 'deals', 'blog'];
