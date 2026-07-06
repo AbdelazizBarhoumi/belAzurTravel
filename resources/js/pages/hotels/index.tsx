@@ -1,36 +1,23 @@
 import { motion } from 'framer-motion';
-import { Wifi, Car, Coffee, MapPin } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { MapPin } from 'lucide-react';
+import { AmenityIcons } from '@/components/cards/AmenityIcons';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import type { DateRange } from 'react-day-picker';
 import { HotelFilters } from '@/components/filters/HotelFilters';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
-import { DatePicker } from '@/components/ui/DatePicker';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { StarRating } from '@/components/ui/StarRating';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useCountries, useCities } from '@/hooks/useCountries';
-import { useHotels, useCategories } from '@/hooks/usePublicData';
-import { HOTEL_FILTER_KEYS } from '@/data/hotelFilters';
+import { useHotels, useCategoryTypesPublic } from '@/hooks/usePublicData';
 
-import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
-
-const AMENITY_ICONS: Record<string, LucideIcon> = {
-    wifi: Wifi,
-    parking: Car,
-    breakfast: Coffee,
-};
+import { getHotelCategoryLabels } from '@/lib/categoryLabels';
+import { matchesSearchText } from '@/lib/listFilters';
 
 export default function Hotels() {
     const { t, lang, dir } = useLanguage();
@@ -48,93 +35,39 @@ export default function Hotels() {
     void showMobileFilter;
     void setShowMobileFilter;
     const [searchQuery, setSearchQuery] = useState(initialSearch);
-    const [selectedCountry, setSelectedCountry] = useState(initialCountry);
-    const [selectedCity, setSelectedCity] = useState(initialCity);
-    const [selectedTags, setSelectedTags] = useState<string[]>(
-        initialCategory ? [initialCategory] : [],
-    );
-
-    // Use a simple string dependency for URLSearchParams to satisfy linting
-    // Initialize star filter from URL parameter or mapped propertyClass (e.g. "4-star")
-    const initialStars = (() => {
-        const starsParam = params.get('stars');
-        const propertyClass =
-            params.get('propertyClass') || params.get('propertyclass');
-
-        let fromPropertyClass: number | null = null;
-        if (propertyClass) {
-            const m = propertyClass.match(/(\d+)/);
-            if (m) fromPropertyClass = parseInt(m[1], 10);
-        }
-
-        const stars =
-            starsParam ??
-            (fromPropertyClass ? String(fromPropertyClass) : null);
-        if (stars) {
-            const starsNum = parseInt(stars, 10);
-            if (starsNum >= 1 && starsNum <= 5) {
-                return [starsNum];
-            }
-        }
-        return [];
-    })();
-
-    const [selectedStars, setSelectedStars] = useState<number[]>(initialStars);
-    // Honor landing roomType param as a tag-like filter when present
-    const initialRoomType =
-        params.get('roomType') || params.get('roomtype') || 'any';
-    const [roomType, _setRoomType] = useState<string>(initialRoomType);
     const [guests, setGuests] = useState(
         Number.isFinite(initialGuests) && initialGuests > 0 ? initialGuests : 2,
     );
-    const [fromDate, setFromDate] = useState(initialFromDate);
-    const [toDate, setToDate] = useState(initialToDate);
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: initialFromDate ? new Date(initialFromDate) : undefined,
+        to: initialToDate ? new Date(initialToDate) : undefined,
+    });
     const { data: hotels = [] } = useHotels();
-    const { data: dynamicCategories = [] } = useCategories('hotels');
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
 
-    // Hotel filter state
-    const [hotelFilters, setHotelFilters] = useState<Record<string, boolean>>({});
+    const maxPrice = hotels.length > 0 ? Math.max(...hotels.map((h) => h.price)) : 1000;
+    const minPrice = hotels.length > 0 ? Math.min(...hotels.map((h) => h.price)) : 0;
+
+    // Category type filters state
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>({});
     const [hotelPriceRange, setHotelPriceRange] = useState<[number, number]>([0, 1000]);
 
-    const HOTEL_TAGS = dynamicCategories.map((c) => ({
-        id: c.key,
-        name: {
-            en: c.name.en,
-            fr: c.name.fr || c.name.en,
-            ar: c.name.ar || c.name.en,
-        },
-    }));
-
-    const allCountries = useCountries();
-    const allCities = useCities(selectedCountry || null);
-
-    const countries = useMemo(() => {
-        return allCountries.map((c) => c.name[lang] || c.name.en);
-    }, [allCountries, lang]);
-
-    const cities = useMemo(() => {
-        return allCities.map((c) => c.name[lang] || c.name.en);
-    }, [allCities, lang]);
-
-    const maxPrice =
-        hotels.length > 0 ? Math.max(...hotels.map((hotel) => hotel.price)) : 1000;
-
-    const minPrice =
-        hotels.length > 0 ? Math.min(...hotels.map((hotel) => hotel.price)) : 0;
+    // Sync price range when data loads
+    useEffect(() => {
+        if (hotels.length > 0) {
+            setHotelPriceRange([minPrice, maxPrice]);
+        }
+    }, [hotels.length, minPrice, maxPrice]);
 
     const hasLandingDateOrGuestFilters =
-        guests !== 2 || fromDate !== '' || toDate !== '';
+        guests !== 2 || dateRange?.from !== undefined || dateRange?.to !== undefined;
 
-    const hasActiveHotelFilters = Object.values(hotelFilters).some((v) => v);
+    const hasActiveCategoryTypeFilters = Object.values(categoryTypeFilters).some((v) => v.length > 0);
     const filteredHotels =
         searchQuery.trim().length === 0 &&
-        selectedTags.length === 0 &&
-        selectedStars.length === 0 &&
-        (selectedCountry === '' || selectedCountry === 'all') &&
-        (selectedCity === '' || selectedCity === 'all') &&
         hotelPriceRange[0] === minPrice &&
         hotelPriceRange[1] === maxPrice &&
-        !hasActiveHotelFilters
+        !hasActiveCategoryTypeFilters
             ? hotels
             : hotels.filter((hotel) => {
                   const matchesSearch = matchesSearchText(searchQuery, [
@@ -144,88 +77,39 @@ export default function Hotels() {
                       localizeText(hotel.city, lang),
                       (hotel.tags ?? []).join(' '),
                   ]);
-                  const matchesTags =
-                      selectedTags.length === 0 ||
-                      selectedTags.some((tag) =>
-                          matchesFilterValue(tag, hotel.tags ?? []),
-                      );
-                  const matchesStars =
-                      selectedStars.length === 0 ||
-                      selectedStars.includes(hotel.stars);
-                  const matchesRoomType =
-                      !roomType ||
-                      roomType === 'any' ||
-                      (hotel.tags ?? []).includes(roomType);
-                  const matchesCountry =
-                      !selectedCountry ||
-                      selectedCountry === 'all' ||
-                      localizeText(hotel.country, lang) === selectedCountry;
-                  const matchesCity =
-                      !selectedCity ||
-                      selectedCity === 'all' ||
-                      localizeText(hotel.city, lang) === selectedCity;
                   const matchesPrice =
                       hotel.price >= hotelPriceRange[0] &&
                       hotel.price <= hotelPriceRange[1];
-                  // Check hotel filter fields (OR logic - match any active filter)
-                  const activeFilterKeys = HOTEL_FILTER_KEYS.filter(
-                      (key) => hotelFilters[key]
-                  );
-                  const matchesStaticFilters =
-                      activeFilterKeys.length === 0 ||
-                      activeFilterKeys.some((key) => (hotel as any)[key] === true);
-                  // Check dynamic star filters
-                  const activeStarFilters = Object.entries(hotelFilters)
-                      .filter(([key, val]) => val && key.startsWith('star_'))
-                      .map(([key]) => parseInt(key.replace('star_', '')));
-                  const matchesStarFilters =
-                      activeStarFilters.length === 0 ||
-                      activeStarFilters.includes(hotel.stars);
-                  // Check dynamic country filters
-                  const activeCountryFilters = Object.entries(hotelFilters)
-                      .filter(([key, val]) => val && key.startsWith('country_'))
-                      .map(([key]) => key.replace('country_', ''));
-                  const hotelCountry = hotel.country && typeof hotel.country === 'object' ? hotel.country.en : '';
-                  const matchesCountryFilters =
-                      activeCountryFilters.length === 0 ||
-                      activeCountryFilters.includes(hotelCountry);
+                  const matchesGuests = true; // Guests filter handled by category types or separate logic
+                  // Check category type filters (OR logic)
+                  const assignments = hotel.category_assignments;
+                  const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
+                  const matchesCategoryTypes = activeTypeFilters.length === 0 ||
+                      activeTypeFilters.some(([typeKey, values]) => {
+                          // Handle dynamic filters (country, stars)
+                          if (typeKey.startsWith('dynamic_country_')) {
+                              const countryKey = typeKey.replace('dynamic_country_', '');
+                              const hotelCountry = hotel.country && typeof hotel.country === 'object' ? hotel.country.en : '';
+                              return values.includes(hotelCountry);
+                          }
+                          if (typeKey.startsWith('dynamic_star_')) {
+                              return values.includes(String(hotel.stars));
+                          }
+                          // Handle regular category type filters
+                          return assignments && values.includes(assignments[typeKey]);
+                      });
                   return (
                       matchesSearch &&
-                      matchesTags &&
-                      matchesRoomType &&
-                      matchesCountry &&
-                      matchesCity &&
                       matchesPrice &&
-                      matchesStaticFilters &&
-                      matchesStarFilters &&
-                      matchesCountryFilters
+                      matchesCategoryTypes
                   );
               });
 
-    const handleTagToggle = (tagId: string) => {
-        setSelectedTags((current) =>
-            current.includes(tagId)
-                ? current.filter((id) => id !== tagId)
-                : [...current, tagId],
-        );
-    };
-
-    const handleStarToggle = (stars: number) => {
-        setSelectedStars((current) =>
-            current.includes(stars)
-                ? current.filter((s) => s !== stars)
-                : [...current, stars],
-        );
-    };
-
     const handleClearAll = () => {
         setSearchQuery('');
-        setSelectedTags([]);
-        setSelectedStars([]);
-        setSelectedCountry('all');
-        setSelectedCity('all');
-        setHotelFilters({});
+        setCategoryTypeFilters({});
         setHotelPriceRange([minPrice, maxPrice]);
+        setDateRange(undefined);
     };
 
     return (
@@ -264,85 +148,18 @@ export default function Hotels() {
                         resultCount={filteredHotels.length}
                         hasActiveFilters={
                             searchQuery.trim().length > 0 ||
-                            selectedTags.length > 0 ||
-                            selectedStars.length > 0 ||
-                            (selectedCountry !== '' && selectedCountry !== 'all') ||
-                            (selectedCity !== '' && selectedCity !== 'all') ||
                             hasLandingDateOrGuestFilters ||
-                            Object.values(hotelFilters).some((v) => v)
+                            hasActiveCategoryTypeFilters
                         }
                         onClearFilters={handleClearAll}
                         searchPlaceholder={t('common.search')}
                         className="mb-8"
+                        inline
                     >
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            <label className="grid gap-2 text-sm">
-                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                                    {t('search.fields.dates')}
-                                </span>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <DatePicker
-                                        date={
-                                            fromDate
-                                                ? new Date(fromDate)
-                                                : undefined
-                                        }
-                                        onDateChange={(date) =>
-                                            setFromDate(
-                                                date
-                                                    ? date
-                                                          .toISOString()
-                                                          .split('T')[0]
-                                                    : '',
-                                            )
-                                        }
-                                        placeholder={t(
-                                            'search.placeholders.checkIn',
-                                        )}
-                                    />
-                                    <DatePicker
-                                        date={
-                                            toDate
-                                                ? new Date(toDate)
-                                                : undefined
-                                        }
-                                        onDateChange={(date) =>
-                                            setToDate(
-                                                date
-                                                    ? date
-                                                          .toISOString()
-                                                          .split('T')[0]
-                                                    : '',
-                                            )
-                                        }
-                                        placeholder={t(
-                                            'search.placeholders.checkOut',
-                                        )}
-                                    />
-                                </div>
-                            </label>
-
-                            <label className="grid gap-2 text-sm">
-                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                                    {t('search.fields.guests')}
-                                </span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    value={guests}
-                                    onChange={(event) =>
-                                        setGuests(
-                                            Math.max(
-                                                1,
-                                                Number(event.target.value) || 1,
-                                            ),
-                                        )
-                                    }
-                                    className="h-12 rounded-2xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm"
-                                    aria-label={t('search.fields.guests')}
-                                />
-                            </label>
-                        </div>
+                        <DateRangePicker
+                            value={dateRange}
+                            onChange={setDateRange}
+                        />
                     </ListFilterBar>
 
                     {/* Main Layout: Sidebar + Content */}
@@ -363,7 +180,7 @@ export default function Hotels() {
                                     <h2 className="font-serif text-lg font-bold text-foreground">
                                         {t('hotels.filters')}
                                     </h2>
-                                    {Object.values(hotelFilters).some((v) => v) && (
+                                    {hasActiveCategoryTypeFilters && (
                                         <button
                                             type="button"
                                             onClick={handleClearAll}
@@ -375,16 +192,19 @@ export default function Hotels() {
                                 </div>
 
                                 <HotelFilters
-                                    selectedFilters={hotelFilters}
+                                    hotels={hotels}
+                                    lang={lang}
                                     priceRange={hotelPriceRange}
-                                    onFilterChange={(key, value) =>
-                                        setHotelFilters((prev) => ({ ...prev, [key]: value }))
-                                    }
                                     onPriceChange={setHotelPriceRange}
                                     maxPrice={maxPrice}
                                     minPrice={minPrice}
-                                    hotels={hotels}
-                                    lang={lang}
+                                    categoryTypes={categoryTypes}
+                                    categoryTypeFilters={categoryTypeFilters}
+                                    onCategoryTypeChange={(typeKey, values) =>
+                                        setCategoryTypeFilters((prev) => ({ ...prev, [typeKey]: values }))
+                                    }
+                                    guests={guests}
+                                    onGuestsChange={setGuests}
                                 />
                             </div>
                         </motion.aside>
@@ -469,72 +289,24 @@ export default function Hotels() {
                                                         />
                                                     </div>
 
-                                                    <div className="mb-4">
-                                                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3">
-                                                            {hotel.tags.map(
-                                                                (tagId) => {
-                                                                    const tag =
-                                                                        HOTEL_TAGS.find(
-                                                                            (
-                                                                                item,
-                                                                            ) =>
-                                                                                item.id ===
-                                                                                tagId,
-                                                                        );
-                                                                    if (!tag)
-                                                                        return null;
-
-                                                                    return (
-                                                                        <div
-                                                                            key={
-                                                                                tagId
-                                                                            }
-                                                                            className="flex items-center justify-center rounded-lg bg-muted px-2 py-1"
-                                                                        >
-                                                                            <span className="text-center text-xs font-medium text-muted-foreground">
-                                                                                {
-                                                                                    tag
-                                                                                        .name[
-                                                                                        lang
-                                                                                    ]
-                                                                                }
-                                                                            </span>
-                                                                        </div>
-                                                                    );
-                                                                },
-                                                            )}
-                                                        </div>
-                                                    </div>
+                                                    {(() => {
+                                                        const catLabels = getHotelCategoryLabels(hotel.category_assignments, categoryTypes, lang, 3);
+                                                        if (catLabels.length === 0) return null;
+                                                        return (
+                                                            <div className="mb-4 flex flex-wrap gap-2">
+                                                                {catLabels.map((label) => (
+                                                                    <span key={label} className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                                                                        {label}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    })()}
 
                                                     <div className="flex items-center justify-between gap-4">
-                                                        <div className="flex gap-2">
-                                                            {hotel.amenities.map(
-                                                                (amenity) => {
-                                                                    const Icon =
-                                                                        AMENITY_ICONS[
-                                                                            amenity
-                                                                        ];
-                                                                    if (!Icon)
-                                                                        return null;
-
-                                                                    return (
-                                                                        <div
-                                                                            key={
-                                                                                amenity
-                                                                            }
-                                                                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted"
-                                                                        >
-                                                                            <Icon className="h-4 w-4 text-muted-foreground" />
-                                                                        </div>
-                                                                    );
-                                                                },
-                                                            )}
-                                                        </div>
-
-                                                        <span className="text-sm font-semibold text-primary">
-                                                            {t(
-                                                                'common.viewAll',
-                                                            )}
+                                                        <AmenityIcons amenities={hotel.amenities} maxVisible={8} />
+                                                        <span className="shrink-0 text-sm font-semibold text-primary">
+                                                            {t('common.viewAll')}
                                                         </span>
                                                     </div>
                                                 </div>

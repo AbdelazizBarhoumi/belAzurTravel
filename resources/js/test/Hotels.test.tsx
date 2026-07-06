@@ -27,7 +27,8 @@ vi.mock('@/hooks/usePublicData', () => ({
                 rating: 4.8,
                 reviews: 120,
                 tags: ['luxury'],
-                amenities: ['wifi'],
+                amenities: [{ name: { en: 'WiFi', fr: 'Wi-Fi', ar: 'واي فاي' }, icon: 'wifi' }],
+                category_assignments: { service: 'thalasso_spa', arrangements: 'demi_pension' },
             },
         ],
         isLoading: false,
@@ -45,6 +46,10 @@ vi.mock('@/hooks/usePublicData', () => ({
                 entity_type: 'hotels',
             },
         ],
+        isLoading: false,
+    }),
+    useCategoryTypesPublic: () => ({
+        data: [],
         isLoading: false,
     }),
 }));

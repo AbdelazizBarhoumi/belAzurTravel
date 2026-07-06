@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::store
- * @see app/Http/Controllers/Api/AdminTourController.php:46
+ * @see app/Http/Controllers/Api/AdminTourController.php:47
  * @route '/api/admin/tours'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::store
- * @see app/Http/Controllers/Api/AdminTourController.php:46
+ * @see app/Http/Controllers/Api/AdminTourController.php:47
  * @route '/api/admin/tours'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::store
- * @see app/Http/Controllers/Api/AdminTourController.php:46
+ * @see app/Http/Controllers/Api/AdminTourController.php:47
  * @route '/api/admin/tours'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminTourController::store
- * @see app/Http/Controllers/Api/AdminTourController.php:46
+ * @see app/Http/Controllers/Api/AdminTourController.php:47
  * @route '/api/admin/tours'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminTourController::store
- * @see app/Http/Controllers/Api/AdminTourController.php:46
+ * @see app/Http/Controllers/Api/AdminTourController.php:47
  * @route '/api/admin/tours'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::show
- * @see app/Http/Controllers/Api/AdminTourController.php:55
+ * @see app/Http/Controllers/Api/AdminTourController.php:56
  * @route '/api/admin/tours/{id}'
  */
 export const show = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -149,7 +149,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::show
- * @see app/Http/Controllers/Api/AdminTourController.php:55
+ * @see app/Http/Controllers/Api/AdminTourController.php:56
  * @route '/api/admin/tours/{id}'
  */
 show.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -177,7 +177,7 @@ show.url = (args: { id: string | number } | [id: string | number ] | string | nu
 
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::show
- * @see app/Http/Controllers/Api/AdminTourController.php:55
+ * @see app/Http/Controllers/Api/AdminTourController.php:56
  * @route '/api/admin/tours/{id}'
  */
 show.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -186,7 +186,7 @@ show.get = (args: { id: string | number } | [id: string | number ] | string | nu
 })
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::show
- * @see app/Http/Controllers/Api/AdminTourController.php:55
+ * @see app/Http/Controllers/Api/AdminTourController.php:56
  * @route '/api/admin/tours/{id}'
  */
 show.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -196,7 +196,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
     /**
 * @see \App\Http\Controllers\Api\AdminTourController::show
- * @see app/Http/Controllers/Api/AdminTourController.php:55
+ * @see app/Http/Controllers/Api/AdminTourController.php:56
  * @route '/api/admin/tours/{id}'
  */
     const showForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -206,7 +206,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
             /**
 * @see \App\Http\Controllers\Api\AdminTourController::show
- * @see app/Http/Controllers/Api/AdminTourController.php:55
+ * @see app/Http/Controllers/Api/AdminTourController.php:56
  * @route '/api/admin/tours/{id}'
  */
         showForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -215,7 +215,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
         })
             /**
 * @see \App\Http\Controllers\Api\AdminTourController::show
- * @see app/Http/Controllers/Api/AdminTourController.php:55
+ * @see app/Http/Controllers/Api/AdminTourController.php:56
  * @route '/api/admin/tours/{id}'
  */
         showForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -231,7 +231,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::update
- * @see app/Http/Controllers/Api/AdminTourController.php:62
+ * @see app/Http/Controllers/Api/AdminTourController.php:63
  * @route '/api/admin/tours/{id}'
  */
 export const update = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -246,7 +246,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::update
- * @see app/Http/Controllers/Api/AdminTourController.php:62
+ * @see app/Http/Controllers/Api/AdminTourController.php:63
  * @route '/api/admin/tours/{id}'
  */
 update.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -274,7 +274,7 @@ update.url = (args: { id: string | number } | [id: string | number ] | string | 
 
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::update
- * @see app/Http/Controllers/Api/AdminTourController.php:62
+ * @see app/Http/Controllers/Api/AdminTourController.php:63
  * @route '/api/admin/tours/{id}'
  */
 update.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -284,7 +284,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Api\AdminTourController::update
- * @see app/Http/Controllers/Api/AdminTourController.php:62
+ * @see app/Http/Controllers/Api/AdminTourController.php:63
  * @route '/api/admin/tours/{id}'
  */
     const updateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -299,7 +299,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Api\AdminTourController::update
- * @see app/Http/Controllers/Api/AdminTourController.php:62
+ * @see app/Http/Controllers/Api/AdminTourController.php:63
  * @route '/api/admin/tours/{id}'
  */
         updateForm.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -315,7 +315,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::destroy
- * @see app/Http/Controllers/Api/AdminTourController.php:72
+ * @see app/Http/Controllers/Api/AdminTourController.php:73
  * @route '/api/admin/tours/{id}'
  */
 export const destroy = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -330,7 +330,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::destroy
- * @see app/Http/Controllers/Api/AdminTourController.php:72
+ * @see app/Http/Controllers/Api/AdminTourController.php:73
  * @route '/api/admin/tours/{id}'
  */
 destroy.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -358,7 +358,7 @@ destroy.url = (args: { id: string | number } | [id: string | number ] | string |
 
 /**
 * @see \App\Http\Controllers\Api\AdminTourController::destroy
- * @see app/Http/Controllers/Api/AdminTourController.php:72
+ * @see app/Http/Controllers/Api/AdminTourController.php:73
  * @route '/api/admin/tours/{id}'
  */
 destroy.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -368,7 +368,7 @@ destroy.delete = (args: { id: string | number } | [id: string | number ] | strin
 
     /**
 * @see \App\Http\Controllers\Api\AdminTourController::destroy
- * @see app/Http/Controllers/Api/AdminTourController.php:72
+ * @see app/Http/Controllers/Api/AdminTourController.php:73
  * @route '/api/admin/tours/{id}'
  */
     const destroyForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -383,7 +383,7 @@ destroy.delete = (args: { id: string | number } | [id: string | number ] | strin
 
             /**
 * @see \App\Http\Controllers\Api\AdminTourController::destroy
- * @see app/Http/Controllers/Api/AdminTourController.php:72
+ * @see app/Http/Controllers/Api/AdminTourController.php:73
  * @route '/api/admin/tours/{id}'
  */
         destroyForm.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

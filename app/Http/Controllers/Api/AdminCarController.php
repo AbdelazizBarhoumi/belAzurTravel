@@ -32,7 +32,7 @@ class AdminCarController extends Controller
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.cars', now()->addMinutes(5), function () {
-            return Car::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
+            return Car::query()->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
         });
 
         return response()->json(['data' => $data]);

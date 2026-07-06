@@ -90,7 +90,10 @@ class AdminCategoryTypeController extends Controller
         }
 
         $categoryType->update($updateData);
-        $this->clearCache($categoryType->entity_type);
+        // Only clear cache if something actually changed
+        if ($categoryType->wasChanged()) {
+            $this->clearCache($categoryType->entity_type);
+        }
 
         return response()->json(['data' => $categoryType->fresh(['values'])]);
     }
@@ -174,10 +177,11 @@ class AdminCategoryTypeController extends Controller
         }
         $value->update($updateData);
 
-        // Sync denormalized data on entities using this value
-        $this->syncEntityCategoryNames($value);
-
-        $this->clearCache($categoryType->entity_type);
+        // Only sync and clear cache if something actually changed
+        if ($value->wasChanged()) {
+            $this->syncEntityCategoryNames($value);
+            $this->clearCache($categoryType->entity_type);
+        }
 
         return response()->json(['data' => $value->fresh()]);
     }
@@ -219,9 +223,16 @@ class AdminCategoryTypeController extends Controller
 
     private function clearCache(?string $entityType = null): void
     {
+        // Admin cache keys
         Cache::forget('category-types:all');
         if ($entityType) {
             Cache::forget($this->cacheKey($entityType));
+        }
+
+        // Public API cache keys (used by AdminCategoryController::typesByEntity)
+        Cache::forget('category-types-nested:all');
+        if ($entityType) {
+            Cache::forget("category-types-nested:{$entityType}");
         }
     }
 
@@ -265,5 +276,32 @@ class AdminCategoryTypeController extends Controller
             'blog' => 'blog_posts',
             default => null,
         };
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:category_types,id'],
+            'entity_type' => ['required', 'string'],
+        ]);
+
+        // Check if order actually changed
+        $currentOrder = CategoryType::where('entity_type', $data['entity_type'])
+            ->orderBy('sort_order')
+            ->pluck('id')
+            ->toArray();
+
+        if ($currentOrder === $data['ids']) {
+            return response()->json(['message' => 'Order unchanged']);
+        }
+
+        foreach ($data['ids'] as $index => $id) {
+            CategoryType::where('id', $id)->update(['sort_order' => $index]);
+        }
+
+        $this->clearCache($data['entity_type']);
+
+        return response()->json(['message' => 'Reordered successfully']);
     }
 }

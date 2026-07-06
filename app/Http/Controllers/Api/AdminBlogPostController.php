@@ -29,6 +29,7 @@ class AdminBlogPostController extends Controller
     {
         $data = Cache::remember('admin.entity.blog-posts', now()->addMinutes(5), function () {
             return BlogPost::query()
+                ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                 ->oldest('id')
                 ->get()
                 ->map(fn (Model $item) => $this->adminPayload($item))

@@ -34,6 +34,7 @@ import {
     createCategoryValue,
     updateCategoryValue,
     deleteCategoryValue,
+    reorderCategoryTypes,
     type CategoryType,
     type CategoryTypeValue,
     type FilterStyle,
@@ -50,6 +51,8 @@ import {
     X,
     Loader2,
     ChevronLeft,
+    ChevronUp,
+    ChevronDown,
     Settings,
     Lock,
 } from 'lucide-react';
@@ -81,7 +84,7 @@ export function CategoryTypeManager({
         fr: '',
         ar: '',
     });
-    const [newTypeFilterStyle, setNewTypeFilterStyle] = useState<FilterStyle>('pills');
+    const [newTypeFilterStyle, setNewTypeFilterStyle] = useState<FilterStyle>('checkbox');
     const [isCreatingType, setIsCreatingType] = useState(false);
 
     // Value editing state
@@ -123,7 +126,7 @@ export function CategoryTypeManager({
     const resetState = () => {
         setEditingTypeId(null);
         setNewTypeLabel({ en: '', fr: '', ar: '' });
-        setNewTypeFilterStyle('pills');
+        setNewTypeFilterStyle('checkbox');
         setIsCreatingType(false);
         setEditingValueId(null);
         setNewValueName({ en: '', fr: '', ar: '' });
@@ -193,6 +196,28 @@ export function CategoryTypeManager({
                 return;
             }
             toast.error(t('admin.categoryTypeManager.errorDelete'));
+        }
+    };
+
+    // --- Reorder ---
+
+    const handleReorder = async (direction: 'up' | 'down', index: number) => {
+        const newTypes = [...types];
+        const swapIndex = direction === 'up' ? index - 1 : index + 1;
+        if (swapIndex < 0 || swapIndex >= newTypes.length) return;
+
+        [newTypes[index], newTypes[swapIndex]] = [newTypes[swapIndex], newTypes[index]];
+        setTypes(newTypes);
+
+        try {
+            await reorderCategoryTypes(
+                newTypes.map((t) => t.id),
+                entityType,
+            );
+            queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
+        } catch {
+            toast.error(t('admin.categoryTypeManager.errorUpdate'));
+            loadTypes();
         }
     };
 
@@ -343,19 +368,6 @@ export function CategoryTypeManager({
                                                     setNewTypeLabel,
                                                     { en: 'Category', fr: 'Catégorie', ar: 'فئة' },
                                                 )}
-                                                <div className="space-y-1">
-                                                    <Label className="text-xs">{t('admin.settings.filterStyle')}</Label>
-                                                    <Select value={newTypeFilterStyle} onValueChange={(v: FilterStyle) => setNewTypeFilterStyle(v)}>
-                                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="pills">{t('filters.style.pills')}</SelectItem>
-                                                            <SelectItem value="checkbox">{t('filters.style.checkbox')}</SelectItem>
-                                                            <SelectItem value="dropdown">{t('filters.style.dropdown')}</SelectItem>
-                                                            <SelectItem value="slider">{t('filters.style.slider')}</SelectItem>
-                                                            <SelectItem value="radio">{t('filters.style.radio')}</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
                                                 <div className="flex justify-end gap-2">
                                                     <Button
                                                         size="sm"
@@ -397,6 +409,24 @@ export function CategoryTypeManager({
                                                     </span>
                                                 </div>
                                                 <div className="flex gap-1">
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => handleReorder('up', types.indexOf(type))}
+                                                        disabled={types.indexOf(type) === 0}
+                                                        title="Move up"
+                                                    >
+                                                        <ChevronUp className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => handleReorder('down', types.indexOf(type))}
+                                                        disabled={types.indexOf(type) === types.length - 1}
+                                                        title="Move down"
+                                                    >
+                                                        <ChevronDown className="h-4 w-4" />
+                                                    </Button>
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
@@ -444,20 +474,6 @@ export function CategoryTypeManager({
                                             setNewTypeLabel,
                                             { en: 'Star Rating', fr: 'Classement', ar: 'تصنيف' },
                                         )}
-                                        <div className="space-y-1">
-                                            <Label className="text-xs">{t('admin.settings.filterStyle')}</Label>
-                                            <Select value={newTypeFilterStyle} onValueChange={(v: FilterStyle) => setNewTypeFilterStyle(v)}>
-                                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="pills">{t('filters.style.pills')}</SelectItem>
-                                                    <SelectItem value="checkbox">{t('filters.style.checkbox')}</SelectItem>
-                                                    <SelectItem value="dropdown">{t('filters.style.dropdown')}</SelectItem>
-                                                    <SelectItem value="slider">{t('filters.style.slider')}</SelectItem>
-                                                    <SelectItem value="radio">{t('filters.style.radio')}</SelectItem>
-                                                    <SelectItem value="colors">{t('filters.style.colors')}</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
                                         <div className="mt-3 rounded-lg border border-dashed border-border p-3">
                                             <Label className="text-xs text-muted-foreground">{t('admin.settings.preview')}</Label>
                                             <div className="mt-2">
@@ -468,7 +484,7 @@ export function CategoryTypeManager({
                                                         key: 'preview',
                                                         label: newTypeLabel.en ? newTypeLabel : { en: 'Sample', fr: 'Exemple', ar: 'نموذج' },
                                                         sort_order: 0,
-                                                        filter_style: newTypeFilterStyle,
+                                                        filter_style: 'checkbox',
                                                         values: [
                                                             { id: 1, category_type_id: 0, key: 'val1', name: { en: 'Value 1', fr: 'Valeur 1', ar: 'قيمة 1' } },
                                                             { id: 2, category_type_id: 0, key: 'val2', name: { en: 'Value 2', fr: 'Valeur 2', ar: 'قيمة 2' } },
@@ -537,25 +553,6 @@ export function CategoryTypeManager({
                                                     setNewValueName,
                                                     { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
                                                 )}
-                                                {selectedType?.filter_style === 'colors' && (
-                                                    <div className="space-y-1">
-                                                        <Label className="text-xs">{t('admin.settings.color')}</Label>
-                                                        <div className="flex items-center gap-2">
-                                                            <input
-                                                                type="color"
-                                                                value={newValueColor}
-                                                                onChange={(e) => setNewValueColor(e.target.value)}
-                                                                className="h-8 w-8 cursor-pointer rounded border"
-                                                            />
-                                                            <Input
-                                                                value={newValueColor}
-                                                                onChange={(e) => setNewValueColor(e.target.value)}
-                                                                placeholder="#000000"
-                                                                className="flex-1"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )}
                                                 <div className="flex justify-end gap-2">
                                                     <Button
                                                         size="sm"
@@ -614,25 +611,6 @@ export function CategoryTypeManager({
                                             newValueName,
                                             setNewValueName,
                                             { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
-                                        )}
-                                        {selectedType?.filter_style === 'colors' && (
-                                            <div className="space-y-1">
-                                                <Label className="text-xs">{t('admin.settings.color')}</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <input
-                                                        type="color"
-                                                        value={newValueColor}
-                                                        onChange={(e) => setNewValueColor(e.target.value)}
-                                                        className="h-8 w-8 cursor-pointer rounded border"
-                                                    />
-                                                    <Input
-                                                        value={newValueColor}
-                                                        onChange={(e) => setNewValueColor(e.target.value)}
-                                                        placeholder="#000000"
-                                                        className="flex-1"
-                                                    />
-                                                </div>
-                                            </div>
                                         )}
                                         <div className="flex justify-end gap-2">
                                             <Button

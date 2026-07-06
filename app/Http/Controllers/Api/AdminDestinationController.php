@@ -24,7 +24,7 @@ class AdminDestinationController extends Controller
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.destinations', now()->addMinutes(5), function () {
-            return Destination::query()->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
+            return Destination::query()->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
         });
 
         return response()->json(['data' => $data]);

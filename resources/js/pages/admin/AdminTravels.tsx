@@ -609,7 +609,7 @@ const AdminTravels = () => {
                 <div className="space-y-6">
                     {/* Destination */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                        <h4 className="text-s font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                             Destination
                         </h4>
                         <div className="space-y-2">
@@ -636,7 +636,7 @@ const AdminTravels = () => {
 
                     {/* Jeunes */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                        <h4 className="text-s font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                             Jeunes
                         </h4>
                         <div className="space-y-2">
@@ -656,7 +656,7 @@ const AdminTravels = () => {
 
                     {/* Niveau physique */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                        <h4 className="text-s font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                             Niveau physique
                         </h4>
                         <div className="space-y-2">

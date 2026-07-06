@@ -212,6 +212,7 @@ Route::middleware('auth')->group(function () {
         // Category Types (multi-type system)
         Route::get('/admin/category-types', [AdminCategoryTypeController::class, 'index']);
         Route::post('/admin/category-types', [AdminCategoryTypeController::class, 'store']);
+        Route::post('/admin/category-types/reorder', [AdminCategoryTypeController::class, 'reorder']);
         Route::put('/admin/category-types/{categoryType}', [AdminCategoryTypeController::class, 'update']);
         Route::delete('/admin/category-types/{categoryType}', [AdminCategoryTypeController::class, 'destroy']);
 

@@ -634,7 +634,7 @@ const AdminHotels = () => {
                 <div className="space-y-6">
                     {/* Tarifs et disponibilités */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                        <h4 className="text-s font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                             Tarifs et disponibilités
                         </h4>
                         <div className="space-y-2">
@@ -662,7 +662,7 @@ const AdminHotels = () => {
 
                     {/* Arrangements */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                        <h4 className="text-s font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                             Arrangements
                         </h4>
                         <div className="space-y-2">
@@ -689,7 +689,7 @@ const AdminHotels = () => {
 
                     {/* Catégorie */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                        <h4 className="text-s font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                             Catégorie
                         </h4>
                         <div className="space-y-2">
@@ -709,7 +709,7 @@ const AdminHotels = () => {
 
                     {/* Type de chambres */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                        <h4 className="text-s font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                             Type de chambres
                         </h4>
                         <div className="space-y-2">
@@ -736,7 +736,7 @@ const AdminHotels = () => {
 
                     {/* Service */}
                     <div>
-                        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                        <h4 className="text-s font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                             Service
                         </h4>
                         <div className="space-y-2">

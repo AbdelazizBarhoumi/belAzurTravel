@@ -7,6 +7,7 @@ import { DestinationsSection } from './landing/DestinationsSection';
 import { EventsSection } from './landing/EventsSection';
 import { FlightsSection } from './landing/FlightsSection';
 import { HotelsSection } from './landing/HotelsSection';
+import { LocationSection } from './landing/LocationSection';
 import { OrganizedSection } from './landing/OrganizedSection';
 import { ToursSection } from './landing/ToursSection';
 
@@ -20,9 +21,10 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType<{ config: LandingSe
     events: EventsSection,
     deals: DealsSection,
     blog: BlogSection,
+    location: LocationSection,
 };
 
-const DEFAULT_ORDER = ['destinations', 'hotels', 'organized', 'tours', 'cars', 'flights', 'events', 'deals', 'blog'];
+const DEFAULT_ORDER = ['destinations', 'hotels', 'organized', 'tours', 'cars', 'flights', 'events', 'deals', 'blog', 'location'];
 
 export function LandingSections() {
     const { settings } = useSiteSettings();

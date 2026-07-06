@@ -38,7 +38,7 @@ class AdminHotelController extends Controller
     public function index(): JsonResponse
     {
         $data = Cache::remember('admin.entity.hotels', now()->addMinutes(5), function () {
-            return Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
+            return Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->oldest('id')->get()->map(fn (Model $item) => $this->adminPayload($item));
         });
 
         return response()->json(['data' => $data]);
@@ -60,14 +60,14 @@ class AdminHotelController extends Controller
 
     public function show(int|string $id): JsonResponse
     {
-        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->findOrFail($id);
+        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->findOrFail($id);
 
         return response()->json(['data' => $this->adminPayload($item)]);
     }
 
     public function update(Request $request, int|string $id): JsonResponse
     {
-        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities'])->findOrFail($id);
+        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->findOrFail($id);
         $data = $this->attributes($request, $item);
         $rooms = $data['rooms'] ?? [];
         unset($data['rooms']);

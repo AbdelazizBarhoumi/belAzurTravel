@@ -23,24 +23,24 @@ export function FilterSidebar({
             initial={{ opacity: 0, x: dir === 'rtl' ? 100 : -100 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.05 }}
-            className="hidden flex-shrink-0 md:block md:w-72"
+            className="hidden flex-shrink-0 md:block md:w-64 lg:w-72"
         >
-            <div className="sticky top-24 rounded-3xl border border-border bg-card p-6">
-                <div className="mb-6 flex items-center justify-between gap-4">
-                    <h2 className="font-serif text-lg font-bold text-foreground">
+            <div className="sticky top-24 rounded-2xl lg:rounded-3xl border border-border bg-card p-4 lg:p-6">
+                <div className="mb-4 lg:mb-6 flex items-center justify-between gap-3 lg:gap-4">
+                    <h2 className="font-serif text-base lg:text-lg font-bold text-foreground">
                         {title}
                     </h2>
                     {hasActiveFilters && (
                         <button
                             type="button"
                             onClick={onClearAll}
-                            className="text-xs font-medium text-primary hover:underline"
+                            className="text-[10px] lg:text-xs font-medium text-primary hover:underline"
                         >
                             {clearLabel}
                         </button>
                     )}
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-4 lg:space-y-6">
                     {children}
                 </div>
             </div>

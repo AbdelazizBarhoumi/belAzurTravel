@@ -5840,3 +5840,8 @@ translations['admin.section.blog'] = {
     ar: 'المدونة',
     en: 'Blog',
 };
+translations['admin.section.location'] = {
+    fr: 'Emplacement',
+    ar: 'الموقع',
+    en: 'Location',
+};

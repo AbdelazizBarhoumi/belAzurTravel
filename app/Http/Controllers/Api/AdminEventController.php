@@ -32,6 +32,7 @@ class AdminEventController extends Controller
     {
         $data = Cache::remember('admin.entity.events', now()->addMinutes(5), function () {
             return Event::query()
+                ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                 ->oldest('id')
                 ->get()
                 ->map(fn (Model $item) => $this->adminPayload($item))

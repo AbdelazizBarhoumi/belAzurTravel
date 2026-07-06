@@ -34,9 +34,10 @@ const SECTION_META: Record<string, { labelKey: string; styles: string[] }> = {
     events: { labelKey: 'admin.section.events', styles: ['carousel', 'cards', 'grid'] },
     deals: { labelKey: 'admin.section.deals', styles: ['carousel', 'cards', 'grid'] },
     blog: { labelKey: 'admin.section.blog', styles: ['carousel', 'cards', 'grid'] },
+    location: { labelKey: 'admin.section.location', styles: ['default'] },
 };
 
-const DEFAULT_ORDER = ['destinations', 'hotels', 'organized', 'tours', 'cars', 'flights', 'events', 'deals', 'blog'];
+const DEFAULT_ORDER = ['destinations', 'hotels', 'organized', 'tours', 'cars', 'flights', 'events', 'deals', 'blog', 'location'];
 
 function SortableSection({
     sectionKey,

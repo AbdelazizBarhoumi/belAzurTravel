@@ -1,12 +1,14 @@
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AmenityIcons } from '@/components/cards/AmenityIcons';
 import type { LandingSectionConfig } from '@/api/siteSettings.api';
 import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useHotels } from '@/hooks/usePublicData';
+import { useHotels, useCategoryTypesPublic } from '@/hooks/usePublicData';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { isPageEnabled } from '@/lib/pageVisibility';
 
 interface Props { config: LandingSectionConfig; }
@@ -15,6 +17,7 @@ export function HotelsSection({ config }: Props) {
     const { lang, t } = useLanguage();
     const { settings } = useSiteSettings();
     const { data: hotels = [] } = useHotels();
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
     if (!isPageEnabled('hotels', settings.content?.nav?.settings)) return null;
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('home.featuredHotels');
@@ -31,6 +34,7 @@ export function HotelsSection({ config }: Props) {
             meta: localizeText(hotel.location, lang),
             image: hotel.image,
             href: `/hotels/${hotel.slug}`,
+            amenities: hotel.amenities,
         }));
         return (
             <HorizontalDeals
@@ -66,6 +70,24 @@ export function HotelsSection({ config }: Props) {
                                             <div className="flex text-secondary">{'★'.repeat(hotel.stars)}</div>
                                             <span className="text-xs font-semibold">{hotel.rating}</span>
                                         </div>
+                                        {(() => {
+                                            const catLabels = getHotelCategoryLabels(hotel.category_assignments, categoryTypes, lang, 3);
+                                            if (catLabels.length === 0) return null;
+                                            return (
+                                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                                    {catLabels.map((label) => (
+                                                        <span key={label} className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                                            {label}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
+                                        {hotel.amenities?.length > 0 && (
+                                            <div className="mt-2.5">
+                                                <AmenityIcons amenities={hotel.amenities} maxVisible={6} />
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             </Link>
@@ -97,6 +119,24 @@ export function HotelsSection({ config }: Props) {
                                         <div className="flex text-secondary">{'★'.repeat(hotel.stars)}</div>
                                         <span className="text-sm font-semibold text-secondary">{hotel.rating}</span>
                                     </div>
+                                    {(() => {
+                                        const catLabels = getHotelCategoryLabels(hotel.category_assignments, categoryTypes, lang, 3);
+                                        if (catLabels.length === 0) return null;
+                                        return (
+                                            <div className="mt-2 flex flex-wrap gap-1.5">
+                                                {catLabels.map((label) => (
+                                                    <span key={label} className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                                        {label}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
+                                    {hotel.amenities?.length > 0 && (
+                                        <div className="mt-2.5">
+                                            <AmenityIcons amenities={hotel.amenities} maxVisible={6} />
+                                        </div>
+                                    )}
                                 </div>
                             </motion.div>
                         </Link>

@@ -11,7 +11,7 @@ export interface CategoryType {
     values: CategoryTypeValue[];
 }
 
-export type FilterStyle = 'pills' | 'checkbox' | 'dropdown' | 'slider' | 'radio';
+export type FilterStyle = 'checkbox';
 
 export interface CategoryTypeValue {
     id: number;
@@ -78,6 +78,16 @@ export async function deleteCategoryType(
 }> {
     const url = `/api/admin/category-types/${id}${force ? '?force=true' : ''}`;
     return await apiFetch(url, { method: 'DELETE' });
+}
+
+export async function reorderCategoryTypes(
+    ids: number[],
+    entityType: string,
+): Promise<{ message: string }> {
+    return await apiFetch('/api/admin/category-types/reorder', {
+        method: 'POST',
+        body: JSON.stringify({ ids, entity_type: entityType }),
+    });
 }
 
 // --- Category Values ---

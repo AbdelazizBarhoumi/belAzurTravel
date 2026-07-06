@@ -1,9 +1,5 @@
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { CheckboxFilter } from './CheckboxFilter';
-import { DropdownFilter } from './DropdownFilter';
-import { PillFilter } from './PillFilter';
-import { RadioFilter } from './RadioFilter';
-import { SliderFilter } from './SliderFilter';
 
 interface FilterRendererProps {
     categoryType: PublicCategoryType;
@@ -11,6 +7,7 @@ interface FilterRendererProps {
     onChange: (values: string[]) => void;
     lang: string;
     preview?: boolean;
+    items?: any[];
 }
 
 export function FilterRenderer({
@@ -19,32 +16,20 @@ export function FilterRenderer({
     onChange,
     lang,
     preview = false,
+    items = [],
 }: FilterRendererProps) {
     if (!categoryType.values || categoryType.values.length === 0) {
         return null;
     }
 
-    const style = categoryType.filter_style || 'pills';
-
-    const commonProps = {
-        categoryType,
-        selectedValues,
-        onChange,
-        lang,
-        preview,
-    };
-
-    switch (style) {
-        case 'checkbox':
-            return <CheckboxFilter {...commonProps} />;
-        case 'dropdown':
-            return <DropdownFilter {...commonProps} />;
-        case 'slider':
-            return <SliderFilter {...commonProps} />;
-        case 'radio':
-            return <RadioFilter {...commonProps} />;
-        case 'pills':
-        default:
-            return <PillFilter {...commonProps} />;
-    }
+    return (
+        <CheckboxFilter
+            categoryType={categoryType}
+            selectedValues={selectedValues}
+            onChange={onChange}
+            lang={lang}
+            preview={preview}
+            items={items}
+        />
+    );
 }

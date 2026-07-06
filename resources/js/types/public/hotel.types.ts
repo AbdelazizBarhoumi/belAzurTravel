@@ -19,7 +19,7 @@ export interface HotelItem {
     reviews: number;
     image: string;
     tags: string[];
-    amenities: string[];
+    amenities: Array<{ name: Record<string, string>; icon: string }>;
     category_assignments?: Record<string, string>;
     // Filter fields
     htel_recommande?: boolean;

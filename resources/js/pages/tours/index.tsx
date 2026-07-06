@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { Clock, Users, MapPin, Star } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import type { DateRange } from 'react-day-picker';
 import { TourFilters } from '@/components/filters/TourFilters';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { FilterSidebar } from '@/components/lists/FilterSidebar';
@@ -9,11 +10,11 @@ import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyStat
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/DatePicker';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useTours } from '@/hooks/usePublicData';
+import { useTours, useCategoryTypesPublic } from '@/hooks/usePublicData';
 import { TOUR_FILTER_KEYS } from '@/data/tourFilters';
 
 import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
@@ -31,19 +32,30 @@ const Tours = () => {
     const initialToDate = params.get('to') || '';
 
     const { data: tours = [] } = useTours();
+    const { data: categoryTypes = [] } = useCategoryTypesPublic('tours');
 
     const [searchQuery, setSearchQuery] = useState(initialSearch);
-    const [selectedLocation, setSelectedLocation] = useState(ALL);
-    const [selectedDuration, setSelectedDuration] = useState(initialDuration);
-    const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [travelers, setTravelers] = useState(
         Number.isFinite(initialGuests) && initialGuests > 0 ? initialGuests : 2,
     );
-    const [fromDate, setFromDate] = useState(initialFromDate);
-    const [toDate, setToDate] = useState(initialToDate);
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: initialFromDate ? new Date(initialFromDate) : undefined,
+        to: initialToDate ? new Date(initialToDate) : undefined,
+    });
 
-    // Tour filter state
-    const [tourFilters, setTourFilters] = useState<Record<string, boolean>>({});
+    const maxPrice = tours.length > 0 ? Math.max(...tours.map((t) => t.price)) : 1000;
+    const minPrice = tours.length > 0 ? Math.min(...tours.map((t) => t.price)) : 0;
+
+    // Category type filters
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>({});
+    const [tourPriceRange, setTourPriceRange] = useState<[number, number]>([0, 1000]);
+
+    // Sync price range when data loads
+    useEffect(() => {
+        if (tours.length > 0) {
+            setTourPriceRange([minPrice, maxPrice]);
+        }
+    }, [tours.length, minPrice, maxPrice]);
 
     const filteredTours = useMemo(
         () =>
@@ -54,65 +66,45 @@ const Tours = () => {
                     localizeText(tour.duration, lang),
                     localizeText(tour.description, lang),
                 ]);
-                const matchesLocation =
-                    selectedLocation === ALL ||
-                    localizeText(tour.location, lang) === selectedLocation;
-                const matchesDuration =
-                    selectedDuration === ALL ||
-                    matchesFilterValue(selectedDuration, [tour.duration]);
-                const matchesCategory =
-                    selectedCategory === ALL ||
-                    (tour.category_key ?? '').toLowerCase() ===
-                        selectedCategory;
+                const matchesPrice =
+                    tour.price >= tourPriceRange[0] &&
+                    tour.price <= tourPriceRange[1];
                 const matchesTravelers = tour.maxGroup >= travelers;
-                // Check tour filter fields (OR logic)
-                const activeFilterKeys = TOUR_FILTER_KEYS.filter(
-                    (key) => tourFilters[key]
-                );
-                const matchesTourFilters =
-                    activeFilterKeys.length === 0 ||
-                    activeFilterKeys.some((key) => (tour as any)[key] === true);
+                // Check category type filters (OR logic)
+                const assignments = tour.category_assignments;
+                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
+                    activeTypeFilters.some(([typeKey, values]) =>
+                        assignments && values.includes(assignments[typeKey])
+                    );
 
                 return (
                     matchesSearch &&
-                    matchesLocation &&
-                    matchesDuration &&
-                    matchesCategory &&
+                    matchesPrice &&
                     matchesTravelers &&
-                    matchesTourFilters
+                    matchesCategoryTypes
                 );
             }),
         [
             tours,
             lang,
             searchQuery,
-            selectedLocation,
-            selectedDuration,
-            selectedCategory,
+            tourPriceRange,
             travelers,
-            tourFilters,
+            categoryTypeFilters,
         ],
     );
 
+    const hasActiveCategoryTypeFilters = Object.values(categoryTypeFilters).some((v) => v.length > 0);
     const hasActiveFilters =
         searchQuery.trim().length > 0 ||
-        selectedLocation !== ALL ||
-        selectedDuration !== ALL ||
-        selectedCategory !== ALL ||
-        travelers !== 2 ||
-        fromDate !== '' ||
-        toDate !== '' ||
-        Object.values(tourFilters).some((v) => v);
+        hasActiveCategoryTypeFilters;
 
     const clearFilters = () => {
         setSearchQuery('');
-        setSelectedLocation(ALL);
-        setSelectedDuration(ALL);
-        setSelectedCategory(ALL);
-        setTravelers(2);
-        setFromDate('');
-        setToDate('');
-        setTourFilters({});
+        setCategoryTypeFilters({});
+        setTourPriceRange([minPrice, maxPrice]);
+        setDateRange(undefined);
     };
 
     return (
@@ -156,46 +148,12 @@ const Tours = () => {
                         onClearFilters={clearFilters}
                         searchPlaceholder={t('common.search')}
                         className="mb-8"
+                        inline
                     >
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            <label className="grid gap-2 text-sm">
-                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                                    {t('search.fields.dates')}
-                                </span>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <DatePicker
-                                        date={fromDate ? new Date(fromDate) : undefined}
-                                        onDateChange={(date) =>
-                                            setFromDate(date ? date.toISOString().split('T')[0] : '')
-                                        }
-                                        placeholder={t('search.placeholders.checkIn')}
-                                    />
-                                    <DatePicker
-                                        date={toDate ? new Date(toDate) : undefined}
-                                        onDateChange={(date) =>
-                                            setToDate(date ? date.toISOString().split('T')[0] : '')
-                                        }
-                                        placeholder={t('search.placeholders.checkOut')}
-                                    />
-                                </div>
-                            </label>
-
-                            <label className="grid gap-2 text-sm">
-                                <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                                    {t('search.fields.travelers')}
-                                </span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    value={travelers}
-                                    onChange={(event) =>
-                                        setTravelers(Math.max(1, Number(event.target.value) || 1))
-                                    }
-                                    className="h-12 rounded-2xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm"
-                                    aria-label={t('search.fields.travelers')}
-                                />
-                            </label>
-                        </div>
+                        <DateRangePicker
+                            value={dateRange}
+                            onChange={setDateRange}
+                        />
                     </ListFilterBar>
 
                     <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -207,12 +165,19 @@ const Tours = () => {
                             dir={dir}
                         >
                             <TourFilters
-                                selectedFilters={tourFilters}
-                                onFilterChange={(key, value) =>
-                                    setTourFilters((prev) => ({ ...prev, [key]: value }))
-                                }
-                                tours={tours}
                                 lang={lang}
+                                categoryTypes={categoryTypes}
+                                categoryTypeFilters={categoryTypeFilters}
+                                onCategoryTypeChange={(typeKey, values) =>
+                                    setCategoryTypeFilters((prev) => ({ ...prev, [typeKey]: values }))
+                                }
+                                priceRange={tourPriceRange}
+                                onPriceChange={setTourPriceRange}
+                                maxPrice={maxPrice}
+                                minPrice={minPrice}
+                                tours={tours}
+                                travelers={travelers}
+                                onTravelersChange={setTravelers}
                             />
                         </FilterSidebar>
 

@@ -25,6 +25,7 @@ class AdminTravelController extends Controller
     {
         $data = Cache::remember('admin.entity.travels', now()->addMinutes(5), function () {
             return Travel::query()
+                ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                 ->oldest('id')
                 ->get()
                 ->map(fn (Model $item) => $this->adminPayload($item))
