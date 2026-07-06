@@ -5,21 +5,23 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import AdminSiteSettingsLandingSections from '@/pages/admin/site-settings/AdminSiteSettingsLandingSections';
 
+const mockLandingSectionsSettings = {
+    content: {
+        landing_sections: {
+            order: ['blog'],
+            sections: {
+                blog: { enabled: true, style: 'carousel' },
+                tours: { enabled: false, style: 'grid' },
+            },
+        },
+    },
+    landingVideo: null,
+};
+
 vi.mock('@/hooks/useSiteSettings', () => ({
     useSiteSettings: () => ({
         loading: false,
-        settings: {
-            content: {
-                landing_sections: {
-                    order: ['blog'],
-                    sections: {
-                        blog: { enabled: true, style: 'carousel' },
-                        tours: { enabled: false, style: 'grid' },
-                    },
-                },
-            },
-            landingVideo: null,
-        },
+        settings: mockLandingSectionsSettings,
     }),
 }));
 
