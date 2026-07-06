@@ -1,5 +1,6 @@
 import type { LandingSectionConfig } from '@/api/siteSettings.api';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { normalizeLandingSections } from '@/lib/landingSections';
 import { BlogSection } from './landing/BlogSection';
 import { CarsSection } from './landing/CarsSection';
 import { DealsSection } from './landing/DealsSection';
@@ -24,19 +25,13 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType<{ config: LandingSe
     location: LocationSection,
 };
 
-const DEFAULT_ORDER = ['destinations', 'hotels', 'organized', 'tours', 'cars', 'flights', 'events', 'deals', 'blog', 'location'];
-
 export function LandingSections() {
     const { settings } = useSiteSettings();
     const landingSections = settings.content?.landing_sections;
 
-    const order = landingSections?.order ?? DEFAULT_ORDER;
-    const storedSections = landingSections?.sections ?? {};
-
-    const sections: Record<string, LandingSectionConfig> = {};
-    for (const key of order) {
-        sections[key] = storedSections[key] ?? { enabled: true, style: 'auto' };
-    }
+    const normalized = normalizeLandingSections(landingSections);
+    const order = normalized.order;
+    const sections = normalized.sections;
 
     return (
         <>

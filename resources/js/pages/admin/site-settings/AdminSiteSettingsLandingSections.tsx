@@ -22,22 +22,13 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import type { LandingSectionConfig, LandingSections, PageHeroSlide } from '@/api/siteSettings.api';
-
-const SECTION_META: Record<string, { labelKey: string; styles: string[] }> = {
-    destinations: { labelKey: 'admin.section.destinations', styles: ['carousel', 'cards', 'grid'] },
-    hotels: { labelKey: 'admin.section.hotels', styles: ['carousel', 'cards', 'grid'] },
-    organized: { labelKey: 'admin.section.organized', styles: ['carousel', 'cards', 'grid'] },
-    tours: { labelKey: 'admin.section.tours', styles: ['carousel', 'cards', 'grid'] },
-    cars: { labelKey: 'admin.section.cars', styles: ['carousel', 'cards', 'grid'] },
-    flights: { labelKey: 'admin.section.flights', styles: ['carousel', 'cards', 'grid'] },
-    events: { labelKey: 'admin.section.events', styles: ['carousel', 'cards', 'grid'] },
-    deals: { labelKey: 'admin.section.deals', styles: ['carousel', 'cards', 'grid'] },
-    blog: { labelKey: 'admin.section.blog', styles: ['carousel', 'cards', 'grid'] },
-    location: { labelKey: 'admin.section.location', styles: ['default'] },
-};
-
-const DEFAULT_ORDER = ['destinations', 'hotels', 'organized', 'tours', 'cars', 'flights', 'events', 'deals', 'blog', 'location'];
+import type { LandingSectionConfig, PageHeroSlide } from '@/api/siteSettings.api';
+import {
+    LANDING_SECTION_META as SECTION_META,
+    LANDING_SECTION_ORDER,
+    buildLandingSectionDefaults,
+    normalizeLandingSections,
+} from '@/lib/landingSections';
 
 function SortableSection({
     sectionKey,
@@ -132,7 +123,7 @@ export default function AdminSiteSettingsLandingSections() {
     const { t } = useLanguage();
 
     // Sections state
-    const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
+    const [order, setOrder] = useState<string[]>([...LANDING_SECTION_ORDER]);
     const [sections, setSections] = useState<Record<string, LandingSectionConfig>>({});
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -152,14 +143,12 @@ export default function AdminSiteSettingsLandingSections() {
         // Load sections
         const existing = settings.content?.landing_sections;
         if (existing) {
-            setOrder(existing.order.length > 0 ? existing.order : DEFAULT_ORDER);
-            setSections(existing.sections ?? {});
+            const normalized = normalizeLandingSections(existing);
+            setOrder(normalized.order);
+            setSections(normalized.sections);
         } else {
-            const defaults: Record<string, LandingSectionConfig> = {};
-            DEFAULT_ORDER.forEach((key) => {
-                defaults[key] = { enabled: true, style: SECTION_META[key]?.styles[0] ?? 'grid' };
-            });
-            setSections(defaults);
+            setOrder([...LANDING_SECTION_ORDER]);
+            setSections(buildLandingSectionDefaults());
         }
 
         // Load video
@@ -221,6 +210,7 @@ export default function AdminSiteSettingsLandingSections() {
 
             // Build the full content to save in one shot (hero + sections + video)
             const filteredSlides = heroSlides.filter((s) => s.url);
+            const normalizedLandingSections = normalizeLandingSections({ order, sections });
             const content: Record<string, any> = {
                 ...(settings.content ?? {}),
                 page_heroes: {
@@ -230,7 +220,7 @@ export default function AdminSiteSettingsLandingSections() {
                         interval: heroInterval,
                     },
                 },
-                landing_sections: { order, sections },
+                landing_sections: normalizedLandingSections,
                 landing_video: savedVideoUrl ? { url: savedVideoUrl } : null,
             };
 
