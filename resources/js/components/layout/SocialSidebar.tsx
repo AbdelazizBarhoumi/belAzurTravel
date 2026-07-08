@@ -6,6 +6,7 @@ import {
     LinkedinIcon,
     YoutubeIcon,
     TiktokIcon,
+    WhatsAppIcon,
 } from '@/components/ui/SocialIcons';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
@@ -16,6 +17,7 @@ const brandIcons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElemen
     linkedin: LinkedinIcon,
     youtube: YoutubeIcon,
     tiktok: TiktokIcon,
+    whatsapp: WhatsAppIcon,
 };
 
 export function SocialSidebar() {

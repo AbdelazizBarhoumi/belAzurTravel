@@ -83,7 +83,7 @@ function FlightsContent() {
 
     const filteredFlights = useMemo(
         () =>
-            flights.filter((flight) => {
+            (Array.isArray(flights) ? flights : []).filter((flight) => {
                 const fromDateTime = fromDate ? new Date(fromDate) : null;
                 const toDateTime = toDate ? new Date(toDate) : null;
                 const matchesSearch = matchesSearchText(searchQuery, [

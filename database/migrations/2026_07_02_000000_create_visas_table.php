@@ -13,7 +13,6 @@ return new class extends Migration
             $table->string('code', 10)->unique();
             $table->json('name');
             $table->string('flag', 10);
-            $table->json('region');
             $table->json('processing');
             $table->unsignedInteger('price');
             $table->boolean('is_active')->default(true);

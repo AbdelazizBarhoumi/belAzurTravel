@@ -45,11 +45,38 @@ export default function Hotels() {
     const { data: hotels = [] } = useHotels();
     const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
 
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+
     const maxPrice = hotels.length > 0 ? Math.max(...hotels.map((h) => h.price)) : 1000;
     const minPrice = hotels.length > 0 ? Math.min(...hotels.map((h) => h.price)) : 0;
 
     // Category type filters state
-    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>({});
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+
+    // Sync state with URL params when they change (e.g. navbar subcategory links)
+    useEffect(() => {
+        setSearchQuery(params.get('q') || params.get('destination') || '');
+    }, [params]);
+    useEffect(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        setCategoryTypeFilters(filters);
+    }, [params]);
     const [hotelPriceRange, setHotelPriceRange] = useState<[number, number]>([0, 1000]);
 
     // Sync price range when data loads
@@ -113,7 +140,7 @@ export default function Hotels() {
     };
 
     return (
-        <div key={params.toString()} className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background">
             <PageHeroCarousel pageKey="hotels" />
             <main className="pb-16 pt-8">
                 <div className="container mx-auto px-4">

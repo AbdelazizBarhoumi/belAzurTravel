@@ -12,6 +12,7 @@ import {
     LinkedinIcon,
     YoutubeIcon,
     TiktokIcon,
+    WhatsAppIcon,
 } from '@/components/ui/SocialIcons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -103,6 +104,7 @@ export default function Contact() {
             linkedin: LinkedinIcon,
             youtube: YoutubeIcon,
             tiktok: TiktokIcon,
+            whatsapp: WhatsAppIcon,
         };
         return brandIcons[label.toLowerCase()] || Link2;
     };

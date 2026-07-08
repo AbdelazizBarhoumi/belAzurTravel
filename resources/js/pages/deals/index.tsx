@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { CalendarClock, Tag } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
@@ -44,6 +44,22 @@ export default function Deals() {
     const [activeCategory, setActiveCategory] = useState<'all' | string>(initialCategory);
     const [searchQuery, setSearchQuery] = useState(initialSearch);
 
+    // Sync state with URL params when they change (e.g. navbar subcategory links)
+    useEffect(() => {
+        setSearchQuery(params.get('q') || '');
+        setActiveCategory(params.get('cat')?.toLowerCase() || ALL);
+    }, [params]);
+    useEffect(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        setCategoryTypeFilters(filters);
+    }, [params]);
+
     const categories = useMemo(
         () => [
             { value: 'all', label: t('common.all') },
@@ -57,7 +73,7 @@ export default function Deals() {
 
     const filteredDeals = useMemo(
         () =>
-            deals.filter((deal) => {
+            (Array.isArray(deals) ? deals : []).filter((deal) => {
                 const matchesSearch = matchesSearchText(searchQuery, [
                     localizeText(deal.title, lang),
                     localizeText(deal.description, lang),
@@ -91,7 +107,7 @@ export default function Deals() {
     };
 
     return (
-        <div key={params.toString()} className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background">
             <PageHeroCarousel pageKey="deals" />
             <main className="pb-16 pt-8">
                 <div className="container mx-auto px-4">

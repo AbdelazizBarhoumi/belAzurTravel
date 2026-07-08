@@ -156,6 +156,14 @@ class AdminCategoryController extends Controller
         if ($type) {
             Cache::forget($this->cacheKey($type));
         }
+
+        // Also clear category types caches (both systems coexist)
+        Cache::forget('category-types:all');
+        Cache::forget('category-types-nested:all');
+        if ($type) {
+            Cache::forget("category-types:{$type}");
+            Cache::forget("category-types-nested:{$type}");
+        }
     }
 
     private function clearEntityCaches(string $type): void

@@ -13,6 +13,7 @@ import {
     LinkedinWhiteIcon,
     YoutubeWhiteIcon,
     TiktokWhiteIcon,
+    WhatsAppWhiteIcon,
 } from '@/components/ui/SocialIconsWhite';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,6 +41,7 @@ const SOCIAL_ICONS: Record<string, React.ComponentType<React.SVGProps<SVGSVGElem
     linkedin: LinkedinWhiteIcon,
     youtube: YoutubeWhiteIcon,
     tiktok: TiktokWhiteIcon,
+    whatsapp: WhatsAppWhiteIcon,
 };
 
 function useHoverDelay(delay = 250) {
@@ -139,12 +141,14 @@ function MobileNestedItems({
     entry,
     onClose,
     resolveDropdownItemLabel,
+    lang,
     depth = 0,
 }: {
     items: DropdownItemConfig[];
     entry: HeaderEntry;
     onClose: () => void;
     resolveDropdownItemLabel: (entry: HeaderEntry, item: DropdownItemConfig) => string;
+    lang: string;
     depth?: number;
 }) {
     return (
@@ -165,6 +169,7 @@ function MobileNestedItems({
                                     entry={entry}
                                     onClose={onClose}
                                     resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                    lang={lang}
                                     depth={depth + 1}
                                 />
                             </div>
@@ -175,7 +180,7 @@ function MobileNestedItems({
                 return (
                     <Link
                         key={idx}
-                        to={buildItemHref(entry.pageKey, item, 'en')}
+                        to={buildItemHref(entry.pageKey, item, lang as 'en' | 'fr' | 'ar')}
                         onClick={onClose}
                         className="py-1 text-sm text-muted-foreground"
                     >
@@ -499,6 +504,7 @@ function MobileGroupSection({
                                         entry={{ pageKey: groupPage.pageKey, label: groupPage.label } as HeaderEntry}
                                         onClose={onClose}
                                         resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                        lang={lang}
                                     />
                                 </div>
                             </details>
@@ -602,7 +608,8 @@ export function Navbar() {
         navSettings = settings.content.nav.settings;
     }
 
-    const enabled = navSettings.header.filter(
+    const headerEntries = Array.isArray(navSettings.header) ? navSettings.header : [];
+    const enabled = headerEntries.filter(
         (h) => h.enabled && getPage(h.pageKey),
     );
     const topbarEntries = enabled.filter((e) => e.placement === 'topbar');
@@ -979,6 +986,7 @@ export function Navbar() {
                                                                             setHoveredPath(null);
                                                                         }}
                                                                         resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                                        lang={lang}
                                                                     />
                                                                 </div>
                                                             )}
@@ -1115,6 +1123,7 @@ export function Navbar() {
                                                     entry={entry}
                                                     onClose={() => setOpen(false)}
                                                     resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                    lang={lang}
                                                 />
                                             </div>
                                         </details>
@@ -1199,6 +1208,7 @@ export function Navbar() {
                                                                 entry={entry}
                                                                 onClose={() => setOpen(false)}
                                                                 resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                                lang={lang}
                                                             />
                                                         </div>
                                                     </details>

@@ -34,6 +34,17 @@ const Tours = () => {
     const { data: tours = [] } = useTours();
     const { data: categoryTypes = [] } = useCategoryTypesPublic('tours');
 
+    const initialCategoryTypeFilters = useMemo(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        return filters;
+    }, [params]);
+
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [travelers, setTravelers] = useState(
         Number.isFinite(initialGuests) && initialGuests > 0 ? initialGuests : 2,
@@ -47,7 +58,23 @@ const Tours = () => {
     const minPrice = tours.length > 0 ? Math.min(...tours.map((t) => t.price)) : 0;
 
     // Category type filters
-    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>({});
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+
+    // Sync state with URL params when they change (e.g. navbar subcategory links)
+    useEffect(() => {
+        setSearchQuery(params.get('q') || params.get('destination') || '');
+    }, [params]);
+    useEffect(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        setCategoryTypeFilters(filters);
+    }, [params]);
     const [tourPriceRange, setTourPriceRange] = useState<[number, number]>([0, 1000]);
 
     // Sync price range when data loads
@@ -59,7 +86,7 @@ const Tours = () => {
 
     const filteredTours = useMemo(
         () =>
-            tours.filter((tour) => {
+            (Array.isArray(tours) ? tours : []).filter((tour) => {
                 const matchesSearch = matchesSearchText(searchQuery, [
                     localizeText(tour.name, lang),
                     localizeText(tour.location, lang),
@@ -109,7 +136,6 @@ const Tours = () => {
 
     return (
         <div
-            key={params.toString()}
             className="flex min-h-screen flex-col bg-background"
         >
             <PageHeroCarousel pageKey="tours" />

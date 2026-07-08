@@ -7,18 +7,14 @@ import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useHotels, useCategoryTypesPublic } from '@/hooks/usePublicData';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
-import { isPageEnabled } from '@/lib/pageVisibility';
 
 interface Props { config: LandingSectionConfig; }
 
 export function HotelsSection({ config }: Props) {
     const { lang, t } = useLanguage();
-    const { settings } = useSiteSettings();
     const { data: hotels = [] } = useHotels();
     const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
-    if (!isPageEnabled('hotels', settings.content?.nav?.settings)) return null;
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('home.featuredHotels');
     const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredHotelsDesc');

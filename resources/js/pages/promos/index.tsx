@@ -38,7 +38,7 @@ function PromosContent() {
 
     const filteredPromos = useMemo(
         () =>
-            promos.filter((promo) => {
+            (Array.isArray(promos) ? promos : []).filter((promo) => {
                 const matchesSearch = matchesSearchText(searchQuery, [
                     promo.code,
                     localizeText(promo.title, lang),

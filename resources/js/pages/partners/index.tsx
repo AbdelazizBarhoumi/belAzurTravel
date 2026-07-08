@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { localizeText } from '@/api/entities.api';
 import { apiFetch } from '@/api/http';
 import { fetchPartners, type PartnerItem } from '@/api/partners.api';
@@ -57,6 +57,22 @@ const Partners = () => {
     }, [params]);
     const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
+    // Sync state with URL params when they change (e.g. navbar subcategory links)
+    useEffect(() => {
+        setQ(params.get('q') || '');
+        setCat(params.get('cat') || 'All');
+    }, [params]);
+    useEffect(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        setCategoryTypeFilters(filters);
+    }, [params]);
+
     const categories = useMemo(() => {
         const keys = new Set(partners.map((p) => p.category).filter(Boolean) as string[]);
         return ['All', ...Array.from(keys)];
@@ -69,7 +85,7 @@ const Partners = () => {
     };
 
     const filtered = useMemo(() => {
-        return partners.filter((p) => {
+        return (Array.isArray(partners) ? partners : []).filter((p) => {
             const matchesCategory = cat === 'All' || p.category === cat;
             const matchesSearch = !q || getPartnerName(p, lang).toLowerCase().includes(q.toLowerCase());
             const assignments = (p as unknown as Record<string, unknown>).category_assignments as Record<string, string> | undefined;
@@ -94,7 +110,7 @@ const Partners = () => {
     };
 
     return (
-        <div key={params.toString()} className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background">
             <PageHeroCarousel pageKey="home" />
             <div className="pb-16 pt-8">
                 <div className="container mx-auto px-4">

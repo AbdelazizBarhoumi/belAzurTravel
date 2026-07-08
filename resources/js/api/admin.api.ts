@@ -33,7 +33,7 @@ export function listAdminEntities<T = AdminRow>(type: AdminEntityType) {
                 return payload.data as T[];
             }
         }
-        return res as T[];
+        return Array.isArray(res) ? res as T[] : [];
     });
 }
 

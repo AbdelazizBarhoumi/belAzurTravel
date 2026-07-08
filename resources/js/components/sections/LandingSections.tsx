@@ -11,6 +11,7 @@ import { HotelsSection } from './landing/HotelsSection';
 import { LocationSection } from './landing/LocationSection';
 import { OrganizedSection } from './landing/OrganizedSection';
 import { ToursSection } from './landing/ToursSection';
+import { VisaSection } from './landing/VisaSection';
 
 const SECTION_COMPONENTS: Record<string, React.ComponentType<{ config: LandingSectionConfig }>> = {
     destinations: DestinationsSection,
@@ -22,6 +23,7 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType<{ config: LandingSe
     events: EventsSection,
     deals: DealsSection,
     blog: BlogSection,
+    visas: VisaSection,
     location: LocationSection,
 };
 

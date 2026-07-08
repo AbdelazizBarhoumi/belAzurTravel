@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Users, Fuel, Settings2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
@@ -60,6 +60,22 @@ function CarsContent() {
     const [selectedTransmission, setSelectedTransmission] = useState(ALL);
     const [selectedSeats, setSelectedSeats] = useState(ALL);
 
+    // Sync state with URL params when they change (e.g. navbar subcategory links)
+    useEffect(() => {
+        setSearchQuery(params.get('q') || '');
+        setSelectedCategory(params.get('type')?.toLowerCase() || ALL);
+    }, [params]);
+    useEffect(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        setCategoryTypeFilters(filters);
+    }, [params]);
+
     const categoryOptions = useMemo(
         () => [
             { value: ALL, label: t('common.all') },
@@ -95,7 +111,7 @@ function CarsContent() {
 
     const filteredCars = useMemo(
         () =>
-            cars.filter((car) => {
+            (Array.isArray(cars) ? cars : []).filter((car) => {
                 const matchesSearch = matchesSearchText(searchQuery, [
                     localizeText(car.name, lang),
                     localizeText(car.category, lang),

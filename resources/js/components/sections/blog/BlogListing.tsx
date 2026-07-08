@@ -83,7 +83,7 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
 
     const filteredPosts = useMemo(
         () =>
-            posts.filter((post) => {
+            (Array.isArray(posts) ? posts : []).filter((post) => {
                 const matchesSearch = matchesSearchText(searchQuery, [
                     localize(post.title, lang),
                     localize(post.excerpt, lang),

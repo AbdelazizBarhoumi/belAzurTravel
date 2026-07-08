@@ -69,7 +69,7 @@ export default function AdminSiteSettingsVideo() {
             <Card className="space-y-4 p-4">
                 {videoUrl && (
                     <div className="space-y-2">
-                        <video src={videoUrl} controls className="max-h-48 w-full rounded-lg" />
+                        <video src={videoUrl} controls className="max-h-48 w-full object-contain rounded-lg" />
                         <Button
                             size="sm"
                             variant="destructive"

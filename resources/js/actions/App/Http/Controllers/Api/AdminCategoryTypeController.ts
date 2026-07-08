@@ -134,7 +134,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Api\AdminCategoryTypeController::reorder
- * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:281
+ * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:296
  * @route '/api/admin/category-types/reorder'
  */
 export const reorder = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -149,7 +149,7 @@ reorder.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCategoryTypeController::reorder
- * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:281
+ * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:296
  * @route '/api/admin/category-types/reorder'
  */
 reorder.url = (options?: RouteQueryOptions) => {
@@ -158,7 +158,7 @@ reorder.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminCategoryTypeController::reorder
- * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:281
+ * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:296
  * @route '/api/admin/category-types/reorder'
  */
 reorder.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -168,7 +168,7 @@ reorder.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminCategoryTypeController::reorder
- * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:281
+ * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:296
  * @route '/api/admin/category-types/reorder'
  */
     const reorderForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -178,7 +178,7 @@ reorder.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminCategoryTypeController::reorder
- * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:281
+ * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:296
  * @route '/api/admin/category-types/reorder'
  */
         reorderForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

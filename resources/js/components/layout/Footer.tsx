@@ -11,6 +11,7 @@ import {
     LinkedinIcon,
     YoutubeIcon,
     TiktokIcon,
+    WhatsAppIcon,
 } from '@/components/ui/SocialIcons';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -54,6 +55,7 @@ export function Footer() {
             linkedin: LinkedinIcon,
             youtube: YoutubeIcon,
             tiktok: TiktokIcon,
+            whatsapp: WhatsAppIcon,
         };
         return brandIcons[label.toLowerCase()] || Link2;
     };

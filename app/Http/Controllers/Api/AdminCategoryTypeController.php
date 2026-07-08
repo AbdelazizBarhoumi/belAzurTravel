@@ -234,6 +234,21 @@ class AdminCategoryTypeController extends Controller
         if ($entityType) {
             Cache::forget("category-types-nested:{$entityType}");
         }
+
+        // Admin entity caches (so add/edit modals reflect category type changes)
+        $entityCacheMap = [
+            'hotels' => 'admin.entity.hotels',
+            'tours' => 'admin.entity.tours',
+            'travels' => 'admin.entity.travels',
+            'events' => 'admin.entity.events',
+            'deals' => 'admin.entity.deals',
+            'destinations' => 'admin.entity.destinations',
+            'cars' => 'admin.entity.cars',
+            'blog' => 'admin.entity.blog-posts',
+        ];
+        foreach ($entityCacheMap as $cacheKey) {
+            Cache::forget($cacheKey);
+        }
     }
 
     private function getAffectedEntities(CategoryType $categoryType): array

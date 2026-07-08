@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AdminTravelController;
 use App\Http\Controllers\Api\AdminVisaController;
 use App\Http\Controllers\Api\AuthUserController;
+use App\Http\Controllers\Api\VisaApplicationController;
 use App\Http\Controllers\Api\VisaController;
 use App\Http\Controllers\Api\BlogPostController;
 use App\Http\Controllers\Api\BookingController;
@@ -49,6 +50,7 @@ Route::get('/auth/user', [AuthUserController::class, 'show']);
 Route::post('/interactions/notify', [InteractionController::class, 'notify']);
 
 Route::get('/visas', [VisaController::class, 'index']);
+Route::post('/visa-applications', [VisaApplicationController::class, 'store']);
 Route::get('/categories', [AdminCategoryController::class, 'index']);
 Route::get('/categories/types', [AdminCategoryController::class, 'typesByEntity']);
 Route::get('/gallery', [GalleryController::class, 'index'])

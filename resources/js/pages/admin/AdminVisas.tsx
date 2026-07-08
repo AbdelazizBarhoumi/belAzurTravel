@@ -1,27 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Edit, Plus, Trash2, Image as ImageIcon, Save, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { apiFetch } from '@/api/http';
 import {
     deleteAdminEntity,
     listAdminEntities,
     saveAdminEntity,
 } from '@/api/admin.api';
+import type { PageHeroSlide } from '@/api/siteSettings.api';
+import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityFormDialog, type SectionDef } from '@/components/forms/EntityFormDialog';
 import LangBadge from '@/components/forms/LangBadge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Switch } from '@/components/ui/switch';
+import { Country } from 'country-state-city';
+import countries from 'i18n-iso-countries';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { cn } from '@/lib/utils';
 import { LocationSelect } from '@/components/ui/LocationSelect';
 import { countryCodeToFlag } from '@/lib/flagEmoji';
-import { VISA_REGIONS, getLocalizedLabel } from '@/data/adminSelectOptions';
 
 type VisaLang = 'en' | 'fr' | 'ar';
 
@@ -33,10 +37,6 @@ interface AdminVisa {
     name_fr: string;
     name_ar: string;
     flag: string;
-    region: string;
-    region_en: string;
-    region_fr: string;
-    region_ar: string;
     processing: string;
     processing_en: string;
     processing_fr: string;
@@ -76,10 +76,49 @@ const AdminVisas = () => {
     useAdminGuard();
     const queryClient = useQueryClient();
     const { t, lang, dir } = useLanguage();
+    const { settings: siteSettings } = useSiteSettings();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminVisa | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminVisa | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Hero images state
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.visas;
+    const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
+    const [heroInterval, setHeroInterval] = useState(6000);
+    const [isHeroSaving, setIsHeroSaving] = useState(false);
+
+    useEffect(() => {
+        setHeroSlides(existingHeroConfig?.images ?? []);
+        setHeroInterval(existingHeroConfig?.interval ?? 6000);
+    }, [existingHeroConfig]);
+
+    const saveHeroImages = useCallback(async () => {
+        setIsHeroSaving(true);
+        try {
+            const filteredSlides = heroSlides.filter((s) => s.url);
+            const content = {
+                ...(siteSettings?.content ?? {}),
+                page_heroes: {
+                    ...(siteSettings?.content?.page_heroes ?? {}),
+                    visas: {
+                        images: filteredSlides,
+                        interval: heroInterval,
+                    },
+                },
+            };
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            toast.error(t('admin.settings.saveError'));
+        } finally {
+            setIsHeroSaving(false);
+        }
+    }, [heroSlides, heroInterval, siteSettings?.content, t]);
 
     const { data: visas = [] } = useQuery({
         queryKey: ['admin', 'visas'],
@@ -102,15 +141,6 @@ const AdminVisas = () => {
     const dialogInitial = useMemo<VisaFormValues | null>(() => {
         if (!editing) return null;
 
-        const regionKey = (() => {
-            const raw = editing.region_en || editing.region || '';
-            if (VISA_REGIONS.some((r) => r.value === raw)) return raw;
-            const match = VISA_REGIONS.find(
-                (r) => r.label.en === raw || r.label.fr === raw || r.label.ar === raw,
-            );
-            return match?.value || raw;
-        })();
-
         return {
             id: editing.id,
             code: editing.code,
@@ -118,7 +148,6 @@ const AdminVisas = () => {
             name_fr: editing.name_fr,
             name_ar: editing.name_ar,
             flag: editing.flag,
-            region: regionKey,
             processing: editing.processing_en || editing.processing || '',
             price: editing.price,
             is_active: editing.is_active,
@@ -136,8 +165,6 @@ const AdminVisas = () => {
 
         if (!values.code) errs.code = t('admin.errors.required');
         if (!values.flag) errs.flag = t('admin.errors.required');
-        if (!values.region) errs.region = t('admin.errors.required');
-        if (!values.processing) errs.processing = t('admin.errors.required');
         if (!values.price || Number(values.price) < 0) errs.price = t('admin.errors.required');
 
         return errs;
@@ -151,9 +178,6 @@ const AdminVisas = () => {
             return;
         }
 
-        const regionKey = String(values.region || '').trim();
-        const regionOption = VISA_REGIONS.find((r) => r.value === regionKey);
-
         const payload: AdminVisa = {
             id: (values.id as string) || (editing?.id ?? ''),
             code: String(values.code).trim(),
@@ -162,10 +186,6 @@ const AdminVisas = () => {
             name_fr: firstNonEmpty(values.name_fr),
             name_ar: firstNonEmpty(values.name_ar),
             flag: String(values.flag).trim(),
-            region: regionOption?.label.en || regionKey,
-            region_en: regionOption?.label.en || regionKey,
-            region_fr: regionOption?.label.fr || regionKey,
-            region_ar: regionOption?.label.ar || regionKey,
             processing: firstNonEmpty(values.processing),
             processing_en: firstNonEmpty(values.processing),
             processing_fr: firstNonEmpty(values.processing),
@@ -203,7 +223,12 @@ const AdminVisas = () => {
                                 value={String(values.code ?? '')}
                                 onChange={(val) => {
                                     setField('code', val);
-                                    setField('flag', countryCodeToFlag(val));
+                                    // LocationSelect passes the English country name;
+                                    // look up its ISO code to generate the flag emoji
+                                    const match = Country.getAllCountries().find(
+                                        (c) => countries.getName(c.isoCode, 'en') === val,
+                                    );
+                                    setField('flag', countryCodeToFlag(match?.isoCode ?? val));
                                     setField('name_en', val);
                                     setField('name_fr', val);
                                     setField('name_ar', val);
@@ -255,32 +280,6 @@ const AdminVisas = () => {
                             )}
                         </div>
 
-                        <div className="space-y-2">
-                            <Label
-                                className={dialogErrors?.region ? 'text-destructive' : 'text-muted-foreground'}
-                            >
-                                {t('admin.visaForm.region')}
-                            </Label>
-                            <Select
-                                value={String(values.region ?? '')}
-                                onValueChange={(val) => setField('region', val)}
-                            >
-                                <SelectTrigger className={dialogErrors?.region ? 'border-destructive ring-1 ring-destructive' : ''}>
-                                    <SelectValue placeholder={t('admin.visaForm.regionPlaceholder')} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {VISA_REGIONS.map((region) => (
-                                        <SelectItem key={region.value} value={region.value}>
-                                            {getLocalizedLabel(region, lang as 'en' | 'fr' | 'ar')}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {dialogErrors?.region && (
-                                <p className="text-[10px] text-destructive">{dialogErrors.region}</p>
-                            )}
-                        </div>
-
                         <div className="space-y-2 md:col-span-2">
                             <Label
                                 className={dialogErrors?.processing ? 'text-destructive' : 'text-muted-foreground'}
@@ -313,7 +312,7 @@ const AdminVisas = () => {
                                 htmlFor="visa-price"
                                 className={dialogErrors?.price ? 'text-destructive' : 'text-muted-foreground'}
                             >
-                                {t('admin.visaForm.price')} (DT)
+                                {t('admin.visaForm.price')}
                             </Label>
                             <Input
                                 id="visa-price"
@@ -373,6 +372,34 @@ const AdminVisas = () => {
                 </Button>
             }
         >
+            {/* Hero Images Section */}
+            <div className="rounded-2xl border border-border bg-card p-5">
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
+                    </div>
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        disabled={isHeroSaving}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        {isHeroSaving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}{' '}
+                        {t('admin.settings.save')}
+                    </Button>
+                </div>
+                <HeroImagesManager
+                    pageKey="visas"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
+            </div>
+
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -381,7 +408,6 @@ const AdminVisas = () => {
                                 {[
                                     t('admin.visaTable.flag'),
                                     t('admin.visaTable.name'),
-                                    t('admin.visaTable.region'),
                                     t('admin.visaTable.processing'),
                                     t('admin.visaTable.price'),
                                     t('admin.visaTable.active'),
@@ -391,7 +417,7 @@ const AdminVisas = () => {
                                         key={h}
                                         className={cn(
                                             'px-4 py-3 text-xs font-semibold uppercase text-muted-foreground',
-                                            i <= 4
+                                            i <= 3
                                                 ? dir === 'rtl'
                                                     ? 'text-right'
                                                     : 'text-left'
@@ -418,13 +444,6 @@ const AdminVisas = () => {
                                             <span>{v[`${lang}_en`] || v.name}</span>
                                             <span className="ml-2 text-xs text-muted-foreground">({v.code})</span>
                                         </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {(() => {
-                                            const regionKey = v.region_en || v.region || '';
-                                            const regionOption = VISA_REGIONS.find((r) => r.value === regionKey);
-                                            return regionOption ? getLocalizedLabel(regionOption, lang as 'en' | 'fr' | 'ar') : regionKey;
-                                        })()}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
                                         {v[`${lang}_processing`] || v.processing}

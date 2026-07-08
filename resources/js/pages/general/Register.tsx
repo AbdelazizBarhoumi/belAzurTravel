@@ -81,13 +81,10 @@ const Register = () => {
                     alt="Travel landscape"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-primary/30" />
+                <div className="absolute inset-0 bg-primary/10" />
                 <div className="absolute bottom-12 left-12 right-12">
                     <p className="font-serif text-3xl font-bold leading-tight text-primary-foreground">
                         {t('auth.registerQuote')}
-                    </p>
-                    <p className="mt-3 text-sm text-primary-foreground/70">
-                        — {t('auth.registerQuoteAuthor')}
                     </p>
                 </div>
             </div>

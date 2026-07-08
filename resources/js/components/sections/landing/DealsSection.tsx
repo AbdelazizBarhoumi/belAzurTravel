@@ -6,16 +6,12 @@ import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDeals } from '@/hooks/usePublicData';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { isPageEnabled } from '@/lib/pageVisibility';
 
 interface Props { config: LandingSectionConfig; }
 
 export function DealsSection({ config }: Props) {
     const { lang, t } = useLanguage();
-    const { settings } = useSiteSettings();
     const { data: deals = [] } = useDeals();
-    if (!isPageEnabled('deals', settings.content?.nav?.settings)) return null;
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('home.featuredDeals');
     const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredDealsDesc');

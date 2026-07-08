@@ -249,6 +249,27 @@ function SortableHeaderRow({ entry, children, dragLabel }: { entry: HeaderEntry;
   );
 }
 
+/* ─── Mini Language Toggle for Dropdown Items ─── */
+function MiniLangToggle({ lang, onLanguageChange }: { lang: string; onLanguageChange: (l: 'fr' | 'en' | 'ar') => void }) {
+  return (
+    <div className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-[10px]">
+      {(['fr', 'en', 'ar'] as const).map((l) => (
+        <button
+          key={l}
+          onClick={() => onLanguageChange(l)}
+          className={`rounded px-1.5 py-0.5 font-semibold transition-colors ${
+            lang === l
+              ? 'bg-primary text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          {l === 'ar' ? 'ع' : l.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ─── Enhanced Dropdown Item Tree ─── */
 interface DropdownItemTreeProps {
   items: DropdownItemConfig[];
@@ -272,10 +293,18 @@ function DropdownItemTree({
   items, depth, parentPath, pageKey, page, categoryTypes, allCategoryValues,
   formErrors, errorPrefix, onAdd, onUpdate, onRemove, onMove, lang, t,
 }: DropdownItemTreeProps) {
+  const [localLang, setLocalLang] = useState<'fr' | 'en' | 'ar'>(lang as 'fr' | 'en' | 'ar');
+  useEffect(() => { setLocalLang(lang); }, [lang]);
+
   if (items.length === 0) return null;
 
   return (
     <div className={depth > 0 ? 'ml-6 border-l-2 border-dashed border-border/50 pl-4' : ''}>
+      {depth === 0 && (
+        <div className="flex items-center justify-start mb-2">
+          <MiniLangToggle lang={localLang} onLanguageChange={setLocalLang} />
+        </div>
+      )}
       {items.map((item, iIdx) => {
         const itemPath = [...parentPath, iIdx];
         const hasChildren = (item.children?.length ?? 0) > 0;
@@ -405,7 +434,7 @@ function DropdownItemTree({
                         <SelectContent>
                           {categoryTypes.map((ct) => (
                             <SelectItem key={ct.key} value={ct.key}>
-                              {ct.label[lang] ?? ct.label.en ?? ct.key}
+                              {ct.label[localLang] ?? ct.label.en ?? ct.key}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -439,15 +468,15 @@ function DropdownItemTree({
                     <div>
                       <Label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
                         <Type className="h-3 w-3" />
-                        {t('admin_settings_label')} ({lang.toUpperCase()})
+                        {t('admin_settings_label')} ({localLang.toUpperCase()})
                       </Label>
                       <Input
-                        value={(item as any).label?.[lang] ?? ''}
+                        value={(item as any).label?.[localLang] ?? ''}
                         onChange={(e) => {
                           const current = normalizeLocalizedText((item as any).label);
-                          onUpdate(itemPath, { label: { ...current, [lang]: e.target.value } as LocalizedText });
+                          onUpdate(itemPath, { label: { ...current, [localLang]: e.target.value } as LocalizedText });
                         }}
-                        placeholder={`${t('admin_settings_label')} ${lang.toUpperCase()}`}
+                        placeholder={`${t('admin_settings_label')} ${localLang.toUpperCase()}`}
                         className="h-9 text-xs"
                       />
                     </div>
@@ -478,7 +507,7 @@ function DropdownItemTree({
                 onUpdate={onUpdate}
                 onRemove={onRemove}
                 onMove={onMove}
-                lang={lang}
+                lang={localLang}
                 t={t}
               />
             )}

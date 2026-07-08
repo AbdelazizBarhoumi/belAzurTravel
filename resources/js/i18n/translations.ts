@@ -1317,7 +1317,6 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'السفر هو الشيء الوحيد الذي تشتريه ويجعلك أكثر ثراءً.',
         en: 'Travel is the only thing you buy that makes you richer.',
     },
-    'auth.loginQuoteAuthor': { fr: 'Anonyme', ar: 'مجهول', en: 'Anonymous' },
     'auth.registerQuote': {
         fr: "Le monde est un livre, et ceux qui ne voyagent pas n'en lisent qu'une page.",
         ar: 'العالم كتاب، ومن لا يسافر يقرأ صفحة واحدة فقط.',
@@ -2707,6 +2706,8 @@ export const translations: Record<string, TranslationEntry> = {
     'admin.visaForm.name': { fr: 'Nom du pays', ar: 'اسم الدولة', en: 'Country Name' },
     'admin.visaForm.namePlaceholder': { fr: 'France', ar: 'فرنسا', en: 'France' },
     'admin.visaForm.flag': { fr: 'Drapeau (emoji)', ar: 'العلم (إيموجي)', en: 'Flag (emoji)' },
+    'admin.visaForm.selectCountry': { fr: 'Sélectionner un pays', ar: 'اختر الدولة', en: 'Select a country' },
+    'admin.visaForm.flagAuto': { fr: 'Généré automatiquement', ar: 'يتم إنشاؤه تلقائيًا', en: 'Auto-generated' },
     'admin.visaForm.region': { fr: 'Région', ar: 'المنطقة', en: 'Region' },
     'admin.visaForm.regionPlaceholder': { fr: 'Europe', ar: 'أوروبا', en: 'Europe' },
     'admin.visaForm.processing': { fr: 'Délai de traitement', ar: 'مدة المعالجة', en: 'Processing Time' },
@@ -5839,6 +5840,11 @@ translations['admin.section.blog'] = {
     fr: 'Blog',
     ar: 'المدونة',
     en: 'Blog',
+};
+translations['admin.section.visas'] = {
+    fr: 'Visa',
+    ar: 'التأشيرات',
+    en: 'Visas',
 };
 translations['admin.section.location'] = {
     fr: 'Emplacement',

@@ -266,12 +266,9 @@ const Login = () => {
                     alt="Beach"
                     className="absolute inset-0 h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-primary/30" />
+                <div className="absolute inset-0 bg-primary/10" />
                 <div className="absolute bottom-12 left-12 right-12">
 
-                    <p className="mt-3 text-sm text-primary-foreground/70">
-                        — {t('auth.loginQuoteAuthor')}
-                    </p>
                 </div>
             </div>
         </div>

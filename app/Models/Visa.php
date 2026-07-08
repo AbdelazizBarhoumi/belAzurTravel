@@ -9,11 +9,10 @@ class Visa extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'name', 'flag', 'region', 'processing', 'price', 'is_active', 'sort_order'];
+    protected $fillable = ['code', 'name', 'flag', 'processing', 'price', 'is_active', 'sort_order'];
 
     protected $casts = [
         'name' => 'array',
-        'region' => 'array',
         'processing' => 'array',
         'price' => 'integer',
         'is_active' => 'boolean',

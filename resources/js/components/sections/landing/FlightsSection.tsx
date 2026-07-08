@@ -5,17 +5,12 @@ import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useFlights } from '@/hooks/usePublicData';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { isPageEnabled } from '@/lib/pageVisibility';
 
 interface Props { config: LandingSectionConfig; }
 
 export function FlightsSection({ config }: Props) {
     const { lang, t } = useLanguage();
-    const { settings } = useSiteSettings();
-    const flightsEnabled = isPageEnabled('flights', settings.content?.nav?.settings);
-    const { data: flights = [] } = useFlights(flightsEnabled);
-    if (!flightsEnabled) return null;
+    const { data: flights = [] } = useFlights();
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('home.featuredFlights');
     const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredFlightsDesc');

@@ -30,6 +30,7 @@ import {
     LinkedinIcon,
     YoutubeIcon,
     TiktokIcon,
+    WhatsAppIcon,
 } from '@/components/ui/SocialIcons';
 
 const SOCIAL_PLATFORMS: Array<{ label: string; placeholder: string; icon: React.ComponentType<React.SVGProps<SVGSVGElement>> }> = [
@@ -39,6 +40,7 @@ const SOCIAL_PLATFORMS: Array<{ label: string; placeholder: string; icon: React.
     { label: 'LinkedIn', placeholder: 'https://linkedin.com/...', icon: LinkedinIcon },
     { label: 'YouTube', placeholder: 'https://youtube.com/...', icon: YoutubeIcon },
     { label: 'TikTok', placeholder: 'https://tiktok.com/...', icon: TiktokIcon },
+    { label: 'WhatsApp', placeholder: 'https://wa.me/...', icon: WhatsAppIcon },
 ];
 
 interface SocialLink {

@@ -275,6 +275,22 @@ export function useBlogPosts() {
     });
 }
 
+export interface VisaItem {
+    id: number;
+    code: string;
+    name: string;
+    flag: string;
+    processing: string;
+    price: number;
+}
+
+export function useVisas() {
+    return useEntityQuery<{ data: VisaItem[] }>({
+        queryKey: ['visas'],
+        queryFn: () => fetchEntity('visas'),
+    });
+}
+
 export type PublicCategory = {
     id: number | string;
     key: string;
@@ -295,6 +311,7 @@ export function useCategories(type?: string) {
             });
         },
         select: (categories) => {
+            if (!Array.isArray(categories)) return [];
             if (!normalizedType) {
                 return categories;
             }
@@ -333,6 +350,7 @@ export function useCategoryTypesPublic(entityType?: string) {
             const resp = await apiFetch<{ data: PublicCategoryType[] }>(url);
             return resp.data;
         },
+        select: (data) => (Array.isArray(data) ? data : []),
     });
 }
 

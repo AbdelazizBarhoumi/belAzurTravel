@@ -59,7 +59,23 @@ const Travels = () => {
     const minPrice = tours.length > 0 ? Math.min(...tours.map((t) => t.price)) : 0;
 
     // Category type filters
-    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>({});
+    const [categoryTypeFilters, setCategoryTypeFilters] =
+        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+
+    // Sync state with URL params when they change (e.g. navbar subcategory links)
+    useEffect(() => {
+        setSearchQuery(params.get('q') || params.get('destination') || '');
+    }, [params]);
+    useEffect(() => {
+        const filters: Record<string, string[]> = {};
+        for (const [key, val] of params.entries()) {
+            if (key.startsWith('category_')) {
+                const typeKey = key.slice('category_'.length);
+                filters[typeKey] = val.split(',').filter(Boolean);
+            }
+        }
+        setCategoryTypeFilters(filters);
+    }, [params]);
     const [travelPriceRange, setTravelPriceRange] = useState<[number, number]>([0, 1000]);
 
     // Sync price range when data loads
@@ -71,7 +87,7 @@ const Travels = () => {
 
     const filteredTours = useMemo(
         () =>
-            tours.filter((tour) => {
+            (Array.isArray(tours) ? tours : []).filter((tour) => {
                 const matchesSearch = matchesSearchText(searchQuery, [
                     localizeText(tour.name, lang),
                     localizeText(tour.location, lang),
@@ -127,7 +143,7 @@ const Travels = () => {
     };
 
     return (
-        <div key={params.toString()} className="flex min-h-screen flex-col bg-background">
+        <div className="flex min-h-screen flex-col bg-background">
             <PageHeroCarousel pageKey="tours" />
             <div className="flex-1 pb-16 pt-8">
                 <div className="container mx-auto px-4">

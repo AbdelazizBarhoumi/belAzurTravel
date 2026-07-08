@@ -6,16 +6,12 @@ import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useEvents } from '@/hooks/usePublicData';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { isPageEnabled } from '@/lib/pageVisibility';
 
 interface Props { config: LandingSectionConfig; }
 
 export function EventsSection({ config }: Props) {
     const { lang, t } = useLanguage();
-    const { settings } = useSiteSettings();
     const { data: events = [] } = useEvents();
-    if (!isPageEnabled('events', settings.content?.nav?.settings)) return null;
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('home.featuredEvents');
     const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredEventsDesc');

@@ -286,7 +286,7 @@ export default function AdminSiteSettingsLandingSections() {
                     </div>
                     {videoUrl && (
                         <div className="space-y-2">
-                            <video src={videoUrl} controls className="max-h-48 w-full rounded-lg" />
+                            <video src={videoUrl} controls className="max-h-48 w-full object-contain rounded-lg" />
                             <Button
                                 size="sm"
                                 variant="destructive"

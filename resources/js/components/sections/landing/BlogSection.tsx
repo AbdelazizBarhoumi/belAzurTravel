@@ -5,16 +5,12 @@ import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useBlogPosts } from '@/hooks/usePublicData';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { isPageEnabled } from '@/lib/pageVisibility';
 
 interface Props { config: LandingSectionConfig; }
 
 export function BlogSection({ config }: Props) {
     const { lang, t } = useLanguage();
-    const { settings } = useSiteSettings();
     const { data: posts = [] } = useBlogPosts();
-    if (!isPageEnabled('blog', settings.content?.nav?.settings)) return null;
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('home.latestBlog');
     const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.latestBlogDesc');

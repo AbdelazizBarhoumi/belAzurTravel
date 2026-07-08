@@ -10,6 +10,7 @@ export const LANDING_SECTION_META = {
     events: { labelKey: 'admin.section.events', styles: ['carousel', 'cards', 'grid'] },
     deals: { labelKey: 'admin.section.deals', styles: ['carousel', 'cards', 'grid'] },
     blog: { labelKey: 'admin.section.blog', styles: ['carousel', 'cards', 'grid'] },
+    visas: { labelKey: 'admin.section.visas', styles: ['carousel', 'cards', 'grid'] },
     location: { labelKey: 'admin.section.location', styles: ['default'] },
 } as const;
 
@@ -23,6 +24,7 @@ export const LANDING_SECTION_ORDER = [
     'events',
     'deals',
     'blog',
+    'visas',
     'location',
 ] as const;
 

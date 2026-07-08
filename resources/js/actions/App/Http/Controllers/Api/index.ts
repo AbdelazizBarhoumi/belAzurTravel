@@ -2,6 +2,7 @@ import SiteSettingsController from './SiteSettingsController'
 import AuthUserController from './AuthUserController'
 import InteractionController from './InteractionController'
 import VisaController from './VisaController'
+import VisaApplicationController from './VisaApplicationController'
 import AdminCategoryController from './AdminCategoryController'
 import GalleryController from './GalleryController'
 import DestinationController from './DestinationController'
@@ -42,6 +43,7 @@ const Api = {
 AuthUserController: Object.assign(AuthUserController, AuthUserController),
 InteractionController: Object.assign(InteractionController, InteractionController),
 VisaController: Object.assign(VisaController, VisaController),
+VisaApplicationController: Object.assign(VisaApplicationController, VisaApplicationController),
 AdminCategoryController: Object.assign(AdminCategoryController, AdminCategoryController),
 GalleryController: Object.assign(GalleryController, GalleryController),
 DestinationController: Object.assign(DestinationController, DestinationController),

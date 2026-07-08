@@ -6,18 +6,12 @@ import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useDestinations } from '@/hooks/usePublicData';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { isPageEnabled } from '@/lib/pageVisibility';
 
 interface Props { config: LandingSectionConfig; }
 
 export function DestinationsSection({ config }: Props) {
     const { lang, t } = useLanguage();
-    const { settings } = useSiteSettings();
     const { data: destinations = [] } = useDestinations();
-
-    const navSettings = settings.content?.nav?.settings;
-    if (!isPageEnabled('destinations', navSettings)) return null;
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('home.featuredDestinations');
     const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredDestinationsDesc');

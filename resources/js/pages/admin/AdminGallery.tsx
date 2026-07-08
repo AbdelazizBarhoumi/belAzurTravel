@@ -172,7 +172,7 @@ const AdminGallery = () => {
     const loadGallery = async () => {
         try {
             const data = await fetchGallery();
-            setImages(data);
+            setImages(Array.isArray(data) ? data : []);
         } catch (e) {
             toast.error(t('admin.error.loadGallery', lang));
         }

@@ -881,24 +881,24 @@ class TestDataSeeder extends Seeder
     private function seedVisas(): void
     {
         $visas = [
-            ['code' => 'FR', 'flag' => '🇫🇷', 'price' => 280, 'sort_order' => 1, 'name' => $this->loc('France', 'France', 'فرنسا'), 'region' => $this->loc('Europe', 'Europe', 'أوروبا'), 'processing' => $this->loc('10-15 days', '10-15 jours', '10-15 يوم')],
-            ['code' => 'IT', 'flag' => '🇮🇹', 'price' => 260, 'sort_order' => 2, 'name' => $this->loc('Italy', 'Italie', 'إيطاليا'), 'region' => $this->loc('Europe', 'Europe', 'أوروبا'), 'processing' => $this->loc('10-15 days', '10-15 jours', '10-15 يوم')],
-            ['code' => 'ES', 'flag' => '🇪🇸', 'price' => 260, 'sort_order' => 3, 'name' => $this->loc('Spain', 'Espagne', 'إسبانيا'), 'region' => $this->loc('Europe', 'Europe', 'أوروبا'), 'processing' => $this->loc('12-18 days', '12-18 jours', '12-18 يوم')],
-            ['code' => 'DE', 'flag' => '🇩🇪', 'price' => 290, 'sort_order' => 4, 'name' => $this->loc('Germany', 'Allemagne', 'ألمانيا'), 'region' => $this->loc('Europe', 'Europe', 'أوروبا'), 'processing' => $this->loc('10-14 days', '10-14 jours', '10-14 يوم')],
-            ['code' => 'GB', 'flag' => '🇬🇧', 'price' => 550, 'sort_order' => 5, 'name' => $this->loc('United Kingdom', 'Royaume-Uni', 'المملكة المتحدة'), 'region' => $this->loc('Europe', 'Europe', 'أوروبا'), 'processing' => $this->loc('15-21 days', '15-21 jours', '15-21 يوم')],
-            ['code' => 'US', 'flag' => '🇺🇸', 'price' => 620, 'sort_order' => 6, 'name' => $this->loc('United States', 'États-Unis', 'الولايات المتحدة'), 'region' => $this->loc('America', 'Amérique', 'أمريكا'), 'processing' => $this->loc('30-60 days', '30-60 jours', '30-60 يوم')],
-            ['code' => 'CA', 'flag' => '🇨🇦', 'price' => 480, 'sort_order' => 7, 'name' => $this->loc('Canada', 'Canada', 'كندا'), 'region' => $this->loc('America', 'Amérique', 'أمريكا'), 'processing' => $this->loc('20-40 days', '20-40 jours', '20-40 يوم')],
-            ['code' => 'AE', 'flag' => '🇦🇪', 'price' => 220, 'sort_order' => 8, 'name' => $this->loc('UAE', 'EAU', 'الإمارات'), 'region' => $this->loc('Middle East', 'Moyen-Orient', 'الشرق الأوسط'), 'processing' => $this->loc('3-5 days', '3-5 jours', '3-5 أيام')],
-            ['code' => 'SA', 'flag' => '🇸🇦', 'price' => 340, 'sort_order' => 9, 'name' => $this->loc('Saudi Arabia', 'Arabie Saoudite', 'السعودية'), 'region' => $this->loc('Middle East', 'Moyen-Orient', 'الشرق الأوسط'), 'processing' => $this->loc('5-10 days', '5-10 jours', '5-10 أيام')],
-            ['code' => 'TR', 'flag' => '🇹🇷', 'price' => 120, 'sort_order' => 10, 'name' => $this->loc('Turkey', 'Turquie', 'تركيا'), 'region' => $this->loc('Middle East', 'Moyen-Orient', 'الشرق الأوسط'), 'processing' => $this->loc('1-3 days', '1-3 jours', '1-3 أيام')],
-            ['code' => 'CN', 'flag' => '🇨🇳', 'price' => 380, 'sort_order' => 11, 'name' => $this->loc('China', 'Chine', 'الصين'), 'region' => $this->loc('Asia', 'Asie', 'آسيا'), 'processing' => $this->loc('10-15 days', '10-15 jours', '10-15 يوم')],
-            ['code' => 'JP', 'flag' => '🇯🇵', 'price' => 320, 'sort_order' => 12, 'name' => $this->loc('Japan', 'Japon', 'اليابان'), 'region' => $this->loc('Asia', 'Asie', 'آسيا'), 'processing' => $this->loc('7-10 days', '7-10 jours', '7-10 أيام')],
-            ['code' => 'TH', 'flag' => '🇹🇭', 'price' => 240, 'sort_order' => 13, 'name' => $this->loc('Thailand', 'Thaïlande', 'تايلاند'), 'region' => $this->loc('Asia', 'Asie', 'آسيا'), 'processing' => $this->loc('5-8 days', '5-8 jours', '5-8 أيام')],
-            ['code' => 'MY', 'flag' => '🇲🇾', 'price' => 210, 'sort_order' => 14, 'name' => $this->loc('Malaysia', 'Malaisie', 'ماليزيا'), 'region' => $this->loc('Asia', 'Asie', 'آسيا'), 'processing' => $this->loc('5-7 days', '5-7 jours', '5-7 أيام')],
-            ['code' => 'ID', 'flag' => '🇮🇩', 'price' => 250, 'sort_order' => 15, 'name' => $this->loc('Indonesia', 'Indonésie', 'إندونيسيا'), 'region' => $this->loc('Asia', 'Asie', 'آسيا'), 'processing' => $this->loc('7-10 days', '7-10 jours', '7-10 أيام')],
-            ['code' => 'AU', 'flag' => '🇦🇺', 'price' => 580, 'sort_order' => 16, 'name' => $this->loc('Australia', 'Australie', 'أستراليا'), 'region' => $this->loc('Oceania', 'Océanie', 'أوقيانوسيا'), 'processing' => $this->loc('20-30 days', '20-30 jours', '20-30 يوم')],
-            ['code' => 'ZA', 'flag' => '🇿🇦', 'price' => 300, 'sort_order' => 17, 'name' => $this->loc('South Africa', 'Afrique du Sud', 'جنوب أفريقيا'), 'region' => $this->loc('Africa', 'Afrique', 'أفريقيا'), 'processing' => $this->loc('10-15 days', '10-15 jours', '10-15 يوم')],
-            ['code' => 'EG', 'flag' => '🇪🇬', 'price' => 180, 'sort_order' => 18, 'name' => $this->loc('Egypt', 'Égypte', 'مصر'), 'region' => $this->loc('Africa', 'Afrique', 'أفريقيا'), 'processing' => $this->loc('5-7 days', '5-7 jours', '5-7 أيام')],
+            ['code' => 'FR', 'flag' => '🇫🇷', 'price' => 280, 'sort_order' => 1, 'name' => $this->loc('France', 'France', 'فرنسا'), 'processing' => $this->loc('10-15 days', '10-15 jours', '10-15 يوم')],
+            ['code' => 'IT', 'flag' => '🇮🇹', 'price' => 260, 'sort_order' => 2, 'name' => $this->loc('Italy', 'Italie', 'إيطاليا'), 'processing' => $this->loc('10-15 days', '10-15 jours', '10-15 يوم')],
+            ['code' => 'ES', 'flag' => '🇪🇸', 'price' => 260, 'sort_order' => 3, 'name' => $this->loc('Spain', 'Espagne', 'إسبانيا'), 'processing' => $this->loc('12-18 days', '12-18 jours', '12-18 يوم')],
+            ['code' => 'DE', 'flag' => '🇩🇪', 'price' => 290, 'sort_order' => 4, 'name' => $this->loc('Germany', 'Allemagne', 'ألمانيا'), 'processing' => $this->loc('10-14 days', '10-14 jours', '10-14 يوم')],
+            ['code' => 'GB', 'flag' => '🇬🇧', 'price' => 550, 'sort_order' => 5, 'name' => $this->loc('United Kingdom', 'Royaume-Uni', 'المملكة المتحدة'), 'processing' => $this->loc('15-21 days', '15-21 jours', '15-21 يوم')],
+            ['code' => 'US', 'flag' => '🇺🇸', 'price' => 620, 'sort_order' => 6, 'name' => $this->loc('United States', 'États-Unis', 'الولايات المتحدة'), 'processing' => $this->loc('30-60 days', '30-60 jours', '30-60 يوم')],
+            ['code' => 'CA', 'flag' => '🇨🇦', 'price' => 480, 'sort_order' => 7, 'name' => $this->loc('Canada', 'Canada', 'كندا'), 'processing' => $this->loc('20-40 days', '20-40 jours', '20-40 يوم')],
+            ['code' => 'AE', 'flag' => '🇦🇪', 'price' => 220, 'sort_order' => 8, 'name' => $this->loc('UAE', 'EAU', 'الإمارات'), 'processing' => $this->loc('3-5 days', '3-5 jours', '3-5 أيام')],
+            ['code' => 'SA', 'flag' => '🇸🇦', 'price' => 340, 'sort_order' => 9, 'name' => $this->loc('Saudi Arabia', 'Arabie Saoudite', 'السعودية'), 'processing' => $this->loc('5-10 days', '5-10 jours', '5-10 أيام')],
+            ['code' => 'TR', 'flag' => '🇹🇷', 'price' => 120, 'sort_order' => 10, 'name' => $this->loc('Turkey', 'Turquie', 'تركيا'), 'processing' => $this->loc('1-3 days', '1-3 jours', '1-3 أيام')],
+            ['code' => 'CN', 'flag' => '🇨🇳', 'price' => 380, 'sort_order' => 11, 'name' => $this->loc('China', 'Chine', 'الصين'), 'processing' => $this->loc('10-15 days', '10-15 jours', '10-15 يوم')],
+            ['code' => 'JP', 'flag' => '🇯🇵', 'price' => 320, 'sort_order' => 12, 'name' => $this->loc('Japan', 'Japon', 'اليابان'), 'processing' => $this->loc('7-10 days', '7-10 jours', '7-10 أيام')],
+            ['code' => 'TH', 'flag' => '🇹🇭', 'price' => 240, 'sort_order' => 13, 'name' => $this->loc('Thailand', 'Thaïlande', 'تايلاند'), 'processing' => $this->loc('5-8 days', '5-8 jours', '5-8 أيام')],
+            ['code' => 'MY', 'flag' => '🇲🇾', 'price' => 210, 'sort_order' => 14, 'name' => $this->loc('Malaysia', 'Malaisie', 'ماليزيا'), 'processing' => $this->loc('5-7 days', '5-7 jours', '5-7 أيام')],
+            ['code' => 'ID', 'flag' => '🇮🇩', 'price' => 250, 'sort_order' => 15, 'name' => $this->loc('Indonesia', 'Indonésie', 'إندونيسيا'), 'processing' => $this->loc('7-10 days', '7-10 jours', '7-10 أيام')],
+            ['code' => 'AU', 'flag' => '🇦🇺', 'price' => 580, 'sort_order' => 16, 'name' => $this->loc('Australia', 'Australie', 'أستراليا'), 'processing' => $this->loc('20-30 days', '20-30 jours', '20-30 يوم')],
+            ['code' => 'ZA', 'flag' => '🇿🇦', 'price' => 300, 'sort_order' => 17, 'name' => $this->loc('South Africa', 'Afrique du Sud', 'جنوب أفريقيا'), 'processing' => $this->loc('10-15 days', '10-15 jours', '10-15 يوم')],
+            ['code' => 'EG', 'flag' => '🇪🇬', 'price' => 180, 'sort_order' => 18, 'name' => $this->loc('Egypt', 'Égypte', 'مصر'), 'processing' => $this->loc('5-7 days', '5-7 jours', '5-7 أيام')],
         ];
 
         foreach ($visas as $data) {
@@ -1084,7 +1084,7 @@ class TestDataSeeder extends Seeder
                     ],
                 ],
             ],
-            'landing_video' => ['url' => '/storage/uploads/site/1rE5Aaj7YL9P30iDynq2lagcXyAc8sOeU5e6vsSv.mp4'],
+            'landing_video' => ['url' => '/storage/uploads/site/YvaYaqLy2RD6sct2W6elvWWxGbdXNlQTrifggI0Y.mov'],
             'landing_sections' => [
                 'order' => ['destinations', 'hotels', 'organized', 'tours', 'cars', 'flights', 'events', 'deals', 'blog'],
                 'sections' => [

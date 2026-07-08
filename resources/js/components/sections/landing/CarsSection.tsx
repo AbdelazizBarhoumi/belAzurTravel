@@ -6,17 +6,12 @@ import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCars } from '@/hooks/usePublicData';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { isPageEnabled } from '@/lib/pageVisibility';
 
 interface Props { config: LandingSectionConfig; }
 
 export function CarsSection({ config }: Props) {
     const { lang, t } = useLanguage();
-    const { settings } = useSiteSettings();
-    const carsEnabled = isPageEnabled('cars', settings.content?.nav?.settings);
-    const { data: cars = [] } = useCars(carsEnabled);
-    if (!carsEnabled) return null;
+    const { data: cars = [] } = useCars();
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('home.featuredCars');
     const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredCarsDesc');

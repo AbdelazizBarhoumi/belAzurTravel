@@ -67,11 +67,11 @@ export function HotelFilters({
     }, [hotels, availableStars]);
 
     const STARS_LABELS: Record<number, { en: string; fr: string; ar: string }> = {
-        1: { en: '1 Star', fr: '★ (1 étoile)', ar: '1 نجمة' },
-        2: { en: '2 Stars', fr: '★★ (2 étoiles)', ar: '2 نجمة' },
-        3: { en: '3 Stars', fr: '★★★ (3 étoiles)', ar: '3 نجوم' },
-        4: { en: '4 Stars', fr: '★★★★ (4 étoiles)', ar: '4 نجوم' },
-        5: { en: '5 Stars', fr: '★★★★★ (5 étoiles)', ar: '5 نجوم' },
+        1: { en: '★ (1 Star)', fr: '★ (1 étoile)', ar: '★ (1 نجمة)' },
+        2: { en: '★★ (2 Stars)', fr: '★★ (2 étoiles)', ar: '★★ (2 نجوم)' },
+        3: { en: '★★★ (3 Stars)', fr: '★★★ (3 étoiles)', ar: '★★★ (3 نجوم)' },
+        4: { en: '★★★★ (4 Stars)', fr: '★★★★ (4 étoiles)', ar: '★★★★ (4 نجوم)' },
+        5: { en: '★★★★★ (5 Stars)', fr: '★★★★★ (5 étoiles)', ar: '★★★★★ (5 نجوم)' },
     };
 
     return (

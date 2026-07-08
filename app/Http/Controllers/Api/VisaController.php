@@ -24,7 +24,6 @@ class VisaController extends Controller
                     'code' => $visa->code,
                     'name' => $visa->name[$lang] ?? $visa->name['en'] ?? '',
                     'flag' => $visa->flag,
-                    'region' => $visa->region[$lang] ?? $visa->region['en'] ?? '',
                     'processing' => $visa->processing[$lang] ?? $visa->processing['en'] ?? '',
                     'price' => $visa->price,
                 ]);
