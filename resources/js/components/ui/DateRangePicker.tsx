@@ -23,20 +23,34 @@ interface DateRangePickerProps {
     value: DateRange | undefined;
     onChange: (value: DateRange | undefined) => void;
     className?: string;
+    placeholderFrom?: string;
+    placeholderTo?: string;
+    placeholderSingle?: string;
+    placeholderEmpty?: string;
 }
 
-export function DateRangePicker({ value, onChange, className }: DateRangePickerProps) {
+export function DateRangePicker({
+    value,
+    onChange,
+    className,
+    placeholderFrom,
+    placeholderTo,
+    placeholderSingle,
+    placeholderEmpty,
+}: DateRangePickerProps) {
     const { lang, t, dir } = useLanguage();
     const isRtl = dir === 'rtl';
     const locale = getLocale(lang);
 
     const startLabel = value?.from
         ? value.from.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
-        : t('search.placeholders.checkIn');
+        : (placeholderFrom ?? t('search.placeholders.checkIn'));
 
     const endLabel = value?.to
         ? value.to.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
-        : t('search.placeholders.checkOut');
+        : (placeholderTo ?? t('search.placeholders.checkOut'));
+
+    const emptyLabel = placeholderEmpty ?? t('search.placeholders.dates');
 
     return (
         <Popover>
@@ -53,8 +67,8 @@ export function DateRangePicker({ value, onChange, className }: DateRangePickerP
                     <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-primary" />
                     <span className="min-w-0 truncate text-xs sm:text-sm text-foreground">
                         {value?.from
-                            ? `${startLabel} — ${value?.to ? endLabel : t('search.placeholders.flexibleDates')}`
-                            : t('search.placeholders.dates')}
+                            ? `${startLabel} — ${value?.to ? endLabel : (placeholderSingle ?? t('search.placeholders.flexibleDates'))}`
+                            : emptyLabel}
                     </span>
                 </Button>
             </PopoverTrigger>

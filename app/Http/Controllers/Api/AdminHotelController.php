@@ -174,6 +174,8 @@ class AdminHotelController extends Controller
             'rooms.*.capacity' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'rooms.*.size' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'destination_slug' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
         ];
 
         $data = $request->validate($rules);
@@ -213,6 +215,8 @@ class AdminHotelController extends Controller
             'tags' => array_values(array_filter([Str::slug($categoryKey !== '' ? $categoryKey : ($data['category_en'] ?? $data['category'] ?? $existing?->details['category']['en'] ?? ''))])),
             'details' => $this->hotelDetails($request, $data, $existing, $gallery, $categoryName),
             'rooms' => $data['rooms'] ?? [],
+            'date_from' => $data['date_from'] ?? $existing?->date_from ?? null,
+            'date_to' => $data['date_to'] ?? $existing?->date_to ?? null,
         ];
     }
 
@@ -282,6 +286,8 @@ class AdminHotelController extends Controller
                 'features' => $room->featureItems->pluck('label')->all(),
                 'images' => $room->imageItems->map(fn ($img) => $this->normalizeApiOutputPath($img->path))->all(),
             ])->values(),
+            'date_from' => $item->date_from,
+            'date_to' => $item->date_to,
         ];
     }
 

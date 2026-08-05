@@ -30,6 +30,8 @@ class Travel extends Model
         'includes',
         'excludes',
         'images',
+        'date_from',
+        'date_to',
         // Filter fields
         'istanbul', 'asie', 'europe', 'afrique_nord',
         'jeune', 'tranquille',
@@ -46,6 +48,8 @@ class Travel extends Model
         'includes' => 'json',
         'excludes' => 'json',
         'images' => 'json',
+        'date_from' => 'date',
+        'date_to' => 'date',
         'duration_days' => 'integer',
         'duration_nights' => 'integer',
         'max_group' => 'integer',

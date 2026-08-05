@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react';
 import type { LandingSectionConfig } from '@/api/siteSettings.api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
+import { getMapDisplayText, getMapEmbedSrc, getMapLink, getMapQuery } from '@/lib/site-map';
 
 interface Props { config: LandingSectionConfig; }
 
@@ -10,7 +11,7 @@ export function LocationSection({ config }: Props) {
     const { lang, t } = useLanguage();
     const { settings } = useSiteSettings();
 
-    const mapQuery = settings.plusCode || settings.address || '';
+    const mapQuery = getMapQuery(settings);
     if (!mapQuery) return null;
 
     const title = config.title?.[lang] ?? config.title?.en ?? t('contact.locationTitle');
@@ -44,7 +45,7 @@ export function LocationSection({ config }: Props) {
                         <div className="overflow-hidden rounded-2xl border border-border/60 bg-muted/30">
                             <iframe
                                 title={t('contact.mapTitle')}
-                                src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
+                                src={getMapEmbedSrc(settings)}
                                 className="h-[360px] w-full"
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
@@ -53,10 +54,10 @@ export function LocationSection({ config }: Props) {
 
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
                             <span>
-                                {settings.plusCode || settings.address}
+                                {getMapDisplayText(settings)}
                             </span>
                             <a
-                                href={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}`}
+                                href={getMapLink(settings)}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="font-medium text-primary hover:underline"

@@ -44,6 +44,8 @@ interface AdminVisa {
     price: number;
     is_active: boolean;
     sort_order: number;
+    date_from?: string;
+    date_to?: string;
 }
 
 type VisaFormValues = Record<string, unknown> & {
@@ -193,6 +195,8 @@ const AdminVisas = () => {
             price: Number(values.price),
             is_active: values.is_active !== false,
             sort_order: Number(values.sort_order) || 0,
+            date_from: String(values.dateFrom ?? ''),
+            date_to: String(values.dateTo ?? ''),
         };
 
         saveMutation.mutate(payload, {
@@ -299,6 +303,16 @@ const AdminVisas = () => {
                     </div>
                 </div>
             ),
+        },
+        {
+            title: t('admin.dateRange'),
+            fields: [
+                {
+                    key: 'dateFrom',
+                    label: t('admin.dateRange'),
+                    type: 'daterange',
+                },
+            ],
         },
         {
             title: t('admin.visaForm.pricingAndSettings'),

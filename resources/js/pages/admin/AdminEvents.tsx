@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save } from 'lucide-react';
+import {
+    Edit,
+    Plus,
+    Trash2,
+    Settings,
+    Image as ImageIcon,
+    Save,
+} from 'lucide-react';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
@@ -27,7 +34,6 @@ import {
     JsonListEditor,
     type JsonFieldDef,
 } from '@/components/forms/JsonListEditor';
-import { DatePicker } from '@/components/ui/DatePicker';
 import {
     Select,
     SelectContent,
@@ -102,8 +108,7 @@ export default function AdminEvents() {
             if (!values[`title_${lang}`])
                 errs[`title_${lang}`] = t('admin.error.required');
         });
-        if (!values.location)
-            errs.location = t('admin.error.required');
+        if (!values.location) errs.location = t('admin.error.required');
         if (!values.category_key) errs.category_key = t('admin.error.required');
         if (!values.date) errs.date = t('admin.error.required');
         if (!values.price || Number(values.price) <= 0)
@@ -248,6 +253,13 @@ export default function AdminEvents() {
         {
             title: t('admin.eventForm.coreDetails'),
             description: t('admin.eventForm.coreDetailsHint'),
+            fields: [
+                {
+                    key: 'dateFrom',
+                    label: t('admin.dateRange'),
+                    type: 'daterange',
+                },
+            ],
             render: ({ values, setField, activeLang, errors }) => (
                 <div className="space-y-6">
                     <EntityMediaInputs values={values} setField={setField} />
@@ -255,20 +267,25 @@ export default function AdminEvents() {
                     {categoryTypes.map((catType) => (
                         <div key={catType.key} className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <label
-                                    className="text-xs font-semibold text-muted-foreground"
-                                >
-                                    {catType.label[activeLang] || catType.label.en}
+                                <label className="text-xs font-semibold text-muted-foreground">
+                                    {catType.label[activeLang] ||
+                                        catType.label.en}
                                 </label>
                             </div>
                             <Select
-                                value={String(values[`category_${catType.key}`] || '')}
-                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                value={String(
+                                    values[`category_${catType.key}`] || '',
+                                )}
+                                onValueChange={(val) =>
+                                    setField(`category_${catType.key}`, val)
+                                }
                             >
                                 <SelectTrigger
                                     className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm`}
                                 >
-                                    <SelectValue placeholder={t('actions.select')} />
+                                    <SelectValue
+                                        placeholder={t('actions.select')}
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {catType.values.map((v) => (
@@ -281,35 +298,44 @@ export default function AdminEvents() {
                         </div>
                     ))}
                     <div className="grid gap-4 md:grid-cols-2">
-                        {[{ key: 'title', label: t('admin.title') }].map((field) => {
-                            const fieldKey = `${field.key}_${activeLang}`;
-                            const error = errors?.[fieldKey];
-                            return (
-                                <div key={fieldKey} className="space-y-2">
-                                    <label
-                                        htmlFor={fieldKey}
-                                        className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
-                                    >
-                                        {field.label}
-                                        <LangBadge lang={activeLang} />
-                                    </label>
-                                    <input
-                                        id={fieldKey}
-                                        value={String(values[fieldKey] ?? '')}
-                                        onChange={(e) =>
-                                            setField(fieldKey, e.target.value)
-                                        }
-                                        placeholder={t('admin.titlePlaceholder')}
-                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}
-                                    />
-                                    {error && (
-                                        <p className="text-xs text-destructive">
-                                            {error}
-                                        </p>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        {[{ key: 'title', label: t('admin.title') }].map(
+                            (field) => {
+                                const fieldKey = `${field.key}_${activeLang}`;
+                                const error = errors?.[fieldKey];
+                                return (
+                                    <div key={fieldKey} className="space-y-2">
+                                        <label
+                                            htmlFor={fieldKey}
+                                            className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
+                                        >
+                                            {field.label}
+                                            <LangBadge lang={activeLang} />
+                                        </label>
+                                        <input
+                                            id={fieldKey}
+                                            value={String(
+                                                values[fieldKey] ?? '',
+                                            )}
+                                            onChange={(e) =>
+                                                setField(
+                                                    fieldKey,
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder={t(
+                                                'admin.titlePlaceholder',
+                                            )}
+                                            className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : ''}`}
+                                        />
+                                        {error && (
+                                            <p className="text-xs text-destructive">
+                                                {error}
+                                            </p>
+                                        )}
+                                    </div>
+                                );
+                            },
+                        )}
 
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-muted-foreground">
@@ -325,35 +351,6 @@ export default function AdminEvents() {
 
                         <div className="space-y-2">
                             <label
-                                className={`text-xs font-semibold ${errors?.date ? 'text-destructive' : 'text-muted-foreground'}`}
-                            >
-                                {t('admin.date')}
-                            </label>
-                            <DatePicker
-                                date={
-                                    values.date
-                                        ? new Date(values.date as string)
-                                        : undefined
-                                }
-                                onDateChange={(date) =>
-                                    setField(
-                                        'date',
-                                        date
-                                            ? date.toISOString().split('T')[0]
-                                            : '',
-                                    )
-                                }
-                                placeholder={t('admin.date')}
-                            />
-                            {errors?.date && (
-                                <p className="text-xs text-destructive">
-                                    {errors.date}
-                                </p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <label
                                 className={`text-xs font-semibold ${errors?.price ? 'text-destructive' : 'text-muted-foreground'}`}
                             >
                                 {t('admin.price')}
@@ -364,8 +361,14 @@ export default function AdminEvents() {
                                 step={0.01}
                                 placeholder="0.00"
                                 value={String(values.price ?? '')}
-                                onChange={(e) => setField('price', e.target.value)}
-                                className={errors?.price ? 'border-destructive ring-1 ring-destructive' : ''}
+                                onChange={(e) =>
+                                    setField('price', e.target.value)
+                                }
+                                className={
+                                    errors?.price
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             <p className="text-[10px] text-muted-foreground">
                                 {t('admin.priceHint')}
@@ -595,8 +598,10 @@ export default function AdminEvents() {
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {String(
-                                            (typeof row.category === 'object' && row.category !== null
-                                                ? (row.category as any)[lang] || (row.category as any).en
+                                            (typeof row.category === 'object' &&
+                                            row.category !== null
+                                                ? (row.category as any)[lang] ||
+                                                  (row.category as any).en
                                                 : null) ??
                                                 row.category_key ??
                                                 '',
@@ -674,9 +679,7 @@ export default function AdminEvents() {
                 }
                 sections={eventSections}
                 initial={dialogInitial}
-                onSubmit={(values) =>
-                    handleSave(values as unknown as AdminRow)
-                }
+                onSubmit={(values) => handleSave(values as unknown as AdminRow)}
                 errors={errors}
                 languages={['en', 'fr', 'ar']}
                 activeLang={modalLang}

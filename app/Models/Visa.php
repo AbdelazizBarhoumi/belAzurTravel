@@ -9,7 +9,7 @@ class Visa extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'name', 'flag', 'processing', 'price', 'is_active', 'sort_order'];
+    protected $fillable = ['code', 'name', 'flag', 'processing', 'price', 'is_active', 'sort_order', 'date_from', 'date_to'];
 
     protected $casts = [
         'name' => 'array',
@@ -17,5 +17,7 @@ class Visa extends Model
         'price' => 'integer',
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'date_from' => 'date',
+        'date_to' => 'date',
     ];
 }

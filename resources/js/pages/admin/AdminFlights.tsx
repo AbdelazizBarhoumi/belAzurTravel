@@ -12,8 +12,7 @@ import { apiFetch } from '@/api/http';
 import type { PageHeroSlide } from '@/api/siteSettings.api';
 import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { DatePicker } from '@/components/ui/DatePicker';
-import { format } from 'date-fns';
+
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import {
     EntityFormDialog,
@@ -118,7 +117,9 @@ export default function AdminFlights() {
         },
     });
 
-    const validate = (values: Record<string, unknown>): Record<string, string> => {
+    const validate = (
+        values: Record<string, unknown>,
+    ): Record<string, string> => {
         const errs: Record<string, string> = {};
         if (!values.code) errs.code = t('validation.required');
         if (!values.from) errs.from = t('validation.required');
@@ -130,7 +131,11 @@ export default function AdminFlights() {
         if (!values.duration) errs.duration = t('validation.required');
         if (!values.stops) errs.stops = t('validation.required');
         if (!values.cabin) errs.cabin = t('validation.required');
-        if (values.price !== null && values.price !== undefined && Number(values.price) < 0) {
+        if (
+            values.price !== null &&
+            values.price !== undefined &&
+            Number(values.price) < 0
+        ) {
             errs.price = t('validation.invalidPrice');
         }
         return errs;
@@ -161,8 +166,16 @@ export default function AdminFlights() {
                             value={String(values.airline ?? '')}
                             onValueChange={(val) => setField('airline', val)}
                         >
-                            <SelectTrigger className={sectionErrors?.airline ? 'border-destructive ring-1 ring-destructive' : ''}>
-                                <SelectValue placeholder={t('admin.airlinePlaceholder')} />
+                            <SelectTrigger
+                                className={
+                                    sectionErrors?.airline
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
+                            >
+                                <SelectValue
+                                    placeholder={t('admin.airlinePlaceholder')}
+                                />
                             </SelectTrigger>
                             <SelectContent>
                                 {AIRLINE_NAMES.map((a) => (
@@ -182,12 +195,23 @@ export default function AdminFlights() {
                             value={String(values.to ?? '')}
                             onValueChange={(val) => setField('to', val)}
                         >
-                            <SelectTrigger className={sectionErrors?.to ? 'border-destructive ring-1 ring-destructive' : ''}>
-                                <SelectValue placeholder={t('admin.toPlaceholder')} />
+                            <SelectTrigger
+                                className={
+                                    sectionErrors?.to
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
+                            >
+                                <SelectValue
+                                    placeholder={t('admin.toPlaceholder')}
+                                />
                             </SelectTrigger>
                             <SelectContent>
                                 {AIRPORTS.map((a) => (
-                                    <SelectItem key={a.iata} value={`${a.city} (${a.iata})`}>
+                                    <SelectItem
+                                        key={a.iata}
+                                        value={`${a.city} (${a.iata})`}
+                                    >
                                         {a.city} - {a.iata}
                                     </SelectItem>
                                 ))}
@@ -202,8 +226,14 @@ export default function AdminFlights() {
                         <Input
                             value={String(values.duration ?? '')}
                             placeholder={t('label.duration')}
-                            onChange={(e) => setField('duration', e.target.value)}
-                            className={sectionErrors?.duration ? 'border-destructive ring-1 ring-destructive' : ''}
+                            onChange={(e) =>
+                                setField('duration', e.target.value)
+                            }
+                            className={
+                                sectionErrors?.duration
+                                    ? 'border-destructive ring-1 ring-destructive'
+                                    : ''
+                            }
                         />
                     </div>
 
@@ -215,7 +245,13 @@ export default function AdminFlights() {
                             value={String(values.stops ?? '')}
                             onValueChange={(val) => setField('stops', val)}
                         >
-                            <SelectTrigger className={sectionErrors?.stops ? 'border-destructive ring-1 ring-destructive' : ''}>
+                            <SelectTrigger
+                                className={
+                                    sectionErrors?.stops
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
+                            >
                                 <SelectValue placeholder={t('admin.stops')} />
                             </SelectTrigger>
                             <SelectContent>
@@ -255,11 +291,16 @@ export default function AdminFlights() {
                             onValueChange={(val) => setField('from', val)}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder={t('admin.fromPlaceholder')} />
+                                <SelectValue
+                                    placeholder={t('admin.fromPlaceholder')}
+                                />
                             </SelectTrigger>
                             <SelectContent>
                                 {AIRPORTS.map((a) => (
-                                    <SelectItem key={a.iata} value={`${a.city} (${a.iata})`}>
+                                    <SelectItem
+                                        key={a.iata}
+                                        value={`${a.city} (${a.iata})`}
+                                    >
                                         {a.city} - {a.iata}
                                     </SelectItem>
                                 ))}
@@ -284,26 +325,27 @@ export default function AdminFlights() {
         {
             title: t('admin.flightForm.schedule'),
             columns: 2,
+            fields: [
+                {
+                    key: 'dateFrom',
+                    label: t('admin.flightForm.travelDate'),
+                    type: 'daterange',
+                },
+            ],
             render: ({ values, setField }) => (
                 <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-muted-foreground">
-                            {t('admin.flightForm.travelDate')}
-                        </label>
-                        <DatePicker
-                            placeholder={t('admin.datePlaceholder')}
-                            date={values.date ? new Date(String(values.date)) : undefined}
-                            onDateChange={(date) => setField('date', date ? format(date, 'yyyy-MM-dd') : '')}
-                        />
-                    </div>
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-muted-foreground">
                             {t('admin.flightForm.departureTime')}
                         </label>
                         <Input
                             value={String(values.departure ?? '')}
-                            placeholder={t('admin.flightForm.departurePlaceholder')}
-                            onChange={(e) => setField('departure', e.target.value)}
+                            placeholder={t(
+                                'admin.flightForm.departurePlaceholder',
+                            )}
+                            onChange={(e) =>
+                                setField('departure', e.target.value)
+                            }
                         />
                     </div>
                     <div className="space-y-2">
@@ -312,8 +354,12 @@ export default function AdminFlights() {
                         </label>
                         <Input
                             value={String(values.arrival ?? '')}
-                            placeholder={t('admin.flightForm.arrivalPlaceholder')}
-                            onChange={(e) => setField('arrival', e.target.value)}
+                            placeholder={t(
+                                'admin.flightForm.arrivalPlaceholder',
+                            )}
+                            onChange={(e) =>
+                                setField('arrival', e.target.value)
+                            }
                         />
                     </div>
                     <div className="space-y-2">
@@ -344,8 +390,16 @@ export default function AdminFlights() {
                             value={String(values.cabin ?? '')}
                             onValueChange={(val) => setField('cabin', val)}
                         >
-                            <SelectTrigger className={sectionErrors?.cabin ? 'border-destructive ring-1 ring-destructive' : ''}>
-                                <SelectValue placeholder={t('label.cabinPlaceholder')} />
+                            <SelectTrigger
+                                className={
+                                    sectionErrors?.cabin
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
+                            >
+                                <SelectValue
+                                    placeholder={t('label.cabinPlaceholder')}
+                                />
                             </SelectTrigger>
                             <SelectContent>
                                 {CABIN_CLASSES.map((c) => (
@@ -363,7 +417,9 @@ export default function AdminFlights() {
                         <Input
                             value={String(values.aircraft ?? '')}
                             placeholder={t('label.aircraftPlaceholder')}
-                            onChange={(e) => setField('aircraft', e.target.value)}
+                            onChange={(e) =>
+                                setField('aircraft', e.target.value)
+                            }
                         />
                     </div>
                     <div className="space-y-2">
@@ -373,7 +429,9 @@ export default function AdminFlights() {
                         <Input
                             value={String(values.baggage ?? '')}
                             placeholder={t('label.baggage')}
-                            onChange={(e) => setField('baggage', e.target.value)}
+                            onChange={(e) =>
+                                setField('baggage', e.target.value)
+                            }
                         />
                     </div>
                     <div className="space-y-2">
@@ -382,7 +440,9 @@ export default function AdminFlights() {
                         </label>
                         <Input
                             value={String(values.refund ?? '')}
-                            placeholder={t('admin.flightForm.refundPlaceholder')}
+                            placeholder={t(
+                                'admin.flightForm.refundPlaceholder',
+                            )}
                             onChange={(e) => setField('refund', e.target.value)}
                         />
                     </div>
@@ -397,7 +457,11 @@ export default function AdminFlights() {
             subtitle={t('admin.flightsSubtitle')}
             actions={
                 <Button
-                    onClick={() => { setEditing(null); setOpen(true); setErrors({}); }}
+                    onClick={() => {
+                        setEditing(null);
+                        setOpen(true);
+                        setErrors({});
+                    }}
                     className="gap-2 bg-primary text-primary-foreground"
                 >
                     <Plus className="h-4 w-4" /> {t('actions.add')}
@@ -412,8 +476,13 @@ export default function AdminFlights() {
                             {t('admin.heroImages')}
                         </h3>
                     </div>
-                    <Button size="sm" onClick={saveHeroImages} className="bg-primary text-primary-foreground">
-                        <Save className="mr-1 h-3.5 w-3.5" /> {t('admin.settings.save')}
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
                     </Button>
                 </div>
                 <HeroImagesManager
@@ -429,8 +498,18 @@ export default function AdminFlights() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
-                                {[t('admin.code'), t('admin.airline'), t('admin.from'), t('admin.to'), t('admin.price'), t('admin.actions')].map((label) => (
-                                    <th key={label} className="px-4 py-3 text-center text-xs font-semibold uppercase text-muted-foreground">
+                                {[
+                                    t('admin.code'),
+                                    t('admin.airline'),
+                                    t('admin.from'),
+                                    t('admin.to'),
+                                    t('admin.price'),
+                                    t('admin.actions'),
+                                ].map((label) => (
+                                    <th
+                                        key={label}
+                                        className="px-4 py-3 text-center text-xs font-semibold uppercase text-muted-foreground"
+                                    >
                                         {label}
                                     </th>
                                 ))}
@@ -438,24 +517,53 @@ export default function AdminFlights() {
                         </thead>
                         <tbody>
                             {rows.map((row) => (
-                                <tr key={row.id} className="border-b border-border last:border-0 hover:bg-muted/20">
-                                    <td className="px-4 py-3 text-center text-sm">{row.code}</td>
+                                <tr
+                                    key={row.id}
+                                    className="border-b border-border last:border-0 hover:bg-muted/20"
+                                >
                                     <td className="px-4 py-3 text-center text-sm">
-                                        {AIRLINE_NAMES.find((a) => a.value === row.airline)
-                                            ? getLocalizedLabel(AIRLINE_NAMES.find((a) => a.value === row.airline)!, lang)
+                                        {row.code}
+                                    </td>
+                                    <td className="px-4 py-3 text-center text-sm">
+                                        {AIRLINE_NAMES.find(
+                                            (a) => a.value === row.airline,
+                                        )
+                                            ? getLocalizedLabel(
+                                                  AIRLINE_NAMES.find(
+                                                      (a) =>
+                                                          a.value ===
+                                                          row.airline,
+                                                  )!,
+                                                  lang,
+                                              )
                                             : String(row.airline ?? '')}
                                     </td>
-                                    <td className="px-4 py-3 text-center text-sm">{String(row.from ?? '')}</td>
-                                    <td className="px-4 py-3 text-center text-sm">{String(row.to ?? '')}</td>
+                                    <td className="px-4 py-3 text-center text-sm">
+                                        {String(row.from ?? '')}
+                                    </td>
+                                    <td className="px-4 py-3 text-center text-sm">
+                                        {String(row.to ?? '')}
+                                    </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
                                         {Number(row.price).toLocaleString()} TND
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-2">
-                                            <button onClick={() => { setEditing(row); setOpen(true); }} className="rounded-lg p-1.5 hover:bg-muted">
+                                            <button
+                                                onClick={() => {
+                                                    setEditing(row);
+                                                    setOpen(true);
+                                                }}
+                                                className="rounded-lg p-1.5 hover:bg-muted"
+                                            >
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
-                                            <button onClick={() => setPendingDelete(row)} className="rounded-lg p-1.5 hover:bg-destructive/10">
+                                            <button
+                                                onClick={() =>
+                                                    setPendingDelete(row)
+                                                }
+                                                className="rounded-lg p-1.5 hover:bg-destructive/10"
+                                            >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </button>
                                         </div>
@@ -469,7 +577,9 @@ export default function AdminFlights() {
 
             <ConfirmDialog
                 open={!!pendingDelete}
-                onOpenChange={(isOpen) => { if (!isOpen) setPendingDelete(null); }}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) setPendingDelete(null);
+                }}
                 onConfirm={() => {
                     if (!pendingDelete) return;
                     deleteMutation.mutate(String(pendingDelete.id));
@@ -480,7 +590,11 @@ export default function AdminFlights() {
             <EntityFormDialog
                 open={open}
                 onOpenChange={handleOpenChange}
-                title={editing ? `${t('actions.edit')} ${t('admin.flights')}` : `${t('actions.add')} ${t('admin.flights')}`}
+                title={
+                    editing
+                        ? `${t('actions.edit')} ${t('admin.flights')}`
+                        : `${t('actions.add')} ${t('admin.flights')}`
+                }
                 sections={flightSections}
                 initial={editing ? { ...editing } : null}
                 onSubmit={(values) => handleSave(values as AdminRow)}

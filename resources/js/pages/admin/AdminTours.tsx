@@ -641,6 +641,17 @@ const AdminTours = () => {
             ),
         },
         {
+            title: t('admin.dateRange'),
+            column: 'main',
+            fields: [
+                {
+                    key: 'dateFrom',
+                    label: t('admin.dateRange'),
+                    type: 'daterange',
+                },
+            ],
+        },
+        {
             title: t('admin.tourForm.media'),
             column: 'side',
             description: t('admin.tourForm.mediaHint'),

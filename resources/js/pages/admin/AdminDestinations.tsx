@@ -888,6 +888,16 @@ const AdminDestinations = () => {
                         ),
                     },
                     {
+                        title: t('admin.dateRange'),
+                        fields: [
+                            {
+                                key: 'dateFrom',
+                                label: t('admin.dateRange'),
+                                type: 'daterange',
+                            },
+                        ],
+                    },
+                    {
                         title: t('admin.destinationForm.mediaAndHighlights'),
                         description: t(
                             'admin.destinationForm.mediaAndHighlightsHint2',

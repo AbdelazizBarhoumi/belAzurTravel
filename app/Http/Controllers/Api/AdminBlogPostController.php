@@ -105,12 +105,11 @@ class AdminBlogPostController extends Controller
         return [
             'slug' => $slug,
             'category_key' => $data['category_key'] ?? $existing?->category_key,
-            'title' => $localized('title', ''),
             'excerpt' => $localized('excerpt', ''),
-            'date' => $data['date'] ?? now()->format('M d, Y'),
             'category' => $localized('category'),
             'image' => $this->handleMainImage($request, $existing?->image, 'uploads/blog_posts'),
             'content' => $this->blogContent($data, $existing, $localized('excerpt', '')),
+            'date' => $data['date'] ?? now()->format('M d, Y'),
         ];
     }
 

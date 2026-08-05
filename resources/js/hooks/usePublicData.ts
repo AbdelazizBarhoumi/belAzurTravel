@@ -278,9 +278,9 @@ export function useBlogPosts() {
 export interface VisaItem {
     id: number;
     code: string;
-    name: string;
+    name: Record<string, string>;
     flag: string;
-    processing: string;
+    processing: Record<string, string>;
     price: number;
 }
 

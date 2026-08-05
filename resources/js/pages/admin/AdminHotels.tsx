@@ -627,6 +627,17 @@ const AdminHotels = () => {
             ),
         },
         {
+            title: t('admin.dateRange'),
+            column: 'main',
+            fields: [
+                {
+                    key: 'dateFrom',
+                    label: t('admin.dateRange'),
+                    type: 'daterange',
+                },
+            ],
+        },
+        {
             title: t('admin.hotelForm.media'),
             column: 'side',
             description: t('admin.hotelForm.mediaHint'),

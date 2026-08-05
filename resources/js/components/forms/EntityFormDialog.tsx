@@ -1,7 +1,10 @@
+import { format, parse } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/DatePicker';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import {
     Dialog,
     DialogContent,
@@ -25,7 +28,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
 // import removed: uniqueNonEmptySelectOptions not used in this file
 
-export type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'checkbox' | 'radio';
+export type FieldType =
+    | 'text'
+    | 'number'
+    | 'textarea'
+    | 'select'
+    | 'checkbox'
+    | 'radio'
+    | 'date'
+    | 'daterange';
 
 export interface FieldOption {
     label: string;
@@ -159,6 +170,66 @@ function optionToLabel(option: string | FieldOption): string {
     return typeof option === 'string' ? option : option.label;
 }
 
+const DATE_FROM_KEY = 'dateFrom';
+const DATE_TO_KEY = 'dateTo';
+
+function parseDateFieldValue(value: unknown): Date | undefined {
+    if (typeof value !== 'string' || value.trim() === '') return undefined;
+    const parsed = parse(value, 'yyyy-MM-dd', new Date());
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
+
+function DateRangeField({
+    field,
+    values,
+    setField,
+    error,
+}: {
+    field: FieldDef;
+    values: Record<string, unknown>;
+    setField: (key: string, value: unknown) => void;
+    error?: string;
+}) {
+    const { t } = useLanguage();
+    const from = parseDateFieldValue(String(values[DATE_FROM_KEY] ?? ''));
+    const to = parseDateFieldValue(String(values[DATE_TO_KEY] ?? ''));
+
+    return (
+        <div className={`space-y-2 ${normalizeSpan(field.colSpan)}`}>
+            <Label
+                className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
+            >
+                {field.label}
+            </Label>
+            <DateRangePicker
+                value={from || to ? { from, to } : undefined}
+                onChange={(range) => {
+                    setField(
+                        DATE_FROM_KEY,
+                        range?.from ? format(range.from, 'yyyy-MM-dd') : '',
+                    );
+                    setField(
+                        DATE_TO_KEY,
+                        range?.to ? format(range.to, 'yyyy-MM-dd') : '',
+                    );
+                }}
+                placeholderFrom={t('admin.dateFrom')}
+                placeholderTo={t('admin.dateTo')}
+                className={
+                    error ? 'border-destructive ring-1 ring-destructive' : undefined
+                }
+            />
+            {error ? (
+                <p className="text-[10px] text-destructive">{error}</p>
+            ) : field.helpText ? (
+                <p className="text-xs text-muted-foreground">
+                    {field.helpText}
+                </p>
+            ) : null}
+        </div>
+    );
+}
+
 function FieldControl({
     field,
     value,
@@ -246,7 +317,10 @@ function FieldControl({
                         }))
                         .filter(({ value }) => value.trim().length > 0)
                         .map(({ value, label }) => (
-                            <div key={value} className="flex items-center space-x-2">
+                            <div
+                                key={value}
+                                className="flex items-center space-x-2"
+                            >
                                 <RadioGroupItem
                                     value={value}
                                     id={`${field.key}-${value}`}
@@ -260,6 +334,32 @@ function FieldControl({
                             </div>
                         ))}
                 </RadioGroup>
+            ) : field.type === 'date' ? (
+                <DatePicker
+                    date={
+                        stringValue
+                            ? (() => {
+                                  const parsed = parse(
+                                      stringValue,
+                                      'yyyy-MM-dd',
+                                      new Date(),
+                                  );
+                                  return Number.isNaN(parsed.getTime())
+                                      ? undefined
+                                      : parsed;
+                              })()
+                            : undefined
+                    }
+                    onDateChange={(date) =>
+                        onChange(date ? format(date, 'yyyy-MM-dd') : '')
+                    }
+                    placeholder={field.placeholder}
+                    className={
+                        error
+                            ? 'border-destructive ring-1 ring-destructive'
+                            : undefined
+                    }
+                />
             ) : (
                 <Input
                     id={field.key}
@@ -272,7 +372,6 @@ function FieldControl({
                     className={commonInputClass}
                 />
             )}
-
             {error ? (
                 <p className="text-[10px] text-destructive">{error}</p>
             ) : field.helpText ? (
@@ -320,15 +419,27 @@ function SectionCard({
 
             {hasFields ? (
                 <div className={normalizeColumns(section.columns)}>
-                    {section.fields?.map((field) => (
-                        <FieldControl
-                            key={field.key}
-                            field={field}
-                            value={values[field.key]}
-                            onChange={(next) => setField(field.key, next)}
-                            error={errors?.[field.key]}
-                        />
-                    ))}
+                    {section.fields?.map((field) =>
+                        field.type === 'daterange' ? (
+                            <DateRangeField
+                                key={field.key}
+                                field={field}
+                                values={values}
+                                setField={setField}
+                                error={errors?.[field.key]}
+                            />
+                        ) : (
+                            <FieldControl
+                                key={field.key}
+                                field={field}
+                                value={values[field.key]}
+                                onChange={(next) =>
+                                    setField(field.key, next)
+                                }
+                                error={errors?.[field.key]}
+                            />
+                        ),
+                    )}
                 </div>
             ) : null}
 

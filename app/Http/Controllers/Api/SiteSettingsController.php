@@ -33,6 +33,9 @@ class SiteSettingsController extends Controller
                     'whatsapp' => null,
                     'address' => null,
                     'plusCode' => null,
+                    'mapLat' => null,
+                    'mapLng' => null,
+                    'mapEmbed' => null,
                     'year' => null,
                     'socialLinks' => [],
                     'legalSections' => [],
@@ -54,6 +57,9 @@ class SiteSettingsController extends Controller
                 'whatsapp' => $row->whatsapp,
                 'address' => $row->address,
                 'plusCode' => $row->plus_code,
+                'mapLat' => $row->map_lat,
+                'mapLng' => $row->map_lng,
+                'mapEmbed' => $row->map_embed,
                 'year' => $row->year,
                 'socialLinks' => $row->social_links,
                 'legalSections' => $row->legal_sections,
@@ -245,7 +251,7 @@ class SiteSettingsController extends Controller
             'phone2' => ['nullable', 'string', 'max:64'],
             'whatsapp' => ['nullable', 'string', 'max:64'],
             'address' => ['nullable', 'string', 'max:512'],
-            'plusCode' => ['nullable', 'string', 'max:100'],
+            'plusCode' => ['nullable', 'string', 'max:2000'],
             'year' => ['nullable', 'integer'],
             'socialLinks' => ['nullable', 'array'],
             'legalSections' => ['nullable', 'array'],
@@ -370,6 +376,13 @@ class SiteSettingsController extends Controller
 
             $hours = $this->normalizeHoursPayload($data['hours'] ?? ($row?->hours ?? []));
 
+            $plusCodeRaw = $data['plusCode'] ?? ($row?->plus_code ?? null);
+            $place = is_string($plusCodeRaw) && $plusCodeRaw !== ''
+                ? $this->resolvePlace($plusCodeRaw)
+                : ['embed' => null, 'coords' => null];
+            $mapEmbed = $place['embed'];
+            $coordinates = $place['coords'];
+
             $updateData = [
                 'company_name' => $data['companyName'] ?? ($row?->company_name ?? $defaults['company_name']),
                 'email' => $data['email'] ?? ($row?->email ?? $defaults['email']),
@@ -377,7 +390,10 @@ class SiteSettingsController extends Controller
                 'phone2' => $data['phone2'] ?? ($row?->phone2 ?? $defaults['phone2']),
                 'whatsapp' => $data['whatsapp'] ?? ($row?->whatsapp ?? $defaults['whatsapp']),
                 'address' => $data['address'] ?? ($row?->address ?? $defaults['address']),
-                'plus_code' => $data['plusCode'] ?? ($row?->plus_code ?? null),
+                'plus_code' => $plusCodeRaw,
+                'map_lat' => $coordinates ? (string) $coordinates[0] : null,
+                'map_lng' => $coordinates ? (string) $coordinates[1] : null,
+                'map_embed' => $mapEmbed,
                 'year' => $data['year'] ?? ($row?->year ?? $defaults['year'] ?? (int) date('Y')),
                 'social_links' => $data['socialLinks'] ?? ($row?->social_links ?? []),
                 'legal_sections' => $data['legalSections'] ?? ($row?->legal_sections ?? []),
@@ -597,5 +613,175 @@ class SiteSettingsController extends Controller
         }
 
         return $normalized;
+    }
+
+    /**
+     * Resolve a user-supplied map value to an embed URL and coordinates.
+     *
+     * Accepts:
+     *  1. Direct coordinates: "lat,lng"
+     *  2. Google Maps embed URL or <iframe src="...pb=..."> snippet
+     *  3. Full Google Maps place URL
+     *  4. Bare short code: "<code>"
+     *  5. Full short link: "https://maps.app.goo.gl/<code>"
+     *  6. Plain address / plus code (fallback text search)
+     *
+     * Returns ['embed' => ?string, 'coords' => ?array].
+     */
+    protected function resolvePlace(string $input): array
+    {
+        $value = trim($input);
+        if ($value === '') {
+            return ['embed' => null, 'coords' => null];
+        }
+
+        // 1. Explicit coordinates
+        if (preg_match('/^[-+]?\d+(?:\.\d+)?\s*,\s*[-+]?\d+(?:\.\d+)?$/', $value)) {
+            [$lat, $lng] = array_map('trim', explode(',', $value));
+
+            return ['embed' => null, 'coords' => [(float) $lat, (float) $lng]];
+        }
+
+        // 2. Direct embed URL / iframe snippet
+        $embed = $this->resolveMapEmbed($value);
+        if ($embed !== null) {
+            return ['embed' => $embed, 'coords' => $this->parseCoordsFromUrl($embed)];
+        }
+
+        // 3. Full Google Maps URL carrying coords / place id inline
+        if (str_contains($value, 'google.com/maps') || str_contains($value, 'goo.gl/maps')) {
+            $embed = $this->buildEmbedFromCanonicalUrl($value);
+            $coords = $this->parseCoordsFromUrl($value);
+            if ($embed !== null || $coords !== null) {
+                return ['embed' => $embed, 'coords' => $coords];
+            }
+        }
+
+        // 4. Bare short code (letters/digits/_/- only, no '+', long enough to be a goo.gl code)
+        if (preg_match('/^[A-Za-z0-9_-]{10,}$/', $value)) {
+            $value = 'https://maps.app.goo.gl/'.$value;
+        }
+
+        // 5. Full short link
+        if (preg_match('#^https?://maps\.app\.goo\.gl/[A-Za-z0-9_-]+$#', $value)) {
+            $finalUrl = $this->followRedirects($value);
+
+            return [
+                'embed' => $this->buildEmbedFromCanonicalUrl($finalUrl),
+                'coords' => $this->parseCoordsFromUrl($finalUrl),
+            ];
+        }
+
+        // 6. Plain address / plus code -> text search fallback
+        return ['embed' => null, 'coords' => null];
+    }
+
+    /**
+     * Build an embed URL ("...maps/embed?pb=...") from a Google Maps canonical
+     * place URL that carries a place id (`!1s<placeId>`) and coordinates.
+     */
+    protected function buildEmbedFromCanonicalUrl(string $url): ?string
+    {
+        if (! preg_match('/!1s([^!]+)/', $url, $placeIdMatch)) {
+            return null;
+        }
+
+        $placeId = rawurldecode($placeIdMatch[1]);
+
+        $coords = $this->parseCoordsFromUrl($url);
+        if ($coords === null) {
+            return null;
+        }
+        [$lat, $lng] = $coords;
+
+        $label = '';
+        if (preg_match('#/maps/place/([^/@]+)#', $url, $labelMatch)) {
+            $label = str_replace('+', ' ', $labelMatch[1]);
+        }
+        $label = $label === '' ? $placeId : $label;
+
+        return 'https://www.google.com/maps/embed?pb='
+            .'!1m18!1m12!1m3!1d4000!2d'.$lng.'!3d'.$lat
+            .'!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1'
+            .'!3m3!1m2!1s'.rawurlencode($placeId).'!2s'.rawurlencode($label)
+            .'!5e0!3m2!1sen!2stn!5m2!1sen!2stn';
+    }
+
+    /**
+     * Extract latitude/longitude from a Google Maps canonical URL.
+     */
+    protected function parseCoordsFromUrl(string $url): ?array
+    {
+        if (preg_match('/@(-?[\d.]+),(-?[\d.]+)/', $url, $m)) {
+            return [(float) $m[1], (float) $m[2]];
+        }
+
+        if (preg_match('/!3d(-?[\d.]+)!4d(-?[\d.]+)/', $url, $m)) {
+            return [(float) $m[1], (float) $m[2]];
+        }
+
+        // Official embed (pb) format uses !2d<lng>!3d<lat>
+        if (preg_match('/!2d(-?[\d.]+)!3d(-?[\d.]+)/', $url, $m)) {
+            return [(float) $m[2], (float) $m[1]];
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect a Google Maps embed URL (either a bare URL or a pasted
+     * <iframe src="..."> snippet) and normalize it to the canonical
+     * "https://www.google.com/maps/embed?pb=..." form.
+     */
+    protected function resolveMapEmbed(string $input): ?string
+    {
+        $value = trim($input);
+        if ($value === '') {
+            return null;
+        }
+
+        // Pasted <iframe ... src="..."> snippet
+        if (preg_match('/src="([^"]*maps\/embed\?pb=[^"]*)"/i', $value, $m)) {
+            $value = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5);
+        }
+
+        // Bare embed URL with a pb parameter
+        if (preg_match('#^https?://(?:www\.)?google\.[a-z]{2,}/maps/embed\?pb=#i', $value)) {
+            $pbStart = strpos($value, 'pb=') + 3;
+            $pb = strtok(substr($value, $pbStart), '&');
+            if ($pb === false || $pb === '') {
+                return null;
+            }
+
+            return 'https://www.google.com/maps/embed?pb='.$pb;
+        }
+
+        return null;
+    }
+
+    /**
+     * Follow redirects and return the final effective URL.
+     */
+    protected function followRedirects(string $url): string
+    {
+        if (! function_exists('curl_init')) {
+            return $url;
+        }
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_NOBODY => true,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_MAXREDIRS => 5,
+            CURLOPT_USERAGENT => 'Mozilla/5.0',
+        ]);
+        curl_exec($ch);
+        $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+        curl_close($ch);
+
+        return is_string($finalUrl) && $finalUrl !== '' ? $finalUrl : $url;
     }
 }

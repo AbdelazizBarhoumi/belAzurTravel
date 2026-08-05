@@ -116,6 +116,8 @@ class AdminTourController extends Controller
             'images' => ['sometimes', 'nullable', 'array'],
             'gallery' => ['sometimes', 'nullable'],
             'category_key' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
             // Filter fields
             'djerba' => ['sometimes', 'boolean'],
             'nord_tunisien' => ['sometimes', 'boolean'],
@@ -204,6 +206,8 @@ class AdminTourController extends Controller
             'itinerary' => $data['itinerary'] ?? $existing->itinerary ?? [],
             'includes' => $data['includes'] ?? $existing->includes ?? [],
             'excludes' => $data['excludes'] ?? $existing->excludes ?? [],
+            'date_from' => $data['date_from'] ?? $existing->date_from ?? null,
+            'date_to' => $data['date_to'] ?? $existing->date_to ?? null,
         ];
     }
 
@@ -243,6 +247,8 @@ class AdminTourController extends Controller
             'excludes' => $item->excludes ?? [],
             'gallery' => $images,
             'images' => $images,
+            'date_from' => $item->date_from,
+            'date_to' => $item->date_to,
         ];
     }
 

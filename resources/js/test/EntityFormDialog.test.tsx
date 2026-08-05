@@ -145,6 +145,44 @@ describe('EntityFormDialog', () => {
         expect(screen.getByText('Name is required')).toBeInTheDocument();
     });
 
+    it('renders a date field that submits a serialized yyyy-MM-dd value', () => {
+        const onSubmit = vi.fn();
+
+        renderWithLanguage(
+            <EntityFormDialog
+                open
+                onOpenChange={vi.fn()}
+                title="Dated entity"
+                sections={[
+                    {
+                        title: 'Schedule',
+                        fields: [
+                            {
+                                key: 'startsAt',
+                                label: 'Starts on',
+                                type: 'date',
+                            },
+                        ],
+                    },
+                ]}
+                initial={{ startsAt: '2026-08-05' }}
+                onSubmit={onSubmit}
+            />,
+        );
+
+        expect(screen.getByText('Starts on')).toBeInTheDocument();
+        expect(screen.getByText(/2026/)).toBeInTheDocument();
+
+        fireEvent.click(
+            screen.getByRole('button', { name: /save|enregistrer/i }),
+        );
+
+        expect(onSubmit).toHaveBeenCalledWith(
+            expect.objectContaining({ startsAt: '2026-08-05' }),
+            expect.any(Function),
+        );
+    });
+
     it('preserves array-backed values when requested', () => {
         const onSubmit = vi.fn();
 

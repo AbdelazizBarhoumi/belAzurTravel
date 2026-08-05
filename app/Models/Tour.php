@@ -28,6 +28,8 @@ class Tour extends Model
         'includes',
         'excludes',
         'images',
+        'date_from',
+        'date_to',
         // Filter fields
         'djerba', 'nord_tunisien', 'sud_tunisien', 'tunisia',
         'tranquille', 'famille', 'djerba_by_vol', 'jeune',
@@ -45,6 +47,8 @@ class Tour extends Model
         'includes' => 'json',
         'excludes' => 'json',
         'images' => 'json',
+        'date_from' => 'date',
+        'date_to' => 'date',
         'duration_days' => 'integer',
         'duration_nights' => 'integer',
         'max_group' => 'integer',

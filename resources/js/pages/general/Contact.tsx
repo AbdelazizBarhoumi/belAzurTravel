@@ -20,6 +20,7 @@ import {
 } from '@/data';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { formatHourRanges } from '@/lib/site-hours';
+import { getMapDisplayText, getMapEmbedSrc, getMapLink, getMapQuery } from '@/lib/site-map';
 
 export default function Contact() {
     const { lang, t } = useLanguage();
@@ -63,7 +64,7 @@ export default function Contact() {
     );
     const companyHours = settings.hours.length > 0 ? settings.hours : [];
     const companySocials = settings.socialLinks;
-    const mapQuery = settings.plusCode || settings.address || '';
+    const mapQuery = getMapQuery(settings);
 
     // Always show all 3 contact method cards, but ONLY with data from settings
     const contactMethods = [
@@ -149,208 +150,203 @@ export default function Contact() {
                 </section>
 
                 <section className="container mx-auto px-4 py-16">
-                    <div className="grid gap-8 lg:grid-cols-3">
-                        <div className="space-y-6 lg:col-span-2">
-                            <motion.div
-                                initial={{ opacity: 0, y: 24 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: '-80px' }}
-                                transition={{ duration: 0.35 }}
-                                className="grid gap-4 md:grid-cols-3"
-                            >
-                                {contactMethods.map((method) => {
-                                    const Icon = method.icon;
-                                    const isCall =
-                                        method.labelKey === 'contact.calls';
-                                    const isWhatsapp =
-                                        method.labelKey === 'contact.whatsapp';
+                    <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.35, delay: 0.1 }}
+                            className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm lg:col-start-3 lg:row-start-2"
+                        >
+                            <h2 className="font-serif text-2xl font-bold text-foreground">
+                                {contactSocialTitle}
+                            </h2>
+                            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                {contactSocialDescription}
+                            </p>
 
-                                    return (
-                                        <a
-                                            key={method.labelKey}
-                                            href={method.href}
-                                            onClick={() => {
-                                                if (isCall)
-                                                    notifyInteraction('call');
-                                                if (isWhatsapp)
-                                                    notifyInteraction(
-                                                        'whatsapp',
-                                                    );
-                                            }}
-                                            className="group rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
-                                        >
-                                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                                                {Icon && (
-                                                    <Icon className="h-5 w-5" />
-                                                )}
-                                            </div>
-                                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                                                {t(method.labelKey)}
-                                            </p>
-                                            <p className="mt-2 text-base font-medium text-foreground">
-                                                {method.value || '—'}
-                                            </p>
-                                        </a>
-                                    );
-                                })}
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 24 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: '-80px' }}
-                                transition={{ duration: 0.35, delay: 0.05 }}
-                                className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm md:p-8"
-                            >
-                                <div className="mb-6 flex items-center gap-3">
-                                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/15 text-secondary">
-                                        <MapPin className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <h2 className="font-serif text-2xl font-bold text-foreground">
-                                            {contactLocationTitle}
-                                        </h2>
-                                        {contactLocationSubtitle && (
-                                            <p className="text-sm text-muted-foreground">
-                                                {contactLocationSubtitle}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {mapQuery && (
-                                    <>
-                                        <div className="overflow-hidden rounded-2xl border border-border/60 bg-muted/30">
-                                            <iframe
-                                                title={t('contact.mapTitle')}
-                                                src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
-                                                className="h-[360px] w-full"
-                                                loading="lazy"
-                                                referrerPolicy="no-referrer-when-downgrade"
-                                            />
-                                        </div>
-
-                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                                            <span>
-                                                {settings.plusCode ||
-                                                    settings.address}
-                                            </span>
+                            {companySocials.length > 0 && (
+                                <div className="mt-6 grid grid-cols-2 gap-3">
+                                    {companySocials.map((social) => {
+                                        const Icon = getSocialIcon(
+                                            social.label,
+                                        );
+                                        return (
                                             <a
-                                                href={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}`}
+                                                key={social.label}
+                                                href={social.href}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="font-medium text-primary hover:underline"
+                                                className="flex items-center gap-3 rounded-2xl border border-border/60 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
                                             >
-                                                {t('contact.openMap')}
+                                                <Icon className="h-4 w-4" />
+                                                <span>{social.label}</span>
                                             </a>
-                                        </div>
-                                    </>
-                                )}
-                            </motion.div>
-                        </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </motion.div>
 
-                        <div className="space-y-6">
-                            <motion.div
-                                initial={{ opacity: 0, y: 24 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: '-80px' }}
-                                transition={{ duration: 0.35, delay: 0.06 }}
-                                className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm"
-                            >
-                                <h2 className="font-serif text-2xl font-bold text-foreground">
-                                    {settings.companyName ||
-                                        t('admin.siteSettings')}
-                                </h2>
-                                {settings.address && (
-                                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                                        {settings.address}
-                                    </p>
-                                )}
-                                {companyHours.length > 0 && (
-                                    <div className="mt-5 space-y-2 text-sm text-muted-foreground">
-                                        {companyHours.map((row, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="flex justify-between gap-3"
-                                            >
-                                                <span>{t(row.dayKey)}</span>
-                                                <span className="text-foreground">
-                                                    {formatHourRanges(
-                                                        row,
-                                                        t('footer.closed'),
-                                                    )}
-                                                </span>
-                                            </div>
-                                        ))}
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.35, delay: 0.05 }}
+                            className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm md:p-8 lg:col-span-2 lg:row-start-2"
+                        >
+                            <div className="mb-6 flex items-center gap-3">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/15 text-secondary">
+                                    <MapPin className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h2 className="font-serif text-2xl font-bold text-foreground">
+                                        {contactLocationTitle}
+                                    </h2>
+                                    {contactLocationSubtitle && (
+                                        <p className="text-sm text-muted-foreground">
+                                            {contactLocationSubtitle}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {mapQuery && (
+                                <>
+                                    <div className="overflow-hidden rounded-2xl border border-border/60 bg-muted/30">
+                                        <iframe
+                                            title={t('contact.mapTitle')}
+                                            src={getMapEmbedSrc(settings)}
+                                            className="h-[360px] w-full"
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                        />
                                     </div>
-                                )}
-                            </motion.div>
 
-                            <motion.div
-                                initial={{ opacity: 0, y: 24 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: '-80px' }}
-                                transition={{ duration: 0.35, delay: 0.1 }}
-                                className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm"
-                            >
-                                <h2 className="font-serif text-2xl font-bold text-foreground">
-                                    {contactSocialTitle}
-                                </h2>
-                                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                                    {contactSocialDescription}
-                                </p>
-
-                                {companySocials.length > 0 && (
-                                    <div className="mt-6 grid grid-cols-2 gap-3">
-                                        {companySocials.map((social) => {
-                                            const Icon = getSocialIcon(
-                                                social.label,
-                                            );
-                                            return (
-                                                <a
-                                                    key={social.label}
-                                                    href={social.href}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="flex items-center gap-3 rounded-2xl border border-border/60 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-                                                >
-                                                    <Icon className="h-4 w-4" />
-                                                    <span>{social.label}</span>
-                                                </a>
-                                            );
-                                        })}
+                                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+<span>
+                                                {getMapDisplayText(settings)}
+                                            </span>
+                                        <a
+                                            href={getMapLink(settings)}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="font-medium text-primary hover:underline"
+                                        >
+                                            {t('contact.openMap')}
+                                        </a>
                                     </div>
-                                )}
-                            </motion.div>
+                                </>
+                            )}
+                        </motion.div>
 
-                            <motion.div
-                                initial={{ opacity: 0, y: 24 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: '-80px' }}
-                                transition={{ duration: 0.35, delay: 0.15 }}
-                                className="rounded-3xl border border-border/60 bg-gradient-to-br from-primary to-secondary p-6 text-primary-foreground shadow-lg"
-                            >
-                                <h2 className="font-serif text-2xl font-bold">
-                                    {contactCtaTitle}
-                                </h2>
-                                <p className="mt-3 text-sm leading-6 text-primary-foreground/80">
-                                    {contactCtaDescription}
-                                </p>
-                                {settings.email ? (
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.35 }}
+                            className="grid gap-4 md:grid-cols-3 lg:col-span-2 lg:row-start-1"
+                        >
+                            {contactMethods.map((method) => {
+                                const Icon = method.icon;
+                                const isCall =
+                                    method.labelKey === 'contact.calls';
+                                const isWhatsapp =
+                                    method.labelKey === 'contact.whatsapp';
+
+                                return (
                                     <a
-                                        href={`mailto:${settings.email}`}
-                                        className="mt-6 inline-flex items-center gap-2 rounded-full bg-background px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5"
+                                        key={method.labelKey}
+                                        href={method.href}
+                                        onClick={() => {
+                                            if (isCall)
+                                                notifyInteraction('call');
+                                            if (isWhatsapp)
+                                                notifyInteraction(
+                                                    'whatsapp',
+                                                );
+                                        }}
+                                        className="group rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
                                     >
-                                        <Mail className="h-4 w-4" />
-                                        {settings.email}
+                                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                                            {Icon && (
+                                                <Icon className="h-5 w-5" />
+                                            )}
+                                        </div>
+                                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                                            {t(method.labelKey)}
+                                        </p>
+                                        <p className="mt-2 text-base font-medium text-foreground">
+                                            {method.value || '—'}
+                                        </p>
                                     </a>
-                                ) : (
-                                    <p className="mt-6 text-sm text-primary-foreground/60">
-                                        —
-                                    </p>
-                                )}
-                            </motion.div>
-                        </div>
+                                );
+                            })}
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.35, delay: 0.06 }}
+                            className="rounded-3xl border border-border/60 bg-card p-6 shadow-sm lg:col-start-3 lg:row-start-1"
+                        >
+                            <h2 className="font-serif text-2xl font-bold text-foreground">
+                                {settings.companyName ||
+                                    t('admin.siteSettings')}
+                            </h2>
+                            {settings.address && (
+                                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                    {settings.address}
+                                </p>
+                            )}
+                            {companyHours.length > 0 && (
+                                <div className="mt-5 space-y-2 text-sm text-muted-foreground">
+                                    {companyHours.map((row, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="flex justify-between gap-3"
+                                        >
+                                            <span>{t(row.dayKey)}</span>
+                                            <span className="text-foreground">
+                                                {formatHourRanges(
+                                                    row,
+                                                    t('footer.closed'),
+                                                )}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-80px' }}
+                            transition={{ duration: 0.35, delay: 0.15 }}
+                            className="rounded-3xl border border-border/60 bg-gradient-to-br from-primary to-secondary p-6 text-primary-foreground shadow-lg lg:col-start-3 lg:row-start-3"
+                        >
+                            <h2 className="font-serif text-2xl font-bold">
+                                {contactCtaTitle}
+                            </h2>
+                            <p className="mt-3 text-sm leading-6 text-primary-foreground/80">
+                                {contactCtaDescription}
+                            </p>
+                            {settings.email ? (
+                                <a
+                                    href={`mailto:${settings.email}`}
+                                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-background px-5 py-3 text-sm font-semibold text-foreground transition-transform hover:-translate-y-0.5"
+                                >
+                                    <Mail className="h-4 w-4" />
+                                    {settings.email}
+                                </a>
+                            ) : (
+                                <p className="mt-6 text-sm text-primary-foreground/60">
+                                    —
+                                </p>
+                            )}
+                        </motion.div>
                     </div>
                 </section>
             </main>

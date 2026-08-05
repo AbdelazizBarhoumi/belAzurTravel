@@ -250,7 +250,11 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.promos.active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
     'admin.promos.inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
-    'admin.promos.special': { fr: 'Offres spéciales', ar: 'عروض مميزة', en: 'Special Offers' },
+    'admin.promos.special': {
+        fr: 'Offres spéciales',
+        ar: 'عروض مميزة',
+        en: 'Special Offers',
+    },
     'admin.promos.notSpecial': { fr: 'Normal', ar: 'عادي', en: 'Normal' },
     'admin.promos.limitsTitle': {
         fr: 'Limites et portée',
@@ -275,7 +279,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Failed to save data.',
     },
     'admin.saveFailed': {
-        fr: "Échec de la sauvegarde",
+        fr: 'Échec de la sauvegarde',
         ar: 'فشل الحفظ',
         en: 'Failed to save',
     },
@@ -382,6 +386,9 @@ export const translations: Record<string, TranslationEntry> = {
     'label.stops': { fr: 'Escales', ar: 'توقف', en: 'Stops' },
     'admin.price': { fr: 'Prix', ar: 'السعر', en: 'Price' },
     'admin.date': { fr: 'Date', ar: 'التاريخ', en: 'Date' },
+    'admin.dateRange': { fr: 'Période', ar: 'الفترة', en: 'Period' },
+    'admin.dateFrom': { fr: 'Du', ar: 'من', en: 'From' },
+    'admin.dateTo': { fr: 'Au', ar: 'إلى', en: 'To' },
     'admin.code': { fr: 'Code', ar: 'الرمز', en: 'Code' },
     'admin.from': { fr: 'Origine', ar: 'الأصل', en: 'Origin' },
     'admin.bio': { fr: 'Bio', ar: 'السيرة الذاتية', en: 'Bio' },
@@ -462,7 +469,11 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Destination',
     },
     'search.fields.country': { fr: 'Pays', ar: 'البلد', en: 'Country' },
-    'search.placeholders.country': { fr: 'Sélectionner un pays', ar: 'اختر البلد', en: 'Select country' },
+    'search.placeholders.country': {
+        fr: 'Sélectionner un pays',
+        ar: 'اختر البلد',
+        en: 'Select country',
+    },
     'search.fields.dates': { fr: 'Dates', ar: 'التواريخ', en: 'Dates' },
     'search.fields.guests': {
         fr: 'BelAzurTravels',
@@ -2695,33 +2706,121 @@ export const translations: Record<string, TranslationEntry> = {
     'admin.visaTable.flag': { fr: 'Drapeau', ar: 'العلم', en: 'Flag' },
     'admin.visaTable.name': { fr: 'Nom', ar: 'الاسم', en: 'Name' },
     'admin.visaTable.region': { fr: 'Région', ar: 'المنطقة', en: 'Region' },
-    'admin.visaTable.processing': { fr: 'Délai', ar: 'مدة المعالجة', en: 'Processing' },
+    'admin.visaTable.processing': {
+        fr: 'Délai',
+        ar: 'مدة المعالجة',
+        en: 'Processing',
+    },
     'admin.visaTable.price': { fr: 'Prix', ar: 'السعر', en: 'Price' },
     'admin.visaTable.active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
-    'admin.visaTable.actions': { fr: 'Actions', ar: 'الإجراءات', en: 'Actions' },
-    'admin.visaForm.details': { fr: 'Détails du visa', ar: 'تفاصيل التأشيرة', en: 'Visa Details' },
-    'admin.visaForm.detailsHint': { fr: 'Informations sur le pays et les tarifs', ar: 'معلومات البلد والأسعار', en: 'Country and pricing information' },
-    'admin.visaForm.helper': { fr: 'Remplissez les informations du visa pour chaque langue', ar: 'املأ معلومات التأشيرة لكل لغة', en: 'Fill in visa information for each language' },
-    'admin.visaForm.code': { fr: 'Code pays', ar: 'رمز الدولة', en: 'Country Code' },
-    'admin.visaForm.name': { fr: 'Nom du pays', ar: 'اسم الدولة', en: 'Country Name' },
-    'admin.visaForm.namePlaceholder': { fr: 'France', ar: 'فرنسا', en: 'France' },
-    'admin.visaForm.flag': { fr: 'Drapeau (emoji)', ar: 'العلم (إيموجي)', en: 'Flag (emoji)' },
-    'admin.visaForm.selectCountry': { fr: 'Sélectionner un pays', ar: 'اختر الدولة', en: 'Select a country' },
-    'admin.visaForm.flagAuto': { fr: 'Généré automatiquement', ar: 'يتم إنشاؤه تلقائيًا', en: 'Auto-generated' },
+    'admin.visaTable.actions': {
+        fr: 'Actions',
+        ar: 'الإجراءات',
+        en: 'Actions',
+    },
+    'admin.visaForm.details': {
+        fr: 'Détails du visa',
+        ar: 'تفاصيل التأشيرة',
+        en: 'Visa Details',
+    },
+    'admin.visaForm.detailsHint': {
+        fr: 'Informations sur le pays et les tarifs',
+        ar: 'معلومات البلد والأسعار',
+        en: 'Country and pricing information',
+    },
+    'admin.visaForm.helper': {
+        fr: 'Remplissez les informations du visa pour chaque langue',
+        ar: 'املأ معلومات التأشيرة لكل لغة',
+        en: 'Fill in visa information for each language',
+    },
+    'admin.visaForm.code': {
+        fr: 'Code pays',
+        ar: 'رمز الدولة',
+        en: 'Country Code',
+    },
+    'admin.visaForm.name': {
+        fr: 'Nom du pays',
+        ar: 'اسم الدولة',
+        en: 'Country Name',
+    },
+    'admin.visaForm.namePlaceholder': {
+        fr: 'France',
+        ar: 'فرنسا',
+        en: 'France',
+    },
+    'admin.visaForm.flag': {
+        fr: 'Drapeau (emoji)',
+        ar: 'العلم (إيموجي)',
+        en: 'Flag (emoji)',
+    },
+    'admin.visaForm.selectCountry': {
+        fr: 'Sélectionner un pays',
+        ar: 'اختر الدولة',
+        en: 'Select a country',
+    },
+    'admin.visaForm.flagAuto': {
+        fr: 'Généré automatiquement',
+        ar: 'يتم إنشاؤه تلقائيًا',
+        en: 'Auto-generated',
+    },
     'admin.visaForm.region': { fr: 'Région', ar: 'المنطقة', en: 'Region' },
-    'admin.visaForm.regionPlaceholder': { fr: 'Europe', ar: 'أوروبا', en: 'Europe' },
-    'admin.visaForm.processing': { fr: 'Délai de traitement', ar: 'مدة المعالجة', en: 'Processing Time' },
-    'admin.visaForm.processingPlaceholder': { fr: '10-15 jours', ar: '10-15 يوم', en: '10-15 days' },
-    'admin.visaForm.price': { fr: 'Prix (DT)', ar: 'السعر (د.ت)', en: 'Price (DT)' },
-    'admin.visaForm.sortOrder': { fr: 'Ordre', ar: 'الترتيب', en: 'Sort Order' },
+    'admin.visaForm.regionPlaceholder': {
+        fr: 'Europe',
+        ar: 'أوروبا',
+        en: 'Europe',
+    },
+    'admin.visaForm.processing': {
+        fr: 'Délai de traitement',
+        ar: 'مدة المعالجة',
+        en: 'Processing Time',
+    },
+    'admin.visaForm.processingPlaceholder': {
+        fr: '10-15 jours',
+        ar: '10-15 يوم',
+        en: '10-15 days',
+    },
+    'admin.visaForm.price': {
+        fr: 'Prix (DT)',
+        ar: 'السعر (د.ت)',
+        en: 'Price (DT)',
+    },
+    'admin.visaForm.sortOrder': {
+        fr: 'Ordre',
+        ar: 'الترتيب',
+        en: 'Sort Order',
+    },
     'admin.visaForm.active': { fr: 'Actif', ar: 'نشط', en: 'Active' },
     'admin.visaForm.inactive': { fr: 'Inactif', ar: 'غير نشط', en: 'Inactive' },
-    'admin.visaForm.pricingAndSettings': { fr: 'Prix et paramètres', ar: 'السعر والإعدادات', en: 'Pricing & Settings' },
-    'admin.visaForm.pricingAndSettingsHint': { fr: 'Définir le prix et l\'état du visa', ar: 'تحديد سعر وحالة التأشيرة', en: 'Set visa price and status' },
-    'admin.visaAddTitle': { fr: 'Ajouter un visa', ar: 'إضافة تأشيرة', en: 'Add Visa' },
-    'admin.visaEditTitle': { fr: 'Modifier le visa', ar: 'تعديل التأشيرة', en: 'Edit Visa' },
-    'admin.visaAdded': { fr: 'Visa ajouté', ar: 'تمت إضافة التأشيرة', en: 'Visa added' },
-    'admin.visaUpdated': { fr: 'Visa mis à jour', ar: 'تم تحديث التأشيرة', en: 'Visa updated' },
+    'admin.visaForm.pricingAndSettings': {
+        fr: 'Prix et paramètres',
+        ar: 'السعر والإعدادات',
+        en: 'Pricing & Settings',
+    },
+    'admin.visaForm.pricingAndSettingsHint': {
+        fr: "Définir le prix et l'état du visa",
+        ar: 'تحديد سعر وحالة التأشيرة',
+        en: 'Set visa price and status',
+    },
+    'admin.visaAddTitle': {
+        fr: 'Ajouter un visa',
+        ar: 'إضافة تأشيرة',
+        en: 'Add Visa',
+    },
+    'admin.visaEditTitle': {
+        fr: 'Modifier le visa',
+        ar: 'تعديل التأشيرة',
+        en: 'Edit Visa',
+    },
+    'admin.visaAdded': {
+        fr: 'Visa ajouté',
+        ar: 'تمت إضافة التأشيرة',
+        en: 'Visa added',
+    },
+    'admin.visaUpdated': {
+        fr: 'Visa mis à jour',
+        ar: 'تم تحديث التأشيرة',
+        en: 'Visa updated',
+    },
     'admin.partnerAdded': {
         fr: 'Partenaire ajouté',
         ar: 'تم إضافة الشريك',
@@ -3405,45 +3504,177 @@ export const translations: Record<string, TranslationEntry> = {
 
     'admin.hotels': HOTELS,
     'admin.tours': TOURS,
-    'admin.travels': { fr: 'Voyages à l\'étranger', ar: 'رحلات دولية', en: 'International Travel' },
-    'admin.travelsSubtitle': { fr: 'Gérez les voyages internationaux', ar: 'إدارة الرحلات الدولية', en: 'Manage international travel packages' },
-    'admin.travelUpdated': { fr: 'Voyage mis à jour', ar: 'تم تحديث الرحلة', en: 'Travel updated' },
-    'admin.travelAdded': { fr: 'Voyage ajouté', ar: 'تمت إضافة الرحلة', en: 'Travel added' },
-    'admin.travelForm.coreDetails': { fr: 'Détails de base', ar: 'التفاصيل الأساسية', en: 'Core Details' },
-    'admin.travelForm.coreDetailsHint': { fr: 'Informations principales du voyage', ar: 'المعلومات الرئيسية للرحلة', en: 'Main information about the travel' },
-    'admin.travelForm.namePlaceholder': { fr: 'Nom du voyage', ar: 'اسم الرحلة', en: 'Travel name' },
-    'admin.travelForm.locationPlaceholder': { fr: 'Destination', ar: 'الوجهة', en: 'Destination' },
-    'admin.travelForm.durationPlaceholder': { fr: 'Ex: 7 jours / 6 nuits', ar: 'مثال: 7 أيام / 6 ليالٍ', en: 'Ex: 7 days / 6 nights' },
-    'admin.travelForm.descriptionPlaceholder': { fr: 'Décrivez le voyage...', ar: 'صف الرحلة...', en: 'Describe the travel...' },
-    'admin.travelForm.pricePlaceholder': { fr: 'Prix en DT', ar: 'السعر بالدينار', en: 'Price in DT' },
-    'admin.travelForm.ratingPlaceholder': { fr: 'Note (0-5)', ar: 'التقييم (0-5)', en: 'Rating (0-5)' },
+    'admin.travels': {
+        fr: "Voyages à l'étranger",
+        ar: 'رحلات دولية',
+        en: 'International Travel',
+    },
+    'admin.travelsSubtitle': {
+        fr: 'Gérez les voyages internationaux',
+        ar: 'إدارة الرحلات الدولية',
+        en: 'Manage international travel packages',
+    },
+    'admin.travelUpdated': {
+        fr: 'Voyage mis à jour',
+        ar: 'تم تحديث الرحلة',
+        en: 'Travel updated',
+    },
+    'admin.travelAdded': {
+        fr: 'Voyage ajouté',
+        ar: 'تمت إضافة الرحلة',
+        en: 'Travel added',
+    },
+    'admin.travelForm.coreDetails': {
+        fr: 'Détails de base',
+        ar: 'التفاصيل الأساسية',
+        en: 'Core Details',
+    },
+    'admin.travelForm.coreDetailsHint': {
+        fr: 'Informations principales du voyage',
+        ar: 'المعلومات الرئيسية للرحلة',
+        en: 'Main information about the travel',
+    },
+    'admin.travelForm.namePlaceholder': {
+        fr: 'Nom du voyage',
+        ar: 'اسم الرحلة',
+        en: 'Travel name',
+    },
+    'admin.travelForm.locationPlaceholder': {
+        fr: 'Destination',
+        ar: 'الوجهة',
+        en: 'Destination',
+    },
+    'admin.travelForm.durationPlaceholder': {
+        fr: 'Ex: 7 jours / 6 nuits',
+        ar: 'مثال: 7 أيام / 6 ليالٍ',
+        en: 'Ex: 7 days / 6 nights',
+    },
+    'admin.travelForm.descriptionPlaceholder': {
+        fr: 'Décrivez le voyage...',
+        ar: 'صف الرحلة...',
+        en: 'Describe the travel...',
+    },
+    'admin.travelForm.pricePlaceholder': {
+        fr: 'Prix en DT',
+        ar: 'السعر بالدينار',
+        en: 'Price in DT',
+    },
+    'admin.travelForm.ratingPlaceholder': {
+        fr: 'Note (0-5)',
+        ar: 'التقييم (0-5)',
+        en: 'Rating (0-5)',
+    },
     'admin.travelForm.durationDays': { fr: 'Jours', ar: 'أيام', en: 'Days' },
-    'admin.travelForm.durationDaysPlaceholder': { fr: 'Nombre de jours', ar: 'عدد الأيام', en: 'Number of days' },
-    'admin.travelForm.durationNights': { fr: 'Nuits', ar: 'ليالٍ', en: 'Nights' },
-    'admin.travelForm.durationNightsPlaceholder': { fr: 'Nombre de nuits', ar: 'عدد الليالٍ', en: 'Number of nights' },
-    'admin.travelForm.maxGroup': { fr: 'Groupe max', ar: 'الحد الأقصى للمجموعة', en: 'Max Group' },
-    'admin.travelForm.maxGroupPlaceholder': { fr: 'Capacité max', ar: 'السعة القصوى', en: 'Max capacity' },
-    'admin.travelForm.priceUnit': { fr: 'DT/personne', ar: 'دينار/شخص', en: 'DT/person' },
+    'admin.travelForm.durationDaysPlaceholder': {
+        fr: 'Nombre de jours',
+        ar: 'عدد الأيام',
+        en: 'Number of days',
+    },
+    'admin.travelForm.durationNights': {
+        fr: 'Nuits',
+        ar: 'ليالٍ',
+        en: 'Nights',
+    },
+    'admin.travelForm.durationNightsPlaceholder': {
+        fr: 'Nombre de nuits',
+        ar: 'عدد الليالٍ',
+        en: 'Number of nights',
+    },
+    'admin.travelForm.maxGroup': {
+        fr: 'Groupe max',
+        ar: 'الحد الأقصى للمجموعة',
+        en: 'Max Group',
+    },
+    'admin.travelForm.maxGroupPlaceholder': {
+        fr: 'Capacité max',
+        ar: 'السعة القصوى',
+        en: 'Max capacity',
+    },
+    'admin.travelForm.priceUnit': {
+        fr: 'DT/personne',
+        ar: 'دينار/شخص',
+        en: 'DT/person',
+    },
     'admin.travelForm.media': { fr: 'Médias', ar: 'الوسائط', en: 'Media' },
-    'admin.travelForm.mediaHint': { fr: 'Image principale et galerie', ar: 'الصورة الرئيسية والمعرض', en: 'Main image and gallery' },
-    'admin.travelForm.itinerary': { fr: 'Itinéraire', ar: 'خط السير', en: 'Itinerary' },
-    'admin.travelForm.itineraryHint': { fr: 'Journée par jour', ar: 'يوم بيوم', en: 'Day by day' },
-    'admin.travelForm.addDay': { fr: 'Ajouter une journée', ar: 'إضافة يوم', en: 'Add Day' },
+    'admin.travelForm.mediaHint': {
+        fr: 'Image principale et galerie',
+        ar: 'الصورة الرئيسية والمعرض',
+        en: 'Main image and gallery',
+    },
+    'admin.travelForm.itinerary': {
+        fr: 'Itinéraire',
+        ar: 'خط السير',
+        en: 'Itinerary',
+    },
+    'admin.travelForm.itineraryHint': {
+        fr: 'Journée par jour',
+        ar: 'يوم بيوم',
+        en: 'Day by day',
+    },
+    'admin.travelForm.addDay': {
+        fr: 'Ajouter une journée',
+        ar: 'إضافة يوم',
+        en: 'Add Day',
+    },
     'admin.travelForm.day': { fr: 'Jour', ar: 'يوم', en: 'Day' },
-    'admin.travelForm.inclusions': { fr: 'Inclusions / Exclusions', ar: 'اليشمل / لا يشمل', en: 'Inclusions / Exclusions' },
-    'admin.travelForm.inclusionsHint': { fr: 'Ce qui est inclus et non inclus', ar: 'ما هو مشمول وغير مشمول', en: 'What is included and excluded' },
+    'admin.travelForm.inclusions': {
+        fr: 'Inclusions / Exclusions',
+        ar: 'اليشمل / لا يشمل',
+        en: 'Inclusions / Exclusions',
+    },
+    'admin.travelForm.inclusionsHint': {
+        fr: 'Ce qui est inclus et non inclus',
+        ar: 'ما هو مشمول وغير مشمول',
+        en: 'What is included and excluded',
+    },
     'admin.travelForm.includes': { fr: 'Inclus', ar: 'مشمول', en: 'Included' },
-    'admin.travelForm.excludes': { fr: 'Non inclus', ar: 'غير مشمول', en: 'Not Included' },
-    'admin.travelForm.addInclusion': { fr: 'Ajouter une inclusion', ar: 'إضافة مشمول', en: 'Add Inclusion' },
-    'admin.travelForm.addExclusion': { fr: 'Ajouter une exclusion', ar: 'إضافة غير مشمول', en: 'Add Exclusion' },
-    'admin.travelForm.itemName': { fr: 'Nom de l\'élément', ar: 'اسم العنصر', en: 'Item name' },
-    'nav.travels': { fr: 'Voyages à l\'étranger', ar: 'رحلات دولية', en: 'International Travel' },
-    'travels.title': { fr: 'Voyages à l\'étranger', ar: 'رحلات دولية', en: 'International Travel' },
-    'travels.subtitle': { fr: 'Découvrez nos voyages internationaux', ar: 'اكتشف رحلاتنا الدولية', en: 'Discover our international travel packages' },
+    'admin.travelForm.excludes': {
+        fr: 'Non inclus',
+        ar: 'غير مشمول',
+        en: 'Not Included',
+    },
+    'admin.travelForm.addInclusion': {
+        fr: 'Ajouter une inclusion',
+        ar: 'إضافة مشمول',
+        en: 'Add Inclusion',
+    },
+    'admin.travelForm.addExclusion': {
+        fr: 'Ajouter une exclusion',
+        ar: 'إضافة غير مشمول',
+        en: 'Add Exclusion',
+    },
+    'admin.travelForm.itemName': {
+        fr: "Nom de l'élément",
+        ar: 'اسم العنصر',
+        en: 'Item name',
+    },
+    'nav.travels': {
+        fr: "Voyages à l'étranger",
+        ar: 'رحلات دولية',
+        en: 'International Travel',
+    },
+    'travels.title': {
+        fr: "Voyages à l'étranger",
+        ar: 'رحلات دولية',
+        en: 'International Travel',
+    },
+    'travels.subtitle': {
+        fr: 'Découvrez nos voyages internationaux',
+        ar: 'اكتشف رحلاتنا الدولية',
+        en: 'Discover our international travel packages',
+    },
     'travels.person': { fr: 'personne', ar: 'شخص', en: 'person' },
     'travels.bookTravel': { fr: 'Réserver', ar: 'احجز', en: 'Book' },
-    'travels.filterByLocation': { fr: 'Filtrer par destination', ar: 'تصفية حسب الوجهة', en: 'Filter by destination' },
-    'travels.filterByDuration': { fr: 'Filtrer par durée', ar: 'تصفية حسب المدة', en: 'Filter by duration' },
+    'travels.filterByLocation': {
+        fr: 'Filtrer par destination',
+        ar: 'تصفية حسب الوجهة',
+        en: 'Filter by destination',
+    },
+    'travels.filterByDuration': {
+        fr: 'Filtrer par durée',
+        ar: 'تصفية حسب المدة',
+        en: 'Filter by duration',
+    },
     'travels.max': { fr: 'Max', ar: 'الحد الأقصى', en: 'Max' },
     'admin.bookings': { fr: 'Réservations', ar: 'الحجوزات', en: 'Bookings' },
     'admin.users': { fr: 'Utilisateurs', ar: 'المستخدمون', en: 'Users' },
@@ -3641,7 +3872,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Refund Amount',
     },
     'client.adminReply': {
-        fr: 'Réponse de l\'administrateur',
+        fr: "Réponse de l'administrateur",
         ar: 'رد المدير',
         en: 'Admin Reply',
     },
@@ -3658,7 +3889,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Pending',
     },
     'complaint.status.in_review': {
-        fr: 'En cours d\'examen',
+        fr: "En cours d'examen",
         ar: 'قيد المراجعة',
         en: 'In Review',
     },
@@ -3718,7 +3949,7 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'إدارة الشكاوى والمبالغ المستردة',
         en: 'Manage complaints and refund requests',
     },
-    'your.journey.is.loading':{
+    'your.journey.is.loading': {
         fr: 'Votre voyage est en cours de chargement...',
         ar: 'رحلتك قيد التحميل...',
         en: 'Your journey is loading...',
@@ -3886,7 +4117,7 @@ translations['payment.failedTitle'] = {
     en: 'Payment Failed',
 };
 translations['payment.failedMessage'] = {
-    fr: 'Le paiement n\'a pas pu être traité. Veuillez réessayer depuis votre tableau de bord.',
+    fr: "Le paiement n'a pas pu être traité. Veuillez réessayer depuis votre tableau de bord.",
     ar: 'تعذر معالجة الدفع. يرجى المحاولة مرة أخرى من لوحة التحكم.',
     en: 'Payment could not be processed. Please try again from your dashboard.',
 };
@@ -3901,7 +4132,7 @@ translations['payment.errorMessage'] = {
     en: 'An error occurred while processing the payment.',
 };
 translations['payment.initError'] = {
-    fr: 'Échec de l\'initialisation du paiement. Veuillez payer depuis votre tableau de bord.',
+    fr: "Échec de l'initialisation du paiement. Veuillez payer depuis votre tableau de bord.",
     ar: 'فشل تهيئة الدفع. يرجى الدفع من لوحة التحكم.',
     en: 'Payment initiation failed. Please pay from your dashboard.',
 };
@@ -4124,7 +4355,7 @@ translations['home.featuredEvents'] = {
 translations['home.featuredEventsDesc'] = {
     fr: 'Ne manquez aucun événement',
     ar: 'لا تفوّت أي حدث',
-    en: 'Don\'t miss any event',
+    en: "Don't miss any event",
 };
 translations['home.featuredDeals'] = {
     fr: 'Offres Spéciales',
@@ -4182,7 +4413,7 @@ translations['admin.heroUpload'] = {
     en: 'Upload',
 };
 translations['admin.heroAddImage'] = {
-    fr: "Ajouter une image héros",
+    fr: 'Ajouter une image héros',
     ar: 'إضافة صورة للواجهة',
     en: 'Add an image to the hero section',
 };
@@ -4485,9 +4716,9 @@ translations['admin.settings.address'] = {
     en: 'Address',
 };
 translations['admin.settings.plusCode'] = {
-    fr: 'Plus Code (map)',
-    ar: 'رمز الخريطة',
-    en: 'Plus Code for map',
+    fr: 'Lien Google Maps',
+    ar: 'رابط خرائط جوجل',
+    en: 'Google Maps link',
 };
 translations['admin.settings.year'] = { fr: 'Année', ar: 'السنة', en: 'Year' };
 translations['admin.settings.contactDetails'] = {
@@ -4727,7 +4958,7 @@ translations['admin.settings.selectPageToAdd'] = {
     en: 'Select a page to add...',
 };
 translations['admin.settings.noPagesAdded'] = {
-    fr: "Aucune page ajoutée. Utilisez le menu ci-dessus pour ajouter des pages.",
+    fr: 'Aucune page ajoutée. Utilisez le menu ci-dessus pour ajouter des pages.',
     ar: 'لم تتم إضافة أي صفحة. استخدم القائمة أعلاه لإضافة الصفحات.',
     en: 'No pages added yet. Use the dropdown above to add pages.',
 };
@@ -4772,9 +5003,9 @@ translations['admin.settings.placeholder.address'] = {
     en: 'City, country',
 };
 translations['admin.settings.placeholder.plusCode'] = {
-    fr: '8FVC9G8F+5V',
-    ar: '8FVC9G8F+5V',
-    en: '8FVC9G8F+5V',
+    fr: 'https://maps.app.goo.gl/… , un code, ou l’URL d’intégration / iframe Google Maps',
+    ar: 'https://maps.app.goo.gl/…  أو  رمز  أو  رابط الموقع المضمن  (iframe)',
+    en: 'https://maps.app.goo.gl/…, a code, or the Google Maps embed / <iframe> URL',
 };
 translations['admin.settings.placeholder.email'] = {
     fr: 'contact@belazurtravel.com',
@@ -5006,7 +5237,7 @@ translations['admin.hotelForm.media'] = {
     en: 'Media',
 };
 translations['admin.hotelForm.mediaHint'] = {
-    fr: 'Images et listes d\'équipements.',
+    fr: "Images et listes d'équipements.",
     ar: 'الصور وقوائم المرافق.',
     en: 'Images and amenity lists.',
 };
@@ -5123,7 +5354,7 @@ translations['admin.categoryTypeManager.errorDelete'] = {
     en: 'Failed to delete category type',
 };
 translations['admin.categoryTypeManager.errorAddValue'] = {
-    fr: 'Échec de l\'ajout de la valeur',
+    fr: "Échec de l'ajout de la valeur",
     ar: 'فشل إضافة القيمة',
     en: 'Failed to add value',
 };
@@ -5356,7 +5587,7 @@ translations['admin.settings.hasDropdown'] = {
     en: 'This link has a dropdown',
 };
 translations['admin.settings.noDropdown'] = {
-    fr: 'Ce lien n\'a pas de menu déroulant',
+    fr: "Ce lien n'a pas de menu déroulant",
     ar: 'هذا الرابط لا يحتوي على قائمة منسدلة',
     en: 'This link has no dropdown',
 };
@@ -5401,7 +5632,7 @@ translations['admin.settings.linkHidden'] = {
     en: 'This link is hidden in navigation',
 };
 translations['admin.settings.navEditorGuide'] = {
-    fr: 'Guide de l\'éditeur de navigation',
+    fr: "Guide de l'éditeur de navigation",
     ar: 'دليل محرر التنقل',
     en: 'Navigation Editor Guide',
 };
@@ -5416,7 +5647,7 @@ translations['admin.settings.addPageToHeader'] = {
     en: 'Add Page to Navigation',
 };
 translations['admin.settings.addPageDescription'] = {
-    fr: 'Sélectionnez une page pour l\'ajouter à la navigation principale.',
+    fr: "Sélectionnez une page pour l'ajouter à la navigation principale.",
     ar: 'اختر صفحة لإضافتها إلى التنقل الرئيسي.',
     en: 'Select a page to add to the main navigation.',
 };
@@ -5885,4 +6116,261 @@ translations['admin.section.location'] = {
     fr: 'Emplacement',
     ar: 'الموقع',
     en: 'Location',
+};
+
+// Visa page
+translations['visa.title'] = {
+    fr: 'Demande de Visa',
+    ar: 'طلب التأشيرة',
+    en: 'Visa Request',
+};
+translations['visa.loading'] = {
+    fr: 'Chargement...',
+    ar: 'جارٍ التحميل...',
+    en: 'Loading...',
+};
+translations['visa.selectCountrySubtitle'] = {
+    fr: 'Sélectionnez le pays de destination pour démarrer votre demande.',
+    ar: 'اختر بلد الوجهة لبدء طلبك.',
+    en: 'Select the destination country to start your request.',
+};
+translations['visa.searchPlaceholder'] = {
+    fr: 'Rechercher un pays...',
+    ar: 'ابحث عن بلد...',
+    en: 'Search for a country...',
+};
+translations['visa.noCountries'] = {
+    fr: 'Aucun pays trouvé.',
+    ar: 'لا توجد بلدان مطابقة.',
+    en: 'No countries found.',
+};
+translations['visa.processingLabel'] = {
+    fr: 'Traitement',
+    ar: 'مدة المعالجة',
+    en: 'Processing',
+};
+translations['visa.currency'] = {
+    fr: 'DT',
+    ar: 'د.ت',
+    en: 'DT',
+};
+translations['visa.submittedTitle'] = {
+    fr: 'Demande de visa envoyée',
+    ar: 'تم إرسال طلب التأشيرة',
+    en: 'Visa request sent',
+};
+translations['visa.submittedSubtitle'] = {
+    fr: 'Nous vous contacterons très prochainement.',
+    ar: 'سنتواصل معك قريبًا جدًا.',
+    en: 'We will contact you very soon.',
+};
+translations['visa.forCountry'] = {
+    fr: 'Visa pour {name}',
+    ar: 'تأشيرة {name}',
+    en: 'Visa for {name}',
+};
+translations['visa.advisorNote'] = {
+    fr: 'Un conseiller vous contactera sous 24h pour finaliser votre dossier.',
+    ar: 'سيتواصل معك مستشار خلال 24 ساعة لاستكمال ملفك.',
+    en: 'An advisor will contact you within 24h to finalize your file.',
+};
+translations['visa.newRequest'] = {
+    fr: 'Nouvelle demande',
+    ar: 'طلب جديد',
+    en: 'New request',
+};
+translations['visa.chooseAnotherCountry'] = {
+    fr: 'Choisir un autre pays',
+    ar: 'اختر بلدًا آخر',
+    en: 'Choose another country',
+};
+translations['visa.firstName'] = {
+    fr: 'Prénom',
+    ar: 'الاسم الأول',
+    en: 'First name',
+};
+translations['visa.lastName'] = {
+    fr: 'Nom de la famille',
+    ar: 'اسم العائلة',
+    en: 'Last name',
+};
+translations['visa.email'] = {
+    fr: 'Email',
+    ar: 'البريد الإلكتروني',
+    en: 'Email',
+};
+translations['visa.phone'] = {
+    fr: 'Téléphone',
+    ar: 'الهاتف',
+    en: 'Phone',
+};
+translations['visa.passport'] = {
+    fr: 'N° de passeport',
+    ar: 'رقم جواز السفر',
+    en: 'Passport number',
+};
+translations['visa.birthDate'] = {
+    fr: 'Date de naissance',
+    ar: 'تاريخ الميلاد',
+    en: 'Date of birth',
+};
+translations['visa.travelDate'] = {
+    fr: 'Date de voyage prévue',
+    ar: 'تاريخ السفر المخطط',
+    en: 'Planned travel date',
+};
+translations['visa.visaType'] = {
+    fr: 'Type de visa',
+    ar: 'نوع التأشيرة',
+    en: 'Visa type',
+};
+translations['visa.typeTourism'] = {
+    fr: 'Touristique',
+    ar: 'سياحية',
+    en: 'Tourism',
+};
+translations['visa.typeBusiness'] = {
+    fr: 'Affaires',
+    ar: 'أعمال',
+    en: 'Business',
+};
+translations['visa.typeStudy'] = {
+    fr: 'Études',
+    ar: 'دراسية',
+    en: 'Study',
+};
+translations['visa.typeFamily'] = {
+    fr: 'Visite familiale',
+    ar: 'زيارة عائلية',
+    en: 'Family visit',
+};
+translations['visa.typeTransit'] = {
+    fr: 'Transit',
+    ar: 'عبور',
+    en: 'Transit',
+};
+translations['visa.passportCopy'] = {
+    fr: 'Copie du passeport',
+    ar: 'نسخة من جواز السفر',
+    en: 'Passport copy',
+};
+translations['visa.chooseFile'] = {
+    fr: 'Choisir un fichier',
+    ar: 'اختر ملفًا',
+    en: 'Choose a file',
+};
+translations['visa.fileHint'] = {
+    fr: 'JPG, PNG ou PDF — max 5 Mo',
+    ar: 'JPG أو PNG أو PDF — بحد أقصى 5 م.ب',
+    en: 'JPG, PNG or PDF — max 5 MB',
+};
+translations['visa.fileTooLarge'] = {
+    fr: 'Le fichier ne doit pas dépasser 5 Mo',
+    ar: 'يجب ألا يتجاوز الملف 5 م.ب',
+    en: 'The file must not exceed 5 MB',
+};
+translations['visa.invalidFileType'] = {
+    fr: 'Format accepté : JPG, PNG ou PDF',
+    ar: 'الصيغة المقبولة: JPG أو PNG أو PDF',
+    en: 'Accepted format: JPG, PNG or PDF',
+};
+translations['visa.mb'] = {
+    fr: 'Mo',
+    ar: 'م.ب',
+    en: 'MB',
+};
+translations['visa.previousVisaQuestion'] = {
+    fr: 'Avez-vous obtenu un visa auparavant ?',
+    ar: 'هل حصلت على تأشيرة من قبل؟',
+    en: 'Have you obtained a visa before?',
+};
+translations['visa.yes'] = {
+    fr: 'Oui',
+    ar: 'نعم',
+    en: 'Yes',
+};
+translations['visa.no'] = {
+    fr: 'Non',
+    ar: 'لا',
+    en: 'No',
+};
+translations['visa.notes'] = {
+    fr: 'Notes complémentaires',
+    ar: 'ملاحظات إضافية',
+    en: 'Additional notes',
+};
+translations['visa.confirmData'] = {
+    fr: "Je confirme l'exactitude des données fournies dans ce formulaire.",
+    ar: 'أؤكد صحة البيانات المقدمة في هذا النموذج.',
+    en: 'I confirm the accuracy of the data provided in this form.',
+};
+translations['visa.submit'] = {
+    fr: 'Envoyer la demande',
+    ar: 'إرسال الطلب',
+    en: 'Submit request',
+};
+translations['visa.submitting'] = {
+    fr: 'Envoi en cours...',
+    ar: 'جارٍ الإرسال...',
+    en: 'Submitting...',
+};
+translations['visa.firstNameRequired'] = {
+    fr: 'Prénom requis',
+    ar: 'الاسم الأول مطلوب',
+    en: 'First name is required',
+};
+translations['visa.lastNameRequired'] = {
+    fr: 'Nom requis',
+    ar: 'اسم العائلة مطلوب',
+    en: 'Last name is required',
+};
+translations['visa.emailInvalid'] = {
+    fr: 'Email invalide',
+    ar: 'بريد إلكتروني غير صالح',
+    en: 'Invalid email',
+};
+translations['visa.phoneRequired'] = {
+    fr: 'Téléphone requis',
+    ar: 'الهاتف مطلوب',
+    en: 'Phone is required',
+};
+translations['visa.passportRequired'] = {
+    fr: 'N° de passeport requis',
+    ar: 'رقم جواز السفر مطلوب',
+    en: 'Passport number is required',
+};
+translations['visa.dateRequired'] = {
+    fr: 'Date requise',
+    ar: 'التاريخ مطلوب',
+    en: 'Date is required',
+};
+translations['visa.typeRequired'] = {
+    fr: 'Type requis',
+    ar: 'النوع مطلوب',
+    en: 'Type is required',
+};
+translations['visa.confirmRequired'] = {
+    fr: "Vous devez confirmer l'exactitude de vos données",
+    ar: 'يجب عليك تأكيد صحة بياناتك',
+    en: 'You must confirm the accuracy of your data',
+};
+translations['visa.toastSuccessTitle'] = {
+    fr: 'Demande envoyée',
+    ar: 'تم إرسال الطلب',
+    en: 'Request sent',
+};
+translations['visa.toastSuccessDescription'] = {
+    fr: 'Votre demande de visa pour {name} a été reçue.',
+    ar: 'تم استلام طلب التأشيرة الخاص بـ {name}.',
+    en: 'Your visa request for {name} has been received.',
+};
+translations['visa.toastErrorTitle'] = {
+    fr: 'Erreur',
+    ar: 'خطأ',
+    en: 'Error',
+};
+translations['visa.toastErrorDescription'] = {
+    fr: "Une erreur est survenue lors de l'envoi. Veuillez réessayer.",
+    ar: 'حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.',
+    en: 'An error occurred while sending. Please try again.',
 };

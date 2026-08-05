@@ -22,9 +22,9 @@ class VisaController extends Controller
                 ->map(fn ($visa) => [
                     'id' => (int) $visa->id,
                     'code' => $visa->code,
-                    'name' => $visa->name[$lang] ?? $visa->name['en'] ?? '',
+                    'name' => $visa->name,
                     'flag' => $visa->flag,
-                    'processing' => $visa->processing[$lang] ?? $visa->processing['en'] ?? '',
+                    'processing' => $visa->processing,
                     'price' => $visa->price,
                 ]);
         });

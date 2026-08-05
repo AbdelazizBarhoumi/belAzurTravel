@@ -13,6 +13,7 @@ class Hotel extends Model
         'category_key', 'category', 'price', 'price_per_night',
         'rating', 'stars', 'reviews', 'description', 'image',
         'tags', 'details',
+        'date_from', 'date_to',
         // Filter fields
         'htel_recommande', 'tarifs_promo', 'enfant_gratuit',
         'disponible_seulement', 'annulation_gratuite',
@@ -35,6 +36,8 @@ class Hotel extends Model
         'rating' => 'float',
         'stars' => 'integer',
         'reviews' => 'integer',
+        'date_from' => 'date',
+        'date_to' => 'date',
         // Filter fields as boolean
         'htel_recommande' => 'boolean',
         'tarifs_promo' => 'boolean',

@@ -66,6 +66,8 @@ class AdminVisaController extends Controller
             'price' => 'required|integer|min:0',
             'is_active' => 'boolean',
             'sort_order' => 'integer|min:0',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
         ]);
 
         return [
@@ -76,6 +78,8 @@ class AdminVisaController extends Controller
             'price' => $data['price'],
             'is_active' => $data['is_active'] ?? true,
             'sort_order' => $data['sort_order'] ?? 0,
+            'date_from' => $data['date_from'] ?? null,
+            'date_to' => $data['date_to'] ?? null,
         ];
     }
 
@@ -96,6 +100,8 @@ class AdminVisaController extends Controller
             'price' => $item->price,
             'is_active' => $item->is_active,
             'sort_order' => $item->sort_order,
+            'date_from' => $item->date_from,
+            'date_to' => $item->date_to,
         ];
     }
 

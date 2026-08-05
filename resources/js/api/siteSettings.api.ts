@@ -78,6 +78,9 @@ export interface SiteSettings {
     whatsapp: string;
     address: string;
     plusCode: string;
+    mapLat: string;
+    mapLng: string;
+    mapEmbed: string;
     year?: number;
     socialLinks: Array<{ label: string; href: string }>;
     legalSections: Array<{
@@ -110,6 +113,9 @@ export const defaultSiteSettings: SiteSettings = {
     whatsapp: '',
     address: '',
     plusCode: '',
+    mapLat: '',
+    mapLng: '',
+    mapEmbed: '',
     year: new Date().getFullYear(),
     socialLinks: [],
     legalSections: [],
@@ -145,6 +151,9 @@ function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
         whatsapp: (json.whatsapp as string) ?? defaultSiteSettings.whatsapp,
         address: (json.address as string) ?? defaultSiteSettings.address,
         plusCode: (json.plusCode as string) ?? defaultSiteSettings.plusCode,
+        mapLat: (json.mapLat as string) ?? defaultSiteSettings.mapLat,
+        mapLng: (json.mapLng as string) ?? defaultSiteSettings.mapLng,
+        mapEmbed: (json.mapEmbed as string) ?? defaultSiteSettings.mapEmbed,
         year: (json.year as number) ?? defaultSiteSettings.year,
         socialLinks: (json.socialLinks as SiteSettings['socialLinks']) ?? [],
         legalSections:

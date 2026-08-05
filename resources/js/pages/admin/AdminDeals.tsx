@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save } from 'lucide-react';
+import {
+    Edit,
+    Plus,
+    Trash2,
+    Settings,
+    Image as ImageIcon,
+    Save,
+} from 'lucide-react';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
 import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
@@ -30,22 +37,26 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/DatePicker';
-import { format } from 'date-fns';
+
 import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
 
 const title = { en: 'Deals', fr: 'Offres', ar: 'العروض' };
-const subtitle = { en: 'Manage deals', fr: 'Gérer les offres', ar: 'إدارة العروض' };
+const subtitle = {
+    en: 'Manage deals',
+    fr: 'Gérer les offres',
+    ar: 'إدارة العروض',
+};
 
 export default function AdminDeals() {
     useAdminGuard();
     const { t, lang } = useLanguage();
     const queryClient = useQueryClient();
     const { settings: siteSettings } = useSiteSettings();
-    const isCodeEnabled = siteSettings?.config?.navigation?.enabled_dropdowns?.includes('deals');
+    const isCodeEnabled =
+        siteSettings?.config?.navigation?.enabled_dropdowns?.includes('deals');
     const [open, setOpen] = useState(false);
     const [modalLang, setModalLang] = useState<Lang>('en');
     const [catManagerOpen, setCatManagerOpen] = useState(false);
@@ -53,7 +64,10 @@ export default function AdminDeals() {
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
     const handleOpenChange = (nextOpen: boolean) => {
-        if (!nextOpen) { setErrors({}); setEditing(null); }
+        if (!nextOpen) {
+            setErrors({});
+            setEditing(null);
+        }
         setOpen(nextOpen);
     };
 
@@ -76,7 +90,10 @@ export default function AdminDeals() {
                     deals: { images: filteredSlides, interval: heroInterval },
                 },
             };
-            await apiFetch('/api/site-settings', { method: 'PUT', body: JSON.stringify({ content }) });
+            await apiFetch('/api/site-settings', {
+                method: 'PUT',
+                body: JSON.stringify({ content }),
+            });
             window.dispatchEvent(new CustomEvent('site-settings-updated'));
             toast.success(t('admin.settings.saveSuccess'));
         } catch {
@@ -89,7 +106,9 @@ export default function AdminDeals() {
     const { data: rows = [] } = useQuery<AdminRow[]>({
         queryKey,
         queryFn: async () => {
-            const data = (await listAdminEntities<AdminRow>('deals')) as unknown as AdminRow[] | { data?: AdminRow[] };
+            const data = (await listAdminEntities<AdminRow>(
+                'deals',
+            )) as unknown as AdminRow[] | { data?: AdminRow[] };
             return Array.isArray(data) ? data : (data.data ?? []);
         },
     });
@@ -101,7 +120,8 @@ export default function AdminDeals() {
             if (error?.data?.errors) {
                 const errs: Record<string, string> = {};
                 for (const [k, v] of Object.entries(error.data.errors)) {
-                    if (Array.isArray(v) && v.length > 0) errs[k] = String(v[0]);
+                    if (Array.isArray(v) && v.length > 0)
+                        errs[k] = String(v[0]);
                 }
                 setErrors(errs);
                 toast.error(t('admin.pleaseFixErrors'));
@@ -113,7 +133,10 @@ export default function AdminDeals() {
 
     const deleteMutation = useMutation({
         mutationFn: (id: string) => deleteAdminEntity('deals', id),
-        onSuccess: () => { queryClient.invalidateQueries({ queryKey }); toast.success(t('actions.deleted')); },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey });
+            toast.success(t('actions.deleted'));
+        },
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -124,7 +147,11 @@ export default function AdminDeals() {
             if (v && typeof v === 'object') {
                 const r = v as Record<string, unknown>;
                 for (const localized of [r.en, r.fr, r.ar]) {
-                    if (typeof localized === 'string' && localized.trim() !== '') return localized.trim();
+                    if (
+                        typeof localized === 'string' &&
+                        localized.trim() !== ''
+                    )
+                        return localized.trim();
                 }
             }
         }
@@ -135,19 +162,38 @@ export default function AdminDeals() {
         if (!editing) return null;
         return {
             ...editing,
-            category_key: resolveCategoryKey(editing.category_key, editing.category, editing.category_en, editing.category_fr, editing.category_ar) || editing.category_key || '',
-            category_en: editing.category_en ?? ((editing.category as any)?.en) ?? '',
-            category_fr: editing.category_fr ?? ((editing.category as any)?.fr) ?? '',
-            category_ar: editing.category_ar ?? ((editing.category as any)?.ar) ?? '',
-            ...Object.fromEntries(categoryTypes.map((ct) => [`category_${ct.key}`, (editing as any).category_assignments?.[ct.key] || ''])),
+            category_key:
+                resolveCategoryKey(
+                    editing.category_key,
+                    editing.category,
+                    editing.category_en,
+                    editing.category_fr,
+                    editing.category_ar,
+                ) ||
+                editing.category_key ||
+                '',
+            category_en:
+                editing.category_en ?? (editing.category as any)?.en ?? '',
+            category_fr:
+                editing.category_fr ?? (editing.category as any)?.fr ?? '',
+            category_ar:
+                editing.category_ar ?? (editing.category as any)?.ar ?? '',
+            ...Object.fromEntries(
+                categoryTypes.map((ct) => [
+                    `category_${ct.key}`,
+                    (editing as any).category_assignments?.[ct.key] || '',
+                ]),
+            ),
         } as AdminRow;
     }, [editing, categoryTypes]);
 
     const validate = (values: AdminRow) => {
         const errs: Record<string, string> = {};
         ['en', 'fr', 'ar'].forEach((l) => {
-            if (!values[`title_${l}`]) errs[`title_${l}`] = t('admin.fieldRequired');
-            if (!values[`description_${l}`]) errs[`description_${l}`] = t('admin.fieldRequired');
+            if (!values[`title_${l}`])
+                errs[`title_${l}`] = t('admin.fieldRequired');
+            if (!values[`description_${l}`])
+                errs[`description_${l}`] = t('admin.fieldRequired');
         });
         if (!values.discount) errs.discount = t('admin.fieldRequired');
         if (!values.expires) errs.expires = t('admin.fieldRequired');
@@ -157,33 +203,67 @@ export default function AdminDeals() {
 
     function handleSave(values: AdminRow) {
         const errs = validate(values);
-        if (Object.keys(errs).length > 0) { setErrors(errs); toast.error(t('admin.pleaseFixErrors')); return; }
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
+            toast.error(t('admin.pleaseFixErrors'));
+            return;
+        }
 
-        const cleanedPayload = Object.entries(values).reduce((acc, [key, val]) => {
-            if (['highlights_en', 'highlights_fr', 'highlights_ar', 'terms_en', 'terms_fr', 'terms_ar'].includes(key) && Array.isArray(val)) {
-                acc[key] = (val as string[]).filter((item) => item.trim() !== '');
-            } else {
-                acc[key] = val;
-            }
-            return acc;
-        }, {} as Record<string, unknown>);
+        const cleanedPayload = Object.entries(values).reduce(
+            (acc, [key, val]) => {
+                if (
+                    [
+                        'highlights_en',
+                        'highlights_fr',
+                        'highlights_ar',
+                        'terms_en',
+                        'terms_fr',
+                        'terms_ar',
+                    ].includes(key) &&
+                    Array.isArray(val)
+                ) {
+                    acc[key] = (val as string[]).filter(
+                        (item) => item.trim() !== '',
+                    );
+                } else {
+                    acc[key] = val;
+                }
+                return acc;
+            },
+            {} as Record<string, unknown>,
+        );
 
         const normalized: Record<string, unknown> = { ...cleanedPayload };
-        normalized.category_key = resolveCategoryKey(normalized.category_key, normalized.category, normalized.category_en, normalized.category_fr, normalized.category_ar) || '';
+        normalized.category_key =
+            resolveCategoryKey(
+                normalized.category_key,
+                normalized.category,
+                normalized.category_en,
+                normalized.category_fr,
+                normalized.category_ar,
+            ) || '';
 
         const categoryAssignments: Record<string, string> = {};
         categoryTypes.forEach((ct) => {
             const val = values[`category_${ct.key}`];
-            if (val && typeof val === 'string' && val !== '') categoryAssignments[ct.key] = val;
+            if (val && typeof val === 'string' && val !== '')
+                categoryAssignments[ct.key] = val;
         });
         normalized.category_assignments = categoryAssignments;
 
-        saveMutation.mutate({ ...(normalized as AdminRow), id: editing?.id ?? '' } as AdminRow, {
-            onSuccess: () => {
-                toast.success(editing ? t('actions.saved') : t('actions.added'));
-                setEditing(null); setOpen(false); setErrors({});
+        saveMutation.mutate(
+            { ...(normalized as AdminRow), id: editing?.id ?? '' } as AdminRow,
+            {
+                onSuccess: () => {
+                    toast.success(
+                        editing ? t('actions.saved') : t('actions.added'),
+                    );
+                    setEditing(null);
+                    setOpen(false);
+                    setErrors({});
+                },
             },
-        });
+        );
     }
 
     const dealSections: SectionDef[] = [
@@ -191,6 +271,13 @@ export default function AdminDeals() {
             title: t('deals.promotionDetails'),
             description: t('deals.promotionDescription'),
             columns: 2,
+            fields: [
+                {
+                    key: 'dateFrom',
+                    label: t('deals.expiresLabel'),
+                    type: 'daterange',
+                },
+            ],
             render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
                     {categoryTypes.map((catType) => (
@@ -198,11 +285,24 @@ export default function AdminDeals() {
                             <label className="text-xs font-semibold text-muted-foreground">
                                 {catType.label[activeLang] || catType.label.en}
                             </label>
-                            <Select value={String(values[`category_${catType.key}`] || '')} onValueChange={(val) => setField(`category_${catType.key}`, val)}>
-                                <SelectTrigger><SelectValue placeholder={t('actions.select')} /></SelectTrigger>
+                            <Select
+                                value={String(
+                                    values[`category_${catType.key}`] || '',
+                                )}
+                                onValueChange={(val) =>
+                                    setField(`category_${catType.key}`, val)
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue
+                                        placeholder={t('actions.select')}
+                                    />
+                                </SelectTrigger>
                                 <SelectContent>
                                     {catType.values.map((v) => (
-                                        <SelectItem key={v.key} value={v.key}>{v.name[activeLang] || v.name.en}</SelectItem>
+                                        <SelectItem key={v.key} value={v.key}>
+                                            {v.name[activeLang] || v.name.en}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -212,15 +312,31 @@ export default function AdminDeals() {
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-muted-foreground">
-                                {t('deals.titleLabel')} <LangBadge lang={activeLang} />
+                                {t('deals.titleLabel')}{' '}
+                                <LangBadge lang={activeLang} />
                             </label>
                             <Input
-                                value={String(values[`title_${activeLang}`] ?? '')}
+                                value={String(
+                                    values[`title_${activeLang}`] ?? '',
+                                )}
                                 placeholder={t('deals.placeholder.title')}
-                                onChange={(e) => setField(`title_${activeLang}`, e.target.value)}
-                                className={errors[`title_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
+                                onChange={(e) =>
+                                    setField(
+                                        `title_${activeLang}`,
+                                        e.target.value,
+                                    )
+                                }
+                                className={
+                                    errors[`title_${activeLang}`]
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
-                            {errors[`title_${activeLang}`] && <p className="text-xs text-destructive">{errors[`title_${activeLang}`]}</p>}
+                            {errors[`title_${activeLang}`] && (
+                                <p className="text-xs text-destructive">
+                                    {errors[`title_${activeLang}`]}
+                                </p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -235,24 +351,24 @@ export default function AdminDeals() {
                                     step={1}
                                     value={String(values.discount ?? '')}
                                     placeholder="0"
-                                    onChange={(e) => setField('discount', e.target.value)}
-                                    className={errors.discount ? 'border-destructive ring-1 ring-destructive' : ''}
+                                    onChange={(e) =>
+                                        setField('discount', e.target.value)
+                                    }
+                                    className={
+                                        errors.discount
+                                            ? 'border-destructive ring-1 ring-destructive'
+                                            : ''
+                                    }
                                 />
-                                <span className="text-sm font-medium text-muted-foreground">%</span>
+                                <span className="text-sm font-medium text-muted-foreground">
+                                    %
+                                </span>
                             </div>
-                            {errors.discount && <p className="text-xs text-destructive">{errors.discount}</p>}
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-semibold text-muted-foreground">
-                                {t('deals.expiresLabel')}
-                            </label>
-                            <DatePicker
-                                placeholder={t('deals.placeholder.expires')}
-                                date={values.expires ? new Date(String(values.expires)) : undefined}
-                                onDateChange={(date) => setField('expires', date ? format(date, 'yyyy-MM-dd') : '')}
-                            />
-                            {errors.expires && <p className="text-xs text-destructive">{errors.expires}</p>}
+                            {errors.discount && (
+                                <p className="text-xs text-destructive">
+                                    {errors.discount}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -267,12 +383,27 @@ export default function AdminDeals() {
                         {t('deals.description')} <LangBadge lang={activeLang} />
                     </label>
                     <Textarea
-                        value={String(values[`description_${activeLang}`] ?? '')}
-                        onChange={(e) => setField(`description_${activeLang}`, e.target.value)}
+                        value={String(
+                            values[`description_${activeLang}`] ?? '',
+                        )}
+                        onChange={(e) =>
+                            setField(
+                                `description_${activeLang}`,
+                                e.target.value,
+                            )
+                        }
                         rows={4}
-                        className={errors[`description_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
+                        className={
+                            errors[`description_${activeLang}`]
+                                ? 'border-destructive ring-1 ring-destructive'
+                                : ''
+                        }
                     />
-                    {errors[`description_${activeLang}`] && <p className="text-xs text-destructive">{errors[`description_${activeLang}`]}</p>}
+                    {errors[`description_${activeLang}`] && (
+                        <p className="text-xs text-destructive">
+                            {errors[`description_${activeLang}`]}
+                        </p>
+                    )}
                 </div>
             ),
         },
@@ -285,11 +416,22 @@ export default function AdminDeals() {
             actions={
                 <div className="flex gap-2">
                     {isCodeEnabled && (
-                        <Button variant="outline" onClick={() => setCatManagerOpen(true)} className="gap-2">
-                            <Settings className="h-4 w-4" /> {t('deals.manageCategories')}
+                        <Button
+                            variant="outline"
+                            onClick={() => setCatManagerOpen(true)}
+                            className="gap-2"
+                        >
+                            <Settings className="h-4 w-4" />{' '}
+                            {t('deals.manageCategories')}
                         </Button>
                     )}
-                    <Button onClick={() => { setEditing(null); setOpen(true); }} className="gap-2 bg-primary text-primary-foreground">
+                    <Button
+                        onClick={() => {
+                            setEditing(null);
+                            setOpen(true);
+                        }}
+                        className="gap-2 bg-primary text-primary-foreground"
+                    >
                         <Plus className="h-4 w-4" /> {t('actions.add')}
                     </Button>
                 </div>
@@ -299,45 +441,97 @@ export default function AdminDeals() {
                 <div className="mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">{t('admin.heroImages')}</h3>
+                        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                            {t('admin.heroImages')}
+                        </h3>
                     </div>
-                    <Button size="sm" onClick={saveHeroImages} className="bg-primary text-primary-foreground">
-                        <Save className="mr-1 h-3.5 w-3.5" /> {t('admin.settings.save')}
+                    <Button
+                        size="sm"
+                        onClick={saveHeroImages}
+                        className="bg-primary text-primary-foreground"
+                    >
+                        <Save className="mr-1 h-3.5 w-3.5" />{' '}
+                        {t('admin.settings.save')}
                     </Button>
                 </div>
-                <HeroImagesManager pageKey="deals" slides={heroSlides} onSlidesChange={setHeroSlides} interval={heroInterval} onIntervalChange={setHeroInterval} />
+                <HeroImagesManager
+                    pageKey="deals"
+                    slides={heroSlides}
+                    onSlidesChange={setHeroSlides}
+                    interval={heroInterval}
+                    onIntervalChange={setHeroInterval}
+                />
             </div>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border bg-muted/30">
-                                {[t('deals.titleLabel'), t('deals.discountLabel'), t('deals.expiresLabel'), t('admin.category'), t('admin.actions')].map((label) => (
-                                    <th key={label} className="px-4 py-3 text-center text-xs font-semibold uppercase text-muted-foreground">{label}</th>
+                                {[
+                                    t('deals.titleLabel'),
+                                    t('deals.discountLabel'),
+                                    t('deals.expiresLabel'),
+                                    t('admin.category'),
+                                    t('admin.actions'),
+                                ].map((label) => (
+                                    <th
+                                        key={label}
+                                        className="px-4 py-3 text-center text-xs font-semibold uppercase text-muted-foreground"
+                                    >
+                                        {label}
+                                    </th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
                             {rows.map((row) => (
-                                <tr key={String(row.id)} className="border-b border-border last:border-0 hover:bg-muted/20">
-                                    <td className={`px-4 py-3 text-sm ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
-                                        {String((row as any)[`title_${lang}`] ?? row.title_en ?? '')}
+                                <tr
+                                    key={String(row.id)}
+                                    className="border-b border-border last:border-0 hover:bg-muted/20"
+                                >
+                                    <td
+                                        className={`px-4 py-3 text-sm ${lang === 'ar' ? 'text-right' : 'text-left'}`}
+                                    >
+                                        {String(
+                                            (row as any)[`title_${lang}`] ??
+                                                row.title_en ??
+                                                '',
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        {row.discount ? `${row.discount}%` : '—'}
+                                        {row.discount
+                                            ? `${row.discount}%`
+                                            : '—'}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
-                                        {row.expires ? String(row.expires) : '—'}
+                                        {row.expires
+                                            ? String(row.expires)
+                                            : '—'}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
-                                        {String(row.category_en ?? row.category ?? '')}
+                                        {String(
+                                            row.category_en ??
+                                                row.category ??
+                                                '',
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-2">
-                                            <button onClick={() => { setEditing(row); setOpen(true); }} className="rounded-lg p-1.5 hover:bg-muted">
+                                            <button
+                                                onClick={() => {
+                                                    setEditing(row);
+                                                    setOpen(true);
+                                                }}
+                                                className="rounded-lg p-1.5 hover:bg-muted"
+                                            >
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
-                                            <button onClick={() => setPendingDelete(row)} className="rounded-lg p-1.5 hover:bg-destructive/10">
+                                            <button
+                                                onClick={() =>
+                                                    setPendingDelete(row)
+                                                }
+                                                className="rounded-lg p-1.5 hover:bg-destructive/10"
+                                            >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </button>
                                         </div>
@@ -351,20 +545,43 @@ export default function AdminDeals() {
 
             <ConfirmDialog
                 open={!!pendingDelete}
-                onOpenChange={(isOpen) => { if (!isOpen) setPendingDelete(null); }}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) setPendingDelete(null);
+                }}
                 title={t('admin.deleteItemTitle')}
-                description={pendingDelete ? `${t('admin.deleteItemPrompt')} "${String(pendingDelete.title_en ?? '')}"? ${t('admin.deleteItemWarning')}` : t('admin.deleteItemFallback')}
+                description={
+                    pendingDelete
+                        ? `${t('admin.deleteItemPrompt')} "${String(pendingDelete.title_en ?? '')}"? ${t('admin.deleteItemWarning')}`
+                        : t('admin.deleteItemFallback')
+                }
                 confirmText={t('actions.delete')}
                 cancelText={t('actions.cancel')}
-                onConfirm={() => { if (!pendingDelete) return; deleteMutation.mutate(String(pendingDelete.id)); setPendingDelete(null); }}
+                onConfirm={() => {
+                    if (!pendingDelete) return;
+                    deleteMutation.mutate(String(pendingDelete.id));
+                    setPendingDelete(null);
+                }}
             />
 
-            <CategoryTypeManager entityType="deals" isOpen={catManagerOpen} onClose={() => { setCatManagerOpen(false); queryClient.invalidateQueries({ queryKey: ['admin', 'category-types', 'deals'] }); }} />
+            <CategoryTypeManager
+                entityType="deals"
+                isOpen={catManagerOpen}
+                onClose={() => {
+                    setCatManagerOpen(false);
+                    queryClient.invalidateQueries({
+                        queryKey: ['admin', 'category-types', 'deals'],
+                    });
+                }}
+            />
 
             <EntityFormDialog
                 open={open}
                 onOpenChange={handleOpenChange}
-                title={editing ? `${t('actions.edit')} ${t('admin.deals')}` : `${t('actions.add')} ${t('admin.deals')}`}
+                title={
+                    editing
+                        ? `${t('actions.edit')} ${t('admin.deals')}`
+                        : `${t('actions.add')} ${t('admin.deals')}`
+                }
                 sections={dealSections}
                 initial={dialogInitial}
                 onSubmit={(values) => handleSave(values as AdminRow)}

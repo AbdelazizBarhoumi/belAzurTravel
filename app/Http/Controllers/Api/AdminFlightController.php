@@ -148,6 +148,8 @@ class AdminFlightController extends Controller
             'stops' => $localized('stops'),
             'departure' => $data['departure'] ?? $existing?->departure ?? '',
             'arrival' => $data['arrival'] ?? $existing?->arrival ?? '',
+            'date_from' => $data['date_from'] ?? $existing?->date_from ?? null,
+            'date_to' => $data['date_to'] ?? $existing?->date_to ?? null,
             'image' => $this->handleMainImage($request, $existing?->image, 'uploads/flights'),
             'details' => $this->flightDetails($data, $existing, $gallery),
         ];
@@ -185,11 +187,11 @@ class AdminFlightController extends Controller
             'arrival' => $item->arrival,
             'image' => $this->normalizeApiOutputPath($item->image),
             'gallery' => $details['gallery'] ?? [$item->image],
-            'date' => $details['date'] ?? '',
+            'date_from' => $item->date_from,
+            'date_to' => $item->date_to,
             'seats' => $details['seats'] ?? null,
             'details' => [
                 'gallery' => $details['gallery'] ?? [$item->image],
-                'date' => $details['date'] ?? '',
                 'seats' => $details['seats'] ?? null,
                 'cabin' => $details['cabin'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
                 'aircraft' => $details['aircraft'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
@@ -228,10 +230,6 @@ class AdminFlightController extends Controller
         $details = $existing?->details ?? [];
 
         $details['gallery'] = $gallery;
-
-        if (array_key_exists('date', $data)) {
-            $details['date'] = $data['date'] ?? '';
-        }
 
         if (array_key_exists('seats', $data)) {
             $details['seats'] = isset($data['seats']) ? (int) $data['seats'] : null;

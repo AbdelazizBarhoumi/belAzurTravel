@@ -117,6 +117,8 @@ class AdminDestinationController extends Controller
             'weather_en' => ['sometimes', 'nullable', 'string'],
             'weather_fr' => ['sometimes', 'nullable', 'string'],
             'weather_ar' => ['sometimes', 'nullable', 'string'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
         ];
 
         $data = $request->validate($rules);
@@ -152,6 +154,8 @@ class AdminDestinationController extends Controller
             'image' => $this->handleMainImage($request, $existing?->image, 'uploads/destinations'),
             'description' => $description,
             'details' => $this->destinationDetails($data, $existing, $description, $gallery),
+            'date_from' => $data['date_from'] ?? $existing?->date_from ?? null,
+            'date_to' => $data['date_to'] ?? $existing?->date_to ?? null,
         ];
     }
 
@@ -186,6 +190,8 @@ class AdminDestinationController extends Controller
             ...$this->flatLocalized('language', $item->details['language'] ?? null),
             ...$this->flatLocalized('currency', $item->details['currency'] ?? null),
             ...$this->flatLocalized('weather', $item->details['weather'] ?? null),
+            'date_from' => $item->date_from,
+            'date_to' => $item->date_to,
         ];
     }
 
