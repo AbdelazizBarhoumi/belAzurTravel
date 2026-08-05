@@ -18,6 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { IconPicker } from '@/components/ui/IconPicker';
 import { ImagePicker } from '@/components/ui/ImagePicker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +29,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { IconPicker } from '@/components/ui/IconPicker';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';

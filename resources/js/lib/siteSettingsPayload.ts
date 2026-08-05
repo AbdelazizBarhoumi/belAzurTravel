@@ -1,4 +1,4 @@
-import type { NavSettings } from '@/lib/nav-config';
+import type { NavSettings, NavGroup } from '@/lib/nav-config';
 
 export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
 
@@ -33,6 +33,10 @@ function normalizeDropdownItem(item: Record<string, unknown>): Record<string, un
 
     if (Object.prototype.hasOwnProperty.call(rest, 'label')) {
         rest.label = normalizeLocalizedText(rest.label);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(rest, 'pageKey') && !rest.pageKey) {
+        delete rest.pageKey;
     }
 
     if (Array.isArray(rest.children)) {
@@ -86,6 +90,12 @@ function normalizeNavGroupForSave(group: Record<string, unknown>): Record<string
     } else {
         result.pages = [];
     }
+    if (Array.isArray(result.links)) {
+        result.links = result.links.map((link: unknown) => {
+            if (!link || typeof link !== 'object' || Array.isArray(link)) return link;
+            return normalizeDropdownItem(link as Record<string, unknown>);
+        });
+    }
     if (Array.isArray(result.groups)) {
         result.groups = result.groups.map((g) =>
             g && typeof g === 'object' && !Array.isArray(g)
@@ -99,7 +109,7 @@ function normalizeNavGroupForSave(group: Record<string, unknown>): Record<string
 function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
     const groups = Array.isArray(nav.groups)
         ? nav.groups.map((g) =>
-            normalizeNavGroupForSave(g as unknown as Record<string, unknown>) as unknown as import('@/lib/nav-config').NavGroup,
+            normalizeNavGroupForSave(g as unknown as Record<string, unknown>) as unknown as NavGroup,
         )
         : [];
 

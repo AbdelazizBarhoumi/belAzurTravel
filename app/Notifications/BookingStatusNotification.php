@@ -19,6 +19,7 @@ class BookingStatusNotification extends Notification
         if ($this->isMailConfigured()) {
             $channels[] = 'mail';
         }
+
         return $channels;
     }
 
@@ -59,9 +60,9 @@ class BookingStatusNotification extends Notification
                 'booking' => $this->booking,
                 'payment' => $this->booking->payment,
                 'greeting' => match ($status) {
-                    'Confirmed' => "Your Booking is Confirmed!",
-                    'Cancelled' => "Your Booking Has Been Cancelled",
-                    default => "Booking Status Update",
+                    'Confirmed' => 'Your Booking is Confirmed!',
+                    'Cancelled' => 'Your Booking Has Been Cancelled',
+                    default => 'Booking Status Update',
                 },
                 'headerSubtitle' => $subject,
                 'introLine' => match ($status) {
@@ -81,11 +82,11 @@ class BookingStatusNotification extends Notification
                 },
                 'nextStepsLine' => match ($status) {
                     'Confirmed' => "You will receive your travel documents shortly. If you have any questions, don't hesitate to contact us.",
-                    'Cancelled' => "If you paid for this booking, a refund will be processed within 5-10 business days.",
-                    default => "If you have any questions about your booking, please contact our support team.",
+                    'Cancelled' => 'If you paid for this booking, a refund will be processed within 5-10 business days.',
+                    default => 'If you have any questions about your booking, please contact our support team.',
                 },
                 'actionText' => 'View Booking',
-                'actionUrl' => config('app.url')."/client/dashboard",
+                'actionUrl' => config('app.url').'/client/dashboard',
                 'closingLine' => 'Thank you for choosing BelAzur Travel.',
             ]);
     }

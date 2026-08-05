@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { LandingSections } from '@/components/sections/LandingSections';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 vi.mock('@/hooks/useSiteSettings', () => ({
     useSiteSettings: vi.fn(),

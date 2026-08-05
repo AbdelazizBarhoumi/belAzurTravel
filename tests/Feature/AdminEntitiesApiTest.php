@@ -314,7 +314,7 @@ class AdminEntitiesApiTest extends TestCase
         $this->assertEquals('Deluxe Suite', $hotel['rooms'][0]['name']['en']);
         $this->assertEquals(500, $hotel['rooms'][0]['pricePerNight']);
         $this->assertCount(2, $hotel['rooms'][0]['features']);
-        $this->assertEquals('King Bed', $hotel['rooms'][0]['features'][0]['name']['en']);
+        $this->assertEquals('King Bed', $hotel['rooms'][0]['features'][0]);
 
         // Update hotel with modified details
         $updatedPayload = [

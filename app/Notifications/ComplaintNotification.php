@@ -19,6 +19,7 @@ class ComplaintNotification extends Notification
         if ($this->isMailConfigured()) {
             $channels[] = 'mail';
         }
+
         return $channels;
     }
 
@@ -55,15 +56,15 @@ class ComplaintNotification extends Notification
                 'complaint' => $this->complaint,
                 'greeting' => "New {$type} Received",
                 'headerSubtitle' => "{$type} #{$this->complaint->id}",
-                'introLine' => "A new ".strtolower($type)." has been submitted and requires your attention.",
+                'introLine' => 'A new '.strtolower($type).' has been submitted and requires your attention.',
                 'complaintLabel' => "{$type} Details",
                 'refLabel' => 'Reference',
                 'typeLabel' => 'Type',
                 'subjectLabel' => 'Subject',
                 'bookingRefLabel' => 'Booking Reference',
                 'actionText' => "Review {$type}",
-                'actionUrl' => config('app.url')."/admin/complaints",
-                'closingLine' => "Please review and respond to this ".strtolower($type)." as soon as possible.",
+                'actionUrl' => config('app.url').'/admin/complaints',
+                'closingLine' => 'Please review and respond to this '.strtolower($type).' as soon as possible.',
             ]);
     }
 }

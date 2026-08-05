@@ -22,8 +22,8 @@ class DestinationController extends Controller
                 return Destination::query()->oldest('id')
                     ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                     ->get()->map(
-                    fn (Destination $item) => $this->payload($item)
-                );
+                        fn (Destination $item) => $this->payload($item)
+                    );
             }
         );
 

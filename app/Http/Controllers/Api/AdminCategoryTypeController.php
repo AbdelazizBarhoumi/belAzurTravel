@@ -54,7 +54,7 @@ class AdminCategoryTypeController extends Controller
         $baseKey = $key;
         $counter = 1;
         while (CategoryType::where('entity_type', $data['entity_type'])->where('key', $key)->exists()) {
-            $key = $baseKey . '-' . $counter++;
+            $key = $baseKey.'-'.$counter++;
         }
 
         $type = CategoryType::create([
@@ -98,14 +98,14 @@ class AdminCategoryTypeController extends Controller
         return response()->json(['data' => $categoryType->fresh(['values'])]);
     }
 
-    public function destroy(CategoryType $categoryType): JsonResponse
+    public function destroy(Request $request, CategoryType $categoryType): JsonResponse
     {
         $type = $categoryType->entity_type;
 
         // Check if any entities use values from this type
         $count = EntityCategoryAssignment::where('category_type_id', $categoryType->id)->count();
 
-        if ($count > 0) {
+        if ($request->query('force') !== 'true' && $count > 0) {
             $affected = $this->getAffectedEntities($categoryType);
 
             return response()->json([
@@ -115,6 +115,11 @@ class AdminCategoryTypeController extends Controller
                 'requires_confirmation' => true,
             ], 409);
         }
+
+        $valueKeys = $categoryType->values()->pluck('key')->all();
+
+        $this->deleteAssignmentsForType($categoryType->id);
+        $this->nullifyEntitiesForValueKeys($type, $valueKeys);
 
         $categoryType->delete();
         $this->clearCache($type);
@@ -146,7 +151,7 @@ class AdminCategoryTypeController extends Controller
         $baseKey = $key;
         $counter = 1;
         while (CategoryValue::where('category_type_id', $categoryType->id)->where('key', $key)->exists()) {
-            $key = $baseKey . '-' . $counter++;
+            $key = $baseKey.'-'.$counter++;
         }
 
         $value = CategoryValue::create([
@@ -186,15 +191,15 @@ class AdminCategoryTypeController extends Controller
         return response()->json(['data' => $value->fresh()]);
     }
 
-    public function destroyValue(CategoryType $categoryType, CategoryValue $value): JsonResponse
+    public function destroyValue(Request $request, CategoryType $categoryType, CategoryValue $value): JsonResponse
     {
         $count = EntityCategoryAssignment::where('category_value_id', $value->id)->count();
 
-        if ($count > 0) {
+        if ($request->query('force') !== 'true' && $count > 0) {
             $affected = DB::table('entity_category_assignments')
                 ->where('category_value_id', $value->id)
                 ->get()
-                ->map(fn($row) => [
+                ->map(fn ($row) => [
                     'name' => "{$row->entity_type} #{$row->entity_id}",
                     'slug' => "{$row->entity_type}-{$row->entity_id}",
                 ])
@@ -207,6 +212,9 @@ class AdminCategoryTypeController extends Controller
                 'requires_confirmation' => true,
             ], 409);
         }
+
+        $this->deleteAssignmentsForValue($value->id);
+        $this->nullifyEntitiesForValueKeys($categoryType->entity_type, [$value->key]);
 
         $value->delete();
         $this->clearCache($categoryType->entity_type);
@@ -257,7 +265,7 @@ class AdminCategoryTypeController extends Controller
             ->with('categoryValue')
             ->get();
 
-        return $assignments->map(fn($a) => [
+        return $assignments->map(fn ($a) => [
             'name' => "{$a->entity_type} #{$a->entity_id}",
             'slug' => "{$a->entity_type}-{$a->entity_id}",
         ])->toArray();
@@ -269,7 +277,7 @@ class AdminCategoryTypeController extends Controller
 
         foreach ($assignments as $assignment) {
             $tableName = $this->getTableName($assignment->entity_type);
-            if (!$tableName || !DB::getSchemaBuilder()->hasColumn($tableName, 'category')) {
+            if (! $tableName || ! DB::getSchemaBuilder()->hasColumn($tableName, 'category')) {
                 continue;
             }
 
@@ -277,6 +285,37 @@ class AdminCategoryTypeController extends Controller
                 ->where('id', $assignment->entity_id)
                 ->update(['category' => json_encode($value->name)]);
         }
+    }
+
+    private function deleteAssignmentsForType(int $typeId): void
+    {
+        EntityCategoryAssignment::where('category_type_id', $typeId)->delete();
+    }
+
+    private function deleteAssignmentsForValue(int $valueId): void
+    {
+        EntityCategoryAssignment::where('category_value_id', $valueId)->delete();
+    }
+
+    private function nullifyEntitiesForValueKeys(string $entityType, array $valueKeys): void
+    {
+        if (empty($valueKeys)) {
+            return;
+        }
+
+        $tableName = $this->getTableName($entityType);
+        if (! $tableName || ! DB::getSchemaBuilder()->hasColumn($tableName, 'category_key')) {
+            return;
+        }
+
+        $update = ['category_key' => null];
+        if (DB::getSchemaBuilder()->hasColumn($tableName, 'category')) {
+            $update['category'] = null;
+        }
+
+        DB::table($tableName)
+            ->whereIn('category_key', $valueKeys)
+            ->update($update);
     }
 
     private function getTableName(string $entityType): ?string

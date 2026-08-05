@@ -14,7 +14,7 @@ class SiteSettingsApiTest extends TestCase
     public function test_admin_can_partially_update_nav_settings_without_required_profile_fields(): void
     {
         $admin = User::factory()->create([
-            'role' => 'admin',
+            'role' => 'superadmin',
             'active' => true,
         ]);
 
@@ -102,7 +102,7 @@ class SiteSettingsApiTest extends TestCase
 
     public function test_admin_can_update_contact_settings(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'active' => true]);
+        $admin = User::factory()->create(['role' => 'superadmin', 'active' => true]);
 
         $payload = [
             'content' => [
@@ -126,7 +126,7 @@ class SiteSettingsApiTest extends TestCase
 
     public function test_admin_cannot_update_contact_settings_with_invalid_translations(): void
     {
-        $admin = User::factory()->create(['role' => 'admin', 'active' => true]);
+        $admin = User::factory()->create(['role' => 'superadmin', 'active' => true]);
 
         $payload = [
             'content' => [

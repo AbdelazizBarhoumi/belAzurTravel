@@ -19,6 +19,7 @@ class ComplaintReplyNotification extends Notification
         if ($this->isMailConfigured()) {
             $channels[] = 'mail';
         }
+
         return $channels;
     }
 
@@ -56,14 +57,14 @@ class ComplaintReplyNotification extends Notification
                 'replyMessage' => $replyMessage,
                 'greeting' => "You've Received a Reply",
                 'headerSubtitle' => "{$type} #{$this->complaint->id}",
-                'introLine' => "Our team has responded to your ".strtolower($type).". Please review the reply below.",
+                'introLine' => 'Our team has responded to your '.strtolower($type).'. Please review the reply below.',
                 'adminReplyLabel' => 'Admin Reply',
                 'refLabel' => 'Reference',
                 'typeLabel' => 'Type',
                 'statusLabel' => 'Status',
                 'actionText' => 'View & Reply',
-                'actionUrl' => config('app.url')."/client/complaints",
-                'closingLine' => "You can reply to this message directly from your dashboard.",
+                'actionUrl' => config('app.url').'/client/complaints',
+                'closingLine' => 'You can reply to this message directly from your dashboard.',
             ]);
     }
 }

@@ -114,6 +114,7 @@ trait HandlesAdminMedia
                 ->filter()
                 ->map(function ($file) use ($folder) {
                     File::ensureDirectoryExists(storage_path("app/public/{$folder}"));
+
                     return '/storage/'.$file->store($folder, 'public');
                 })
                 ->all();

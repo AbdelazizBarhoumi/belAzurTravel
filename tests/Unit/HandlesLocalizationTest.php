@@ -37,7 +37,7 @@ class HandlesLocalizationTest extends TestCase
             'title_ar' => 'Arabic',
         ];
 
-        $result = $this->testClass->testLocalized($data, 'title');
+        $result = $this->testClass->test_localized($data, 'title');
 
         $this->assertEquals([
             'fr' => 'French',
@@ -54,7 +54,7 @@ class HandlesLocalizationTest extends TestCase
             'ar' => 'Arabic',
         ];
 
-        $result = $this->testClass->testFlatLocalized('title', $value);
+        $result = $this->testClass->test_flat_localized('title', $value);
 
         $this->assertEquals([
             'title' => 'English',

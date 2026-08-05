@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { AmenityIcons } from '@/components/cards/AmenityIcons';
 import type { LandingSectionConfig } from '@/api/siteSettings.api';
+import { AmenityIcons } from '@/components/cards/AmenityIcons';
 import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';

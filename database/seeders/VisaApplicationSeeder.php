@@ -127,7 +127,9 @@ class VisaApplicationSeeder extends Seeder
 
         foreach ($applications as $app) {
             $visa = Visa::where('code', $app['country_code'])->first();
-            if (!$visa) continue;
+            if (! $visa) {
+                continue;
+            }
 
             VisaApplication::updateOrCreate(
                 [

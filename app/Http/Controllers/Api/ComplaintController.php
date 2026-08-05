@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Complaint;
 use App\Models\ComplaintReply;
 use App\Models\User;
@@ -47,7 +48,7 @@ class ComplaintController extends Controller
         }
 
         if (! empty($data['booking_id'])) {
-            $booking = \App\Models\Booking::query()->find($data['booking_id']);
+            $booking = Booking::query()->find($data['booking_id']);
             abort_unless($booking && $booking->user_id === $request->user()->id, 403);
         }
 

@@ -22,6 +22,7 @@ class ComplaintResolvedNotification extends Notification
         if ($this->isMailConfigured()) {
             $channels[] = 'mail';
         }
+
         return $channels;
     }
 
@@ -60,24 +61,24 @@ class ComplaintResolvedNotification extends Notification
         $isResolved = $this->resolution === 'resolved';
 
         return (new MailMessage)
-            ->subject(($isResolved ? 'Resolved' : 'Rejected') . " - {$type} #{$this->complaint->id}")
+            ->subject(($isResolved ? 'Resolved' : 'Rejected')." - {$type} #{$this->complaint->id}")
             ->view('emails.complaint-resolved', [
                 'complaint' => $this->complaint,
                 'isResolved' => $isResolved,
                 'greeting' => $isResolved ? "Your {$type} Has Been Resolved" : "Your {$type} Has Been Rejected",
                 'headerSubtitle' => "{$type} #{$this->complaint->id}",
                 'introLine' => $isResolved
-                    ? "We've reviewed your ".strtolower($type)." and are pleased to inform you that it has been resolved."
-                    : "We've carefully reviewed your ".strtolower($type)." and unfortunately, we are unable to accommodate your request at this time.",
+                    ? "We've reviewed your ".strtolower($type).' and are pleased to inform you that it has been resolved.'
+                    : "We've carefully reviewed your ".strtolower($type).' and unfortunately, we are unable to accommodate your request at this time.',
                 'refLabel' => 'Reference',
                 'typeLabel' => 'Type',
                 'statusLabel' => 'Status',
                 'refundAmountLabel' => 'Refund Amount',
                 'actionText' => 'View Details',
-                'actionUrl' => config('app.url')."/client/complaints",
+                'actionUrl' => config('app.url').'/client/complaints',
                 'closingLine' => $isResolved
                     ? "If you have any further questions, please don't hesitate to contact us."
-                    : "If you believe this decision was made in error, please contact our support team for further assistance.",
+                    : 'If you believe this decision was made in error, please contact our support team for further assistance.',
             ]);
     }
 }

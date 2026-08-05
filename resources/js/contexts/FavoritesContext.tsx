@@ -14,7 +14,8 @@ export interface FavoriteItem {
         | 'event'
         | 'deal'
         | 'promo'
-        | 'blog';
+        | 'blog'
+        | 'travel';
     name: string;
     image: string;
     price?: number;

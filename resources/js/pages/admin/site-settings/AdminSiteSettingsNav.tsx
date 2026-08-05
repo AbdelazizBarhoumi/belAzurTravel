@@ -38,7 +38,7 @@ import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { useCategories, type PublicCategory } from '@/hooks/usePublicData';
 import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import {
-  AVAILABLE_PAGES, getPage, DEFAULT_NAV_SETTINGS, getNextGroupKey, getPagesInGroups, createGroupPageEntry
+  AVAILABLE_PAGES, getPage, DEFAULT_NAV_SETTINGS, getNextGroupKey, getPagesInGroups, createGroupPageEntry, createGroupLink
 } from '@/lib/nav-config';
 import {
   createLocalizedText,
@@ -46,7 +46,7 @@ import {
   normalizeNavSettingsDraft,
   type LocalizedText,
 } from '@/lib/siteSettingsPayload';
-import type { NavSettings, HeaderEntry, DropdownItemConfig, NavGroup, GroupPageEntry } from '@/lib/nav-config';
+import type { NavSettings, HeaderEntry, DropdownItemConfig, NavGroup, GroupPageEntry, NavGroupLink } from '@/lib/nav-config';
 
 const MAX_DEPTH = 2;
 
@@ -60,6 +60,7 @@ function sanitizeNavSettings(nav: NavSettings): NavSettings {
     groups.map((g) => ({
       ...g,
       pages: (g.pages ?? []).filter((p) => allowedPageKeys.has(p.pageKey)),
+      links: (g.links ?? []).filter((l) => allowedPageKeys.has(l.pageKey)),
       groups: g.groups ? sanitizeGroups(g.groups) : [],
     }));
   return {
@@ -294,7 +295,7 @@ function DropdownItemTree({
   formErrors, errorPrefix, onAdd, onUpdate, onRemove, onMove, lang, t,
 }: DropdownItemTreeProps) {
   const [localLang, setLocalLang] = useState<'fr' | 'en' | 'ar'>(lang as 'fr' | 'en' | 'ar');
-  useEffect(() => { setLocalLang(lang); }, [lang]);
+  useEffect(() => { setLocalLang(lang as 'fr' | 'en' | 'ar'); }, [lang]);
 
   if (items.length === 0) return null;
 
@@ -518,6 +519,302 @@ function DropdownItemTree({
   );
 }
 
+/* ─── Group Sub-Page Link Tree ─── */
+interface GroupLinkTreeProps {
+  items: NavGroupLink[];
+  depth: number;
+  parentPath: number[];
+  parentPageKey: string;
+  categoryTypesByPage: Record<string, CategoryType[]>;
+  getAllCategoryValuesForPage: (pageKey: string) => { value: string; label: string }[];
+  formErrors: Record<string, string>;
+  errorPrefix: string;
+  onAdd: (parentPath: number[], parentPageKey: string) => void;
+  onUpdate: (path: number[], patch: Partial<DropdownItemConfig>) => void;
+  onRemove: (path: number[]) => void;
+  onMove: (path: number[], direction: 'up' | 'down') => void;
+  lang: string;
+  t: (key: string) => string;
+}
+
+function GroupLinkTree({
+  items, depth, parentPath, parentPageKey, categoryTypesByPage,
+  getAllCategoryValuesForPage, formErrors, errorPrefix,
+  onAdd, onUpdate, onRemove, onMove, lang, t,
+}: GroupLinkTreeProps) {
+  const [localLang, setLocalLang] = useState<'fr' | 'en' | 'ar'>(lang as 'fr' | 'en' | 'ar');
+  useEffect(() => { setLocalLang(lang as 'fr' | 'en' | 'ar'); }, [lang]);
+
+  if (items.length === 0) return null;
+
+  const modeIcons = {
+    categories: <Tag className="h-3.5 w-3.5" />,
+    filter: <Filter className="h-3.5 w-3.5" />,
+    search: <Search className="h-3.5 w-3.5" />,
+  };
+
+  return (
+    <div className={depth > 0 ? 'ml-6 border-l-2 border-dashed border-border/50 pl-4' : ''}>
+      {depth === 0 && (
+        <div className="flex items-center justify-start mb-2">
+          <MiniLangToggle lang={localLang} onLanguageChange={setLocalLang} />
+        </div>
+      )}
+      {items.map((item, iIdx) => {
+        const itemPath = [...parentPath, iIdx];
+        const effectivePageKey = item.pageKey || parentPageKey;
+        const page = getPage(effectivePageKey);
+        const hasChildren = (item.children?.length ?? 0) > 0;
+        const canAddChild = depth < MAX_DEPTH;
+        const errorKey = `${errorPrefix}-${iIdx}`;
+        const hasError = !!formErrors[errorKey];
+
+        const typeOptions = categoryTypesByPage[effectivePageKey as keyof typeof categoryTypesByPage] ?? [];
+        const valueOptions = getAllCategoryValuesForPage(effectivePageKey);
+
+        return (
+          <div key={iIdx} className="py-1">
+            <div className={`rounded-lg border bg-card p-3 transition-colors ${hasError ? 'border-destructive/50 bg-destructive/5' : 'border-border/60 hover:border-border'}`}>
+              {/* Item Header Row */}
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <NavBadge type="item" />
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {depth === 0 ? t('admin.settings.subPage') : t('admin.settings.subItem')}
+                  </span>
+                  {hasError && (
+                    <Badge variant="destructive" className="gap-1 text-[10px]">
+                      <AlertCircle className="h-3 w-3" />
+                      {t('admin.settings.translationRequired')}
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {canAddChild && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onAdd(itemPath, effectivePageKey)}>
+                          <CornerDownRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top"><p className="text-xs">{t('admin.settings.addSubItem')}</p></TooltipContent>
+                    </Tooltip>
+                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onMove(itemPath, 'up')} disabled={iIdx === 0}>
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top"><p className="text-xs">{t('admin.settings.moveUp')}</p></TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onMove(itemPath, 'down')} disabled={iIdx === items.length - 1}>
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top"><p className="text-xs">{t('admin.settings.moveDown')}</p></TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive" onClick={() => onRemove(itemPath)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top"><p className="text-xs">{t('admin.settings.removeItem')}</p></TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* Configuration Grid */}
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                {/* Target Page */}
+                <div className="md:col-span-4">
+                  <Label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                    <Globe className="h-3 w-3" />
+                    {t('admin.settings.targetPage')}
+                  </Label>
+                  <Select
+                    value={effectivePageKey}
+                    onValueChange={(v) => {
+                      const canDropdown = getPage(v)?.canHaveDropdown ?? false;
+                      const nextMode = item.mode === 'categories' && !canDropdown ? 'filter' : item.mode;
+                      onUpdate(itemPath, { pageKey: v, mode: nextMode, value: '' });
+                    }}
+                  >
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder={t('admin.settings.selectTargetPage')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AVAILABLE_PAGES.map((p) => (
+                        <SelectItem key={p.key} value={p.key}>
+                          <span className="flex items-center justify-between gap-2">
+                            <span>{t('nav.' + p.key)}</span>
+                            <span className="text-xs text-muted-foreground">{p.href}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Mode Selector */}
+                <div className="md:col-span-4">
+                  <Label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                    {modeIcons[item.mode as keyof typeof modeIcons] || <Settings className="h-3 w-3" />}
+                    {t('admin.settings.mode')}
+                  </Label>
+                  <Select value={item.mode} onValueChange={(v: any) => onUpdate(itemPath, { mode: v, value: '' })}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {page?.canHaveDropdown && (
+                        <SelectItem value="categories">
+                          <span className="flex items-center gap-2">
+                            <Tag className="h-3.5 w-3.5" />
+                            {t('admin.settings.dynamicCategories')}
+                          </span>
+                        </SelectItem>
+                      )}
+                      <SelectItem value="filter">
+                        <span className="flex items-center gap-2">
+                          <Filter className="h-3.5 w-3.5" />
+                          {t('admin.settings.filter')} ({page?.filterParam || 'cat'})
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="search">
+                        <span className="flex items-center gap-2">
+                          <Search className="h-3.5 w-3.5" />
+                          {t('admin.settings.searchKeyword')} (q)
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Value / Link Target */}
+                <div className="md:col-span-4">
+                  {item.mode === 'categories' ? (
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                        <Type className="h-3 w-3" />
+                        {t('admin.settings.categoryType')}
+                      </Label>
+                      <Select
+                        value={item.value}
+                        onValueChange={(v) => {
+                          const selectedType = typeOptions.find((ct) => ct.key === v);
+                          onUpdate(itemPath, {
+                            value: v,
+                            label: selectedType?.label ?? item.label,
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="h-9 text-xs">
+                          <SelectValue placeholder={t('admin.settings.selectCategoryType')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {typeOptions.map((ct) => (
+                            <SelectItem key={ct.key} value={ct.key}>
+                              {ct.label[localLang] ?? ct.label.en ?? ct.key}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : item.mode === 'filter' ? (
+                    valueOptions.length > 0 ? (
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                          <Filter className="h-3 w-3" />
+                          {t('admin.settings.category')}
+                        </Label>
+                        <Select value={item.value} onValueChange={(v) => onUpdate(itemPath, { value: v })}>
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder={t('admin_settings_select_category')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {valueOptions.map((cv) => (
+                              <SelectItem key={cv.value} value={cv.value}>{cv.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <div className="flex h-9 items-center rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground">
+                        <Info className="mr-2 h-3.5 w-3.5" />
+                        {t('admin.settings.noCategoriesAvailable')}
+                      </div>
+                    )
+                  ) : (
+                    <div className="flex h-9 items-center rounded-md border border-dashed border-border bg-muted/30 px-3 text-xs text-muted-foreground">
+                      <Info className="mr-2 h-3.5 w-3.5" />
+                      {t('admin.settings.searchUsesLabel')}
+                    </div>
+                  )}
+                </div>
+
+                {/* Label Translations */}
+                <div className="md:col-span-12 rounded-md bg-muted/20 p-2">
+                  <Label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                    <Globe className="h-3 w-3" />
+                    {t('admin_settings_label')} ({localLang.toUpperCase()})
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['en', 'fr', 'ar'] as const).map((l) => (
+                      <div key={l}>
+                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{l}</Label>
+                        <Input
+                          value={item.label?.[l] ?? ''}
+                          onChange={(e) => {
+                            const current = normalizeLocalizedText(item.label);
+                            onUpdate(itemPath, { label: { ...current, [l]: e.target.value } as LocalizedText });
+                          }}
+                          placeholder={`${t('admin_settings_label')} ${l.toUpperCase()}`}
+                          className="mt-1 h-9 text-xs"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {hasError && (
+                <p className="mt-1.5 flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="h-3 w-3" />
+                  {formErrors[errorKey]}
+                </p>
+              )}
+            </div>
+
+            {/* Nested Children */}
+            {hasChildren && (
+              <GroupLinkTree
+                items={item.children as NavGroupLink[]}
+                depth={depth + 1}
+                parentPath={itemPath}
+                parentPageKey={effectivePageKey}
+                categoryTypesByPage={categoryTypesByPage}
+                getAllCategoryValuesForPage={getAllCategoryValuesForPage}
+                formErrors={formErrors}
+                errorPrefix={errorKey}
+                onAdd={onAdd}
+                onUpdate={onUpdate}
+                onRemove={onRemove}
+                onMove={onMove}
+                lang={localLang}
+                t={t}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ─── Enhanced Group Card ─── */
 interface GroupCardProps {
   group: NavGroup;
@@ -538,6 +835,14 @@ interface GroupCardProps {
   onRemovePageFromSubGroup: (groupKey: string, pageKey: string) => void;
   onMovePageInSubGroup: (groupKey: string, pageKey: string, direction: 'up' | 'down') => void;
   onUpdatePageInSubGroup: (groupKey: string, pageKey: string, patch: Partial<GroupPageEntry>) => void;
+  onAddLink: (parentPath: number[], parentPageKey: string) => void;
+  onUpdateLink: (path: number[], patch: Partial<DropdownItemConfig>) => void;
+  onRemoveLink: (path: number[]) => void;
+  onMoveLink: (path: number[], direction: 'up' | 'down') => void;
+  onAddLinkToSubGroup: (groupKey: string, parentPath: number[], parentPageKey: string) => void;
+  onUpdateLinkInSubGroup: (groupKey: string, path: number[], patch: Partial<DropdownItemConfig>) => void;
+  onRemoveLinkInSubGroup: (groupKey: string, path: number[]) => void;
+  onMoveLinkInSubGroup: (groupKey: string, path: number[], direction: 'up' | 'down') => void;
   getCategoriesForPage: (pageKey: string) => PublicCategory[];
   categoryTypesByPage: Record<string, CategoryType[]>;
   getAllCategoryValuesForPage: (pageKey: string) => { value: string; label: string }[];
@@ -550,7 +855,9 @@ function GroupCard({
   group, parentKey, allGroups, depth, availablePages, onUpdate, onRemove,
   onAddPage, onRemovePage, onMovePage, onUpdatePage, onAddSubGroup, onUpdateSubGroup,
   onRemoveSubGroup, onAddPageToSubGroup, onRemovePageFromSubGroup, onMovePageInSubGroup,
-  onUpdatePageInSubGroup, getCategoriesForPage, categoryTypesByPage, getAllCategoryValuesForPage,
+  onUpdatePageInSubGroup, onAddLink, onUpdateLink, onRemoveLink, onMoveLink,
+  onAddLinkToSubGroup, onUpdateLinkInSubGroup, onRemoveLinkInSubGroup, onMoveLinkInSubGroup,
+  getCategoriesForPage, categoryTypesByPage, getAllCategoryValuesForPage,
   formErrors, lang, t,
 }: GroupCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -902,6 +1209,44 @@ function GroupCard({
               )}
             </div>
 
+            {/* Sub-Pages (Mixed Links) */}
+            <div>
+              <Separator className="mb-4" />
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  <Link2 className="h-4 w-4 text-muted-foreground" />
+                  {t('admin.settings.subPages')}
+                </Label>
+                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onAddLink([], '')}>
+                  <Plus className="mr-1 h-3.5 w-3.5" /> {t('admin.settings.addSubPage')}
+                </Button>
+              </div>
+
+              {(group.links ?? []).length === 0 && (
+                <div className="flex items-center gap-2 rounded-md border border-dashed border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5" />
+                  {t('admin.settings.subPagesEmptyDescription')}
+                </div>
+              )}
+
+              <GroupLinkTree
+                items={(group.links ?? []) as NavGroupLink[]}
+                depth={0}
+                parentPath={[]}
+                parentPageKey=""
+                categoryTypesByPage={categoryTypesByPage}
+                getAllCategoryValuesForPage={getAllCategoryValuesForPage}
+                formErrors={formErrors}
+                errorPrefix={`group-${group.key}-links`}
+                onAdd={(parentPath, parentPageKey) => onAddLink(parentPath, parentPageKey)}
+                onUpdate={(path, patch) => onUpdateLink(path, patch)}
+                onRemove={(path) => onRemoveLink(path)}
+                onMove={(path, dir) => onMoveLink(path, dir)}
+                lang={lang}
+                t={t}
+              />
+            </div>
+
             {/* Sub-Groups */}
             {depth < 1 && (
               <div>
@@ -957,6 +1302,14 @@ function GroupCard({
                           onRemovePageFromSubGroup={onRemovePageFromSubGroup}
                           onMovePageInSubGroup={onMovePageInSubGroup}
                           onUpdatePageInSubGroup={onUpdatePageInSubGroup}
+                          onAddLink={(parentPath, parentPageKey) => onAddLinkToSubGroup(subGroup.key, parentPath, parentPageKey)}
+                          onUpdateLink={(path, patch) => onUpdateLinkInSubGroup(subGroup.key, path, patch)}
+                          onRemoveLink={(path) => onRemoveLinkInSubGroup(subGroup.key, path)}
+                          onMoveLink={(path, dir) => onMoveLinkInSubGroup(subGroup.key, path, dir)}
+                          onAddLinkToSubGroup={onAddLinkToSubGroup}
+                          onUpdateLinkInSubGroup={onUpdateLinkInSubGroup}
+                          onRemoveLinkInSubGroup={onRemoveLinkInSubGroup}
+                          onMoveLinkInSubGroup={onMoveLinkInSubGroup}
                           getCategoriesForPage={getCategoriesForPage}
                           categoryTypesByPage={categoryTypesByPage}
                           getAllCategoryValuesForPage={getAllCategoryValuesForPage}
@@ -1217,6 +1570,47 @@ export default function AdminSiteSettingsNav() {
     setDraft({ ...draft, groups: updateInList(draft.groups ?? []) });
   }, [draft]);
 
+  const addLinkToGroup = useCallback((groupKey: string, parentPath: number[], parentPageKey: string) => {
+    const newLink = createGroupLink(parentPageKey);
+    const addToList = (groups: NavGroup[]): NavGroup[] =>
+      groups.map((g) => {
+        if (g.key === groupKey) return { ...g, links: addItemAtPath(g.links ?? [], parentPath, newLink) as NavGroupLink[] };
+        if (g.groups?.length) return { ...g, groups: addToList(g.groups) };
+        return g;
+      });
+    setDraft({ ...draft, groups: addToList(draft.groups ?? []) });
+  }, [draft]);
+
+  const updateLinkInGroup = useCallback((groupKey: string, path: number[], patch: Partial<DropdownItemConfig>) => {
+    const updateInList = (groups: NavGroup[]): NavGroup[] =>
+      groups.map((g) => {
+        if (g.key === groupKey) return { ...g, links: updateItemAtPath(g.links ?? [], path, patch) as NavGroupLink[] };
+        if (g.groups?.length) return { ...g, groups: updateInList(g.groups) };
+        return g;
+      });
+    setDraft({ ...draft, groups: updateInList(draft.groups ?? []) });
+  }, [draft]);
+
+  const removeLinkFromGroup = useCallback((groupKey: string, path: number[]) => {
+    const removeInList = (groups: NavGroup[]): NavGroup[] =>
+      groups.map((g) => {
+        if (g.key === groupKey) return { ...g, links: removeItemAtPath(g.links ?? [], path) as NavGroupLink[] };
+        if (g.groups?.length) return { ...g, groups: removeInList(g.groups) };
+        return g;
+      });
+    setDraft({ ...draft, groups: removeInList(draft.groups ?? []) });
+  }, [draft]);
+
+  const moveLinkInGroup = useCallback((groupKey: string, path: number[], direction: 'up' | 'down') => {
+    const moveInList = (groups: NavGroup[]): NavGroup[] =>
+      groups.map((g) => {
+        if (g.key === groupKey) return { ...g, links: moveItemAtPath(g.links ?? [], path, direction) as NavGroupLink[] };
+        if (g.groups?.length) return { ...g, groups: moveInList(g.groups) };
+        return g;
+      });
+    setDraft({ ...draft, groups: moveInList(draft.groups ?? []) });
+  }, [draft]);
+
   const moveHeaderToGroup = useCallback((headerIdx: number, groupKey: string) => {
     const entry = draft.header[headerIdx];
     const newGroupPage: GroupPageEntry = {
@@ -1301,6 +1695,48 @@ export default function AdminSiteSettingsNav() {
     return errors;
   };
 
+  const validateLinks = (items: DropdownItemConfig[], errorPrefix: string): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    items.forEach((item, iIdx) => {
+      const key = `${errorPrefix}-${iIdx}`;
+      if (!item.pageKey) {
+        errors[key] = t('admin.settings.selectTargetPage');
+        return;
+      }
+      if (item.mode === 'categories') {
+        if (item.children?.length) Object.assign(errors, validateLinks(item.children, key));
+        return;
+      }
+      const rawLabel = (item as any).label;
+      if (!rawLabel) {
+        errors[key] = t('admin.settings.provideTranslations');
+      } else {
+        const label = normalizeLocalizedText(rawLabel);
+        for (const k of ['en', 'fr', 'ar'] as const) {
+          if (!label[k]?.trim()) {
+            errors[key] = t('admin.settings.missingTranslation') + `: ${k.toUpperCase()}`;
+            break;
+          }
+        }
+      }
+      if (item.children?.length) Object.assign(errors, validateLinks(item.children, key));
+    });
+    return errors;
+  };
+
+  const validateGroupLinks = (groups: NavGroup[]): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    for (const g of groups) {
+      if (g.links?.length) {
+        Object.assign(errors, validateLinks(g.links, `group-${g.key}-links`));
+      }
+      if (g.groups?.length) {
+        Object.assign(errors, validateGroupLinks(g.groups));
+      }
+    }
+    return errors;
+  };
+
   const save = async () => {
     const errors: Record<string, string> = {};
     for (const [hIdx, entry] of draft.header.entries()) {
@@ -1308,6 +1744,7 @@ export default function AdminSiteSettingsNav() {
         Object.assign(errors, validateItems(entry.items, `${hIdx}`));
       }
     }
+    Object.assign(errors, validateGroupLinks(draft.groups ?? []));
     if (Object.keys(errors).length > 0) { setFormErrors(errors); toast.error(Object.values(errors)[0]); return; }
     setFormErrors({});
     setIsSaving(true);
@@ -1698,6 +2135,14 @@ export default function AdminSiteSettingsNav() {
                       onRemovePageFromSubGroup={removePageFromGroup}
                       onMovePageInSubGroup={movePageInGroup}
                       onUpdatePageInSubGroup={updateGroupPage}
+                      onAddLink={(parentPath, parentPageKey) => addLinkToGroup(group.key, parentPath, parentPageKey)}
+                      onUpdateLink={(path, patch) => updateLinkInGroup(group.key, path, patch)}
+                      onRemoveLink={(path) => removeLinkFromGroup(group.key, path)}
+                      onMoveLink={(path, dir) => moveLinkInGroup(group.key, path, dir)}
+                      onAddLinkToSubGroup={addLinkToGroup}
+                      onUpdateLinkInSubGroup={updateLinkInGroup}
+                      onRemoveLinkInSubGroup={removeLinkFromGroup}
+                      onMoveLinkInSubGroup={moveLinkInGroup}
                       getCategoriesForPage={getCategoriesForPage}
                       categoryTypesByPage={categoryTypesByPage}
                       getAllCategoryValuesForPage={getAllCategoryValuesForPage}

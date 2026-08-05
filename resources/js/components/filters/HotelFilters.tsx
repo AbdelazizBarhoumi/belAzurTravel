@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { Slider } from '@/components/ui/slider';
-import { FilterRenderer } from './FilterRenderer';
-import type { HotelItem } from '@/types/public/hotel.types';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
+import type { HotelItem } from '@/types/public/hotel.types';
+import { FilterRenderer } from './FilterRenderer';
 
 interface HotelFiltersProps {
     hotels: HotelItem[];

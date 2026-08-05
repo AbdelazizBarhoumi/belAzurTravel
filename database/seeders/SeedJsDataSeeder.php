@@ -3,13 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Amenity;
-use Illuminate\Database\Seeder;
 use App\Models\Hotel;
 use App\Models\HotelRoom;
-use App\Models\HotelRoomFeature;
-use App\Models\HotelRoomImage;
 use App\Models\SiteSetting;
 use App\Models\Tour;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
 
 class SeedJsDataSeeder extends Seeder
@@ -241,8 +239,8 @@ class SeedJsDataSeeder extends Seeder
 
         // La Badira
         $badiraDescFr = "Situé dans un quartier calme de Hammamet, La Badira est un établissement Adult Only 5 étoiles de luxe bénéficiant d'un emplacement stratégique : à 3,4 km de la médina, à 10,6 km de Yasmine Hammamet et à 73 km de l'aéroport de Tunis-Carthage.\n\nL'hôtel propose 120 chambres open-space avec vue sur la mer et 10 suites dont 6 avec piscine privée. Toutes équipées de douche italienne, literie brodée et oreillers de haute qualité.\n\nGastronomie sous la direction du chef exécutif Slim Bettaieb : restaurant de gastronomie tunisienne, restaurant de cuisine internationale, restaurant-grill en bord de plage et salon pour le petit-déjeuner. Deux cafés et deux bars complètent l'offre.\n\nBien-être : piscine intérieure chauffée, spa avec hammams et salle de yoga, salon de coiffure et nail bar, salle de fitness, centre équestre, club de plongée PADI, 3 parcours de golf 18 trous à proximité.";
-        $badiraDescEn = "Located in a quiet area of Hammamet, La Badira is an adult-only 5-star luxury hotel, 3.4 km from the medina, 10.6 km from Yasmine Hammamet and 73 km from Tunis-Carthage Airport. It offers 120 open-space rooms with sea views and 10 suites, 6 of them with private pools. The property includes an indoor heated pool, spa with hammams, yoga room, fitness room, equestrian center, PADI dive club and nearby golf courses.";
-        $badiraDescAr = "يقع لا باديرا في منطقة هادئة بهامامات، وهو فندق فاخر من فئة 5 نجوم ومخصص للبالغين فقط، على بعد 3.4 كم من المدينة العتيقة، و10.6 كم من ياسمين الحمامات، و73 كم من مطار تونس قرطاج. يضم 120 غرفة مفتوحة على البحر و10 أجنحة، منها 6 بأحواض سباحة خاصة، إضافة إلى مسبح داخلي مدفأ، وسبا مع حمامات تقليدية، وغرفة يوغا، وقاعة لياقة بدنية، ومركز للفروسية، ونادٍ للغوص، وحقول غولف قريبة.";
+        $badiraDescEn = 'Located in a quiet area of Hammamet, La Badira is an adult-only 5-star luxury hotel, 3.4 km from the medina, 10.6 km from Yasmine Hammamet and 73 km from Tunis-Carthage Airport. It offers 120 open-space rooms with sea views and 10 suites, 6 of them with private pools. The property includes an indoor heated pool, spa with hammams, yoga room, fitness room, equestrian center, PADI dive club and nearby golf courses.';
+        $badiraDescAr = 'يقع لا باديرا في منطقة هادئة بهامامات، وهو فندق فاخر من فئة 5 نجوم ومخصص للبالغين فقط، على بعد 3.4 كم من المدينة العتيقة، و10.6 كم من ياسمين الحمامات، و73 كم من مطار تونس قرطاج. يضم 120 غرفة مفتوحة على البحر و10 أجنحة، منها 6 بأحواض سباحة خاصة، إضافة إلى مسبح داخلي مدفأ، وسبا مع حمامات تقليدية، وغرفة يوغا، وقاعة لياقة بدنية، ومركز للفروسية، ونادٍ للغوص، وحقول غولف قريبة.';
 
         $badira = Hotel::updateOrCreate(['slug' => 'hotel-badira'], [
             'code' => 'hotel-badira-001',
@@ -328,7 +326,7 @@ class SeedJsDataSeeder extends Seeder
         // Iberostar
         $iberostarDescFr = "Situé à Yasmine Hammamet, à proximité de la Médina et de Carthage Land, l'Iberostar Waves Averroes dispose de 256 chambres (suites, simples et doubles) avec décor élégant et vues sur jardin ou mer.\n\nÉquipements en chambre : climatisation individuelle, salle de bain avec baignoire et bidet, TV satellite, téléphone, sèche-cheveux. Service en chambre 24h/24.\n\nRestauration : Le Laurier (cuisine internationale), L'Olivier Italian Restaurant, snack-bar et épicerie fine.\n\nLoisirs : 2 grandes piscines dont une couverte et une enfants, espace spa avec sauna, hammam et cabines de massage, salle de fitness, terrain de volley, sports nautiques (ski nautique, planche à voile). À proximité : Yasmine Golf et Yasmine Marina. Wi-Fi et parking gratuits.";
         $iberostarDescEn = "Located in Yasmine Hammamet, near the medina and Carthage Land, Iberostar Waves Averroes has 256 rooms, suites, singles and doubles with elegant décor and garden or sea views. Rooms include individual air conditioning, a bathroom with bathtub and bidet, satellite TV, telephone and hairdryer, with 24-hour room service. Dining includes Le Laurier, L'Olivier Italian Restaurant, a snack bar and fine grocery shop. Leisure facilities include two large pools, a spa with sauna, hammam and massage cabins, fitness room, volleyball court and water sports.";
-        $iberostarDescAr = "يقع فندق إيبيروستار ويڤز أفيروز في ياسمين الحمامات، بالقرب من المدينة العتيقة وكارطاج لاند. يضم 256 غرفة وجناحًا وغرفًا فردية ومزدوجة بديكور أنيق وإطلالات على الحديقة أو البحر. تشمل المرافق تكييفًا فرديًا وحمامًا مع حوض استحمام وبيديه وتلفازًا فضائيًا وهاتفًا ومجفف شعر، مع خدمة الغرف على مدار الساعة. وتضم المطاعم لو لوريي، ولوفيلييه الإيطالي، وبارًا خفيفًا ومتجرًا فاخرًا. كما تتوفر مسابح ومنتجع صحي وساونا وحمام تقليدي وغرف مساج وقاعة لياقة رياضية ورياضات مائية.";
+        $iberostarDescAr = 'يقع فندق إيبيروستار ويڤز أفيروز في ياسمين الحمامات، بالقرب من المدينة العتيقة وكارطاج لاند. يضم 256 غرفة وجناحًا وغرفًا فردية ومزدوجة بديكور أنيق وإطلالات على الحديقة أو البحر. تشمل المرافق تكييفًا فرديًا وحمامًا مع حوض استحمام وبيديه وتلفازًا فضائيًا وهاتفًا ومجفف شعر، مع خدمة الغرف على مدار الساعة. وتضم المطاعم لو لوريي، ولوفيلييه الإيطالي، وبارًا خفيفًا ومتجرًا فاخرًا. كما تتوفر مسابح ومنتجع صحي وساونا وحمام تقليدي وغرف مساج وقاعة لياقة رياضية ورياضات مائية.';
 
         $iberostar = Hotel::updateOrCreate(['slug' => 'hotel-iberostar'], [
             'code' => 'hotel-iberostar-001',
@@ -413,7 +411,7 @@ class SeedJsDataSeeder extends Seeder
         // Concorde
         $concordeDescFr = "Le Barcelo Concorde Green Park Palace est idéalement situé à 5 minutes à pied du Port El Kantaoui et à 10 minutes en voiture de la Médina de Sousse. L'aéroport de Monastir se trouve à 20 km.\n\n452 chambres luxueuses avec balcon ou terrasse (vue mer ou montagne), salle de bain privée avec baignoire/douche, TV écran plat, réfrigérateur, coffre-fort. Suites prestiges avec baignoire hydromassage.\n\n5 restaurants : buffet principal, La Torreta (italien), restaurant piscine, El Jem (arabo-oriental), Le Pêcheur (méditerranéen). Bars avec cocktails locaux et internationaux.\n\nLoisirs : grande piscine extérieure, piscine enfants, piscine couverte chauffée, court de tennis, terrain polyvalent, centre de fitness, mini-club enfants. Wi-Fi et parking gratuits.";
         $concordeDescEn = "Barcelo Concorde Green Park Palace is ideally located 5 minutes on foot from Port El Kantaoui and 10 minutes by car from the Medina of Sousse, with Monastir Airport 20 km away. It offers 452 luxurious rooms with balcony or terrace, sea or mountain views, private bathrooms, flat-screen TVs, refrigerators and safes. There are five restaurants, several bars, outdoor and indoor pools, tennis courts, a fitness center and a kids' club.";
-        $concordeDescAr = "يقع بارسيلو كونكورد غرين بارك بالاس في موقع مثالي على بعد 5 دقائق سيرًا من ميناء القنطاوي و10 دقائق بالسيارة من مدينة سوسة العتيقة، بينما يبعد مطار المنستير 20 كم. يضم 452 غرفة فاخرة بشرفات أو تراسات وإطلالات على البحر أو الجبل، وحمامات خاصة وتلفازًا مسطحًا وثلاجة وخزنة. كما يحتوي على خمسة مطاعم وعدة بارات ومسابح داخلية وخارجية وملاعب تنس ومركز لياقة ونادٍ للأطفال.";
+        $concordeDescAr = 'يقع بارسيلو كونكورد غرين بارك بالاس في موقع مثالي على بعد 5 دقائق سيرًا من ميناء القنطاوي و10 دقائق بالسيارة من مدينة سوسة العتيقة، بينما يبعد مطار المنستير 20 كم. يضم 452 غرفة فاخرة بشرفات أو تراسات وإطلالات على البحر أو الجبل، وحمامات خاصة وتلفازًا مسطحًا وثلاجة وخزنة. كما يحتوي على خمسة مطاعم وعدة بارات ومسابح داخلية وخارجية وملاعب تنس ومركز لياقة ونادٍ للأطفال.';
 
         $concorde = Hotel::updateOrCreate(['slug' => 'hotel-concorde'], [
             'code' => 'hotel-concorde-001',
@@ -498,7 +496,7 @@ class SeedJsDataSeeder extends Seeder
         // Occidental
         $occDescFr = "L'Occidental Sousse Marhaba est idéalement situé au cœur de la zone touristique de Sousse, à 20 km de l'aéroport de Monastir et à 40 km de l'aéroport d'Enfidha.\n\n240 chambres spacieuses rénovées en 2018, réparties autour de magnifiques jardins tropicaux, alliant luxe et confort.\n\nRestauration : restaurant buffet cuisine internationale, barbecue au bord de l'eau, bar animé piscine et club de plage.\n\nLoisirs : 2 piscines extérieures (dont une avec toboggans), piscine intérieure, centre de bien-être 300 m² avec sauna et massage, tennis, discothèque, club enfants. Navettes aéroport gratuites, Wi-Fi, accessible en fauteuil roulant.";
         $occDescEn = "Occidental Sousse Marhaba is ideally located in the heart of Sousse's tourist area, 20 km from Monastir Airport and 40 km from Enfidha Airport. It offers 240 spacious rooms renovated in 2018, surrounded by tropical gardens. Dining includes an international buffet, water-side barbecue, pool bar and beach club. Leisure facilities include two outdoor pools, an indoor pool, a wellness center, tennis, a disco and a kids' club.";
-        $occDescAr = "يقع أوكسيدنتال سوسة مرحبا في قلب المنطقة السياحية بسوسة، على بعد 20 كم من مطار المنستير و40 كم من مطار النفيضة. يضم 240 غرفة فسيحة تم تجديدها سنة 2018، وتحيط بها حدائق استوائية جميلة. تتوفر مطاعم بنظام البوفيه ومطعم شواء على الماء وبار مسبح ونادٍ شاطئي، إضافة إلى مسابح خارجية وداخلية ومركز عافية ونادٍ للأطفال وخدمة نقل مجانية من وإلى المطار.";
+        $occDescAr = 'يقع أوكسيدنتال سوسة مرحبا في قلب المنطقة السياحية بسوسة، على بعد 20 كم من مطار المنستير و40 كم من مطار النفيضة. يضم 240 غرفة فسيحة تم تجديدها سنة 2018، وتحيط بها حدائق استوائية جميلة. تتوفر مطاعم بنظام البوفيه ومطعم شواء على الماء وبار مسبح ونادٍ شاطئي، إضافة إلى مسابح خارجية وداخلية ومركز عافية ونادٍ للأطفال وخدمة نقل مجانية من وإلى المطار.';
 
         $occ = Hotel::updateOrCreate(['slug' => 'hotel-occidental'], [
             'code' => 'hotel-occidental-001',

@@ -22,8 +22,8 @@ class TourController extends Controller
                 return Tour::query()->oldest('id')
                     ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                     ->get()->map(
-                    fn (Tour $item) => $this->payload($item)
-                );
+                        fn (Tour $item) => $this->payload($item)
+                    );
             }
         );
 

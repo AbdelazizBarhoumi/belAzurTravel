@@ -1,13 +1,17 @@
 import { useMemo } from 'react';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 
+export interface CategorizedItem {
+    category_assignments?: Record<string, string>;
+}
+
 interface CheckboxFilterProps {
     categoryType: PublicCategoryType;
     selectedValues: string[];
     onChange: (values: string[]) => void;
     lang: string;
     preview?: boolean;
-    items?: any[];
+    items?: CategorizedItem[];
 }
 
 export function CheckboxFilter({ categoryType, selectedValues, onChange, lang, preview, items = [] }: CheckboxFilterProps) {

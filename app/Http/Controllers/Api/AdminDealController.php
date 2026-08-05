@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\CategoryType;
-use App\Models\CategoryValue;
 use App\Models\Deal;
 use App\Models\EntityCategoryAssignment;
 use Illuminate\Database\Eloquent\Model;
@@ -136,7 +135,7 @@ class AdminDealController extends Controller
         $details['highlights'] = $this->localizedList($data, 'highlights');
         $details['terms'] = $this->localizedList($data, 'terms');
 
-        $categoryKey = (string) ($data['category_key'] ?? $data['category'] ?? $request->input('category') ?? ($existing?->category_key ?? ''));
+        $categoryKey = (string) ($data['category_key'] ?? $data['category'] ?? $data['category_en'] ?? $request->input('category') ?? ($existing?->category_key ?? ''));
         $category = Category::where('entity_type', 'deals')
             ->where('key', $categoryKey)
             ->first();

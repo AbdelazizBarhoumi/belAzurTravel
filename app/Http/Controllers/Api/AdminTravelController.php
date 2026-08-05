@@ -6,7 +6,6 @@ use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\CategoryType;
-use App\Models\CategoryValue;
 use App\Models\EntityCategoryAssignment;
 use App\Models\GalleryImage;
 use App\Models\Travel;

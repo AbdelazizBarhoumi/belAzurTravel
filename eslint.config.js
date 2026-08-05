@@ -88,6 +88,7 @@ export default [
             'vite.config.ts',
             'resources/js/pages/admin/**',
             'resources/js/components/admin/**',
+            'resources/js/actions/**',
         ],
     },
     prettier, // Turn off all rules that might conflict with Prettier

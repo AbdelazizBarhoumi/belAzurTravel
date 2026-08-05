@@ -170,7 +170,7 @@ class NavigationLinkVisibilityTest extends TestCase
     public function test_toggling_link_disabled_filters_content_for_client(): void
     {
         $user = User::factory()->create(['role' => 'client']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'superadmin']);
 
         // Start with all enabled
         $settings = SiteSetting::create([

@@ -83,7 +83,7 @@ export function AutocompleteSelect({
                 className="p-0"
                 style={{ width: triggerWidth || '100%' }}
                 align="start"
-                onkeydown={handleKeyDown}
+                onKeyDown={handleKeyDown}
             >
                 <Command>
                     <CommandInput placeholder={searchPlaceholder} />

@@ -1,5 +1,5 @@
 import type { PublicCategoryType } from '@/hooks/usePublicData';
-import { CheckboxFilter } from './CheckboxFilter';
+import { CheckboxFilter, type CategorizedItem } from './CheckboxFilter';
 
 interface FilterRendererProps {
     categoryType: PublicCategoryType;
@@ -7,7 +7,7 @@ interface FilterRendererProps {
     onChange: (values: string[]) => void;
     lang: string;
     preview?: boolean;
-    items?: any[];
+    items?: CategorizedItem[];
 }
 
 export function FilterRenderer({

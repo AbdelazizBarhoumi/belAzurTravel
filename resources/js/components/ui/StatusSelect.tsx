@@ -59,7 +59,6 @@ export function StatusSelect({
   const normalizedValue = value?.toLowerCase() || "";
   
   const statusColorClass = selectedOption?.colorClass || defaultStatusColors[normalizedValue] || "bg-muted/50 text-muted-foreground border-border";
-  const indicatorColorClass = selectedOption?.indicatorClass || defaultIndicatorColors[normalizedValue] || "bg-muted-foreground";
 
   return (
     <Select value={value} onValueChange={onValueChange} disabled={disabled}>

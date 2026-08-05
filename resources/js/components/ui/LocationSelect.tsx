@@ -1,17 +1,11 @@
-import { useState, useMemo } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
 import { Country, City } from 'country-state-city';
 import countries from 'i18n-iso-countries';
 import ar from 'i18n-iso-countries/langs/ar.json';
 import en from 'i18n-iso-countries/langs/en.json';
 import fr from 'i18n-iso-countries/langs/fr.json';
-import { cn } from '@/lib/utils';
+import { ChevronDown, Check } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
 import {
     Command,
     CommandEmpty,
@@ -20,9 +14,15 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
-import { useCountries, useCities } from '@/hooks/useCountries';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import { getLocalizedName } from '@/data/cityTranslations';
+import { useCountries, useCities } from '@/hooks/useCountries';
 import type { Lang } from '@/i18n/translations';
+import { cn } from '@/lib/utils';
 
 countries.registerLocale(en);
 countries.registerLocale(fr);

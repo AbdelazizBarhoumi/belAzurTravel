@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
     Select,
     SelectContent,
@@ -20,7 +21,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
 // import removed: uniqueNonEmptySelectOptions not used in this file
@@ -377,22 +377,29 @@ export function EntityFormDialog<T extends object>({
         () => JSON.stringify(toRecord(initial, preserveArrayKeys)),
         [initial, preserveArrayKeys],
     );
-    useEffect(() => {
-        if (open) {
-            setValues(toRecord(initial, preserveArrayKeys));
-            setLocalErrors({});
-        } else {
-            setValues({});
-            setLocalErrors({});
-        }
-    }, [open, initialSignature, preserveArrayKeys]);
+    const [prevOpen, setPrevOpen] = useState(open);
+    const [prevSignature, setPrevSignature] = useState(initialSignature);
+    if (open !== prevOpen || (open && initialSignature !== prevSignature)) {
+        setPrevOpen(open);
+        setPrevSignature(initialSignature);
+        setValues(open ? toRecord(initial, preserveArrayKeys) : {});
+        setLocalErrors({});
+    }
 
-    useEffect(() => {
-        if (activeLangProp) return;
-        setInternalActiveLang(
-            languages && languages.length > 0 ? languages[0] : ('en' as Lang),
-        );
-    }, [activeLangProp, languages, open]);
+    const [prevLangSetup, setPrevLangSetup] = useState(
+        JSON.stringify([open, languages?.[0], activeLangProp]),
+    );
+    const langSetupKey = JSON.stringify([open, languages?.[0], activeLangProp]);
+    if (langSetupKey !== prevLangSetup) {
+        setPrevLangSetup(langSetupKey);
+        if (!activeLangProp) {
+            setInternalActiveLang(
+                languages && languages.length > 0
+                    ? languages[0]
+                    : ('en' as Lang),
+            );
+        }
+    }
 
     const effectiveSections = useMemo<SectionDef[]>(() => {
         if (sections && sections.length > 0) {

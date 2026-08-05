@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
 import { MapPin, Star } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
-import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { FilterSidebar } from '@/components/lists/FilterSidebar';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
@@ -72,22 +72,21 @@ const Destinations = () => {
     const [categoryTypeFilters, setCategoryTypeFilters] =
         useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
-    // Sync state with URL params when they change (e.g. navbar subcategory links)
-    useEffect(() => {
+    // Adjust state during render when URL params change (e.g. navbar subcategory links)
+    const [prevParamsKey, setPrevParamsKey] = useState(() => params.toString());
+    if (params.toString() !== prevParamsKey) {
+        setPrevParamsKey(params.toString());
         setSearchQuery(params.get('q') || '');
         setSelectedCategory(params.get('cat')?.toLowerCase() || 'all');
         setSelectedCountry(params.get('country') || 'all');
-    }, [params]);
-    useEffect(() => {
-        const filters: Record<string, string[]> = {};
+        const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                const typeKey = key.slice('category_'.length);
-                filters[typeKey] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
             }
         }
-        setCategoryTypeFilters(filters);
-    }, [params]);
+        setCategoryTypeFilters(nextFilters);
+    }
 
     const countries = useMemo(() => {
         return [

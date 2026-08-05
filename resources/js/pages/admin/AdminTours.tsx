@@ -316,6 +316,10 @@ const AdminTours = () => {
             category_assignments: categoryAssignments,
         };
 
+        const days = Number(values.duration_value) || 0;
+        payload.duration_days = days > 0 ? days : null;
+        payload.duration_nights = days > 0 ? Math.max(0, days - 1) : null;
+
         if (Array.isArray(galleryFiles) && galleryFiles.length > 0) {
             payload.gallery_files = galleryFiles;
         }
@@ -328,6 +332,24 @@ const AdminTours = () => {
                 setOpen(false);
                 setEditing(null);
                 setErrors({});
+            },
+            onError: (error: unknown) => {
+                const errData = (error as { data?: { errors?: Record<string, unknown>; message?: string }; message?: string }).data;
+                const serverErrors = errData?.errors;
+                if (serverErrors && typeof serverErrors === 'object') {
+                    const mapped: Record<string, string> = {};
+                    Object.entries(serverErrors).forEach(([key, value]) => {
+                        const displayKey =
+                            key === 'duration_days' || key === 'duration_nights'
+                                ? 'duration'
+                                : key;
+                        mapped[displayKey] = Array.isArray(value)
+                            ? String(value[0])
+                            : String(value);
+                    });
+                    setErrors(mapped);
+                }
+                toast.error(errData?.message || (error as Error).message || t('admin.saveError'));
             },
         });
     };

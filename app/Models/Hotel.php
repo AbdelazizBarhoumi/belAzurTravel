@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\HotelRoom;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Hotel extends Model
 {
@@ -57,13 +58,12 @@ class Hotel extends Model
         'detente' => 'boolean',
     ];
 
-
-    public function amenities(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function amenities(): BelongsToMany
     {
         return $this->belongsToMany(Amenity::class, 'amenity_hotel');
     }
 
-    public function rooms(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function rooms(): HasMany
     {
         return $this->hasMany(HotelRoom::class);
     }

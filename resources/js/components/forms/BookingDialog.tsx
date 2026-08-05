@@ -23,7 +23,7 @@ import { api } from '@/hooks/useBooking';
 interface BookingDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    type: 'destination' | 'hotel' | 'tour' | 'flight' | 'car';
+    type: 'destination' | 'hotel' | 'tour' | 'flight' | 'car' | 'travel';
     itemSlug?: string;
     itemId?: string;
     itemName: string;

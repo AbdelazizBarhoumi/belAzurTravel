@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::index
- * @see app/Http/Controllers/Api/ComplaintController.php:15
+ * @see app/Http/Controllers/Api/ComplaintController.php:16
  * @route '/api/client/complaints'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::index
- * @see app/Http/Controllers/Api/ComplaintController.php:15
+ * @see app/Http/Controllers/Api/ComplaintController.php:16
  * @route '/api/client/complaints'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::index
- * @see app/Http/Controllers/Api/ComplaintController.php:15
+ * @see app/Http/Controllers/Api/ComplaintController.php:16
  * @route '/api/client/complaints'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::index
- * @see app/Http/Controllers/Api/ComplaintController.php:15
+ * @see app/Http/Controllers/Api/ComplaintController.php:16
  * @route '/api/client/complaints'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ComplaintController::index
- * @see app/Http/Controllers/Api/ComplaintController.php:15
+ * @see app/Http/Controllers/Api/ComplaintController.php:16
  * @route '/api/client/complaints'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ComplaintController::index
- * @see app/Http/Controllers/Api/ComplaintController.php:15
+ * @see app/Http/Controllers/Api/ComplaintController.php:16
  * @route '/api/client/complaints'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\ComplaintController::index
- * @see app/Http/Controllers/Api/ComplaintController.php:15
+ * @see app/Http/Controllers/Api/ComplaintController.php:16
  * @route '/api/client/complaints'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::show
- * @see app/Http/Controllers/Api/ComplaintController.php:27
+ * @see app/Http/Controllers/Api/ComplaintController.php:28
  * @route '/api/client/complaints/{id}'
  */
 export const show = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::show
- * @see app/Http/Controllers/Api/ComplaintController.php:27
+ * @see app/Http/Controllers/Api/ComplaintController.php:28
  * @route '/api/client/complaints/{id}'
  */
 show.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -122,7 +122,7 @@ show.url = (args: { id: string | number } | [id: string | number ] | string | nu
 
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::show
- * @see app/Http/Controllers/Api/ComplaintController.php:27
+ * @see app/Http/Controllers/Api/ComplaintController.php:28
  * @route '/api/client/complaints/{id}'
  */
 show.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -131,7 +131,7 @@ show.get = (args: { id: string | number } | [id: string | number ] | string | nu
 })
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::show
- * @see app/Http/Controllers/Api/ComplaintController.php:27
+ * @see app/Http/Controllers/Api/ComplaintController.php:28
  * @route '/api/client/complaints/{id}'
  */
 show.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -141,7 +141,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
     /**
 * @see \App\Http\Controllers\Api\ComplaintController::show
- * @see app/Http/Controllers/Api/ComplaintController.php:27
+ * @see app/Http/Controllers/Api/ComplaintController.php:28
  * @route '/api/client/complaints/{id}'
  */
     const showForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -151,7 +151,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
             /**
 * @see \App\Http\Controllers\Api\ComplaintController::show
- * @see app/Http/Controllers/Api/ComplaintController.php:27
+ * @see app/Http/Controllers/Api/ComplaintController.php:28
  * @route '/api/client/complaints/{id}'
  */
         showForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -160,7 +160,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
         })
             /**
 * @see \App\Http\Controllers\Api\ComplaintController::show
- * @see app/Http/Controllers/Api/ComplaintController.php:27
+ * @see app/Http/Controllers/Api/ComplaintController.php:28
  * @route '/api/client/complaints/{id}'
  */
         showForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -176,7 +176,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::store
- * @see app/Http/Controllers/Api/ComplaintController.php:36
+ * @see app/Http/Controllers/Api/ComplaintController.php:37
  * @route '/api/client/complaints'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::store
- * @see app/Http/Controllers/Api/ComplaintController.php:36
+ * @see app/Http/Controllers/Api/ComplaintController.php:37
  * @route '/api/client/complaints'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -200,7 +200,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::store
- * @see app/Http/Controllers/Api/ComplaintController.php:36
+ * @see app/Http/Controllers/Api/ComplaintController.php:37
  * @route '/api/client/complaints'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -210,7 +210,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ComplaintController::store
- * @see app/Http/Controllers/Api/ComplaintController.php:36
+ * @see app/Http/Controllers/Api/ComplaintController.php:37
  * @route '/api/client/complaints'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -220,7 +220,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ComplaintController::store
- * @see app/Http/Controllers/Api/ComplaintController.php:36
+ * @see app/Http/Controllers/Api/ComplaintController.php:37
  * @route '/api/client/complaints'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -231,7 +231,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::reply
- * @see app/Http/Controllers/Api/ComplaintController.php:80
+ * @see app/Http/Controllers/Api/ComplaintController.php:81
  * @route '/api/client/complaints/{id}/reply'
  */
 export const reply = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -246,7 +246,7 @@ reply.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::reply
- * @see app/Http/Controllers/Api/ComplaintController.php:80
+ * @see app/Http/Controllers/Api/ComplaintController.php:81
  * @route '/api/client/complaints/{id}/reply'
  */
 reply.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -274,7 +274,7 @@ reply.url = (args: { id: string | number } | [id: string | number ] | string | n
 
 /**
 * @see \App\Http\Controllers\Api\ComplaintController::reply
- * @see app/Http/Controllers/Api/ComplaintController.php:80
+ * @see app/Http/Controllers/Api/ComplaintController.php:81
  * @route '/api/client/complaints/{id}/reply'
  */
 reply.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -284,7 +284,7 @@ reply.post = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Api\ComplaintController::reply
- * @see app/Http/Controllers/Api/ComplaintController.php:80
+ * @see app/Http/Controllers/Api/ComplaintController.php:81
  * @route '/api/client/complaints/{id}/reply'
  */
     const replyForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -294,7 +294,7 @@ reply.post = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Api\ComplaintController::reply
- * @see app/Http/Controllers/Api/ComplaintController.php:80
+ * @see app/Http/Controllers/Api/ComplaintController.php:81
  * @route '/api/client/complaints/{id}/reply'
  */
         replyForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

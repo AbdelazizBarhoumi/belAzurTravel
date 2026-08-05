@@ -1,10 +1,10 @@
+import { useIsFetching } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plane } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useIsFetching } from '@tanstack/react-query';
-import { traceRoute } from '@/lib/routeTrace';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { traceRoute } from '@/lib/routeTrace';
 
 
 export function RouteLoader() {
@@ -85,6 +85,7 @@ export function RouteLoader() {
             maxWaitTimeoutRef.current = null;
         }
 
+         
         setLoading(true);
         // Allow new route to mount + images/data to start fetching before hiding
         const minDelay = firstLoad ? 600 : 450;
@@ -205,6 +206,7 @@ export function RouteLoader() {
                 rafTwoRef.current = null;
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.pathname, isFetching]);
     return (
         <AnimatePresence initial={false}>

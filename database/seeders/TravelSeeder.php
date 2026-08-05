@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\CategoryType;
 use App\Models\CategoryValue;
+use App\Models\EntityCategoryAssignment;
 use App\Models\Travel;
 use Illuminate\Database\Seeder;
 
@@ -149,7 +150,7 @@ class TravelSeeder extends Seeder
                 $value = $pricingType?->values()->where('key', $data['category_key'])->first();
 
                 if ($pricingType && $value) {
-                    \App\Models\EntityCategoryAssignment::updateOrCreate(
+                    EntityCategoryAssignment::updateOrCreate(
                         [
                             'entity_type' => 'travels',
                             'entity_id' => $travel->id,

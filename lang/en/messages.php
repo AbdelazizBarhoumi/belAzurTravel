@@ -1,8 +1,8 @@
 <?php
 
 return [
-    'ok' => 'OK',
-    'deleted' => 'Deleted',
+    'ok' => 'ok',
+    'deleted' => 'deleted',
     'image_deleted' => 'Image deleted',
     'confirmed' => 'confirmed',
     'cancelled' => 'cancelled',

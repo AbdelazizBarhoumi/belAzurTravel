@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { Navbar } from '@/components/layout/Navbar';
@@ -93,6 +93,56 @@ vi.mock('@/hooks/usePublicData', async () => {
             isLoading: false,
             isFetched: true,
         }),
+        useCategoryTypesPublic: (type?: string) => ({
+            data:
+                (type === 'destinations'
+                    ? [
+                          {
+                              id: 1,
+                              entity_type: 'destinations',
+                              key: 'destination',
+                              label: { en: 'Destination', fr: 'Destination', ar: 'x' },
+                              sort_order: 1,
+                              filter_style: 'checkbox',
+                              values: [
+                                  {
+                                      id: 1,
+                                      category_type_id: 1,
+                                      key: 'beach',
+                                      name: { en: 'Beach', fr: 'Plage', ar: 'x' },
+                                  },
+                                  {
+                                      id: 2,
+                                      category_type_id: 1,
+                                      key: 'city',
+                                      name: { en: 'City', fr: 'Ville', ar: 'x' },
+                                  },
+                              ],
+                          },
+                      ]
+                    : type === 'hotels'
+                      ? [
+                            {
+                                id: 2,
+                                entity_type: 'hotels',
+                                key: 'hotel',
+                                label: { en: 'Hotel', fr: 'Hôtel', ar: 'x' },
+                                sort_order: 1,
+                                filter_style: 'checkbox',
+                                values: [
+                                    {
+                                        id: 3,
+                                        category_type_id: 2,
+                                        key: 'luxury',
+                                        name: { en: 'Luxury', fr: 'Luxe', ar: 'x' },
+                                    },
+                                ],
+                            },
+                        ]
+                      : []) as never,
+            isLoading: false,
+            isFetched: true,
+        }),
     };
 });
 
@@ -127,6 +177,150 @@ describe('Navbar', () => {
         ).toBeTruthy();
     });
 
+    it('renders mixed sub-page links to different index pages inside a group', async () => {
+        mockUseSiteSettings.mockReturnValue({
+            settings: {
+                content: {
+                    nav: {
+                        settings: {
+                            header: [],
+                            footer: [],
+                            groups: [
+                                {
+                                    key: 'group-1',
+                                    label: { en: 'Explore', fr: 'Explorer', ar: 'استكشف' },
+                                    enabled: true,
+                                    placement: 'top',
+                                    pages: [],
+                                    links: [
+                                        {
+                                            pageKey: 'destinations',
+                                            label: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
+                                            mode: 'filter',
+                                            value: 'beach',
+                                        },
+                                        {
+                                            pageKey: 'hotels',
+                                            label: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+                                            mode: 'filter',
+                                            value: 'hotels:luxury',
+                                        },
+                                        {
+                                            pageKey: 'tours',
+                                            label: { en: 'Adventure', fr: 'Aventure', ar: 'مغامرة' },
+                                            mode: 'filter',
+                                            value: 'tours:adventure',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+            loading: false,
+        });
+
+        render(
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter>
+                        <Navbar />
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>,
+        );
+
+        const button = await waitFor(() =>
+            Array.from(document.querySelectorAll('button')).find((b) =>
+                b.textContent?.includes('Explore'),
+            ),
+        );
+        fireEvent.mouseEnter(button!);
+
+        await waitFor(() =>
+            expect(
+                document.querySelector('a[href="/destinations?cat=beach"]'),
+            ).toBeTruthy(),
+        );
+        expect(
+            document.querySelector('a[href="/hotels?category_hotels=luxury"]'),
+        ).toBeTruthy();
+        expect(
+            document.querySelector('a[href="/tours?category_tours=adventure"]'),
+        ).toBeTruthy();
+    });
+
+    it('renders nested children of a group sub-page link', async () => {
+        mockUseSiteSettings.mockReturnValue({
+            settings: {
+                content: {
+                    nav: {
+                        settings: {
+                            header: [],
+                            footer: [],
+                            groups: [
+                                {
+                                    key: 'group-1',
+                                    label: { en: 'Explore', fr: 'Explorer', ar: 'استكشف' },
+                                    enabled: true,
+                                    placement: 'top',
+                                    pages: [],
+                                    links: [
+                                        {
+                                            pageKey: 'tours',
+                                            label: { en: 'Adventure', fr: 'Aventure', ar: 'مغامرة' },
+                                            mode: 'filter',
+                                            value: 'tours:adventure',
+                                            children: [
+                                                {
+                                                    pageKey: 'deals',
+                                                    label: { en: 'Summer Deals', fr: 'Offres', ar: 'عروض' },
+                                                    mode: 'filter',
+                                                    value: 'deals:summer',
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+            loading: false,
+        });
+
+        render(
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter>
+                        <Navbar />
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>,
+        );
+
+        const button = await waitFor(() =>
+            Array.from(document.querySelectorAll('button')).find((b) =>
+                b.textContent?.includes('Explore'),
+            ),
+        );
+        fireEvent.mouseEnter(button!);
+
+        const parentLink = await waitFor(() =>
+            document.querySelector('a[href="/tours?category_tours=adventure"]'),
+        );
+        const parentItem = parentLink?.closest('li');
+        if (parentItem) fireEvent.mouseEnter(parentItem);
+
+        await waitFor(() =>
+            expect(
+                document.querySelector('a[href="/deals?category_deals=summer"]'),
+            ).toBeTruthy(),
+        );
+    });
+
     it('renders live categories inside dropdown menus', async () => {
         mockUseSiteSettings.mockReturnValue(
             makeNavSettings([
@@ -137,7 +331,7 @@ describe('Navbar', () => {
                     isDropdown: true,
                     linkSelf: true,
                     items: [
-                        { label: 'Categories', mode: 'categories', value: '' },
+                        { label: 'Categories', mode: 'categories', value: 'destination' },
                     ],
                 },
                 {
@@ -147,7 +341,7 @@ describe('Navbar', () => {
                     isDropdown: true,
                     linkSelf: true,
                     items: [
-                        { label: 'Categories', mode: 'categories', value: '' },
+                        { label: 'Categories', mode: 'categories', value: 'hotel' },
                     ],
                 },
                 {
@@ -171,17 +365,31 @@ describe('Navbar', () => {
             </LanguageProvider>,
         );
 
+        const hoverTrigger = (text: string) => {
+            const trigger = Array.from(document.querySelectorAll('a, button')).find(
+                (el) => el.textContent?.trim() === text,
+            );
+            if (trigger) fireEvent.mouseEnter(trigger);
+        };
+
+        hoverTrigger('Destinations');
+
         await waitFor(() =>
             expect(
-                document.querySelector('a[href="/destinations?cat=beach"]'),
+                document.querySelector('a[href="/destinations?category_destination=beach"]'),
             ).toBeTruthy(),
         );
         expect(
-            document.querySelector('a[href="/destinations?cat=city"]'),
+            document.querySelector('a[href="/destinations?category_destination=city"]'),
         ).toBeTruthy();
-        expect(
-            document.querySelector('a[href="/hotels?cat=luxury"]'),
-        ).toBeTruthy();
+
+        hoverTrigger('Hôtels');
+
+        await waitFor(() =>
+            expect(
+                document.querySelector('a[href="/hotels?category_hotel=luxury"]'),
+            ).toBeTruthy(),
+        );
     });
 
     it('uses the active locale label for search dropdown links', async () => {
@@ -219,6 +427,13 @@ describe('Navbar', () => {
                 </FavoritesProvider>
             </LanguageProvider>,
         );
+
+        await waitFor(() => {
+            const trigger = Array.from(document.querySelectorAll('a, button')).find(
+                (el) => el.textContent?.trim() === 'الجولات',
+            );
+            if (trigger) fireEvent.mouseEnter(trigger);
+        });
 
         await waitFor(() => {
             const link = Array.from(document.querySelectorAll('a')).find(
@@ -264,6 +479,13 @@ describe('Navbar', () => {
                 </FavoritesProvider>
             </LanguageProvider>,
         );
+
+        await waitFor(() => {
+            const trigger = Array.from(document.querySelectorAll('a, button')).find(
+                (el) => el.textContent?.trim() === 'Destinations',
+            );
+            if (trigger) fireEvent.mouseEnter(trigger);
+        });
 
         await waitFor(() => {
             const link = Array.from(document.querySelectorAll('a')).find(

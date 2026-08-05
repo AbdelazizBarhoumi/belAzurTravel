@@ -285,9 +285,24 @@ class SiteSettingsController extends Controller
 
             $content = $this->normalizeNavLabelShapes($content);
 
-            // Contact page title/description are now static in translation files, not DB-managed.
+            // Validate contact title/description translations
             if (isset($content['contact']) && is_array($content['contact'])) {
-                unset($content['contact']['title'], $content['contact']['description']);
+                foreach (['title', 'description'] as $contactField) {
+                    if (! array_key_exists($contactField, $content['contact'])) {
+                        continue;
+                    }
+
+                    $value = $content['contact'][$contactField] ?? null;
+                    if (! is_array($value)) {
+                        continue;
+                    }
+
+                    foreach (['en', 'fr', 'ar'] as $langKey) {
+                        if (! isset($value[$langKey]) || ! is_string($value[$langKey]) || trim($value[$langKey]) === '') {
+                            return response()->json(['message' => __('messages.contact_translation_required', ['field' => $contactField, 'lang' => $langKey])], 422);
+                        }
+                    }
+                }
             }
 
             // Validate legalSections structure

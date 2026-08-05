@@ -22,6 +22,7 @@ class BookingActivityNotification extends Notification
         if ($this->isMailConfigured()) {
             $channels[] = 'mail';
         }
+
         return $channels;
     }
 
@@ -63,10 +64,10 @@ class BookingActivityNotification extends Notification
             ->view('emails.booking-created', [
                 'booking' => $this->booking,
                 'greeting' => match ($this->activityType) {
-                    'booking.paid' => "Payment Received!",
-                    'booking.cancelled' => "Booking Cancelled",
-                    'booking.confirmed' => "Booking Confirmed",
-                    default => "New Booking Received",
+                    'booking.paid' => 'Payment Received!',
+                    'booking.cancelled' => 'Booking Cancelled',
+                    'booking.confirmed' => 'Booking Confirmed',
+                    default => 'New Booking Received',
                 },
                 'headerSubtitle' => $subject,
                 'introLine' => match ($this->activityType) {
@@ -82,7 +83,7 @@ class BookingActivityNotification extends Notification
                 'amountLabel' => 'Amount',
                 'statusLabel' => 'Status',
                 'actionText' => 'View Booking',
-                'actionUrl' => config('app.url')."/admin/bookings",
+                'actionUrl' => config('app.url').'/admin/bookings',
                 'closingLine' => 'This is an automated notification from BelAzur Travel.',
             ]);
     }

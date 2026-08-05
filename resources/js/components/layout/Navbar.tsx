@@ -226,13 +226,35 @@ function DesktopGroupDropdown({
                         label: val.name as unknown as LocalizedText,
                         mode: 'filter' as const,
                         value: `${selectedType.key}:${val.key}`,
+                        pageKey,
                     }));
                 }
             }
             const resolvedChildren = item.children
                 ? resolveDropdownItems(item.children, pageKey)
                 : undefined;
-            return [{ ...item, children: resolvedChildren }];
+            return [{ ...item, pageKey, children: resolvedChildren }];
+        });
+
+    const resolveLinks = (links: DropdownItemConfig[]): DropdownItemConfig[] =>
+        links.flatMap((link): DropdownItemConfig[] => {
+            const pageKey = link.pageKey ?? '';
+            if (link.mode === 'categories' && link.value) {
+                const categoryTypes = categoryTypesByPage[pageKey] ?? [];
+                const selectedType = categoryTypes.find((ct: PublicCategoryType) => ct.key === link.value);
+                if (selectedType && selectedType.values) {
+                    return selectedType.values.map((val) => ({
+                        label: val.name as unknown as LocalizedText,
+                        mode: 'filter' as const,
+                        value: `${selectedType.key}:${val.key}`,
+                        pageKey,
+                    }));
+                }
+            }
+            const resolvedChildren = link.children
+                ? resolveLinks(link.children)
+                : undefined;
+            return [{ ...link, children: resolvedChildren }];
         });
 
     return (
@@ -320,6 +342,65 @@ function DesktopGroupDropdown({
                                     </Link>
                                 </li>
                             );
+                        })}
+                        {group.links?.map((link, linkIdx) => {
+                            const linkPageKey = link.pageKey ?? '';
+                            const page = getPage(linkPageKey);
+                            if (!page) return null;
+                            const resolvedLinks = resolveLinks([link]);
+
+                            return resolvedLinks.map((resolved, subIdx) => {
+                                const resolvedPageKey = resolved.pageKey ?? linkPageKey;
+                                const resolvedPage = getPage(resolvedPageKey);
+                                if (!resolvedPage) return null;
+                                const linkPath = `${triggerPath}:link:${linkIdx}:${subIdx}`;
+                                const isLinkHovered = hoveredPath === linkPath || hoveredPath?.startsWith(linkPath + ':');
+                                const children = resolved.children ?? [];
+
+                                return (
+                                    <li
+                                        key={`${linkIdx}-${subIdx}`}
+                                        className="relative"
+                                        onMouseEnter={() => {
+                                            hover.clear();
+                                            setHoveredPath(linkPath);
+                                        }}
+                                        onMouseLeave={() => {
+                                            if (children.length > 0) hover.schedule(() => setHoveredPath(null));
+                                        }}
+                                    >
+                                        <Link
+                                            to={buildItemHref(resolvedPageKey, resolved, lang as 'en' | 'fr' | 'ar')}
+                                            className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                        >
+                                            <span>{resolveDropdownItemLabel({ pageKey: resolvedPageKey } as HeaderEntry, resolved)}</span>
+                                            {children.length > 0 && <ChevronRight className="h-4 w-4 opacity-50" />}
+                                        </Link>
+                                        {children.length > 0 && isLinkHovered && (
+                                            <div
+                                                className="absolute left-[calc(100%+8px)] top-0"
+                                                onMouseEnter={() => {
+                                                    hover.clear();
+                                                    setHoveredPath(linkPath);
+                                                }}
+                                                onMouseLeave={() => {
+                                                    hover.schedule(() => setHoveredPath(null));
+                                                }}
+                                            >
+                                                <DesktopFlyoutItems
+                                                    items={children}
+                                                    entry={{ pageKey: linkPath, label: resolved.label } as HeaderEntry}
+                                                    lang={lang}
+                                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                    hoveredPath={hoveredPath}
+                                                    setHoveredPath={setHoveredPath}
+                                                    hover={hover}
+                                                />
+                                            </div>
+                                        )}
+                                    </li>
+                                );
+                            });
                         })}
                         {group.groups?.filter((sg) => sg.enabled).map((subGroup) => {
                             const subGroupPath = `${triggerPath}:sub:${subGroup.key}`;
@@ -461,13 +542,35 @@ function MobileGroupSection({
                         label: val.name as unknown as LocalizedText,
                         mode: 'filter' as const,
                         value: `${selectedType.key}:${val.key}`,
+                        pageKey,
                     }));
                 }
             }
             const resolvedChildren = item.children
                 ? resolveDropdownItems(item.children, pageKey)
                 : undefined;
-            return [{ ...item, children: resolvedChildren }];
+            return [{ ...item, pageKey, children: resolvedChildren }];
+        });
+
+    const resolveLinks = (links: DropdownItemConfig[]): DropdownItemConfig[] =>
+        links.flatMap((link): DropdownItemConfig[] => {
+            const pageKey = link.pageKey ?? '';
+            if (link.mode === 'categories' && link.value) {
+                const categoryTypes = categoryTypesByPage[pageKey] ?? [];
+                const selectedType = categoryTypes.find((ct: PublicCategoryType) => ct.key === link.value);
+                if (selectedType && selectedType.values) {
+                    return selectedType.values.map((val) => ({
+                        label: val.name as unknown as LocalizedText,
+                        mode: 'filter' as const,
+                        value: `${selectedType.key}:${val.key}`,
+                        pageKey,
+                    }));
+                }
+            }
+            const resolvedChildren = link.children
+                ? resolveLinks(link.children)
+                : undefined;
+            return [{ ...link, children: resolvedChildren }];
         });
 
     return (
@@ -521,6 +624,50 @@ function MobileGroupSection({
                             {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
                         </Link>
                     );
+                })}
+                {group.links?.map((link, linkIdx) => {
+                    const linkPageKey = link.pageKey ?? '';
+                    const page = getPage(linkPageKey);
+                    if (!page) return null;
+                    const resolvedLinks = resolveLinks([link]);
+
+                    return resolvedLinks.map((resolved, subIdx) => {
+                        const resolvedPageKey = resolved.pageKey ?? linkPageKey;
+                        const resolvedPage = getPage(resolvedPageKey);
+                        if (!resolvedPage) return null;
+                        const children = resolved.children ?? [];
+
+                        if (children.length > 0) {
+                            return (
+                                <details key={`${linkIdx}-${subIdx}`} className="group/link">
+                                    <summary className="flex cursor-pointer items-center justify-between py-1 text-sm text-muted-foreground">
+                                        {resolveDropdownItemLabel({ pageKey: resolvedPageKey } as HeaderEntry, resolved)}
+                                        <ChevronDown className="h-3 w-3 transition-transform group-open/link:rotate-180" />
+                                    </summary>
+                                    <div className="flex flex-col gap-0.5 pb-1 pl-3">
+                                        <MobileNestedItems
+                                            items={children}
+                                            entry={{ pageKey: resolvedPageKey, label: resolved.label } as HeaderEntry}
+                                            onClose={onClose}
+                                            resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                            lang={lang}
+                                        />
+                                    </div>
+                                </details>
+                            );
+                        }
+
+                        return (
+                            <Link
+                                key={`${linkIdx}-${subIdx}`}
+                                to={buildItemHref(resolvedPageKey, resolved, lang as 'en' | 'fr' | 'ar')}
+                                onClick={onClose}
+                                className="py-1 text-sm text-muted-foreground"
+                            >
+                                {resolveDropdownItemLabel({ pageKey: resolvedPageKey } as HeaderEntry, resolved)}
+                            </Link>
+                        );
+                    });
                 })}
                 {group.groups?.filter((sg) => sg.enabled).map((subGroup) => (
                     <details key={subGroup.key} className="group/nested">
@@ -623,7 +770,6 @@ export function Navbar() {
     const enabledGroups = (navSettings.groups ?? []).filter((g) => g.enabled);
     const topGroups = enabledGroups.filter((g) => g.placement === 'top');
     const moreGroups = enabledGroups.filter((g) => g.placement === 'more');
-    const topbarGroups = enabledGroups.filter((g) => g.placement === 'topbar');
 
     const categoriesByPage = useMemo(
         () => ({
@@ -669,12 +815,13 @@ export function Navbar() {
         entry: HeaderEntry,
         item: DropdownItemConfig,
     ): string => {
+        const effectivePageKey = item.pageKey ?? entry.pageKey;
         if (item.mode === 'filter') {
             // Handle new format: "typeKey:valueKey"
             if (item.value.includes(':')) {
                 const [typeKey, valueKey] = item.value.split(':');
                 const categoryTypes =
-                    categoryTypesByPage[entry.pageKey as keyof typeof categoryTypesByPage] ?? [];
+                    categoryTypesByPage[effectivePageKey as keyof typeof categoryTypesByPage] ?? [];
                 const selectedType = categoryTypes.find(
                     (ct: PublicCategoryType) => ct.key === typeKey,
                 );
@@ -690,7 +837,7 @@ export function Navbar() {
 
             // Fallback to old format lookup
             const categories =
-                categoriesByPage[entry.pageKey as CategoryPageKey] ?? [];
+                categoriesByPage[effectivePageKey as CategoryPageKey] ?? [];
             const localizedCategoryLabel = getLocalizedCategoryLabelByKey(
                 categories,
                 item.value,
@@ -791,7 +938,7 @@ export function Navbar() {
                         })}
                     </div>
 
-                    <div className="flex items-center gap-4 text-xs text-primary-foreground/60">
+                    <div className="flex items-center gap-4 text-xs text-primary-foreground">
                         {settings.phone && (
                             <a
                                 href={`tel:${settings.phone.replace(/\D/g, '')}`}
@@ -825,7 +972,7 @@ export function Navbar() {
                             );
                         })}
                         <Link to={accountLink}>
-                            <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10">
+                            <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-primary-foreground hover:text-primary-foreground hover:bg-primary-foreground/10">
                                 <User className="h-3 w-3" /> {accountLabel}
                             </Button>
                         </Link>
@@ -1024,6 +1171,20 @@ export function Navbar() {
                                                                     className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                                 >
                                                                     {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                                                </Link>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                    {group.links?.map((link, linkIdx) => {
+                                                        const page = getPage(link.pageKey ?? '');
+                                                        if (!page) return null;
+                                                        return (
+                                                            <li key={`link-${linkIdx}`}>
+                                                                <Link
+                                                                    to={buildItemHref(link.pageKey ?? '', link, lang as 'en' | 'fr' | 'ar')}
+                                                                    className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                >
+                                                                    {resolveDropdownItemLabel({ pageKey: link.pageKey ?? '' } as HeaderEntry, link)}
                                                                 </Link>
                                                             </li>
                                                         );
@@ -1257,6 +1418,20 @@ export function Navbar() {
                                                                 className="py-1 text-sm text-muted-foreground"
                                                             >
                                                                 {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                                            </Link>
+                                                        );
+                                                    })}
+                                                    {group.links?.map((link, linkIdx) => {
+                                                        const page = getPage(link.pageKey ?? '');
+                                                        if (!page) return null;
+                                                        return (
+                                                            <Link
+                                                                key={`link-${linkIdx}`}
+                                                                to={buildItemHref(link.pageKey ?? '', link, lang as 'en' | 'fr' | 'ar')}
+                                                                onClick={() => setOpen(false)}
+                                                                className="py-1 text-sm text-muted-foreground"
+                                                            >
+                                                                {resolveDropdownItemLabel({ pageKey: link.pageKey ?? '' } as HeaderEntry, link)}
                                                             </Link>
                                                         );
                                                     })}

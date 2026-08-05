@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import AdminSiteSettingsLandingSections from '@/pages/admin/site-settings/AdminSiteSettingsLandingSections';

@@ -1166,7 +1166,7 @@ class TestDataSeeder extends Seeder
                 'active' => $data['active'],
             ]);
 
-            if ($verifiedAt && !$user->email_verified_at) {
+            if ($verifiedAt && ! $user->email_verified_at) {
                 $user->forceFill(['email_verified_at' => $verifiedAt])->save();
             }
         }
@@ -1201,7 +1201,7 @@ class TestDataSeeder extends Seeder
             Booking::updateOrCreate(
                 ['user_id' => $user->id, 'item_slug' => $data['item_slug']],
                 array_merge($data, [
-                    'client' => ['name' => $user->name, 'email' => $user->email, 'phone' => '+216 ' . rand(20, 99) . ' ' . rand(100, 999) . ' ' . rand(1000, 9999)],
+                    'client' => ['name' => $user->name, 'email' => $user->email, 'phone' => '+216 '.rand(20, 99).' '.rand(100, 999).' '.rand(1000, 9999)],
                     'travelers' => [rand(1, 4)],
                 ])
             );

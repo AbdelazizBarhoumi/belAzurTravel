@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\Log;
 class ClictoPayService
 {
     private string $username;
+
     private string $password;
+
     private string $baseUrl;
+
     private int $currency;
 
     public function __construct()
@@ -131,7 +134,7 @@ class ClictoPayService
      */
     private function generateOrderNumber(Booking $booking): string
     {
-        return "BAZ-{$booking->id}-" . uniqid('', true);
+        return "BAZ-{$booking->id}-".uniqid('', true);
     }
 
     /**

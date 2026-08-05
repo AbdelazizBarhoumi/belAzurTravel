@@ -109,6 +109,8 @@ export interface DropdownItemConfig {
     value: string;
     /** Nested sub-items (optional, enables 2-level nesting) */
     children?: DropdownItemConfig[];
+    /** Target index page. Used by group sub-page links; children fall back to the parent's pageKey when omitted. */
+    pageKey?: string;
 }
 
 export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
@@ -139,12 +141,19 @@ export interface GroupPageEntry {
     items: DropdownItemConfig[];
 }
 
+/** A mixed sub-page link inside a group. Each link targets its own index page + filter/search. */
+export interface NavGroupLink extends DropdownItemConfig {
+    pageKey: string;
+}
+
 export interface NavGroup {
     key: string;
     label: LocalizedText;
     enabled: boolean;
     placement: 'topbar' | 'top' | 'more';
     pages: GroupPageEntry[];
+    /** Mixed sub-page links — each may point to a different index page. */
+    links?: NavGroupLink[];
     groups?: NavGroup[];
 }
 
@@ -241,7 +250,8 @@ export function buildItemHref(
     item: DropdownItemConfig,
     lang: 'en' | 'fr' | 'ar' = 'en',
 ): string {
-    const page = getPage(pageKey);
+    const effectivePageKey = item.pageKey ?? pageKey;
+    const page = getPage(effectivePageKey);
     if (!page) return '#';
     if (item.mode === 'search') {
         const query = item.label[lang] ?? item.label.en ?? '';
@@ -254,6 +264,16 @@ export function buildItemHref(
     }
     const param = page.filterParam || 'cat';
     return `${page.href}?${param}=${encodeURIComponent(item.value)}`;
+}
+
+export function createGroupLink(pageKey = ''): NavGroupLink {
+    const label: LocalizedText = { en: '', fr: '', ar: '' };
+    return {
+        pageKey,
+        label,
+        mode: 'filter',
+        value: '',
+    };
 }
 
 export function getNextGroupKey(groups: NavGroup[]): string {
@@ -287,7 +307,7 @@ export function getPagesInGroups(groups: NavGroup[]): Set<string> {
     return result;
 }
 
-export function createGroupPageEntry(pageKey: string, t?: (key: string) => string): GroupPageEntry {
+export function createGroupPageEntry(pageKey: string): GroupPageEntry {
     return {
         pageKey,
         isDropdown: false,

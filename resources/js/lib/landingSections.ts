@@ -97,7 +97,8 @@ export function normalizeLandingSections(
             enabled: true,
             style: getLandingSectionDefaultStyle(key),
         };
-        const saved = landingSections?.sections?.[key] ?? {};
+        const saved: LandingSectionConfig =
+            landingSections?.sections?.[key] ?? ({} as LandingSectionConfig);
 
         sections[key] = {
             ...base,

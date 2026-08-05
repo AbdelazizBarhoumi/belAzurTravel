@@ -1,6 +1,6 @@
+import { Icon } from '@iconify/react';
 import { useId } from 'react';
 import type { SVGProps } from 'react';
-import { Icon } from '@iconify/react';
 
 type IconProps = SVGProps<SVGSVGElement>;
 

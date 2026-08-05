@@ -3,6 +3,7 @@ import { Calendar } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
+import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import CardMedia from '@/components/ui/CardMedia';
@@ -16,7 +17,6 @@ import {
 } from '@/components/ui/pagination';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useBlogPosts, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
-import { FilterRenderer } from '@/components/filters/FilterRenderer';
 import type { Lang } from '@/i18n/translations';
 import { matchesSearchText } from '@/lib/listFilters';
 

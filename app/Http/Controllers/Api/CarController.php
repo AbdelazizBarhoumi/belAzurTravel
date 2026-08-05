@@ -21,8 +21,8 @@ class CarController extends Controller
                 return Car::query()->oldest('id')
                     ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                     ->get()->map(
-                    fn (Car $item) => $this->payload($item)
-                );
+                        fn (Car $item) => $this->payload($item)
+                    );
             }
         );
 

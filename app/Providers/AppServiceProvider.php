@@ -8,11 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
-use Illuminate\Support\Facades\URL;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,9 +33,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('admin', fn ($user): bool => $user->role === 'admin' && $user->active);
         Gate::define('assistant', fn ($user): bool => false);
         $this->configureDefaults();
-         if (app()->environment('production')) {
-        URL::forceScheme('https');
-    }
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 
     /**

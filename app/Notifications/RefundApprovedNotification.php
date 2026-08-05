@@ -23,6 +23,7 @@ class RefundApprovedNotification extends Notification
         if ($this->isMailConfigured()) {
             $channels[] = 'mail';
         }
+
         return $channels;
     }
 
@@ -54,16 +55,16 @@ class RefundApprovedNotification extends Notification
             ->view('emails.complaint-resolved', [
                 'complaint' => $this->complaint,
                 'isResolved' => true,
-                'greeting' => "Your Refund Has Been Approved",
+                'greeting' => 'Your Refund Has Been Approved',
                 'headerSubtitle' => "Refund for Booking #{$this->booking->id}",
-                'introLine' => "Your refund request has been approved. The refund will be processed to your original payment method within 5-10 business days.",
+                'introLine' => 'Your refund request has been approved. The refund will be processed to your original payment method within 5-10 business days.',
                 'refLabel' => 'Reference',
                 'typeLabel' => 'Type',
                 'statusLabel' => 'Status',
                 'refundAmountLabel' => 'Refund Amount',
                 'actionText' => 'View Details',
-                'actionUrl' => config('app.url')."/client/complaints",
-                'closingLine' => "If you have any questions about your refund, please contact our support team.",
+                'actionUrl' => config('app.url').'/client/complaints',
+                'closingLine' => 'If you have any questions about your refund, please contact our support team.',
             ]);
     }
 }

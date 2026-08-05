@@ -18,8 +18,8 @@ class DealController extends Controller
                 return Deal::query()->oldest('id')
                     ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                     ->get()->map(
-                    fn (Deal $item) => $this->payload($item)
-                );
+                        fn (Deal $item) => $this->payload($item)
+                    );
             }
         );
 

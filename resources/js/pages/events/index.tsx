@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
-import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { FilterSidebar } from '@/components/lists/FilterSidebar';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
@@ -58,22 +58,8 @@ function EventsContent() {
     const [selectedLocation, setSelectedLocation] = useState(ALL);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
 
-    // Sync state with URL params when they change (e.g. navbar subcategory links)
-    useEffect(() => {
-        setSearchQuery(params.get('q') || '');
-        setSelectedCategory(params.get('cat')?.toLowerCase() || ALL);
-    }, [params]);
-    useEffect(() => {
-        const filters: Record<string, string[]> = {};
-        for (const [key, val] of params.entries()) {
-            if (key.startsWith('category_')) {
-                const typeKey = key.slice('category_'.length);
-                filters[typeKey] = val.split(',').filter(Boolean);
-            }
-        }
-        setCategoryTypeFilters(filters);
-    }, [params]);
-
+    // Sync state with URL params happens via the `EventsContent key={location.search}`
+    // remount in the parent; no effect needed here.
     const categories = useMemo(
         () => [
             { value: ALL, label: t('common.all') },

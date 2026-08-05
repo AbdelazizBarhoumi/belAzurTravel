@@ -1,8 +1,8 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { AmenityIcons } from "@/components/cards/AmenityIcons";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface HDeal {
   id: string;

@@ -2,9 +2,13 @@ export * from './common';
 export * from './destination.types';
 export * from './hotel.types';
 export * from './tour.types';
-export * from './travel.types';
 export * from './booking.types';
 export * from './user.types';
+export type {
+    AdminTravel,
+    LocalizedAdminTravel,
+    TravelFormState,
+} from './travel.types';
 
 import type { AdminBooking } from './booking.types';
 import type { AdminDestination } from './destination.types';

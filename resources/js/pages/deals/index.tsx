@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 import { CalendarClock, Tag } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
-import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { FilterSidebar } from '@/components/lists/FilterSidebar';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
@@ -44,21 +44,20 @@ export default function Deals() {
     const [activeCategory, setActiveCategory] = useState<'all' | string>(initialCategory);
     const [searchQuery, setSearchQuery] = useState(initialSearch);
 
-    // Sync state with URL params when they change (e.g. navbar subcategory links)
-    useEffect(() => {
+    // Adjust state during render when URL params change (e.g. navbar subcategory links)
+    const [prevParamsKey, setPrevParamsKey] = useState(() => params.toString());
+    if (params.toString() !== prevParamsKey) {
+        setPrevParamsKey(params.toString());
         setSearchQuery(params.get('q') || '');
         setActiveCategory(params.get('cat')?.toLowerCase() || ALL);
-    }, [params]);
-    useEffect(() => {
-        const filters: Record<string, string[]> = {};
+        const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                const typeKey = key.slice('category_'.length);
-                filters[typeKey] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
             }
         }
-        setCategoryTypeFilters(filters);
-    }, [params]);
+        setCategoryTypeFilters(nextFilters);
+    }
 
     const categories = useMemo(
         () => [

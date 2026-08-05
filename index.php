@@ -8,24 +8,38 @@ define('VERSION', '2.0');
 $message = ['type' => '', 'text' => ''];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
-function safePath($rel) {
-    $abs = realpath(ROOT . '/' . ltrim($rel, '/'));
-    if ($abs && strpos($abs, ROOT) === 0) return $abs;
+function safePath($rel)
+{
+    $abs = realpath(ROOT.'/'.ltrim($rel, '/'));
+    if ($abs && strpos($abs, ROOT) === 0) {
+        return $abs;
+    }
     // For new files that don't exist yet
-    $abs2 = ROOT . '/' . ltrim($rel, '/');
-    if (strpos(realpath(dirname($abs2)), ROOT) === 0) return $abs2;
+    $abs2 = ROOT.'/'.ltrim($rel, '/');
+    if (strpos(realpath(dirname($abs2)), ROOT) === 0) {
+        return $abs2;
+    }
+
     return false;
 }
 
-function formatSize($bytes) {
-    if ($bytes === false || $bytes < 0) return '-';
-    $units = ['B','KB','MB','GB','TB'];
+function formatSize($bytes)
+{
+    if ($bytes === false || $bytes < 0) {
+        return '-';
+    }
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
     $i = 0;
-    while ($bytes >= 1024 && $i < 4) { $bytes /= 1024; $i++; }
-    return round($bytes, 1) . ' ' . $units[$i];
+    while ($bytes >= 1024 && $i < 4) {
+        $bytes /= 1024;
+        $i++;
+    }
+
+    return round($bytes, 1).' '.$units[$i];
 }
 
-function formatPerms($path) {
+function formatPerms($path)
+{
     $perms = fileperms($path);
     $info = '';
     $info .= (($perms & 0x0100) ? 'r' : '-');
@@ -37,55 +51,79 @@ function formatPerms($path) {
     $info .= (($perms & 0x0004) ? 'r' : '-');
     $info .= (($perms & 0x0002) ? 'w' : '-');
     $info .= (($perms & 0x0001) ? 'x' : '-');
+
     return $info;
 }
 
-function isText($path) {
-    $textExts = ['txt','php','html','htm','css','js','json','xml','csv','md','log','ini','env','sh','py','rb','java','c','cpp','h','ts','jsx','tsx','vue','yaml','yml','conf','htaccess','gitignore','sql'];
+function isText($path)
+{
+    $textExts = ['txt', 'php', 'html', 'htm', 'css', 'js', 'json', 'xml', 'csv', 'md', 'log', 'ini', 'env', 'sh', 'py', 'rb', 'java', 'c', 'cpp', 'h', 'ts', 'jsx', 'tsx', 'vue', 'yaml', 'yml', 'conf', 'htaccess', 'gitignore', 'sql'];
     $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
     return in_array($ext, $textExts);
 }
 
-function isImage($path) {
-    $imgExts = ['jpg','jpeg','png','gif','bmp','webp','svg','ico'];
+function isImage($path)
+{
+    $imgExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'];
     $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
     return in_array($ext, $imgExts);
 }
 
-function deleteRecursive($path) {
-    if (is_file($path) || is_link($path)) return unlink($path);
-    if (!is_dir($path)) return false;
-    foreach (array_diff(scandir($path), ['.','..']) as $item)
-        deleteRecursive($path . DIRECTORY_SEPARATOR . $item);
+function deleteRecursive($path)
+{
+    if (is_file($path) || is_link($path)) {
+        return unlink($path);
+    }
+    if (! is_dir($path)) {
+        return false;
+    }
+    foreach (array_diff(scandir($path), ['.', '..']) as $item) {
+        deleteRecursive($path.DIRECTORY_SEPARATOR.$item);
+    }
+
     return rmdir($path);
 }
 
-function copyRecursive($src, $dst) {
+function copyRecursive($src, $dst)
+{
     if (is_dir($src)) {
         @mkdir($dst, 0755, true);
-        foreach (array_diff(scandir($src), ['.','..']) as $item)
+        foreach (array_diff(scandir($src), ['.', '..']) as $item) {
             copyRecursive($src.'/'.$item, $dst.'/'.$item);
+        }
     } else {
         copy($src, $dst);
     }
 }
 
-function getDirSize($path) {
+function getDirSize($path)
+{
     $size = 0;
-    if (!is_dir($path)) return filesize($path);
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)) as $f)
+    if (! is_dir($path)) {
+        return filesize($path);
+    }
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)) as $f) {
         $size += $f->getSize();
+    }
+
     return $size;
 }
 
-function searchFiles($dir, $query) {
+function searchFiles($dir, $query)
+{
     $results = [];
     $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
     foreach ($it as $file) {
-        if (stripos($file->getFilename(), $query) !== false)
+        if (stripos($file->getFilename(), $query) !== false) {
             $results[] = $file->getPathname();
-        if (count($results) >= 200) break;
+        }
+        if (count($results) >= 200) {
+            break;
+        }
     }
+
     return $results;
 }
 
@@ -93,21 +131,27 @@ function searchFiles($dir, $query) {
 $cwd = ROOT;
 if (isset($_GET['dir'])) {
     $cd = safePath($_GET['dir']);
-    if ($cd && is_dir($cd)) $cwd = $cd;
+    if ($cd && is_dir($cd)) {
+        $cwd = $cd;
+    }
 }
 $cwdRel = str_replace(ROOT, '', $cwd) ?: '/';
 
 // ─── ACTIONS ──────────────────────────────────────────────────────────────────
 
 // Upload (files and folders)
-if (isset($_FILES['upload_files']) && !empty($_FILES['upload_files']['name'][0])) {
-    $uploaded  = 0;
-    $failed    = 0;
-    $dirsMade  = [];
+if (isset($_FILES['upload_files']) && ! empty($_FILES['upload_files']['name'][0])) {
+    $uploaded = 0;
+    $failed = 0;
+    $dirsMade = [];
     $relativePaths = $_POST['relative_paths'] ?? [];
 
     foreach ($_FILES['upload_files']['name'] as $i => $name) {
-        if ($_FILES['upload_files']['error'][$i] !== UPLOAD_ERR_OK) { $failed++; continue; }
+        if ($_FILES['upload_files']['error'][$i] !== UPLOAD_ERR_OK) {
+            $failed++;
+
+            continue;
+        }
 
         $relPath = $relativePaths[$i] ?? '';
 
@@ -115,42 +159,51 @@ if (isset($_FILES['upload_files']) && !empty($_FILES['upload_files']['name'][0])
             // Sanitise: strip traversal segments and normalise slashes
             $safeParts = [];
             foreach (explode('/', str_replace('\\', '/', $relPath)) as $part) {
-                if ($part === '' || $part === '.' || $part === '..') continue;
+                if ($part === '' || $part === '.' || $part === '..') {
+                    continue;
+                }
                 $safeParts[] = $part;
             }
             if (empty($safeParts)) {
-                $dest = $cwd . '/' . basename($name);
+                $dest = $cwd.'/'.basename($name);
             } else {
-                $dest    = $cwd . '/' . implode('/', $safeParts);
+                $dest = $cwd.'/'.implode('/', $safeParts);
                 $destDir = dirname($dest);
                 // Create parent dirs and verify they stay within $cwd
-                if (!isset($dirsMade[$destDir])) {
+                if (! isset($dirsMade[$destDir])) {
                     @mkdir($destDir, 0755, true);
                     $dirsMade[$destDir] = true;
                 }
                 $resolved = realpath($destDir);
-                if (!$resolved || strpos($resolved, $cwd) !== 0) { $failed++; continue; }
+                if (! $resolved || strpos($resolved, $cwd) !== 0) {
+                    $failed++;
+
+                    continue;
+                }
             }
         } else {
-            $dest = $cwd . '/' . basename($name);
+            $dest = $cwd.'/'.basename($name);
         }
 
-        if (move_uploaded_file($_FILES['upload_files']['tmp_name'][$i], $dest)) $uploaded++;
-        else $failed++;
+        if (move_uploaded_file($_FILES['upload_files']['tmp_name'][$i], $dest)) {
+            $uploaded++;
+        } else {
+            $failed++;
+        }
     }
 
-    $folderMsg = count($dirsMade) ? ' in ' . count($dirsMade) . ' folder(s)' : '';
-    $message = ['type'=>'success','text'=>"Uploaded $uploaded file(s)$folderMsg." . ($failed ? " $failed failed." : '')];
+    $folderMsg = count($dirsMade) ? ' in '.count($dirsMade).' folder(s)' : '';
+    $message = ['type' => 'success', 'text' => "Uploaded $uploaded file(s)$folderMsg.".($failed ? " $failed failed." : '')];
 }
 
 // Create folder
 if (isset($_POST['action']) && $_POST['action'] === 'mkdir') {
     $name = basename(trim($_POST['name'] ?? ''));
     if ($name) {
-        $path = $cwd . '/' . $name;
+        $path = $cwd.'/'.$name;
         $message = mkdir($path, 0755)
-            ? ['type'=>'success','text'=>"Folder '$name' created."]
-            : ['type'=>'error','text'=>"Failed to create folder."];
+            ? ['type' => 'success', 'text' => "Folder '$name' created."]
+            : ['type' => 'error', 'text' => 'Failed to create folder.'];
     }
 }
 
@@ -158,10 +211,10 @@ if (isset($_POST['action']) && $_POST['action'] === 'mkdir') {
 if (isset($_POST['action']) && $_POST['action'] === 'mkfile') {
     $name = basename(trim($_POST['name'] ?? ''));
     if ($name) {
-        $path = $cwd . '/' . $name;
+        $path = $cwd.'/'.$name;
         $message = (file_put_contents($path, '') !== false)
-            ? ['type'=>'success','text'=>"File '$name' created."]
-            : ['type'=>'error','text'=>"Failed to create file."];
+            ? ['type' => 'success', 'text' => "File '$name' created."]
+            : ['type' => 'error', 'text' => 'Failed to create file.'];
     }
 }
 
@@ -170,45 +223,47 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete') {
     $targets = $_POST['targets'] ?? [];
     $count = 0;
     foreach ($targets as $t) {
-        $p = safePath($cwdRel . '/' . basename($t));
-        if ($p && deleteRecursive($p)) $count++;
+        $p = safePath($cwdRel.'/'.basename($t));
+        if ($p && deleteRecursive($p)) {
+            $count++;
+        }
     }
-    $message = ['type'=>'success','text'=>"Deleted $count item(s)."];
+    $message = ['type' => 'success', 'text' => "Deleted $count item(s)."];
 }
 
 // Rename
 if (isset($_POST['action']) && $_POST['action'] === 'rename') {
-    $old = safePath($cwdRel . '/' . basename($_POST['old_name'] ?? ''));
-    $new = $cwd . '/' . basename($_POST['new_name'] ?? '');
-    if ($old && file_exists($old) && !file_exists($new)) {
+    $old = safePath($cwdRel.'/'.basename($_POST['old_name'] ?? ''));
+    $new = $cwd.'/'.basename($_POST['new_name'] ?? '');
+    if ($old && file_exists($old) && ! file_exists($new)) {
         $message = rename($old, $new)
-            ? ['type'=>'success','text'=>"Renamed successfully."]
-            : ['type'=>'error','text'=>"Rename failed."];
+            ? ['type' => 'success', 'text' => 'Renamed successfully.']
+            : ['type' => 'error', 'text' => 'Rename failed.'];
     } else {
-        $message = ['type'=>'error','text'=>"Invalid rename operation."];
+        $message = ['type' => 'error', 'text' => 'Invalid rename operation.'];
     }
 }
 
 // Copy
 if (isset($_POST['action']) && $_POST['action'] === 'copy') {
-    $src = safePath($cwdRel . '/' . basename($_POST['src'] ?? ''));
+    $src = safePath($cwdRel.'/'.basename($_POST['src'] ?? ''));
     $dstName = basename($_POST['dst_name'] ?? '');
     if ($src && $dstName) {
-        $dst = $cwd . '/' . $dstName;
+        $dst = $cwd.'/'.$dstName;
         copyRecursive($src, $dst);
-        $message = ['type'=>'success','text'=>"Copied to '$dstName'."];
+        $message = ['type' => 'success', 'text' => "Copied to '$dstName'."];
     }
 }
 
 // Move
 if (isset($_POST['action']) && $_POST['action'] === 'move') {
-    $src = safePath($cwdRel . '/' . basename($_POST['src'] ?? ''));
+    $src = safePath($cwdRel.'/'.basename($_POST['src'] ?? ''));
     $dstDir = safePath($_POST['dst_dir'] ?? '/');
     if ($src && $dstDir && is_dir($dstDir)) {
-        $dst = $dstDir . '/' . basename($src);
+        $dst = $dstDir.'/'.basename($src);
         $message = rename($src, $dst)
-            ? ['type'=>'success','text'=>"Moved successfully."]
-            : ['type'=>'error','text'=>"Move failed."];
+            ? ['type' => 'success', 'text' => 'Moved successfully.']
+            : ['type' => 'error', 'text' => 'Move failed.'];
     }
 }
 
@@ -217,58 +272,61 @@ if (isset($_POST['action']) && $_POST['action'] === 'save') {
     $p = safePath($_POST['filepath'] ?? '');
     if ($p && is_file($p)) {
         $message = (file_put_contents($p, $_POST['content'] ?? '') !== false)
-            ? ['type'=>'success','text'=>"File saved."]
-            : ['type'=>'error','text'=>"Save failed."];
+            ? ['type' => 'success', 'text' => 'File saved.']
+            : ['type' => 'error', 'text' => 'Save failed.'];
     }
 }
 
 // Permissions
 if (isset($_POST['action']) && $_POST['action'] === 'chmod') {
-    $p = safePath($cwdRel . '/' . basename($_POST['target'] ?? ''));
+    $p = safePath($cwdRel.'/'.basename($_POST['target'] ?? ''));
     $mode = octdec(trim($_POST['mode'] ?? ''));
     if ($p && $mode) {
         $message = chmod($p, $mode)
-            ? ['type'=>'success','text'=>"Permissions updated."]
-            : ['type'=>'error','text'=>"chmod failed."];
+            ? ['type' => 'success', 'text' => 'Permissions updated.']
+            : ['type' => 'error', 'text' => 'chmod failed.'];
     }
 }
 
 // Zip
 if (isset($_POST['action']) && $_POST['action'] === 'zip') {
     $targets = $_POST['targets'] ?? [];
-    $zipName = basename(trim($_POST['zip_name'] ?? 'archive')) . '.zip';
-    $zipPath = $cwd . '/' . $zipName;
-    $zip = new ZipArchive();
+    $zipName = basename(trim($_POST['zip_name'] ?? 'archive')).'.zip';
+    $zipPath = $cwd.'/'.$zipName;
+    $zip = new ZipArchive;
     if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
         foreach ($targets as $t) {
-            $p = safePath($cwdRel . '/' . basename($t));
-            if (!$p) continue;
+            $p = safePath($cwdRel.'/'.basename($t));
+            if (! $p) {
+                continue;
+            }
             if (is_file($p)) {
                 $zip->addFile($p, basename($p));
             } elseif (is_dir($p)) {
                 $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($p, FilesystemIterator::SKIP_DOTS));
-                foreach ($it as $f)
+                foreach ($it as $f) {
                     $zip->addFile($f->getPathname(), basename($p).'/'.$it->getSubPathname());
+                }
             }
         }
         $zip->close();
-        $message = ['type'=>'success','text'=>"Archive '$zipName' created."];
+        $message = ['type' => 'success', 'text' => "Archive '$zipName' created."];
     } else {
-        $message = ['type'=>'error','text'=>"Failed to create archive."];
+        $message = ['type' => 'error', 'text' => 'Failed to create archive.'];
     }
 }
 
 // Unzip
 if (isset($_POST['action']) && $_POST['action'] === 'unzip') {
-    $p = safePath($cwdRel . '/' . basename($_POST['target'] ?? ''));
+    $p = safePath($cwdRel.'/'.basename($_POST['target'] ?? ''));
     if ($p && is_file($p)) {
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($p) === true) {
-            $extractDir = $cwd . '/' . pathinfo($p, PATHINFO_FILENAME);
+            $extractDir = $cwd.'/'.pathinfo($p, PATHINFO_FILENAME);
             @mkdir($extractDir, 0755, true);
             $zip->extractTo($extractDir);
             $zip->close();
-            $message = ['type'=>'success','text'=>"Extracted to '" . basename($extractDir) . "'."];
+            $message = ['type' => 'success', 'text' => "Extracted to '".basename($extractDir)."'."];
         }
     }
 }
@@ -277,28 +335,34 @@ if (isset($_POST['action']) && $_POST['action'] === 'unzip') {
 if (isset($_POST['action']) && $_POST['action'] === 'download_repo') {
     $repoZip = trim($_POST['repo_url'] ?? '');
     if ($repoZip) {
-        $zipFile = $cwd . '/_repo_tmp.zip';
+        $zipFile = $cwd.'/_repo_tmp.zip';
         $data = @file_get_contents($repoZip);
         if ($data !== false) {
             file_put_contents($zipFile, $data);
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
             if ($zip->open($zipFile) === true) {
-                $tempDir = $cwd . '/_tmp_extract_' . time();
+                $tempDir = $cwd.'/_tmp_extract_'.time();
                 mkdir($tempDir, 0777, true);
                 $zip->extractTo($tempDir);
                 $zip->close();
-                $folders = glob($tempDir . '/*', GLOB_ONLYDIR);
-                if (!empty($folders)) {
+                $folders = glob($tempDir.'/*', GLOB_ONLYDIR);
+                if (! empty($folders)) {
                     foreach (scandir($folders[0]) as $f) {
-                        if ($f === '.' || $f === '..') continue;
+                        if ($f === '.' || $f === '..') {
+                            continue;
+                        }
                         rename($folders[0].'/'.$f, $cwd.'/'.$f);
                     }
                     deleteRecursive($tempDir);
                 }
                 @unlink($zipFile);
-                $message = ['type'=>'success','text'=>"Repository downloaded and extracted."];
-            } else $message = ['type'=>'error','text'=>"Failed to open ZIP."];
-        } else $message = ['type'=>'error','text'=>"Failed to download ZIP."];
+                $message = ['type' => 'success', 'text' => 'Repository downloaded and extracted.'];
+            } else {
+                $message = ['type' => 'error', 'text' => 'Failed to open ZIP.'];
+            }
+        } else {
+            $message = ['type' => 'error', 'text' => 'Failed to download ZIP.'];
+        }
     }
 }
 
@@ -309,7 +373,7 @@ if (isset($_GET['download_file'])) {
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="'.basename($p).'"');
-        header('Content-Length: ' . filesize($p));
+        header('Content-Length: '.filesize($p));
         readfile($p);
         exit;
     }
@@ -320,7 +384,7 @@ if (isset($_GET['preview'])) {
     $p = safePath($_GET['preview']);
     if ($p && is_file($p) && isImage($p)) {
         $mime = mime_content_type($p) ?: 'image/jpeg';
-        header('Content-Type: ' . $mime);
+        header('Content-Type: '.$mime);
         readfile($p);
         exit;
     }
@@ -345,23 +409,25 @@ if (isset($_GET['edit'])) {
 
 // ─── FILE LIST ────────────────────────────────────────────────────────────────
 $items = [];
-if (!$searchResults && !$editFile) {
+if (! $searchResults && ! $editFile) {
     $raw = @scandir($cwd);
     if ($raw) {
         foreach ($raw as $name) {
-            if ($name === '.' || $name === '..') continue;
-            $full = $cwd . '/' . $name;
+            if ($name === '.' || $name === '..') {
+                continue;
+            }
+            $full = $cwd.'/'.$name;
             $items[] = [
-                'name'  => $name,
-                'full'  => $full,
-                'rel'   => str_replace(ROOT, '', $full),
+                'name' => $name,
+                'full' => $full,
+                'rel' => str_replace(ROOT, '', $full),
                 'isDir' => is_dir($full),
-                'size'  => is_file($full) ? filesize($full) : getDirSize($full),
+                'size' => is_file($full) ? filesize($full) : getDirSize($full),
                 'mtime' => filemtime($full),
                 'perms' => formatPerms($full),
             ];
         }
-        usort($items, fn($a,$b) => ($b['isDir'] - $a['isDir']) ?: strnatcasecmp($a['name'], $b['name']));
+        usort($items, fn ($a, $b) => ($b['isDir'] - $a['isDir']) ?: strnatcasecmp($a['name'], $b['name']));
     }
 }
 
@@ -712,31 +778,31 @@ input[type=checkbox] {
 </head>
 <body>
 
-<?php if ($editFile): ?>
+<?php if ($editFile) { ?>
 <!-- ═══ EDITOR MODE ═══════════════════════════════════════════════════════ -->
 <div class="app">
   <div class="topbar">
     <div class="logo">FileBridge</div>
-    <a href="?dir=<?=urlencode($cwdRel)?>" class="btn btn-ghost btn-sm">
-      <?=icon('arrow-left')?> Back
+    <a href="?dir=<?= urlencode($cwdRel)?>" class="btn btn-ghost btn-sm">
+      <?= icon('arrow-left')?> Back
     </a>
   </div>
   <form method="POST" class="editor-wrap" style="flex:1;display:flex;flex-direction:column;">
     <input type="hidden" name="action" value="save">
-    <input type="hidden" name="filepath" value="<?=htmlspecialchars(str_replace(ROOT,'',$editFile))?>">
+    <input type="hidden" name="filepath" value="<?= htmlspecialchars(str_replace(ROOT, '', $editFile))?>">
     <div class="editor-bar">
-      <span class="filename"><?=htmlspecialchars(str_replace(ROOT,'',$editFile))?></span>
-      <span class="file-meta" style="margin-right:auto"><?=formatSize(filesize($editFile))?></span>
-      <button type="submit" class="btn btn-primary btn-sm"><?=icon('save')?> Save</button>
+      <span class="filename"><?= htmlspecialchars(str_replace(ROOT, '', $editFile))?></span>
+      <span class="file-meta" style="margin-right:auto"><?= formatSize(filesize($editFile))?></span>
+      <button type="submit" class="btn btn-primary btn-sm"><?= icon('save')?> Save</button>
     </div>
-    <?php if ($message['text']): ?>
-    <div class="toast toast-<?=$message['type']?>" style="margin:10px 16px 0;"><?=$message['text']?></div>
-    <?php endif; ?>
-    <textarea id="editor-textarea" name="content" spellcheck="false"><?=htmlspecialchars($editContent)?></textarea>
+    <?php if ($message['text']) { ?>
+    <div class="toast toast-<?= $message['type']?>" style="margin:10px 16px 0;"><?= $message['text']?></div>
+    <?php } ?>
+    <textarea id="editor-textarea" name="content" spellcheck="false"><?= htmlspecialchars($editContent)?></textarea>
   </form>
 </div>
 
-<?php else: ?>
+<?php } else { ?>
 <!-- ═══ MAIN FILE MANAGER ═════════════════════════════════════════════════ -->
 <div class="app">
 
@@ -744,14 +810,16 @@ input[type=checkbox] {
 <div class="topbar">
   <div class="logo">&#9670; FileBridge</div>
   <form method="GET" class="topbar-search">
-    <?php if ($cwdRel !== '/') echo '<input type="hidden" name="dir" value="'.htmlspecialchars($cwdRel).'">'; ?>
+    <?php if ($cwdRel !== '/') {
+        echo '<input type="hidden" name="dir" value="'.htmlspecialchars($cwdRel).'">';
+    } ?>
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" name="search" placeholder="Search files..." value="<?=htmlspecialchars($_GET['search']??'')?>">
+    <input type="text" name="search" placeholder="Search files..." value="<?= htmlspecialchars($_GET['search'] ?? '')?>">
   </form>
   <div class="topbar-actions">
-    <button class="btn btn-ghost btn-sm" onclick="showModal('modal-repo')"><?=icon('git')?> Git Repo</button>
-    <button class="btn btn-ghost btn-sm" onclick="openUpload('folder')"><?=icon('folder-plus')?> Folder</button>
-    <button class="btn btn-primary btn-sm" onclick="openUpload('files')"><?=icon('upload')?> Upload</button>
+    <button class="btn btn-ghost btn-sm" onclick="showModal('modal-repo')"><?= icon('git')?> Git Repo</button>
+    <button class="btn btn-ghost btn-sm" onclick="openUpload('folder')"><?= icon('folder-plus')?> Folder</button>
+    <button class="btn btn-primary btn-sm" onclick="openUpload('files')"><?= icon('upload')?> Upload</button>
   </div>
 </div>
 
@@ -761,29 +829,29 @@ input[type=checkbox] {
 <div class="sidebar">
   <div class="sidebar-section">
     <div class="sidebar-title">Navigation</div>
-    <a class="sidebar-item <?=$cwdRel==='/'?'active':''?>" href="?"><?=icon('home')?> Root</a>
-    <a class="sidebar-item" href="?dir=<?=urlencode($cwdRel)?>&search=*.php"><?=icon('code')?> PHP Files</a>
-    <a class="sidebar-item" href="?dir=<?=urlencode($cwdRel)?>&search=*.js"><?=icon('file')?> JS Files</a>
-    <a class="sidebar-item" href="?dir=<?=urlencode($cwdRel)?>&search=*.zip"><?=icon('archive')?> Archives</a>
+    <a class="sidebar-item <?= $cwdRel === '/' ? 'active' : ''?>" href="?"><?= icon('home')?> Root</a>
+    <a class="sidebar-item" href="?dir=<?= urlencode($cwdRel)?>&search=*.php"><?= icon('code')?> PHP Files</a>
+    <a class="sidebar-item" href="?dir=<?= urlencode($cwdRel)?>&search=*.js"><?= icon('file')?> JS Files</a>
+    <a class="sidebar-item" href="?dir=<?= urlencode($cwdRel)?>&search=*.zip"><?= icon('archive')?> Archives</a>
   </div>
   <div class="sidebar-section" style="margin-top:8px">
     <div class="sidebar-title">Actions</div>
-    <div class="sidebar-item" onclick="showModal('modal-mkdir')"><?=icon('folder-plus')?> New Folder</div>
-    <div class="sidebar-item" onclick="showModal('modal-mkfile')"><?=icon('file-plus')?> New File</div>
-    <div class="sidebar-item" onclick="openUpload('files')"><?=icon('upload')?> Upload Files</div>
-    <div class="sidebar-item" onclick="openUpload('folder')"><?=icon('folder-plus')?> Upload Folder</div>
-    <div class="sidebar-item" onclick="showModal('modal-repo')"><?=icon('git')?> Download Repo</div>
+    <div class="sidebar-item" onclick="showModal('modal-mkdir')"><?= icon('folder-plus')?> New Folder</div>
+    <div class="sidebar-item" onclick="showModal('modal-mkfile')"><?= icon('file-plus')?> New File</div>
+    <div class="sidebar-item" onclick="openUpload('files')"><?= icon('upload')?> Upload Files</div>
+    <div class="sidebar-item" onclick="openUpload('folder')"><?= icon('folder-plus')?> Upload Folder</div>
+    <div class="sidebar-item" onclick="showModal('modal-repo')"><?= icon('git')?> Download Repo</div>
   </div>
   <div class="sidebar-section" style="margin-top:8px">
     <div class="sidebar-title">Info</div>
-    <div class="sidebar-item"><?=icon('info')?>
+    <div class="sidebar-item"><?= icon('info')?>
       <?php
         $du = disk_free_space(ROOT);
-        $dt = disk_total_space(ROOT);
-        echo formatSize($dt - $du) . ' used';
-      ?>
+    $dt = disk_total_space(ROOT);
+    echo formatSize($dt - $du).' used';
+    ?>
     </div>
-    <div class="sidebar-item"><?=icon('hard-drive')?> <?=formatSize(disk_free_space(ROOT))?> free</div>
+    <div class="sidebar-item"><?= icon('hard-drive')?> <?= formatSize(disk_free_space(ROOT))?> free</div>
   </div>
 </div>
 
@@ -797,72 +865,78 @@ input[type=checkbox] {
     <?php
     $builtPath = '';
     foreach ($breadParts as $part) {
-        $builtPath .= '/' . $part;
+        $builtPath .= '/'.$part;
         echo '<span>›</span>';
-        if ($part === end($breadParts)) echo '<span class="current">'.htmlspecialchars($part).'</span>';
-        else echo '<a href="?dir='.urlencode($builtPath).'">'.htmlspecialchars($part).'</a>';
+        if ($part === end($breadParts)) {
+            echo '<span class="current">'.htmlspecialchars($part).'</span>';
+        } else {
+            echo '<a href="?dir='.urlencode($builtPath).'">'.htmlspecialchars($part).'</a>';
+        }
     }
     ?>
   </div>
-  <button class="btn btn-ghost btn-sm" onclick="showModal('modal-mkdir')"><?=icon('folder-plus')?> Folder</button>
-  <button class="btn btn-ghost btn-sm" onclick="showModal('modal-mkfile')"><?=icon('file-plus')?> File</button>
-  <button class="btn btn-ghost btn-sm" id="btn-zip" onclick="bulkAction('zip')" style="display:none"><?=icon('archive')?> Zip</button>
-  <button class="btn btn-danger btn-sm" id="btn-del" onclick="bulkAction('delete')" style="display:none"><?=icon('trash')?> Delete</button>
+  <button class="btn btn-ghost btn-sm" onclick="showModal('modal-mkdir')"><?= icon('folder-plus')?> Folder</button>
+  <button class="btn btn-ghost btn-sm" onclick="showModal('modal-mkfile')"><?= icon('file-plus')?> File</button>
+  <button class="btn btn-ghost btn-sm" id="btn-zip" onclick="bulkAction('zip')" style="display:none"><?= icon('archive')?> Zip</button>
+  <button class="btn btn-danger btn-sm" id="btn-del" onclick="bulkAction('delete')" style="display:none"><?= icon('trash')?> Delete</button>
 </div>
 
 <!-- SELECTED BANNER -->
 <div class="sel-banner" id="sel-banner">
   <strong id="sel-count">0</strong> item(s) selected &nbsp;
-  <button class="btn btn-ghost btn-sm" onclick="selectAll()"><?=icon('check-square')?> All</button>
-  <button class="btn btn-ghost btn-sm" onclick="selectNone()"><?=icon('square')?> None</button>
-  <button class="btn btn-ghost btn-sm" onclick="bulkAction('zip')"><?=icon('archive')?> Zip Selected</button>
-  <button class="btn btn-danger btn-sm" onclick="bulkAction('delete')"><?=icon('trash')?> Delete Selected</button>
+  <button class="btn btn-ghost btn-sm" onclick="selectAll()"><?= icon('check-square')?> All</button>
+  <button class="btn btn-ghost btn-sm" onclick="selectNone()"><?= icon('square')?> None</button>
+  <button class="btn btn-ghost btn-sm" onclick="bulkAction('zip')"><?= icon('archive')?> Zip Selected</button>
+  <button class="btn btn-danger btn-sm" onclick="bulkAction('delete')"><?= icon('trash')?> Delete Selected</button>
 </div>
 
 <!-- MESSAGE -->
-<?php if ($message['text']): ?>
-<div class="toast toast-<?=$message['type']?>" style="margin:12px 16px 0">
-  <?=$message['type']==='success'?'✓':'✗'?> <?=htmlspecialchars($message['text'])?>
+<?php if ($message['text']) { ?>
+<div class="toast toast-<?= $message['type']?>" style="margin:12px 16px 0">
+  <?= $message['type'] === 'success' ? '✓' : '✗'?> <?= htmlspecialchars($message['text'])?>
 </div>
-<?php endif; ?>
+<?php } ?>
 
 <!-- FILE AREA -->
 <div class="file-area" id="file-area">
 
-<?php if ($searchResults !== null): ?>
+<?php if ($searchResults !== null) { ?>
 <!-- SEARCH RESULTS -->
 <div style="padding-bottom:12px">
-  <strong><?=count($searchResults)?> result(s) for "<?=htmlspecialchars($_GET['search']??'')?>"</strong>
-  <a href="?dir=<?=urlencode($cwdRel)?>" style="margin-left:12px;color:var(--muted);font-size:12px">Clear search</a>
+  <strong><?= count($searchResults)?> result(s) for "<?= htmlspecialchars($_GET['search'] ?? '')?>"</strong>
+  <a href="?dir=<?= urlencode($cwdRel)?>" style="margin-left:12px;color:var(--muted);font-size:12px">Clear search</a>
 </div>
-<?php if (empty($searchResults)): ?>
+<?php if (empty($searchResults)) { ?>
 <div class="empty-state"><div class="big-icon">🔍</div><p>No files found.</p></div>
-<?php else: foreach ($searchResults as $sr): $srRel = str_replace(ROOT,'',$sr); ?>
+<?php } else {
+    foreach ($searchResults as $sr) {
+        $srRel = str_replace(ROOT, '', $sr); ?>
 <div class="search-result-item">
-  <span><?=is_dir($sr)?'📁':'📄'?></span>
+  <span><?= is_dir($sr) ? '📁' : '📄'?></span>
   <div>
     <div>
-      <?php if (is_dir($sr)): ?>
-        <a href="?dir=<?=urlencode($srRel)?>" class="file-name folder"><?=htmlspecialchars(basename($sr))?></a>
-      <?php else: ?>
-        <a href="?edit=<?=urlencode($srRel)?>" class="file-name"><?=htmlspecialchars(basename($sr))?></a>
-      <?php endif; ?>
+      <?php if (is_dir($sr)) { ?>
+        <a href="?dir=<?= urlencode($srRel)?>" class="file-name folder"><?= htmlspecialchars(basename($sr))?></a>
+      <?php } else { ?>
+        <a href="?edit=<?= urlencode($srRel)?>" class="file-name"><?= htmlspecialchars(basename($sr))?></a>
+      <?php } ?>
     </div>
-    <div class="search-path"><?=htmlspecialchars($srRel)?></div>
+    <div class="search-path"><?= htmlspecialchars($srRel)?></div>
   </div>
-  <?php if (is_file($sr)): ?>
+  <?php if (is_file($sr)) { ?>
   <div style="margin-left:auto;display:flex;gap:6px">
-    <a href="?download_file=<?=urlencode($srRel)?>" class="btn btn-ghost btn-sm"><?=icon('download')?></a>
+    <a href="?download_file=<?= urlencode($srRel)?>" class="btn btn-ghost btn-sm"><?= icon('download')?></a>
   </div>
-  <?php endif; ?>
+  <?php } ?>
 </div>
-<?php endforeach; endif; ?>
+<?php }
+    } ?>
 
-<?php else: ?>
+<?php } else { ?>
 <!-- FILE TABLE -->
-<?php if (empty($items)): ?>
+<?php if (empty($items)) { ?>
 <div class="empty-state"><div class="big-icon">📂</div><p>This folder is empty.</p></div>
-<?php else: ?>
+<?php } else { ?>
 <table class="file-table" id="file-table">
 <thead>
 <tr>
@@ -876,63 +950,63 @@ input[type=checkbox] {
 </thead>
 <tbody>
 <?php
-$parentRel = dirname($cwdRel);
-if ($cwdRel !== '/') {
-    echo '<tr><td></td><td colspan="5"><a href="?dir='.urlencode($parentRel).'" class="file-name" style="color:var(--muted)">📁 ..</a></td></tr>';
-}
-foreach ($items as $it):
-    $itRel = str_replace(ROOT,'',$it['full']);
-?>
-<tr data-name="<?=htmlspecialchars($it['name'])?>" oncontextmenu="ctxMenu(event,'<?=htmlspecialchars(addslashes($it['name']))?>','<?=$it['isDir']?'dir':'file'?>')">
-  <td><input type="checkbox" class="row-chk" value="<?=htmlspecialchars($it['name'])?>" onchange="updateSel()"></td>
+    $parentRel = dirname($cwdRel);
+    if ($cwdRel !== '/') {
+        echo '<tr><td></td><td colspan="5"><a href="?dir='.urlencode($parentRel).'" class="file-name" style="color:var(--muted)">📁 ..</a></td></tr>';
+    }
+    foreach ($items as $it) {
+        $itRel = str_replace(ROOT, '', $it['full']);
+        ?>
+<tr data-name="<?= htmlspecialchars($it['name'])?>" oncontextmenu="ctxMenu(event,'<?= htmlspecialchars(addslashes($it['name']))?>','<?= $it['isDir'] ? 'dir' : 'file'?>')">
+  <td><input type="checkbox" class="row-chk" value="<?= htmlspecialchars($it['name'])?>" onchange="updateSel()"></td>
   <td>
     <div class="file-icon">
-      <span class="icon"><?=$it['isDir']?'📁':getFileIcon($it['name'])?></span>
-      <?php if ($it['isDir']): ?>
-        <a href="?dir=<?=urlencode($itRel)?>" class="file-name folder"><?=htmlspecialchars($it['name'])?></a>
-      <?php elseif (isText($it['full'])): ?>
-        <a href="?edit=<?=urlencode($itRel)?>" class="file-name"><?=htmlspecialchars($it['name'])?></a>
-      <?php elseif (isImage($it['full'])): ?>
-        <a href="#" class="file-name" onclick="previewImage('<?=urlencode($itRel)?>', '<?=htmlspecialchars(addslashes($it['name']))?>')"><?=htmlspecialchars($it['name'])?></a>
-      <?php else: ?>
-        <span class="file-name" style="cursor:default"><?=htmlspecialchars($it['name'])?></span>
-      <?php endif; ?>
+      <span class="icon"><?= $it['isDir'] ? '📁' : getFileIcon($it['name'])?></span>
+      <?php if ($it['isDir']) { ?>
+        <a href="?dir=<?= urlencode($itRel)?>" class="file-name folder"><?= htmlspecialchars($it['name'])?></a>
+      <?php } elseif (isText($it['full'])) { ?>
+        <a href="?edit=<?= urlencode($itRel)?>" class="file-name"><?= htmlspecialchars($it['name'])?></a>
+      <?php } elseif (isImage($it['full'])) { ?>
+        <a href="#" class="file-name" onclick="previewImage('<?= urlencode($itRel)?>', '<?= htmlspecialchars(addslashes($it['name']))?>')"><?= htmlspecialchars($it['name'])?></a>
+      <?php } else { ?>
+        <span class="file-name" style="cursor:default"><?= htmlspecialchars($it['name'])?></span>
+      <?php } ?>
     </div>
   </td>
-  <td class="file-meta"><?=formatSize($it['size'])?></td>
-  <td class="file-meta"><?=date('Y-m-d H:i',$it['mtime'])?></td>
-  <td class="file-perms"><?=$it['perms']?></td>
+  <td class="file-meta"><?= formatSize($it['size'])?></td>
+  <td class="file-meta"><?= date('Y-m-d H:i', $it['mtime'])?></td>
+  <td class="file-perms"><?= $it['perms']?></td>
   <td>
     <div class="row-actions">
-      <?php if (!$it['isDir'] && isText($it['full'])): ?>
-      <a href="?edit=<?=urlencode($itRel)?>" class="btn btn-ghost btn-sm" title="Edit"><?=icon('edit')?></a>
-      <?php endif; ?>
-      <?php if (!$it['isDir']): ?>
-      <a href="?download_file=<?=urlencode($itRel)?>" class="btn btn-ghost btn-sm" title="Download"><?=icon('download')?></a>
-      <?php endif; ?>
-      <?php if (!$it['isDir'] && strtolower(pathinfo($it['name'],PATHINFO_EXTENSION)) === 'zip'): ?>
-      <button class="btn btn-ghost btn-sm" title="Extract" onclick="doUnzip('<?=htmlspecialchars(addslashes($it['name']))?>')"><?=icon('archive')?></button>
-      <?php endif; ?>
-      <button class="btn btn-ghost btn-sm" title="Rename" onclick="doRename('<?=htmlspecialchars(addslashes($it['name']))?>')"><?=icon('rename')?></button>
-      <button class="btn btn-ghost btn-sm" title="Copy" onclick="doCopy('<?=htmlspecialchars(addslashes($it['name']))?>')"><?=icon('copy')?></button>
-      <button class="btn btn-ghost btn-sm" title="Permissions" onclick="doChmod('<?=htmlspecialchars(addslashes($it['name']))?>', '<?=substr(sprintf('%o',fileperms($it['full'])),-4)?>')"><?=icon('lock')?></button>
-      <button class="btn btn-danger btn-sm" title="Delete" onclick="doDelete(['<?=htmlspecialchars(addslashes($it['name']))?>'])"><?=icon('trash')?></button>
+      <?php if (! $it['isDir'] && isText($it['full'])) { ?>
+      <a href="?edit=<?= urlencode($itRel)?>" class="btn btn-ghost btn-sm" title="Edit"><?= icon('edit')?></a>
+      <?php } ?>
+      <?php if (! $it['isDir']) { ?>
+      <a href="?download_file=<?= urlencode($itRel)?>" class="btn btn-ghost btn-sm" title="Download"><?= icon('download')?></a>
+      <?php } ?>
+      <?php if (! $it['isDir'] && strtolower(pathinfo($it['name'], PATHINFO_EXTENSION)) === 'zip') { ?>
+      <button class="btn btn-ghost btn-sm" title="Extract" onclick="doUnzip('<?= htmlspecialchars(addslashes($it['name']))?>')"><?= icon('archive')?></button>
+      <?php } ?>
+      <button class="btn btn-ghost btn-sm" title="Rename" onclick="doRename('<?= htmlspecialchars(addslashes($it['name']))?>')"><?= icon('rename')?></button>
+      <button class="btn btn-ghost btn-sm" title="Copy" onclick="doCopy('<?= htmlspecialchars(addslashes($it['name']))?>')"><?= icon('copy')?></button>
+      <button class="btn btn-ghost btn-sm" title="Permissions" onclick="doChmod('<?= htmlspecialchars(addslashes($it['name']))?>', '<?= substr(sprintf('%o', fileperms($it['full'])), -4)?>')"><?= icon('lock')?></button>
+      <button class="btn btn-danger btn-sm" title="Delete" onclick="doDelete(['<?= htmlspecialchars(addslashes($it['name']))?>'])"><?= icon('trash')?></button>
     </div>
   </td>
 </tr>
-<?php endforeach; ?>
+<?php } ?>
 </tbody>
 </table>
-<?php endif; ?>
-<?php endif; ?>
+<?php } ?>
+<?php } ?>
 
 </div><!-- /file-area -->
 
 <!-- INFO BAR -->
 <div class="infobar">
-  <span><?=icon('folder')?> <?=count($items)?> items</span>
-  <span><?=icon('hard-drive')?> <?=formatSize(disk_free_space(ROOT))?> free</span>
-  <span style="margin-left:auto;font-size:10px;opacity:.5">FileBridge v<?=VERSION?></span>
+  <span><?= icon('folder')?> <?= count($items)?> items</span>
+  <span><?= icon('hard-drive')?> <?= formatSize(disk_free_space(ROOT))?> free</span>
+  <span style="margin-left:auto;font-size:10px;opacity:.5">FileBridge v<?= VERSION?></span>
 </div>
 
 </div><!-- /content -->
@@ -942,16 +1016,16 @@ foreach ($items as $it):
 <!-- ─── CONTEXT MENU ──────────────────────────────────────────────────────── -->
 <div class="ctx-menu" id="ctx-menu">
   <div class="ctx-item" id="ctx-open">📂 Open</div>
-  <div class="ctx-item" id="ctx-edit"><?=icon('edit')?> Edit</div>
-  <div class="ctx-item" id="ctx-download"><?=icon('download')?> Download</div>
+  <div class="ctx-item" id="ctx-edit"><?= icon('edit')?> Edit</div>
+  <div class="ctx-item" id="ctx-download"><?= icon('download')?> Download</div>
   <div class="ctx-sep"></div>
-  <div class="ctx-item" id="ctx-rename"><?=icon('rename')?> Rename</div>
-  <div class="ctx-item" id="ctx-copy"><?=icon('copy')?> Copy</div>
-  <div class="ctx-item" id="ctx-zip"><?=icon('archive')?> Zip</div>
-  <div class="ctx-item" id="ctx-unzip"><?=icon('archive')?> Extract</div>
-  <div class="ctx-item" id="ctx-chmod"><?=icon('lock')?> Permissions</div>
+  <div class="ctx-item" id="ctx-rename"><?= icon('rename')?> Rename</div>
+  <div class="ctx-item" id="ctx-copy"><?= icon('copy')?> Copy</div>
+  <div class="ctx-item" id="ctx-zip"><?= icon('archive')?> Zip</div>
+  <div class="ctx-item" id="ctx-unzip"><?= icon('archive')?> Extract</div>
+  <div class="ctx-item" id="ctx-chmod"><?= icon('lock')?> Permissions</div>
   <div class="ctx-sep"></div>
-  <div class="ctx-item danger" id="ctx-delete"><?=icon('trash')?> Delete</div>
+  <div class="ctx-item danger" id="ctx-delete"><?= icon('trash')?> Delete</div>
 </div>
 
 <!-- ─── MODALS ────────────────────────────────────────────────────────────── -->
@@ -959,7 +1033,7 @@ foreach ($items as $it):
 <!-- Create Folder -->
 <div class="overlay" id="modal-mkdir">
 <div class="modal">
-  <h3><?=icon('folder-plus')?> &nbsp;New Folder</h3>
+  <h3><?= icon('folder-plus')?> &nbsp;New Folder</h3>
   <form method="POST">
     <input type="hidden" name="action" value="mkdir">
     <div class="modal-row">
@@ -968,7 +1042,7 @@ foreach ($items as $it):
     </div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" onclick="hideModal('modal-mkdir')">Cancel</button>
-      <button type="submit" class="btn btn-primary"><?=icon('folder-plus')?> Create</button>
+      <button type="submit" class="btn btn-primary"><?= icon('folder-plus')?> Create</button>
     </div>
   </form>
 </div></div>
@@ -976,7 +1050,7 @@ foreach ($items as $it):
 <!-- Create File -->
 <div class="overlay" id="modal-mkfile">
 <div class="modal">
-  <h3><?=icon('file-plus')?> &nbsp;New File</h3>
+  <h3><?= icon('file-plus')?> &nbsp;New File</h3>
   <form method="POST">
     <input type="hidden" name="action" value="mkfile">
     <div class="modal-row">
@@ -985,7 +1059,7 @@ foreach ($items as $it):
     </div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" onclick="hideModal('modal-mkfile')">Cancel</button>
-      <button type="submit" class="btn btn-primary"><?=icon('file-plus')?> Create</button>
+      <button type="submit" class="btn btn-primary"><?= icon('file-plus')?> Create</button>
     </div>
   </form>
 </div></div>
@@ -993,7 +1067,7 @@ foreach ($items as $it):
 <!-- Rename -->
 <div class="overlay" id="modal-rename">
 <div class="modal">
-  <h3><?=icon('rename')?> &nbsp;Rename</h3>
+  <h3><?= icon('rename')?> &nbsp;Rename</h3>
   <form method="POST">
     <input type="hidden" name="action" value="rename">
     <input type="hidden" name="old_name" id="rename-old">
@@ -1011,7 +1085,7 @@ foreach ($items as $it):
 <!-- Copy -->
 <div class="overlay" id="modal-copy">
 <div class="modal">
-  <h3><?=icon('copy')?> &nbsp;Copy As</h3>
+  <h3><?= icon('copy')?> &nbsp;Copy As</h3>
   <form method="POST">
     <input type="hidden" name="action" value="copy">
     <input type="hidden" name="src" id="copy-src">
@@ -1029,7 +1103,7 @@ foreach ($items as $it):
 <!-- Chmod -->
 <div class="overlay" id="modal-chmod">
 <div class="modal">
-  <h3><?=icon('lock')?> &nbsp;Change Permissions</h3>
+  <h3><?= icon('lock')?> &nbsp;Change Permissions</h3>
   <form method="POST">
     <input type="hidden" name="action" value="chmod">
     <input type="hidden" name="target" id="chmod-target">
@@ -1047,7 +1121,7 @@ foreach ($items as $it):
 <!-- Zip -->
 <div class="overlay" id="modal-zip">
 <div class="modal">
-  <h3><?=icon('archive')?> &nbsp;Create Archive</h3>
+  <h3><?= icon('archive')?> &nbsp;Create Archive</h3>
   <form method="POST" id="zip-form">
     <input type="hidden" name="action" value="zip">
     <div id="zip-hidden-targets"></div>
@@ -1057,7 +1131,7 @@ foreach ($items as $it):
     </div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" onclick="hideModal('modal-zip')">Cancel</button>
-      <button type="submit" class="btn btn-primary"><?=icon('archive')?> Create</button>
+      <button type="submit" class="btn btn-primary"><?= icon('archive')?> Create</button>
     </div>
   </form>
 </div></div>
@@ -1065,14 +1139,14 @@ foreach ($items as $it):
 <!-- Delete confirm -->
 <div class="overlay" id="modal-delete">
 <div class="modal">
-  <h3><?=icon('trash')?> &nbsp;Confirm Delete</h3>
+  <h3><?= icon('trash')?> &nbsp;Confirm Delete</h3>
   <p id="delete-msg" style="color:var(--muted);margin-bottom:18px;font-size:13px">Are you sure?</p>
   <form method="POST" id="delete-form">
     <input type="hidden" name="action" value="delete">
     <div id="delete-hidden-targets"></div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" onclick="hideModal('modal-delete')">Cancel</button>
-      <button type="submit" class="btn btn-danger"><?=icon('trash')?> Delete</button>
+      <button type="submit" class="btn btn-danger"><?= icon('trash')?> Delete</button>
     </div>
   </form>
 </div></div>
@@ -1080,7 +1154,7 @@ foreach ($items as $it):
 <!-- Git Repo Download -->
 <div class="overlay" id="modal-repo">
 <div class="modal">
-  <h3><?=icon('git')?> &nbsp;Download GitHub Repository</h3>
+  <h3><?= icon('git')?> &nbsp;Download GitHub Repository</h3>
   <form method="POST">
     <input type="hidden" name="action" value="download_repo">
     <div class="modal-row">
@@ -1089,7 +1163,7 @@ foreach ($items as $it):
     </div>
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" onclick="hideModal('modal-repo')">Cancel</button>
-      <button type="submit" class="btn btn-primary"><?=icon('git')?> Download</button>
+      <button type="submit" class="btn btn-primary"><?= icon('git')?> Download</button>
     </div>
   </form>
 </div></div>
@@ -1097,7 +1171,7 @@ foreach ($items as $it):
 <!-- Upload (Files + Folder) -->
 <div class="overlay" id="modal-upload">
 <div class="modal" style="max-width:480px">
-  <h3><?=icon('upload')?> &nbsp;Upload</h3>
+  <h3><?= icon('upload')?> &nbsp;Upload</h3>
 
   <!-- Mode tabs -->
   <div class="upload-tabs">
@@ -1137,11 +1211,11 @@ foreach ($items as $it):
   <img id="preview-img" src="" alt="" style="max-width:100%;max-height:70vh;border-radius:6px;border:1px solid var(--border2)">
   <div class="modal-actions" style="justify-content:center;margin-top:14px">
     <button class="btn btn-ghost" onclick="hideModal('modal-preview')">Close</button>
-    <a id="preview-dl" href="#" class="btn btn-primary"><?=icon('download')?> Download</a>
+    <a id="preview-dl" href="#" class="btn btn-primary"><?= icon('download')?> Download</a>
   </div>
 </div></div>
 
-<?php endif; // end main file manager ?>
+<?php } // end main file manager?>
 
 <script>
 // ─── MODAL HELPERS ────────────────────────────────────────────────────────────
@@ -1251,13 +1325,13 @@ function ctxMenu(e, name, type) {
 document.addEventListener('click', ()=>document.getElementById('ctx-menu').classList.remove('show'));
 
 document.getElementById('ctx-open')?.addEventListener('click', ()=>{
-  if(ctxTarget) window.location='?dir='+encodeURIComponent('<?=$cwdRel?>/'+ctxTarget);
+  if(ctxTarget) window.location='?dir='+encodeURIComponent('<?= $cwdRel?>/'+ctxTarget);
 });
 document.getElementById('ctx-edit')?.addEventListener('click', ()=>{
-  if(ctxTarget) window.location='?edit='+encodeURIComponent('<?=$cwdRel?>/'+ctxTarget);
+  if(ctxTarget) window.location='?edit='+encodeURIComponent('<?= $cwdRel?>/'+ctxTarget);
 });
 document.getElementById('ctx-download')?.addEventListener('click', ()=>{
-  if(ctxTarget) window.location='?download_file='+encodeURIComponent('<?=$cwdRel?>/'+ctxTarget);
+  if(ctxTarget) window.location='?download_file='+encodeURIComponent('<?= $cwdRel?>/'+ctxTarget);
 });
 document.getElementById('ctx-rename')?.addEventListener('click', ()=>{ if(ctxTarget) doRename(ctxTarget); });
 document.getElementById('ctx-copy')?.addEventListener('click',   ()=>{ if(ctxTarget) doCopy(ctxTarget); });
@@ -1454,47 +1528,51 @@ function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').repl
 </html>
 <?php
 
-// ─── ICON HELPER ─────────────────────────────────────────────────────────────
-function icon($name) {
-    $icons = [
-        'home'        => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-        'folder'      => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
-        'folder-plus' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>',
-        'file'        => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
-        'file-plus'   => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>',
-        'upload'      => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>',
-        'download'    => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>',
-        'trash'       => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
-        'edit'        => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
-        'rename'      => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
-        'copy'        => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
-        'archive'     => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
-        'lock'        => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
-        'save'        => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
-        'info'        => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
-        'hard-drive'  => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>',
-        'code'        => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
-        'git'         => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>',
-        'arrow-left'  => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
-        'check-square'=> '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
-        'square'      => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
-    ];
-    return $icons[$name] ?? '';
-}
+        // ─── ICON HELPER ─────────────────────────────────────────────────────────────
+        function icon($name)
+        {
+            $icons = [
+                'home' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+                'folder' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+                'folder-plus' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>',
+                'file' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+                'file-plus' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>',
+                'upload' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>',
+                'download' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>',
+                'trash' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+                'edit' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+                'rename' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+                'copy' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+                'archive' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+                'lock' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+                'save' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
+                'info' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+                'hard-drive' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>',
+                'code' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+                'git' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>',
+                'arrow-left' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+                'check-square' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+                'square' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
+            ];
 
-function getFileIcon($name) {
+            return $icons[$name] ?? '';
+        }
+
+function getFileIcon($name)
+{
     $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
     $map = [
-        'php'=>'🐘','js'=>'🟨','ts'=>'🟦','jsx'=>'⚛️','tsx'=>'⚛️',
-        'html'=>'🌐','htm'=>'🌐','css'=>'🎨','json'=>'📋','xml'=>'📋',
-        'py'=>'🐍','rb'=>'💎','java'=>'☕','c'=>'©','cpp'=>'©',
-        'md'=>'📝','txt'=>'📝','log'=>'📋','csv'=>'📊',
-        'zip'=>'📦','tar'=>'📦','gz'=>'📦','rar'=>'📦',
-        'jpg'=>'🖼️','jpeg'=>'🖼️','png'=>'🖼️','gif'=>'🖼️','svg'=>'🖼️','webp'=>'🖼️',
-        'pdf'=>'📕','doc'=>'📘','docx'=>'📘','xls'=>'📗','xlsx'=>'📗',
-        'mp3'=>'🎵','mp4'=>'🎬','mov'=>'🎬','avi'=>'🎬',
-        'sql'=>'🗄️','sh'=>'⚙️','env'=>'🔑','htaccess'=>'🔒',
+        'php' => '🐘', 'js' => '🟨', 'ts' => '🟦', 'jsx' => '⚛️', 'tsx' => '⚛️',
+        'html' => '🌐', 'htm' => '🌐', 'css' => '🎨', 'json' => '📋', 'xml' => '📋',
+        'py' => '🐍', 'rb' => '💎', 'java' => '☕', 'c' => '©', 'cpp' => '©',
+        'md' => '📝', 'txt' => '📝', 'log' => '📋', 'csv' => '📊',
+        'zip' => '📦', 'tar' => '📦', 'gz' => '📦', 'rar' => '📦',
+        'jpg' => '🖼️', 'jpeg' => '🖼️', 'png' => '🖼️', 'gif' => '🖼️', 'svg' => '🖼️', 'webp' => '🖼️',
+        'pdf' => '📕', 'doc' => '📘', 'docx' => '📘', 'xls' => '📗', 'xlsx' => '📗',
+        'mp3' => '🎵', 'mp4' => '🎬', 'mov' => '🎬', 'avi' => '🎬',
+        'sql' => '🗄️', 'sh' => '⚙️', 'env' => '🔑', 'htaccess' => '🔒',
     ];
+
     return $map[$ext] ?? '📄';
 }
 ?>

@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { FilterRenderer } from './FilterRenderer';
 import { Slider } from '@/components/ui/slider';
 import { localizeText } from '@/data';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
+import type { TourItem } from '@/types/public';
+import { FilterRenderer } from './FilterRenderer';
 
 interface TourFiltersProps {
     lang: string;
@@ -14,7 +15,7 @@ interface TourFiltersProps {
     onPriceChange: (range: [number, number]) => void;
     maxPrice: number;
     minPrice: number;
-    tours: any[];
+    tours: TourItem[];
     travelers: number;
     onTravelersChange: (value: number) => void;
 }
@@ -32,12 +33,10 @@ export function TourFilters({
     travelers,
     onTravelersChange,
 }: TourFiltersProps) {
-    const typedLang = lang as Lang;
-
     const availableCountries = useMemo(() => {
         const countriesMap = new Map<string, { count: number; label: string }>();
         for (const tour of tours) {
-            const location = localizeText(tour.location, typedLang);
+            const location = localizeText(tour.location, lang as Lang);
             if (location) {
                 const existing = countriesMap.get(location);
                 if (existing) {

@@ -5535,6 +5535,41 @@ translations['admin.settings.navBadgeItem'] = {
     ar: 'عنصر',
     en: 'Item',
 };
+translations['admin.settings.subPages'] = {
+    fr: 'Sous-pages',
+    ar: 'صفحات فرعية',
+    en: 'Sub-Pages',
+};
+translations['admin.settings.addSubPage'] = {
+    fr: 'Ajouter une sous-page',
+    ar: 'إضافة صفحة فرعية',
+    en: 'Add Sub-Page',
+};
+translations['admin.settings.subPagesEmptyDescription'] = {
+    fr: 'Aucune sous-page ajoutée. Chaque sous-page pointe vers une page différente (ex. destinations, hôtels, circuits).',
+    ar: 'لم تتم إضافة أي صفحات فرعية. كل صفحة فرعية تشير إلى صفحة مختلفة (مثل الوجهات والفنادق والجولات).',
+    en: 'No sub-pages added. Each sub-page points to a different index page (e.g. destinations, hotels, tours).',
+};
+translations['admin.settings.targetPage'] = {
+    fr: 'Page cible',
+    ar: 'الصفحة الهدف',
+    en: 'Target Page',
+};
+translations['admin.settings.selectTargetPage'] = {
+    fr: 'Sélectionner la page cible',
+    ar: 'اختر الصفحة الهدف',
+    en: 'Select target page',
+};
+translations['admin.settings.subPage'] = {
+    fr: 'Sous-page',
+    ar: 'صفحة فرعية',
+    en: 'Sub-Page',
+};
+translations['admin.settings.searchUsesLabel'] = {
+    fr: 'Le mode recherche utilise le libellé ci-dessous comme mot-clé.',
+    ar: 'يستخدم وضع البحث التسمية أدناه ككلمة رئيسية.',
+    en: 'Search mode uses the label below as the keyword.',
+};
 
 // Admin complaints keys
 translations['admin.type'] = {

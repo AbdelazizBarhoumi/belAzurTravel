@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
-import { AmenityIcons } from '@/components/cards/AmenityIcons';
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
+import { Link, useSearchParams } from 'react-router-dom';
+import { AmenityIcons } from '@/components/cards/AmenityIcons';
 import { HotelFilters } from '@/components/filters/HotelFilters';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
@@ -24,9 +24,6 @@ export default function Hotels() {
     const [params] = useSearchParams();
     // Accept landing widget params as fallback (destination -> q)
     const initialSearch = params.get('q') || params.get('destination') || '';
-    const initialCategory = params.get('cat')?.toLowerCase() || '';
-    const initialCountry = params.get('country') || '';
-    const initialCity = params.get('city') || '';
     const initialGuests = Number(params.get('guests') || 2);
     const initialFromDate = params.get('from') || '';
     const initialToDate = params.get('to') || '';
@@ -63,28 +60,32 @@ export default function Hotels() {
     const [categoryTypeFilters, setCategoryTypeFilters] =
         useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
-    // Sync state with URL params when they change (e.g. navbar subcategory links)
-    useEffect(() => {
+    // Adjust state during render when URL params change (e.g. navbar subcategory links)
+    const [prevParamsKey, setPrevParamsKey] = useState(() => params.toString());
+    if (params.toString() !== prevParamsKey) {
+        setPrevParamsKey(params.toString());
         setSearchQuery(params.get('q') || params.get('destination') || '');
-    }, [params]);
-    useEffect(() => {
-        const filters: Record<string, string[]> = {};
+        const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                const typeKey = key.slice('category_'.length);
-                filters[typeKey] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
             }
         }
-        setCategoryTypeFilters(filters);
-    }, [params]);
+        setCategoryTypeFilters(nextFilters);
+    }
     const [hotelPriceRange, setHotelPriceRange] = useState<[number, number]>([0, 1000]);
 
-    // Sync price range when data loads
-    useEffect(() => {
-        if (hotels.length > 0) {
-            setHotelPriceRange([minPrice, maxPrice]);
-        }
-    }, [hotels.length, minPrice, maxPrice]);
+    // Adjust state during render when data loads (price range derived from hotels)
+    const [priceRangeSynced, setPriceRangeSynced] = useState<readonly [number, number] | null>(null);
+    if (
+        hotels.length > 0 &&
+        (priceRangeSynced === null ||
+            priceRangeSynced[0] !== minPrice ||
+            priceRangeSynced[1] !== maxPrice)
+    ) {
+        setPriceRangeSynced([minPrice, maxPrice]);
+        setHotelPriceRange([minPrice, maxPrice]);
+    }
 
     const hasLandingDateOrGuestFilters =
         guests !== 2 || dateRange?.from !== undefined || dateRange?.to !== undefined;
@@ -107,7 +108,6 @@ export default function Hotels() {
                   const matchesPrice =
                       hotel.price >= hotelPriceRange[0] &&
                       hotel.price <= hotelPriceRange[1];
-                  const matchesGuests = true; // Guests filter handled by category types or separate logic
                   // Check category type filters (OR logic)
                   const assignments = hotel.category_assignments;
                   const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
@@ -115,7 +115,6 @@ export default function Hotels() {
                       activeTypeFilters.some(([typeKey, values]) => {
                           // Handle dynamic filters (country, stars)
                           if (typeKey.startsWith('dynamic_country_')) {
-                              const countryKey = typeKey.replace('dynamic_country_', '');
                               const hotelCountry = hotel.country && typeof hotel.country === 'object' ? hotel.country.en : '';
                               return values.includes(hotelCountry);
                           }

@@ -24,7 +24,6 @@ import {
     FileText,
     Shield,
     ShoppingCart,
-    Video,
     AlertCircle,
     FileCheck,
 } from 'lucide-react';

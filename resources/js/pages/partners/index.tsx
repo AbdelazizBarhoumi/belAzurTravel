@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { localizeText } from '@/api/entities.api';
 import { apiFetch } from '@/api/http';
 import { fetchPartners, type PartnerItem } from '@/api/partners.api';
 import { FilterRenderer } from '@/components/filters/FilterRenderer';
-import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { FilterSidebar } from '@/components/lists/FilterSidebar';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
-import { useCategoryTypesPublic } from '@/hooks/usePublicData';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useSearchParams } from 'react-router-dom';
+import { useCategoryTypesPublic } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 
 interface Category {
@@ -57,21 +57,20 @@ const Partners = () => {
     }, [params]);
     const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
-    // Sync state with URL params when they change (e.g. navbar subcategory links)
-    useEffect(() => {
+    // Adjust state during render when URL params change (e.g. navbar subcategory links)
+    const [prevParamsKey, setPrevParamsKey] = useState(() => params.toString());
+    if (params.toString() !== prevParamsKey) {
+        setPrevParamsKey(params.toString());
         setQ(params.get('q') || '');
         setCat(params.get('cat') || 'All');
-    }, [params]);
-    useEffect(() => {
-        const filters: Record<string, string[]> = {};
+        const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                const typeKey = key.slice('category_'.length);
-                filters[typeKey] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
             }
         }
-        setCategoryTypeFilters(filters);
-    }, [params]);
+        setCategoryTypeFilters(nextFilters);
+    }
 
     const categories = useMemo(() => {
         const keys = new Set(partners.map((p) => p.category).filter(Boolean) as string[]);

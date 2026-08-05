@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { FilterRenderer } from './FilterRenderer';
+import type { TravelItem } from '@/api/entities.api';
 import { Slider } from '@/components/ui/slider';
 import { localizeText } from '@/data';
-import type { TravelItem } from '@/api/entities.api';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
+import { FilterRenderer } from './FilterRenderer';
 
 interface TravelFiltersProps {
     travels: TravelItem[];
@@ -33,12 +33,10 @@ export function TravelFilters({
     travelers,
     onTravelersChange,
 }: TravelFiltersProps) {
-    const typedLang = lang as Lang;
-
     const availableCountries = useMemo(() => {
         const countriesMap = new Map<string, { count: number; label: string }>();
         for (const travel of travels) {
-            const location = localizeText(travel.location, typedLang);
+            const location = localizeText(travel.location, lang as Lang);
             if (location) {
                 const existing = countriesMap.get(location);
                 if (existing) {

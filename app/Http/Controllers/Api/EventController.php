@@ -21,8 +21,8 @@ class EventController extends Controller
                 return Event::query()->oldest('id')
                     ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                     ->get()->map(
-                    fn (Event $item) => $this->payload($item)
-                );
+                        fn (Event $item) => $this->payload($item)
+                    );
             }
         );
 

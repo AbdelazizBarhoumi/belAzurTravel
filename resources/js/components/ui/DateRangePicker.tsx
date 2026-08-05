@@ -1,6 +1,6 @@
+import { arSA, enUS, fr } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
-import { arSA, enUS, fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

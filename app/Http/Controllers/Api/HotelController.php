@@ -64,6 +64,7 @@ class HotelController extends Controller
             'stars' => $item->stars,
             'reviews' => $item->reviews,
             'image' => $this->normalizeApiOutputPath($item->image),
+            'gallery' => $details['gallery'] ?? [],
             'amenities' => collect($item->amenities ?? [])->map(fn (Amenity $amenity) => [
                 'name' => $amenity->name,
                 'icon' => $amenity->icon,
@@ -110,6 +111,9 @@ class HotelController extends Controller
             'city' => $details['city'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'country' => $details['country'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'description' => $details['description'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'address' => $details['address'] ?? '',
+            'phone' => $details['phone'] ?? '',
+            'whatsapp' => $details['whatsapp'] ?? '',
         ];
     }
 }

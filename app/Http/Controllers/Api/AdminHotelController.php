@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\File;
 use App\Models\Amenity;
 use App\Models\Category;
 use App\Models\CategoryType;
-use App\Models\CategoryValue;
 use App\Models\EntityCategoryAssignment;
 use App\Models\Hotel;
 use App\Models\HotelRoom;
@@ -17,7 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -120,6 +118,9 @@ class AdminHotelController extends Controller
             'description_en' => ['sometimes', 'nullable', 'string'],
             'description_fr' => ['sometimes', 'nullable', 'string'],
             'description_ar' => ['sometimes', 'nullable', 'string'],
+            'address' => ['sometimes', 'nullable', 'string', 'max:512'],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:64'],
+            'whatsapp' => ['sometimes', 'nullable', 'string', 'max:64'],
             'price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'rating' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:5'],
             'stars' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:5'],
@@ -169,6 +170,9 @@ class AdminHotelController extends Controller
             'rooms.*.description.ar' => ['sometimes', 'nullable', 'string', 'max:255'],
             'rooms.*.features' => ['sometimes', 'array'],
             'rooms.*.images' => ['sometimes', 'array'],
+            'rooms.*.pricePerNight' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'rooms.*.capacity' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'rooms.*.size' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'destination_slug' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
 
@@ -251,6 +255,9 @@ class AdminHotelController extends Controller
             ])->values(),
             'tags' => $item->tags ?? [],
             'gallery' => $gallery,
+            'address' => $item->details['address'] ?? '',
+            'phone' => $item->details['phone'] ?? '',
+            'whatsapp' => $item->details['whatsapp'] ?? '',
             'city' => $item->details['city'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'country' => $item->details['country'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'description' => $item->details['description'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
@@ -350,6 +357,12 @@ class AdminHotelController extends Controller
 
         if (array_key_exists('description', $data) || array_key_exists('description_en', $data) || array_key_exists('description_fr', $data) || array_key_exists('description_ar', $data)) {
             $details['description'] = $this->localized($data, 'description', $existing?->details['description'] ?? ['en' => '', 'fr' => '', 'ar' => '']);
+        }
+
+        foreach (['address', 'phone', 'whatsapp'] as $scalarKey) {
+            if (array_key_exists($scalarKey, $data)) {
+                $details[$scalarKey] = (string) $data[$scalarKey];
+            }
         }
 
         $details['gallery'] = $gallery;
@@ -540,6 +553,7 @@ class AdminHotelController extends Controller
         return array_values(array_filter(array_map(function (mixed $image): string {
             if ($image instanceof UploadedFile) {
                 File::ensureDirectoryExists(storage_path('app/public/uploads/hotels/rooms'));
+
                 return '/storage/'.$image->store('uploads/hotels/rooms', 'public');
             }
 

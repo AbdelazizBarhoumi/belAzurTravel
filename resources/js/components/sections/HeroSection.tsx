@@ -1,10 +1,6 @@
 import { motion } from 'framer-motion';
-import heroImage from '@/assets/hero-travel.jpg';
 import { SearchWidget } from '@/components/ui/SearchWidget';
-import { useLanguage } from '@/contexts/LanguageContext';
-
 export function HeroSection() {
-    const { t } = useLanguage();
 
     return (
         <section className="relative -mt-[160px] flex items-center justify-center overflow-hidden pb-8">

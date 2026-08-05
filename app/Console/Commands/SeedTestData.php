@@ -16,7 +16,7 @@ class SeedTestData extends Command
         $this->newLine();
         $this->info('Seeding test data...');
 
-        $seeder = new TestDataSeeder();
+        $seeder = new TestDataSeeder;
         $seeder->run();
 
         $this->newLine();

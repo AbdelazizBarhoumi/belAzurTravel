@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Car;
 use App\Models\Category;
 use App\Models\CategoryType;
-use App\Models\CategoryValue;
 use App\Models\EntityCategoryAssignment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;

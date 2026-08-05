@@ -22,8 +22,8 @@ class TravelController extends Controller
                 return Travel::query()->oldest('id')
                     ->with(['categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])
                     ->get()->map(
-                    fn (Travel $item) => $this->payload($item)
-                );
+                        fn (Travel $item) => $this->payload($item)
+                    );
             }
         );
 

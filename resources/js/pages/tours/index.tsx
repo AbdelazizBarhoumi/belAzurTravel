@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
 import { Clock, Users, MapPin, Star } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
+import { Link, useSearchParams } from 'react-router-dom';
 import { TourFilters } from '@/components/filters/TourFilters';
-import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { FilterSidebar } from '@/components/lists/FilterSidebar';
+import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
@@ -15,18 +15,14 @@ import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useTours, useCategoryTypesPublic } from '@/hooks/usePublicData';
-import { TOUR_FILTER_KEYS } from '@/data/tourFilters';
 
-import { matchesFilterValue, matchesSearchText } from '@/lib/listFilters';
+import { matchesSearchText } from '@/lib/listFilters';
 
-const ALL = 'all';
 
 const Tours = () => {
     const { t, lang, dir } = useLanguage();
     const [params] = useSearchParams();
     const initialSearch = params.get('q') || params.get('destination') || '';
-    const initialCategory = params.get('cat')?.toLowerCase() || ALL;
-    const initialDuration = params.get('duration')?.toLowerCase() || ALL;
     const initialGuests = Number(params.get('guests') || 2);
     const initialFromDate = params.get('from') || '';
     const initialToDate = params.get('to') || '';
@@ -61,28 +57,32 @@ const Tours = () => {
     const [categoryTypeFilters, setCategoryTypeFilters] =
         useState<Record<string, string[]>>(initialCategoryTypeFilters);
 
-    // Sync state with URL params when they change (e.g. navbar subcategory links)
-    useEffect(() => {
+    // Adjust state during render when URL params change (e.g. navbar subcategory links)
+    const [prevParamsKey, setPrevParamsKey] = useState(() => params.toString());
+    if (params.toString() !== prevParamsKey) {
+        setPrevParamsKey(params.toString());
         setSearchQuery(params.get('q') || params.get('destination') || '');
-    }, [params]);
-    useEffect(() => {
-        const filters: Record<string, string[]> = {};
+        const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                const typeKey = key.slice('category_'.length);
-                filters[typeKey] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
             }
         }
-        setCategoryTypeFilters(filters);
-    }, [params]);
+        setCategoryTypeFilters(nextFilters);
+    }
     const [tourPriceRange, setTourPriceRange] = useState<[number, number]>([0, 1000]);
 
-    // Sync price range when data loads
-    useEffect(() => {
-        if (tours.length > 0) {
-            setTourPriceRange([minPrice, maxPrice]);
-        }
-    }, [tours.length, minPrice, maxPrice]);
+    // Adjust state during render when data loads (price range derived from tours)
+    const [priceRangeSynced, setPriceRangeSynced] = useState<readonly [number, number] | null>(null);
+    if (
+        tours.length > 0 &&
+        (priceRangeSynced === null ||
+            priceRangeSynced[0] !== minPrice ||
+            priceRangeSynced[1] !== maxPrice)
+    ) {
+        setPriceRangeSynced([minPrice, maxPrice]);
+        setTourPriceRange([minPrice, maxPrice]);
+    }
 
     const filteredTours = useMemo(
         () =>

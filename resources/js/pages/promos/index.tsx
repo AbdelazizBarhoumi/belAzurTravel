@@ -18,6 +18,7 @@ import { localizeText } from '@/data';
 import { usePromos } from '@/hooks/usePublicData';
 import { matchesSearchText } from '@/lib/listFilters';
 import { getPromoBackground } from '@/lib/promoColor';
+import type { PromoItem } from '@/types/public';
 
 const ALL = 'all';
 
@@ -50,7 +51,10 @@ function PromosContent() {
                     selectedType === ALL ||
                     getPromoType(localizeText(promo.discount, lang)) ===
                         selectedType;
-                const matchesSpecial = !specialOnly || (promo as any).is_special === true;
+                const matchesSpecial =
+                    !specialOnly ||
+                    (promo as PromoItem & { is_special?: boolean }).is_special ===
+                        true;
                 return matchesSearch && matchesType && matchesSpecial;
             }),
         [lang, promos, searchQuery, selectedType, specialOnly],

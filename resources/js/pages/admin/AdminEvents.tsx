@@ -674,7 +674,9 @@ export default function AdminEvents() {
                 }
                 sections={eventSections}
                 initial={dialogInitial}
-                onSubmit={(values) => handleSave(values as AdminRow)}
+                onSubmit={(values) =>
+                    handleSave(values as unknown as AdminRow)
+                }
                 errors={errors}
                 languages={['en', 'fr', 'ar']}
                 activeLang={modalLang}

@@ -6,7 +6,6 @@ use App\Concerns\HandlesAdminMedia;
 use App\Concerns\HandlesLocalization;
 use App\Http\Controllers\Controller;
 use App\Models\CategoryType;
-use App\Models\CategoryValue;
 use App\Models\EntityCategoryAssignment;
 use App\Models\Event;
 use Illuminate\Database\Eloquent\Model;
