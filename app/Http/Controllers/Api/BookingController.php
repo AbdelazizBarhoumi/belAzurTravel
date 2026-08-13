@@ -180,6 +180,12 @@ class BookingController extends Controller
             __('messages.cancellation_closed')
         );
 
+        // Idempotency: cancelling an already-cancelled booking is a no-op and
+        // must not hit the provider again.
+        if ($booking->status === 'Cancelled') {
+            return response()->json($this->payload($booking));
+        }
+
         // OS-TRAVEL hotel: preview the penalty, then confirm the cancellation
         // with the provider. Cancel on an already-cancelled booking is a no-op.
         if ($booking->type === 'hotel' && $booking->provider_booking_id) {

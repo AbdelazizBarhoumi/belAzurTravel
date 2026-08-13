@@ -169,6 +169,40 @@ class OsTravelSearchServiceTest extends TestCase
         ]))));
     }
 
+    public function test_distinct_searches_do_not_share_cache_entries(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        $first = $this->osTravelFixture('hotel_search');
+        $second = $this->osTravelFixture('hotel_search');
+        // Distinct price for the September window to prove results don't bleed.
+        $second['HotelSearch'][0]['Rooms'][0]['Price'] = '750.000';
+        $second['HotelSearch'][0]['Rooms'][1]['Price'] = '900.000';
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::sequence()
+                ->push($first)
+                ->push($second),
+        ]);
+
+        $service = app(OsTravelSearchService::class);
+
+        $sept = $service->search(
+            ['cap-bon-kelibia'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08'],
+        );
+        $oct = $service->search(
+            ['cap-bon-kelibia'],
+            ['check_in' => '2026-10-01', 'check_out' => '2026-10-08'],
+        );
+
+        // Two distinct provider calls happened — no cache bleed between searches.
+        Http::assertSentCount(2);
+
+        $this->assertSame(1113, $sept[0]['price']);
+        $this->assertSame(900, $oct[0]['price']);
+    }
+
     public function test_refresh_latest_prices_persists_min_available_price(): void
     {
         $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
