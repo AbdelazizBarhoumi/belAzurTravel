@@ -1,0 +1,69 @@
+{
+  "HotelSearch": [
+    {
+      "Id": 178,
+      "Name": "Cap Bon Kelibia Beach Hotel & Spa",
+      "Token": "eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=",
+      "Source": "OS-TRAVEL-DIRECT",
+      "Rooms": [
+        {
+          "Id": 501,
+          "Name": "Chambre Double Standard",
+          "Boarding": { "Id": 4, "Code": "LPD", "Name": "Logement Petit D\u00e9jeuner" },
+          "View": [ { "Id": 1, "Name": "City View" } ],
+          "Supplement": [],
+          "Price": "927.520",
+          "Currency": "TND",
+          "StopReservation": false,
+          "CancellationPolicy": [
+            {
+              "Fees": 185.50,
+              "Type": "PERCENT",
+              "Nature": "BEFORE_ARRIVAL",
+              "Description": "Free cancellation until 48h before check-in. 20% fee after.",
+              "FromDate": "2026-09-01 00:00"
+            }
+          ]
+        },
+        {
+          "Id": 502,
+          "Name": "Suite Junior",
+          "Boarding": { "Id": 5, "Code": "DP", "Name": "Demi Pension" },
+          "View": [ { "Id": 2, "Name": "Sea View" } ],
+          "Supplement": [],
+          "Price": "1200.000",
+          "Currency": "TND",
+          "StopReservation": false,
+          "CancellationPolicy": []
+        }
+      ]
+    },
+    {
+      "Id": 999,
+      "Name": "Stop Sales Hotel",
+      "Token": "eyJ0b2tlbiI6InN0b3Atc2FsZXMifQ==",
+      "Source": "OS-TRAVEL-DIRECT",
+      "Rooms": [
+        {
+          "Id": 600,
+          "Name": "Chambre Standard",
+          "Boarding": { "Id": 3, "Code": "LS", "Name": "Logement Simple" },
+          "View": [],
+          "Supplement": [],
+          "Price": "500.000",
+          "Currency": "TND",
+          "StopReservation": true,
+          "CancellationPolicy": []
+        }
+      ]
+    }
+  ],
+  "CountResults": 2,
+  "ErrorMessage": [],
+  "Timing": {
+    "Begin": { "date": "2026-08-13 13:01:47.000000", "timezone_type": 3, "timezone": "Africa/Tunis" },
+    "End": { "date": "2026-08-13 13:01:47.000000", "timezone_type": 3, "timezone": "Africa/Tunis" },
+    "Duration": "350 ms"
+  },
+  "Ip": "102.211.211.160"
+}

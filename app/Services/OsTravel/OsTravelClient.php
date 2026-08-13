@@ -86,6 +86,19 @@ class OsTravelClient
     }
 
     /**
+     * Live availability + rates. `$searchDetails` is the `SearchDetails`
+     * object ({@see OsTravelSearchService}); the returned envelope's
+     * `HotelSearch` key holds per-hotel availability with tokens.
+     *
+     * @param  array<string, mixed>  $searchDetails
+     * @return array<int|string, mixed> Decoded response envelope.
+     */
+    public function hotelSearch(array $searchDetails): array
+    {
+        return $this->post('HotelSearch', ['SearchDetails' => $searchDetails]);
+    }
+
+    /**
      * @param  array<string, mixed>  $extra  Payload keys merged alongside the credential.
      * @return array<int|string, mixed> Decoded response envelope.
      */

@@ -1452,6 +1452,11 @@ export const translations: Record<string, TranslationEntry> = {
     'hotels.showing': { fr: 'Affichage', ar: 'عرض', en: 'Showing' },
     'hotels.results': { fr: 'résultats', ar: 'نتائج', en: 'results' },
     'hotels.priceFrom': { fr: 'À partir de', ar: 'ابتداءً من', en: 'From' },
+    'hotels.livePrices': {
+        fr: 'Prix en direct pour vos dates',
+        ar: 'أسعار مباشرة لتواريخك',
+        en: 'Live prices for your dates',
+    },
     'hotels.noResults': {
         fr: 'Aucun hôtel ne correspond à vos critères de filtre.',
         ar: 'لا توجد فنادق تطابق معايير الفلتر الخاصة بك.',
@@ -1502,6 +1507,21 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Select room',
     },
     'hotelDetail.pernight': { fr: '/nuit', ar: '/ليلة', en: '/night' },
+    'hotelDetail.livePriceTitle': {
+        fr: 'Vérifiez le prix pour vos dates',
+        ar: 'تحقق من السعر لتواريخك',
+        en: 'Check the price for your dates',
+    },
+    'hotelDetail.livePriceHint': {
+        fr: 'Sélectionnez vos dates et le nombre de voyageurs pour obtenir les prix et la disponibilité en temps réel.',
+        ar: 'اختر تواريخك وعدد المسافرين للحصول على الأسعار والتوفر في الوقت الفعلي.',
+        en: 'Pick your dates and number of travelers to get real-time prices and availability.',
+    },
+    'hotelDetail.livePrices': {
+        fr: 'Prix en direct',
+        ar: 'سعر مباشر',
+        en: 'Live price',
+    },
     'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
     'tourDetail.notIncluded': {
         fr: 'Non inclus',

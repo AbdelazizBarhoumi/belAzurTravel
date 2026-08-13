@@ -361,3 +361,71 @@ export function useBlogPostBySlug(slug?: string) {
         enabled: Boolean(slug),
     });
 }
+
+export interface HotelSearchQuery {
+    check_in: string;
+    check_out: string;
+    hotel_slugs?: string[];
+    rooms?: Array<{ adults?: number; children?: number[] }>;
+    only_available?: boolean;
+}
+
+export interface HotelSearchResult {
+    id: string;
+    slug: string;
+    name: Record<string, string>;
+    location: Record<string, string>;
+    category_key?: string;
+    category?: Record<string, string>;
+    stars: number;
+    rating: number;
+    reviews: number;
+    image: string;
+    price: number;
+    base_price: number;
+    markup_percentage: string;
+    currency: string;
+    rooms: Array<{
+        id: string;
+        name: string;
+        boarding: string | null;
+        boarding_name: string | null;
+        price: number;
+        base_price: number;
+        token: string | null;
+        source: string | null;
+        stop_reservation: boolean;
+        cancellation_policy: Array<{
+            fees: number;
+            type: string | null;
+            nature: string | null;
+            description: string | null;
+            from_date: string | null;
+        }>;
+        supplements: unknown[];
+        view: string;
+    }>;
+}
+
+export function useHotelSearch(query?: HotelSearchQuery) {
+    return useQuery({
+        queryKey: ['hotels', 'search', query],
+        queryFn: async () => {
+            const resp = await apiFetch<{ data: HotelSearchResult[] }>(
+                '/api/hotels/search',
+                {
+                    method: 'POST',
+                    body: JSON.stringify(query),
+                },
+            );
+            return resp.data;
+        },
+        enabled: Boolean(
+            query &&
+                query.check_in &&
+                query.check_out &&
+                (query.hotel_slugs?.length ?? 0) > 0,
+        ),
+        staleTime: 1000 * 60 * 5,
+    });
+}

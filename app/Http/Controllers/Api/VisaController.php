@@ -15,7 +15,7 @@ class VisaController extends Controller
         $lang = $request->header('Accept-Language', 'fr');
         $lang = in_array($lang, ['en', 'fr', 'ar']) ? $lang : 'fr';
 
-        $data = Cache::remember("visas.public.{$lang}", now()->addMinutes(3), function () use ($lang) {
+        $data = Cache::remember("visas.public.{$lang}", now()->addMinutes(3), function () {
             return Visa::where('is_active', true)
                 ->orderBy('sort_order')
                 ->get()

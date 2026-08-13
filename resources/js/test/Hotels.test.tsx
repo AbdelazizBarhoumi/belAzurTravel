@@ -52,6 +52,10 @@ vi.mock('@/hooks/usePublicData', () => ({
         data: [],
         isLoading: false,
     }),
+    useHotelSearch: () => ({
+        data: [],
+        isLoading: false,
+    }),
 }));
 
 const queryClient = new QueryClient({

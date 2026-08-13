@@ -342,7 +342,7 @@ class AdminImageUploadTest extends TestCase
         $this->assertEquals(500, $updated->price);
         $this->assertEquals('Gym', $updated->amenities[0]['name']['en']);
         $this->assertEquals('Luxury', $updated->details['category']['en']);
-$this->assertCount(2, $updated->details['gallery']);
+        $this->assertCount(2, $updated->details['gallery']);
 
         $this->actingAs($admin)
             ->getJson('/api/hotels/'.$updated->slug)

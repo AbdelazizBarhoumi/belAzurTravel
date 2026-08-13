@@ -14,7 +14,11 @@ import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { StarRating } from '@/components/ui/StarRating';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useHotels, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import {
+    useHotels,
+    useHotelSearch,
+    useCategoryTypesPublic,
+} from '@/hooks/usePublicData';
 
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
@@ -124,12 +128,41 @@ export default function Hotels() {
                           // Handle regular category type filters
                           return assignments && values.includes(assignments[typeKey]);
                       });
-                  return (
-                      matchesSearch &&
-                      matchesPrice &&
-                      matchesCategoryTypes
-                  );
-              });
+return (
+                       matchesSearch &&
+                       matchesPrice &&
+                       matchesCategoryTypes
+                   );
+               });
+
+    // Live pricing: auto-trigger a batched HotelSearch once a full date range
+    // (plus occupancy) is selected. Results overlay the stored price on cards.
+    const searchQueryForLive = useMemo(() => {
+        if (!dateRange?.from || !dateRange?.to) {
+            return undefined;
+        }
+        const visibleSlugs = filteredHotels.map((hotel) => hotel.slug);
+        if (visibleSlugs.length === 0) {
+            return undefined;
+        }
+
+        return {
+            check_in: dateRange.from.toISOString().slice(0, 10),
+            check_out: dateRange.to.toISOString().slice(0, 10),
+            hotel_slugs: visibleSlugs,
+            rooms: [{ adults: guests }],
+            only_available: true,
+        };
+    }, [dateRange, filteredHotels, guests]);
+
+    const { data: liveResults = [] } = useHotelSearch(searchQueryForLive);
+    const liveBySlug = useMemo(
+        () => new Map(liveResults.map((item) => [item.slug, item])),
+        [liveResults],
+    );
+    const hasLivePrices =
+        searchQueryForLive !== undefined &&
+        (liveResults.length > 0 || liveBySlug.size > 0);
 
     const handleClearAll = () => {
         setSearchQuery('');
@@ -166,6 +199,12 @@ export default function Hotels() {
                         <p className="mx-auto max-w-2xl text-muted-foreground">
                             {t('hotels.subtitle')}
                         </p>
+                        {hasLivePrices && (
+                            <p className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+                                <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                                {t('hotels.livePrices')}
+                            </p>
+                        )}
                     </motion.header>
 
                     <ListFilterBar
@@ -288,7 +327,7 @@ export default function Hotels() {
 
                                                     <div className="absolute right-4 top-4 rounded-full bg-card/95 px-3 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur">
                                                         {t('hotels.priceFrom')}{' '}
-                                                        {hotel.price} TND
+                                                        {liveBySlug.get(hotel.slug)?.price ?? hotel.price} TND
                                                     </div>
                                                 </div>
 

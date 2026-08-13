@@ -11,7 +11,8 @@ class Hotel extends Model
     protected $fillable = [
         'slug', 'code', 'destination_slug', 'name', 'location',
         'category_key', 'category', 'price', 'base_price',
-        'markup_percentage', 'currency', 'price_per_night',
+        'markup_percentage', 'currency', 'last_price', 'last_price_at',
+        'price_per_night',
         'rating', 'stars', 'reviews', 'description', 'image',
         'tags', 'details', 'meta',
         'date_from', 'date_to',
@@ -36,6 +37,8 @@ class Hotel extends Model
         'price' => 'integer',
         'base_price' => 'integer',
         'markup_percentage' => 'decimal:2',
+        'last_price' => 'float',
+        'last_price_at' => 'datetime',
         'price_per_night' => 'integer',
         'rating' => 'float',
         'stars' => 'integer',

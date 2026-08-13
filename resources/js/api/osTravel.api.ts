@@ -183,3 +183,62 @@ export async function rejectOsTravelHotel(id: string) {
         { method: 'POST' },
     );
 }
+
+export interface OsTravelSearchRoomRequest {
+    adults?: number;
+    children?: number[];
+}
+
+export interface OsTravelSearchRequest {
+    check_in: string;
+    check_out: string;
+    hotel_slugs?: string[];
+    rooms?: OsTravelSearchRoomRequest[];
+    only_available?: boolean;
+}
+
+export interface OsTravelSearchRoomResult {
+    id: string;
+    name: string;
+    boarding: string | null;
+    boarding_name: string | null;
+    price: number;
+    base_price: number;
+    token: string | null;
+    source: string | null;
+    stop_reservation: boolean;
+    cancellation_policy: Array<{
+        fees: number;
+        type: string | null;
+        nature: string | null;
+        description: string | null;
+        from_date: string | null;
+    }>;
+    supplements: unknown[];
+    view: string;
+}
+
+export interface OsTravelSearchResult {
+    id: string;
+    slug: string;
+    name: Record<string, string>;
+    location: Record<string, string>;
+    category_key?: string;
+    category?: Record<string, string>;
+    stars: number;
+    rating: number;
+    reviews: number;
+    image: string;
+    price: number;
+    base_price: number;
+    markup_percentage: string;
+    currency: string;
+    rooms: OsTravelSearchRoomResult[];
+}
+
+export async function searchOsTravelHotels(data: OsTravelSearchRequest) {
+    return apiFetch<{ data: OsTravelSearchResult[] }>('/api/hotels/search', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    });
+}

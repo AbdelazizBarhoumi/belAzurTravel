@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Car, Coffee, Droplet, Dumbbell, Utensils, Wifi } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import { Navigate, useParams } from 'react-router-dom';
 import { notifyInteraction } from '@/api/interactions.api';
 import { HotelInfo } from '@/components/cards/HotelInfo';
@@ -9,10 +10,12 @@ import { BookingDialog } from '@/components/forms/BookingDialog';
 import { PageShell } from '@/components/layout/PageShell';
 import { RoomsList } from '@/components/lists/RoomsList';
 import { Gallery } from '@/components/media/Gallery';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import {
     useHotelById,
+    useHotelSearch,
     type HotelDetailLookupData,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
@@ -113,6 +116,25 @@ export default function HotelDetail() {
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [guests, setGuests] = useState(2);
+
+    const liveQuery = useMemo(() => {
+        if (!dateRange?.from || !dateRange?.to || !id) {
+            return undefined;
+        }
+
+        return {
+            check_in: dateRange.from.toISOString().slice(0, 10),
+            check_out: dateRange.to.toISOString().slice(0, 10),
+            hotel_slugs: [id],
+            rooms: [{ adults: guests }],
+            only_available: true,
+        };
+    }, [dateRange, guests, id]);
+
+    const { data: liveResults = [] } = useHotelSearch(liveQuery);
+    const liveHotel = liveResults[0] ?? undefined;
 
     if (isLoading) {
         return null;
@@ -135,6 +157,42 @@ export default function HotelDetail() {
           ]
         : otherImages;
     const rooms = (detail.rooms ?? []).map((room) => toRoomView(room, lang));
+    const staticRoomByName = new Map(rooms.map((room) => [room.name, room]));
+
+    const liveRooms: RoomView[] = (liveHotel?.rooms ?? [])
+        .filter((room) => !room.stop_reservation)
+        .map((room, index) => {
+            const staticRoom = staticRoomByName.get(room.name);
+
+            return {
+                id: staticRoom?.id ?? `live-${room.id ?? index}`,
+                name: room.name,
+                description:
+                    staticRoom?.description ??
+                    (room.boarding_name
+                        ? `Boarding: ${room.boarding_name}`
+                        : ''),
+                pricePerNight: room.price,
+                capacity: staticRoom?.capacity ?? 2,
+                size: staticRoom?.size ?? 0,
+                features:
+                    staticRoom?.features ??
+                    (room.view ? [room.view] : []),
+                images: staticRoom?.images ?? [],
+            };
+        });
+    const liveRoomIds = new Set(liveRooms.map((room) => room.id));
+    const displayRooms =
+        liveRooms.length > 0
+            ? [...liveRooms, ...rooms.filter((room) => !liveRoomIds.has(room.id))]
+            : rooms;
+    const displayMinPrice = displayRooms.length
+        ? Math.min(...displayRooms.map((room) => room.pricePerNight))
+        : (detail.price ?? 0);
+    const minPrice = liveHotel?.price ?? displayMinPrice;
+    const livePriceLabel = liveHotel
+        ? `${t('hotelDetail.livePrices')} - ${liveHotel.price} TND`
+        : undefined;
     const amenities = (detail.amenities ?? [])
         .filter((amenity) => {
             const nameData =
@@ -158,9 +216,6 @@ export default function HotelDetail() {
                 index,
             ),
         );
-    const minPrice = rooms.length
-        ? Math.min(...rooms.map((room) => room.pricePerNight))
-        : (detail.price ?? 0);
     const title = localizeText(detail.name, lang);
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
@@ -175,7 +230,7 @@ export default function HotelDetail() {
     };
 
     const handleBookRoom = (roomId: string) => {
-        const room = rooms.find((r) => r.id === roomId);
+        const room = displayRooms.find((r) => r.id === roomId);
         if (room) {
             setSelectedRoom(room);
         }
@@ -217,7 +272,10 @@ export default function HotelDetail() {
                         <StickyBookingCard
                             minPrice={minPrice}
                             currency="TND"
-                            priceLabel={t('hotelDetail.startingFrom') || 'From'}
+                            priceLabel={
+                                livePriceLabel ??
+                                (t('hotelDetail.startingFrom') || 'From')
+                            }
                             priceSuffix={t('hotelDetail.pernight')}
                             title={title}
                             location={location}
@@ -243,14 +301,63 @@ export default function HotelDetail() {
                         amenities={amenities}
                     />
 
-                    {rooms.length > 0 && (
+                    <div className="mt-8 rounded-3xl border border-border bg-card p-5">
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                            <h2 className="font-serif text-xl font-bold text-foreground">
+                                {t('hotelDetail.livePriceTitle')}
+                            </h2>
+                            {liveHotel && (
+                                <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                    <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                                    {t('hotelDetail.livePrices')}
+                                </span>
+                            )}
+                        </div>
+                        <p className="mb-4 text-sm text-muted-foreground">
+                            {t('hotelDetail.livePriceHint')}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <DateRangePicker
+                                value={dateRange}
+                                onChange={setDateRange}
+                                className="flex-1"
+                            />
+                            <input
+                                type="number"
+                                min={1}
+                                max={10}
+                                value={guests}
+                                onChange={(event) =>
+                                    setGuests(
+                                        Math.max(
+                                            1,
+                                            Math.min(
+                                                10,
+                                                Number(event.target.value) || 1,
+                                            ),
+                                        ),
+                                    )
+                                }
+                                className="h-10 w-20 rounded-xl border border-border/70 bg-background/80 px-3 text-sm text-foreground shadow-sm sm:h-12 sm:rounded-2xl"
+                                aria-label={t('hotelDetail.guests')}
+                            />
+                            <span className="text-sm text-muted-foreground">
+                                {t('hotelDetail.guests')}
+                            </span>
+                        </div>
+                    </div>
+
+                    {displayRooms.length > 0 && (
                         <motion.div
                             id="rooms-list"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.15 }}
                         >
-                            <RoomsList rooms={rooms} onBookRoom={handleBookRoom} />
+                            <RoomsList
+                                rooms={displayRooms}
+                                onBookRoom={handleBookRoom}
+                            />
                         </motion.div>
                     )}
                 </div>
@@ -259,7 +366,10 @@ export default function HotelDetail() {
                     <StickyBookingCard
                         minPrice={minPrice}
                         currency="TND"
-                        priceLabel={t('hotelDetail.startingFrom') || 'From'}
+                        priceLabel={
+                            livePriceLabel ??
+                            (t('hotelDetail.startingFrom') || 'From')
+                        }
                         priceSuffix={t('hotelDetail.pernight')}
                         title={title}
                         location={location}

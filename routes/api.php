@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\FlightController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\HotelController;
+use App\Http\Controllers\Api\HotelSearchController;
 use App\Http\Controllers\Api\InteractionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PartnerController;
@@ -63,6 +64,7 @@ Route::get('destinations/{slug}', [DestinationController::class, 'show'])->middl
 
 Route::get('hotels', [HotelController::class, 'index'])->middleware(['check-nav-page:hotels']);
 Route::get('hotels/{slug}', [HotelController::class, 'show'])->middleware(['check-nav-page:hotels']);
+Route::post('hotels/search', [HotelSearchController::class, 'store'])->middleware(['check-nav-page:hotels']);
 
 Route::get('tours', [TourController::class, 'index'])->middleware(['check-nav-page:tours']);
 Route::get('tours/{slug}', [TourController::class, 'show'])->middleware(['check-nav-page:tours']);

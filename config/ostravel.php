@@ -57,4 +57,15 @@ return [
         ],
     ],
 
+    'refresh' => [
+        // Default date window used by the browse-mode latest-price refresh.
+        'nights' => (int) env('OS_TRAVEL_REFRESH_NIGHTS', 7),
+
+        // Scheduled cadence for `os-travel:refresh-latest-prices`.
+        'schedule' => [
+            'interval' => 'everySixHours',
+            'at' => null,
+        ],
+    ],
+
 ];

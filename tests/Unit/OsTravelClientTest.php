@@ -124,6 +124,23 @@ class OsTravelClientTest extends TestCase
         Http::assertSent(fn ($request) => $this->assertListRequest($request, 'HotelDetail', ['Hotel' => '101']));
     }
 
+    public function test_hotel_search_sends_search_details(): void
+    {
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->fixture('hotel_search')),
+        ]);
+
+        $response = (new OsTravelClient)->hotelSearch([
+            'BookingDetails' => ['CheckIn' => '2026-09-01', 'CheckOut' => '2026-09-08'],
+        ]);
+
+        $this->assertCount(2, $response['HotelSearch']);
+        $this->assertSame(178, $response['HotelSearch'][0]['Id']);
+        $this->assertSame('eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=', $response['HotelSearch'][0]['Token']);
+
+        Http::assertSent(fn ($request) => $this->assertListRequest($request, 'HotelSearch', []));
+    }
+
     public function test_error_message_throws_typed_exception(): void
     {
         Http::fake([

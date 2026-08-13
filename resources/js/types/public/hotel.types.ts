@@ -14,6 +14,11 @@ export interface HotelItem {
     category_key?: string;
     category?: LocalizedText;
     price: number;
+    base_price?: number;
+    markup_percentage?: string | number;
+    currency?: string;
+    last_price?: number | null;
+    last_price_at?: string | null;
     rating: number;
     stars: number;
     reviews: number;

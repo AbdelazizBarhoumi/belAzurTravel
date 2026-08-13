@@ -48,6 +48,14 @@ class HotelController extends Controller
             $details['gallery'] = array_map(fn ($img) => $this->normalizeApiOutputPath($img), $details['gallery']);
         }
 
+        $markup = (float) ($item->markup_percentage ?? 0);
+        $price = $item->price;
+        $basePrice = $item->base_price;
+        if ($item->last_price !== null) {
+            $basePrice = $item->last_price;
+            $price = (int) round($basePrice * (1 + $markup / 100));
+        }
+
         return [
             'id' => $item->slug,
             'slug' => $item->slug,
@@ -59,10 +67,12 @@ class HotelController extends Controller
             'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
                 fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
             )->toArray(),
-            'price' => $item->price,
-            'base_price' => $item->base_price,
+            'price' => $price,
+            'base_price' => $basePrice,
             'markup_percentage' => $item->markup_percentage,
             'currency' => $item->currency,
+            'last_price' => $item->last_price,
+            'last_price_at' => $item->last_price_at,
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,
