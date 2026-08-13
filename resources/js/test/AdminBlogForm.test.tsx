@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as adminApi from '@/api/admin.api';
 import { fetchCategories } from '@/api/categories.api';
+import { fetchCategoryTypes } from '@/api/categoryTypes.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import AdminBlog from '@/pages/admin/AdminBlog';
 
@@ -32,6 +33,10 @@ vi.mock('@/api/admin.api', () => ({
 
 vi.mock('@/api/categories.api', () => ({
     fetchCategories: vi.fn(),
+}));
+
+vi.mock('@/api/categoryTypes.api', () => ({
+    fetchCategoryTypes: vi.fn(),
 }));
 
 function renderAdminBlogPage() {
@@ -68,6 +73,27 @@ describe('Admin blog editor', () => {
                     fr: 'Conseils de voyage',
                     ar: 'نصائح السفر',
                 },
+            },
+        ] as never);
+        vi.mocked(fetchCategoryTypes).mockResolvedValue([
+            {
+                id: 1,
+                entity_type: 'blog',
+                key: 'category',
+                label: { en: 'Category', fr: 'Catégorie', ar: 'الفئة' },
+                sort_order: 0,
+                filter_style: 'select',
+                values: [
+                    {
+                        id: 1,
+                        key: 'travel-tips',
+                        name: {
+                            en: 'Travel Tips',
+                            fr: 'Conseils de voyage',
+                            ar: 'نصائح السفر',
+                        },
+                    },
+                ],
             },
         ] as never);
     });

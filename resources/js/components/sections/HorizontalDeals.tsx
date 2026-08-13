@@ -77,7 +77,9 @@ export function HorizontalDeals({ eyebrow, title, description, ctaLabel, ctaHref
                         <AmenityIcons amenities={it.amenities} maxVisible={4} />
                       </div>
                     ) : null}
-                    <p className="text-secondary text-2xl font-bold drop-shadow">{it.price}</p>
+                    {it.price ? (
+                      <p className="text-secondary text-2xl font-bold drop-shadow">{it.price}</p>
+                    ) : null}
                     <p className="text-primary-foreground/80 text-xs">{it.meta}</p>
                     <span className="inline-block mt-2 px-3 py-1 rounded-md bg-secondary text-secondary-foreground text-xs font-semibold">
                       {t('common.viewDetails')}

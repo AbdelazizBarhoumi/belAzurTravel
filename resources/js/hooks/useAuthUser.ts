@@ -60,6 +60,7 @@ function useAuthUserVitest(): UseQueryResult<AuthUser | null, unknown> {
         isLoadingError: false,
         isPlaceholderData: false,
         isRefetching: false,
+        isPending: isLoading,
         refetch: async () => ({
             data: undefined as AuthUser | null | undefined,
             error: undefined as unknown,

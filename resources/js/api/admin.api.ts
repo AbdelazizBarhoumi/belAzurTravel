@@ -101,6 +101,8 @@ export function saveAdminEntity<T extends { id?: string | number | null }>(
                 const formKey = parentKey ? `${parentKey}[${key}]` : key;
                 appendToFormData(value, formKey);
             });
+        } else if (typeof data === 'boolean') {
+            fd.append(parentKey || '', data ? '1' : '0');
         } else {
             fd.append(parentKey || '', String(data));
         }

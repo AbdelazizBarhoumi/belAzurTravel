@@ -24,7 +24,7 @@ export function DestinationsSection({ config }: Props) {
         const items = destinations.slice(0, 6).map((dest) => ({
             id: dest.slug,
             title: localizeText(dest.name, lang),
-            price: `${dest.price} TND`,
+            price: dest.price > 0 ? `${dest.price} TND` : '',
             meta: localizeText(dest.country, lang),
             image: dest.image,
             href: `/destinations/${dest.slug}`,
@@ -59,7 +59,7 @@ export function DestinationsSection({ config }: Props) {
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {localizeText(dest.country, lang)}</div>
                                         <h3 className="mt-1 font-serif text-lg font-bold">{localizeText(dest.name, lang)}</h3>
                                         <div className="mt-2 flex items-center justify-between">
-                                            <span className="text-sm font-bold text-primary">{dest.price} TND</span>
+                                            {dest.price > 0 && <span className="text-sm font-bold text-primary">{dest.price} TND</span>}
                                             <div className="flex items-center gap-1 text-xs"><Star className="h-3 w-3 fill-secondary text-secondary" /> {dest.rating}</div>
                                         </div>
                                     </div>
@@ -91,7 +91,7 @@ export function DestinationsSection({ config }: Props) {
                                     <h3 className="mt-1 font-serif text-xl font-bold">{localizeText(dest.name, lang)}</h3>
                                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{localizeText(dest.description, lang)}</p>
                                     <div className="mt-4 flex items-center justify-between">
-                                        <span className="font-bold text-primary">From {dest.price} TND</span>
+                                        {dest.price > 0 && <span className="font-bold text-primary">From {dest.price} TND</span>}
                                         <span className="text-sm font-semibold text-primary transition-colors group-hover:underline">View →</span>
                                     </div>
                                 </div>

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { ImagePicker } from '@/components/ui/ImagePicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -43,6 +44,8 @@ export function EntityMediaInputs({
     onGalleryChange,
 }: EntityMediaInputsProps) {
     const { t } = useLanguage();
+    const imageInputId = useId();
+    const galleryInputId = useId();
     // normalize path strings for previewing images
     // values may be undefined when the form is initializing in some usages — guard with optional chaining
     const imagePath =
@@ -168,12 +171,16 @@ export function EntityMediaInputs({
             {showImage && (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                        <label className="text-xs font-semibold text-muted-foreground">
+                        <label
+                            htmlFor={imageInputId}
+                            className="text-xs font-semibold text-muted-foreground"
+                        >
                             {imageLabel}
                         </label>
                     </div>
 
                     <ImagePicker
+                        id={imageInputId}
                         value={imageFile ?? imagePath}
                         onChange={handleImageChange}
                     />
@@ -183,7 +190,10 @@ export function EntityMediaInputs({
             {showGallery && (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                        <label className="text-xs font-semibold text-muted-foreground">
+                        <label
+                            htmlFor={galleryInputId}
+                            className="text-xs font-semibold text-muted-foreground"
+                        >
                             {galleryLabel}
                         </label>
                         <span className="text-xs text-muted-foreground">
@@ -192,6 +202,7 @@ export function EntityMediaInputs({
                     </div>
 
                     <ImagePicker
+                        id={galleryInputId}
                         multiple
                         showPreview={false}
                         onChange={handleGalleryChange}

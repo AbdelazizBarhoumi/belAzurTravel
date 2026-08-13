@@ -47,6 +47,10 @@ vi.mock('@/components/sections/landing/ToursSection', () => ({
     ToursSection: () => <div data-testid="section-tours">tours</div>,
 }));
 
+vi.mock('@/components/sections/landing/VisaSection', () => ({
+    VisaSection: () => <div data-testid="section-visas">visas</div>,
+}));
+
 describe('LandingSections', () => {
     it('renders location and other enabled supported sections even with a partial saved order', () => {
         vi.mocked(useSiteSettings).mockReturnValue({

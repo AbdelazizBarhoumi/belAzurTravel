@@ -9,9 +9,9 @@ class Event extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['slug', 'title', 'location', 'category_key', 'category', 'price', 'image', 'description', 'details', 'date_from', 'date_to'];
+    protected $fillable = ['slug', 'title', 'location', 'category_key', 'category', 'price', 'image', 'description', 'details', 'date', 'date_from', 'date_to'];
 
-    protected $casts = ['title' => 'array', 'location' => 'array', 'category' => 'array', 'description' => 'array', 'details' => 'array', 'price' => 'integer', 'date_from' => 'date', 'date_to' => 'date'];
+    protected $casts = ['title' => 'array', 'location' => 'array', 'category' => 'array', 'description' => 'array', 'details' => 'array', 'price' => 'integer', 'date' => 'array', 'date_from' => 'date', 'date_to' => 'date'];
 
     public function categoryAssignments()
     {

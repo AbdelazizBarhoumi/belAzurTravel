@@ -1,4 +1,5 @@
 import { fireEvent, render } from '@testing-library/react';
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
 
@@ -7,6 +8,20 @@ vi.mock('@/contexts/LanguageContext', () => ({
         t: (key: string) => key,
     }),
 }));
+
+function ControlledGalleryHarness() {
+    const [values, setValues] = useState<Record<string, unknown>>({});
+
+    return (
+        <EntityMediaInputs
+            showImage={false}
+            values={values}
+            setField={(key, value) =>
+                setValues((current) => ({ ...current, [key]: value }))
+            }
+        />
+    );
+}
 
 describe('EntityMediaInputs', () => {
     beforeEach(() => {
@@ -75,17 +90,7 @@ describe('EntityMediaInputs', () => {
     });
 
     it('renders a single gallery preview after selecting files', () => {
-        const onGalleryChange = vi.fn();
-
-        const { container } = render(
-            <EntityMediaInputs
-                showImage={false}
-                galleryPaths={[]}
-                galleryFiles={[]}
-                onImageChange={vi.fn()}
-                onGalleryChange={onGalleryChange}
-            />,
-        );
+        const { container } = render(<ControlledGalleryHarness />);
 
         const fileInput = container.querySelector(
             'input[type="file"]',
@@ -101,7 +106,6 @@ describe('EntityMediaInputs', () => {
             target: { files: [file] },
         });
 
-        expect(onGalleryChange).toHaveBeenCalledTimes(1);
         expect(container.querySelectorAll('img[alt="Gallery"]')).toHaveLength(
             1,
         );

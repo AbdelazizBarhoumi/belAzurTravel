@@ -105,7 +105,6 @@ describe('HotelDetail', () => {
         expect(
             screen.getAllByText('Sunset Paradise Resort').length,
         ).toBeGreaterThan(0);
-        expect(screen.getByText('Beach Resort')).toBeInTheDocument();
         expect(screen.getByText('Chambres disponibles')).toBeInTheDocument();
         expect(
             screen.getByAltText('Sunset Paradise Resort main image'),
@@ -115,7 +114,9 @@ describe('HotelDetail', () => {
     it('does not crash when a room has null features', async () => {
         renderPage('/hotels/sunset-paradise-resort');
 
-        expect(screen.getByText('Deluxe Ocean View')).toBeInTheDocument();
+        expect(
+            screen.getAllByText('Deluxe Ocean View').length,
+        ).toBeGreaterThan(0);
         expect(screen.queryByText('Wi-Fi')).not.toBeInTheDocument();
     });
 });

@@ -104,6 +104,7 @@ class AdminBlogPostController extends Controller
 
         return [
             'slug' => $slug,
+            'title' => $title,
             'category_key' => $data['category_key'] ?? $existing?->category_key,
             'excerpt' => $localized('excerpt', ''),
             'category' => $localized('category'),

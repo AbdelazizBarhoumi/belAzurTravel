@@ -255,30 +255,32 @@ export function StickyBookingCard({
                 </div>
             )}
 
-            <div className="mb-5">
-                {displayPriceLabel && (
-                    <p className="mb-1 mt-4 text-xs text-muted-foreground">
-                        {displayPriceLabel}
-                    </p>
-                )}
+            {displayPrice > 0 && (
+                <div className="mb-5">
+                    {displayPriceLabel && (
+                        <p className="mb-1 mt-4 text-xs text-muted-foreground">
+                            {displayPriceLabel}
+                        </p>
+                    )}
 
-                <div className="flex items-baseline gap-1">
-                    <span className="font-serif text-4xl font-bold leading-none text-secondary">
-                        {displayPrice.toLocaleString()} {currency}
-                    </span>
-                    {priceSuffix && (
-                        <span className="text-sm text-muted-foreground">
-                            {priceSuffix}
+                    <div className="flex items-baseline gap-1">
+                        <span className="font-serif text-4xl font-bold leading-none text-secondary">
+                            {displayPrice.toLocaleString()} {currency}
+                        </span>
+                        {priceSuffix && (
+                            <span className="text-sm text-muted-foreground">
+                                {priceSuffix}
+                            </span>
+                        )}
+                    </div>
+
+                    {type && (
+                        <span className="mt-3 inline-block rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
+                            {type}
                         </span>
                     )}
                 </div>
-
-                {type && (
-                    <span className="mt-3 inline-block rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary">
-                        {type}
-                    </span>
-                )}
-            </div>
+            )}
 
             <div className="space-y-3">
                 <Button onClick={handleBookClick} size="lg" className="w-full">

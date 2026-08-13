@@ -116,19 +116,29 @@ function parseGallery(value: unknown): string[] {
 }
 
 function resolveCategoryKey(
-    _categories: Array<{
+    categories: Array<{
         key: string;
         name: { en: string; fr: string; ar: string };
     }>,
     ...values: Array<unknown>
 ): string {
-    const resolveFromCandidate = (candidate: string): string => {
-        return candidate.trim();
+    const matchValueKey = (candidate: string): string => {
+        const trimmed = candidate.trim();
+        if (!trimmed) return '';
+
+        if (categories.some((c) => c.key === trimmed)) {
+            return trimmed;
+        }
+
+        const byLabel = categories.find((c) =>
+            Object.values(c.name).some((name) => name === trimmed),
+        );
+        return byLabel ? byLabel.key : trimmed;
     };
 
     for (const value of values) {
         if (typeof value === 'string' && value.trim() !== '') {
-            return resolveFromCandidate(value);
+            return matchValueKey(value);
         }
 
         if (value && typeof value === 'object') {
@@ -141,12 +151,12 @@ function resolveCategoryKey(
                       : '';
 
             if (candidate.trim() !== '') {
-                return resolveFromCandidate(candidate);
+                return matchValueKey(candidate);
             }
 
             for (const localized of [record.en, record.fr, record.ar]) {
                 if (typeof localized === 'string' && localized.trim() !== '') {
-                    return resolveFromCandidate(localized);
+                    return matchValueKey(localized);
                 }
             }
         }
@@ -192,8 +202,6 @@ const AdminDestinations = () => {
 
         if (!values.category_key)
             errs.category_key = t('admin.errors.required');
-        if (!values.price || Number(values.price) <= 0)
-            errs.price = t('admin.errors.required');
 
         return errs;
     };
@@ -275,20 +283,31 @@ const AdminDestinations = () => {
             CURRENCIES,
         );
 
+        const categoryTypeValues: Array<{
+            key: string;
+            name: { en: string; fr: string; ar: string };
+        }> = categoryTypes.flatMap((ct) => ct.values);
+        const resolvedCategoryKey = resolveCategoryKey(
+            categoryTypeValues,
+            editingRecord.category_key,
+            editingRecord.category,
+            editingRecord.category_en,
+            editingRecord.category_fr,
+            editingRecord.category_ar,
+        );
+
         return {
             ...editing,
-            category_key: resolveCategoryKey(
-                [],
-                editingRecord.category_key,
-                editingRecord.category,
-                editingRecord.category_en,
-                editingRecord.category_fr,
-                editingRecord.category_ar,
-            ),
+            category_key: resolvedCategoryKey,
             ...Object.fromEntries(
                 categoryTypes.map((ct) => [
                     `category_${ct.key}`,
-                    (editing as any).category_assignments?.[ct.key] || '',
+                    (editing as any).category_assignments?.[ct.key] ||
+                        (ct.values.some(
+                            (v) => v.key === resolvedCategoryKey,
+                        )
+                            ? resolvedCategoryKey
+                            : ''),
                 ]),
             ),
             imagePath: asText(editingRecord.image),
@@ -1081,11 +1100,16 @@ const AdminDestinations = () => {
                     },
                 ]}
                 onSubmit={(values) => {
-                    const gallery = Array.isArray(values.galleryPaths)
+                    const gallery = values.galleryPaths?.length
                         ? (values.galleryPaths as string[]).join('\n')
                         : typeof values.gallery === 'string'
                           ? values.gallery
-                          : '';
+                          : editing
+                            ? parseGallery(
+                                  (editing as unknown as Record<string, unknown>)
+                                      .gallery,
+                              ).join('\n')
+                            : '';
 
                     const name = firstNonEmpty(
                         values.name_en,
@@ -1177,7 +1201,10 @@ const AdminDestinations = () => {
                         image:
                             values.imageFile instanceof File
                                 ? values.imageFile
-                                : (values.imagePath ?? values.image ?? ''),
+                                : (values.imagePath?.trim() ||
+                                      values.image ||
+                                      asText(editing?.image) ||
+                                      ''),
                         description,
                         description_en: firstNonEmpty(
                             values.description_en,
@@ -1206,7 +1233,20 @@ const AdminDestinations = () => {
                         gallery_files: values.galleryFiles ?? undefined,
                     } as unknown as AdminDestination;
 
-                    saveMutation.mutate(item, {
+                    // Strip form-internal media keys so they never reach the API.
+                    const { imagePath, imageFile, galleryPaths, galleryFiles, ...payload } =
+                        item as AdminDestination & {
+                            imagePath?: string;
+                            imageFile?: File | null;
+                            galleryPaths?: string[];
+                            galleryFiles?: File[];
+                        };
+                    void imagePath;
+                    void imageFile;
+                    void galleryPaths;
+                    void galleryFiles;
+
+                    saveMutation.mutate(payload, {
                         onSuccess: () => {
                             toast.success(
                                 editing

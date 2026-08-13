@@ -160,18 +160,21 @@ export default function AdminDeals() {
 
     const dialogInitial = useMemo<AdminRow | null>(() => {
         if (!editing) return null;
+
+        const resolvedDealCategory =
+            resolveCategoryKey(
+                editing.category_key,
+                editing.category,
+                editing.category_en,
+                editing.category_fr,
+                editing.category_ar,
+            ) ||
+            editing.category_key ||
+            '';
+
         return {
             ...editing,
-            category_key:
-                resolveCategoryKey(
-                    editing.category_key,
-                    editing.category,
-                    editing.category_en,
-                    editing.category_fr,
-                    editing.category_ar,
-                ) ||
-                editing.category_key ||
-                '',
+            category_key: resolvedDealCategory,
             category_en:
                 editing.category_en ?? (editing.category as any)?.en ?? '',
             category_fr:
@@ -181,7 +184,12 @@ export default function AdminDeals() {
             ...Object.fromEntries(
                 categoryTypes.map((ct) => [
                     `category_${ct.key}`,
-                    (editing as any).category_assignments?.[ct.key] || '',
+                    (editing as any).category_assignments?.[ct.key] ||
+                        (ct.values.some(
+                            (v) => v.key === resolvedDealCategory,
+                        )
+                            ? resolvedDealCategory
+                            : ''),
                 ]),
             ),
         } as AdminRow;
@@ -195,9 +203,13 @@ export default function AdminDeals() {
             if (!values[`description_${l}`])
                 errs[`description_${l}`] = t('admin.fieldRequired');
         });
-        if (!values.discount) errs.discount = t('admin.fieldRequired');
-        if (!values.expires) errs.expires = t('admin.fieldRequired');
-        if (!values.category_en) errs.category_en = t('admin.fieldRequired');
+        if (!values.discount_en) errs.discount_en = t('admin.fieldRequired');
+        if (!values.expires_en) errs.expires_en = t('admin.fieldRequired');
+        const hasCategory = categoryTypes.some((ct) => {
+            const val = values[`category_${ct.key}`];
+            return typeof val === 'string' && val.trim() !== '';
+        });
+        if (!hasCategory) errs.category_key = t('admin.fieldRequired');
         return errs;
     };
 
@@ -234,14 +246,6 @@ export default function AdminDeals() {
         );
 
         const normalized: Record<string, unknown> = { ...cleanedPayload };
-        normalized.category_key =
-            resolveCategoryKey(
-                normalized.category_key,
-                normalized.category,
-                normalized.category_en,
-                normalized.category_fr,
-                normalized.category_ar,
-            ) || '';
 
         const categoryAssignments: Record<string, string> = {};
         categoryTypes.forEach((ct) => {
@@ -250,6 +254,20 @@ export default function AdminDeals() {
                 categoryAssignments[ct.key] = val;
         });
         normalized.category_assignments = categoryAssignments;
+
+        const selectedKey = Object.values(categoryAssignments)[0] || '';
+        normalized.category_key =
+            resolveCategoryKey(
+                normalized.category_key,
+                normalized.category,
+                normalized.category_en,
+                normalized.category_fr,
+                normalized.category_ar,
+            ) || selectedKey || '';
+        normalized.category =
+            String(normalized.category_key || '') ||
+            String(normalized.category_en ?? '') ||
+            '';
 
         saveMutation.mutate(
             { ...(normalized as AdminRow), id: editing?.id ?? '' } as AdminRow,
@@ -271,18 +289,14 @@ export default function AdminDeals() {
             title: t('deals.promotionDetails'),
             description: t('deals.promotionDescription'),
             columns: 2,
-            fields: [
-                {
-                    key: 'dateFrom',
-                    label: t('deals.expiresLabel'),
-                    type: 'daterange',
-                },
-            ],
             render: ({ values, setField, activeLang }) => (
                 <div className="space-y-4">
                     {categoryTypes.map((catType) => (
                         <div key={catType.key} className="space-y-2">
-                            <label className="text-xs font-semibold text-muted-foreground">
+                            <label
+                                htmlFor={`category-${catType.key}`}
+                                className="text-xs font-semibold text-muted-foreground"
+                            >
                                 {catType.label[activeLang] || catType.label.en}
                             </label>
                             <Select
@@ -293,7 +307,7 @@ export default function AdminDeals() {
                                     setField(`category_${catType.key}`, val)
                                 }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger id={`category-${catType.key}`}>
                                     <SelectValue
                                         placeholder={t('actions.select')}
                                     />
@@ -311,11 +325,15 @@ export default function AdminDeals() {
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <label className="text-xs font-semibold text-muted-foreground">
+                            <label
+                                htmlFor={`title_${activeLang}`}
+                                className={`text-xs font-semibold ${errors[`title_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
+                            >
                                 {t('deals.titleLabel')}{' '}
                                 <LangBadge lang={activeLang} />
                             </label>
                             <Input
+                                id={`title_${activeLang}`}
                                 value={String(
                                     values[`title_${activeLang}`] ?? '',
                                 )}
@@ -340,22 +358,23 @@ export default function AdminDeals() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-semibold text-muted-foreground">
+                            <label
+                                htmlFor="discount_en"
+                                className={`text-xs font-semibold ${errors.discount_en ? 'text-destructive' : 'text-muted-foreground'}`}
+                            >
                                 {t('deals.discountLabel')}
                             </label>
                             <div className="flex items-center gap-2">
                                 <Input
-                                    type="number"
-                                    min={0}
-                                    max={100}
-                                    step={1}
-                                    value={String(values.discount ?? '')}
-                                    placeholder="0"
+                                    id="discount_en"
+                                    type="text"
+                                    value={String(values.discount_en ?? '')}
+                                    placeholder="20%"
                                     onChange={(e) =>
-                                        setField('discount', e.target.value)
+                                        setField('discount_en', e.target.value)
                                     }
                                     className={
-                                        errors.discount
+                                        errors.discount_en
                                             ? 'border-destructive ring-1 ring-destructive'
                                             : ''
                                     }
@@ -364,9 +383,37 @@ export default function AdminDeals() {
                                     %
                                 </span>
                             </div>
-                            {errors.discount && (
+                            {errors.discount_en && (
                                 <p className="text-xs text-destructive">
-                                    {errors.discount}
+                                    {errors.discount_en}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <label
+                                htmlFor="expires_en"
+                                className={`text-xs font-semibold ${errors.expires_en ? 'text-destructive' : 'text-muted-foreground'}`}
+                            >
+                                {t('deals.expiresLabel')}
+                            </label>
+                            <Input
+                                id="expires_en"
+                                type="text"
+                                placeholder="2026-06-30"
+                                value={String(values.expires_en ?? '')}
+                                onChange={(e) =>
+                                    setField('expires_en', e.target.value)
+                                }
+                                className={
+                                    errors.expires_en
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
+                            />
+                            {errors.expires_en && (
+                                <p className="text-xs text-destructive">
+                                    {errors.expires_en}
                                 </p>
                             )}
                         </div>
@@ -379,10 +426,15 @@ export default function AdminDeals() {
             description: t('deals.descriptionLong'),
             render: ({ values, setField, activeLang }) => (
                 <div className="space-y-2">
-                    <label className="text-xs font-semibold text-muted-foreground">
-                        {t('deals.description')} <LangBadge lang={activeLang} />
+                    <label
+                        htmlFor={`description_${activeLang}`}
+                        className={`text-xs font-semibold ${errors[`description_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
+                    >
+                        {t('deals.description')}{' '}
+                        <LangBadge lang={activeLang} />
                     </label>
                     <Textarea
+                        id={`description_${activeLang}`}
                         value={String(
                             values[`description_${activeLang}`] ?? '',
                         )}
@@ -522,6 +574,7 @@ export default function AdminDeals() {
                                                     setEditing(row);
                                                     setOpen(true);
                                                 }}
+                                                aria-label={t('actions.edit')}
                                                 className="rounded-lg p-1.5 hover:bg-muted"
                                             >
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
@@ -530,6 +583,7 @@ export default function AdminDeals() {
                                                 onClick={() =>
                                                     setPendingDelete(row)
                                                 }
+                                                aria-label={t('actions.delete')}
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -587,6 +641,14 @@ export default function AdminDeals() {
                 onSubmit={(values) => handleSave(values as AdminRow)}
                 errors={errors}
                 languages={['en', 'fr', 'ar']}
+                preserveArrayKeys={[
+                    'highlights_en',
+                    'highlights_fr',
+                    'highlights_ar',
+                    'terms_en',
+                    'terms_fr',
+                    'terms_ar',
+                ]}
                 activeLang={modalLang}
                 onActiveLangChange={setModalLang}
                 isSubmitting={saveMutation.isPending}

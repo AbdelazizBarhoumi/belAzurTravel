@@ -342,7 +342,7 @@ class AdminImageUploadTest extends TestCase
         $this->assertEquals(500, $updated->price);
         $this->assertEquals('Gym', $updated->amenities[0]['name']['en']);
         $this->assertEquals('Luxury', $updated->details['category']['en']);
-        $this->assertCount(2, $updated->details['gallery']);
+$this->assertCount(2, $updated->details['gallery']);
 
         $this->actingAs($admin)
             ->getJson('/api/hotels/'.$updated->slug)
@@ -350,5 +350,133 @@ class AdminImageUploadTest extends TestCase
             ->assertJsonPath('price', 500)
             ->assertJsonPath('rating', 4.9)
             ->assertJsonPath('gallery.1', $updated->details['gallery'][1]);
+    }
+
+    public function test_updating_destination_preserves_remote_url_image_when_path_is_resubmitted(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'active' => true,
+        ]);
+
+        $url = 'https://images.unsplash.com/photo-1565711561500-49678a10a63f?w=800&h=500&fit=crop&q=80';
+
+        $this->actingAs($admin)
+            ->post('/api/admin/destinations', [
+                'name' => 'E2E Shores',
+                'country' => 'Testland',
+                'category' => 'City',
+                'price' => 100,
+                'rating' => 4.5,
+                'image' => $url,
+                'gallery' => "{$url}\n/storage/uploads/destinations/shores-1.jpg",
+                'description' => 'Original description',
+                'description_en' => 'Original description',
+            ])
+            ->assertCreated();
+
+        $destination = Destination::query()->latest('id')->firstOrFail();
+        $this->assertSame($url, $destination->image);
+
+        // Text-only update resubmitting the exact stored values, as the admin
+        // form does when no new file is uploaded. Nothing here re-creates the
+        // stored URL, so it must never be wiped.
+        $this->actingAs($admin)
+            ->post('/api/admin/destinations/'.$destination->getKey(), [
+                '_method' => 'PUT',
+                'name' => 'E2E Shores',
+                'country' => 'Testland',
+                'category' => 'City',
+                'price' => 120,
+                'rating' => 4.6,
+                'image' => $url,
+                'gallery' => "{$url}\n/storage/uploads/destinations/shores-1.jpg",
+                'description' => 'Updated description',
+                'description_en' => 'Updated description',
+            ])
+            ->assertOk();
+
+        $updated = Destination::query()->findOrFail($destination->getKey());
+
+        $this->assertSame($url, $updated->image);
+        $this->assertSame([$url, '/storage/uploads/destinations/shores-1.jpg'], $updated->details['gallery']);
+        $this->assertEquals(120, $updated->price);
+    }
+
+    public function test_updating_destination_preserves_remote_url_image_when_not_resubmitted(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'active' => true,
+        ]);
+
+        $url = 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&h=500&fit=crop&q=80';
+
+        $this->actingAs($admin)
+            ->post('/api/admin/destinations', [
+                'name' => 'E2E Oasis',
+                'country' => 'Testland',
+                'category' => 'City',
+                'price' => 100,
+                'rating' => 4.5,
+                'image' => $url,
+                'gallery' => $url,
+                'description' => 'Original description',
+                'description_en' => 'Original description',
+            ])
+            ->assertCreated();
+
+        $destination = Destination::query()->latest('id')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post('/api/admin/destinations/'.$destination->getKey(), [
+                '_method' => 'PUT',
+                'price' => 130,
+            ])
+            ->assertOk();
+
+        $updated = Destination::query()->findOrFail($destination->getKey());
+
+        $this->assertSame($url, $updated->image);
+        $this->assertSame([$url], $updated->details['gallery']);
+        $this->assertEquals(130, $updated->price);
+    }
+
+    public function test_destination_can_be_stored_and_updated_with_price_zero(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'active' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/api/admin/destinations', [
+                'name' => 'E2E Free Entry',
+                'country' => 'Testland',
+                'category' => 'City',
+                'price' => 0,
+                'rating' => 4.5,
+                'description' => 'No charge',
+                'description_en' => 'No charge',
+            ])
+            ->assertCreated();
+
+        $destination = Destination::query()->latest('id')->firstOrFail();
+        $this->assertEquals(0, $destination->price);
+
+        $this->actingAs($admin)
+            ->post('/api/admin/destinations/'.$destination->getKey(), [
+                '_method' => 'PUT',
+                'price' => 0,
+            ])
+            ->assertOk();
+
+        $updated = Destination::query()->findOrFail($destination->getKey());
+        $this->assertEquals(0, $updated->price);
+
+        $this->actingAs($admin)
+            ->getJson('/api/destinations/'.$updated->slug)
+            ->assertOk()
+            ->assertJsonPath('price', 0);
     }
 }

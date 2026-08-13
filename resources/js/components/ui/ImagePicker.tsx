@@ -10,6 +10,7 @@ interface ImagePickerProps {
     className?: string;
     multiple?: boolean;
     showPreview?: boolean;
+    id?: string;
 }
 
 export const ImagePicker = ({
@@ -20,6 +21,7 @@ export const ImagePicker = ({
     className,
     multiple = false,
     showPreview = true,
+    id,
 }: ImagePickerProps) => {
     const [preview, setPreview] = useState<string | string[] | null>(null);
     const { t } = useLanguage();
@@ -62,6 +64,7 @@ export const ImagePicker = ({
                 </div>
             )}
             <input
+                id={id}
                 type="file"
                 multiple={multiple}
                 onChange={handleChange}

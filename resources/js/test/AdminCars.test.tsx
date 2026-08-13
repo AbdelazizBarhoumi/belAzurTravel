@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as adminApi from '@/api/admin.api';
-import { fetchCategories } from '@/api/categories.api';
+import { fetchCategoryTypes } from '@/api/categoryTypes.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import AdminCars from '@/pages/admin/AdminCars';
 
@@ -30,18 +30,22 @@ vi.mock('@/api/admin.api', () => ({
     deleteAdminEntity: vi.fn().mockResolvedValue({}),
 }));
 
-vi.mock('@/api/categories.api', () => ({
-    fetchCategories: vi.fn(),
+vi.mock('@/api/categoryTypes.api', () => ({
+    fetchCategoryTypes: vi.fn(),
 }));
 
-const carCategories = [
+const carCategoryTypes = [
     {
-        key: 'electric',
-        name: { en: 'Electric', fr: 'Électrique', ar: 'كهربائي' },
-    },
-    {
-        key: 'luxury',
-        name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخرة' },
+        id: 1,
+        entity_type: 'cars',
+        key: 'category',
+        label: { en: 'Category', fr: 'Catégorie', ar: 'الفئة' },
+        sort_order: 0,
+        filter_style: 'checkbox',
+        values: [
+            { id: 1, key: 'electric', name: { en: 'Electric', fr: 'Électrique', ar: 'كهربائي' } },
+            { id: 2, key: 'luxury', name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخرة' } },
+        ],
     },
 ];
 
@@ -69,7 +73,9 @@ describe('AdminCars', () => {
         localStorage.setItem('lang', 'en');
         vi.clearAllMocks();
         vi.mocked(adminApi.listAdminEntities).mockResolvedValue([] as never);
-        vi.mocked(fetchCategories).mockResolvedValue(carCategories as never);
+        vi.mocked(fetchCategoryTypes).mockResolvedValue(
+            carCategoryTypes as never,
+        );
     });
 
     afterEach(() => {
@@ -83,7 +89,7 @@ describe('AdminCars', () => {
         fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
 
         const dialog = await screen.findByRole('dialog');
-        const categorySelect = within(dialog).getByRole('combobox');
+        const categorySelect = await within(dialog).findByRole('combobox');
 
         expect(categorySelect).toBeInTheDocument();
         expect(categorySelect).toHaveTextContent('Select');
@@ -103,6 +109,7 @@ describe('AdminCars', () => {
                 category_en: 'Luxury',
                 category_fr: 'Luxe',
                 category_ar: 'فاخرة',
+                category_assignments: { category: 'luxury' },
                 fuel: 'Electric',
                 fuel_en: 'Electric',
                 fuel_fr: 'Électrique',

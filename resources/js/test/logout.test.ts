@@ -47,15 +47,17 @@ describe('logout', () => {
 
         await logout();
 
-        expect(fetchMock).toHaveBeenCalledWith('/logout', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': 'test-csrf-token',
-            },
-        });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+
+        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(new URL(url, 'http://localhost').pathname).toBe('/logout');
+        expect(init.method).toBe('POST');
+        expect(init.credentials).toBe('include');
+
+        const headers = new Headers(init.headers as HeadersInit);
+        expect(headers.get('Accept')).toBe('application/json');
+        expect(headers.get('Content-Type')).toBe('application/json');
+        expect(headers.get('X-CSRF-TOKEN')).toBe('test-csrf-token');
         expect(getAuthUser()).toBeNull();
         expect(queryClient.getQueryData(AUTH_USER_QUERY_KEY)).toBeNull();
     });

@@ -4,6 +4,7 @@ import { within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as adminApi from '@/api/admin.api';
+import { fetchCategoryTypes } from '@/api/categoryTypes.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import AdminDestinations from '@/pages/admin/AdminDestinations';
@@ -15,6 +16,26 @@ vi.mock('@/api/categories.api', () => ({
             entity_type: 'destinations',
             key: 'beach',
             name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
+        },
+    ]),
+}));
+
+vi.mock('@/api/categoryTypes.api', () => ({
+    fetchCategoryTypes: vi.fn().mockResolvedValue([
+        {
+            id: 1,
+            entity_type: 'destinations',
+            key: 'category',
+            label: { en: 'Category', fr: 'Catégorie', ar: 'الفئة' },
+            sort_order: 0,
+            filter_style: 'select',
+            values: [
+                {
+                    id: 1,
+                    key: 'beach',
+                    name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
+                },
+            ],
         },
     ]),
 }));
@@ -102,9 +123,13 @@ describe('Admin destinations editor', () => {
         fireEvent.click(await screen.findByRole('button', { name: /edit/i }));
 
         const dialog = await screen.findByRole('dialog');
-        expect(dialog.querySelector('#category_key')).toHaveTextContent(
-            'Beach',
-        );
+        await waitFor(() => {
+            const categorySelect = within(dialog)
+                .getAllByRole('combobox')
+                .find((box) => box.textContent?.includes('Beach'));
+            expect(categorySelect).toBeTruthy();
+            expect(categorySelect).toHaveTextContent('Beach');
+        });
     });
 
     it('resolves a localized category label to the matching category key', async () => {
@@ -136,9 +161,13 @@ describe('Admin destinations editor', () => {
         fireEvent.click(await screen.findByRole('button', { name: /edit/i }));
 
         const dialog = await screen.findByRole('dialog');
-        expect(dialog.querySelector('#category_key')).toHaveTextContent(
-            'Beach',
-        );
+        await waitFor(() => {
+            const categorySelect = within(dialog)
+                .getAllByRole('combobox')
+                .find((box) => box.textContent?.includes('Beach'));
+            expect(categorySelect).toBeTruthy();
+            expect(categorySelect).toHaveTextContent('Beach');
+        });
     });
 
     it.skip('closes the edit dialog after saving a destination', async () => {

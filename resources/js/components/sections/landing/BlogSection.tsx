@@ -8,6 +8,20 @@ import { useBlogPosts } from '@/hooks/usePublicData';
 
 interface Props { config: LandingSectionConfig; }
 
+function formatBlogDate(date: string, lang: string): string {
+    const locale = lang === 'ar' ? 'ar-EG' : lang === 'fr' ? 'fr-FR' : 'en-US';
+
+    try {
+        return new Intl.DateTimeFormat(locale, {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        }).format(new Date(date));
+    } catch {
+        return date;
+    }
+}
+
 export function BlogSection({ config }: Props) {
     const { lang, t } = useLanguage();
     const { data: posts = [] } = useBlogPosts();
@@ -23,7 +37,7 @@ export function BlogSection({ config }: Props) {
             id: post.slug,
             title: localizeText(post.title, lang),
             price: localizeText(post.category, lang),
-            meta: post.date,
+            meta: formatBlogDate(post.date, lang),
             image: post.image,
             href: `/blog/${post.slug}`,
         }));
@@ -58,7 +72,7 @@ export function BlogSection({ config }: Props) {
                                         <div className="absolute left-3 top-3 rounded-full bg-primary/90 px-3 py-1 text-xs font-bold text-primary-foreground">{localizeText(post.category, lang)}</div>
                                     </div>
                                     <div className="p-5">
-                                        <div className="text-xs text-muted-foreground">{post.date}</div>
+                                        <div className="text-xs text-muted-foreground">{formatBlogDate(post.date, lang)}</div>
                                         <h3 className="mt-1 font-serif text-lg font-bold line-clamp-2">{localizeText(post.title, lang)}</h3>
                                         <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{localizeText(post.excerpt, lang)}</p>
                                     </div>
@@ -89,7 +103,7 @@ export function BlogSection({ config }: Props) {
                                     <div className="absolute left-3 top-3 rounded-full bg-primary/90 px-3 py-1 text-xs font-bold text-primary-foreground">{localizeText(post.category, lang)}</div>
                                 </div>
                                 <div className="p-5">
-                                    <div className="text-xs text-muted-foreground">{post.date}</div>
+                                    <div className="text-xs text-muted-foreground">{formatBlogDate(post.date, lang)}</div>
                                     <h3 className="mt-1 font-serif text-lg font-bold line-clamp-2">{localizeText(post.title, lang)}</h3>
                                     <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{localizeText(post.excerpt, lang)}</p>
                                 </div>

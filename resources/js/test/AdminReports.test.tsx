@@ -42,6 +42,7 @@ vi.mock('recharts', () => ({
 
 describe('AdminReports', () => {
     it('renders without crashing when there are no bookings', () => {
+        localStorage.setItem('lang', 'en');
         render(
             <LanguageProvider>
                 <MemoryRouter initialEntries={['/admin/reports']}>

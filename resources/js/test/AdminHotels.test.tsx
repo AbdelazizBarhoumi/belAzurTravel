@@ -10,7 +10,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { toast } from 'sonner';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import * as adminApi from '@/api/admin.api';
-import { fetchCategories } from '@/api/categories.api';
+import { fetchCategoryTypes } from '@/api/categoryTypes.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import AdminHotels from '@/pages/admin/AdminHotels';
@@ -38,8 +38,8 @@ vi.mock('@/api/admin.api', () => ({
     deleteAdminEntity: vi.fn().mockResolvedValue({}),
 }));
 
-vi.mock('@/api/categories.api', () => ({
-    fetchCategories: vi.fn(),
+vi.mock('@/api/categoryTypes.api', () => ({
+    fetchCategoryTypes: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -49,14 +49,18 @@ vi.mock('sonner', () => ({
     },
 }));
 
-const hotelCategories = [
+const hotelCategoryTypes = [
     {
-        key: 'beach',
-        name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
-    },
-    {
-        key: 'luxury',
-        name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+        id: 1,
+        entity_type: 'hotels',
+        key: 'category',
+        label: { en: 'Category', fr: 'Catégorie', ar: 'الفئة' },
+        sort_order: 0,
+        filter_style: 'checkbox',
+        values: [
+            { id: 1, key: 'beach', name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' } },
+            { id: 2, key: 'luxury', name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' } },
+        ],
     },
 ];
 
@@ -90,7 +94,9 @@ describe('AdminHotels', () => {
             value: vi.fn(),
         });
         vi.mocked(adminApi.listAdminEntities).mockResolvedValue([] as never);
-        vi.mocked(fetchCategories).mockResolvedValue(hotelCategories as never);
+        vi.mocked(fetchCategoryTypes).mockResolvedValue(
+            hotelCategoryTypes as never,
+        );
     });
 
     afterEach(() => {
@@ -133,8 +139,8 @@ describe('AdminHotels', () => {
             ) || dialogs[0];
         expect(dialog).not.toBeNull();
         expect(
-            within(dialog).getByLabelText(/^Category$/i),
-        ).toBeInTheDocument();
+            within(dialog).getAllByRole('combobox').length,
+        ).toBeGreaterThan(0);
 
         fireEvent.click(screen.getByRole('button', { name: /^fr$/i }));
 
@@ -169,6 +175,7 @@ describe('AdminHotels', () => {
                 category_en: 'Beach',
                 category_fr: 'Plage',
                 category_ar: 'شاطئ',
+                category_assignments: { category: 'beach' },
                 price: 120,
                 rating: 4.8,
                 image: '/hotel.jpg',
@@ -276,7 +283,7 @@ describe('AdminHotels', () => {
     });
 
     it('drops blank room drafts before saving a hotel', async () => {
-        vi.mocked(fetchCategories).mockResolvedValue([] as never);
+        vi.mocked(fetchCategoryTypes).mockResolvedValue([] as never);
         renderPage();
 
         fireEvent.click(screen.getAllByRole('button', { name: /^add$/i })[0]);
@@ -315,11 +322,7 @@ describe('AdminHotels', () => {
             });
 
             Object.entries(values).forEach(([field, value]) => {
-                if (field === 'category') {
-                    fill(`category_${lang}`, value);
-                    return;
-                }
-
+                if (field === 'category') return;
                 fill(`${field}_${lang}`, value);
             });
         };

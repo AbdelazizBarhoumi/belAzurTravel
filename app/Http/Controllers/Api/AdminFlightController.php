@@ -189,9 +189,11 @@ class AdminFlightController extends Controller
             'gallery' => $details['gallery'] ?? [$item->image],
             'date_from' => $item->date_from,
             'date_to' => $item->date_to,
+            'date' => $details['date'] ?? null,
             'seats' => $details['seats'] ?? null,
             'details' => [
                 'gallery' => $details['gallery'] ?? [$item->image],
+                'date' => $details['date'] ?? null,
                 'seats' => $details['seats'] ?? null,
                 'cabin' => $details['cabin'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
                 'aircraft' => $details['aircraft'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
@@ -233,6 +235,10 @@ class AdminFlightController extends Controller
 
         if (array_key_exists('seats', $data)) {
             $details['seats'] = isset($data['seats']) ? (int) $data['seats'] : null;
+        }
+
+        if (array_key_exists('date', $data)) {
+            $details['date'] = $data['date'] ?? null;
         }
 
         foreach (['cabin', 'aircraft', 'baggage', 'refund'] as $key) {

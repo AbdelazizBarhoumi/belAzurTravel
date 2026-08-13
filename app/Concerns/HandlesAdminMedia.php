@@ -47,7 +47,15 @@ trait HandlesAdminMedia
             }
         }
 
-        return $this->normalizeStoredMediaPath($existingImage);
+        // Keep the existing image untouched when it is not a value the
+        // normalizer recognises (e.g. a stored remote URL), instead of saving
+        // an empty string and wiping the image on a routine update.
+        $existing = $this->normalizeStoredMediaPath($existingImage);
+        if ($existing === '' && is_string($existingImage) && trim($existingImage) !== '') {
+            return trim($existingImage);
+        }
+
+        return $existing;
     }
 
     /**
@@ -63,6 +71,21 @@ trait HandlesAdminMedia
         $hadLeadingSlash = str_starts_with($trimmed, '/');
         if ($trimmed === '') {
             return '';
+        }
+
+        // Preserve full URLs (e.g. remote/Unsplash images) as-is so they are
+        // not destroyed into a bare path fragment by parse_url() below.
+        // Self-hosted storage/image URLs are reduced to their storage path.
+        if (preg_match('#^https?://#i', $trimmed)) {
+            $urlPath = parse_url($trimmed, PHP_URL_PATH);
+            if (is_string($urlPath) && $urlPath !== '') {
+                $noLeading = ltrim($urlPath, '/');
+                if (str_starts_with($noLeading, 'storage/') || str_starts_with($noLeading, 'images/')) {
+                    return $hadLeadingSlash ? ('/'.$noLeading) : $noLeading;
+                }
+            }
+
+            return $trimmed;
         }
 
         $parsedPath = parse_url($trimmed, PHP_URL_PATH);

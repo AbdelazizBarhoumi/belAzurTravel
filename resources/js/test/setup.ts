@@ -69,6 +69,47 @@ Object.defineProperty(globalThis, 'IntersectionObserver', {
     value: MockIntersectionObserver,
 });
 
+// Radix UI (Select, Dialog) calls scrollIntoView when opening content in jsdom.
+if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+}
+
+// Radix UI pointer capture APIs are not implemented in jsdom.
+if (typeof Element !== 'undefined') {
+    if (!Element.prototype.hasPointerCapture) {
+        Object.defineProperty(Element.prototype, 'hasPointerCapture', {
+            value: () => false,
+        });
+    }
+    if (!Element.prototype.releasePointerCapture) {
+        Object.defineProperty(Element.prototype, 'releasePointerCapture', {
+            value: () => {},
+        });
+    }
+    if (!Element.prototype.setPointerCapture) {
+        Object.defineProperty(Element.prototype, 'setPointerCapture', {
+            value: () => {},
+        });
+    }
+}
+
+// Mock ResizeObserver for Radix UI primitives (Select, Dialog, Popover) in jsdom
+class MockResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+}
+
+Object.defineProperty(window, 'ResizeObserver', {
+    writable: true,
+    value: MockResizeObserver,
+});
+
+Object.defineProperty(globalThis, 'ResizeObserver', {
+    writable: true,
+    value: MockResizeObserver,
+});
+
 // Mock framer-motion to avoid animation-related duplicate renders in jsdom
 // tests which can cause queries to find multiple matching nodes.
 try {
@@ -83,15 +124,28 @@ try {
                 React.createElement(tag, { ref, ...props }, children),
             );
 
+        const tags = [
+            'div',
+            'button',
+            'img',
+            'span',
+            'form',
+            'ul',
+            'li',
+            'a',
+            'article',
+            'aside',
+            'header',
+            'p',
+        ];
+
         return {
             motion: {
-                div: make('div'),
-                button: make('button'),
-                img: make('img'),
-                span: make('span'),
-                form: make('form'),
-                ul: make('ul'),
-                li: make('li'),
+                ...Object.fromEntries(
+                    tags.map((tag) => [tag, make(tag)]),
+                ),
+                create: (Component: React.ComponentType<unknown>) =>
+                    Component,
             },
             AnimatePresence: ({ children }: { children?: React.ReactNode }) =>
                 children,
@@ -322,6 +376,13 @@ const fixtures: Record<string, unknown> = {
             category: { en: 'Seasonal' },
         },
     ],
+    '/api/deals/early-bird-summer-2026': {
+        slug: 'early-bird-summer-2026',
+        title: { en: 'Early Bird Summer 2026' },
+        description: { en: 'Save now' },
+        discount: { en: '35% OFF' },
+        category: { en: 'Seasonal' },
+    },
     '/api/events': [
         {
             slug: 'cherry-blossom-festival',
@@ -343,11 +404,12 @@ const fixtures: Record<string, unknown> = {
         location: { en: 'Kyoto', fr: 'Kyoto' },
         description: {
             en: 'A three-day spring celebration with guided hanami walks and cultural performances.',
-            fr: 'Une célébration printanière de trois jours avec des promenades hanami guidées et des spectacles culturels.',
+            fr: 'Une célébration printanière de trois jours avec des promenades hanami guidées et des performances culturelles.',
         },
         schedule: [{ time: '09:00', activity: { en: 'Parade' } }],
         image: '/images/event-cherry.jpg',
     },
+    '/api/events/unknown-event': null,
     '/api/categories': [
         {
             id: 1,
@@ -398,7 +460,7 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
         const clean = parsedUrl.pathname;
 
         if (clean.startsWith('/api/')) {
-            if (fixtures[clean]) {
+            if (Object.prototype.hasOwnProperty.call(fixtures, clean)) {
                 return Promise.resolve(
                     new Response(JSON.stringify(fixtures[clean]), {
                         status: 200,

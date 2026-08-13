@@ -94,6 +94,10 @@ class AdminDealController extends Controller
             'discount_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'discount_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
 
+            'expires_en' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'expires_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'expires_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
+
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
 
@@ -145,6 +149,7 @@ class AdminDealController extends Controller
             'title' => $title,
             'description' => $localized('description', ''),
             'discount' => $localized('discount'),
+            'expires' => $localized('expires'),
             'category' => $categoryName,
             'category_key' => $categoryKey !== '' ? $categoryKey : null,
             'date_from' => $data['date_from'] ?? $existing?->date_from ?? null,
@@ -173,6 +178,7 @@ class AdminDealController extends Controller
             ...$this->flatLocalized('title', $item->title),
             ...$this->flatLocalized('description', $item->description),
             ...$this->flatLocalized('discount', $item->discount),
+            ...$this->flatLocalized('expires', $item->expires),
             ...$this->flatLocalized('category', $this->getCategoryName($item)),
             'category_key' => $item->category_key,
             'category_assignments' => $categoryAssignments,

@@ -357,9 +357,11 @@ const Destinations = () => {
                                                             {localizeText(dest.description, lang)}
                                                         </p>
                                                         <div className="flex items-center justify-between gap-2">
+                                                            {dest.price > 0 && (
                                                             <span className="font-bold text-primary">
                                                                 From {dest.price.toLocaleString()} TND
                                                             </span>
+                                                        )}
                                                             <Button
                                                                 size="sm"
                                                                 className="bg-primary text-xs text-primary-foreground"

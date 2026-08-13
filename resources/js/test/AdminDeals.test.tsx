@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as adminApi from '@/api/admin.api';
 import { fetchCategories } from '@/api/categories.api';
+import { fetchCategoryTypes } from '@/api/categoryTypes.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import AdminDeals from '@/pages/admin/AdminDeals';
@@ -20,6 +21,10 @@ vi.mock('@/api/admin.api', () => ({
 
 vi.mock('@/api/categories.api', () => ({
     fetchCategories: vi.fn(),
+}));
+
+vi.mock('@/api/categoryTypes.api', () => ({
+    fetchCategoryTypes: vi.fn(),
 }));
 
 function renderAdminDealsPage() {
@@ -60,6 +65,23 @@ describe('Admin deals editor', () => {
                 },
             },
         ] as never);
+        vi.mocked(fetchCategoryTypes).mockResolvedValue([
+            {
+                id: 1,
+                entity_type: 'deals',
+                key: 'category',
+                label: { en: 'Category', fr: 'Catégorie', ar: 'الفئة' },
+                sort_order: 0,
+                filter_style: 'select',
+                values: [
+                    {
+                        id: 1,
+                        key: 'summer',
+                        name: { en: 'Summer', fr: 'Été', ar: 'صيف' },
+                    },
+                ],
+            },
+        ] as never);
     });
 
     afterEach(() => {
@@ -88,8 +110,8 @@ describe('Admin deals editor', () => {
             target: { value: '2026-06-30' },
         });
 
-        fireEvent.mouseDown(screen.getByRole('combobox'));
-        fireEvent.click(await screen.findByText('Summer'));
+        fireEvent.click(screen.getByRole('combobox'));
+        fireEvent.click(await screen.findByRole('option', { name: 'Summer' }));
 
         fireEvent.click(screen.getByRole('button', { name: 'FR' }));
         fireEvent.change(screen.getByLabelText(/Title/i), {
@@ -109,7 +131,8 @@ describe('Admin deals editor', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'EN' }));
 
-        fireEvent.click(screen.getByText(/Save/i));
+        const dialog = await screen.findByRole('dialog');
+        fireEvent.click(within(dialog).getByText(/Save/i));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();
