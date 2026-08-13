@@ -6409,3 +6409,198 @@ translations['visa.toastErrorDescription'] = {
     ar: 'حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.',
     en: 'An error occurred while sending. Please try again.',
 };
+translations['admin.osTravel'] = {
+    fr: 'Catalogue OS-TRAVEL',
+    ar: 'كتالوج OS-TRAVEL',
+    en: 'OS-TRAVEL Catalog',
+};
+translations['admin.osTravelSubtitle'] = {
+    fr: 'Révisez et approuvez les hôtels synchronisés depuis OS-TRAVEL',
+    ar: 'راجع واعتمد الفنادق المزامنة من OS-TRAVEL',
+    en: 'Review and approve hotels synced from OS-TRAVEL',
+};
+translations['osTravel.lastSync'] = {
+    fr: 'Dernière synchronisation',
+    ar: 'آخر مزامنة',
+    en: 'Last sync',
+};
+translations['osTravel.noSync'] = {
+    fr: 'Aucune synchronisation pour le moment.',
+    ar: 'لا توجد مزامنة بعد.',
+    en: 'No sync has run yet.',
+};
+translations['osTravel.syncRunning'] = {
+    fr: 'Synchronisation en cours…',
+    ar: 'المزامنة جارية…',
+    en: 'Sync in progress…',
+};
+translations['osTravel.reactivated'] = {
+    fr: '{count} hôtel(s) réactivé(s)',
+    ar: 'تمت إعادة تفعيل {count} فندق',
+    en: '{count} hotel(s) reactivated',
+};
+translations['osTravel.status.pending'] = {
+    fr: 'En attente',
+    ar: 'قيد الانتظار',
+    en: 'Pending',
+};
+translations['osTravel.status.approved'] = {
+    fr: 'Approuvés',
+    ar: 'معتمد',
+    en: 'Approved',
+};
+translations['osTravel.status.published'] = {
+    fr: 'Publiés',
+    ar: 'منشور',
+    en: 'Published',
+};
+translations['osTravel.status.rejected'] = {
+    fr: 'Rejetés',
+    ar: 'مرفوض',
+    en: 'Rejected',
+};
+translations['osTravel.status.orphaned'] = {
+    fr: 'Orphelins',
+    ar: 'يتيم',
+    en: 'Orphaned',
+};
+translations['osTravel.filterCity'] = {
+    fr: 'Filtrer par ville…',
+    ar: 'تصفية حسب المدينة…',
+    en: 'Filter by city…',
+};
+translations['osTravel.allStars'] = {
+    fr: 'Toutes les étoiles',
+    ar: 'كل النجوم',
+    en: 'All stars',
+};
+translations['osTravel.approveAll'] = {
+    fr: 'Tout approuver',
+    ar: 'اعتماد الكل',
+    en: 'Approve All',
+};
+translations['osTravel.approveAllTitle'] = {
+    fr: 'Tout approuver',
+    ar: 'اعتماد الكل',
+    en: 'Approve All',
+};
+translations['osTravel.approveAllDescription'] = {
+    fr: 'Publier tous les hôtels en attente qui ont déjà un prix de base.',
+    ar: 'نشر جميع الفنادق قيد الانتظار التي لديها سعر أساسي بالفعل.',
+    en: 'Publish all pending hotels that already have a base price.',
+};
+translations['osTravel.preflightSkip'] = {
+    fr: '{count} hôtel(s) seront ignorés (prix manquant).',
+    ar: 'سيتم تخطي {count} فندق (سعر مفقود).',
+    en: '{count} hotel(s) will be skipped for missing price.',
+};
+translations['osTravel.capWarning'] = {
+    fr: 'Le lot est plafonné au maximum configuré.',
+    ar: 'يحدد الدفعة بالحد الأقصى المكوّن.',
+    en: 'The batch is capped at the configured maximum.',
+};
+translations['osTravel.publishedCount'] = {
+    fr: '{count} publiés',
+    ar: 'تم نشر {count}',
+    en: '{count} published',
+};
+translations['osTravel.skippedNoPrice'] = {
+    fr: '{count} ignorés (prix manquant)',
+    ar: 'تم تخطي {count} (سعر مفقود)',
+    en: '{count} skipped (missing price)',
+};
+translations['osTravel.skippedOverCap'] = {
+    fr: '{count} ignorés (limite atteinte)',
+    ar: 'تم تخطي {count} (تجاوز الحد)',
+    en: '{count} skipped (over cap)',
+};
+translations['osTravel.approveAllFailed'] = {
+    fr: "Échec de l'approbation groupée.",
+    ar: 'فشل الاعتماد الجماعي.',
+    en: 'Bulk approval failed.',
+};
+translations['osTravel.approved'] = {
+    fr: 'Hôtel publié.',
+    ar: 'تم نشر الفندق.',
+    en: 'Hotel published.',
+};
+translations['osTravel.approveFailed'] = {
+    fr: "Échec de l'approbation de l'hôtel.",
+    ar: 'فشل اعتماد الفندق.',
+    en: 'Failed to approve hotel.',
+};
+translations['osTravel.priceSaved'] = {
+    fr: 'Prix enregistré sans publication.',
+    ar: 'تم حفظ السعر دون نشر.',
+    en: 'Price saved without publishing.',
+};
+translations['osTravel.savePriceFailed'] = {
+    fr: "Échec de l'enregistrement du prix.",
+    ar: 'فشل حفظ السعر.',
+    en: 'Failed to save price.',
+};
+translations['osTravel.rejected'] = {
+    fr: 'Hôtel rejeté.',
+    ar: 'تم رفض الفندق.',
+    en: 'Hotel rejected.',
+};
+translations['osTravel.rejectFailed'] = {
+    fr: "Échec du rejet de l'hôtel.",
+    ar: 'فشل رفض الفندق.',
+    en: 'Failed to reject hotel.',
+};
+translations['osTravel.reject'] = {
+    fr: 'Rejeter',
+    ar: 'رفض',
+    en: 'Reject',
+};
+translations['osTravel.rejectTitle'] = {
+    fr: 'Rejeter cet hôtel ?',
+    ar: 'رفض هذا الفندق؟',
+    en: 'Reject this hotel?',
+};
+translations['osTravel.rejectDescription'] = {
+    fr: "L'hôtel ne sera pas publié et restera dans le catalogue comme rejeté.",
+    ar: 'لن يتم نشر الفندق وسيبقى في الكتالوج كمرفوض.',
+    en: 'The hotel will not be published and will stay in the catalog as rejected.',
+};
+translations['osTravel.preview'] = {
+    fr: 'Aperçu',
+    ar: 'معاينة',
+    en: 'Preview',
+};
+translations['osTravel.approve'] = {
+    fr: 'Approuver',
+    ar: 'اعتماد',
+    en: 'Approve',
+};
+translations['osTravel.missingPrice'] = {
+    fr: 'Prix manquant',
+    ar: 'السعر مفقود',
+    en: 'Missing price',
+};
+translations['osTravel.emptyState'] = {
+    fr: 'Aucun hôtel à afficher.',
+    ar: 'لا توجد فنادق للعرض.',
+    en: 'No hotels to display.',
+};
+translations['osTravel.priceSection'] = {
+    fr: 'Tarification',
+    ar: 'التسعير',
+    en: 'Pricing',
+};
+translations['osTravel.computedPrice'] = {
+    fr: 'Prix final',
+    ar: 'السعر النهائي',
+    en: 'Final price',
+};
+translations['osTravel.savePrice'] = {
+    fr: 'Enregistrer le prix',
+    ar: 'حفظ السعر',
+    en: 'Save price',
+};
+translations['osTravel.boarding'] = {
+    fr: 'Régimes',
+    ar: 'أنظمة الإقامة',
+    en: 'Boarding',
+};

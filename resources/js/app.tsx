@@ -38,6 +38,7 @@ import AdminEvents from './pages/admin/AdminEvents';
 import AdminFlights from './pages/admin/AdminFlights';
 import AdminGallery from './pages/admin/AdminGallery';
 import AdminHotels from './pages/admin/AdminHotels';
+import AdminOsTravel from './pages/admin/AdminOsTravel';
 import AdminPartners from './pages/admin/AdminPartners';
 import AdminPromos from './pages/admin/AdminPromos';
 import AdminReports from './pages/admin/AdminReports';
@@ -93,7 +94,7 @@ import Tours from './pages/tours';
 import TourDetail from './pages/tours/show';
 import Travels from './pages/travels';
 import TravelDetail from './pages/travels/show';
-import Visa from "./pages/visa/index";
+import Visa from './pages/visa/index';
 
 const adminGuard = (element: JSX.Element) => (
     <RoleGuard role="admin">{element}</RoleGuard>
@@ -240,6 +241,10 @@ const LayoutWrapper = () => {
                         element={adminGuard(<AdminHotels />)}
                     />
                     <Route
+                        path="/admin/os-travel"
+                        element={adminGuard(<AdminOsTravel />)}
+                    />
+                    <Route
                         path="/admin/tours"
                         element={adminGuard(<AdminTours />)}
                     />
@@ -338,19 +343,33 @@ const LayoutWrapper = () => {
                     />
                     <Route
                         path="/admin/site-settings/purchase-policy"
-                        element={adminGuard(<AdminSiteSettingsPurchasePolicy />)}
+                        element={adminGuard(
+                            <AdminSiteSettingsPurchasePolicy />,
+                        )}
                     />
                     <Route
                         path="/admin/site-settings/video"
-                        element={adminGuard(<Navigate to="/admin/site-settings/landing-sections" replace />)}
+                        element={adminGuard(
+                            <Navigate
+                                to="/admin/site-settings/landing-sections"
+                                replace
+                            />,
+                        )}
                     />
                     <Route
                         path="/admin/site-settings/hero-images"
-                        element={adminGuard(<Navigate to="/admin/site-settings/landing-sections" replace />)}
+                        element={adminGuard(
+                            <Navigate
+                                to="/admin/site-settings/landing-sections"
+                                replace
+                            />,
+                        )}
                     />
                     <Route
                         path="/admin/site-settings/landing-sections"
-                        element={adminGuard(<AdminSiteSettingsLandingSections />)}
+                        element={adminGuard(
+                            <AdminSiteSettingsLandingSections />,
+                        )}
                     />
                     <Route
                         path="/admin/notifications"

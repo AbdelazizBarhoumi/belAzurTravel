@@ -24,6 +24,7 @@ import ClientController from './ClientController'
 import ComplaintController from './ComplaintController'
 import AdminDestinationController from './AdminDestinationController'
 import AdminHotelController from './AdminHotelController'
+import AdminOsTravelController from './AdminOsTravelController'
 import AdminTourController from './AdminTourController'
 import AdminTravelController from './AdminTravelController'
 import AdminCarController from './AdminCarController'
@@ -65,6 +66,7 @@ ClientController: Object.assign(ClientController, ClientController),
 ComplaintController: Object.assign(ComplaintController, ComplaintController),
 AdminDestinationController: Object.assign(AdminDestinationController, AdminDestinationController),
 AdminHotelController: Object.assign(AdminHotelController, AdminHotelController),
+AdminOsTravelController: Object.assign(AdminOsTravelController, AdminOsTravelController),
 AdminTourController: Object.assign(AdminTourController, AdminTourController),
 AdminTravelController: Object.assign(AdminTravelController, AdminTravelController),
 AdminCarController: Object.assign(AdminCarController, AdminCarController),
