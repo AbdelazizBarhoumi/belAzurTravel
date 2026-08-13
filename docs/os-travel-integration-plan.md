@@ -309,14 +309,34 @@ Use the existing `role:admin` middleware group; validate with the controller's e
 
 ---
 
-## Phase 9 — (Future) Transactional integration — NOT built now
+## Phase 9 — Live search & pricing (Track B) — NOT built now
 
 Document requirements only:
-- `OsTravelSearchService` proxy for `HotelSearch` (server-side; client sends dates/occupancy, never creds/tokens).
-- Live rates feed `base_price` → public price applies the per-hotel markup automatically.
-- `BookingCreation` (PreBook → Confirm), `BookingCancellation` (Preview → Confirm), `BookingList` proxied; bookings linked to the existing `bookings`/`payments` flow.
+- Full requirements, file map, and build order live in
+  `docs/os-travel-phase-9-live-search.md`.
+- Scheduled `os-travel:refresh-latest-prices` (browse mode, batched `HotelSearch`) stores `hotels.last_price`.
+- `OsTravelSearchService` proxy for `HotelSearch` (server-side; client sends dates/occupancy + visible hotel slugs, never creds/tokens); live prices override stored price for display only.
+- Frontend: `useHotelSearch` hook, index auto-trigger on dates, detail live prices + tokens.
+- No tests written until this phase is started.
+
+---
+
+## Phase 10 — Booking proxy (Track C) — NOT built now
+
+Document requirements only:
+- Full requirements, file map, and build order live in
+  `docs/os-travel-phase-10-booking.md`.
+- `BookingCreation` (PreBook → Confirm), `BookingCancellation` (Preview → Confirm), `BookingList` proxied via `OsTravelBookingService`; bookings linked to the existing `bookings`/`payments` (ClictoPay) flow.
+- Provider columns (`provider_booking_id`, `provider_booking_reference`, `provider_payload`) on `bookings`.
 - Verify `BookingController` + `ClictoPayService` integration.
 - No tests written until this phase is started.
+
+---
+
+## Phase 11 — Final QA & go-live — NOT built now
+
+- Full regression, security review, manual E2E, and go-live checklist live in
+  `docs/os-travel-phase-11-final-qa.md`.
 
 ---
 
