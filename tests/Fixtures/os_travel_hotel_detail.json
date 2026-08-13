@@ -1,0 +1,116 @@
+{
+  "HotelDetail": {
+    "Id": 101,
+    "Name": "Sheraton Tunis Hotel",
+    "Category": {
+      "Title": "5 étoiles",
+      "Star": 5
+    },
+    "City": {
+      "Id": 32,
+      "Name": "Tunis",
+      "Country": "Tunisie"
+    },
+    "Email": "tunsi.reservations@sheratonhotels.com",
+    "Phone": "71 100 300",
+    "LongDescription": "<div id=\"summary\">\r\n<p>Le Sheraton Tunis Hotel &amp; Towers surplombe toute la ville de Tunis. Il dispose d&#39;un spa de luxe et un centre d&#39;affaires ouvert 24h/24.</p>\r\n\r\n<p>Chaque chambre est &eacute;l&eacute;gamment d&eacute;cor&eacute;e et dispose d&#39;un balcon priv&eacute;. Certaines chambres donnent &eacute;galement acc&egrave;s aux privil&egrave;ges Tower Lounge.</p>\r\n\r\n<p>L&#39;h&ocirc;tel dispose de plusieurs restaurants, parmi lesquels le Walima, qui propose une cuisine tunisienne. L&#39;Azzuro offre une cuisine italienne authentique.</p>\r\n\r\n<p>Au spa de l&#39;h&ocirc;tel, vous pourrez profiter des soins esth&eacute;tiques et m&eacute;dicaux prodigu&eacute;s par des professionnels. Vous appr&eacute;cierez &eacute;galement la piscine ext&eacute;rieure et le centre de remise en forme.</p>\r\n\r\n<p>Un parking priv&eacute; gratuit est disponible sur place. La r&eacute;ception du Sheraton Tunis Hotel est ouverte 24h/24 et vous fournira des informations touristiques sur la r&eacute;gion.</p>\r\n</div>\r\n\r\n<p>&nbsp;</p>",
+    "Adress": "Avenue De La Ligue Arabe , 1080 Tunis",
+    "Localization": {
+      "Longitude": "36.831512",
+      "Latitude": "10.161106"
+    },
+    "CheckIn": "14h",
+    "CheckOut": "12h",
+    "Type": "Hôtel",
+    "Image": "https://admin.mygo.co/file_manager/source/photos/tunisie/Tunis/sheraton-tunis/2.png",
+    "Album": [
+      {
+        "Url": "https://admin.mygo.co/file_manager/source/photos/tunisie/Tunis/sheraton-tunis/5.png",
+        "Alt": null
+      },
+      {
+        "Url": "https://admin.mygo.co/file_manager/source/photos/tunisie/Tunis/sheraton-tunis/4.png",
+        "Alt": null
+      },
+      {
+        "Url": "https://admin.mygo.co/file_manager/source/photos/tunisie/Tunis/sheraton-tunis/3.png",
+        "Alt": null
+      },
+      {
+        "Url": "https://admin.mygo.co/file_manager/source/photos/tunisie/Tunis/sheraton-tunis/1.png",
+        "Alt": null
+      }
+    ],
+    "Option": [
+      {
+        "Id": 5,
+        "Title": "Si possible, Arrivée Tardive."
+      },
+      {
+        "Id": 7,
+        "Title": "Si possible, Chambres Côte à Côte"
+      },
+      {
+        "Id": 9,
+        "Title": "Si possible, Chambre Non Fumeur"
+      },
+      {
+        "Id": 10,
+        "Title": "Si possible, Grand lit"
+      },
+      {
+        "Id": 12,
+        "Title": "Traitement VIP"
+      },
+      {
+        "Id": 14,
+        "Title": "Si possible, Chambre Insonorisée"
+      }
+    ],
+    "Boarding": [
+      {
+        "Id": 3,
+        "Code": "LS",
+        "Name": "Logement Simple",
+        "Description": null
+      },
+      {
+        "Id": 4,
+        "Code": "LPD",
+        "Name": "Logement Petit Déjeuner",
+        "Description": "Logement + Petit déjeuner"
+      },
+      {
+        "Id": 5,
+        "Code": "DP",
+        "Name": "Demi Pension",
+        "Description": null
+      },
+      {
+        "Id": 6,
+        "Code": "PC",
+        "Name": "Pension Complète",
+        "Description": "Petit déjeuner +  Dîner (1er service) + Déjeuner (dernier service)"
+      }
+    ],
+    "Theme": [
+      "Affaires"
+    ],
+    "Note": "<div>Une taxe de s&eacute;jour est &agrave; payer &agrave; l&#39;h&ocirc;tel pour tous les clients quelques soit leurs nationalit&eacute;s (&acirc;g&eacute;s plus de 12 ans). Le montant est calcul&eacute; en fonction de la loi en vigueur.<br />\r\nA tourist tax must be paid at the hotel by all guests regardless of nationality (aged over 12). The amount is calculated according to the applicable law.<br />\r\n&nbsp;</div>\r\n"
+  },
+  "ErrorMessage": [],
+  "Timing": {
+    "Begin": {
+      "date": "2026-08-13 13:01:46.062862",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "End": {
+      "date": "2026-08-13 13:01:46.387003",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "Duration": "324 ms"
+  },
+  "Ip": "102.211.211.160"
+}

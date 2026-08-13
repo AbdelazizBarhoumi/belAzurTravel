@@ -1,0 +1,35 @@
+{
+  "ListCountry": [
+    {
+      "Id": 5,
+      "Code": "dz",
+      "Name": "Algérie"
+    },
+    {
+      "Id": 219,
+      "Code": "tn",
+      "Name": "Tunisie"
+    },
+    {
+      "Id": 220,
+      "Code": "TR",
+      "Name": "Turquie"
+    }
+  ],
+  "CountResults": 3,
+  "ErrorMessage": [],
+  "Timing": {
+    "Begin": {
+      "date": "2026-08-13 13:01:38.229121",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "End": {
+      "date": "2026-08-13 13:01:38.380426",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "Duration": "151 ms"
+  },
+  "Ip": "102.211.211.160"
+}

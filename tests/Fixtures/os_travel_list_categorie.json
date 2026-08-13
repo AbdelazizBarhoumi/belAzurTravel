@@ -1,0 +1,75 @@
+{
+  "ListCategorie": [
+    {
+      "Id": 1,
+      "Star": 3,
+      "Title": "3 étoiles"
+    },
+    {
+      "Id": 2,
+      "Star": 4,
+      "Title": "4 étoiles"
+    },
+    {
+      "Id": 3,
+      "Star": 5,
+      "Title": "5 étoiles"
+    },
+    {
+      "Id": 4,
+      "Star": 2,
+      "Title": "2 étoiles"
+    },
+    {
+      "Id": 7,
+      "Star": null,
+      "Title": "Campement"
+    },
+    {
+      "Id": 9,
+      "Star": null,
+      "Title": "Appart Hôtel"
+    },
+    {
+      "Id": 16,
+      "Star": null,
+      "Title": "Maison d'hôtes"
+    },
+    {
+      "Id": 17,
+      "Star": 1,
+      "Title": "1 étoile"
+    },
+    {
+      "Id": 18,
+      "Star": null,
+      "Title": "Appartement"
+    },
+    {
+      "Id": 19,
+      "Star": null,
+      "Title": "Parc d'attraction"
+    },
+    {
+      "Id": 20,
+      "Star": null,
+      "Title": "Villa"
+    }
+  ],
+  "CountResults": 11,
+  "ErrorMessage": [],
+  "Timing": {
+    "Begin": {
+      "date": "2026-08-13 13:01:43.055991",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "End": {
+      "date": "2026-08-13 13:01:43.231505",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "Duration": "176 ms"
+  },
+  "Ip": "102.211.211.160"
+}

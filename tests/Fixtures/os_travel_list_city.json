@@ -1,0 +1,76 @@
+{
+  "ListCity": [
+    {
+      "Id": 12,
+      "Name": "Kelibia",
+      "Country": {
+        "Id": 219,
+        "Name": "Tunisie"
+      }
+    },
+    {
+      "Id": 32,
+      "Name": "Tunis",
+      "Country": {
+        "Id": 219,
+        "Name": "Tunisie"
+      }
+    },
+    {
+      "Id": 34,
+      "Name": "Sousse",
+      "Country": {
+        "Id": 219,
+        "Name": "Tunisie"
+      }
+    },
+    {
+      "Id": 37,
+      "Name": "Monastir",
+      "Country": {
+        "Id": 219,
+        "Name": "Tunisie"
+      }
+    },
+    {
+      "Id": 10,
+      "Name": "Hammamet",
+      "Country": {
+        "Id": 219,
+        "Name": "Tunisie"
+      }
+    },
+    {
+      "Id": 18,
+      "Name": "Djerba",
+      "Country": {
+        "Id": 219,
+        "Name": "Tunisie"
+      }
+    },
+    {
+      "Id": 33,
+      "Name": "Tabarka",
+      "Country": {
+        "Id": 219,
+        "Name": "Tunisie"
+      }
+    }
+  ],
+  "CountResults": 7,
+  "ErrorMessage": [],
+  "Timing": {
+    "Begin": {
+      "date": "2026-08-13 13:00:00.000000",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "End": {
+      "date": "2026-08-13 13:00:00.250000",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "Duration": "250 ms"
+  },
+  "Ip": "0.0.0.0"
+}

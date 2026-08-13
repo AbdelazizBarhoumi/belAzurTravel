@@ -1,0 +1,56 @@
+{
+  "ListHotel": [
+    {
+      "Id": 178,
+      "Name": "Cap Bon Kelibia Beach Hotel & Spa",
+      "Category": {
+        "Id": 2,
+        "Title": "4 étoiles",
+        "Star": 4
+      },
+      "City": {
+        "Id": 12,
+        "Name": "Kelibia",
+        "Country": {
+          "Id": 219,
+          "Name": "Tunisie"
+        }
+      },
+      "Adress": "Zone Al Mansoura Kelibia",
+      "Localization": {
+        "Longitude": "36.85757",
+        "Latitude": "11.12502"
+      },
+      "Image": "https://admin.mygo.co/file_manager/source/photos/tunisie/Kelibia/kelibia%20beach/Kelibia_Beach_8.jpg",
+      "Theme": [
+        "Affaires",
+        "Voyages de Noces",
+        "Famille",
+        "Week-end",
+        "Réveillon ",
+        "Balnéaire ",
+        "Découverte ",
+        "Charme",
+        "Sport & Loisirs",
+        "Tourisme"
+      ],
+      "Note": "- Une taxe de s&eacute;jour est &agrave; payer &agrave; l&#39;h&ocirc;tel pour tous les clients quelques soit leurs nationalit&eacute;s (&acirc;g&eacute;s plus de 12 ans). Le montant est calcul&eacute; en fonction de la loi en vigueur.<br />\r\n- Le burkini est interdit.<br />\r\n<br />\r\nA tourist tax must be paid at the hotel by all guests regardless of nationality (aged over 12). The amount is calculated according to the applicable law<br />\r\nBurkini is not allowed"
+    }
+  ],
+  "CountResults": 1,
+  "ErrorMessage": [],
+  "Timing": {
+    "Begin": {
+      "date": "2026-08-13 13:01:44.854758",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "End": {
+      "date": "2026-08-13 13:01:45.347776",
+      "timezone_type": 3,
+      "timezone": "Africa/Tunis"
+    },
+    "Duration": "493 ms"
+  },
+  "Ip": "102.211.211.160"
+}
