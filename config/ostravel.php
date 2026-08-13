@@ -68,4 +68,9 @@ return [
         ],
     ],
 
+    'search' => [
+        // Delay between multi-chunk HotelSearch calls. 0 in tests.
+        'throttle_ms' => (int) env('OS_TRAVEL_SEARCH_THROTTLE_MS', 150),
+    ],
+
 ];

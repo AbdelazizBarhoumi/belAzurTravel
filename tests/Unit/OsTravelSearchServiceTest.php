@@ -177,8 +177,19 @@ class OsTravelSearchServiceTest extends TestCase
 
         $this->assertTrue(Cache::has('hotels.search.'.sha1(serialize([
             ['cap-bon-kelibia'],
-            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08', 'rooms' => []],
-            true,
+            [
+                'check_in' => '2026-09-01',
+                'check_out' => '2026-09-08',
+                'rooms' => [],
+                'only_available' => true,
+                'city_id' => null,
+                'stars' => null,
+                'category_ids' => [],
+                'boarding_ids' => [],
+                'price_min' => null,
+                'price_max' => null,
+                'sort' => 'price_asc',
+            ],
         ]))));
     }
 
@@ -261,5 +272,168 @@ class OsTravelSearchServiceTest extends TestCase
 
         $hotel->refresh();
         $this->assertSame(777.5, $hotel->last_price);
+    }
+
+    public function test_search_flags_availability_and_provider(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08'],
+        )[0];
+
+        $this->assertTrue($result['available']);
+        $this->assertSame('ostravel', $result['provider']);
+    }
+
+    public function test_search_filters_by_city(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $this->stagedPublishedHotel(999, 'stop-sales', 'Stop Sales Hotel', 800);
+        OsTravelHotel::where('external_id', '999')->update(['city_external_id' => '55']);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia', 'stop-sales'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08', 'city_id' => '12'],
+        );
+
+        $this->assertCount(1, $results);
+        $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
+    }
+
+    public function test_search_filters_by_min_stars(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $this->stagedPublishedHotel(999, 'stop-sales', 'Stop Sales Hotel', 800);
+        Hotel::where('slug', 'stop-sales')->update(['stars' => 3]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia', 'stop-sales'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08', 'stars' => 4],
+        );
+
+        $this->assertCount(1, $results);
+        $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
+    }
+
+    public function test_search_filters_by_boarding(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $this->stagedPublishedHotel(999, 'stop-sales', 'Stop Sales Hotel', 800);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia', 'stop-sales'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08', 'boarding_ids' => [5]],
+        );
+
+        // Stop Sales Hotel only offers boarding 3 (LS), so it is dropped.
+        $this->assertCount(1, $results);
+        $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
+        $this->assertCount(1, $results[0]['rooms']);
+        $this->assertSame(5, $results[0]['rooms'][0]['boarding_id']);
+        // 1080.000 * 1.2 = 1296.
+        $this->assertSame(1296, $results[0]['price']);
+    }
+
+    public function test_search_filters_by_price_range(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $this->stagedPublishedHotel(999, 'stop-sales', 'Stop Sales Hotel', 800);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia', 'stop-sales'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08', 'price_max' => 900],
+        );
+
+        // Kelibia's cheapest room is 1113; Stop Sales falls back to 800.
+        $this->assertCount(1, $results);
+        $this->assertSame('stop-sales', $results[0]['slug']);
+    }
+
+    public function test_search_sorts_price_ascending(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $this->stagedPublishedHotel(999, 'stop-sales', 'Stop Sales Hotel', 800);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia', 'stop-sales'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08', 'sort' => 'price_asc'],
+        );
+
+        $this->assertSame(['stop-sales', 'cap-bon-kelibia'], array_column($results, 'slug'));
+    }
+
+    public function test_search_sorts_stars_descending(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $this->stagedPublishedHotel(999, 'stop-sales', 'Stop Sales Hotel', 800);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia', 'stop-sales'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08', 'sort' => 'stars_desc'],
+        );
+
+        $this->assertSame(['cap-bon-kelibia', 'stop-sales'], array_column($results, 'slug'));
+    }
+
+    public function test_search_keeps_unavailable_hotels_when_only_available_is_false(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $this->stagedPublishedHotel(777, 'omitted-hotel', 'Omitted Hotel', 600);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia', 'omitted-hotel'],
+            [
+                'check_in' => '2026-09-01',
+                'check_out' => '2026-09-08',
+                'only_available' => false,
+            ],
+        );
+
+        $this->assertCount(2, $results);
+
+        $omitted = collect($results)->firstWhere('slug', 'omitted-hotel');
+        $this->assertFalse($omitted['available']);
+        $this->assertSame([], $omitted['rooms']);
+        // Unavailable hotels fall back to the stored price.
+        $this->assertSame(600, $omitted['price']);
+        $this->assertSame(600, $omitted['price_total']);
+
+        // Available hotels sort before unavailable ones.
+        $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
+        $this->assertTrue($results[0]['available']);
     }
 }

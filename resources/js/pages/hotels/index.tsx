@@ -155,7 +155,8 @@ return (
         };
     }, [dateRange, filteredHotels, guests]);
 
-    const { data: liveResults = [] } = useHotelSearch(searchQueryForLive);
+    const { data: liveResult } = useHotelSearch(searchQueryForLive);
+    const liveResults = useMemo(() => liveResult?.data ?? [], [liveResult]);
     const liveBySlug = useMemo(
         () => new Map(liveResults.map((item) => [item.slug, item])),
         [liveResults],

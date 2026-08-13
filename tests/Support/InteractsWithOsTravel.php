@@ -19,6 +19,7 @@ trait InteractsWithOsTravel
             'when' => [429, 500, 502, 503, 504],
         ]);
         Config::set('ostravel.sync.throttle_ms', 0);
+        Config::set('ostravel.search.throttle_ms', 0);
         Config::set('ostravel.sync.lock_ttl_minutes', 180);
     }
 

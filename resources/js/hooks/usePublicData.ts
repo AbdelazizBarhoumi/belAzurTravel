@@ -368,6 +368,22 @@ export interface HotelSearchQuery {
     hotel_slugs?: string[];
     rooms?: Array<{ adults?: number; children?: number[] }>;
     only_available?: boolean;
+    city_id?: string;
+    stars?: number;
+    category_ids?: number[];
+    boarding_ids?: number[];
+    price_min?: number;
+    price_max?: number;
+    sort?: 'price_asc' | 'price_desc' | 'stars_desc';
+    page?: number;
+    per_page?: number;
+}
+
+export interface HotelSearchMeta {
+    current_page: number;
+    last_page: number;
+    total: number;
+    per_page: number;
 }
 
 export interface HotelSearchResult {
@@ -388,6 +404,8 @@ export interface HotelSearchResult {
     markup_percentage: string;
     currency: string;
     nights: number;
+    available: boolean;
+    provider: string;
     rooms: Array<{
         id: string;
         name: string;
@@ -417,23 +435,26 @@ export interface HotelSearchResult {
 }
 
 export function useHotelSearch(query?: HotelSearchQuery) {
-    return useQuery({
+    return useQuery<{
+        data: HotelSearchResult[];
+        meta: HotelSearchMeta;
+    }>({
         queryKey: ['hotels', 'search', query],
         queryFn: async () => {
-            const resp = await apiFetch<{ data: HotelSearchResult[] }>(
-                '/api/hotels/search',
-                {
-                    method: 'POST',
-                    body: JSON.stringify(query),
-                },
-            );
-            return resp.data;
+            const resp = await apiFetch<{
+                data: HotelSearchResult[];
+                meta: HotelSearchMeta;
+            }>('/api/hotels/search', {
+                method: 'POST',
+                body: JSON.stringify(query),
+            });
+            return resp;
         },
         enabled: Boolean(
             query &&
                 query.check_in &&
                 query.check_out &&
-                (query.hotel_slugs?.length ?? 0) > 0,
+                !query.hotel_slugs?.length,
         ),
         staleTime: 1000 * 60 * 5,
     });

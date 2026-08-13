@@ -142,7 +142,8 @@ export default function HotelDetail() {
         };
     }, [dateRange, guests, id]);
 
-    const { data: liveResults = [] } = useHotelSearch(liveQuery);
+    const { data: liveResult } = useHotelSearch(liveQuery);
+    const liveResults = liveResult?.data ?? [];
     const liveHotel = liveResults[0] ?? undefined;
 
     if (isLoading) {

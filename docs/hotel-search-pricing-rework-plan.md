@@ -195,6 +195,22 @@ dates/occupancy/filters.
 3. Request `only_available=false` for an overbooked date → hotel present with `available:false`.
 4. `php artisan test --filter=HotelSearchEndpointTest`.
 
+**Phase B engine — DONE (Aug 2026).** See "Critical finding" above for the response shape.
+- `OsTravelSearchService::search()` is now the full engine: `normalizeOptions()` (deterministic cache
+  key includes dates + rooms + every filter), pre-filters on `os_travel_hotels.city_external_id` and
+  `hotels.stars`, `Filters.Category` + `OnlyAvailable` sent per chunk, 150 ms inter-chunk throttle
+  (`ostravel.search.throttle_ms`, 0 in tests), post-filters for boarding (drops hotels with no match)
+  and live price range, `available`/`provider` fields, sort (available-first then price_asc/price_desc/
+  stars_desc), and `only_available=false` keeps provider-omitted hotels with stored price + `available:false`.
+- New `HotelSearchController` v2: full validation (≤ 30 nights, city_id, stars 1–5, category/boarding id
+  arrays, price range, sort enum, page/per_page 1–50) and paginated `{ data, meta }`.
+- Frontend: `useHotelSearch` returns `{ data, meta }`; `index.tsx` / `show.tsx` unwrap `.data`;
+  hook `enabled` is now dates-only (slugs optional) for the future full server list.
+- Tests: `HotelSearchEndpointTest` (validation, pagination/meta, city+boarding, unavailable keep),
+  service tests for city/stars/boarding/price/sort/availability/cache-key; full suite green
+  (354 backend, 1855 assertions); `tsc`, `pint` clean; hotel frontend tests pass.
+  (Pre-existing unrelated failures: admin gallery/form tests fail on the clean tree too.)
+
 **Checkpoint 2 ✅ / ❌** — server search engine verified against live API for seasonality, filters, availability.
 
 ---
@@ -367,11 +383,7 @@ dates/occupancy/filters.
 - [ ] **Stage 1** — pricing model + server engine + accuracy
   - [x] Phase A pricing correctness (`price_total`/`price_per_night`, shared calculator, markup, currency)
   - [x] Checkpoint 1 (unit + live price sanity) — stay-total confirmed; real response-shape fix landed
-  - [ ] Phase B server search engine (filters, chunking, category pass-through, live price-range, availability flags)
-  - [ ] Checkpoint 2 (live seasonality/filter/availability pass)
-  - [ ] Phase C staleness guarantees (labels, locked bookings, no stale fallbacks)
-  - [ ] Checkpoint 3 (accuracy E2E)
-  - [ ] Phase B server search engine (filters, chunking, category pass-through, live price-range, availability flags)
+  - [x] Phase B server search engine (filters, chunking, category pass-through, live price-range, availability flags)
   - [ ] Checkpoint 2 (live seasonality/filter/availability pass)
   - [ ] Phase C staleness guarantees (labels, locked bookings, no stale fallbacks)
   - [ ] Checkpoint 3 (accuracy E2E)
