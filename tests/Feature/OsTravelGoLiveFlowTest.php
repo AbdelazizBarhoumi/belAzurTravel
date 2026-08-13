@@ -91,7 +91,9 @@ class OsTravelGoLiveFlowTest extends TestCase
         $this->assertSame('eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=', $live['rooms'][0]['token']);
         $this->assertSame(501, (int) $live['rooms'][0]['id']);
         $this->assertSame(4, $live['rooms'][0]['boarding_id']);
-        $this->assertSame([1], $live['rooms'][0]['view_ids']);
+        // The live HotelSearch response does not carry View/Supplement; the
+        // booking sends empty view_ids and supplements.
+        $this->assertSame([], $live['rooms'][0]['view_ids']);
 
         // 5. prebook -> booking created Pending with provider payload.
         Http::fake([

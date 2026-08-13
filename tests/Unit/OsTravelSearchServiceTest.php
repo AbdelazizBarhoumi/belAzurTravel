@@ -76,14 +76,27 @@ class OsTravelSearchServiceTest extends TestCase
 
         $kelibia = collect($results)->firstWhere('slug', 'cap-bon-kelibia');
         $this->assertSame('Cap Bon Kelibia Beach Hotel & Spa', $kelibia['name']['en']);
-        // 927.520 * 1.2 = 1113.024 -> 1113
+        // 927.520 * 1.2 = 1113.024 -> 1113 (TOTAL-stay price, 7 nights).
         $this->assertSame(1113, $kelibia['price']);
+        $this->assertSame(1113, $kelibia['price_total']);
+        $this->assertSame(7, $kelibia['nights']);
+        // 1113 / 7 = 158.999... -> 159.00
+        $this->assertSame(159.0, $kelibia['price_per_night']);
         $this->assertSame(927.52, $kelibia['base_price']);
         $this->assertSame('TND', $kelibia['currency']);
         $this->assertSame('eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=', $kelibia['rooms'][0]['token']);
         $this->assertSame('LPD', $kelibia['rooms'][0]['boarding']);
         $this->assertFalse($kelibia['rooms'][0]['stop_reservation']);
-        $this->assertCount(2, $kelibia['rooms']);
+        $this->assertCount(3, $kelibia['rooms']);
+        // Room-level stay-total semantics.
+        $this->assertSame(1113, $kelibia['rooms'][0]['price']);
+        $this->assertSame(1113, $kelibia['rooms'][0]['price_total']);
+        $this->assertSame(159.0, $kelibia['rooms'][0]['price_per_night']);
+        $this->assertSame(7, $kelibia['rooms'][0]['nights']);
+        $this->assertSame('TND', $kelibia['rooms'][0]['currency']);
+        // Suite: 1200 * 1.2 = 1440.
+        $this->assertSame(1440, $kelibia['rooms'][1]['price_total']);
+        $this->assertSame(205.71, $kelibia['rooms'][1]['price_per_night']);
 
         $stopSales = collect($results)->firstWhere('slug', 'stop-sales');
         // All rooms are stop-sales, so the price falls back to the stored value.
@@ -176,8 +189,8 @@ class OsTravelSearchServiceTest extends TestCase
         $first = $this->osTravelFixture('hotel_search');
         $second = $this->osTravelFixture('hotel_search');
         // Distinct price for the September window to prove results don't bleed.
-        $second['HotelSearch'][0]['Rooms'][0]['Price'] = '750.000';
-        $second['HotelSearch'][0]['Rooms'][1]['Price'] = '900.000';
+        $second['HotelSearch'][0]['Price']['Boarding'][0]['Pax'][0]['Rooms'][0]['Price'] = '750.000';
+        $second['HotelSearch'][0]['Price']['Boarding'][0]['Pax'][0]['Rooms'][1]['Price'] = '900.000';
 
         Http::fake([
             'https://admin.mygo.co/api/hotel/HotelSearch' => Http::sequence()

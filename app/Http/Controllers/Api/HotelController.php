@@ -6,12 +6,17 @@ use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use App\Models\Hotel;
+use App\Services\OsTravel\OsTravelPriceCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
 class HotelController extends Controller
 {
     use HandlesAdminMedia;
+
+    public function __construct(
+        private readonly OsTravelPriceCalculator $calculator,
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -53,7 +58,7 @@ class HotelController extends Controller
         $basePrice = $item->base_price;
         if ($item->last_price !== null) {
             $basePrice = $item->last_price;
-            $price = (int) round($basePrice * (1 + $markup / 100));
+            $price = $this->calculator->applyMarkup($basePrice, $markup);
         }
 
         return [

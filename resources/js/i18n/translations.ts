@@ -1507,6 +1507,16 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Select room',
     },
     'hotelDetail.pernight': { fr: '/nuit', ar: '/ليلة', en: '/night' },
+    'hotelDetail.totalForStay': {
+        fr: 'Total pour le séjour',
+        ar: 'الإجمالي للإقامة',
+        en: 'Total for stay',
+    },
+    'hotelDetail.nightsLabel': {
+        fr: 'nuits',
+        ar: 'ليالي',
+        en: 'nights',
+    },
     'hotelDetail.livePriceTitle': {
         fr: 'Vérifiez le prix pour vos dates',
         ar: 'تحقق من السعر لتواريخك',

@@ -8,6 +8,10 @@ interface Room {
     name: string;
     description: string;
     pricePerNight: number;
+    // Live OS-TRAVEL rooms carry a TOTAL-stay price plus the derived per-night
+    // figure; static admin rooms only have an admin-defined per-night price.
+    priceTotal?: number;
+    nights?: number;
     capacity: number;
     size: number;
     features: string[];
@@ -109,11 +113,18 @@ export function RoomsList({ rooms, onBookRoom }: RoomsListProps) {
                                     <div className="flex flex-col items-end justify-between lg:col-span-1">
                                         <div className="text-right">
                                             <div className="text-sm text-muted-foreground">
-                                                {t('hotelDetail.pricePerNight')}
+                                                {room.priceTotal !== undefined
+                                                    ? t('hotelDetail.totalForStay')
+                                                    : t('hotelDetail.pricePerNight')}
                                             </div>
                                             <div className="mb-4 font-serif text-3xl font-bold text-secondary">
-                                                {room.pricePerNight} TND
+                                                {room.priceTotal?.toLocaleString() ?? room.pricePerNight.toLocaleString()} TND
                                             </div>
+                                            {room.priceTotal !== undefined && room.nights ? (
+                                                <div className="mb-4 text-xs text-muted-foreground">
+                                                    ~{room.pricePerNight.toLocaleString()} TND {t('hotelDetail.pernight')} · {room.nights} {t('hotelDetail.nightsLabel')}
+                                                </div>
+                                            ) : null}
                                         </div>
 
                                         <Button

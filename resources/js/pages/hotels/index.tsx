@@ -326,8 +326,26 @@ return (
                                                     />
 
                                                     <div className="absolute right-4 top-4 rounded-full bg-card/95 px-3 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur">
-                                                        {t('hotels.priceFrom')}{' '}
-                                                        {liveBySlug.get(hotel.slug)?.price ?? hotel.price} TND
+                                                        {(() => {
+                                                            const live = liveBySlug.get(
+                                                                hotel.slug,
+                                                            );
+                                                            const price =
+                                                                live?.price ??
+                                                                hotel.price;
+                                                            return (
+                                                                <>
+                                                                    {t(
+                                                                        'hotels.priceFrom',
+                                                                    )}{' '}
+                                                                    {price.toLocaleString()}{' '}
+                                                                    TND
+                                                                    {live?.nights
+                                                                        ? ` · ${live.nights} ${t('hotelDetail.nightsLabel')}`
+                                                                        : ''}
+                                                                </>
+                                                            );
+                                                        })()}
                                                     </div>
                                                 </div>
 

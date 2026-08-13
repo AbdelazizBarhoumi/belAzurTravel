@@ -19,6 +19,7 @@ class OsTravelBookingService
 {
     public function __construct(
         private readonly OsTravelClient $client,
+        private readonly OsTravelPriceCalculator $calculator,
     ) {}
 
     /**
@@ -234,25 +235,41 @@ class OsTravelBookingService
      */
     private function normalizeCreation(array $data): array
     {
+        $total = (float) ($data['TotalPrice'] ?? 0);
+        $currency = $this->calculator->currency($data['Currency'] ?? 'TND');
+        $nights = $this->calculator->nightsBetween(
+            isset($data['CheckIn']) ? (string) $data['CheckIn'] : null,
+            isset($data['CheckOut']) ? (string) $data['CheckOut'] : null,
+        );
+
         return [
-            'total' => (float) ($data['TotalPrice'] ?? 0),
-            'currency' => $data['Currency'] ?? 'TND',
+            'total' => $total,
+            'currency' => $currency,
             'breakdown' => [
                 'id' => $data['Id'] ?? null,
                 'state' => $data['State'] ?? null,
                 'on_request' => (bool) ($data['OnRequest'] ?? false),
                 'check_in' => $data['CheckIn'] ?? null,
                 'check_out' => $data['CheckOut'] ?? null,
-                'total' => (float) ($data['TotalPrice'] ?? 0),
-                'currency' => $data['Currency'] ?? 'TND',
+                'nights' => $nights,
+                'total' => $total,
+                'currency' => $currency,
+                'price_per_night' => $this->calculator->perNight($total, $nights),
                 'voucher' => $data['Voucher'] ?? null,
                 'cancellation_policy' => $data['CancellationPolicy'] ?? [],
                 'rooms' => array_map(
-                    fn (array $room) => [
-                        'id' => $room['Id'] ?? null,
-                        'boarding' => $room['Boarding'] ?? null,
-                        'total' => (float) ($room['TotalPrice'] ?? 0),
-                    ],
+                    function (array $room) use ($nights, $currency): array {
+                        $roomTotal = (float) ($room['TotalPrice'] ?? 0);
+
+                        return [
+                            'id' => $room['Id'] ?? null,
+                            'boarding' => $room['Boarding'] ?? null,
+                            'total' => $roomTotal,
+                            'currency' => $currency,
+                            'nights' => $nights,
+                            'price_per_night' => $this->calculator->perNight($roomTotal, $nights),
+                        ];
+                    },
                     $data['Rooms'] ?? []
                 ),
             ],
@@ -267,7 +284,7 @@ class OsTravelBookingService
     {
         return [
             'total' => (float) ($data['TotalPrice'] ?? 0),
-            'currency' => $data['Currency'] ?? 'TND',
+            'currency' => $this->calculator->currency($data['Currency'] ?? 'TND'),
             'fees' => $data['CancellationPolicy'] ?? [],
         ];
     }

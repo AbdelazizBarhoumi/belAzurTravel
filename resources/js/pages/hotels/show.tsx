@@ -27,6 +27,10 @@ type RoomView = {
     name: string;
     description: string;
     pricePerNight: number;
+    // Live OS-TRAVEL rooms carry a TOTAL-stay price; static admin rooms only
+    // have an admin-defined per-night price.
+    priceTotal?: number;
+    nights?: number;
     capacity: number;
     size: number;
     features: string[];
@@ -177,7 +181,9 @@ export default function HotelDetail() {
                     (room.boarding_name
                         ? `Boarding: ${room.boarding_name}`
                         : ''),
-                pricePerNight: room.price,
+                pricePerNight: room.price_per_night,
+                priceTotal: room.price_total,
+                nights: room.nights,
                 capacity: staticRoom?.capacity ?? 2,
                 size: staticRoom?.size ?? 0,
                 features:
@@ -196,12 +202,17 @@ export default function HotelDetail() {
             ? [...liveRooms, ...rooms.filter((room) => !liveRoomIds.has(room.id))]
             : rooms;
     const displayMinPrice = displayRooms.length
-        ? Math.min(...displayRooms.map((room) => room.pricePerNight))
+        ? Math.min(...displayRooms.map((room) => room.priceTotal ?? room.pricePerNight))
         : (detail.price ?? 0);
     const minPrice = liveHotel?.price ?? displayMinPrice;
     const livePriceLabel = liveHotel
-        ? `${t('hotelDetail.livePrices')} - ${liveHotel.price} TND`
+        ? t('hotelDetail.livePrices')
         : undefined;
+    const priceSuffix = liveHotel
+        ? liveHotel.nights
+            ? `· ${liveHotel.nights} ${t('hotelDetail.nightsLabel')}`
+            : undefined
+        : t('hotelDetail.pernight');
     const amenities = (detail.amenities ?? [])
         .filter((amenity) => {
             const nameData =
@@ -285,7 +296,7 @@ export default function HotelDetail() {
                                 livePriceLabel ??
                                 (t('hotelDetail.startingFrom') || 'From')
                             }
-                            priceSuffix={t('hotelDetail.pernight')}
+                            priceSuffix={priceSuffix}
                             title={title}
                             location={location}
                             entityType="hotel"
@@ -379,7 +390,7 @@ export default function HotelDetail() {
                             livePriceLabel ??
                             (t('hotelDetail.startingFrom') || 'From')
                         }
-                        priceSuffix={t('hotelDetail.pernight')}
+                        priceSuffix={priceSuffix}
                         title={title}
                         location={location}
                         entityType="hotel"
@@ -402,7 +413,9 @@ export default function HotelDetail() {
                     type="hotel"
                     itemId={detail.id}
                     itemName={`${title} - ${selectedRoom.name}`}
-                    amount={selectedRoom.pricePerNight}
+                    amount={
+                        selectedRoom.priceTotal ?? selectedRoom.pricePerNight
+                    }
                     provider={
                         liveHotel
                             ? {

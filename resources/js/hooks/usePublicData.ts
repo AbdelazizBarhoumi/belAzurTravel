@@ -382,9 +382,12 @@ export interface HotelSearchResult {
     reviews: number;
     image: string;
     price: number;
+    price_total: number;
+    price_per_night: number;
     base_price: number;
     markup_percentage: string;
     currency: string;
+    nights: number;
     rooms: Array<{
         id: string;
         name: string;
@@ -394,7 +397,11 @@ export interface HotelSearchResult {
         view: string;
         view_ids?: number[];
         price: number;
+        price_total: number;
+        price_per_night: number;
         base_price: number;
+        currency: string;
+        nights: number;
         token: string | null;
         source: string | null;
         stop_reservation: boolean;

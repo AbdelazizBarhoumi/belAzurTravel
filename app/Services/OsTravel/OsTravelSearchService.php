@@ -23,6 +23,7 @@ class OsTravelSearchService
 
     public function __construct(
         private readonly OsTravelClient $client,
+        private readonly OsTravelPriceCalculator $calculator,
     ) {}
 
     /**
@@ -53,6 +54,11 @@ class OsTravelSearchService
 
             $results = [];
 
+            $nights = $this->calculator->nightsBetween(
+                $searchDetails['check_in'],
+                $searchDetails['check_out'],
+            );
+
             foreach (array_chunk($staged->keys()->all(), self::MAX_HOTELS_PER_REQUEST) as $chunk) {
                 try {
                     $envelope = $this->client->hotelSearch([
@@ -76,13 +82,13 @@ class OsTravelSearchService
                 }
 
                 foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
-                    $externalId = (string) ($providerHotel['Id'] ?? '');
+                    $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
                     $item = $staged->get($externalId);
                     if ($item === null || $item->hotel === null) {
                         continue;
                     }
 
-                    $results[] = $this->normalize($item->hotel, $providerHotel);
+                    $results[] = $this->normalize($item->hotel, $providerHotel, $nights);
                 }
             }
 
@@ -143,7 +149,7 @@ class OsTravelSearchService
             $seen = [];
 
             foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
-                $externalId = (string) ($providerHotel['Id'] ?? '');
+                $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
                 $item = $published->get($externalId);
                 if ($item === null || $item->hotel === null) {
                     continue;
@@ -203,34 +209,83 @@ class OsTravelSearchService
     }
 
     /**
+     * The provider returns a single offer per hotel inside `HotelSearch`.
+     * A hotel can be available for several boardings and pax configurations;
+     * this flattens `Price.Boarding[].Pax[].Rooms[]` into bookable room offers
+     * (a room + the boarding/pax it was quoted for).
+     *
+     * @param  array<string, mixed>  $providerHotel
+     * @return list<array<string, mixed>>
+     */
+    private function roomOffers(array $providerHotel): array
+    {
+        $offers = [];
+
+        foreach ($providerHotel['Price']['Boarding'] ?? [] as $boarding) {
+            $boardingId = isset($boarding['Id']) ? (int) $boarding['Id'] : null;
+            $boardingCode = $boarding['Code'] ?? null;
+            $boardingName = $boarding['Name'] ?? null;
+
+            foreach ($boarding['Pax'] ?? [] as $pax) {
+                $adults = (int) ($pax['Adult'] ?? 0);
+
+                foreach ($pax['Rooms'] ?? [] as $room) {
+                    $offers[] = [
+                        'id' => (string) ($room['Id'] ?? ''),
+                        'name' => $room['Name'] ?? '',
+                        'boarding_id' => $boardingId,
+                        'boarding' => $boardingCode,
+                        'boarding_name' => $boardingName,
+                        'adults' => $adults,
+                        'price' => (float) ($room['Price'] ?? $room['BasePrice'] ?? 0),
+                        'stop_reservation' => (bool) ($room['StopReservation'] ?? false),
+                        'cancellation_policy' => $room['CancellationPolicy'] ?? [],
+                        'view' => '',
+                        'view_ids' => [],
+                        'supplements' => [],
+                    ];
+                }
+            }
+        }
+
+        return $offers;
+    }
+
+    /**
      * @param  array<string, mixed>  $providerHotel
      * @return array<string, mixed>
      */
-    private function normalize(Hotel $hotel, array $providerHotel): array
+    private function normalize(Hotel $hotel, array $providerHotel, int $nights): array
     {
         $markup = (float) $hotel->markup_percentage;
+        $currency = $this->calculator->currency($providerHotel['Currency'] ?? $hotel->currency);
 
         $rooms = [];
-        foreach ($providerHotel['Rooms'] ?? [] as $room) {
-            $basePrice = (float) ($room['Price'] ?? 0);
+        foreach ($this->roomOffers($providerHotel) as $offer) {
+            $basePrice = $offer['price'];
+
             $rooms[] = [
-                'id' => (string) ($room['Id'] ?? ''),
-                'name' => $room['Name'] ?? '',
-                'boarding' => $room['Boarding']['Code'] ?? null,
-                'boarding_name' => $room['Boarding']['Name'] ?? null,
-                'boarding_id' => isset($room['Boarding']['Id']) ? (int) $room['Boarding']['Id'] : null,
-                'view' => ($room['View'][0]['Name'] ?? ''),
-                'view_ids' => array_values(array_map(
-                    fn ($view) => (int) ($view['Id'] ?? 0),
-                    $room['View'] ?? []
-                )),
-                'price' => (int) round($basePrice * (1 + $markup / 100)),
+                'id' => $offer['id'],
+                'name' => $offer['name'],
+                'boarding' => $offer['boarding'],
+                'boarding_name' => $offer['boarding_name'],
+                'boarding_id' => $offer['boarding_id'],
+                'adults' => $offer['adults'],
+                'view' => $offer['view'],
+                'view_ids' => $offer['view_ids'],
+                // Provider prices are TOTAL-stay per room; the public price is
+                // that total plus markup, and the per-night figure is derived.
+                'price' => $this->calculator->applyMarkup($basePrice, $markup),
+                'price_total' => $this->calculator->applyMarkup($basePrice, $markup),
+                'price_per_night' => $this->calculator->perNight($this->calculator->applyMarkup($basePrice, $markup), $nights),
                 'base_price' => $basePrice,
+                'currency' => $currency,
+                'nights' => $nights,
                 'token' => $providerHotel['Token'] ?? null,
                 'source' => $providerHotel['Source'] ?? null,
-                'stop_reservation' => (bool) ($room['StopReservation'] ?? false),
-                'cancellation_policy' => $this->cancellationPolicy($room['CancellationPolicy'] ?? []),
-                'supplements' => $room['Supplement'] ?? [],
+                'stop_reservation' => $offer['stop_reservation'],
+                'cancellation_policy' => $this->cancellationPolicy($offer['cancellation_policy']),
+                'supplements' => $offer['supplements'],
             ];
         }
 
@@ -255,10 +310,16 @@ class OsTravelSearchService
             'rating' => $hotel->rating,
             'reviews' => $hotel->reviews,
             'image' => $hotel->image,
+            // Stay-total semantics: `price` is the cheapest available room's
+            // total for the whole stay (marked up); fall back to stored when
+            // every room is stopped.
             'price' => $minRoom['price'] ?? $hotel->price,
+            'price_total' => $minRoom['price_total'] ?? $hotel->price,
+            'price_per_night' => $minRoom['price_per_night'] ?? $this->calculator->perNight($hotel->price, $nights),
             'base_price' => $minRoom['base_price'] ?? $hotel->base_price,
             'markup_percentage' => $hotel->markup_percentage,
-            'currency' => $hotel->currency,
+            'currency' => $minRoom['currency'] ?? $currency,
+            'nights' => $nights,
             'rooms' => $rooms,
         ];
     }
@@ -269,11 +330,11 @@ class OsTravelSearchService
     private function minRoomPrice(array $providerHotel): ?float
     {
         $prices = [];
-        foreach ($providerHotel['Rooms'] ?? [] as $room) {
-            if (! empty($room['StopReservation'])) {
+        foreach ($this->roomOffers($providerHotel) as $offer) {
+            if ($offer['stop_reservation']) {
                 continue;
             }
-            $prices[] = (float) ($room['Price'] ?? 0);
+            $prices[] = $offer['price'];
         }
 
         return $prices === [] ? null : (float) min($prices);

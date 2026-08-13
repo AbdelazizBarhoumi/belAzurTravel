@@ -108,6 +108,24 @@ class OsTravelBookingServiceTest extends TestCase
         $this->assertSame('Validated', $result['breakdown']['state']);
     }
 
+    public function test_prebook_breakdown_exposes_stay_total_and_per_night(): void
+    {
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/BookingCreation' => Http::response($this->osTravelFixture('booking_creation_confirm')),
+        ]);
+
+        $result = app(OsTravelBookingService::class)->preBook($this->hotelBooking());
+
+        // Fixture: 2026-09-01 -> 2026-09-05 = 4 nights, TotalPrice 927.520.
+        $this->assertSame(4, $result['breakdown']['nights']);
+        $this->assertSame(927.52, $result['breakdown']['total']);
+        // 927.52 / 4 = 231.88.
+        $this->assertSame(231.88, $result['breakdown']['price_per_night']);
+        $this->assertSame(927.52, $result['breakdown']['rooms'][0]['total']);
+        $this->assertSame(4, $result['breakdown']['rooms'][0]['nights']);
+        $this->assertSame(231.88, $result['breakdown']['rooms'][0]['price_per_night']);
+    }
+
     public function test_confirm_returns_id_voucher_and_confirms_status(): void
     {
         Http::fake([

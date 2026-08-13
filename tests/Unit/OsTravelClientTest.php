@@ -135,7 +135,7 @@ class OsTravelClientTest extends TestCase
         ]);
 
         $this->assertCount(2, $response['HotelSearch']);
-        $this->assertSame(178, $response['HotelSearch'][0]['Id']);
+        $this->assertSame(178, $response['HotelSearch'][0]['Hotel']['Id']);
         $this->assertSame('eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=', $response['HotelSearch'][0]['Token']);
 
         Http::assertSent(fn ($request) => $this->assertListRequest($request, 'HotelSearch', []));

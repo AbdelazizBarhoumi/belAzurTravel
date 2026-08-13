@@ -1,69 +1,134 @@
 {
   "HotelSearch": [
     {
-      "Id": 178,
-      "Name": "Cap Bon Kelibia Beach Hotel & Spa",
+      "Hotel": {
+        "Id": 178,
+        "Name": "Cap Bon Kelibia Beach Hotel & Spa",
+        "Category": { "Title": "4 étoiles", "Star": 4 },
+        "City": { "Id": 12, "Name": "Kelibia" },
+        "Adress": "Zone Touristique Kelibia",
+        "Image": "https://admin.mygo.co/file_manager/source/photos/test.jpg"
+      },
       "Token": "eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=",
+      "Price": {
+        "Boarding": [
+          {
+            "Id": 4,
+            "Code": "LPD",
+            "Name": "Logement Petit D\u00e9jeuner",
+            "Pax": [
+              {
+                "Adult": 2,
+                "Child": [],
+                "Rooms": [
+                  {
+                    "Id": 501,
+                    "Name": "Chambre Double Standard",
+                    "Price": "927.520",
+                    "BasePrice": "927.520",
+                    "PriceWithAffiliateMarkup": "927.520",
+                    "StopReservation": false,
+                    "CancellationPolicy": [
+                      {
+                        "Fees": 185.50,
+                        "Type": "PERCENT",
+                        "Nature": "BEFORE_ARRIVAL",
+                        "Description": "Free cancellation until 48h before check-in. 20% fee after.",
+                        "FromDate": "2026-09-01 00:00"
+                      }
+                    ]
+                  },
+                  {
+                    "Id": 502,
+                    "Name": "Suite Junior",
+                    "Price": "1200.000",
+                    "BasePrice": "1200.000",
+                    "PriceWithAffiliateMarkup": "1200.000",
+                    "StopReservation": false,
+                    "CancellationPolicy": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "Id": 5,
+            "Code": "DP",
+            "Name": "Demi Pension",
+            "Pax": [
+              {
+                "Adult": 2,
+                "Child": [],
+                "Rooms": [
+                  {
+                    "Id": 503,
+                    "Name": "Chambre Double Standard",
+                    "Price": "1080.000",
+                    "BasePrice": "1080.000",
+                    "PriceWithAffiliateMarkup": "1080.000",
+                    "StopReservation": false,
+                    "CancellationPolicy": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "BasePrice": "66.150"
+      },
+      "FreeChild": [],
       "Source": "OS-TRAVEL-DIRECT",
-      "Rooms": [
-        {
-          "Id": 501,
-          "Name": "Chambre Double Standard",
-          "Boarding": { "Id": 4, "Code": "LPD", "Name": "Logement Petit D\u00e9jeuner" },
-          "View": [ { "Id": 1, "Name": "City View" } ],
-          "Supplement": [],
-          "Price": "927.520",
-          "Currency": "TND",
-          "StopReservation": false,
-          "CancellationPolicy": [
-            {
-              "Fees": 185.50,
-              "Type": "PERCENT",
-              "Nature": "BEFORE_ARRIVAL",
-              "Description": "Free cancellation until 48h before check-in. 20% fee after.",
-              "FromDate": "2026-09-01 00:00"
-            }
-          ]
-        },
-        {
-          "Id": 502,
-          "Name": "Suite Junior",
-          "Boarding": { "Id": 5, "Code": "DP", "Name": "Demi Pension" },
-          "View": [ { "Id": 2, "Name": "Sea View" } ],
-          "Supplement": [],
-          "Price": "1200.000",
-          "Currency": "TND",
-          "StopReservation": false,
-          "CancellationPolicy": []
-        }
-      ]
+      "Currency": "TND",
+      "Recommended": 1
     },
     {
-      "Id": 999,
-      "Name": "Stop Sales Hotel",
+      "Hotel": {
+        "Id": 999,
+        "Name": "Stop Sales Hotel",
+        "Category": { "Title": "3 \u00e9toiles", "Star": 3 },
+        "City": { "Id": 12, "Name": "Kelibia" },
+        "Adress": "Somewhere",
+        "Image": "https://admin.mygo.co/file_manager/source/photos/test.jpg"
+      },
       "Token": "eyJ0b2tlbiI6InN0b3Atc2FsZXMifQ==",
+      "Price": {
+        "Boarding": [
+          {
+            "Id": 3,
+            "Code": "LS",
+            "Name": "Logement Simple",
+            "Pax": [
+              {
+                "Adult": 2,
+                "Child": [],
+                "Rooms": [
+                  {
+                    "Id": 600,
+                    "Name": "Chambre Standard",
+                    "Price": "500.000",
+                    "BasePrice": "500.000",
+                    "PriceWithAffiliateMarkup": "500.000",
+                    "StopReservation": true,
+                    "CancellationPolicy": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "BasePrice": "0.000"
+      },
+      "FreeChild": [],
       "Source": "OS-TRAVEL-DIRECT",
-      "Rooms": [
-        {
-          "Id": 600,
-          "Name": "Chambre Standard",
-          "Boarding": { "Id": 3, "Code": "LS", "Name": "Logement Simple" },
-          "View": [],
-          "Supplement": [],
-          "Price": "500.000",
-          "Currency": "TND",
-          "StopReservation": true,
-          "CancellationPolicy": []
-        }
-      ]
+      "Currency": "TND",
+      "Recommended": 0
     }
   ],
   "CountResults": 2,
   "ErrorMessage": [],
+  "SearchId": "test-search-id",
   "Timing": {
-    "Begin": { "date": "2026-08-13 13:01:47.000000", "timezone_type": 3, "timezone": "Africa/Tunis" },
-    "End": { "date": "2026-08-13 13:01:47.000000", "timezone_type": 3, "timezone": "Africa/Tunis" },
     "Duration": "350 ms"
   },
-  "Ip": "102.211.211.160"
+  "Ip": "127.0.0.1"
 }

@@ -100,7 +100,7 @@ class HotelSearchPublicFlowTest extends TestCase
         $this->assertSame('cap-bon-kelibia', $item['slug']);
         $this->assertSame(1113, $item['price']);
         $this->assertSame('eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=', $item['rooms'][0]['token']);
-        $this->assertCount(2, $item['rooms']);
+        $this->assertCount(3, $item['rooms']);
     }
 
     public function test_search_ignores_non_published_hotels(): void
