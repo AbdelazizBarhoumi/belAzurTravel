@@ -62,12 +62,19 @@ class OsTravelClient
     /**
      * Returns the raw decoded envelope so the sync service can detect
      * pagination metadata (e.g. `Page`, `TotalPages`) and loop if present.
+     * Pass an integer page to include a `Paginator` payload.
      *
      * @return array<int|string, mixed> Decoded response envelope.
      */
-    public function listHotels(string $cityId): array
+    public function listHotels(string $cityId, ?int $page = null): array
     {
-        return $this->post('ListHotel', ['City' => $cityId]);
+        $payload = ['City' => $cityId];
+
+        if ($page !== null) {
+            $payload['Paginator'] = ['Page' => $page, 'CountPerPage' => 100];
+        }
+
+        return $this->post('ListHotel', $payload);
     }
 
     /**
