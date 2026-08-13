@@ -390,6 +390,9 @@ export interface HotelSearchResult {
         name: string;
         boarding: string | null;
         boarding_name: string | null;
+        boarding_id?: number | null;
+        view: string;
+        view_ids?: number[];
         price: number;
         base_price: number;
         token: string | null;
@@ -403,7 +406,6 @@ export interface HotelSearchResult {
             from_date: string | null;
         }>;
         supplements: unknown[];
-        view: string;
     }>;
 }
 

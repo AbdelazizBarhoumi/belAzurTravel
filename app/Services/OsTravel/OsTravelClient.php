@@ -99,6 +99,49 @@ class OsTravelClient
     }
 
     /**
+     * PreBook (`PreBooking=true`) or Confirm (`PreBooking` absent) a hotel
+     * reservation. `$hotelBooking` is the `HotelBooking` object (Room ids,
+     * boardings, pax, token, source).
+     *
+     * @param  array<string, mixed>  $hotelBooking
+     * @return array<int|string, mixed> Decoded response envelope.
+     */
+    public function bookingCreation(array $hotelBooking): array
+    {
+        return $this->post('BookingCreation', ['HotelBooking' => $hotelBooking]);
+    }
+
+    /**
+     * Preview (`PreCancelled=true`) or Confirm (`PreCancelled` absent) a
+     * cancellation. `$booking` holds the booking Id plus provider context.
+     *
+     * @param  array<string, mixed>  $booking
+     * @return array<int|string, mixed> Decoded response envelope.
+     */
+    public function bookingCancellation(array $booking): array
+    {
+        return $this->post('BookingCancellation', ['Booking' => $booking]);
+    }
+
+    /**
+     * Reservation history. `$filters` may include booking id, hotel, and date
+     * range keys; `$page` adds a `Paginator` object.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<int|string, mixed> Decoded response envelope.
+     */
+    public function bookingList(array $filters = [], ?int $page = null): array
+    {
+        $payload = ['Filters' => $filters];
+
+        if ($page !== null) {
+            $payload['Paginator'] = ['Page' => $page, 'CountPerPage' => 100];
+        }
+
+        return $this->post('BookingList', $payload);
+    }
+
+    /**
      * @param  array<string, mixed>  $extra  Payload keys merged alongside the credential.
      * @return array<int|string, mixed> Decoded response envelope.
      */

@@ -31,6 +31,11 @@ type RoomView = {
     size: number;
     features: string[];
     images: string[];
+    // OS-TRAVEL live-search context for the booking proxy.
+    providerRoomId?: number;
+    boardingId?: number;
+    viewIds?: number[];
+    supplements?: unknown[];
 };
 
 type AmenityView = {
@@ -179,6 +184,10 @@ export default function HotelDetail() {
                     staticRoom?.features ??
                     (room.view ? [room.view] : []),
                 images: staticRoom?.images ?? [],
+                providerRoomId: room.id ? Number(room.id) : undefined,
+                boardingId: room.boarding_id ?? undefined,
+                viewIds: room.view_ids ?? [],
+                supplements: room.supplements,
             };
         });
     const liveRoomIds = new Set(liveRooms.map((room) => room.id));
@@ -394,6 +403,27 @@ export default function HotelDetail() {
                     itemId={detail.id}
                     itemName={`${title} - ${selectedRoom.name}`}
                     amount={selectedRoom.pricePerNight}
+                    provider={
+                        liveHotel
+                            ? {
+                                  token: liveHotel.rooms[0]?.token,
+                                  source: liveHotel.rooms[0]?.source,
+                                  rooms: [
+                                      {
+                                          id: selectedRoom.providerRoomId
+                                              ? String(selectedRoom.providerRoomId)
+                                              : undefined,
+                                          boardingId:
+                                              selectedRoom.boardingId,
+                                          viewIds: selectedRoom.viewIds,
+                                          supplements:
+                                              selectedRoom.supplements,
+                                      },
+                                  ],
+                                  adults: guests,
+                              }
+                            : undefined
+                    }
                 />
             )}
         </PageShell>

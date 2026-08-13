@@ -28,6 +28,19 @@ interface BookingDialogProps {
     itemId?: string;
     itemName: string;
     amount: number;
+    // OS-TRAVEL live-search context captured on the hotel detail page.
+    provider?: {
+        token?: string | null;
+        source?: string | null;
+        rooms?: Array<{
+            id?: string | null;
+            boardingId?: number | null;
+            viewIds?: number[];
+            supplements?: unknown[];
+        }>;
+        adults?: number;
+        children?: number;
+    };
 }
 
 export function BookingDialog({
@@ -38,6 +51,7 @@ export function BookingDialog({
     itemId,
     itemName,
     amount,
+    provider,
 }: BookingDialogProps) {
     const { t } = useLanguage();
     const { data: user } = useAuthUser();
@@ -50,6 +64,7 @@ export function BookingDialog({
     const [startDate, setStartDate] = useState<Date | undefined>(undefined);
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [notes, setNotes] = useState('');
+    const [travelers, setTravelers] = useState<string>('');
 
     useEffect(() => {
         if (open && user) {
@@ -101,7 +116,34 @@ export function BookingDialog({
             return;
         }
 
-        mutation.mutate({
+        // Parse the travelers textarea into OS-TRAVEL pax adults; the first
+        // guest is the booking holder.
+        const adultLines = travelers
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .slice(0, Math.max(1, provider?.adults ?? 1));
+        const adultPax = adultLines.map((line, index) => {
+            const [firstName = 'Guest', ...rest] = line.split(/\s+/);
+            const surname = rest.join(' ');
+
+            return {
+                civility: 'Mr',
+                name: firstName,
+                surname: surname || 'Traveler',
+                holder: index === 0,
+            };
+        });
+        const childPax = Array.from(
+            { length: Math.max(0, provider?.children ?? 0) },
+            (_, index) => ({
+                name: `Child ${index + 1}`,
+                surname: 'Traveler',
+                age: 8,
+            }),
+        );
+
+        const payload: Record<string, unknown> = {
             type,
             item_slug: itemSlug,
             item_id: itemId,
@@ -114,7 +156,27 @@ export function BookingDialog({
             },
             notes,
             amount,
-        });
+            travelers: adultLines.map((line) => ({ name: line })),
+        };
+
+        if (provider?.token && provider.rooms?.length) {
+            payload.provider = {
+                token: provider.token,
+                source: provider.source ?? 'OS-TRAVEL-DIRECT',
+                rooms: provider.rooms.map((room) => ({
+                    id: room.id ? Number(room.id) : undefined,
+                    boarding_id: room.boardingId ?? undefined,
+                    view_ids: room.viewIds ?? [],
+                    supplements: room.supplements ?? [],
+                })),
+                pax: {
+                    adults: adultPax,
+                    children: childPax,
+                },
+            };
+        }
+
+        mutation.mutate(payload);
     };
 
     return (
@@ -197,6 +259,22 @@ export function BookingDialog({
                             }
                         />
                     </div>
+                    {type === 'hotel' && provider?.token && (
+                        <div className="space-y-2">
+                            <Label htmlFor="travelers">
+                                {t('booking.travelers') || 'Travelers'}
+                            </Label>
+                            <Textarea
+                                id="travelers"
+                                value={travelers}
+                                onChange={(e) => setTravelers(e.target.value)}
+                                placeholder={
+                                    t('booking.travelersPlaceholder') ||
+                                    'One traveler per line: First Last'
+                                }
+                            />
+                        </div>
+                    )}
                     <DialogFooter>
                         <Button type="submit" disabled={mutation.isPending}>
                             {mutation.isPending

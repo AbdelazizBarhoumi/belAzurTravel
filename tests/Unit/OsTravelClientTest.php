@@ -141,6 +141,63 @@ class OsTravelClientTest extends TestCase
         Http::assertSent(fn ($request) => $this->assertListRequest($request, 'HotelSearch', []));
     }
 
+    public function test_booking_creation_sends_hotel_booking(): void
+    {
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/BookingCreation' => Http::response($this->fixture('booking_creation_confirm')),
+        ]);
+
+        $hotelBooking = [
+            'City' => 10,
+            'Hotel' => 100,
+            'CheckIn' => '2026-09-01',
+            'CheckOut' => '2026-09-05',
+            'Source' => 'OS-TRAVEL-DIRECT',
+            'Token' => 'eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=',
+            'Rooms' => [['Id' => 501]],
+        ];
+
+        $response = (new OsTravelClient)->bookingCreation($hotelBooking);
+
+        $this->assertSame(98765, $response['BookingCreation']['Id']);
+        $this->assertSame('VOUCH-98765', $response['BookingCreation']['Voucher']['Num']);
+
+        Http::assertSent(fn ($request) => $this->assertListRequest($request, 'BookingCreation', []));
+        Http::assertSent(fn ($request) => $request->data()['HotelBooking']['Hotel'] === 100);
+    }
+
+    public function test_booking_cancellation_sends_booking_context(): void
+    {
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/BookingCancellation' => Http::response($this->fixture('booking_cancellation_confirm')),
+        ]);
+
+        $booking = ['Id' => 98765, 'Hotel' => 100, 'City' => 10];
+
+        $response = (new OsTravelClient)->bookingCancellation($booking);
+
+        $this->assertSame('Cancelled', $response['BookingCancellation']['State']);
+
+        Http::assertSent(fn ($request) => $this->assertListRequest($request, 'BookingCancellation', []));
+        Http::assertSent(fn ($request) => $request->data()['Booking']['Id'] === 98765);
+    }
+
+    public function test_booking_list_sends_filters_and_paginator(): void
+    {
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/BookingList' => Http::response($this->fixture('booking_list')),
+        ]);
+
+        $response = (new OsTravelClient)->bookingList(['Hotel' => 100], 2);
+
+        $this->assertCount(2, $response['BookingList']);
+        $this->assertSame('Cancelled', $response['BookingList'][1]['State']);
+
+        Http::assertSent(fn ($request) => $this->assertListRequest($request, 'BookingList', []));
+        Http::assertSent(fn ($request) => $request->data()['Filters']['Hotel'] === 100);
+        Http::assertSent(fn ($request) => $request->data()['Paginator']['Page'] === 2);
+    }
+
     public function test_error_message_throws_typed_exception(): void
     {
         Http::fake([

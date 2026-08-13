@@ -4092,6 +4092,16 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'أي طلبات خاصة؟',
         en: 'Any special requests?',
     },
+    'booking.travelers': {
+        fr: 'Voyageurs',
+        ar: 'المسافرون',
+        en: 'Travelers',
+    },
+    'booking.travelersPlaceholder': {
+        fr: 'Un voyageur par ligne : Prénom Nom',
+        ar: 'مسافر واحد في كل سطر: الاسم الكامل',
+        en: 'One traveler per line: First Last',
+    },
     'booking.submit': {
         fr: 'Demander la réservation',
         ar: 'طلب الحجز',

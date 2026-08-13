@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\PaymentController::initiate
- * @see app/Http/Controllers/Api/PaymentController.php:26
+ * @see app/Http/Controllers/Api/PaymentController.php:28
  * @route '/api/bookings/{id}/pay'
  */
 export const initiate = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ initiate.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\PaymentController::initiate
- * @see app/Http/Controllers/Api/PaymentController.php:26
+ * @see app/Http/Controllers/Api/PaymentController.php:28
  * @route '/api/bookings/{id}/pay'
  */
 initiate.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ initiate.url = (args: { id: string | number } | [id: string | number ] | string 
 
 /**
 * @see \App\Http\Controllers\Api\PaymentController::initiate
- * @see app/Http/Controllers/Api/PaymentController.php:26
+ * @see app/Http/Controllers/Api/PaymentController.php:28
  * @route '/api/bookings/{id}/pay'
  */
 initiate.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -54,7 +54,7 @@ initiate.post = (args: { id: string | number } | [id: string | number ] | string
 
     /**
 * @see \App\Http\Controllers\Api\PaymentController::initiate
- * @see app/Http/Controllers/Api/PaymentController.php:26
+ * @see app/Http/Controllers/Api/PaymentController.php:28
  * @route '/api/bookings/{id}/pay'
  */
     const initiateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -64,7 +64,7 @@ initiate.post = (args: { id: string | number } | [id: string | number ] | string
 
             /**
 * @see \App\Http\Controllers\Api\PaymentController::initiate
- * @see app/Http/Controllers/Api/PaymentController.php:26
+ * @see app/Http/Controllers/Api/PaymentController.php:28
  * @route '/api/bookings/{id}/pay'
  */
         initiateForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -75,7 +75,7 @@ initiate.post = (args: { id: string | number } | [id: string | number ] | string
     initiate.form = initiateForm
 /**
 * @see \App\Http\Controllers\Api\PaymentController::retry
- * @see app/Http/Controllers/Api/PaymentController.php:171
+ * @see app/Http/Controllers/Api/PaymentController.php:190
  * @route '/api/bookings/{id}/retry-payment'
  */
 export const retry = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -90,7 +90,7 @@ retry.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\PaymentController::retry
- * @see app/Http/Controllers/Api/PaymentController.php:171
+ * @see app/Http/Controllers/Api/PaymentController.php:190
  * @route '/api/bookings/{id}/retry-payment'
  */
 retry.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -118,7 +118,7 @@ retry.url = (args: { id: string | number } | [id: string | number ] | string | n
 
 /**
 * @see \App\Http\Controllers\Api\PaymentController::retry
- * @see app/Http/Controllers/Api/PaymentController.php:171
+ * @see app/Http/Controllers/Api/PaymentController.php:190
  * @route '/api/bookings/{id}/retry-payment'
  */
 retry.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -128,7 +128,7 @@ retry.post = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Api\PaymentController::retry
- * @see app/Http/Controllers/Api/PaymentController.php:171
+ * @see app/Http/Controllers/Api/PaymentController.php:190
  * @route '/api/bookings/{id}/retry-payment'
  */
     const retryForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -138,7 +138,7 @@ retry.post = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Api\PaymentController::retry
- * @see app/Http/Controllers/Api/PaymentController.php:171
+ * @see app/Http/Controllers/Api/PaymentController.php:190
  * @route '/api/bookings/{id}/retry-payment'
  */
         retryForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -149,7 +149,7 @@ retry.post = (args: { id: string | number } | [id: string | number ] | string | 
     retry.form = retryForm
 /**
 * @see \App\Http\Controllers\Api\PaymentController::callback
- * @see app/Http/Controllers/Api/PaymentController.php:70
+ * @see app/Http/Controllers/Api/PaymentController.php:72
  * @route '/api/payment/callback'
  */
 export const callback = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -164,7 +164,7 @@ callback.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\PaymentController::callback
- * @see app/Http/Controllers/Api/PaymentController.php:70
+ * @see app/Http/Controllers/Api/PaymentController.php:72
  * @route '/api/payment/callback'
  */
 callback.url = (options?: RouteQueryOptions) => {
@@ -173,7 +173,7 @@ callback.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\PaymentController::callback
- * @see app/Http/Controllers/Api/PaymentController.php:70
+ * @see app/Http/Controllers/Api/PaymentController.php:72
  * @route '/api/payment/callback'
  */
 callback.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -182,7 +182,7 @@ callback.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\PaymentController::callback
- * @see app/Http/Controllers/Api/PaymentController.php:70
+ * @see app/Http/Controllers/Api/PaymentController.php:72
  * @route '/api/payment/callback'
  */
 callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -192,7 +192,7 @@ callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\PaymentController::callback
- * @see app/Http/Controllers/Api/PaymentController.php:70
+ * @see app/Http/Controllers/Api/PaymentController.php:72
  * @route '/api/payment/callback'
  */
     const callbackForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -202,7 +202,7 @@ callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\PaymentController::callback
- * @see app/Http/Controllers/Api/PaymentController.php:70
+ * @see app/Http/Controllers/Api/PaymentController.php:72
  * @route '/api/payment/callback'
  */
         callbackForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -211,7 +211,7 @@ callback.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\PaymentController::callback
- * @see app/Http/Controllers/Api/PaymentController.php:70
+ * @see app/Http/Controllers/Api/PaymentController.php:72
  * @route '/api/payment/callback'
  */
         callbackForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

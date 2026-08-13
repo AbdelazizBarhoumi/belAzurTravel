@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\BookingActivityNotification;
 use App\Notifications\BookingStatusNotification;
 use App\Services\ClictoPayService;
+use App\Services\OsTravel\OsTravelBookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class PaymentController extends Controller
 {
     public function __construct(
         private readonly ClictoPayService $clictoPay,
+        private readonly OsTravelBookingService $osTravelBookingService,
     ) {}
 
     /**
@@ -129,6 +131,23 @@ class PaymentController extends Controller
                     'confirmed_at' => now(),
                     'cancelled_at' => null,
                 ]);
+
+                // OS-TRAVEL hotel: Confirm the reservation with the provider
+                // now that payment succeeded, using the stored Phase 9 context.
+                if ($booking->type === 'hotel' && ! $booking->provider_booking_id) {
+                    $hotelBooking = $this->osTravelBookingService->providerContextFromPayload($booking);
+                    if ($hotelBooking) {
+                        try {
+                            $this->osTravelBookingService->confirm($booking, $hotelBooking);
+                            $booking->refresh();
+                        } catch (\Throwable $e) {
+                            Log::error('OS-TRAVEL confirm failed after payment', [
+                                'booking_id' => $booking->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                }
 
                 // Notify admin
                 User::query()

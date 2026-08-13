@@ -218,6 +218,12 @@ class OsTravelSearchService
                 'name' => $room['Name'] ?? '',
                 'boarding' => $room['Boarding']['Code'] ?? null,
                 'boarding_name' => $room['Boarding']['Name'] ?? null,
+                'boarding_id' => isset($room['Boarding']['Id']) ? (int) $room['Boarding']['Id'] : null,
+                'view' => ($room['View'][0]['Name'] ?? ''),
+                'view_ids' => array_values(array_map(
+                    fn ($view) => (int) ($view['Id'] ?? 0),
+                    $room['View'] ?? []
+                )),
                 'price' => (int) round($basePrice * (1 + $markup / 100)),
                 'base_price' => $basePrice,
                 'token' => $providerHotel['Token'] ?? null,
@@ -225,7 +231,6 @@ class OsTravelSearchService
                 'stop_reservation' => (bool) ($room['StopReservation'] ?? false),
                 'cancellation_policy' => $this->cancellationPolicy($room['CancellationPolicy'] ?? []),
                 'supplements' => $room['Supplement'] ?? [],
-                'view' => ($room['View'][0]['Name'] ?? ''),
             ];
         }
 

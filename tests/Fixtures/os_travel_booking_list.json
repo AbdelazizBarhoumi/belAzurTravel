@@ -1,0 +1,83 @@
+{
+  "BookingList": [
+    {
+      "Id": 98765,
+      "OnRequest": false,
+      "State": "Validated",
+      "Hotel": 100,
+      "City": 10,
+      "CheckIn": "2026-09-01",
+      "CheckOut": "2026-09-05",
+      "Source": "OS-TRAVEL-DIRECT",
+      "Token": "eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=",
+      "Rooms": [
+        {
+          "Id": 501,
+          "Boarding": 4,
+          "View": [1],
+          "Supplement": [],
+          "Pax": {
+            "Adult": [
+              { "Civility": "Mr", "Name": "John", "Surname": "Doe", "Holder": true }
+            ],
+            "Child": []
+          },
+          "TotalPrice": "927.520",
+          "Currency": "TND"
+        }
+      ],
+      "TotalPrice": "927.520",
+      "Currency": "TND",
+      "Voucher": {
+        "Num": "VOUCH-98765",
+        "Url": "https://vouchers.os-travel.com/98765.pdf"
+      },
+      "CancellationPolicy": [],
+      "Created": "2026-08-12 10:10:15",
+      "Validated": "2026-08-12 10:10:20"
+    },
+    {
+      "Id": 98766,
+      "OnRequest": false,
+      "State": "Cancelled",
+      "Hotel": 100,
+      "City": 10,
+      "CheckIn": "2026-08-01",
+      "CheckOut": "2026-08-05",
+      "Source": "OS-TRAVEL-DIRECT",
+      "Rooms": [
+        {
+          "Id": 502,
+          "Boarding": 5,
+          "View": [2],
+          "Supplement": [],
+          "Pax": {
+            "Adult": [
+              { "Civility": "Mrs", "Name": "Jane", "Surname": "Doe", "Holder": true }
+            ],
+            "Child": []
+          },
+          "TotalPrice": "1200.000",
+          "Currency": "TND"
+        }
+      ],
+      "TotalPrice": "1200.000",
+      "Currency": "TND",
+      "Voucher": {
+        "Num": "VOUCH-98766",
+        "Url": "https://vouchers.os-travel.com/98766.pdf"
+      },
+      "CancellationPolicy": [],
+      "Created": "2026-07-15 09:00:00",
+      "Validated": "2026-07-15 09:00:05"
+    }
+  ],
+  "CountResults": 2,
+  "ErrorMessage": {},
+  "Timing": {
+    "Begin": { "date": "2026-08-12 12:00:00.000000", "timezone_type": 3, "timezone": "Africa/Tunis" },
+    "End": { "date": "2026-08-12 12:00:00.000000", "timezone_type": 3, "timezone": "Africa/Tunis" },
+    "Duration": "300 ms"
+  },
+  "Ip": "102.211.211.160"
+}
