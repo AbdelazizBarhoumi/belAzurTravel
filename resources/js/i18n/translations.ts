@@ -5206,6 +5206,41 @@ translations['admin.hotelForm.starsHelp'] = {
     ar: 'تصنيف الفندق بالنجوم.',
     en: 'Hotel star rating.',
 };
+translations['admin.basePrice'] = {
+    fr: 'Prix de base',
+    ar: 'السعر الأساسي',
+    en: 'Base price',
+};
+translations['admin.hotelForm.basePricePlaceholder'] = {
+    fr: 'Ex. : 250',
+    ar: 'مثال: 250',
+    en: 'e.g. 250',
+};
+translations['admin.hotelForm.basePriceHelp'] = {
+    fr: 'Prix brut fournisseur. Le prix public est calculé avec la marge.',
+    ar: 'السعر الخام للمورد. يُحتسب السعر النهائي بإضافة هامش الربح.',
+    en: 'Supplier base price. The public price is computed with the markup.',
+};
+translations['admin.markupPercentage'] = {
+    fr: 'Marge (%)',
+    ar: 'هامش الربح (%)',
+    en: 'Markup (%)',
+};
+translations['admin.hotelForm.markupHelp'] = {
+    fr: 'Pourcentage ajouté au prix de base (défaut 20).',
+    ar: 'النسبة المضافة على السعر الأساسي (الافتراضي 20).',
+    en: 'Percentage added on top of the base price (default 20).',
+};
+translations['admin.currency'] = {
+    fr: 'Devise',
+    ar: 'العملة',
+    en: 'Currency',
+};
+translations['admin.hotelForm.currencyHelp'] = {
+    fr: 'Code ISO de la devise (ex. TND).',
+    ar: 'رمز العملة الدولي (مثال: TND).',
+    en: 'ISO currency code (e.g. TND).',
+};
 translations['admin.hotelForm.reviewsPlaceholder'] = {
     fr: 'Ex. : 150',
     ar: 'مثال: 150',

@@ -10,9 +10,10 @@ class Hotel extends Model
 {
     protected $fillable = [
         'slug', 'code', 'destination_slug', 'name', 'location',
-        'category_key', 'category', 'price', 'price_per_night',
+        'category_key', 'category', 'price', 'base_price',
+        'markup_percentage', 'currency', 'price_per_night',
         'rating', 'stars', 'reviews', 'description', 'image',
-        'tags', 'details',
+        'tags', 'details', 'meta',
         'date_from', 'date_to',
         // Filter fields
         'htel_recommande', 'tarifs_promo', 'enfant_gratuit',
@@ -30,8 +31,11 @@ class Hotel extends Model
         'category' => 'array',
         'tags' => 'array',
         'details' => 'array',
+        'meta' => 'array',
         'description' => 'array',
         'price' => 'integer',
+        'base_price' => 'integer',
+        'markup_percentage' => 'decimal:2',
         'price_per_night' => 'integer',
         'rating' => 'float',
         'stars' => 'integer',

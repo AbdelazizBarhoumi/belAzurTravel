@@ -60,6 +60,9 @@ class HotelController extends Controller
                 fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
             )->toArray(),
             'price' => $item->price,
+            'base_price' => $item->base_price,
+            'markup_percentage' => $item->markup_percentage,
+            'currency' => $item->currency,
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,

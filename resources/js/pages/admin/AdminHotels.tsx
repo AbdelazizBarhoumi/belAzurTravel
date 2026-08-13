@@ -57,6 +57,9 @@ type HotelFormValues = AdminRow & {
     imageFile?: File | null;
     galleryFiles?: File[];
     galleryPaths?: string[];
+    basePrice?: string;
+    markupPercentage?: string;
+    currency?: string;
 };
 
 function asText(value: unknown): string {
@@ -397,6 +400,17 @@ const AdminHotels = () => {
               description_ar: asText(editing.description_ar),
               stars: String(editing.stars ?? ''),
               rating: String(editing.rating ?? ''),
+              basePrice:
+                  (editing as any).base_price !== null &&
+                  (editing as any).base_price !== undefined
+                      ? String((editing as any).base_price)
+                      : '',
+              markupPercentage:
+                  (editing as any).markup_percentage !== null &&
+                  (editing as any).markup_percentage !== undefined
+                      ? String((editing as any).markup_percentage)
+                      : String(20),
+              currency: asText((editing as any).currency) || 'TND',
           } as unknown as HotelFormValues)
         : null;
 
@@ -580,6 +594,61 @@ const AdminHotels = () => {
                         />
                         <p className="text-[10px] text-muted-foreground">
                             {t('admin.hotelForm.priceHelp')}
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.basePrice')}
+                        </label>
+                        <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={String(values.basePrice ?? '')}
+                            placeholder={t('admin.hotelForm.basePricePlaceholder')}
+                            onChange={(e) => setField('basePrice', e.target.value)}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            {t('admin.hotelForm.basePriceHelp')}
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.markupPercentage')}
+                        </label>
+                        <Input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={String(values.markupPercentage ?? 20)}
+                            placeholder="20"
+                            onChange={(e) => setField('markupPercentage', e.target.value)}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            {t('admin.hotelForm.markupHelp')}
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.currency')}
+                        </label>
+                        <Input
+                            type="text"
+                            maxLength={3}
+                            value={String(values.currency ?? 'TND')}
+                            placeholder="TND"
+                            onChange={(e) =>
+                                setField(
+                                    'currency',
+                                    e.target.value.toUpperCase(),
+                                )
+                            }
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                            {t('admin.hotelForm.currencyHelp')}
                         </p>
                     </div>
 
@@ -792,6 +861,16 @@ const AdminHotels = () => {
             category_fr: values.category_fr ?? '',
             category_ar: values.category_ar ?? '',
             category_assignments: categoryAssignments,
+            base_price:
+                values.basePrice !== undefined && values.basePrice !== ''
+                    ? Number(values.basePrice)
+                    : undefined,
+            markup_percentage:
+                values.markupPercentage !== undefined &&
+                values.markupPercentage !== ''
+                    ? Number(values.markupPercentage)
+                    : undefined,
+            currency: values.currency?.trim() || 'TND',
             image: imageFile ?? imagePath?.trim() ?? asText(editing?.image),
             amenities: Array.isArray(amenities) ? amenities : [],
             rooms: Array.isArray(rooms)

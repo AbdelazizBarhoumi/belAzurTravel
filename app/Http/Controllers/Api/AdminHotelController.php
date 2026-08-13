@@ -122,6 +122,9 @@ class AdminHotelController extends Controller
             'phone' => ['sometimes', 'nullable', 'string', 'max:64'],
             'whatsapp' => ['sometimes', 'nullable', 'string', 'max:64'],
             'price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'base_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'markup_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'currency' => ['sometimes', 'nullable', 'string', 'max:3'],
             'rating' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:5'],
             'stars' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:5'],
             'reviews' => ['sometimes', 'nullable', 'integer', 'min:0'],
@@ -207,7 +210,10 @@ class AdminHotelController extends Controller
             'location' => $localized('location', $existing?->location),
             'category_key' => $categoryKey !== '' ? $categoryKey : $existing?->category_key,
             'category' => $categoryName,
-            'price' => (int) ($data['price'] ?? 0),
+            'price' => $this->resolvePrice($data, $existing),
+            'base_price' => $data['base_price'] ?? $existing->base_price ?? null,
+            'markup_percentage' => $data['markup_percentage'] ?? $existing->markup_percentage ?? null,
+            'currency' => $data['currency'] ?? $existing->currency ?? config('ostravel.currency.default', 'TND'),
             'rating' => (float) ($data['rating'] ?? 0),
             'stars' => (int) ($data['stars'] ?? $existing->stars ?? 0),
             'reviews' => (int) ($data['reviews'] ?? $existing->reviews ?? 0),
@@ -218,6 +224,24 @@ class AdminHotelController extends Controller
             'date_from' => $data['date_from'] ?? $existing?->date_from ?? null,
             'date_to' => $data['date_to'] ?? $existing?->date_to ?? null,
         ];
+    }
+
+    private function resolvePrice(array $data, ?Model $existing): int
+    {
+        $basePrice = $data['base_price'] ?? $existing?->base_price ?? null;
+        $markup = $data['markup_percentage'] ?? $existing?->markup_percentage ?? null;
+
+        if ($basePrice !== null && $markup !== null) {
+            return (int) round((float) $basePrice * (1 + (float) $markup / 100));
+        }
+
+        if ($basePrice !== null) {
+            $defaultMarkup = config('ostravel.markup.default', 20);
+
+            return (int) round((float) $basePrice * (1 + (float) $defaultMarkup / 100));
+        }
+
+        return (int) ($data['price'] ?? $existing?->price ?? 0);
     }
 
     private function adminPayload(Model $item): array
@@ -248,6 +272,9 @@ class AdminHotelController extends Controller
             ...$this->flatLocalized('category', $category),
             'category_assignments' => $categoryAssignments,
             'price' => $item->price,
+            'base_price' => $item->base_price,
+            'markup_percentage' => $item->markup_percentage,
+            'currency' => $item->currency,
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,
