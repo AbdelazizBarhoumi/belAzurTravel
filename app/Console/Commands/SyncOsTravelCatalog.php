@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Exceptions\OsTravelApiException;
 use App\Services\OsTravel\OsTravelCatalogSync;
 use Illuminate\Console\Command;
 use Throwable;
@@ -16,6 +17,10 @@ class SyncOsTravelCatalog extends Command
     {
         try {
             $result = $sync->sync();
+        } catch (OsTravelApiException $e) {
+            $this->error($this->friendlyMessage($e));
+
+            return self::FAILURE;
         } catch (Throwable $e) {
             $this->error("OS-TRAVEL catalog sync failed: {$e->getMessage()}");
 
@@ -36,5 +41,24 @@ class SyncOsTravelCatalog extends Command
         );
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Render an OS-TRAVEL API error as a friendly admin-facing message.
+     */
+    private function friendlyMessage(OsTravelApiException $e): string
+    {
+        $endpoint = $e->endpoint() ?? 'request';
+        $status = $e->status();
+        $detail = $e->payload()['ErrorMessage'] ?? null;
+
+        if (is_array($detail)) {
+            $detail = $detail['Description'] ?? null;
+        }
+
+        $context = $status !== null ? " (HTTP {$status})" : '';
+
+        return "OS-TRAVEL {$endpoint} is currently unavailable{$context}."
+            .($detail ? ' The provider reported: '.$detail : '');
     }
 }

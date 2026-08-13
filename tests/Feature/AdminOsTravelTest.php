@@ -6,6 +6,7 @@ use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Models\OsTravelSync;
 use App\Models\User;
+use App\Services\OsTravel\HotelPublisher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -305,5 +306,66 @@ class AdminOsTravelTest extends TestCase
             ->assertStatus(422);
 
         $this->assertSame(OsTravelHotel::PUBLISHED, $staged->fresh()->status);
+    }
+
+    public function test_reapprove_is_idempotent_and_returns_existing_hotel(): void
+    {
+        $staged = $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::PENDING, 250);
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/os-travel/hotels/{$staged->id}/approve")
+            ->assertOk();
+
+        $hotelId = Hotel::first()->id;
+        $approvedAt = $staged->fresh()->approved_at;
+
+        $response = $this->actingAs($this->admin)
+            ->postJson("/api/admin/os-travel/hotels/{$staged->id}/approve")
+            ->assertOk();
+
+        $this->assertSame(1, Hotel::count());
+        $this->assertSame((string) $hotelId, $response->json('data.hotel.id'));
+        $this->assertTrue($staged->fresh()->approved_at->equalTo($approvedAt));
+        $this->assertSame(OsTravelHotel::PUBLISHED, $staged->fresh()->status);
+    }
+
+    public function test_bulk_approve_continues_when_single_publish_fails(): void
+    {
+        $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
+        $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::PENDING, 100);
+
+        $publisher = $this->createMock(HotelPublisher::class);
+        $publisher->expects($this->exactly(2))
+            ->method('publish')
+            ->willReturnCallback(function (OsTravelHotel $hotel) {
+                if ($hotel->external_id === '2') {
+                    throw new InvalidArgumentException('boom');
+                }
+
+                return Hotel::create([
+                    'slug' => 'ostravel-1',
+                    'code' => 'ostravel-1',
+                    'name' => ['en' => 'Hotel One'],
+                    'location' => ['en' => 'Kelibia'],
+                    'category' => ['en' => '4 étoiles'],
+                    'price' => 120,
+                    'base_price' => 100,
+                    'markup_percentage' => 20,
+                    'currency' => 'TND',
+                    'image' => 'test.jpg',
+                    'tags' => [],
+                    'details' => [],
+                    'meta' => [],
+                ]);
+            });
+        $this->app->instance(HotelPublisher::class, $publisher);
+
+        $response = $this->actingAs($this->admin)
+            ->postJson('/api/admin/os-travel/hotels/approve-all')
+            ->assertOk();
+
+        $this->assertSame(1, $response->json('data.published_count'));
+        $this->assertSame(1, $response->json('data.failed_count'));
+        $this->assertSame([(string) OsTravelHotel::where('external_id', '2')->first()->id], $response->json('data.failed'));
     }
 }

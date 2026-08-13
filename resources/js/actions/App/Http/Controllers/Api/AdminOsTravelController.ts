@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::dashboard
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:23
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:25
  * @route '/api/admin/os-travel'
  */
 export const dashboard = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ dashboard.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::dashboard
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:23
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:25
  * @route '/api/admin/os-travel'
  */
 dashboard.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ dashboard.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::dashboard
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:23
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:25
  * @route '/api/admin/os-travel'
  */
 dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::dashboard
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:23
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:25
  * @route '/api/admin/os-travel'
  */
 dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::dashboard
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:23
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:25
  * @route '/api/admin/os-travel'
  */
     const dashboardForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::dashboard
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:23
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:25
  * @route '/api/admin/os-travel'
  */
         dashboardForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::dashboard
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:23
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:25
  * @route '/api/admin/os-travel'
  */
         dashboardForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     dashboard.form = dashboardForm
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::index
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:54
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:56
  * @route '/api/admin/os-travel/hotels'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::index
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:54
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:56
  * @route '/api/admin/os-travel/hotels'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::index
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:54
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:56
  * @route '/api/admin/os-travel/hotels'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::index
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:54
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:56
  * @route '/api/admin/os-travel/hotels'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::index
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:54
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:56
  * @route '/api/admin/os-travel/hotels'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::index
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:54
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:56
  * @route '/api/admin/os-travel/hotels'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::index
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:54
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:56
  * @route '/api/admin/os-travel/hotels'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approveAll
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:171
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:193
  * @route '/api/admin/os-travel/hotels/approve-all'
  */
 export const approveAll = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +172,7 @@ approveAll.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approveAll
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:171
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:193
  * @route '/api/admin/os-travel/hotels/approve-all'
  */
 approveAll.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ approveAll.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approveAll
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:171
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:193
  * @route '/api/admin/os-travel/hotels/approve-all'
  */
 approveAll.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ approveAll.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approveAll
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:171
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:193
  * @route '/api/admin/os-travel/hotels/approve-all'
  */
     const approveAllForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +201,7 @@ approveAll.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approveAll
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:171
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:193
  * @route '/api/admin/os-travel/hotels/approve-all'
  */
         approveAllForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -212,7 +212,7 @@ approveAll.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     approveAll.form = approveAllForm
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::show
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:80
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:82
  * @route '/api/admin/os-travel/hotels/{id}'
  */
 export const show = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -227,7 +227,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::show
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:80
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:82
  * @route '/api/admin/os-travel/hotels/{id}'
  */
 show.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -255,7 +255,7 @@ show.url = (args: { id: string | number } | [id: string | number ] | string | nu
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::show
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:80
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:82
  * @route '/api/admin/os-travel/hotels/{id}'
  */
 show.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -264,7 +264,7 @@ show.get = (args: { id: string | number } | [id: string | number ] | string | nu
 })
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::show
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:80
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:82
  * @route '/api/admin/os-travel/hotels/{id}'
  */
 show.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -274,7 +274,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
     /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::show
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:80
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:82
  * @route '/api/admin/os-travel/hotels/{id}'
  */
     const showForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -284,7 +284,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::show
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:80
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:82
  * @route '/api/admin/os-travel/hotels/{id}'
  */
         showForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -293,7 +293,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
         })
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::show
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:80
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:82
  * @route '/api/admin/os-travel/hotels/{id}'
  */
         showForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -309,7 +309,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::update
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:96
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:98
  * @route '/api/admin/os-travel/hotels/{id}'
  */
 export const update = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -324,7 +324,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::update
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:96
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:98
  * @route '/api/admin/os-travel/hotels/{id}'
  */
 update.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -352,7 +352,7 @@ update.url = (args: { id: string | number } | [id: string | number ] | string | 
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::update
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:96
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:98
  * @route '/api/admin/os-travel/hotels/{id}'
  */
 update.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -362,7 +362,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::update
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:96
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:98
  * @route '/api/admin/os-travel/hotels/{id}'
  */
     const updateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -377,7 +377,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::update
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:96
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:98
  * @route '/api/admin/os-travel/hotels/{id}'
  */
         updateForm.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -393,7 +393,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approve
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:125
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:127
  * @route '/api/admin/os-travel/hotels/{id}/approve'
  */
 export const approve = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -408,7 +408,7 @@ approve.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approve
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:125
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:127
  * @route '/api/admin/os-travel/hotels/{id}/approve'
  */
 approve.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -436,7 +436,7 @@ approve.url = (args: { id: string | number } | [id: string | number ] | string |
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approve
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:125
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:127
  * @route '/api/admin/os-travel/hotels/{id}/approve'
  */
 approve.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -446,7 +446,7 @@ approve.post = (args: { id: string | number } | [id: string | number ] | string 
 
     /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approve
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:125
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:127
  * @route '/api/admin/os-travel/hotels/{id}/approve'
  */
     const approveForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -456,7 +456,7 @@ approve.post = (args: { id: string | number } | [id: string | number ] | string 
 
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::approve
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:125
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:127
  * @route '/api/admin/os-travel/hotels/{id}/approve'
  */
         approveForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -467,7 +467,7 @@ approve.post = (args: { id: string | number } | [id: string | number ] | string 
     approve.form = approveForm
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::reject
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:223
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:257
  * @route '/api/admin/os-travel/hotels/{id}/reject'
  */
 export const reject = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -482,7 +482,7 @@ reject.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::reject
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:223
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:257
  * @route '/api/admin/os-travel/hotels/{id}/reject'
  */
 reject.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -510,7 +510,7 @@ reject.url = (args: { id: string | number } | [id: string | number ] | string | 
 
 /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::reject
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:223
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:257
  * @route '/api/admin/os-travel/hotels/{id}/reject'
  */
 reject.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -520,7 +520,7 @@ reject.post = (args: { id: string | number } | [id: string | number ] | string |
 
     /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::reject
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:223
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:257
  * @route '/api/admin/os-travel/hotels/{id}/reject'
  */
     const rejectForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -530,7 +530,7 @@ reject.post = (args: { id: string | number } | [id: string | number ] | string |
 
             /**
 * @see \App\Http\Controllers\Api\AdminOsTravelController::reject
- * @see app/Http/Controllers/Api/AdminOsTravelController.php:223
+ * @see app/Http/Controllers/Api/AdminOsTravelController.php:257
  * @route '/api/admin/os-travel/hotels/{id}/reject'
  */
         rejectForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

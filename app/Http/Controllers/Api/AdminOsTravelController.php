@@ -8,7 +8,9 @@ use App\Models\OsTravelSync;
 use App\Services\OsTravel\HotelPublisher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Admin-only endpoints to review and approve the OS-TRAVEL staging catalog.
@@ -132,6 +134,26 @@ class AdminOsTravelController extends Controller
             'currency' => ['sometimes', 'nullable', 'string', 'max:3'],
         ]);
 
+        // Idempotent re-approve: an already-published staging row returns its
+        // linked hotel without re-publishing (no duplicate hotel, no re-download,
+        // no approved_at bump). A published row whose linked hotel was deleted
+        // (hotel_id nulled by nullOnDelete) falls through and re-publishes.
+        if ($hotel->status === OsTravelHotel::PUBLISHED && $hotel->hotel_id !== null) {
+            return response()->json([
+                'data' => [
+                    ...$this->reviewPayload($hotel->refresh()),
+                    'hotel' => [
+                        'id' => (string) $hotel->hotel->id,
+                        'slug' => $hotel->hotel->slug,
+                        'price' => $hotel->hotel->price,
+                        'base_price' => $hotel->hotel->base_price,
+                        'markup_percentage' => $hotel->hotel->markup_percentage,
+                        'currency' => $hotel->hotel->currency,
+                    ],
+                ],
+            ]);
+        }
+
         $hasBasePrice = $hotel->base_price !== null || isset($data['base_price']);
         if (! $hasBasePrice) {
             return response()->json([
@@ -195,24 +217,36 @@ class AdminOsTravelController extends Controller
         $overCap = $candidates->skip($cap)->pluck('id')->map(fn ($value) => (string) $value)->all();
 
         $published = [];
+        $failed = [];
         foreach ($candidatesSlice as $hotel) {
-            $result = $this->publisher->publish($hotel, $data, $request->user());
-            $published[] = [
-                ...$this->reviewPayload($hotel->refresh()),
-                'hotel' => [
-                    'id' => (string) $result->id,
-                    'slug' => $result->slug,
-                    'price' => $result->price,
-                ],
-            ];
+            try {
+                $result = $this->publisher->publish($hotel, $data, $request->user());
+                $published[] = [
+                    ...$this->reviewPayload($hotel->refresh()),
+                    'hotel' => [
+                        'id' => (string) $result->id,
+                        'slug' => $result->slug,
+                        'price' => $result->price,
+                    ],
+                ];
+            } catch (Throwable $e) {
+                Log::warning('OS-TRAVEL bulk approve failed for a staged hotel; continuing.', [
+                    'os_travel_hotel_id' => $hotel->id,
+                    'external_id' => $hotel->external_id,
+                    'error' => $e->getMessage(),
+                ]);
+                $failed[] = (string) $hotel->id;
+            }
         }
 
         return response()->json([
             'data' => [
                 'published' => $published,
+                'failed' => $failed,
                 'skipped_no_price' => $withoutPrice,
                 'skipped_over_cap' => $overCap,
                 'published_count' => count($published),
+                'failed_count' => count($failed),
                 'skipped_no_price_count' => count($withoutPrice),
                 'skipped_over_cap_count' => count($overCap),
                 'cap' => $cap,
