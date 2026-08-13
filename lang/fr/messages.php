@@ -6,6 +6,7 @@ return [
     'image_deleted' => 'Image supprimée',
     'confirmed' => 'confirmée',
     'cancelled' => 'annulée',
+    'no_change' => 'Aucune modification à enregistrer',
     'unauthenticated' => 'Non authentifié',
     'forbidden' => 'Interdit',
     'endpoint_not_public' => "Ce point de terminaison n'est pas accessible publiquement.",

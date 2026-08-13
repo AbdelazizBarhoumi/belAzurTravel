@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AdminDestinationController;
 use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminFlightController;
 use App\Http\Controllers\Api\AdminHotelController;
+use App\Http\Controllers\Api\AdminOsTravelController;
 use App\Http\Controllers\Api\AdminPartnerController;
 use App\Http\Controllers\Api\AdminPromoController;
 use App\Http\Controllers\Api\AdminTeamController;
@@ -143,6 +144,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/hotels/{id}', [AdminHotelController::class, 'show']);
         Route::put('/admin/hotels/{id}', [AdminHotelController::class, 'update']);
         Route::delete('/admin/hotels/{id}', [AdminHotelController::class, 'destroy']);
+
+        Route::get('/admin/os-travel', [AdminOsTravelController::class, 'dashboard']);
+        Route::get('/admin/os-travel/hotels', [AdminOsTravelController::class, 'index']);
+        Route::post('/admin/os-travel/hotels/approve-all', [AdminOsTravelController::class, 'approveAll']);
+        Route::get('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'show']);
+        Route::put('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'update']);
+        Route::post('/admin/os-travel/hotels/{id}/approve', [AdminOsTravelController::class, 'approve']);
+        Route::post('/admin/os-travel/hotels/{id}/reject', [AdminOsTravelController::class, 'reject']);
 
         Route::get('/admin/tours', [AdminTourController::class, 'index']);
         Route::post('/admin/tours', [AdminTourController::class, 'store']);

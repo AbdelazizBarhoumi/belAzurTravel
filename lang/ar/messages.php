@@ -6,6 +6,7 @@ return [
     'image_deleted' => 'تم حذف الصورة',
     'confirmed' => 'مؤكد',
     'cancelled' => 'ملغى',
+    'no_change' => 'لا توجد تغييرات للحفظ',
     'unauthenticated' => 'غير مصرح',
     'forbidden' => 'ممنوع',
     'endpoint_not_public' => 'هذا المسار غير متاح للعامة.',

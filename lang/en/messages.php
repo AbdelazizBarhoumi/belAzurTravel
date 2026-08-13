@@ -6,6 +6,7 @@ return [
     'image_deleted' => 'Image deleted',
     'confirmed' => 'confirmed',
     'cancelled' => 'cancelled',
+    'no_change' => 'No changes to save',
     'unauthenticated' => 'Unauthenticated',
     'forbidden' => 'Forbidden',
     'endpoint_not_public' => 'This endpoint is not publicly accessible.',
