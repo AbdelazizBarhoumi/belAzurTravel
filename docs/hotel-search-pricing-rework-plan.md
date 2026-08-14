@@ -475,5 +475,5 @@ dates/occupancy/filters.
   - [x] Phase E frontend (list/detail/booking dialog, passenger form)
   - [x] Checkpoint 5 (walkthrough automated; manual staging pass pending)
   - [x] Phase F E2E tests + cancellation + admin ops
-  - [ ] Checkpoint 6 (automated + staging pass)
-  - [ ] Phase G final QA (pint/tsc/lint/test suites)
+  - [ ] Checkpoint 6 (automated + staging pass) — automated pass done (OsTravelGoLiveFlowTest + full suite green); staging pass pending live credentials
+  - [x] Phase G final QA (pint/tsc/lint/test suites) — pint clean, tsc clean, lint clean, 373 backend tests green, vitest green except 13 pre-existing admin failures (documented in os-travel-phase-11-final-qa.md); provider facts written to apidocumentation.md
