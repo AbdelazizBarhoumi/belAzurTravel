@@ -64,4 +64,15 @@ class HotelPayloadTest extends TestCase
         $this->assertNull($response->json('last_price_at'));
         $this->assertSame(1200, $response->json('price'));
     }
+
+    public function test_payload_exposes_source_and_provider(): void
+    {
+        $this->makeHotel(['source' => 'manual']);
+
+        $response = $this->getJson('/api/hotels/test-hotel')->assertOk();
+
+        // A bare hotel with no published OS-TRAVEL row is a manual hotel.
+        $this->assertSame('manual', $response->json('source'));
+        $this->assertSame('manual', $response->json('provider'));
+    }
 }

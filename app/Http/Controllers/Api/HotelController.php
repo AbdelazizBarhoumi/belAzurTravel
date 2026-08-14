@@ -76,6 +76,8 @@ class HotelController extends Controller
             'base_price' => $basePrice,
             'markup_percentage' => $item->markup_percentage,
             'currency' => $item->currency,
+            'source' => $item->source,
+            'provider' => $item->isProviderLinked() ? 'ostravel' : 'manual',
             'last_price' => $item->last_price,
             'last_price_at' => $item->last_price_at,
             'rating' => $item->rating,

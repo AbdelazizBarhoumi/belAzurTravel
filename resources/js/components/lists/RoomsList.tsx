@@ -3,6 +3,12 @@ import { Users, Wifi, Wind, Bath, Tv } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+interface RoomSupplement {
+    name: string;
+    price: number;
+    perNight?: boolean;
+}
+
 interface Room {
     id: string;
     name: string;
@@ -16,6 +22,8 @@ interface Room {
     size: number;
     features: string[];
     images: string[];
+    // Mandatory supplements quoted by the provider for this room offer.
+    supplements?: RoomSupplement[];
 }
 
 interface RoomsListProps {
@@ -128,6 +136,25 @@ export function RoomsList({
                                             {room.priceTotal !== undefined && room.nights ? (
                                                 <div className="mb-4 text-xs text-muted-foreground">
                                                     ~{room.pricePerNight.toLocaleString()} TND {t('hotelDetail.pernight')} · {room.nights} {t('hotelDetail.nightsLabel')}
+                                                </div>
+                                            ) : null}
+                                            {room.supplements && room.supplements.length > 0 ? (
+                                                <div className="mb-4 space-y-1 border-t border-border pt-3">
+                                                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                                        {t('hotelDetail.mandatorySupplements')}
+                                                    </p>
+                                                    {room.supplements.map((supplement, i) => (
+                                                        <div
+                                                            key={`${room.id}-supplement-${i}`}
+                                                            className="flex items-center justify-between gap-2 text-xs text-muted-foreground"
+                                                        >
+                                                            <span>{supplement.name}</span>
+                                                            <span className="font-semibold text-foreground">
+                                                                +{supplement.price.toLocaleString()} TND
+                                                                {supplement.perNight ? ` ${t('hotelDetail.pernight')}` : ''}
+                                                            </span>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             ) : null}
                                         </div>

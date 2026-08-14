@@ -372,6 +372,20 @@ dates/occupancy/filters.
 
 **Checkpoint 5 ✅ / ❌** — frontend consumes the engine, pricing displayed correctly.
 
+**Phase E status: ✅ (automated)**
+- List (`index.tsx`) is server-driven: stars/price/sort/occupancy → server; per-night + stay-total,
+  availability grey-out, `provider` badge, "last known" label in browse; category/country client-side.
+- Detail (`show.tsx`): occupancy picker w/ child ages drives live re-search; room cards show stay-total
+  + per-night + mandatory supplements.
+- `BookingDialog.tsx`: per-guest passenger form (civility, first/last name, age, passport), dates locked
+  to the offer, two-step confirm (prebook-confirmed total → pay). Fixed a timezone bug: dates were
+  serialized via `toISOString()` (UTC shift); now formatted in local time.
+- Types synced (`usePublicData.ts`, `osTravel.api.ts`, `hotel.types.ts`); `source`/`provider` +
+  `last_price_at` on `HotelController::payload()`.
+- Vitest: `Hotels.test.tsx` 7/7, `BookingDialog.test.tsx` 4/4 (passenger rows, pax payload, confirmed
+  total, locked dates). `npx tsc --noEmit` and eslint clean. `php artisan test` 365 passed.
+- Manual walkthrough (browse → filters → detail → book → pay) remains for final sign-off.
+
 ---
 
 ### Phase F — E2E (admin → public → client)
@@ -441,7 +455,7 @@ dates/occupancy/filters.
   - [x] Search merge + instant/request booking flows
   - [x] Checkpoint 4 (both manual modes verified)
 - [ ] **Stage 3** — frontend + E2E + QA
-  - [ ] Phase E frontend (list/detail/booking dialog, passenger form)
+  - [x] Phase E frontend (list/detail/booking dialog, passenger form)
   - [ ] Checkpoint 5 (manual walkthrough)
   - [ ] Phase F E2E tests + cancellation + admin ops
   - [ ] Checkpoint 6 (automated + staging pass)

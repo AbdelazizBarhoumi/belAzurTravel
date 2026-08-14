@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { initiatePayment } from '@/api/payment.api';
@@ -15,10 +15,39 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { api } from '@/hooks/useBooking';
+
+type Civility = 'Mr' | 'Mrs' | 'Ms';
+
+// Serialize a Date as YYYY-MM-DD in local time (toISOString() shifts to UTC).
+const toLocalISODate = (date: Date | null | undefined): string | undefined =>
+    date
+        ? [
+              date.getFullYear(),
+              String(date.getMonth() + 1).padStart(2, '0'),
+              String(date.getDate()).padStart(2, '0'),
+          ].join('-')
+        : undefined;
+
+interface PassengerRow {
+    civility: Civility;
+    firstName: string;
+    lastName: string;
+    // Children carry an age for the provider's age-based pricing.
+    age: number | null;
+    passportNumber: string;
+    passportExpiry: string;
+}
 
 interface BookingDialogProps {
     open: boolean;
@@ -47,6 +76,17 @@ interface BookingDialogProps {
     };
 }
 
+function emptyPassenger(age: number | null): PassengerRow {
+    return {
+        civility: 'Mr',
+        firstName: '',
+        lastName: '',
+        age,
+        passportNumber: '',
+        passportExpiry: '',
+    };
+}
+
 export function BookingDialog({
     open,
     onOpenChange,
@@ -68,7 +108,20 @@ export function BookingDialog({
     const [startDate, setStartDate] = useState<Date | undefined>(undefined);
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [notes, setNotes] = useState('');
-    const [travelers, setTravelers] = useState<string>('');
+    const [passengers, setPassengers] = useState<PassengerRow[]>([]);
+    // Step 2: booking created + provider prebook confirmed total awaiting payment.
+    const [confirmedBooking, setConfirmedBooking] = useState<{
+        id: number;
+        total: number;
+        currency: string;
+    } | null>(null);
+
+    const hasProviderOffer = Boolean(
+        provider?.token &&
+            provider.rooms?.length &&
+            provider.checkIn &&
+            provider.checkOut,
+    );
 
     // Hotels booked from a live offer are locked to the searched dates; the
     // token prices that exact window and cannot be re-booked for others.
@@ -87,6 +140,11 @@ export function BookingDialog({
             ? new Date(`${provider.checkOut}T00:00:00`)
             : endDate;
 
+    const adultCount = hasProviderOffer ? Math.max(1, provider?.adults ?? 1) : 0;
+    const childCount = hasProviderOffer
+        ? Math.max(0, provider?.children ?? 0)
+        : 0;
+
     useEffect(() => {
         if (open && user) {
             // Defer state updates to avoid synchronous setState within effect
@@ -97,16 +155,42 @@ export function BookingDialog({
         }
     }, [open, user]);
 
+    // Rebuild the per-guest passenger rows whenever the dialog opens with a
+    // (possibly changed) offer occupancy.
+    useEffect(() => {
+        if (!open || !hasProviderOffer) {
+            return;
+        }
+        const childrenAges = provider?.childrenAges ?? [];
+        const rows: PassengerRow[] = [];
+        for (let i = 0; i < adultCount; i++) {
+            rows.push(emptyPassenger(null));
+        }
+        for (let i = 0; i < childCount; i++) {
+            rows.push(emptyPassenger(childrenAges[i] ?? 8));
+        }
+        setPassengers(rows);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, adultCount, childCount]);
+
+    const updatePassenger = (index: number, patch: Partial<PassengerRow>) => {
+        setPassengers((prev) =>
+            prev.map((row, i) => (i === index ? { ...row, ...patch } : row)),
+        );
+    };
+
     const mutation = useMutation({
         mutationFn: (payload: Record<string, unknown>) =>
             api.createBooking(payload) as Promise<{
                 id: number;
                 status?: string;
+                total_amount?: number;
+                provider_prebook?: { currency?: string };
             }>,
         onSuccess: async (data) => {
             toast.success(
                 t('booking.success') ||
-                    'Booking created. Redirecting to payment...',
+                    'Booking request submitted successfully!',
             );
             queryClient.invalidateQueries({
                 queryKey: ['client', 'dashboard'],
@@ -119,18 +203,19 @@ export function BookingDialog({
                 return;
             }
 
-            // Initiate payment
-            try {
-                const paymentResult = await initiatePayment(data.id);
-                // Redirect to ClictoPay payment page
-                window.location.href = paymentResult.formUrl;
-            } catch {
-                toast.error(
-                    t('payment.initError') ||
-                        'Payment initiation failed. Please pay from your dashboard.',
-                );
-                onOpenChange(false);
+            // Provider hotels: the server ran the prebook and returned the
+            // confirmed total. Show it before starting payment.
+            if (hasProviderOffer) {
+                setConfirmedBooking({
+                    id: data.id,
+                    total: data.total_amount ?? amount,
+                    currency: data.provider_prebook?.currency ?? 'TND',
+                });
+                return;
             }
+
+            // Everything else goes straight to the payment gateway.
+            await pay(data.id);
         },
         onError: () => {
             toast.error(
@@ -138,6 +223,39 @@ export function BookingDialog({
             );
         },
     });
+
+    const pay = async (bookingId: number) => {
+        try {
+            const paymentResult = await initiatePayment(bookingId);
+            // Redirect to ClictoPay payment page
+            window.location.href = paymentResult.formUrl;
+        } catch {
+            toast.error(
+                t('payment.initError') ||
+                    'Payment initiation failed. Please pay from your dashboard.',
+            );
+            onOpenChange(false);
+        }
+    };
+
+    const passengerPayload = useMemo(() => {
+        const adults = passengers
+            .filter((row) => row.age === null)
+            .map((row, index) => ({
+                Civility: row.civility || 'Mr',
+                Name: row.firstName.trim() || 'Guest',
+                Surname: row.lastName.trim() || 'Traveler',
+                Holder: index === 0,
+            }));
+        const children = passengers
+            .filter((row) => row.age !== null)
+            .map((row) => ({
+                Name: row.firstName.trim() || 'Child',
+                Surname: row.lastName.trim() || 'Traveler',
+                Age: row.age ?? 8,
+            }));
+        return { adults, children };
+    }, [passengers]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -147,39 +265,12 @@ export function BookingDialog({
             return;
         }
 
-        // Parse the travelers textarea into OS-TRAVEL pax adults; the first
-        // guest is the booking holder.
-        const adultLines = travelers
-            .split('\n')
-            .map((line) => line.trim())
-            .filter(Boolean)
-            .slice(0, Math.max(1, provider?.adults ?? 1));
-        const adultPax = adultLines.map((line, index) => {
-            const [firstName = 'Guest', ...rest] = line.split(/\s+/);
-            const surname = rest.join(' ');
-
-            return {
-                civility: 'Mr',
-                name: firstName,
-                surname: surname || 'Traveler',
-                holder: index === 0,
-            };
-        });
-        const childPax = Array.from(
-            { length: Math.max(0, provider?.children ?? 0) },
-            (_, index) => ({
-                name: `Child ${index + 1}`,
-                surname: 'Traveler',
-                age: provider?.childrenAges?.[index] ?? 8,
-            }),
-        );
-
         const payload: Record<string, unknown> = {
             type,
             item_slug: itemSlug,
             item_id: itemId,
-            start_date: effectiveStartDate?.toISOString().split('T')[0],
-            end_date: effectiveEndDate?.toISOString().split('T')[0],
+            start_date: toLocalISODate(effectiveStartDate),
+            end_date: toLocalISODate(effectiveEndDate),
             client: {
                 name,
                 email,
@@ -187,7 +278,10 @@ export function BookingDialog({
             },
             notes,
             amount,
-            travelers: adultLines.map((line) => ({ name: line })),
+            travelers: passengers
+                .map((row) => `${row.firstName} ${row.lastName}`.trim())
+                .filter(Boolean)
+                .map((line) => ({ name: line })),
         };
 
         if (provider?.token && provider.rooms?.length) {
@@ -200,17 +294,12 @@ export function BookingDialog({
                     view_ids: room.viewIds ?? [],
                     supplements: room.supplements ?? [],
                 })),
-                pax: {
-                    adults: adultPax,
-                    children: childPax,
-                },
+                pax: passengerPayload,
                 search: {
                     check_in:
-                        effectiveStartDate?.toISOString().split('T')[0] ??
-                        provider.checkIn,
+                        toLocalISODate(effectiveStartDate) ?? provider.checkIn,
                     check_out:
-                        effectiveEndDate?.toISOString().split('T')[0] ??
-                        provider.checkOut,
+                        toLocalISODate(effectiveEndDate) ?? provider.checkOut,
                 },
             };
         }
@@ -218,118 +307,375 @@ export function BookingDialog({
         mutation.mutate(payload);
     };
 
+    const civilityOptions: { value: Civility; label: string }[] = [
+        { value: 'Mr', label: t('booking.civilityMr') || 'Mr' },
+        { value: 'Mrs', label: t('booking.civilityMrs') || 'Mrs' },
+        { value: 'Ms', label: t('booking.civilityMs') || 'Ms' },
+    ];
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>
-                        {t('booking.title') || 'Book'} {itemName}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {t('booking.description') ||
-                            'Fill in the details below to request a booking.'}
-                    </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="name">
-                            {t('label.fullName') || 'Full Name'}
-                        </Label>
-                        <Input
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="email">
-                                {t('label.email') || 'Email'}
-                            </Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
+            <DialogContent className="sm:max-w-[560px]">
+                {confirmedBooking ? (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle>
+                                {t('booking.confirmTitle') ||
+                                    'Confirm your booking'}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {t('booking.confirmDescription') ||
+                                    'Availability and price confirmed by the provider. Proceed to payment to finalize.'}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 p-4">
+                                <span className="text-sm text-muted-foreground">
+                                    {t('booking.confirmedTotal') ||
+                                        'Confirmed total'}
+                                </span>
+                                <span className="font-serif text-2xl font-bold text-primary">
+                                    {confirmedBooking.total.toLocaleString()}{' '}
+                                    {confirmedBooking.currency}
+                                </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                {t('booking.payHint') ||
+                                    'You will be redirected to the secure payment page.'}
+                            </p>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">
-                                {t('label.phone') || 'Phone'}
-                            </Label>
-                            <Input
-                                id="phone"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>
-                                {t('label.startDate') || 'Start Date'}
-                            </Label>
-                            <DatePicker
-                                date={effectiveStartDate}
-                                onDateChange={setStartDate}
-                                disabled={lockDates}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>{t('label.endDate') || 'End Date'}</Label>
-                            <DatePicker
-                                date={effectiveEndDate}
-                                onDateChange={setEndDate}
-                                disabled={lockDates}
-                            />
-                        </div>
-                    </div>
-                    {lockDates && (
-                        <p className="text-xs text-muted-foreground">
-                            {t('booking.datesLocked') ||
-                                'Dates are fixed to your search; re-search to change them.'}
-                        </p>
-                    )}
-                    <div className="space-y-2">
-                        <Label htmlFor="notes">
-                            {t('label.notes') || 'Notes'}
-                        </Label>
-                        <Textarea
-                            id="notes"
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder={
-                                t('booking.notesPlaceholder') ||
-                                'Any special requests?'
-                            }
-                        />
-                    </div>
-                    {type === 'hotel' && provider?.token && (
-                        <div className="space-y-2">
-                            <Label htmlFor="travelers">
-                                {t('booking.travelers') || 'Travelers'}
-                            </Label>
-                            <Textarea
-                                id="travelers"
-                                value={travelers}
-                                onChange={(e) => setTravelers(e.target.value)}
-                                placeholder={
-                                    t('booking.travelersPlaceholder') ||
-                                    'One traveler per line: First Last'
-                                }
-                            />
-                        </div>
-                    )}
-                    <DialogFooter>
-                        <Button type="submit" disabled={mutation.isPending}>
-                            {mutation.isPending
-                                ? t('common.processing') || 'Processing...'
-                                : t('payment.payNow') || 'Book & Pay'}
-                        </Button>
-                    </DialogFooter>
-                </form>
+                        <DialogFooter>
+                            <Button
+                                onClick={() => pay(confirmedBooking.id)}
+                                disabled={mutation.isPending}
+                            >
+                                {t('booking.confirmedPay') || 'Pay now'}
+                            </Button>
+                        </DialogFooter>
+                    </>
+                ) : (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle>
+                                {t('booking.title') || 'Book'} {itemName}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {t('booking.description') ||
+                                    'Fill in the details below to request a booking.'}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form
+                            onSubmit={handleSubmit}
+                            className="space-y-4 py-4"
+                        >
+                            <div className="space-y-2">
+                                <Label htmlFor="name">
+                                    {t('label.fullName') || 'Full Name'}
+                                </Label>
+                                <Input
+                                    id="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">
+                                        {t('label.email') || 'Email'}
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="phone">
+                                        {t('label.phone') || 'Phone'}
+                                    </Label>
+                                    <Input
+                                        id="phone"
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>
+                                        {t('label.startDate') || 'Start Date'}
+                                    </Label>
+                                    <DatePicker
+                                        date={effectiveStartDate}
+                                        onDateChange={setStartDate}
+                                        disabled={lockDates}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>{t('label.endDate') || 'End Date'}</Label>
+                                    <DatePicker
+                                        date={effectiveEndDate}
+                                        onDateChange={setEndDate}
+                                        disabled={lockDates}
+                                    />
+                                </div>
+                            </div>
+                            {lockDates && (
+                                <p className="text-xs text-muted-foreground">
+                                    {t('booking.datesLocked') ||
+                                        'Dates are fixed to your search; re-search to change them.'}
+                                </p>
+                            )}
+
+                            {hasProviderOffer && passengers.length > 0 && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <h3 className="mb-1 text-sm font-semibold text-foreground">
+                                            {t('booking.passengers') ||
+                                                'Passengers'}
+                                        </h3>
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('booking.passengersHint') ||
+                                                'Add each traveler. The first adult is the booking holder.'}
+                                        </p>
+                                    </div>
+                                    {passengers.map((row, index) => (
+                                        <div
+                                            key={index}
+                                            className="space-y-3 rounded-xl border border-border p-4"
+                                        >
+                                            <p className="text-xs font-medium text-muted-foreground">
+                                                {t('booking.passengerNumber')}{' '}
+                                                {index + 1}{' '}
+                                                {row.age !== null
+                                                    ? `· ${t('hotels.childrenLabel')}`
+                                                    : ''}
+                                            </p>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-2">
+                                                    <Label
+                                                        htmlFor={`pax-${index}-civility`}
+                                                    >
+                                                        {t('booking.civility') ||
+                                                            'Civility'}
+                                                    </Label>
+                                                    <Select
+                                                        value={row.civility}
+                                                        onValueChange={(v) =>
+                                                            updatePassenger(
+                                                                index,
+                                                                {
+                                                                    civility:
+                                                                        v as Civility,
+                                                                },
+                                                            )
+                                                        }
+                                                    >
+                                                        <SelectTrigger
+                                                            id={`pax-${index}-civility`}
+                                                        >
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {civilityOptions.map(
+                                                                (option) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            option.value
+                                                                        }
+                                                                        value={
+                                                                            option.value
+                                                                        }
+                                                                    >
+                                                                        {
+                                                                            option.label
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                {row.age !== null && (
+                                                    <div className="space-y-2">
+                                                        <Label
+                                                            htmlFor={`pax-${index}-age`}
+                                                        >
+                                                            {t(
+                                                                'booking.age',
+                                                            ) || 'Age'}
+                                                        </Label>
+                                                        <Input
+                                                            id={`pax-${index}-age`}
+                                                            type="number"
+                                                            min={0}
+                                                            max={17}
+                                                            value={row.age}
+                                                            onChange={(e) =>
+                                                                updatePassenger(
+                                                                    index,
+                                                                    {
+                                                                        age: Number(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        ),
+                                                                    },
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-2">
+                                                    <Label
+                                                        htmlFor={`pax-${index}-firstName`}
+                                                    >
+                                                        {t(
+                                                            'booking.firstName',
+                                                        ) || 'First name'}
+                                                    </Label>
+                                                    <Input
+                                                        id={`pax-${index}-firstName`}
+                                                        value={row.firstName}
+                                                        onChange={(e) =>
+                                                            updatePassenger(
+                                                                index,
+                                                                {
+                                                                    firstName:
+                                                                        e.target
+                                                                            .value,
+                                                                },
+                                                            )
+                                                        }
+                                                        required={
+                                                            row.age !== null
+                                                        }
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label
+                                                        htmlFor={`pax-${index}-lastName`}
+                                                    >
+                                                        {t(
+                                                            'booking.lastName',
+                                                        ) || 'Last name'}
+                                                    </Label>
+                                                    <Input
+                                                        id={`pax-${index}-lastName`}
+                                                        value={row.lastName}
+                                                        onChange={(e) =>
+                                                            updatePassenger(
+                                                                index,
+                                                                {
+                                                                    lastName:
+                                                                        e.target
+                                                                            .value,
+                                                                },
+                                                            )
+                                                        }
+                                                        required={
+                                                            row.age !== null
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+                                            {row.age === null && (
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="space-y-2">
+                                                        <Label
+                                                            htmlFor={`pax-${index}-passportNumber`}
+                                                        >
+                                                            {t(
+                                                                'booking.passportNumber',
+                                                            ) ||
+                                                                'Passport number'}
+                                                        </Label>
+                                                        <Input
+                                                            id={`pax-${index}-passportNumber`}
+                                                            value={
+                                                                row.passportNumber
+                                                            }
+                                                            onChange={(e) =>
+                                                                updatePassenger(
+                                                                    index,
+                                                                    {
+                                                                        passportNumber:
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                    },
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label
+                                                            htmlFor={`pax-${index}-passportExpiry`}
+                                                        >
+                                                            {t(
+                                                                'booking.passportExpiry',
+                                                            ) ||
+                                                                'Passport expiry'}
+                                                        </Label>
+                                                        <Input
+                                                            id={`pax-${index}-passportExpiry`}
+                                                            type="date"
+                                                            value={
+                                                                row.passportExpiry
+                                                            }
+                                                            onChange={(e) =>
+                                                                updatePassenger(
+                                                                    index,
+                                                                    {
+                                                                        passportExpiry:
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                    },
+                                                                )
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <Label htmlFor="notes">
+                                    {t('label.notes') || 'Notes'}
+                                </Label>
+                                <Textarea
+                                    id="notes"
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    placeholder={
+                                        t('booking.notesPlaceholder') ||
+                                        'Any special requests?'
+                                    }
+                                />
+                            </div>
+                            <DialogFooter>
+                                <Button
+                                    type="submit"
+                                    disabled={mutation.isPending}
+                                >
+                                    {mutation.isPending
+                                        ? t('common.processing') ||
+                                          'Processing...'
+                                        : t('payment.payNow') || 'Book & Pay'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </>
+                )}
             </DialogContent>
         </Dialog>
     );

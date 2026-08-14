@@ -35,6 +35,10 @@ export type HotelDetailLookupData = {
     gallery?: string[];
     image?: string;
     price?: number;
+    source?: 'ostravel' | 'manual';
+    provider?: 'ostravel' | 'manual';
+    last_price?: number | null;
+    last_price_at?: string | null;
     amenities?: Array<string | Record<string, string>>;
     rooms?: Array<{
         id: string;
@@ -406,6 +410,7 @@ export interface HotelSearchResult {
     nights: number;
     available: boolean;
     provider: string;
+    source?: string;
     rooms: Array<{
         id: string;
         name: string;

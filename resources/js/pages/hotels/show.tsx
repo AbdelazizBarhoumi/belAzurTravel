@@ -11,6 +11,10 @@ import { PageShell } from '@/components/layout/PageShell';
 import { RoomsList } from '@/components/lists/RoomsList';
 import { Gallery } from '@/components/media/Gallery';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import {
+    OccupancyPicker,
+    type Occupancy,
+} from '@/components/ui/OccupancyPicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import {
@@ -39,7 +43,7 @@ type RoomView = {
     providerRoomId?: number;
     boardingId?: number;
     viewIds?: number[];
-    supplements?: unknown[];
+    supplements?: Array<{ name: string; price: number; perNight?: boolean }>;
 };
 
 type AmenityView = {
@@ -101,6 +105,49 @@ function toAmenityView(
     };
 }
 
+function normalizeSupplements(
+    supplements: unknown[],
+): Array<{ name: string; price: number; perNight?: boolean }> {
+    if (!Array.isArray(supplements)) {
+        return [];
+    }
+
+    return supplements
+        .filter(
+            (s): s is Record<string, unknown> =>
+                typeof s === 'object' && s !== null,
+        )
+        .map((s) => {
+            const rawName =
+                typeof s.Name === 'string'
+                    ? s.Name
+                    : s.name && typeof s.name === 'object'
+                      ? (s.name as Record<string, string>).en ??
+                        (s.name as Record<string, string>).fr ??
+                        ''
+                      : typeof s.name === 'string'
+                        ? s.name
+                        : '';
+            const rawPrice =
+                typeof s.Price === 'number' || typeof s.Price === 'string'
+                    ? Number(s.Price)
+                    : typeof s.price === 'number'
+                      ? s.price
+                      : 0;
+
+            return {
+                name: rawName || 'Supplement',
+                price: Number.isFinite(rawPrice) ? rawPrice : 0,
+                perNight:
+                    typeof s.Mandatory === 'boolean'
+                        ? Boolean(s.Mandatory)
+                        : typeof s.PerNight === 'boolean'
+                          ? Boolean(s.PerNight)
+                          : false,
+            };
+        });
+}
+
 function toRoomView(
     room: NonNullable<HotelDetailLookupData['rooms']>[number],
     lang: Lang,
@@ -126,7 +173,10 @@ export default function HotelDetail() {
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
-    const [guests, setGuests] = useState(2);
+    const [occupancy, setOccupancy] = useState<Occupancy>({
+        adults: 2,
+        childAges: [],
+    });
 
     const liveQuery = useMemo(() => {
         if (!dateRange?.from || !dateRange?.to || !id) {
@@ -137,10 +187,15 @@ export default function HotelDetail() {
             check_in: dateRange.from.toISOString().slice(0, 10),
             check_out: dateRange.to.toISOString().slice(0, 10),
             hotel_slugs: [id],
-            rooms: [{ adults: guests }],
+            rooms: [
+                {
+                    adults: occupancy.adults,
+                    children: occupancy.childAges,
+                },
+            ],
             only_available: true,
         };
-    }, [dateRange, guests, id]);
+    }, [dateRange, occupancy.adults, occupancy.childAges, id]);
 
     const { data: liveResult, isLoading: liveSearchLoading } =
         useHotelSearch(liveQuery);
@@ -200,7 +255,7 @@ export default function HotelDetail() {
                 providerRoomId: room.id ? Number(room.id) : undefined,
                 boardingId: room.boarding_id ?? undefined,
                 viewIds: room.view_ids ?? [],
-                supplements: room.supplements,
+                supplements: normalizeSupplements(room.supplements ?? []),
             };
         });
     const liveRoomIds = new Set(liveRooms.map((room) => room.id));
@@ -352,28 +407,11 @@ export default function HotelDetail() {
                                 onChange={setDateRange}
                                 className="flex-1"
                             />
-                            <input
-                                type="number"
-                                min={1}
-                                max={10}
-                                value={guests}
-                                onChange={(event) =>
-                                    setGuests(
-                                        Math.max(
-                                            1,
-                                            Math.min(
-                                                10,
-                                                Number(event.target.value) || 1,
-                                            ),
-                                        ),
-                                    )
-                                }
-                                className="h-10 w-20 rounded-xl border border-border/70 bg-background/80 px-3 text-sm text-foreground shadow-sm sm:h-12 sm:rounded-2xl"
-                                aria-label={t('hotelDetail.guests')}
+                            <OccupancyPicker
+                                value={occupancy}
+                                onChange={setOccupancy}
+                                compact
                             />
-                            <span className="text-sm text-muted-foreground">
-                                {t('hotelDetail.guests')}
-                            </span>
                         </div>
                     </div>
 
@@ -451,7 +489,9 @@ export default function HotelDetail() {
                                               selectedRoom.supplements,
                                       },
                                   ],
-                                  adults: guests,
+                                  adults: occupancy.adults,
+                                  children: occupancy.childAges.length,
+                                  childrenAges: occupancy.childAges,
                                   checkIn:
                                       dateRange?.from?.toISOString().slice(0, 10) ??
                                       undefined,

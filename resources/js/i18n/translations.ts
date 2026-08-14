@@ -1472,6 +1472,105 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الفلاتر',
         en: 'Filters',
     },
+    'hotels.occupancy': {
+        fr: 'Voyageurs',
+        ar: 'المسافرون',
+        en: 'Travelers',
+    },
+    'hotels.guestsLabel': {
+        fr: 'voyageur(s)',
+        ar: 'مسافر(ون)',
+        en: 'guest(s)',
+    },
+    'hotels.childrenLabel': {
+        fr: 'enfant(s)',
+        ar: 'enfant(s)',
+        en: 'child(ren)',
+    },
+    'hotels.adultsLabel': { fr: 'Adultes', ar: 'بالغون', en: 'Adults' },
+    'hotels.adultsHelp': {
+        fr: '12 ans et plus',
+        ar: '12 سنة فأكثر',
+        en: 'Ages 12 and up',
+    },
+    'hotels.childrenHelp': {
+        fr: 'Moins de 12 ans',
+        ar: 'أقل من 12 سنة',
+        en: 'Under 12 years',
+    },
+    'hotels.addChild': { fr: 'Ajouter un enfant', ar: 'إضافة طفل', en: 'Add child' },
+    'hotels.removeChild': {
+        fr: 'Retirer l’enfant',
+        ar: 'إزالة الطفل',
+        en: 'Remove child',
+    },
+    'hotels.decreaseAdults': {
+        fr: 'Diminuer les adultes',
+        ar: 'تقليل البالغين',
+        en: 'Decrease adults',
+    },
+    'hotels.increaseAdults': {
+        fr: 'Augmenter les adultes',
+        ar: 'زيادة البالغين',
+        en: 'Increase adults',
+    },
+    'hotels.childAge': {
+        fr: 'Âge de l’enfant',
+        ar: 'عمر الطفل',
+        en: "Child's age",
+    },
+    'hotels.years': { fr: 'an(s)', ar: 'سنة', en: 'year(s)' },
+    'hotels.providerBadge': {
+        fr: 'Disponibilité en direct',
+        ar: 'توفر مباشر',
+        en: 'Live availability',
+    },
+    'hotels.manualBadge': {
+        fr: 'Sur demande',
+        ar: 'عند الطلب',
+        en: 'On request',
+    },
+    'hotels.sortBy': { fr: 'Trier par', ar: 'ترتيب حسب', en: 'Sort by' },
+    'hotels.sortDefault': {
+        fr: 'Recommandés',
+        ar: 'موصى به',
+        en: 'Recommended',
+    },
+    'hotels.sortPriceAsc': {
+        fr: 'Prix croissant',
+        ar: 'السعر تصاعدياً',
+        en: 'Price (low to high)',
+    },
+    'hotels.sortPriceDesc': {
+        fr: 'Prix décroissant',
+        ar: 'السعر تنازلياً',
+        en: 'Price (high to low)',
+    },
+    'hotels.sortStarsDesc': {
+        fr: 'Étoiles décroissantes',
+        ar: 'النجوم تنازلياً',
+        en: 'Stars (high to low)',
+    },
+    'hotels.stayTotal': {
+        fr: 'Total du séjour',
+        ar: 'إجمالي الإقامة',
+        en: 'Stay total',
+    },
+    'hotels.totalFor': {
+        fr: 'Total pour {nights} nuits',
+        ar: 'الإجمالي لـ {nights} ليالٍ',
+        en: 'Total for {nights} nights',
+    },
+    'hotels.unavailable': {
+        fr: 'Indisponible pour ces dates',
+        ar: 'غير متوفر لهذه التواريخ',
+        en: 'Unavailable for these dates',
+    },
+    'hotels.noAvailabilityResults': {
+        fr: 'Aucun hôtel disponible pour vos dates. Essayez d’autres dates.',
+        ar: 'لا توجد فنادق متاحة لتواريخك. جرب تواريخ أخرى.',
+        en: 'No hotels are available for your dates. Try different dates.',
+    },
 
     // Hotel Detail Page
     'hotelDetail.startingFrom': {
@@ -1541,6 +1640,16 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Cet hôtel n\'a aucune disponibilité pour les dates sélectionnées. Essayez d\'autres dates.',
         ar: 'لا يتوفر هذا الفندق للتواريخ المحددة. جرب تواريخ أخرى.',
         en: 'This hotel has no availability for the selected dates. Try other dates.',
+    },
+    'hotelDetail.mandatorySupplements': {
+        fr: 'Suppléments obligatoires',
+        ar: 'الرسوم الإضافية الإجبارية',
+        en: 'Mandatory supplements',
+    },
+    'hotelDetail.roomIncluded': {
+        fr: 'Inclus',
+        ar: 'مشمول',
+        en: 'Included',
     },
     'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
     'tourDetail.notIncluded': {
@@ -4131,6 +4240,71 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Dates verrouillées à l\'offre recherchée',
         ar: 'التواريخ مثبتة على العرض الذي تم البحث عنه',
         en: 'Dates locked to the searched offer',
+    },
+    'booking.passengers': {
+        fr: 'Passagers',
+        ar: 'المسافرون',
+        en: 'Passengers',
+    },
+    'booking.passengersHint': {
+        fr: 'Ajoutez chaque voyageur. Le premier adulte est le titulaire de la réservation.',
+        ar: 'أضف كل مسافر. البالغ الأول هو صاحب الحجز.',
+        en: 'Add each traveler. The first adult is the booking holder.',
+    },
+    'booking.passengerNumber': {
+        fr: 'Passager',
+        ar: 'المسافر',
+        en: 'Passenger',
+    },
+    'booking.civility': { fr: 'Civilité', ar: 'اللقب', en: 'Civility' },
+    'booking.civilityMr': { fr: 'M.', ar: 'السيد', en: 'Mr' },
+    'booking.civilityMrs': { fr: 'Mme', ar: 'السيدة', en: 'Mrs' },
+    'booking.civilityMs': { fr: 'Mlle', ar: 'الآنسة', en: 'Ms' },
+    'booking.age': { fr: 'Âge', ar: 'العمر', en: 'Age' },
+    'booking.firstName': {
+        fr: 'Prénom',
+        ar: 'الاسم الأول',
+        en: 'First name',
+    },
+    'booking.lastName': {
+        fr: 'Nom',
+        ar: 'اسم العائلة',
+        en: 'Last name',
+    },
+    'booking.passportNumber': {
+        fr: 'N° de passeport',
+        ar: 'رقم جواز السفر',
+        en: 'Passport number',
+    },
+    'booking.passportExpiry': {
+        fr: 'Expiration du passeport',
+        ar: 'انتهاء صلاحية جواز السفر',
+        en: 'Passport expiry',
+    },
+    'booking.confirmTitle': {
+        fr: 'Confirmez votre réservation',
+        ar: 'أكد حجزك',
+        en: 'Confirm your booking',
+    },
+    'booking.confirmDescription': {
+        fr: 'Disponibilité et prix confirmés par le fournisseur. Procédez au paiement pour finaliser.',
+        ar: 'تم تأكيد التوفر والسعر من قبل المورد. تابع الدفع لإتمام الحجز.',
+        en: 'Availability and price confirmed by the provider. Proceed to payment to finalize.',
+    },
+    'booking.confirmedTotal': {
+        fr: 'Total confirmé',
+        ar: 'الإجمالي المؤكد',
+        en: 'Confirmed total',
+    },
+    'booking.payHint': {
+        fr: 'Vous serez redirigé vers la page de paiement sécurisée.',
+        ar: 'سيتم توجيهك إلى صفحة الدفع الآمنة.',
+        en: 'You will be redirected to the secure payment page.',
+    },
+    'booking.confirmedPay': {
+        fr: 'Payer maintenant',
+        ar: 'ادفع الآن',
+        en: 'Pay now',
     },
     'common.processing': {
         fr: 'Traitement...',

@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
+import {
+    OccupancyPicker,
+    type Occupancy,
+} from '@/components/ui/OccupancyPicker';
 import { Slider } from '@/components/ui/slider';
+import { useLanguage } from '@/contexts/LanguageContext';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import type { HotelItem } from '@/types/public/hotel.types';
 import { FilterRenderer } from './FilterRenderer';
@@ -14,8 +19,8 @@ interface HotelFiltersProps {
     categoryTypes: PublicCategoryType[];
     categoryTypeFilters: Record<string, string[]>;
     onCategoryTypeChange: (typeKey: string, values: string[]) => void;
-    guests: number;
-    onGuestsChange: (value: number) => void;
+    occupancy: Occupancy;
+    onOccupancyChange: (occupancy: Occupancy) => void;
 }
 
 export function HotelFilters({
@@ -28,9 +33,10 @@ export function HotelFilters({
     categoryTypes,
     categoryTypeFilters,
     onCategoryTypeChange,
-    guests,
-    onGuestsChange,
+    occupancy,
+    onOccupancyChange,
 }: HotelFiltersProps) {
+    const { t } = useLanguage();
     // Get unique countries from hotels
     const availableCountries = useMemo(() => {
         const countriesMap = new Map<string, { count: number; label: { en: string; fr: string; ar: string } }>();
@@ -130,30 +136,17 @@ export function HotelFilters({
                 </div>
             </div>
 
-            {/* Guests Field */}
+            {/* Occupancy Field */}
             <div className="border-t border-border my-3 sm:my-4 py-3 sm:py-4">
                 <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 sm:mb-3">
-                    {lang === 'fr' ? 'Voyageurs' : lang === 'ar' ? 'الضيوف' : 'Guests'}
+                    {t('hotels.occupancy')}
                 </h3>
-                <div className="flex items-center justify-between gap-3 sm:gap-4">
-                    <button
-                        type="button"
-                        onClick={() => onGuestsChange(Math.max(1, guests - 1))}
-                        className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg border border-border bg-background text-base sm:text-lg font-bold text-foreground hover:bg-muted transition-colors"
-                    >
-                        -
-                    </button>
-                    <span className="text-base sm:text-lg font-medium text-foreground min-w-[1.5rem] sm:min-w-[2rem] text-center">
-                        {guests}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={() => onGuestsChange(guests + 1)}
-                        className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg border border-border bg-background text-base sm:text-lg font-bold text-foreground hover:bg-muted transition-colors"
-                    >
-                        +
-                    </button>
-                </div>
+                <OccupancyPicker
+                    value={occupancy}
+                    onChange={onOccupancyChange}
+                    compact
+                    className="w-full"
+                />
             </div>
 
             {/* Price Slider */}

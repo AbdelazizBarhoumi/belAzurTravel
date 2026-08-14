@@ -195,6 +195,15 @@ export interface OsTravelSearchRequest {
     hotel_slugs?: string[];
     rooms?: OsTravelSearchRoomRequest[];
     only_available?: boolean;
+    city_id?: string;
+    stars?: number;
+    category_ids?: number[];
+    boarding_ids?: number[];
+    price_min?: number;
+    price_max?: number;
+    sort?: 'price_asc' | 'price_desc' | 'stars_desc';
+    page?: number;
+    per_page?: number;
 }
 
 export interface OsTravelSearchRoomResult {
@@ -202,8 +211,15 @@ export interface OsTravelSearchRoomResult {
     name: string;
     boarding: string | null;
     boarding_name: string | null;
+    boarding_id?: number | null;
+    view: string;
+    view_ids?: number[];
     price: number;
+    price_total: number;
+    price_per_night: number;
     base_price: number;
+    currency: string;
+    nights: number;
     token: string | null;
     source: string | null;
     stop_reservation: boolean;
@@ -215,7 +231,6 @@ export interface OsTravelSearchRoomResult {
         from_date: string | null;
     }>;
     supplements: unknown[];
-    view: string;
 }
 
 export interface OsTravelSearchResult {
@@ -230,9 +245,14 @@ export interface OsTravelSearchResult {
     reviews: number;
     image: string;
     price: number;
+    price_total: number;
+    price_per_night: number;
     base_price: number;
     markup_percentage: string;
     currency: string;
+    nights: number;
+    available: boolean;
+    provider: string;
     rooms: OsTravelSearchRoomResult[];
 }
 

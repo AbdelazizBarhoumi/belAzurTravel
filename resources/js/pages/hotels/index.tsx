@@ -11,6 +11,17 @@ import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import {
+    OccupancyPicker,
+    type Occupancy,
+} from '@/components/ui/OccupancyPicker';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { StarRating } from '@/components/ui/StarRating';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -23,12 +34,15 @@ import {
 
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
+import { cn } from '@/lib/utils';
 import type { HotelItem } from '@/types/public/hotel.types';
 
 // A card is either a stored browse record or a live result (name/location are
 // wider `Record<string, string>` after merging the live spread over browse).
 type HotelCard = Omit<HotelItem, 'name' | 'location' | 'category'> &
     Partial<HotelSearchResult>;
+
+type SortValue = 'price_asc' | 'price_desc' | 'stars_desc';
 
 export default function Hotels() {
     const { t, lang, dir } = useLanguage();
@@ -43,9 +57,14 @@ export default function Hotels() {
     void showMobileFilter;
     void setShowMobileFilter;
     const [searchQuery, setSearchQuery] = useState(initialSearch);
-    const [guests, setGuests] = useState(
-        Number.isFinite(initialGuests) && initialGuests > 0 ? initialGuests : 2,
-    );
+    const [occupancy, setOccupancy] = useState<Occupancy>({
+        adults:
+            Number.isFinite(initialGuests) && initialGuests > 0
+                ? initialGuests
+                : 2,
+        childAges: [],
+    });
+    const [sort, setSort] = useState<SortValue>('price_asc');
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: initialFromDate ? new Date(initialFromDate) : undefined,
         to: initialToDate ? new Date(initialToDate) : undefined,
@@ -99,17 +118,38 @@ export default function Hotels() {
     }
 
     const hasLandingDateOrGuestFilters =
-        guests !== 2 || dateRange?.from !== undefined || dateRange?.to !== undefined;
+        occupancy.adults !== 2 ||
+        occupancy.childAges.length > 0 ||
+        dateRange?.from !== undefined ||
+        dateRange?.to !== undefined;
 
     const hasActiveCategoryTypeFilters = Object.values(categoryTypeFilters).some((v) => v.length > 0);
 
-    // Phase C: once a full date range (+ occupancy) is chosen, the list is
-    // server-driven — `useHotelSearch` fetches the live availability set for
-    // those exact dates (only_available=true, no slug restriction), so
-    // unavailable hotels never appear and every card carries a live total.
+    // Phase E: once a full date range (+ occupancy) is chosen, the list is
+    // server-driven — the filter bar maps to the server search request
+    // (stars, price range, sort, rooms with child ages). Client-side
+    // filtering is removed for those server-owned dimensions.
     const hasDates = Boolean(dateRange?.from && dateRange?.to);
     const from = dateRange?.from;
     const to = dateRange?.to;
+
+    // Server `stars` is a minimum threshold; if the user picked star levels,
+    // honor the strictest (lowest) selected value.
+    const selectedStarValues = Object.entries(categoryTypeFilters)
+        .filter(([key, values]) => key.startsWith('dynamic_star_') && values.length > 0)
+        .flatMap(([, values]) => values.map((v) => Number(v)))
+        .filter((v) => Number.isFinite(v));
+    const starsFilter = selectedStarValues.length > 0
+        ? Math.min(...selectedStarValues)
+        : undefined;
+
+    // The browse slider is per-night; the server price filter is stay-total,
+    // so convert the slider bounds with the fixed stay length.
+    const nights = from && to
+        ? Math.max(1, Math.round((to.getTime() - from.getTime()) / 86_400_000))
+        : 0;
+    const priceFilterActive =
+        (hotelPriceRange[0] !== minPrice || hotelPriceRange[1] !== maxPrice) && nights > 0;
 
     const searchQueryForLive = useMemo(() => {
         if (!from || !to) {
@@ -119,11 +159,25 @@ export default function Hotels() {
         return {
             check_in: from.toISOString().slice(0, 10),
             check_out: to.toISOString().slice(0, 10),
-            rooms: [{ adults: guests }],
+            rooms: [
+                {
+                    adults: occupancy.adults,
+                    children: occupancy.childAges,
+                },
+            ],
             only_available: true,
+            ...(starsFilter !== undefined ? { stars: starsFilter } : {}),
+            ...(priceFilterActive
+                ? {
+                      price_min: Math.round(hotelPriceRange[0] * nights),
+                      price_max: Math.round(hotelPriceRange[1] * nights),
+                  }
+                : {}),
+            sort,
             per_page: 50,
         };
-    }, [from, to, guests]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [from, to, occupancy.adults, occupancy.childAges, starsFilter, hotelPriceRange[0], hotelPriceRange[1], priceFilterActive, nights, sort]);
 
     const { data: liveResult } = useHotelSearch(searchQueryForLive);
     const liveResults = useMemo(() => liveResult?.data ?? [], [liveResult]);
@@ -139,58 +193,38 @@ export default function Hotels() {
         ? liveResults.map((live) => {
               const browse = browseBySlug.get(live.slug);
               return browse
-                  ? { ...browse, ...live }
+                  ? ({ ...browse, ...live } as unknown as HotelCard)
                   : (live as unknown as HotelCard);
           })
         : (hotels as HotelCard[]);
-    const hasLivePrices = liveLoaded && liveResults.length > 0;
 
-    const filteredHotels =
-        searchQuery.trim().length === 0 &&
-        hotelPriceRange[0] === minPrice &&
-        hotelPriceRange[1] === maxPrice &&
-        !hasActiveCategoryTypeFilters
-            ? baseList
-            : baseList.filter((hotel) => {
-                  const matchesSearch = matchesSearchText(searchQuery, [
-                      localizeText(hotel.name, lang),
-                      localizeText(hotel.location, lang),
-                      localizeText(hotel.country, lang),
-                      localizeText(hotel.city, lang),
-                      (hotel.tags ?? []).join(' '),
-                  ]);
-                  // The browse slider is per-night; live results are stay-total,
-                  // so filter live cards on their derived per-night figure.
-                  const filterPrice =
-                      liveLoaded &&
-                      typeof hotel.price_per_night === 'number'
-                          ? hotel.price_per_night
-                          : hotel.price;
-                  const matchesPrice =
-                      filterPrice >= hotelPriceRange[0] &&
-                      filterPrice <= hotelPriceRange[1];
-                  // Check category type filters (OR logic)
-                  const assignments = hotel.category_assignments;
-                  const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
-                  const matchesCategoryTypes = activeTypeFilters.length === 0 ||
-                      activeTypeFilters.some(([typeKey, values]) => {
-                          // Handle dynamic filters (country, stars)
-                          if (typeKey.startsWith('dynamic_country_')) {
-                              const hotelCountry = hotel.country && typeof hotel.country === 'object' ? hotel.country.en : '';
-                              return values.includes(hotelCountry);
-                          }
-                          if (typeKey.startsWith('dynamic_star_')) {
-                              return values.includes(String(hotel.stars));
-                          }
-                          // Handle regular category type filters
-                          return assignments && values.includes(assignments[typeKey]);
-                      });
-return (
-                       matchesSearch &&
-                       matchesPrice &&
-                       matchesCategoryTypes
-                   );
-               });
+    // Server-owned dimensions (stars, price, sort, occupancy, dates) are NOT
+    // filtered here. Only app-level refinements the provider can't express
+    // (search text, category assignments, country) apply client-side.
+    const filteredHotels = baseList.filter((hotel) => {
+        const matchesSearch = matchesSearchText(searchQuery, [
+            localizeText(hotel.name, lang),
+            localizeText(hotel.location, lang),
+            localizeText(hotel.country, lang),
+            localizeText(hotel.city, lang),
+            (hotel.tags ?? []).join(' '),
+        ]);
+        const assignments = hotel.category_assignments;
+        const activeTypeFilters = Object.entries(categoryTypeFilters)
+            .filter(([, v]) => v.length > 0)
+            .filter(([key]) => !key.startsWith('dynamic_star_'));
+        const matchesCategoryTypes = activeTypeFilters.length === 0 ||
+            activeTypeFilters.some(([typeKey, values]) => {
+                // Handle dynamic filters (country)
+                if (typeKey.startsWith('dynamic_country_')) {
+                    const hotelCountry = hotel.country && typeof hotel.country === 'object' ? hotel.country.en : '';
+                    return values.includes(hotelCountry);
+                }
+                // Handle regular category type filters
+                return assignments && values.includes(assignments[typeKey]);
+            });
+        return matchesSearch && matchesCategoryTypes;
+    });
 
     const handleClearAll = () => {
         setSearchQuery('');
@@ -198,6 +232,8 @@ return (
         setHotelPriceRange([minPrice, maxPrice]);
         setDateRange(undefined);
     };
+
+    const isRtl = dir === 'rtl';
 
     return (
         <div className="min-h-screen bg-background">
@@ -227,7 +263,7 @@ return (
                         <p className="mx-auto max-w-2xl text-muted-foreground">
                             {t('hotels.subtitle')}
                         </p>
-                        {hasLivePrices && (
+                        {liveLoaded && liveResults.length > 0 && (
                             <p className="mx-auto mt-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
                                 <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
                                 {t('hotels.livePrices')}
@@ -242,7 +278,9 @@ return (
                         hasActiveFilters={
                             searchQuery.trim().length > 0 ||
                             hasLandingDateOrGuestFilters ||
-                            hasActiveCategoryTypeFilters
+                            hasActiveCategoryTypeFilters ||
+                            priceFilterActive ||
+                            sort !== 'price_asc'
                         }
                         onClearFilters={handleClearAll}
                         searchPlaceholder={t('common.search')}
@@ -253,16 +291,42 @@ return (
                             value={dateRange}
                             onChange={setDateRange}
                         />
+                        <OccupancyPicker
+                            value={occupancy}
+                            onChange={setOccupancy}
+                        />
+                        <Select
+                            value={sort}
+                            onValueChange={(v) => setSort(v as SortValue)}
+                        >
+                            <SelectTrigger
+                                aria-label={t('hotels.sortBy')}
+                                className="h-10 sm:h-12 w-44 rounded-xl sm:rounded-2xl border-border/70 bg-background/80 px-3 text-xs sm:text-sm shadow-sm sm:h-12"
+                            >
+                                <SelectValue placeholder={t('hotels.sortDefault')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="price_asc">
+                                    {t('hotels.sortPriceAsc')}
+                                </SelectItem>
+                                <SelectItem value="price_desc">
+                                    {t('hotels.sortPriceDesc')}
+                                </SelectItem>
+                                <SelectItem value="stars_desc">
+                                    {t('hotels.sortStarsDesc')}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </ListFilterBar>
 
                     {/* Main Layout: Sidebar + Content */}
                     <div
-                        className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}
+                        className={`flex gap-6 ${isRtl ? 'flex-row-reverse' : 'flex-row'}`}
                     >
                         <motion.aside
                             initial={{
                                 opacity: 0,
-                                x: dir === 'rtl' ? 100 : -100,
+                                x: isRtl ? 100 : -100,
                             }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.05 }}
@@ -273,7 +337,7 @@ return (
                                     <h2 className="font-serif text-lg font-bold text-foreground">
                                         {t('hotels.filters')}
                                     </h2>
-                                    {hasActiveCategoryTypeFilters && (
+                                    {(hasActiveCategoryTypeFilters || priceFilterActive) && (
                                         <button
                                             type="button"
                                             onClick={handleClearAll}
@@ -296,8 +360,8 @@ return (
                                     onCategoryTypeChange={(typeKey, values) =>
                                         setCategoryTypeFilters((prev) => ({ ...prev, [typeKey]: values }))
                                     }
-                                    guests={guests}
-                                    onGuestsChange={setGuests}
+                                    occupancy={occupancy}
+                                    onOccupancyChange={setOccupancy}
                                 />
                             </div>
                         </motion.aside>
@@ -313,113 +377,156 @@ return (
                                 />
                             ) : (
                                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                    {filteredHotels.map((hotel, index) => (
-                                        <motion.article
-                                            key={hotel.slug}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.05 }}
-                                        >
-                                            <Link
-                                                to={`/hotels/${hotel.slug}`}
-                                                className="group block transform-gpu overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                    {filteredHotels.map((hotel, index) => {
+                                        const unavailable = hotel.available === false;
+                                        return (
+                                            <motion.article
+                                                key={hotel.slug}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: index * 0.05 }}
+                                                className={cn(
+                                                    unavailable &&
+                                                        'opacity-60 grayscale',
+                                                )}
                                             >
-                                                <div className="relative h-56 overflow-hidden">
-                                                    <img
-                                                        src={hotel.image}
-                                                        alt={localizeText(
-                                                            hotel.name,
-                                                            lang,
-                                                        )}
-                                                        className="h-full w-full transform-gpu object-cover transition-transform duration-500 group-hover:scale-105"
-                                                    />
-
-                                                    <FavoriteButton
-                                                        className="absolute left-4 top-4"
-                                                        item={{
-                                                            id: hotel.slug,
-                                                            type: 'hotel',
-                                                            name: localizeText(
+                                                <Link
+                                                    to={`/hotels/${hotel.slug}`}
+                                                    className="group block transform-gpu overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                                >
+                                                    <div className="relative h-56 overflow-hidden">
+                                                        <img
+                                                            src={hotel.image}
+                                                            alt={localizeText(
                                                                 hotel.name,
                                                                 lang,
-                                                            ),
-                                                            image: hotel.image,
-                                                            price: hotel.price,
-                                                            location:
-                                                                localizeText(
-                                                                    hotel.location,
+                                                            )}
+                                                            className="h-full w-full transform-gpu object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        />
+
+                                                        <FavoriteButton
+                                                            className="absolute left-4 top-4"
+                                                            item={{
+                                                                id: hotel.slug,
+                                                                type: 'hotel',
+                                                                name: localizeText(
+                                                                    hotel.name,
                                                                     lang,
                                                                 ),
-                                                        }}
-                                                    />
+                                                                image: hotel.image,
+                                                                price: hotel.price,
+                                                                location:
+                                                                    localizeText(
+                                                                        hotel.location,
+                                                                        lang,
+                                                                    ),
+                                                            }}
+                                                        />
 
-                                                    <div className="absolute right-4 top-4 rounded-full bg-card/95 px-3 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur">
-                                                        {(() => {
-                                                            return (
+                                                        <div className="absolute right-4 top-4 rounded-full bg-card/95 px-3 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur">
+                                                            {liveLoaded ? (
+                                                                <>
+                                                                    {hotel.price_total?.toLocaleString()}{' '}
+                                                                    {hotel.currency ?? 'TND'}
+                                                                    {hotel.nights
+                                                                        ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
+                                                                        : ''}
+                                                                </>
+                                                            ) : (
                                                                 <>
                                                                     {t(
                                                                         'hotels.priceFrom',
                                                                     )}{' '}
                                                                     {hotel.price.toLocaleString()}{' '}
                                                                     TND
-                                                                    {hotel.nights
-                                                                        ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
-                                                                        : hotel.last_price_at
-                                                                          ? ` · ${t('hotels.lastKnown')}`
-                                                                          : ''}
+                                                                    {hotel.last_price_at
+                                                                        ? ` · ${t('hotels.lastKnown')}`
+                                                                        : ''}
                                                                 </>
+                                                            )}
+                                                        </div>
+
+                                                        {liveLoaded && (
+                                                            <div className="absolute bottom-3 right-4 left-4 flex items-center justify-between gap-2">
+                                                                <span
+                                                                    className={cn(
+                                                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
+                                                                        hotel.provider === 'manual'
+                                                                            ? 'bg-muted text-muted-foreground'
+                                                                            : 'bg-primary/90 text-primary-foreground',
+                                                                    )}
+                                                                >
+                                                                    {hotel.provider === 'manual'
+                                                                        ? t('hotels.manualBadge')
+                                                                        : t('hotels.providerBadge')}
+                                                                </span>
+                                                                {unavailable && (
+                                                                    <span className="inline-flex items-center rounded-full bg-red-500/90 px-2.5 py-0.5 text-[10px] font-semibold text-white">
+                                                                        {t('hotels.unavailable')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="p-5">
+                                                        <div className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
+                                                            <MapPin className="h-3.5 w-3.5" />
+                                                            {localizeText(
+                                                                hotel.location,
+                                                                lang,
+                                                            )}
+                                                        </div>
+
+                                                        <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
+                                                            {localizeText(
+                                                                hotel.name,
+                                                                lang,
+                                                            )}
+                                                        </h3>
+
+                                                        <div className="mb-3 flex items-center gap-3">
+                                                            <StarRating
+                                                                rating={hotel.stars}
+                                                                size="sm"
+                                                            />
+                                                        </div>
+
+                                                        {(() => {
+                                                            const catLabels = getHotelCategoryLabels(hotel.category_assignments, categoryTypes, lang, 3);
+                                                            if (catLabels.length === 0) return null;
+                                                            return (
+                                                                <div className="mb-4 flex flex-wrap gap-2">
+                                                                    {catLabels.map((label) => (
+                                                                        <span key={label} className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                                                                            {label}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
                                                             );
                                                         })()}
-                                                    </div>
-                                                </div>
 
-                                                <div className="p-5">
-                                                    <div className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
-                                                        <MapPin className="h-3.5 w-3.5" />
-                                                        {localizeText(
-                                                            hotel.location,
-                                                            lang,
-                                                        )}
-                                                    </div>
-
-                                                    <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
-                                                        {localizeText(
-                                                            hotel.name,
-                                                            lang,
-                                                        )}
-                                                    </h3>
-
-                                                    <div className="mb-3 flex items-center gap-3">
-                                                        <StarRating
-                                                            rating={hotel.stars}
-                                                            size="sm"
-                                                        />
-                                                    </div>
-
-                                                    {(() => {
-                                                        const catLabels = getHotelCategoryLabels(hotel.category_assignments, categoryTypes, lang, 3);
-                                                        if (catLabels.length === 0) return null;
-                                                        return (
-                                                            <div className="mb-4 flex flex-wrap gap-2">
-                                                                {catLabels.map((label) => (
-                                                                    <span key={label} className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                                                                        {label}
-                                                                    </span>
-                                                                ))}
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <AmenityIcons amenities={hotel.amenities} maxVisible={8} />
+                                                            <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                                                                {liveLoaded &&
+                                                                    typeof hotel.price_per_night === 'number' && (
+                                                                        <span className="text-sm font-bold text-primary">
+                                                                            {hotel.price_per_night.toLocaleString()}{' '}
+                                                                            {hotel.currency ?? 'TND'}
+                                                                            {t('hotelDetail.pernight')}
+                                                                        </span>
+                                                                    )}
+                                                                <span className="text-xs font-medium text-primary">
+                                                                    {t('common.viewAll')}
+                                                                </span>
                                                             </div>
-                                                        );
-                                                    })()}
-
-                                                    <div className="flex items-center justify-between gap-4">
-                                                        <AmenityIcons amenities={hotel.amenities} maxVisible={8} />
-                                                        <span className="shrink-0 text-sm font-semibold text-primary">
-                                                            {t('common.viewAll')}
-                                                        </span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </Link>
-                                        </motion.article>
-                                    ))}
+                                                </Link>
+                                            </motion.article>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>{' '}

@@ -17,6 +17,8 @@ export interface HotelItem {
     base_price?: number;
     markup_percentage?: string | number;
     currency?: string;
+    source?: 'ostravel' | 'manual';
+    provider?: 'ostravel' | 'manual';
     last_price?: number | null;
     last_price_at?: string | null;
     rating: number;

@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 const { mockHotelSearch } = vi.hoisted(() => ({
-    mockHotelSearch: { data: [] as unknown[] },
+    mockHotelSearch: { data: [] as unknown[], calls: [] as unknown[] },
 }));
 
 vi.mock('@/hooks/usePublicData', () => ({
@@ -81,18 +81,21 @@ vi.mock('@/hooks/usePublicData', () => ({
         data: [],
         isLoading: false,
     }),
-    useHotelSearch: vi.fn(() => ({
-        data: {
-            data: mockHotelSearch.data,
-            meta: {
-                current_page: 1,
-                last_page: 1,
-                total: mockHotelSearch.data.length,
-                per_page: 50,
+    useHotelSearch: vi.fn((query?: unknown) => {
+        mockHotelSearch.calls.push(query);
+        return {
+            data: {
+                data: mockHotelSearch.data,
+                meta: {
+                    current_page: 1,
+                    last_page: 1,
+                    total: mockHotelSearch.data.length,
+                    per_page: 50,
+                },
             },
-        },
-        isLoading: false,
-    })),
+            isLoading: false,
+        };
+    }),
 }));
 
 const queryClient = new QueryClient({
@@ -122,6 +125,7 @@ describe('Hotels', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockHotelSearch.data = [];
+        mockHotelSearch.calls = [];
     });
 
     it('renders hotel cards without hitting an update loop', async () => {
@@ -181,5 +185,128 @@ describe('Hotels', () => {
         ).toBeInTheDocument();
         expect(screen.queryByText('Sunset Bay')).not.toBeInTheDocument();
         expect(screen.queryByText('Ocean Club')).not.toBeInTheDocument();
+    });
+
+    it('sends the occupancy (with child ages) to the live search request', async () => {
+        renderPage('/hotels?from=2026-08-20&to=2026-08-27&guests=2');
+
+        await screen.findByText(/Aucun résultat|No results/i);
+
+        const searchCall = mockHotelSearch.calls.find(
+            (query) =>
+                typeof query === 'object' &&
+                query !== null &&
+                (query as { check_in?: string }).check_in === '2026-08-20',
+        ) as { rooms?: Array<{ adults: number; children: number[] }> } | undefined;
+
+        expect(searchCall).toBeDefined();
+        expect(searchCall?.rooms).toEqual([{ adults: 2, children: [] }]);
+    });
+
+    it('renders per-night plus stay total on live cards', async () => {
+        mockHotelSearch.data = [
+            {
+                slug: 'sunset-bay',
+                name: { en: 'Sunset Bay', fr: 'Sunset Bay', ar: 'Sunset Bay' },
+                location: {
+                    en: 'Sousse, Tunisia',
+                    fr: 'Sousse, Tunisie',
+                    ar: 'سوسة، تونس',
+                },
+                stars: 5,
+                rating: 4.8,
+                reviews: 120,
+                image: '/hotel.jpg',
+                price: 1234,
+                price_total: 1234,
+                price_per_night: 176,
+                nights: 7,
+                available: true,
+                provider: 'ostravel',
+                currency: 'TND',
+                rooms: [],
+            },
+        ];
+
+        renderPage('/hotels?from=2026-08-20&to=2026-08-27&guests=2');
+
+        expect(await screen.findByText('Sunset Bay')).toBeInTheDocument();
+        expect(screen.getByText(/1,234/)).toBeInTheDocument();
+        expect(screen.getByText(/176\s*TND\s*\/nuit|176\s*TND\s*\/night/i)).toBeInTheDocument();
+    });
+
+    it('greys out unavailable hotels and shows the unavailable badge', async () => {
+        mockHotelSearch.data = [
+            {
+                slug: 'ocean-club',
+                name: { en: 'Ocean Club', fr: 'Ocean Club', ar: 'Ocean Club' },
+                location: {
+                    en: 'Hammamet, Tunisia',
+                    fr: 'Hammamet, Tunisie',
+                    ar: 'الحمامات، تونس',
+                },
+                stars: 4,
+                rating: 4.5,
+                reviews: 80,
+                image: '/ocean.jpg',
+                price: 220,
+                price_total: 220,
+                price_per_night: 31,
+                nights: 7,
+                available: false,
+                provider: 'ostravel',
+                currency: 'TND',
+                rooms: [],
+            },
+        ];
+
+        renderPage('/hotels?from=2026-08-20&to=2026-08-27&guests=2');
+
+        expect(await screen.findByText('Ocean Club')).toBeInTheDocument();
+        const unavailableBadge = await screen.findByText(
+            /Indisponible pour ces dates|Unavailable for these dates/i,
+        );
+        expect(unavailableBadge).toBeInTheDocument();
+    });
+
+    it('shows a last-known label in browse mode and a live badge in live mode', async () => {
+        // Browse mode: no dates, one hotel carries a last known price.
+        const { unmount } = renderPage('/hotels');
+
+        expect(await screen.findByText('Sunset Bay')).toBeInTheDocument();
+        unmount();
+
+        // Live mode: badge shown once server results exist.
+        mockHotelSearch.data = [
+            {
+                slug: 'sunset-bay',
+                name: { en: 'Sunset Bay', fr: 'Sunset Bay', ar: 'Sunset Bay' },
+                location: {
+                    en: 'Sousse, Tunisia',
+                    fr: 'Sousse, Tunisie',
+                    ar: 'سوسة، تونس',
+                },
+                stars: 5,
+                rating: 4.8,
+                reviews: 120,
+                image: '/hotel.jpg',
+                price: 1234,
+                price_total: 1234,
+                price_per_night: 176,
+                nights: 7,
+                available: true,
+                provider: 'ostravel',
+                rooms: [],
+            },
+        ];
+
+        renderPage('/hotels?from=2026-08-20&to=2026-08-27&guests=2');
+
+        expect(await screen.findByText('Sunset Bay')).toBeInTheDocument();
+        expect(
+            screen.getByText(
+                /Disponibilité en direct|Live availability/i,
+            ),
+        ).toBeInTheDocument();
     });
 });
