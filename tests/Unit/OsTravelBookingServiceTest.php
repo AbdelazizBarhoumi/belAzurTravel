@@ -253,6 +253,16 @@ class OsTravelBookingServiceTest extends TestCase
         $this->assertSame('Pending', $service->mapStatus('Unknown'));
     }
 
+    public function test_map_cancellation_status_never_downgrades_rejected_cancellation(): void
+    {
+        $service = app(OsTravelBookingService::class);
+        $this->assertSame('Cancelled', $service->mapCancellationStatus('Cancelled'));
+        $this->assertSame('Pending', $service->mapCancellationStatus('OnRequest'));
+        $this->assertSame('Confirmed', $service->mapCancellationStatus('Rejected'));
+        $this->assertSame('Confirmed', $service->mapCancellationStatus('Validated'));
+        $this->assertSame('Confirmed', $service->mapCancellationStatus('Unknown'));
+    }
+
     public function test_provider_context_from_payload_replays_request(): void
     {
         $booking = $this->booking([

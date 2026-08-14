@@ -141,7 +141,7 @@ class OsTravelBookingService
         $response = $this->client->bookingCancellation($bookingContext);
         $data = $response['BookingCancellation'] ?? [];
 
-        $status = $this->mapStatus($data['State'] ?? 'Cancelled');
+        $status = $this->mapCancellationStatus($data['State'] ?? 'Cancelled');
 
         $booking->update([
             'provider_payload' => $response,
@@ -181,6 +181,23 @@ class OsTravelBookingService
             'Cancelled' => 'Cancelled',
             'OnRequest' => 'Pending',
             default => 'Pending',
+        };
+    }
+
+    /**
+     * Map a cancellation `State` to the app's `Booking.status`.
+     *
+     * `Rejected` (the provider refuses to cancel) must leave a Confirmed
+     * booking Confirmed instead of downgrading it, and `OnRequest` keeps the
+     * cancellation pending local resolution.
+     */
+    public function mapCancellationStatus(string $state): string
+    {
+        return match ($state) {
+            'Cancelled' => 'Cancelled',
+            'OnRequest' => 'Pending',
+            'Rejected' => 'Confirmed',
+            default => 'Confirmed',
         };
     }
 

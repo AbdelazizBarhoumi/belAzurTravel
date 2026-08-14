@@ -296,4 +296,109 @@ class OsTravelGoLiveFlowTest extends TestCase
         $this->assertSame(1, Hotel::where('code', 'ostravel-42')->count());
         $this->assertSame($first->id, Hotel::where('code', 'ostravel-42')->first()->id);
     }
+
+    /**
+     * Phase F manual-hotel variants: `instant` and `request` manual hotels live
+     * side-by-side with the published provider hotel across the admin list,
+     * public search and booking chain — without any provider call.
+     */
+    public function test_manual_hotel_variants_flow_through_admin_public_and_booking_chain(): void
+    {
+        $this->fakeOsTravelChain();
+        Artisan::call('os-travel:sync-catalog');
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->actingAs($this->admin)
+            ->putJson("/api/admin/os-travel/hotels/{$staged->id}", [
+                'base_price' => 833,
+                'markup_percentage' => 20,
+                'currency' => 'TND',
+            ])
+            ->assertOk();
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/os-travel/hotels/{$staged->id}/approve")
+            ->assertOk();
+        $providerHotel = Hotel::first();
+
+        // Two manual hotels: instant (auto-confirm) and request (needs admin).
+        foreach (['instant', 'request'] as $i => $mode) {
+            Hotel::create([
+                'slug' => "maison-{$mode}",
+                'code' => "hotel-manual-{$i}",
+                'name' => ['en' => ucfirst($mode).' Maison', 'fr' => ucfirst($mode).' Maison', 'ar' => ucfirst($mode).' Maison'],
+                'location' => ['en' => 'Sousse', 'fr' => 'Sousse', 'ar' => 'سوسة'],
+                'price' => 120,
+                'base_price' => 100,
+                'markup_percentage' => 20,
+                'currency' => 'TND',
+                'rating' => 4.0,
+                'stars' => 3,
+                'reviews' => 5,
+                'image' => 'https://example.com/manual.jpg',
+                'source' => 'manual',
+                'booking_mode' => $mode,
+            ]);
+        }
+
+        // Admin list exposes all three hotels (provider + both manual modes).
+        $adminList = $this->actingAs($this->admin)->getJson('/api/admin/hotels')->assertOk()->json('data');
+        $slugs = collect($adminList)->pluck('slug');
+        $this->assertContains($providerHotel->slug, $slugs->all());
+        $this->assertContains('maison-instant', $slugs->all());
+        $this->assertContains('maison-request', $slugs->all());
+
+        // Public search finds the manual hotels without any provider call
+        // (the provider hotel's live search is covered separately above).
+        Http::fake();
+        $search = $this->postJson('/api/hotels/search', [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-05',
+            'hotel_slugs' => ['maison-instant', 'maison-request'],
+        ])->assertOk()->json('data');
+
+        $manualInstant = collect($search)->firstWhere('slug', 'maison-instant');
+        $this->assertSame('manual', $manualInstant['provider']);
+        $this->assertTrue($manualInstant['available']);
+        $this->assertSame([], $manualInstant['rooms']);
+        $manualRequest = collect($search)->firstWhere('slug', 'maison-request');
+        $this->assertSame('manual', $manualRequest['provider']);
+        Http::assertNothingSent();
+
+        // Instant booking confirms immediately, request stays Pending then an
+        // admin confirms it — both without provider calls.
+        Http::fake();
+        $instant = $this->actingAs($this->client)
+            ->postJson('/api/bookings', [
+                'type' => 'hotel',
+                'item_slug' => 'maison-instant',
+                'start_date' => '2026-09-01',
+                'end_date' => '2026-09-05',
+                'client' => ['name' => 'John Doe', 'email' => 'john@example.com', 'phone' => '123456789'],
+                'amount' => 480,
+            ])
+            ->assertStatus(201)
+            ->json();
+        $this->assertSame('Confirmed', $instant['status']);
+
+        $request = $this->actingAs($this->client)
+            ->postJson('/api/bookings', [
+                'type' => 'hotel',
+                'item_slug' => 'maison-request',
+                'start_date' => '2026-09-01',
+                'end_date' => '2026-09-05',
+                'client' => ['name' => 'Jane Roe', 'email' => 'jane@example.com', 'phone' => '123456789'],
+                'amount' => 480,
+            ])
+            ->assertStatus(201)
+            ->json();
+        $this->assertSame('Pending', $request['status']);
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/bookings/{$request['id']}/confirm")
+            ->assertOk();
+        $this->assertDatabaseHas('bookings', [
+            'id' => $request['id'],
+            'status' => 'Confirmed',
+        ]);
+        Http::assertNothingSent();
+    }
 }

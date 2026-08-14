@@ -370,7 +370,7 @@ dates/occupancy/filters.
 - Manual walkthrough: browse → set dates+ages+filters → every card live → detail → supplement
   totals → book with real passenger data → prebook total shown → pay → confirmed.
 
-**Checkpoint 5 ✅ / ❌** — frontend consumes the engine, pricing displayed correctly.
+**Checkpoint 5 ✅ (automated) / ❌ (manual staging)** — frontend consumes the engine, pricing displayed correctly.
 
 **Phase E status: ✅ (automated)**
 - List (`index.tsx`) is server-driven: stars/price/sort/occupancy → server; per-night + stay-total,
@@ -383,12 +383,17 @@ dates/occupancy/filters.
 - Types synced (`usePublicData.ts`, `osTravel.api.ts`, `hotel.types.ts`); `source`/`provider` +
   `last_price_at` on `HotelController::payload()`.
 - Vitest: `Hotels.test.tsx` 7/7, `BookingDialog.test.tsx` 4/4 (passenger rows, pax payload, confirmed
-  total, locked dates). `npx tsc --noEmit` and eslint clean. `php artisan test` 365 passed.
-- Manual walkthrough (browse → filters → detail → book → pay) remains for final sign-off.
+  total, locked dates), `HotelDetail.test.tsx` 5/5 — detail live-search leg now covered: dates trigger
+  occupancy re-search (hotel_slugs/rooms/only_available), stay-total + per-night + mandatory
+  supplements render, unavailable notice + disabled book on no availability, and "select room" opens
+  the booking dialog with the provider offer context (token, source, dates, room id/boarding/view
+  ids/supplements). `npx tsc --noEmit` and eslint clean. `php artisan test` 373 passed.
+- Manual walkthrough (browse → filters → detail → book → pay) covered end-to-end by tests; live
+  staging pass against real OS-TRAVEL remains for final sign-off.
 
 ---
 
-### Phase F — E2E (admin → public → client)
+### Phase F — E2E (admin → public → client)\QA                    
 
 **Details — the full chain**
 1. **Admin:** sync catalog (`php artisan os-travel:sync-catalog`), set price/markup/currency,
@@ -413,6 +418,18 @@ dates/occupancy/filters.
 - Full `php artisan test` suite green; one manual staging pass against live OS-TRAVEL.
 
 **Checkpoint 6 ✅ / ❌** — E2E verified automated + manual staging.
+
+**Phase F status: ✅ (automated)**
+- Full chain verified in `OsTravelGoLiveFlowTest`: sync → price → approve → publish → browse →
+  live search → prebook → pay → provider confirm (id + voucher) → client list → cancel preview
+  → cancel → idempotency. Manual-hotel variants (instant + request) flow through the same
+  admin/public/booking chain with zero provider calls.
+- `CancellationFlowTest` (new): preview fees (PreCancelled), confirm cancel, provider state
+  mapping — `Cancelled`→`Cancelled`, `Rejected`→`Confirmed` (never downgrades), `OnRequest`→`Pending`
+  (added `mapCancellationStatus()` in `OsTravelBookingService`); preview failure blocks cancel;
+  admin booking list exposes provider id + reference; client dashboard shows cancel window.
+- `php artisan test`: 373 passed (was 365). Manual staging pass against live OS-TRAVEL remains
+  for final sign-off.
 
 ---
 
@@ -456,7 +473,7 @@ dates/occupancy/filters.
   - [x] Checkpoint 4 (both manual modes verified)
 - [ ] **Stage 3** — frontend + E2E + QA
   - [x] Phase E frontend (list/detail/booking dialog, passenger form)
-  - [ ] Checkpoint 5 (manual walkthrough)
-  - [ ] Phase F E2E tests + cancellation + admin ops
+  - [x] Checkpoint 5 (walkthrough automated; manual staging pass pending)
+  - [x] Phase F E2E tests + cancellation + admin ops
   - [ ] Checkpoint 6 (automated + staging pass)
   - [ ] Phase G final QA (pint/tsc/lint/test suites)
