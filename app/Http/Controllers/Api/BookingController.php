@@ -131,44 +131,64 @@ class BookingController extends Controller
 
         // OS-TRAVEL hotel: PreBook to verify availability + final price, then
         // persist the provider context so the payment callback can Confirm.
+        // Manual hotels (Stage 2) never call the provider: `instant` ones are
+        // confirmed immediately, `request` ones wait for an admin to confirm.
         $providerContext = null;
         $prebookTotal = null;
-        if ($data['type'] === 'hotel' && ! empty($data['provider']['token'])) {
-            $hotel = Hotel::query()->where('slug', $data['item_slug'])->first();
-            $staged = $hotel ? OsTravelHotel::query()
-                ->where('status', OsTravelHotel::PUBLISHED)
-                ->where('hotel_id', $hotel->id)
-                ->first() : null;
+        $status = 'Pending';
+        $confirmedAt = null;
 
-            if (! $staged) {
-                throw ValidationException::withMessages(['provider' => __('messages.hotel_not_available')]);
+        if ($data['type'] === 'hotel') {
+            $hotel = Hotel::query()
+                ->where(fn (Builder $query) => $query
+                    ->where('slug', $data['item_slug'] ?? '')
+                    ->orWhere('code', $data['item_id'] ?? ''))
+                ->first();
+
+            // A provider-backed hotel uses the OS-TRAVEL flow (even when the
+            // `source` column was never set). Only genuinely manual hotels —
+            // no published staging row — skip the provider entirely.
+            if ($hotel !== null && ! $hotel->isProviderLinked()) {
+                if ($hotel->booking_mode === Hotel::BOOKING_INSTANT) {
+                    $status = 'Confirmed';
+                    $confirmedAt = now();
+                }
+            } elseif ($hotel !== null && ! empty($data['provider']['token'])) {
+                $staged = OsTravelHotel::query()
+                    ->where('status', OsTravelHotel::PUBLISHED)
+                    ->where('hotel_id', $hotel->id)
+                    ->first();
+
+                if (! $staged) {
+                    throw ValidationException::withMessages(['provider' => __('messages.hotel_not_available')]);
+                }
+
+                $hotelBooking = $this->osTravelBookingService->buildHotelBooking([
+                    'city' => $staged->city_external_id,
+                    'hotel' => $staged->external_id,
+                    'check_in' => $data['start_date'],
+                    'check_out' => $data['end_date'],
+                    'source' => $data['provider']['source'],
+                    'token' => $data['provider']['token'],
+                    'rooms' => $data['provider']['rooms'] ?? [],
+                ], $data['provider']['pax'] ?? []);
+
+                try {
+                    $prebook = $this->osTravelBookingService->preBook($hotelBooking);
+                } catch (Throwable $e) {
+                    throw ValidationException::withMessages([
+                        'provider' => __('messages.booking_prebook_failed'),
+                    ]);
+                }
+
+                $providerContext = [
+                    'request' => $hotelBooking,
+                    'prebook' => $prebook,
+                ];
+                $prebookTotal = $prebook['total'] > 0
+                    ? (int) round($prebook['total'] * (1 + ($hotel->markup_percentage ? (float) $hotel->markup_percentage : 0) / 100))
+                    : (int) $data['amount'];
             }
-
-            $hotelBooking = $this->osTravelBookingService->buildHotelBooking([
-                'city' => $staged->city_external_id,
-                'hotel' => $staged->external_id,
-                'check_in' => $data['start_date'],
-                'check_out' => $data['end_date'],
-                'source' => $data['provider']['source'],
-                'token' => $data['provider']['token'],
-                'rooms' => $data['provider']['rooms'] ?? [],
-            ], $data['provider']['pax'] ?? []);
-
-            try {
-                $prebook = $this->osTravelBookingService->preBook($hotelBooking);
-            } catch (Throwable $e) {
-                throw ValidationException::withMessages([
-                    'provider' => __('messages.booking_prebook_failed'),
-                ]);
-            }
-
-            $providerContext = [
-                'request' => $hotelBooking,
-                'prebook' => $prebook,
-            ];
-            $prebookTotal = $prebook['total'] > 0
-                ? (int) round($prebook['total'] * (1 + ($hotel->markup_percentage ? (float) $hotel->markup_percentage : 0) / 100))
-                : (int) $data['amount'];
         }
 
         $booking = Booking::create([
@@ -188,11 +208,20 @@ class BookingController extends Controller
             'promo_code' => $data['promo_code'] ?? null,
             'notes' => $data['notes'] ?? null,
             'total_amount' => $prebookTotal ?? (int) $data['amount'],
-            'status' => 'Pending',
+            'status' => $status,
+            'confirmed_at' => $confirmedAt,
             'provider_payload' => $providerContext,
         ]);
 
         $this->notifyOperations($booking, 'booking.created');
+
+        // Manual `instant` bookings are confirmed at creation (no payment
+        // callback drives it), so record the payment and notify both sides.
+        if ($status === 'Confirmed' && $confirmedAt !== null) {
+            $this->recordPayment($booking->refresh());
+            $this->notifyOperations($booking->refresh(), 'booking.confirmed');
+            $this->notifyClient($booking->refresh());
+        }
 
         return response()->json($this->payload($booking), 201);
     }

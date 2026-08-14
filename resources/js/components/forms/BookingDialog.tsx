@@ -99,7 +99,10 @@ export function BookingDialog({
 
     const mutation = useMutation({
         mutationFn: (payload: Record<string, unknown>) =>
-            api.createBooking(payload) as Promise<{ id: number }>,
+            api.createBooking(payload) as Promise<{
+                id: number;
+                status?: string;
+            }>,
         onSuccess: async (data) => {
             toast.success(
                 t('booking.success') ||
@@ -108,6 +111,13 @@ export function BookingDialog({
             queryClient.invalidateQueries({
                 queryKey: ['client', 'dashboard'],
             });
+
+            // Manual `instant` hotels are confirmed at creation — no payment
+            // session to start.
+            if (data.status === 'Confirmed') {
+                onOpenChange(false);
+                return;
+            }
 
             // Initiate payment
             try {

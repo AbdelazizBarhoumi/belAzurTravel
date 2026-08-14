@@ -333,8 +333,7 @@ dates/occupancy/filters.
 3. Create one with `request` → booking shows Pending; admin confirms → Confirmed.
 4. `php artisan test --filter=ManualHotelTest`.
 
-**Checkpoint 4 ✅ / ❌** — manual hotels fully functional both modes.
-
+**Checkpoint 4 ✅** — manual hotels fully functional both modes.
 ---
 
 ## Stage 3 — Frontend consumption + E2E + QA
@@ -437,10 +436,10 @@ dates/occupancy/filters.
   - [x] Checkpoint 2 (live seasonality/filter/availability pass) — live `HotelSearch` verified: seasonality, markup totals, price-range, city/stars filters, availability flags
   - [x] Phase C staleness guarantees (labels, locked bookings, unavailable-not-bookable, server-driven list, stale-fallback removal; list pagination UI + full `filteredHotels` removal go with Phase E, `source` with Stage 2)
   - [x] Checkpoint 3 (accuracy E2E) — browse labels, live totals, occupancy-driven pricing, booking date-lock, prebook total consistency
-- [ ] **Stage 2** — manual hotels
-  - [ ] `source` + `booking_mode` migration/model/admin UI
-  - [ ] Search merge + instant/request booking flows
-  - [ ] Checkpoint 4 (both manual modes verified)
+- [x] **Stage 2** — manual hotels
+  - [x] `source` + `booking_mode` migration/model/admin UI
+  - [x] Search merge + instant/request booking flows
+  - [x] Checkpoint 4 (both manual modes verified)
 - [ ] **Stage 3** — frontend + E2E + QA
   - [ ] Phase E frontend (list/detail/booking dialog, passenger form)
   - [ ] Checkpoint 5 (manual walkthrough)

@@ -310,6 +310,82 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
     }
 
+    public function test_search_merges_manual_hotels_without_provider_call(): void
+    {
+        // A provider hotel that will be returned by the fake API.
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        // A purely manual hotel: no OS-TRAVEL staging row.
+        Hotel::create([
+            'slug' => 'maison-de-la-plage',
+            'code' => 'hotel-maison-001',
+            'name' => ['en' => 'Maison de la Plage', 'fr' => 'Maison de la Plage', 'ar' => 'منزل الشاطئ'],
+            'location' => ['en' => 'Sousse', 'fr' => 'Sousse', 'ar' => 'سوسة'],
+            'price' => 120,
+            'base_price' => 100,
+            'markup_percentage' => 20,
+            'currency' => 'TND',
+            'rating' => 4.0,
+            'stars' => 3,
+            'reviews' => 5,
+            'image' => 'https://example.com/manual.jpg',
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['cap-bon-kelibia', 'maison-de-la-plage'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08'],
+        );
+
+        $manual = collect($results)->firstWhere('slug', 'maison-de-la-plage');
+        $this->assertNotNull($manual);
+        $this->assertSame('manual', $manual['provider']);
+        $this->assertTrue($manual['available']);
+        $this->assertSame([], $manual['rooms']);
+        // Stored price is per-night (120); the search shape is a stay total.
+        $this->assertSame(7, $manual['nights']);
+        $this->assertSame(840, $manual['price']);
+        $this->assertSame(840, $manual['price_total']);
+        $this->assertSame(120.0, $manual['price_per_night']);
+        $this->assertSame(100, $manual['base_price']);
+        $this->assertSame('TND', $manual['currency']);
+    }
+
+    public function test_search_does_not_call_provider_for_manual_only_slugs(): void
+    {
+        Hotel::create([
+            'slug' => 'maison-de-la-plage',
+            'code' => 'hotel-maison-001',
+            'name' => ['en' => 'Maison de la Plage', 'fr' => 'Maison de la Plage', 'ar' => 'منزل الشاطئ'],
+            'location' => ['en' => 'Sousse', 'fr' => 'Sousse', 'ar' => 'سوسة'],
+            'price' => 120,
+            'base_price' => 100,
+            'markup_percentage' => 20,
+            'currency' => 'TND',
+            'rating' => 4.0,
+            'stars' => 3,
+            'reviews' => 5,
+            'image' => 'https://example.com/manual.jpg',
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response(['HotelSearch' => [], 'CountResults' => 0]),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            ['maison-de-la-plage'],
+            ['check_in' => '2026-09-01', 'check_out' => '2026-09-08'],
+        );
+
+        $this->assertCount(1, $results);
+        $this->assertSame('maison-de-la-plage', $results[0]['slug']);
+        $this->assertSame('manual', $results[0]['provider']);
+        Http::assertNothingSent();
+    }
+
     public function test_search_filters_by_min_stars(): void
     {
         $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);

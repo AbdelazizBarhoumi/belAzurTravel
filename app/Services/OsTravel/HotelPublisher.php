@@ -96,6 +96,8 @@ class HotelPublisher
             'base_price' => $basePrice,
             'markup_percentage' => $markupPercentage,
             'currency' => $currency,
+            'source' => 'ostravel',
+            'booking_mode' => 'instant',
             'rating' => (float) ($list['Rating'] ?? $detail['Rating'] ?? 0),
             'stars' => (int) $stars,
             'reviews' => (int) ($list['Reviews'] ?? $detail['Reviews'] ?? 0),

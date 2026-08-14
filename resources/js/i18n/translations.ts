@@ -5296,6 +5296,46 @@ translations['admin.hotelForm.currencyHelp'] = {
     ar: 'رمز العملة الدولي (مثال: TND).',
     en: 'ISO currency code (e.g. TND).',
 };
+translations['admin.hotelForm.source'] = {
+    fr: 'Source',
+    ar: 'المصدر',
+    en: 'Source',
+};
+translations['admin.hotelForm.sourceHelp'] = {
+    fr: 'Fournisseur connecté (OS-TRAVEL) ou hôtel manuel.',
+    ar: 'مزود متصل (OS-TRAVEL) أو فندق يدوي.',
+    en: 'Connected provider (OS-TRAVEL) or manual hotel.',
+};
+translations['admin.hotelForm.bookingMode'] = {
+    fr: 'Mode de réservation',
+    ar: 'وضع الحجز',
+    en: 'Booking mode',
+};
+translations['admin.hotelForm.bookingModeHelp'] = {
+    fr: 'Instantané : réservation confirmée immédiatement. Sur demande : confirmation manuelle par l’admin.',
+    ar: 'فوري: يتم تأكيد الحجز فورًا. عند الطلب: تأكيد يدوي من الإدارة.',
+    en: 'Instant: booking confirmed immediately. On request: manual confirmation by admin.',
+};
+translations['admin.hotelForm.bookingModeInstant'] = {
+    fr: 'Instantané',
+    ar: 'فوري',
+    en: 'Instant',
+};
+translations['admin.hotelForm.bookingModeRequest'] = {
+    fr: 'Sur demande',
+    ar: 'عند الطلب',
+    en: 'On request',
+};
+translations['admin.hotelForm.sourceManual'] = {
+    fr: 'Manuel',
+    ar: 'يدوي',
+    en: 'Manual',
+};
+translations['admin.hotelForm.sourceOsttravel'] = {
+    fr: 'OS-TRAVEL',
+    ar: 'OS-TRAVEL',
+    en: 'OS-TRAVEL',
+};
 translations['admin.hotelForm.reviewsPlaceholder'] = {
     fr: 'Ex. : 150',
     ar: 'مثال: 150',

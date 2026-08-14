@@ -10,6 +10,7 @@ use App\Models\CategoryType;
 use App\Models\EntityCategoryAssignment;
 use App\Models\Hotel;
 use App\Models\HotelRoom;
+use App\Models\OsTravelHotel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -125,6 +126,8 @@ class AdminHotelController extends Controller
             'base_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'markup_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'currency' => ['sometimes', 'nullable', 'string', 'max:3'],
+            'source' => ['sometimes', 'nullable', 'string', 'in:ostravel,manual'],
+            'booking_mode' => ['sometimes', 'nullable', 'string', 'in:instant,request'],
             'rating' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:5'],
             'stars' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:5'],
             'reviews' => ['sometimes', 'nullable', 'integer', 'min:0'],
@@ -214,6 +217,8 @@ class AdminHotelController extends Controller
             'base_price' => $data['base_price'] ?? $existing->base_price ?? null,
             'markup_percentage' => $data['markup_percentage'] ?? $existing->markup_percentage ?? null,
             'currency' => $data['currency'] ?? $existing->currency ?? config('ostravel.currency.default', 'TND'),
+            'source' => $this->resolveSource($data, $existing),
+            'booking_mode' => $data['booking_mode'] ?? $existing->booking_mode ?? 'instant',
             'rating' => (float) ($data['rating'] ?? 0),
             'stars' => (int) ($data['stars'] ?? $existing->stars ?? 0),
             'reviews' => (int) ($data['reviews'] ?? $existing->reviews ?? 0),
@@ -224,6 +229,23 @@ class AdminHotelController extends Controller
             'date_from' => $data['date_from'] ?? $existing?->date_from ?? null,
             'date_to' => $data['date_to'] ?? $existing?->date_to ?? null,
         ];
+    }
+
+    /**
+     * A hotel wired to a published OS-TRAVEL staging row must stay `ostravel` —
+     * only genuinely manual hotels may be switched, and never to `ostravel`
+     * without a provider connection.
+     */
+    private function resolveSource(array $data, ?Model $existing): string
+    {
+        $isProviderLinked = $existing !== null
+            && $existing instanceof Hotel
+            && OsTravelHotel::query()
+                ->where('status', OsTravelHotel::PUBLISHED)
+                ->where('hotel_id', $existing->id)
+                ->exists();
+
+        return $isProviderLinked ? 'ostravel' : 'manual';
     }
 
     private function resolvePrice(array $data, ?Model $existing): int
@@ -275,6 +297,8 @@ class AdminHotelController extends Controller
             'base_price' => $item->base_price,
             'markup_percentage' => $item->markup_percentage,
             'currency' => $item->currency,
+            'source' => $item->source ?? 'manual',
+            'booking_mode' => $item->booking_mode ?? 'instant',
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,

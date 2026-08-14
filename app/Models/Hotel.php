@@ -8,10 +8,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Hotel extends Model
 {
+    public const SOURCE_OSTRAVEL = 'ostravel';
+
+    public const SOURCE_MANUAL = 'manual';
+
+    public const BOOKING_INSTANT = 'instant';
+
+    public const BOOKING_REQUEST = 'request';
+
+    protected $attributes = [
+        'source' => self::SOURCE_MANUAL,
+        'booking_mode' => self::BOOKING_INSTANT,
+    ];
+
     protected $fillable = [
         'slug', 'code', 'destination_slug', 'name', 'location',
         'category_key', 'category', 'price', 'base_price',
-        'markup_percentage', 'currency', 'last_price', 'last_price_at',
+        'markup_percentage', 'currency', 'source', 'booking_mode',
+        'last_price', 'last_price_at',
         'price_per_night',
         'rating', 'stars', 'reviews', 'description', 'image',
         'tags', 'details', 'meta',
@@ -45,6 +59,8 @@ class Hotel extends Model
         'reviews' => 'integer',
         'date_from' => 'date',
         'date_to' => 'date',
+        'source' => 'string',
+        'booking_mode' => 'string',
         // Filter fields as boolean
         'htel_recommande' => 'boolean',
         'tarifs_promo' => 'boolean',
@@ -82,5 +98,18 @@ class Hotel extends Model
     {
         return $this->hasMany(EntityCategoryAssignment::class, 'entity_id')
             ->where('entity_type', 'hotels');
+    }
+
+    /**
+     * Whether this hotel is wired to a published OS-TRAVEL staging row. This is
+     * the authoritative signal that a hotel is provider-backed — regardless of
+     * the `source` column value.
+     */
+    public function isProviderLinked(): bool
+    {
+        return OsTravelHotel::query()
+            ->where('status', OsTravelHotel::PUBLISHED)
+            ->where('hotel_id', $this->id)
+            ->exists();
     }
 }

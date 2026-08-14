@@ -60,6 +60,8 @@ type HotelFormValues = AdminRow & {
     basePrice?: string;
     markupPercentage?: string;
     currency?: string;
+    source?: string;
+    bookingMode?: string;
 };
 
 function asText(value: unknown): string {
@@ -411,6 +413,9 @@ const AdminHotels = () => {
                       ? String((editing as any).markup_percentage)
                       : String(20),
               currency: asText((editing as any).currency) || 'TND',
+              source: asText((editing as any).source) || 'manual',
+              bookingMode:
+                  asText((editing as any).booking_mode) || 'instant',
           } as unknown as HotelFormValues)
         : null;
 
@@ -696,6 +701,63 @@ const AdminHotels = () => {
             ),
         },
         {
+            title: t('admin.hotelForm.source'),
+            column: 'main',
+            render: ({ values, setField }) => (
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.hotelForm.source')}
+                        </label>
+                        <Select
+                            value={String(values.source ?? 'manual')}
+                            onValueChange={(val) => setField('source', val)}
+                        >
+                            <SelectTrigger className={baseFieldClass(false)}>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="manual">
+                                    {t('admin.hotelForm.sourceManual')}
+                                </SelectItem>
+                                <SelectItem value="ostravel">
+                                    {t('admin.hotelForm.sourceOsttravel')}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground">
+                            {t('admin.hotelForm.sourceHelp')}
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('admin.hotelForm.bookingMode')}
+                        </label>
+                        <Select
+                            value={String(values.bookingMode ?? 'instant')}
+                            onValueChange={(val) => setField('bookingMode', val)}
+                        >
+                            <SelectTrigger className={baseFieldClass(false)}>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="instant">
+                                    {t('admin.hotelForm.bookingModeInstant')}
+                                </SelectItem>
+                                <SelectItem value="request">
+                                    {t('admin.hotelForm.bookingModeRequest')}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground">
+                            {t('admin.hotelForm.bookingModeHelp')}
+                        </p>
+                    </div>
+                </div>
+            ),
+        },
+        {
             title: t('admin.dateRange'),
             column: 'main',
             fields: [
@@ -871,6 +933,9 @@ const AdminHotels = () => {
                     ? Number(values.markupPercentage)
                     : undefined,
             currency: values.currency?.trim() || 'TND',
+            source: values.source === 'ostravel' ? 'ostravel' : 'manual',
+            booking_mode:
+                values.bookingMode === 'request' ? 'request' : 'instant',
             image: imageFile ?? imagePath?.trim() ?? asText(editing?.image),
             amenities: Array.isArray(amenities) ? amenities : [],
             rooms: Array.isArray(rooms)
@@ -980,6 +1045,7 @@ const AdminHotels = () => {
                                     t('admin.category'),
                                     t('admin.pricePerNight'),
                                     t('admin.stars'),
+                                    t('admin.hotelForm.source'),
                                     t('admin.actions'),
                                 ].map((h, i) => (
                                     <th
@@ -1062,6 +1128,39 @@ const AdminHotels = () => {
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {String(d.stars ?? '')}
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        <div className="flex flex-col items-center gap-1">
+                                            <span
+                                                className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
+                                                    (d as any).source === 'ostravel'
+                                                        ? 'bg-primary/10 text-primary'
+                                                        : 'bg-muted text-muted-foreground'
+                                                }`}
+                                            >
+                                                {(
+                                                    (d as any).source ?? 'manual'
+                                                ) === 'ostravel'
+                                                    ? t(
+                                                          'admin.hotelForm.sourceOsttravel',
+                                                      )
+                                                    : t(
+                                                          'admin.hotelForm.sourceManual',
+                                                      )}
+                                            </span>
+                                            <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                                                {(
+                                                    (d as any).booking_mode ??
+                                                    'instant'
+                                                ) === 'request'
+                                                    ? t(
+                                                          'admin.hotelForm.bookingModeRequest',
+                                                      )
+                                                    : t(
+                                                          'admin.hotelForm.bookingModeInstant',
+                                                      )}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-2">

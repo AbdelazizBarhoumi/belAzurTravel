@@ -65,7 +65,22 @@ class OsTravelSearchService
 
             $staged = $query->get()->keyBy('external_id');
 
-            if ($staged->isEmpty()) {
+            // Manual hotels (Stage 2) are always candidates with their stored
+            // price — never sent to the provider. Provider-only filters (city
+            // external id, category, boarding) don't apply to them. Hotels with
+            // a published provider row are excluded regardless of the column so
+            // a single hotel can never be returned twice.
+            $manualHotels = Hotel::query()
+                ->where('source', Hotel::SOURCE_MANUAL)
+                ->whereNotIn('id', OsTravelHotel::query()
+                    ->where('status', OsTravelHotel::PUBLISHED)
+                    ->whereNotNull('hotel_id')
+                    ->pluck('hotel_id'))
+                ->when($hotelSlugs !== [], fn ($q) => $q->whereIn('slug', $hotelSlugs))
+                ->when($options['stars'] !== null, fn ($q) => $q->where('stars', '>=', $options['stars']))
+                ->get();
+
+            if ($staged->isEmpty() && $manualHotels->isEmpty()) {
                 return [];
             }
 
@@ -158,6 +173,11 @@ class OsTravelSearchService
 
                     $results[] = $result;
                 }
+            }
+
+            // Manual hotels: stored price, always available, no provider call.
+            foreach ($manualHotels as $manualHotel) {
+                $results[] = $this->manualPayload($manualHotel, $nights);
             }
 
             return $this->finalize($results, $options);
@@ -460,6 +480,29 @@ class OsTravelSearchService
             'provider' => 'ostravel',
             'available' => true,
         ];
+    }
+
+    /**
+     * Manual hotels have no provider record — expose the stored price as-is
+     * (already marked up) with no live rooms and no provider call.
+     *
+     * @return array<string, mixed>
+     */
+    private function manualPayload(Hotel $hotel, int $nights): array
+    {
+        $result = $this->basePayload($hotel);
+        $result['provider'] = 'manual';
+        $result['available'] = true;
+        $result['rooms'] = [];
+
+        return array_merge($result, [
+            'price' => (int) round((int) $hotel->price * $nights),
+            'price_total' => (int) round((int) $hotel->price * $nights),
+            'price_per_night' => (float) $hotel->price,
+            'base_price' => $hotel->base_price,
+            'currency' => $hotel->currency,
+            'nights' => $nights,
+        ]);
     }
 
     /**
