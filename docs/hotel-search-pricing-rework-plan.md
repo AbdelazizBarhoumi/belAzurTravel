@@ -211,11 +211,50 @@ dates/occupancy/filters.
   (354 backend, 1855 assertions); `tsc`, `pint` clean; hotel frontend tests pass.
   (Pre-existing unrelated failures: admin gallery/form tests fail on the clean tree too.)
 
-**Checkpoint 2 ✅ / ❌** — server search engine verified against live API for seasonality, filters, availability.
+**Checkpoint 2 ✅ / ✅ — DONE (Aug 2026).** Live-API pass against `admin.mygo.co` (read-only `HotelSearch`):
+- Seasonality: 2 adult / 7-night searches — `2026-09-01→08` returned 5 hotels and `2026-10-01→08` returned 7;
+  overlapping hotels priced differently (e.g. Flora Park 2 262 vs 1 915 TND, Vincci Saphir 4 268 vs 2 633 TND).
+- Markup/stay-total: `price_total == round(raw × 1.2)` and `price_per_night == total / nights` held for every
+  live result (e.g. La Kasbah base 2 425.50 → 2 911.00, 415.86/night).
+- Price-range filter on live totals: `[T,T]` keeps the hotel, a range just above `T` drops it.
+- City filter (`city_id=18` Djerba) and stars filter (`stars=5`) return only matching hotels.
+- Availability: `only_available=false` kept 9 hotels (5 available + 4 omitted flagged `available:false`,
+  empty `rooms`, stored price fallback). `php artisan test --filter=HotelSearchEndpointTest` green.
 
 ---
 
 ### Phase C — Accuracy & staleness guarantees
+
+**Phase C engine — DONE (Aug 2026).**
+- Booking date-lock: `BookingController::store` accepts `provider.search.check_in/check_out`; when a hotel +
+  token + search dates are present, `start_date`/`end_date` must match them (else 422 on both keys). The
+  `BookingDialog` prefills and disables the date pickers for a live offer (`effectiveStartDate/EndDate`
+  derived at render, no setState-in-effect), sends `provider.search`, and carries `childrenAges`.
+- Browse-mode labels: `index.tsx` shows "last known price" on cards with `last_price_at` and no live price
+  (`hotels.lastKnown` i18n); `HotelController::payload()` exposes `last_price`/`last_price_at`.
+- Unavailable hotels never bookable: fixed `useHotelSearch` `enabled` to dates-only (was
+  `!query.hotel_slugs?.length`, which silently disabled every slug-scoped search — the detail-page live
+  search and the date-lock never fired). Now, a completed search with no result marks the hotel
+  `searchedUnavailable`: the detail page disables room booking (`RoomsList bookDisabled`) and shows a
+  notice (`hotelDetail.unavailableNotice`).
+- Server-driven list when dates set (item 2): `index.tsx` issues a live search with NO slug restriction
+  (`only_available=true`, `per_page=50`, current occupancy) once a full date range is chosen, and merges
+  the live results over their stored browse records for card metadata. Unavailable hotels never appear;
+  every card carries a live stay total. Client filters (search text, category types, price) still apply
+  on top of the live base list.
+- Stale fallback removal (item 5): stored prices are never presented as a live price on the list. In
+  browse mode (no dates) cards show "from / last known" with `last_price_at`; once dates are set, the
+  price badge always shows the live stay total and nights.
+- Tests: `BookingOsTravelFlowTest::test_hotel_booking_locks_to_the_searched_offer_dates` (mismatch → 422,
+  match → 201); `tests/Feature/HotelPayloadTest.php` (payload `last_price`/`last_price_at`, marked-up
+  browse price); `Hotels.test.tsx` now mocks `useHotelSearch` and asserts (a) live results replace the
+  browse list when dates are set (live total + nights shown), (b) hotels with no availability are hidden.
+  Full backend suite green (357, 1868 assertions); `pint`/`tsc`/`eslint` clean; hotel frontend tests pass
+  (same pre-existing admin failures only).
+- Remaining Phase C handoffs (not Stage 1 blockers): full removal of the client-side `filteredHotels` path
+  (item 2 as originally scoped) belongs with the Phase E server list; live list capped at `per_page: 50` with
+  no pagination UI (Phase E follow-up); `source` in the payload needs the Stage 2 migration.
+
 
 **Details**
 1. Browse mode (no dates): `GET /api/hotels` keeps returning all published hotels with stored
@@ -232,9 +271,10 @@ dates/occupancy/filters.
    as a live price.
 
 **Tests**
-- `tests/Feature/BookingControllerTest.php` — store() rejects date mismatch with the offer/token;
+- `tests/Feature/BookingOsTravelFlowTest.php` — store() rejects date mismatch with the offer/token;
   children ages carried from search into prebook; total recomputed server-side.
-- `tests/Feature/HotelControllerTest.php` — payload includes `last_price_at` + `source`.
+- `tests/Feature/HotelPayloadTest.php` — payload includes `last_price` / `last_price_at`; `source`
+  pending the Stage 2 migration.
 
 **Expected**
 - The user always sees either an exact live price (dates set) or a clearly-labelled last-known price (browse).
@@ -245,7 +285,17 @@ dates/occupancy/filters.
 2. Search dates → every card shows live total; changing occupancy (add child age) changes totals correctly.
 3. Book with altered dates in the dialog → rejected/coerced to search dates; displayed total == prebook total.
 
-**Checkpoint 3 ✅ / ❌** — accuracy + staleness rules proven end-to-end.
+**Checkpoint 3 ✅ / ✅ — DONE (Aug 2026).** Accuracy + staleness rules proven end-to-end:
+- Browse (no dates): payload exposes `last_price`/`last_price_at`; the list shows "from / last known"
+  (`HotelPayloadTest`, `Hotels.test.tsx` browse label).
+- Search (dates set): every card carries a live stay total + nights; `Hotels.test.tsx` asserts live results
+  replace the browse list and unavailable hotels are hidden; the frontend only issues live searches once a
+  full date range is chosen.
+- Occupancy drives provider pricing live: hotel 9 (Vincci Saphir) 2 adults = 3 556.97 → +1 child(7) =
+  4 446.21 → +2 children(5,9) = 6 166.39 TND raw.
+- Booking lock: altering the searched dates in the dialog is rejected (422 on `start_date`/`end_date`),
+  matching dates pass (`BookingOsTravelFlowTest::test_hotel_booking_locks_to_the_searched_offer_dates`);
+  search total == prebook total == confirm total (`BookingPriceConsistencyTest`, `OsTravelGoLiveFlowTest`).
 
 ---
 
@@ -380,13 +430,13 @@ dates/occupancy/filters.
 
 ## Checklist (tracking)
 
-- [ ] **Stage 1** — pricing model + server engine + accuracy
+- [x] **Stage 1** — pricing model + server engine + accuracy
   - [x] Phase A pricing correctness (`price_total`/`price_per_night`, shared calculator, markup, currency)
   - [x] Checkpoint 1 (unit + live price sanity) — stay-total confirmed; real response-shape fix landed
   - [x] Phase B server search engine (filters, chunking, category pass-through, live price-range, availability flags)
-  - [ ] Checkpoint 2 (live seasonality/filter/availability pass)
-  - [ ] Phase C staleness guarantees (labels, locked bookings, no stale fallbacks)
-  - [ ] Checkpoint 3 (accuracy E2E)
+  - [x] Checkpoint 2 (live seasonality/filter/availability pass) — live `HotelSearch` verified: seasonality, markup totals, price-range, city/stars filters, availability flags
+  - [x] Phase C staleness guarantees (labels, locked bookings, unavailable-not-bookable, server-driven list, stale-fallback removal; list pagination UI + full `filteredHotels` removal go with Phase E, `source` with Stage 2)
+  - [x] Checkpoint 3 (accuracy E2E) — browse labels, live totals, occupancy-driven pricing, booking date-lock, prebook total consistency
 - [ ] **Stage 2** — manual hotels
   - [ ] `source` + `booking_mode` migration/model/admin UI
   - [ ] Search merge + instant/request booking flows

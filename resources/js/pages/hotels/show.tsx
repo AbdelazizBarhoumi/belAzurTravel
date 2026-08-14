@@ -142,9 +142,15 @@ export default function HotelDetail() {
         };
     }, [dateRange, guests, id]);
 
-    const { data: liveResult } = useHotelSearch(liveQuery);
+    const { data: liveResult, isLoading: liveSearchLoading } =
+        useHotelSearch(liveQuery);
     const liveResults = liveResult?.data ?? [];
     const liveHotel = liveResults[0] ?? undefined;
+
+    // A completed search with no result means the hotel has no availability
+    // for the selected dates — never offer stale room prices for it.
+    const searchedUnavailable =
+        Boolean(liveQuery) && !liveSearchLoading && !liveHotel;
 
     if (isLoading) {
         return null;
@@ -251,6 +257,9 @@ export default function HotelDetail() {
     };
 
     const handleBookRoom = (roomId: string) => {
+        if (searchedUnavailable) {
+            return;
+        }
         const room = displayRooms.find((r) => r.id === roomId);
         if (room) {
             setSelectedRoom(room);
@@ -368,6 +377,13 @@ export default function HotelDetail() {
                         </div>
                     </div>
 
+                    {searchedUnavailable && (
+                        <div className="mt-6 rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-800">
+                            {t('hotelDetail.unavailableNotice') ||
+                                'This hotel has no availability for the selected dates. Try other dates.'}
+                        </div>
+                    )}
+
                     {displayRooms.length > 0 && (
                         <motion.div
                             id="rooms-list"
@@ -378,6 +394,7 @@ export default function HotelDetail() {
                             <RoomsList
                                 rooms={displayRooms}
                                 onBookRoom={handleBookRoom}
+                                bookDisabled={searchedUnavailable}
                             />
                         </motion.div>
                     )}
@@ -435,6 +452,12 @@ export default function HotelDetail() {
                                       },
                                   ],
                                   adults: guests,
+                                  checkIn:
+                                      dateRange?.from?.toISOString().slice(0, 10) ??
+                                      undefined,
+                                  checkOut:
+                                      dateRange?.to?.toISOString().slice(0, 10) ??
+                                      undefined,
                               }
                             : undefined
                     }

@@ -156,6 +156,42 @@ class BookingOsTravelFlowTest extends TestCase
             ->assertJsonValidationErrors('provider');
     }
 
+    public function test_hotel_booking_locks_to_the_searched_offer_dates(): void
+    {
+        $this->publishedHotel();
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/BookingCreation' => Http::response($this->osTravelFixture('booking_creation_prebook')),
+        ]);
+
+        // Dates changed after the search (e.g. by hand) must be rejected.
+        $this->actingAs($this->client)
+            ->postJson('/api/bookings', $this->hotelBookingPayload([
+                'provider' => array_merge($this->hotelBookingPayload()['provider'], [
+                    'search' => [
+                        'check_in' => '2026-09-01',
+                        'check_out' => '2026-09-05',
+                    ],
+                ]),
+                'start_date' => '2026-10-01',
+                'end_date' => '2026-10-05',
+            ]))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['start_date', 'end_date']);
+
+        // Matching dates pass the lock.
+        $this->actingAs($this->client)
+            ->postJson('/api/bookings', $this->hotelBookingPayload([
+                'provider' => array_merge($this->hotelBookingPayload()['provider'], [
+                    'search' => [
+                        'check_in' => '2026-09-01',
+                        'check_out' => '2026-09-05',
+                    ],
+                ]),
+            ]))
+            ->assertStatus(201);
+    }
+
     public function test_payment_callback_confirms_provider_booking(): void
     {
         $this->publishedHotel();

@@ -18,10 +18,17 @@ import {
     useHotels,
     useHotelSearch,
     useCategoryTypesPublic,
+    type HotelSearchResult,
 } from '@/hooks/usePublicData';
 
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
+import type { HotelItem } from '@/types/public/hotel.types';
+
+// A card is either a stored browse record or a live result (name/location are
+// wider `Record<string, string>` after merging the live spread over browse).
+type HotelCard = Omit<HotelItem, 'name' | 'location' | 'category'> &
+    Partial<HotelSearchResult>;
 
 export default function Hotels() {
     const { t, lang, dir } = useLanguage();
@@ -95,13 +102,56 @@ export default function Hotels() {
         guests !== 2 || dateRange?.from !== undefined || dateRange?.to !== undefined;
 
     const hasActiveCategoryTypeFilters = Object.values(categoryTypeFilters).some((v) => v.length > 0);
+
+    // Phase C: once a full date range (+ occupancy) is chosen, the list is
+    // server-driven — `useHotelSearch` fetches the live availability set for
+    // those exact dates (only_available=true, no slug restriction), so
+    // unavailable hotels never appear and every card carries a live total.
+    const hasDates = Boolean(dateRange?.from && dateRange?.to);
+    const from = dateRange?.from;
+    const to = dateRange?.to;
+
+    const searchQueryForLive = useMemo(() => {
+        if (!from || !to) {
+            return undefined;
+        }
+
+        return {
+            check_in: from.toISOString().slice(0, 10),
+            check_out: to.toISOString().slice(0, 10),
+            rooms: [{ adults: guests }],
+            only_available: true,
+            per_page: 50,
+        };
+    }, [from, to, guests]);
+
+    const { data: liveResult } = useHotelSearch(searchQueryForLive);
+    const liveResults = useMemo(() => liveResult?.data ?? [], [liveResult]);
+
+    const browseBySlug = useMemo(
+        () => new Map(hotels.map((h) => [h.slug, h as HotelCard])),
+        [hotels],
+    );
+    const liveLoaded = hasDates && liveResult !== undefined;
+    // Live results carry the price/availability; the stored browse record
+    // supplies the richer card metadata (amenities, category assignments).
+    const baseList: HotelCard[] = liveLoaded
+        ? liveResults.map((live) => {
+              const browse = browseBySlug.get(live.slug);
+              return browse
+                  ? { ...browse, ...live }
+                  : (live as unknown as HotelCard);
+          })
+        : (hotels as HotelCard[]);
+    const hasLivePrices = liveLoaded && liveResults.length > 0;
+
     const filteredHotels =
         searchQuery.trim().length === 0 &&
         hotelPriceRange[0] === minPrice &&
         hotelPriceRange[1] === maxPrice &&
         !hasActiveCategoryTypeFilters
-            ? hotels
-            : hotels.filter((hotel) => {
+            ? baseList
+            : baseList.filter((hotel) => {
                   const matchesSearch = matchesSearchText(searchQuery, [
                       localizeText(hotel.name, lang),
                       localizeText(hotel.location, lang),
@@ -109,9 +159,16 @@ export default function Hotels() {
                       localizeText(hotel.city, lang),
                       (hotel.tags ?? []).join(' '),
                   ]);
+                  // The browse slider is per-night; live results are stay-total,
+                  // so filter live cards on their derived per-night figure.
+                  const filterPrice =
+                      liveLoaded &&
+                      typeof hotel.price_per_night === 'number'
+                          ? hotel.price_per_night
+                          : hotel.price;
                   const matchesPrice =
-                      hotel.price >= hotelPriceRange[0] &&
-                      hotel.price <= hotelPriceRange[1];
+                      filterPrice >= hotelPriceRange[0] &&
+                      filterPrice <= hotelPriceRange[1];
                   // Check category type filters (OR logic)
                   const assignments = hotel.category_assignments;
                   const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
@@ -134,36 +191,6 @@ return (
                        matchesCategoryTypes
                    );
                });
-
-    // Live pricing: auto-trigger a batched HotelSearch once a full date range
-    // (plus occupancy) is selected. Results overlay the stored price on cards.
-    const searchQueryForLive = useMemo(() => {
-        if (!dateRange?.from || !dateRange?.to) {
-            return undefined;
-        }
-        const visibleSlugs = filteredHotels.map((hotel) => hotel.slug);
-        if (visibleSlugs.length === 0) {
-            return undefined;
-        }
-
-        return {
-            check_in: dateRange.from.toISOString().slice(0, 10),
-            check_out: dateRange.to.toISOString().slice(0, 10),
-            hotel_slugs: visibleSlugs,
-            rooms: [{ adults: guests }],
-            only_available: true,
-        };
-    }, [dateRange, filteredHotels, guests]);
-
-    const { data: liveResult } = useHotelSearch(searchQueryForLive);
-    const liveResults = useMemo(() => liveResult?.data ?? [], [liveResult]);
-    const liveBySlug = useMemo(
-        () => new Map(liveResults.map((item) => [item.slug, item])),
-        [liveResults],
-    );
-    const hasLivePrices =
-        searchQueryForLive !== undefined &&
-        (liveResults.length > 0 || liveBySlug.size > 0);
 
     const handleClearAll = () => {
         setSearchQuery('');
@@ -328,22 +355,18 @@ return (
 
                                                     <div className="absolute right-4 top-4 rounded-full bg-card/95 px-3 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur">
                                                         {(() => {
-                                                            const live = liveBySlug.get(
-                                                                hotel.slug,
-                                                            );
-                                                            const price =
-                                                                live?.price ??
-                                                                hotel.price;
                                                             return (
                                                                 <>
                                                                     {t(
                                                                         'hotels.priceFrom',
                                                                     )}{' '}
-                                                                    {price.toLocaleString()}{' '}
+                                                                    {hotel.price.toLocaleString()}{' '}
                                                                     TND
-                                                                    {live?.nights
-                                                                        ? ` · ${live.nights} ${t('hotelDetail.nightsLabel')}`
-                                                                        : ''}
+                                                                    {hotel.nights
+                                                                        ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
+                                                                        : hotel.last_price_at
+                                                                          ? ` · ${t('hotels.lastKnown')}`
+                                                                          : ''}
                                                                 </>
                                                             );
                                                         })()}

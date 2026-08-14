@@ -73,7 +73,37 @@ class BookingController extends Controller
             'provider.rooms.*.supplements' => ['nullable', 'array'],
             'provider.pax.adults' => ['nullable', 'array'],
             'provider.pax.children' => ['nullable', 'array'],
+            // Search offer lock (Phase C): the dates the user actually searched,
+            // captured on the detail page. store() refuses a token with dates
+            // that differ, so a booking can never drift from the priced offer.
+            'provider.search.check_in' => ['nullable', 'date'],
+            'provider.search.check_out' => ['nullable', 'date', 'after_or_equal:provider.search.check_in'],
         ]);
+
+        // A provider token prices a specific date window; lock the booking to it.
+        if (
+            $data['type'] === 'hotel'
+            && ! empty($data['provider']['token'])
+            && ! empty($data['provider']['search']['check_in'])
+        ) {
+            $searchedIn = $data['provider']['search']['check_in'];
+            $searchedOut = $data['provider']['search']['check_out'];
+
+            $mismatches = [];
+            if (($data['start_date'] ?? null) !== $searchedIn) {
+                $mismatches[] = 'start_date';
+            }
+            if (($data['end_date'] ?? null) !== $searchedOut) {
+                $mismatches[] = 'end_date';
+            }
+
+            if ($mismatches !== []) {
+                throw ValidationException::withMessages([
+                    'start_date' => 'The booking dates must match the dates you searched. Re-run the search to change dates.',
+                    'end_date' => 'The booking dates must match the dates you searched. Re-run the search to change dates.',
+                ]);
+            }
+        }
 
         if (! empty($data['promo_code'])) {
             $promo = Promo::where('code', $data['promo_code'])->first();

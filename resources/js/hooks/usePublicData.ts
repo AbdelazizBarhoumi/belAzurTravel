@@ -450,12 +450,7 @@ export function useHotelSearch(query?: HotelSearchQuery) {
             });
             return resp;
         },
-        enabled: Boolean(
-            query &&
-                query.check_in &&
-                query.check_out &&
-                !query.hotel_slugs?.length,
-        ),
+        enabled: Boolean(query && query.check_in && query.check_out),
         staleTime: 1000 * 60 * 5,
     });
 }

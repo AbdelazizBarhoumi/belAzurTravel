@@ -1452,6 +1452,11 @@ export const translations: Record<string, TranslationEntry> = {
     'hotels.showing': { fr: 'Affichage', ar: 'عرض', en: 'Showing' },
     'hotels.results': { fr: 'résultats', ar: 'نتائج', en: 'results' },
     'hotels.priceFrom': { fr: 'À partir de', ar: 'ابتداءً من', en: 'From' },
+    'hotels.lastKnown': {
+        fr: 'dernier prix connu',
+        ar: 'آخر سعر معروف',
+        en: 'last known price',
+    },
     'hotels.livePrices': {
         fr: 'Prix en direct pour vos dates',
         ar: 'أسعار مباشرة لتواريخك',
@@ -1531,6 +1536,11 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Prix en direct',
         ar: 'سعر مباشر',
         en: 'Live price',
+    },
+    'hotelDetail.unavailableNotice': {
+        fr: 'Cet hôtel n\'a aucune disponibilité pour les dates sélectionnées. Essayez d\'autres dates.',
+        ar: 'لا يتوفر هذا الفندق للتواريخ المحددة. جرب تواريخ أخرى.',
+        en: 'This hotel has no availability for the selected dates. Try other dates.',
     },
     'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
     'tourDetail.notIncluded': {
@@ -4116,6 +4126,11 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Demander la réservation',
         ar: 'طلب الحجز',
         en: 'Request Booking',
+    },
+    'booking.datesLocked': {
+        fr: 'Dates verrouillées à l\'offre recherchée',
+        ar: 'التواريخ مثبتة على العرض الذي تم البحث عنه',
+        en: 'Dates locked to the searched offer',
     },
     'common.processing': {
         fr: 'Traitement...',

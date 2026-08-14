@@ -40,6 +40,10 @@ interface BookingDialogProps {
         }>;
         adults?: number;
         children?: number;
+        childrenAges?: number[];
+        // The date window the offer was priced for; the booking is locked to it.
+        checkIn?: string;
+        checkOut?: string;
     };
 }
 
@@ -65,6 +69,23 @@ export function BookingDialog({
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [notes, setNotes] = useState('');
     const [travelers, setTravelers] = useState<string>('');
+
+    // Hotels booked from a live offer are locked to the searched dates; the
+    // token prices that exact window and cannot be re-booked for others.
+    const lockDates =
+        type === 'hotel' &&
+        Boolean(provider?.token && provider.checkIn && provider.checkOut);
+
+    // Locked dates are derived straight from the offer (never editable); local
+    // state only drives the unlocked case.
+    const effectiveStartDate =
+        lockDates && provider?.checkIn
+            ? new Date(`${provider.checkIn}T00:00:00`)
+            : startDate;
+    const effectiveEndDate =
+        lockDates && provider?.checkOut
+            ? new Date(`${provider.checkOut}T00:00:00`)
+            : endDate;
 
     useEffect(() => {
         if (open && user) {
@@ -139,7 +160,7 @@ export function BookingDialog({
             (_, index) => ({
                 name: `Child ${index + 1}`,
                 surname: 'Traveler',
-                age: 8,
+                age: provider?.childrenAges?.[index] ?? 8,
             }),
         );
 
@@ -147,8 +168,8 @@ export function BookingDialog({
             type,
             item_slug: itemSlug,
             item_id: itemId,
-            start_date: startDate?.toISOString().split('T')[0],
-            end_date: endDate?.toISOString().split('T')[0],
+            start_date: effectiveStartDate?.toISOString().split('T')[0],
+            end_date: effectiveEndDate?.toISOString().split('T')[0],
             client: {
                 name,
                 email,
@@ -172,6 +193,14 @@ export function BookingDialog({
                 pax: {
                     adults: adultPax,
                     children: childPax,
+                },
+                search: {
+                    check_in:
+                        effectiveStartDate?.toISOString().split('T')[0] ??
+                        provider.checkIn,
+                    check_out:
+                        effectiveEndDate?.toISOString().split('T')[0] ??
+                        provider.checkOut,
                 },
             };
         }
@@ -233,18 +262,26 @@ export function BookingDialog({
                                 {t('label.startDate') || 'Start Date'}
                             </Label>
                             <DatePicker
-                                date={startDate}
+                                date={effectiveStartDate}
                                 onDateChange={setStartDate}
+                                disabled={lockDates}
                             />
                         </div>
                         <div className="space-y-2">
                             <Label>{t('label.endDate') || 'End Date'}</Label>
                             <DatePicker
-                                date={endDate}
+                                date={effectiveEndDate}
                                 onDateChange={setEndDate}
+                                disabled={lockDates}
                             />
                         </div>
                     </div>
+                    {lockDates && (
+                        <p className="text-xs text-muted-foreground">
+                            {t('booking.datesLocked') ||
+                                'Dates are fixed to your search; re-search to change them.'}
+                        </p>
+                    )}
                     <div className="space-y-2">
                         <Label htmlFor="notes">
                             {t('label.notes') || 'Notes'}

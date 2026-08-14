@@ -21,6 +21,7 @@ interface Room {
 interface RoomsListProps {
     rooms: Room[];
     onBookRoom: (roomId: string) => void;
+    bookDisabled?: boolean;
 }
 
 const FEATURE_ICONS: Record<string, typeof Wifi> = {
@@ -30,7 +31,11 @@ const FEATURE_ICONS: Record<string, typeof Wifi> = {
     tv: Tv,
 };
 
-export function RoomsList({ rooms, onBookRoom }: RoomsListProps) {
+export function RoomsList({
+    rooms,
+    onBookRoom,
+    bookDisabled = false,
+}: RoomsListProps) {
     const { t } = useLanguage();
 
     return (
@@ -130,6 +135,7 @@ export function RoomsList({ rooms, onBookRoom }: RoomsListProps) {
                                         <Button
                                             onClick={() => onBookRoom(room.id)}
                                             className="w-full"
+                                            disabled={bookDisabled}
                                         >
                                             {t('hotelDetail.selectRoom')}
                                         </Button>
