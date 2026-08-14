@@ -149,11 +149,15 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/admin/os-travel', [AdminOsTravelController::class, 'dashboard']);
         Route::get('/admin/os-travel/hotels', [AdminOsTravelController::class, 'index']);
+        Route::get('/admin/os-travel/references', [AdminOsTravelController::class, 'references']);
         Route::post('/admin/os-travel/hotels/approve-all', [AdminOsTravelController::class, 'approveAll']);
+        Route::post('/admin/os-travel/hotels/refresh-prices', [AdminOsTravelController::class, 'refreshPrices']);
+        Route::get('/admin/os-travel/hotels/refresh-prices/status', [AdminOsTravelController::class, 'refreshPriceStatus']);
         Route::get('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'show']);
         Route::put('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'update']);
         Route::post('/admin/os-travel/hotels/{id}/approve', [AdminOsTravelController::class, 'approve']);
         Route::post('/admin/os-travel/hotels/{id}/reject', [AdminOsTravelController::class, 'reject']);
+        Route::post('/admin/os-travel/hotels/{id}/refresh-price', [AdminOsTravelController::class, 'refreshPrice']);
 
         Route::get('/admin/tours', [AdminTourController::class, 'index']);
         Route::post('/admin/tours', [AdminTourController::class, 'store']);

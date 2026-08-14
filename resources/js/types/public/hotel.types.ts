@@ -13,8 +13,8 @@ export interface HotelItem {
     country?: LocalizedText;
     category_key?: string;
     category?: LocalizedText;
-    price: number;
-    base_price?: number;
+    price: number | null;
+    base_price?: number | null;
     markup_percentage?: string | number;
     currency?: string;
     source?: 'ostravel' | 'manual';

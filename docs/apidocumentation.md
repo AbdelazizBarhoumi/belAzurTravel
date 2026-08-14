@@ -28,6 +28,9 @@ marked **confirmed**; items needing provider clarification are marked
   (`config('ostravel.markup.default')`), overridable per hotel at approve time.
 - `Price.BasePrice` (a per-hotel hint) is currently unused — **open** to
   clarify meaning before relying on it.
+- `PriceWithAffiliateMarkup` (per-room, what the provider charges us) is
+  received but not relied on; the local `markup_percentage` is applied to
+  `Price`. **open** — confirm the two never diverge.
 
 ## Currency (open)
 
@@ -35,6 +38,79 @@ marked **confirmed**; items needing provider clarification are marked
   hotel; fallback to `hotels.currency` (default `TND`). The interaction between
   room-level, hotel-level and global currency is **open** for provider
   clarification.
+
+## Hotel content now captured
+
+When a staged hotel is published (`HotelPublisher::publish`), the following
+provider data is persisted into `hotels.details` and surfaced on the public
+hotel page (`HotelInfo`):
+
+- `Localization`/`City`/`Country` → `address` (from `HotelDetail`), `city`/
+  `country`.
+- `CheckIn`/`CheckOut` → `check_in_time`/`check_out_time` (shown as arrival/
+  departure times).
+- `Longitude`/`Latitude` → `coordinates` `{latitude, longitude}` (not yet
+  mapped to a map component — **open**: wire into a map).
+- `Email`/`Phone` → `email`/`phone`; `whatsapp` is no longer overwritten with
+  the provider email (bug fixed) — it is preserved from the existing local
+  row. `Note` → `note` (HTML stripped), shown at the bottom of the page.
+- `Type` → `hotel_type` (e.g. `Hôtel`).
+- `Option[]` → `options` `[{id, title}]` ("Available options" chips).
+- `Boarding[]` (per-hotel) → `boardings` `[{id, code, name, description}]`
+  ("Meal plans").
+- `Facilitie[]` (detail, provider's singular spelling) / `Facilities[]` (list)
+  → `facilities` `[{title, category}]` ("Facilities" chips).
+- `Tag[]` (detail-only) → `amenity_tags` `[{id, title, image}]` ("Services &
+  tags"); relative `Image` paths are resolved against
+  `config('ostravel.base_url')`.
+- `Theme[]` → `tags` (preferring `ListHotel`, falling back to `HotelDetail`).
+
+All provider text is normalized before storage/rendering
+(`HotelPublisher::cleanText` / `htmlToText`): HTML entities such as `&eacute;`,
+`&#39;`, `&agrave;` are decoded, tags are stripped, and description/note
+paragraph breaks are preserved (rendered with `whitespace-pre-line` on the
+frontend).
+
+## Lazy per-day HotelDetail refresh
+
+`HotelDetail` is fetched at most **once per day per hotel**, lazily, on the
+first click — never in bulk:
+
+- `OsTravelCatalogSync::enrichDetails()` only fetches `HotelDetail` for
+  brand-new hotels (whose staged payload has none). Known hotels are skipped.
+- First admin-or-public visit each day triggers the fetch
+  (`HotelPublisher::refreshDetail`), guarded by a 30s single-flight
+  `Cache::lock("ostravel.detail.{externalId}")` so concurrent requests don't
+  pile up. Public `GET /api/hotels/{slug}` and admin
+  `GET /api/admin/os-travel/hotels/{id}` both trigger it; `approve` refreshes
+  before publishing.
+- The staged `os_travel_hotels.detail_fetched_at` timestamp is set on success;
+  later same-day visits are cache hits with **zero** provider calls. Unclicked
+  hotels are never refreshed. On provider failure the timestamp is left
+  untouched so the next click retries, and existing data is preserved.
+- Gallery re-download: the album is only re-fetched when the provider's
+  `Album[].Url` list changed vs the stored `details.gallery_sources`;
+  otherwise the already-downloaded local files are reused.
+
+Search-time room data (`OsTravelSearchService`): `View` → `view_ids` and
+`Supplement[]` → `supplements` (raw provider shape, echoed back to the provider
+on booking so nothing is lost; the frontend normalizes for display).
+
+## Filter booleans derived at publish
+
+The existing `hotels` boolean filter columns (used by the public search UI)
+are now populated automatically at publish time (`deriveFilterBooleans`):
+
+- `categorie_4_etoiles` — `Category.Star >= 4`.
+- `logement_simple` (LS), `petit_dejeuner` (LPD), `demi_pension` (DP),
+  `pension_complete` (PC) from `Boarding[].Code`.
+- Theme flags — `affaires` (Affaires/Business), `famille` (Famille/Family/
+  Voyages de noces), `sport_loisir` (Sport/Loisirs), `thalasso_spa`
+  (Thalasso/Spa), `nature_aventure` (Nature/Aventure/Découverte), `detente`
+  (Détente/Charme/Balnéaire).
+- All other filter columns are set to `false` so the UI never sees nulls.
+  Note: re-publishing a hotel re-derives these and overwrites any admin-set
+  values.
 
 ## Rate limits (assumption)
 

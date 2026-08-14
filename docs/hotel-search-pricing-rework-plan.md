@@ -73,8 +73,9 @@ Key consequences:
   `$providerHotel['Rooms']`, which is empty in production, so live search returned hotels with
   empty rooms and no bookable context (a real go-live bug). Now fixed: `roomOffers()` flattens
   `Price.Boarding[].Pax[].Rooms[]`.
-- The provider does **not** return `View` or `Supplement` in `HotelSearch` — bookings send empty
-  `view_ids`/`supplements`.
+- The provider does **not** return a top-level `Rooms[]`; room `View` and `Supplement` arrays **are**
+  present inside each room offer and are now captured (`view_ids` + raw `supplements`) so the booking
+  proxy can echo them back to the provider unchanged.
 - `Fees` in `CancellationPolicy` can be strings; `FromDate` is `d-m-Y H:i`.
 - Hotel-level `Price.BasePrice` (e.g. `66.150`) is ambiguous and must not be used for pricing;
   the per-room `Price` is the stay total we use.
@@ -446,6 +447,39 @@ dates/occupancy/filters.
 **Expected**
 - No regressions; all checkpoints marked ✅; module ready.
 
+**Phase G status: ✅ (automated)**
+- `pint` clean, `npx tsc --noEmit` clean, `eslint` clean, full `php artisan test` green
+  (403 backend tests, 2149 assertions), vitest green except the 14 pre-existing admin
+  failures (documented, fail at the phase-F commit too).
+- Fixed pint EOF issues in `CancellationFlowTest.php` + `ManualHotelTest.php`; removed an
+  unused `fetchCategoryTypes` import in `AdminDestinations.test.tsx`.
+- Provider-data utilization (see `apidocumentation.md` "Hotel content now captured" +
+  "Filter booleans derived at publish"):
+  - `HotelPublisher` bug fixed: `whatsapp` is no longer overwritten with the provider email;
+    `email` stored separately.
+  - Published hotels now persist `address`, `check_in_time`/`check_out_time`, `coordinates`,
+    `phone`, `note` (HTML-stripped), `hotel_type`, `options`, `boardings` and surface them on
+    the public detail page (`HotelInfo` new sections + i18n keys).
+  - `OsTravelSearchService` room offers capture `view_ids` + raw `supplements`; the booking
+    proxy echoes them unchanged. `hotel_search` fixture updated with `View`/`Supplement`.
+  - `deriveFilterBooleans()` populates every `hotels` boolean filter column at publish
+    (stars ≥ 4, boarding codes LS/LPD/DP/PC, Theme flags) so the existing filter UI works
+    for provider hotels. Note: re-publish re-derives and overwrites admin-set booleans.
+  - `facilities` (`Facilitie[]`/`Facilities[]`) and `amenity_tags` (`Tag[]`, relative
+    images resolved via `base_url`) now captured + rendered ("Facilities" / "Services &
+    tags" sections, i18n keys).
+  - **Lazy per-day detail refresh:** `HotelDetail` is fetched at most once/day/hotel on
+    the first click (`HotelPublisher::refreshDetail`, 30s single-flight lock,
+    `detail_fetched_at`); public `show`, admin `show`, and `approve` trigger it; sync only
+    fetches detail for brand-new hotels. Gallery re-downloads only when `Album[].Url`
+    changed vs stored `gallery_sources`. New `OsTravelDetailRefreshTest` (7 tests).
+  - All provider text decoded + structure-preserved (`cleanText`/`htmlToText`): entities
+    (`&eacute;` etc.) and `<p>` blocks normalized; frontend renders with
+    `whitespace-pre-line`.
+  - New tests: publisher derived-fields/booleans, search view_ids/supplements pass-through,
+    go-live view assertion, frontend `HotelDetail` practical-info/boardings/options/note,
+    lazy-refresh feature tests. Backend **403 tests / 2149 assertions green**.
+
 ---
 
 ## Provider items to confirm with OS-TRAVEL (open)
@@ -476,4 +510,8 @@ dates/occupancy/filters.
   - [x] Checkpoint 5 (walkthrough automated; manual staging pass pending)
   - [x] Phase F E2E tests + cancellation + admin ops
   - [ ] Checkpoint 6 (automated + staging pass) — automated pass done (OsTravelGoLiveFlowTest + full suite green); staging pass pending live credentials
-  - [x] Phase G final QA (pint/tsc/lint/test suites) — pint clean, tsc clean, lint clean, 373 backend tests green, vitest green except 13 pre-existing admin failures (documented in os-travel-phase-11-final-qa.md); provider facts written to apidocumentation.md
+  - [x] Phase G final QA (pint/tsc/lint/test suites) — pint clean, tsc clean, lint clean, 403 backend tests green, vitest green except 14 pre-existing admin failures (documented in os-travel-phase-11-final-qa.md); provider facts + content/filter capture written to apidocumentation.md; provider-data utilization shipped (whatsapp bug fix, detail fields, view_ids/supplements, derived filter booleans, facilities/tags, lazy per-day detail refresh, provider-text decoding)
+  - [x] **Admin price refresh** — `OsTravelSearchService::refreshStagedPrices()` (writes provider min room price to staged `base_price` for PENDING/APPROVED hotels) + `refreshPrice()`/`refreshPrices()` endpoints (single + bulk, optional ids/dates) + admin UI (bulk "Refresh prices" button, per-row refresh, "Fetch price" in preview that hydrates the form) + i18n. Backend 381 tests green (was 373), vitest AdminOsTravel 10/10. Note: admin no longer must type a price first — refresh populates it, then approve.
+  - [x] **Smart multi-window refresh (nearest available time)** — `refreshLatestPrices()` and `refreshStagedPrices()` now share a private `probePrices()` that queries the provider for the default window and, when a hotel has no availability, probes forward chronologically (`ostravel.refresh.probe.step_days` per attempt, up to `attempts`, default 6 × 7d ≈ 42 days) until the **nearest** window that returns a price. Hotel seen but unpriced (stop-sales) keeps being probed; provider failures abort that chunk (no re-query) and are reported separately from "no availability". Updated `config/ostravel.php` (`refresh.probe.*`), refreshed `osTravel.noAvailability` copy to "~42 days". Backend 392 tests green (was 381, +3 probe tests), vitest AdminOsTravel 10/10, tsc + eslint clean.
+  - [x] **Browse prices are live per-night (not stay totals)** — the refresh probe now queries a **1-night window** (`ostravel.refresh.nights` default 1) so the stored `last_price`/`base_price` is the provider's genuine per-night minimum (provider applies its own 1-night pricing; dividing a stay total is avoided because length-of-stay discounts make it an approximation). Browse displays (home HotelsSection, `index.tsx` "From X TND/night") label the price per-night; filtered searches keep calling the live API with the user's filters (unchanged). Probe test updated for the 1-night CheckOut. Backend 393 tests green, tsc + eslint clean.
+  - [x] **No approximations, ever: no fallback division (final)** — `probePrices()` queries the single 1-night window only and stores the provider's 1-night total **as-is** (never divided). The earlier 7-night fallback pass was **removed** because it stored an *approximate* per-night (stay total ÷ nights). Hotels the provider will not price for a 1-night stay (e.g. Four Seasons — no 1-night availability) are now **omitted and their stored browse price is cleared** (`last_price`/`base_price` → null), so browse shows **no price / "Price unavailable"** instead of a stale or approximated value. Config `refresh.probe.fallback_nights` removed. `HotelController::payload` reports provider hotels' price only from the live `last_price` (null when cleared), and `HotelPublisher` seeds `last_price`/`last_price_at` from the approved `base_price` at publish time so freshly-published hotels show a genuine price immediately. Frontend (`HotelItem.price: number | null`, HotelsSection, hotels `index.tsx`, destinations `show.tsx`) renders "Price unavailable" for null. Backend **396 tests green**, tsc clean. Live re-refresh of all staged hotels: `updated=195 omitted=243` — the 5 remaining `base_price > 1000` are genuine luxury nightly rates (e.g. Four Seasons 1250 is now a real 1-night probe result, not `8746.5 ÷ 7`).

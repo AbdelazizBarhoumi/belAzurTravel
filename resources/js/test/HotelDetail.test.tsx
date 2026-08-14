@@ -52,6 +52,24 @@ vi.mock('@/hooks/usePublicData', () => ({
                   rating: 4.9,
                   reviews: 234,
                   whatsapp: '1234567890',
+                  check_in_time: '14h',
+                  check_out_time: '12h',
+                  address: '123 Beach Road',
+                  phone: '+216 71 000 000',
+                  email: 'reservations@sunset.example',
+                  options: [
+                      { id: 1, title: 'Baby bed' },
+                      { id: 2, title: 'Airport transfer' },
+                  ],
+                  boardings: [
+                      {
+                          id: 4,
+                          code: 'DP',
+                          name: 'Demi-pension',
+                          description: 'Bed & half board',
+                      },
+                  ],
+                  note: 'Séjour avec taxe de séjour à régler sur place.',
                   amenities: [{ en: 'Wi-Fi', fr: 'Wi-Fi', ar: 'Wi-Fi' }],
                   rooms: [
                       {
@@ -165,6 +183,24 @@ describe('HotelDetail', () => {
         expect(
             screen.getByAltText('Sunset Paradise Resort main image'),
         ).toHaveAttribute('src', '/main-hotel.jpg');
+    });
+
+    it('renders the practical info, boardings, options and note sections', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+
+        expect(screen.getByText(/Arrivée: 14h/)).toBeInTheDocument();
+        expect(screen.getByText(/Départ: 12h/)).toBeInTheDocument();
+        expect(screen.getByText('Contact')).toBeInTheDocument();
+        expect(screen.getByText('123 Beach Road')).toBeInTheDocument();
+        expect(screen.getByText(/\+216 71 000 000/)).toBeInTheDocument();
+        expect(
+            screen.getByText(/reservations@sunset.example/),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Demi-pension')).toBeInTheDocument();
+        expect(screen.getByText('Bed & half board')).toBeInTheDocument();
+        expect(screen.getByText('Baby bed')).toBeInTheDocument();
+        expect(screen.getByText('Airport transfer')).toBeInTheDocument();
+        expect(screen.getByText(/taxe de séjour/)).toBeInTheDocument();
     });
 
     it('does not crash when a room has null features', async () => {

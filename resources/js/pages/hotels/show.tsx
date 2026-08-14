@@ -248,9 +248,7 @@ export default function HotelDetail() {
                 nights: room.nights,
                 capacity: staticRoom?.capacity ?? 2,
                 size: staticRoom?.size ?? 0,
-                features:
-                    staticRoom?.features ??
-                    (room.view ? [room.view] : []),
+                features: staticRoom?.features ?? [],
                 images: staticRoom?.images ?? [],
                 providerRoomId: room.id ? Number(room.id) : undefined,
                 boardingId: room.boarding_id ?? undefined,
@@ -384,6 +382,16 @@ export default function HotelDetail() {
                                 : ''
                         }
                         amenities={amenities}
+                        checkIn={detail.check_in_time}
+                        checkOut={detail.check_out_time}
+                        address={detail.address}
+                        phone={detail.phone}
+                        email={detail.email}
+                        options={detail.options}
+                        boardings={detail.boardings}
+                        facilities={detail.facilities}
+                        amenityTags={detail.amenity_tags}
+                        note={detail.note}
                     />
 
                     <div className="mt-8 rounded-3xl border border-border bg-card p-5">

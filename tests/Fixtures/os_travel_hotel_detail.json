@@ -93,6 +93,28 @@
         "Description": "Petit déjeuner +  Dîner (1er service) + Déjeuner (dernier service)"
       }
     ],
+    "Facilitie": [
+      {
+        "Title": "Spa et bien-être",
+        "Category": "Bien-être"
+      },
+      {
+        "Title": "Salle de sport",
+        "Category": "Activités"
+      }
+    ],
+    "Tag": [
+      {
+        "Id": 55,
+        "Title": "Wifi gratuit",
+        "Image": "uploads/d0be1cace167bc758be36b3bbe3c10eee507485f.jpeg"
+      },
+      {
+        "Id": 91,
+        "Title": "Plage privée",
+        "Image": "uploads/2bec56906de5e43e916a8f703267a152b6f88e34.jpeg"
+      }
+    ],
     "Theme": [
       "Affaires"
     ],

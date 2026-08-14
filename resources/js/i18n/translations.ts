@@ -1611,6 +1611,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Select room',
     },
     'hotelDetail.pernight': { fr: '/nuit', ar: '/ليلة', en: '/night' },
+    'hotelDetail.noPrice': { fr: 'Prix non disponible', ar: 'السعر غير متوفر', en: 'Price unavailable' },
     'hotelDetail.totalForStay': {
         fr: 'Total pour le séjour',
         ar: 'الإجمالي للإقامة',
@@ -1650,6 +1651,61 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Inclus',
         ar: 'مشمول',
         en: 'Included',
+    },
+    'hotelDetail.practicalInfo': {
+        fr: 'Informations pratiques',
+        ar: 'معلومات عملية',
+        en: 'Practical information',
+    },
+    'hotelDetail.checkInOut': {
+        fr: 'Heures d\'arrivée / départ',
+        ar: 'أوقات الوصول والمغادرة',
+        en: 'Check-in / check-out',
+    },
+    'hotelDetail.checkIn': {
+        fr: 'Arrivée',
+        ar: 'الوصول',
+        en: 'Check-in',
+    },
+    'hotelDetail.checkOut': {
+        fr: 'Départ',
+        ar: 'المغادرة',
+        en: 'Check-out',
+    },
+    'hotelDetail.contact': {
+        fr: 'Contact',
+        ar: 'اتصال',
+        en: 'Contact',
+    },
+    'hotelDetail.phone': {
+        fr: 'Téléphone',
+        ar: 'هاتف',
+        en: 'Phone',
+    },
+    'hotelDetail.email': {
+        fr: 'Email',
+        ar: 'بريد إلكتروني',
+        en: 'Email',
+    },
+    'hotelDetail.boardings': {
+        fr: 'Formules de repas',
+        ar: 'أنظمة الطعام',
+        en: 'Meal plans',
+    },
+    'hotelDetail.options': {
+        fr: 'Options disponibles',
+        ar: 'خيارات متاحة',
+        en: 'Available options',
+    },
+    'hotelDetail.facilities': {
+        fr: 'Équipements',
+        ar: 'المرافق',
+        en: 'Facilities',
+    },
+    'hotelDetail.tags': {
+        fr: 'Services et tags',
+        ar: 'الخدمات والوسوم',
+        en: 'Services & tags',
     },
     'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
     'tourDetail.notIncluded': {
@@ -4427,6 +4483,11 @@ translations['actions.cancel'] = {
     ar: 'إلغاء',
     en: 'Cancel',
 };
+translations['actions.close'] = {
+    fr: 'Fermer',
+    ar: 'إغلاق',
+    en: 'Close',
+};
 translations['actions.save'] = {
     fr: 'Enregistrer',
     ar: 'حفظ',
@@ -6872,4 +6933,144 @@ translations['osTravel.boarding'] = {
     fr: 'Régimes',
     ar: 'أنظمة الإقامة',
     en: 'Boarding',
+};
+translations['osTravel.refreshPrices'] = {
+    fr: 'Actualiser les prix',
+    ar: 'تحديث الأسعار',
+    en: 'Refresh prices',
+};
+translations['osTravel.refreshPrice'] = {
+    fr: 'Actualiser le prix',
+    ar: 'تحديث السعر',
+    en: 'Refresh price',
+};
+translations['osTravel.fetchPrice'] = {
+    fr: 'Récupérer le prix',
+    ar: 'جلب السعر',
+    en: 'Fetch price',
+};
+translations['osTravel.refreshing'] = {
+    fr: 'Actualisation…',
+    ar: 'جارٍ التحديث…',
+    en: 'Refreshing…',
+};
+translations['osTravel.refreshFailed'] = {
+    fr: "Échec de l'actualisation des prix.",
+    ar: 'فشل تحديث الأسعار.',
+    en: 'Failed to refresh prices.',
+};
+translations['osTravel.refreshTimeout'] = {
+    fr: "L'actualisation a pris trop de temps. Réessayez.",
+    ar: 'استغرق تحديث الأسعار وقتاً طويلاً. أعد المحاولة.',
+    en: 'The refresh took too long. Please try again.',
+};
+translations['osTravel.refreshAllDone'] = {
+    fr: '{updated} prix actualisés · {omitted} indisponibles',
+    ar: 'تم تحديث {updated} سعر · {omitted} غير متوفر',
+    en: '{updated} prices refreshed · {omitted} unavailable',
+};
+translations['osTravel.priceRefreshed'] = {
+    fr: 'Prix mis à jour : {price} {currency}',
+    ar: 'تم تحديث السعر: {price} {currency}',
+    en: 'Price updated: {price} {currency}',
+};
+translations['osTravel.noAvailability'] = {
+    fr: 'Aucune disponibilité dans les ~42 prochains jours.',
+    ar: 'لا توجد توفر خلال الـ 42 يوماً القادمة تقريباً.',
+    en: 'No availability in the next ~42 days.',
+};
+translations['osTravel.filterCountry'] = {
+    fr: 'Pays…',
+    ar: 'البلد…',
+    en: 'Country…',
+};
+translations['osTravel.filterCitySelect'] = {
+    fr: 'Ville…',
+    ar: 'المدينة…',
+    en: 'City…',
+};
+translations['osTravel.filterDates'] = {
+    fr: 'Choisir les dates',
+    ar: 'اختر التواريخ',
+    en: 'Pick dates',
+};
+translations['osTravel.filterFrom'] = {
+    fr: 'Arrivée',
+    ar: 'الوصول',
+    en: 'Check-in',
+};
+translations['osTravel.filterTo'] = {
+    fr: 'Départ',
+    ar: 'المغادرة',
+    en: 'Check-out',
+};
+translations['osTravel.liveCheckActive'] = {
+    fr: 'Vérification live des dates',
+    ar: 'فحص مباشر للتواريخ',
+    en: 'Live check for dates',
+};
+translations['osTravel.priceReason.neverRefreshed'] = {
+    fr: 'Prix jamais actualisé',
+    ar: 'لم يتم تحديث السعر بعد',
+    en: 'Never refreshed',
+};
+translations['osTravel.priceReason.noAvailability'] = {
+    fr: 'Aucune disponibilité à l’actualisation',
+    ar: 'لا توجد توفر عند التحديث',
+    en: 'No availability at refresh',
+};
+translations['osTravel.priceReason.providerError'] = {
+    fr: 'Erreur fournisseur à l’actualisation',
+    ar: 'خطأ مزود عند التحديث',
+    en: 'Provider error at refresh',
+};
+translations['osTravel.priceReason.hasPrice'] = {
+    fr: 'Prix disponible',
+    ar: 'السعر متوفر',
+    en: 'Price available',
+};
+translations['osTravel.liveStatus.available'] = {
+    fr: 'Disponible',
+    ar: 'متوفر',
+    en: 'Available',
+};
+translations['osTravel.liveStatus.noAvailability'] = {
+    fr: 'Aucune dispo sur ces dates',
+    ar: 'لا توجد توفر لهذه التواريخ',
+    en: 'No availability on these dates',
+};
+translations['osTravel.liveStatus.providerError'] = {
+    fr: 'Erreur fournisseur',
+    ar: 'خطأ مزود',
+    en: 'Provider error',
+};
+translations['osTravel.liveStatus.live'] = {
+    fr: 'live',
+    ar: 'مباشر',
+    en: 'live',
+};
+translations['osTravel.refreshResultTitle'] = {
+    fr: 'Résultat de l’actualisation',
+    ar: 'نتيجة التحديث',
+    en: 'Refresh result',
+};
+translations['osTravel.refreshResultSummary'] = {
+    fr: '{updated} hôtels actualisés.',
+    ar: 'تم تحديث {updated} فندق.',
+    en: '{updated} hotels refreshed.',
+};
+translations['osTravel.refreshOmitted'] = {
+    fr: '{count} hôtels sans prix (aucune disponibilité) :',
+    ar: '{count} فندق بدون سعر (لا توفر):',
+    en: '{count} hotels without a price (no availability):',
+};
+translations['osTravel.refreshFailedList'] = {
+    fr: '{count} hôtels en erreur fournisseur :',
+    ar: '{count} فندق بخطأ مزود:',
+    en: '{count} hotels with a provider error:',
+};
+translations['osTravel.refreshNoIssues'] = {
+    fr: 'Tous les hôtels ont été actualisés avec succès.',
+    ar: 'تم تحديث جميع الفنادق بنجاح.',
+    en: 'All hotels refreshed successfully.',
 };

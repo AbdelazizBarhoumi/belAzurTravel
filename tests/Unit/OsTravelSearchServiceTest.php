@@ -58,6 +58,94 @@ class OsTravelSearchServiceTest extends TestCase
         return $hotel;
     }
 
+    private function stagedHotel(int $id, string $name, string $status = OsTravelHotel::PENDING): OsTravelHotel
+    {
+        return OsTravelHotel::create([
+            'external_id' => (string) $id,
+            'payload' => [],
+            'payload_hash' => str_repeat('c', 64),
+            'name' => $name,
+            'city_external_id' => '12',
+            'city_name' => 'Kelibia',
+            'category_title' => '4 étoiles',
+            'stars' => 4,
+            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'status' => $status,
+            'last_synced_at' => now(),
+        ]);
+    }
+
+    public function test_refresh_staged_prices_persists_min_price_as_base_price(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+        $this->stagedHotel(999, 'Stop Sales Hotel');
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(1, $result['updated']);
+        // Stop Sales Hotel is returned by the provider but has no bookable
+        // room, so it has no live price and counts as omitted.
+        $this->assertSame(1, $result['omitted']);
+        $this->assertSame(['999'], $result['omitted_ids']);
+        $this->assertSame([], $result['failed_ids']);
+
+        $kelibia = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame(928, $kelibia->base_price);
+        $this->assertSame('TND', $kelibia->currency);
+        $this->assertSame(OsTravelHotel::PRICE_HAS_PRICE, $kelibia->price_status);
+        $this->assertNotNull($kelibia->last_price_attempt_at);
+
+        // Stop Sales Hotel's only room is stopped, so no price is written.
+        $stopSales = OsTravelHotel::where('external_id', '999')->first();
+        $this->assertNull($stopSales->base_price);
+        $this->assertSame(OsTravelHotel::PRICE_NO_AVAILABILITY, $stopSales->price_status);
+        $this->assertNotNull($stopSales->last_price_attempt_at);
+    }
+
+    public function test_refresh_staged_prices_can_target_specific_ids(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+        $other = $this->stagedHotel(999, 'Stop Sales Hotel');
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([$other->id], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertNull(OsTravelHotel::where('external_id', '178')->first()->base_price);
+        $this->assertNull(OsTravelHotel::where('external_id', '999')->first()->base_price);
+    }
+
+    public function test_refresh_staged_prices_skips_published_hotels(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+        $this->assertSame(1000, OsTravelHotel::where('external_id', '178')->first()->base_price);
+    }
+
     public function test_search_returns_markup_prices_and_tokens(): void
     {
         $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
@@ -94,6 +182,12 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame(159.0, $kelibia['rooms'][0]['price_per_night']);
         $this->assertSame(7, $kelibia['rooms'][0]['nights']);
         $this->assertSame('TND', $kelibia['rooms'][0]['currency']);
+        // View ids and supplements pass through to power the booking proxy.
+        $this->assertSame([1, 3], $kelibia['rooms'][0]['view_ids']);
+        $this->assertSame('Insurance', $kelibia['rooms'][0]['supplements'][0]['Name']);
+        $this->assertSame(40, $kelibia['rooms'][0]['supplements'][0]['Price']);
+        $this->assertSame([2], $kelibia['rooms'][1]['view_ids']);
+        $this->assertSame([], $kelibia['rooms'][1]['supplements']);
         // Suite: 1200 * 1.2 = 1440.
         $this->assertSame(1440, $kelibia['rooms'][1]['price_total']);
         $this->assertSame(205.71, $kelibia['rooms'][1]['price_per_night']);
@@ -159,6 +253,33 @@ class OsTravelSearchServiceTest extends TestCase
         );
 
         Http::assertSentCount(2);
+    }
+
+    public function test_refresh_latest_prices_chunks_hotels_by_two_hundred(): void
+    {
+        for ($i = 1; $i <= 250; $i++) {
+            $this->stagedPublishedHotel($i, "hotel-{$i}", "Hotel {$i}", 100);
+        }
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response(['HotelSearch' => [], 'CountResults' => 0]),
+        ]);
+
+        app(OsTravelSearchService::class)->refreshLatestPrices([
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        // 250 hotels is two chunks; each chunk is a separate provider call,
+        // and every call stays within the 200-per-request cap.
+        $requests = Http::recorded();
+        $this->assertTrue(count($requests) >= 2);
+        foreach ($requests as [$request]) {
+            $this->assertLessThanOrEqual(
+                200,
+                count($request->data()['SearchDetails']['BookingDetails']['Hotels'] ?? [])
+            );
+        }
     }
 
     public function test_search_results_are_cached(): void
@@ -242,7 +363,9 @@ class OsTravelSearchServiceTest extends TestCase
         ]);
 
         $this->assertSame(1, $result['updated']);
-        $this->assertSame(0, $result['omitted']);
+        // Stop Sales Hotel is returned but has no bookable room, so it has no
+        // live price and counts as omitted (its stored price is cleared).
+        $this->assertSame(1, $result['omitted']);
 
         $kelibia = Hotel::where('slug', 'cap-bon-kelibia')->first();
         $this->assertSame(927.52, $kelibia->last_price);
@@ -253,7 +376,7 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertNull($stopSales->last_price);
     }
 
-    public function test_refresh_keeps_previous_price_when_hotel_omitted(): void
+    public function test_refresh_clears_previous_price_when_hotel_omitted(): void
     {
         $hotel = $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
         $hotel->update(['last_price' => 777.5, 'last_price_at' => now()->subDay()]);
@@ -270,8 +393,11 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame(0, $result['updated']);
         $this->assertSame(1, $result['omitted']);
 
+        // No live per-night price anywhere in the probe horizon: the stale
+        // stored price is cleared so browse never shows a non-live value.
         $hotel->refresh();
-        $this->assertSame(777.5, $hotel->last_price);
+        $this->assertNull($hotel->last_price);
+        $this->assertNull($hotel->last_price_at);
     }
 
     public function test_search_flags_availability_and_provider(): void
@@ -479,6 +605,264 @@ class OsTravelSearchServiceTest extends TestCase
         );
 
         $this->assertSame(['cap-bon-kelibia', 'stop-sales'], array_column($results, 'slug'));
+    }
+
+    public function test_refresh_latest_prices_probes_forward_to_nearest_available_window(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::sequence()
+                ->push(['HotelSearch' => [], 'CountResults' => 0])
+                ->push($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshLatestPrices([
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        // No availability in the first window, so the refresh probes forward
+        // one step (check_in + 7 days) and lands a price there. The price
+        // basis is a 1-night window, so the probe CheckOut is +1 night.
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+
+        $hotel = Hotel::where('slug', 'cap-bon-kelibia')->first();
+        $this->assertSame(927.52, $hotel->last_price);
+
+        Http::assertSent(function ($request) {
+            $body = $request->data();
+
+            // The successful probe used the stepped window, not the default.
+            return ($body['SearchDetails']['BookingDetails']['CheckIn'] ?? '') === '2026-09-08'
+                && ($body['SearchDetails']['BookingDetails']['CheckOut'] ?? '') === '2026-09-09';
+        });
+    }
+
+    public function test_refresh_staged_prices_probes_forward_to_nearest_available_window(): void
+    {
+        OsTravelHotel::create([
+            'external_id' => '178',
+            'payload' => [],
+            'payload_hash' => str_repeat('b', 64),
+            'name' => 'Cap Bon Kelibia Beach Hotel & Spa',
+            'city_external_id' => '12',
+            'city_name' => 'Kelibia',
+            'category_title' => '4 étoiles',
+            'stars' => 4,
+            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'status' => OsTravelHotel::PENDING,
+            'base_price' => null,
+            'last_synced_at' => now(),
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::sequence()
+                ->push(['HotelSearch' => [], 'CountResults' => 0])
+                ->push($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices();
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+
+        $this->assertSame(928, OsTravelHotel::where('external_id', '178')->first()->base_price);
+    }
+
+    public function test_refresh_latest_prices_clears_stored_price_when_no_one_night_availability(): void
+    {
+        $hotel = $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $hotel->update(['last_price' => 777.5, 'last_price_at' => now()->subDay()]);
+
+        // The provider only books a longer stay (e.g. 7 nights) and never
+        // returns a 1-night price for this hotel. Since every stored browse
+        // price must be a genuine live per-night API value, the stored price
+        // is cleared rather than shown as a stale stay-total.
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response(['HotelSearch' => [], 'CountResults' => 0]),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshLatestPrices([
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(1, $result['omitted']);
+
+        $hotel->refresh();
+        $this->assertNull($hotel->last_price);
+        $this->assertNull($hotel->last_price_at);
+    }
+
+    public function test_refresh_staged_prices_clears_stored_price_when_no_one_night_availability(): void
+    {
+        OsTravelHotel::create([
+            'external_id' => '178',
+            'payload' => [],
+            'payload_hash' => str_repeat('b', 64),
+            'name' => 'Cap Bon Kelibia Beach Hotel & Spa',
+            'city_external_id' => '12',
+            'city_name' => 'Kelibia',
+            'category_title' => '4 étoiles',
+            'stars' => 4,
+            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'status' => OsTravelHotel::PENDING,
+            'base_price' => 133,
+            'last_synced_at' => now(),
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response(['HotelSearch' => [], 'CountResults' => 0]),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices();
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(1, $result['omitted']);
+        $this->assertSame(['178'], $result['omitted_ids']);
+
+        $hotel = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertNull($hotel->base_price);
+        $this->assertSame(OsTravelHotel::PRICE_NO_AVAILABILITY, $hotel->price_status);
+        $this->assertNotNull($hotel->last_price_attempt_at);
+    }
+
+    public function test_refresh_probe_counts_provider_failure_separately_from_omitted(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response('Service Unavailable', 500),
+        ]);
+
+        // A provider error aborts probing (no re-query) and is reported
+        // separately from a hotel that simply had no availability.
+        $result = app(OsTravelSearchService::class)->refreshLatestPrices([
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+        // The single default-window query was retried per the HTTP client
+        // policy (times=3) and then probing aborted — no forward re-query.
+        Http::assertSentCount(3);
+    }
+
+    public function test_probe_window_reports_prices_omitted_and_failed_for_exact_dates(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+        $this->stagedHotel(999, 'Stop Sales Hotel');
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->probeWindow(['178', '999'], '2026-09-01', '2026-09-08');
+
+        $this->assertArrayHasKey('178', $result['prices']);
+        $this->assertSame(927.52, $result['prices']['178']['price']);
+        $this->assertSame('TND', $result['prices']['178']['currency']);
+        $this->assertSame(['999'], $result['omitted_ids']);
+        $this->assertSame([], $result['failed_ids']);
+    }
+
+    public function test_probe_window_reports_provider_failure_as_failed(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response('Service Unavailable', 500),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->probeWindow(['178'], '2026-09-01', '2026-09-08');
+
+        $this->assertSame([], $result['prices']);
+        $this->assertSame([], $result['omitted_ids']);
+        $this->assertSame(['178'], $result['failed_ids']);
+    }
+
+    public function test_refresh_marks_chunk_provider_error_on_staged_hotel(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response('Service Unavailable', 500),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        // Provider failure is not an omitted hotel: it keeps its value but is
+        // flagged so the admin can see why the refresh didn't cover it.
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+        $this->assertSame(['178'], $result['failed_ids']);
+
+        $hotel = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame(OsTravelHotel::PRICE_PROVIDER_ERROR, $hotel->price_status);
+        $this->assertNotNull($hotel->last_price_attempt_at);
+    }
+
+    public function test_refresh_marks_horizon_exceeded_as_omitted_not_failed(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+        $this->stagedHotel(999, 'Stop Sales Hotel');
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response([
+                'HotelSearch' => [],
+                'CountResults' => 0,
+                'ErrorMessage' => ['Code' => 14, 'Description' => 'Données erronées: CheckIn dépasser'],
+            ]),
+        ]);
+
+        // The provider rejects the window because its CheckIn falls beyond the
+        // bookable horizon ("CheckIn dépasser"). Probing further forward is
+        // pointless, so the chunk is omitted (no availability), not a provider
+        // failure — and it is never retried.
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(2, $result['omitted']);
+        $this->assertSame(['178', '999'], $result['omitted_ids']);
+        $this->assertSame([], $result['failed_ids']);
+
+        foreach (['178', '999'] as $externalId) {
+            $hotel = OsTravelHotel::where('external_id', $externalId)->first();
+            $this->assertSame(OsTravelHotel::PRICE_NO_AVAILABILITY, $hotel->price_status);
+            $this->assertNotNull($hotel->last_price_attempt_at);
+        }
+    }
+
+    public function test_probe_window_marks_horizon_exceeded_as_omitted(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response([
+                'HotelSearch' => [],
+                'CountResults' => 0,
+                'ErrorMessage' => ['Code' => 14, 'Description' => 'Données erronées: CheckIn dépasser'],
+            ]),
+        ]);
+
+        // A horizon-exceeded window can never yield a live price, so the
+        // admin live-check reports the hotel as omitted for those dates rather
+        // than surfacing a provider error.
+        $result = app(OsTravelSearchService::class)->probeWindow(['178'], '2026-09-01', '2026-09-08');
+
+        $this->assertSame([], $result['prices']);
+        $this->assertSame(['178'], $result['omitted_ids']);
+        $this->assertSame([], $result['failed_ids']);
     }
 
     public function test_search_keeps_unavailable_hotels_when_only_available_is_false(): void

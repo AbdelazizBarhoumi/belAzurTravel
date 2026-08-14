@@ -27,3 +27,8 @@ if ($refreshAt !== null && $refreshAt !== '') {
 }
 
 $refreshCommand->withoutOverlapping()->onOneServer();
+
+Schedule::command('os-travel:process-refresh-request')
+    ->everyMinute()
+    ->withoutOverlapping(config('ostravel.refresh.lock_ttl_minutes'))
+    ->onOneServer();

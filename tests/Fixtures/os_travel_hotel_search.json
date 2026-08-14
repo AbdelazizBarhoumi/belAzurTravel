@@ -28,6 +28,10 @@
                     "BasePrice": "927.520",
                     "PriceWithAffiliateMarkup": "927.520",
                     "StopReservation": false,
+                    "View": [1, 3],
+                    "Supplement": [
+                      { "Name": "Insurance", "Price": 40, "PerNight": true }
+                    ],
                     "CancellationPolicy": [
                       {
                         "Fees": 185.50,
@@ -45,6 +49,8 @@
                     "BasePrice": "1200.000",
                     "PriceWithAffiliateMarkup": "1200.000",
                     "StopReservation": false,
+                    "View": [2],
+                    "Supplement": [],
                     "CancellationPolicy": []
                   }
                 ]

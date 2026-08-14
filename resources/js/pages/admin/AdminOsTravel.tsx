@@ -1,11 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
 import { Eye, RefreshCw, Star, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
-import { type OsTravelHotelRow, type OsTravelStatus } from '@/api/osTravel.api';
+import {
+    type OsTravelHotelRow,
+    type OsTravelListFilters,
+    type OsTravelStatus,
+} from '@/api/osTravel.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import {
     Dialog,
     DialogContent,
@@ -30,6 +36,7 @@ import {
     useOsTravelDashboard,
     useOsTravelHotelDetail,
     useOsTravelHotels,
+    useOsTravelReferences,
 } from '@/hooks/useOsTravelAdmin';
 
 const STATUSES: OsTravelStatus[] = [
@@ -50,6 +57,46 @@ const statusColors: Record<string, string> = {
 
 const CURRENCIES = ['TND', 'EUR', 'USD', 'GBP'];
 
+const priceStatusMeta: Record<
+    NonNullable<OsTravelHotelRow['price_status']>,
+    { labelKey: string; className: string }
+> = {
+    never_refreshed: {
+        labelKey: 'osTravel.priceReason.neverRefreshed',
+        className: 'text-muted-foreground',
+    },
+    no_availability: {
+        labelKey: 'osTravel.priceReason.noAvailability',
+        className: 'text-amber-600',
+    },
+    provider_error: {
+        labelKey: 'osTravel.priceReason.providerError',
+        className: 'text-destructive',
+    },
+    has_price: {
+        labelKey: 'osTravel.priceReason.hasPrice',
+        className: 'text-muted-foreground',
+    },
+};
+
+const liveStatusMeta: Record<
+    NonNullable<OsTravelHotelRow['live_status']>,
+    { labelKey: string; className: string }
+> = {
+    available: {
+        labelKey: 'osTravel.liveStatus.available',
+        className: 'text-emerald-600',
+    },
+    no_availability: {
+        labelKey: 'osTravel.liveStatus.noAvailability',
+        className: 'text-amber-600',
+    },
+    provider_error: {
+        labelKey: 'osTravel.liveStatus.providerError',
+        className: 'text-destructive',
+    },
+};
+
 interface PriceForm {
     basePrice: string;
     markup: string;
@@ -62,6 +109,14 @@ const emptyPriceForm: PriceForm = {
     currency: 'TND',
 };
 
+const hotelLabel = (
+    externalId: string,
+    hotels: OsTravelHotelRow[],
+): string => {
+    const match = hotels.find((h) => h.external_id === externalId);
+    return match ? match.name : `#${externalId}`;
+};
+
 const AdminOsTravel = () => {
     useAdminGuard();
     const { t, dir } = useLanguage();
@@ -69,14 +124,35 @@ const AdminOsTravel = () => {
 
     const [status, setStatus] = useState<OsTravelStatus | ''>('pending');
     const [city, setCity] = useState('');
+    const [countryId, setCountryId] = useState('');
+    const [cityId, setCityId] = useState('');
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [starsFilter, setStarsFilter] = useState('');
     const [detailId, setDetailId] = useState<string | null>(null);
     const [priceForm, setPriceForm] = useState<PriceForm>(emptyPriceForm);
     const [rejectId, setRejectId] = useState<string | null>(null);
     const [approveAllOpen, setApproveAllOpen] = useState(false);
+    const [refreshResult, setRefreshResult] = useState<{
+        omitted_ids: string[];
+        failed_ids: string[];
+        updated: number;
+    } | null>(null);
 
     const { data: dashboard } = useOsTravelDashboard();
-    const { data: hotels = [], isLoading } = useOsTravelHotels(status, city);
+    const { data: references } = useOsTravelReferences();
+    const filters = useMemo<OsTravelListFilters>(() => {
+        const f: OsTravelListFilters = {};
+        if (status) f.status = status;
+        if (city.trim()) f.city = city.trim();
+        if (countryId) f.country_id = countryId;
+        if (cityId) f.city_id = cityId;
+        if (dateRange?.from && dateRange.to) {
+            f.check_in = dateRange.from.toISOString().slice(0, 10);
+            f.check_out = dateRange.to.toISOString().slice(0, 10);
+        }
+        return f;
+    }, [status, city, countryId, cityId, dateRange]);
+    const { data: hotels = [], isLoading } = useOsTravelHotels(filters);
     const { data: detail } = useOsTravelHotelDetail(detailId);
 
     const computedPrice = useMemo(() => {
@@ -210,6 +286,50 @@ const AdminOsTravel = () => {
         },
     });
 
+    const refreshAllMutation = useMutation({
+        mutationFn: (data?: { check_in?: string; check_out?: string }) =>
+            admin.refreshPrices(data),
+        onSuccess: (result) => {
+            toast.success(
+                t('osTravel.refreshAllDone')
+                    .replace('{updated}', String(result.updated))
+                    .replace('{omitted}', String(result.omitted)),
+            );
+            setRefreshResult({
+                omitted_ids: result.omitted_ids,
+                failed_ids: result.failed_ids,
+                updated: result.updated,
+            });
+        },
+        onError: (err: unknown) => {
+            toast.error(admin.toErrorMessage(err, 'osTravel.refreshFailed'));
+        },
+    });
+
+    const refreshPriceMutation = useMutation({
+        mutationFn: (id: string) => admin.refreshPrice(id),
+        onSuccess: (row) => {
+            if (row.base_price !== null) {
+                hydratedIdRef.current = detailId;
+                setPriceForm((p) => ({
+                    ...p,
+                    basePrice: String(row.base_price),
+                    currency: row.currency ?? p.currency,
+                }));
+                toast.success(
+                    t('osTravel.priceRefreshed')
+                        .replace('{price}', String(row.base_price))
+                        .replace('{currency}', row.currency ?? 'TND'),
+                );
+            } else {
+                toast.info(t('osTravel.noAvailability'));
+            }
+        },
+        onError: (err: unknown) => {
+            toast.error(admin.toErrorMessage(err, 'osTravel.refreshFailed'));
+        },
+    });
+
     const activeHotel = hotels.find((h) => h.id === detailId) ?? null;
     const preview = detail?.mapped_preview ?? null;
 
@@ -217,6 +337,29 @@ const AdminOsTravel = () => {
         if (!starsFilter) return hotels;
         return hotels.filter((h) => String(h.stars) === starsFilter);
     }, [hotels, starsFilter]);
+
+    const availableCities = useMemo(() => {
+        if (!references) return [];
+        if (!countryId) return references.cities;
+        return references.cities.filter((c) => c.country_id === countryId);
+    }, [references, countryId]);
+
+    const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+
+    const hasDateFilter = Boolean(dateRange?.from && dateRange.to);
+
+    const dateFilterValues = useMemo(() => {
+        if (!dateRange?.from || !dateRange.to) return null;
+        return {
+            check_in: formatDate(dateRange.from),
+            check_out: formatDate(dateRange.to),
+        };
+    }, [dateRange]);
+
+    const handleCountryChange = (value: string) => {
+        setCountryId(value);
+        setCityId('');
+    };
 
     const counts = dashboard?.counts;
 
@@ -296,6 +439,44 @@ const AdminOsTravel = () => {
                         placeholder={t('osTravel.filterCity')}
                         className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
                     />
+                    <Select
+                        value={countryId}
+                        onValueChange={handleCountryChange}
+                    >
+                        <SelectTrigger className="w-44" aria-label={t('osTravel.filterCountry')}>
+                            <SelectValue placeholder={t('osTravel.filterCountry')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {references?.countries.map((c) => (
+                                <SelectItem key={c.id} value={c.id}>
+                                    {c.name ?? c.id}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Select
+                        value={cityId}
+                        onValueChange={setCityId}
+                        disabled={Boolean(countryId) && availableCities.length === 0}
+                    >
+                        <SelectTrigger className="w-44" aria-label={t('osTravel.filterCitySelect')}>
+                            <SelectValue placeholder={t('osTravel.filterCitySelect')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableCities.map((c) => (
+                                <SelectItem key={c.id} value={c.id}>
+                                    {c.name ?? c.id}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <DateRangePicker
+                        value={dateRange}
+                        onChange={setDateRange}
+                        placeholderFrom={t('osTravel.filterFrom')}
+                        placeholderTo={t('osTravel.filterTo')}
+                        placeholderEmpty={t('osTravel.filterDates')}
+                    />
                     <select
                         value={starsFilter}
                         onChange={(e) => setStarsFilter(e.target.value)}
@@ -319,6 +500,36 @@ const AdminOsTravel = () => {
                             {t('osTravel.approveAll')}
                         </Button>
                     )}
+                    {(status === 'pending' || status === 'approved') && (
+                        <Button
+                            variant="outline"
+                            onClick={() =>
+                                refreshAllMutation.mutate(
+                                    dateFilterValues ?? undefined,
+                                )
+                            }
+                            disabled={
+                                refreshAllMutation.isPending ||
+                                hotels.length === 0
+                            }
+                        >
+                            <RefreshCw
+                                className={`h-4 w-4 ${
+                                    refreshAllMutation.isPending
+                                        ? 'animate-spin'
+                                        : ''
+                                }`}
+                            />
+                            {refreshAllMutation.isPending
+                                ? t('osTravel.refreshing')
+                                : t('osTravel.refreshPrices')}
+                        </Button>
+                    )}
+                    {hasDateFilter && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                            {t('osTravel.liveCheckActive')}
+                        </span>
+                    )}
                 </div>
 
                 {/* Table */}
@@ -330,6 +541,7 @@ const AdminOsTravel = () => {
                                     {[
                                         t('admin.name'),
                                         t('admin.location'),
+                                        t('admin.country'),
                                         t('admin.stars'),
                                         t('admin.category'),
                                         t('admin.basePrice'),
@@ -365,9 +577,39 @@ const AdminOsTravel = () => {
                                                         {h.name}
                                                     </p>
                                                     {!h.has_base_price && (
-                                                        <p className="text-[10px] font-semibold text-destructive">
+                                                        <p
+                                                            className={`text-[10px] font-semibold ${
+                                                                h.price_status &&
+                                                                priceStatusMeta[
+                                                                    h.price_status
+                                                                ]
+                                                                    ? priceStatusMeta[
+                                                                          h
+                                                                              .price_status
+                                                                      ].className
+                                                                    : 'text-destructive'
+                                                            }`}
+                                                        >
+                                                            {h.price_status &&
+                                                            priceStatusMeta[
+                                                                h.price_status
+                                                            ]
+                                                                ? t(
+                                                                      priceStatusMeta[
+                                                                          h
+                                                                              .price_status
+                                                                      ]
+                                                                          .labelKey,
+                                                                  )
+                                                                : t(
+                                                                      'osTravel.missingPrice',
+                                                                  )}
+                                                        </p>
+                                                    )}
+                                                    {h.has_base_price && (
+                                                        <p className="text-[10px] font-semibold text-muted-foreground">
                                                             {t(
-                                                                'osTravel.missingPrice',
+                                                                'osTravel.priceReason.hasPrice',
                                                             )}
                                                         </p>
                                                     )}
@@ -376,6 +618,9 @@ const AdminOsTravel = () => {
                                         </td>
                                         <td className="px-4 py-3 text-sm text-muted-foreground">
                                             {h.city_name}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                                            {h.country_name}
                                         </td>
                                         <td className="px-4 py-3 text-sm">
                                             <span className="flex items-center gap-1">
@@ -387,7 +632,24 @@ const AdminOsTravel = () => {
                                             {h.category_title}
                                         </td>
                                         <td className="px-4 py-3 text-sm">
-                                            {h.base_price !== null ? (
+                                            {h.live_status ? (
+                                                h.live_status === 'available' ? (
+                                                    <span className="font-semibold text-emerald-600">
+                                                        {h.live_price}{' '}
+                                                        {h.live_currency ?? 'TND'}
+                                                    </span>
+                                                ) : (
+                                                    <span
+                                                        className={`text-xs font-semibold ${liveStatusMeta[h.live_status].className}`}
+                                                    >
+                                                        {t(
+                                                            liveStatusMeta[
+                                                                h.live_status
+                                                            ].labelKey,
+                                                        )}
+                                                    </span>
+                                                )
+                                            ) : h.base_price !== null ? (
                                                 <span className="font-medium">
                                                     {h.base_price}{' '}
                                                     {h.currency ?? 'TND'}
@@ -429,6 +691,37 @@ const AdminOsTravel = () => {
                                                         }
                                                     >
                                                         {t('osTravel.approve')}
+                                                    </Button>
+                                                )}
+                                                {(h.status === 'pending' ||
+                                                    h.status === 'approved') && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            refreshPriceMutation.mutate(
+                                                                h.id,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            refreshPriceMutation.isPending
+                                                        }
+                                                        aria-label={t(
+                                                            'osTravel.refreshPrice',
+                                                        )}
+                                                    >
+                                                        <RefreshCw
+                                                            className={`h-4 w-4 ${
+                                                                refreshPriceMutation.isPending
+                                                                    ? 'animate-spin'
+                                                                    : ''
+                                                            }`}
+                                                        />
+                                                        <span className="sr-only">
+                                                            {t(
+                                                                'osTravel.refreshPrice',
+                                                            )}
+                                                        </span>
                                                     </Button>
                                                 )}
                                                 {h.status !== 'published' && (
@@ -523,9 +816,35 @@ const AdminOsTravel = () => {
 
                             {/* Price section */}
                             <div className="rounded-xl border border-border bg-muted/20 p-4">
-                                <p className="text-xs font-semibold uppercase text-muted-foreground">
-                                    {t('osTravel.priceSection')}
-                                </p>
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <p className="text-xs font-semibold uppercase text-muted-foreground">
+                                        {t('osTravel.priceSection')}
+                                    </p>
+                                    {activeHotel &&
+                                        activeHotel.status !== 'published' && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    refreshPriceMutation.mutate(
+                                                        activeHotel.id,
+                                                    )
+                                                }
+                                                disabled={
+                                                    refreshPriceMutation.isPending
+                                                }
+                                            >
+                                                <RefreshCw
+                                                    className={`h-3.5 w-3.5 ${
+                                                        refreshPriceMutation.isPending
+                                                            ? 'animate-spin'
+                                                            : ''
+                                                    }`}
+                                                />
+                                                {t('osTravel.fetchPrice')}
+                                            </Button>
+                                        )}
+                                </div>
                                 <div className="mt-3 grid gap-3 sm:grid-cols-4">
                                     <div className="space-y-1">
                                         <label className="text-xs font-medium text-muted-foreground">
@@ -613,7 +932,14 @@ const AdminOsTravel = () => {
 
                             {activeHotel && !activeHotel.has_base_price && (
                                 <p className="text-xs text-destructive">
-                                    {t('osTravel.missingPrice')}
+                                    {activeHotel.price_status &&
+                                    priceStatusMeta[activeHotel.price_status]
+                                        ? t(
+                                              priceStatusMeta[
+                                                  activeHotel.price_status
+                                              ].labelKey,
+                                          )
+                                        : t('osTravel.missingPrice')}
                                 </p>
                             )}
                         </div>
@@ -676,6 +1002,97 @@ const AdminOsTravel = () => {
                         </p>
                     </div>
                 </ConfirmDialog>
+
+                {/* Refresh result: omitted / failed hotels */}
+                <Dialog
+                    open={refreshResult !== null}
+                    onOpenChange={(open) => !open && setRefreshResult(null)}
+                >
+                    <DialogContent className="max-w-lg" dir={dir}>
+                        <DialogHeader>
+                            <DialogTitle className="text-xl">
+                                {t('osTravel.refreshResultTitle')}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {t('osTravel.refreshResultSummary').replace(
+                                    '{updated}',
+                                    String(refreshResult?.updated ?? 0),
+                                )}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="max-h-80 space-y-4 overflow-y-auto pr-1">
+                            {refreshResult &&
+                                refreshResult.omitted_ids.length > 0 && (
+                                    <div>
+                                        <p className="mb-1 text-xs font-semibold text-amber-600">
+                                            {t(
+                                                'osTravel.refreshOmitted',
+                                            ).replace(
+                                                '{count}',
+                                                String(
+                                                    refreshResult.omitted_ids
+                                                        .length,
+                                                ),
+                                            )}
+                                        </p>
+                                        <ul className="space-y-1 text-sm text-muted-foreground">
+                                            {refreshResult.omitted_ids.map(
+                                                (externalId) => (
+                                                    <li key={externalId}>
+                                                        {hotelLabel(
+                                                            externalId,
+                                                            hotels,
+                                                        )}
+                                                    </li>
+                                                ),
+                                            )}
+                                        </ul>
+                                    </div>
+                                )}
+                            {refreshResult &&
+                                refreshResult.failed_ids.length > 0 && (
+                                    <div>
+                                        <p className="mb-1 text-xs font-semibold text-destructive">
+                                            {t('osTravel.refreshFailedList').replace(
+                                                '{count}',
+                                                String(
+                                                    refreshResult.failed_ids
+                                                        .length,
+                                                ),
+                                            )}
+                                        </p>
+                                        <ul className="space-y-1 text-sm text-muted-foreground">
+                                            {refreshResult.failed_ids.map(
+                                                (externalId) => (
+                                                    <li key={externalId}>
+                                                        {hotelLabel(
+                                                            externalId,
+                                                            hotels,
+                                                        )}
+                                                    </li>
+                                                ),
+                                            )}
+                                        </ul>
+                                    </div>
+                                )}
+                            {refreshResult &&
+                                refreshResult.omitted_ids.length === 0 &&
+                                refreshResult.failed_ids.length === 0 && (
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('osTravel.refreshNoIssues')}
+                                    </p>
+                                )}
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                onClick={() => setRefreshResult(null)}
+                            >
+                                {t('actions.close')}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AdminLayout>
     );

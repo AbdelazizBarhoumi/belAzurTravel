@@ -6,6 +6,8 @@ use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use App\Models\Hotel;
+use App\Models\OsTravelHotel;
+use App\Services\OsTravel\HotelPublisher;
 use App\Services\OsTravel\OsTravelPriceCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
@@ -16,6 +18,7 @@ class HotelController extends Controller
 
     public function __construct(
         private readonly OsTravelPriceCalculator $calculator,
+        private readonly HotelPublisher $publisher,
     ) {}
 
     public function index(): JsonResponse
@@ -37,10 +40,24 @@ class HotelController extends Controller
     {
         $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->where('slug', $slug)->firstOrFail();
 
+        // Lazily refresh provider HotelDetail at most once per day: the first
+        // visitor each day triggers a single-flight fetch; later visitors hit
+        // the cached payload with no provider call. Manual hotels never refresh.
+        if ($item->isProviderLinked()) {
+            $staged = OsTravelHotel::query()
+                ->where('status', OsTravelHotel::PUBLISHED)
+                ->where('hotel_id', $item->id)
+                ->first();
+
+            if ($staged !== null) {
+                $this->publisher->refreshDetail($staged);
+            }
+        }
+
         return response()->json(Cache::remember(
             "hotels.{$slug}",
             now()->addMinutes(10),
-            fn () => $this->payload($item)
+            fn () => $this->payload($item->fresh(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue']))
         ));
     }
 
@@ -54,11 +71,19 @@ class HotelController extends Controller
         }
 
         $markup = (float) ($item->markup_percentage ?? 0);
-        $price = $item->price;
-        $basePrice = $item->base_price;
-        if ($item->last_price !== null) {
-            $basePrice = $item->last_price;
-            $price = $this->calculator->applyMarkup($basePrice, $markup);
+        if ($item->isProviderLinked()) {
+            // Provider-linked hotels prefer the live per-night price. When the
+            // browse refresh found no live 1-night availability we fall back to
+            // the approved `base_price` (the same min price the admin sees) so
+            // browse never hides a known price.
+            $reference = $item->last_price ?? $item->base_price;
+            $price = $reference !== null
+                ? $this->calculator->applyMarkup($reference, $markup)
+                : null;
+            $basePrice = $reference;
+        } else {
+            $price = $item->price;
+            $basePrice = $item->base_price;
         }
 
         return [
@@ -133,7 +158,17 @@ class HotelController extends Controller
             'description' => $details['description'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'address' => $details['address'] ?? '',
             'phone' => $details['phone'] ?? '',
+            'email' => $details['email'] ?? '',
             'whatsapp' => $details['whatsapp'] ?? '',
+            'coordinates' => $details['coordinates'] ?? null,
+            'check_in_time' => $details['check_in_time'] ?? '',
+            'check_out_time' => $details['check_out_time'] ?? '',
+            'hotel_type' => $details['hotel_type'] ?? '',
+            'note' => $details['note'] ?? '',
+            'options' => $details['options'] ?? [],
+            'boardings' => $details['boardings'] ?? [],
+            'facilities' => $details['facilities'] ?? [],
+            'amenity_tags' => $details['amenity_tags'] ?? [],
         ];
     }
 }

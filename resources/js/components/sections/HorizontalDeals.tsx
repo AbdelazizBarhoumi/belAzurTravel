@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef } from "react";
 import { Link } from "react-router-dom";
-import { AmenityIcons } from "@/components/cards/AmenityIcons";
+import { ThemeIcons } from "@/components/cards/ThemeIcons";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface HDeal {
@@ -12,6 +12,7 @@ export interface HDeal {
   image: string;
   href: string;
   amenities?: Array<{ name: Record<string, string>; icon: string }>;
+  tags?: string[];
 }
 interface Props {
   eyebrow: string;
@@ -72,9 +73,9 @@ export function HorizontalDeals({ eyebrow, title, description, ctaLabel, ctaHref
                     </h3>
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-foreground/90 to-transparent">
-                    {it.amenities?.length ? (
+                    {it.tags?.length || it.amenities?.length ? (
                       <div className="mb-1.5">
-                        <AmenityIcons amenities={it.amenities} maxVisible={4} />
+                        <ThemeIcons tags={it.tags} amenities={it.amenities} maxVisible={4} />
                       </div>
                     ) : null}
                     {it.price ? (

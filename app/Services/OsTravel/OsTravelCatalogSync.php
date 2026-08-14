@@ -199,11 +199,15 @@ class OsTravelCatalogSync
 
         if (! $hotel->exists) {
             $hotel->status = OsTravelHotel::PENDING;
+            $hotel->price_status = OsTravelHotel::PRICE_NEVER_REFRESHED;
         } elseif ($hotel->status === OsTravelHotel::ORPHANED) {
             $this->reactivate($hotel);
         }
 
         $changed = ! $hotel->exists || $hotel->payload_hash !== $hash;
+
+        $city = $item['City'] ?? [];
+        $country = is_array($city) ? ($city['Country'] ?? []) : [];
 
         $hotel->fill([
             'sync_id' => $this->sync->id,
@@ -211,7 +215,9 @@ class OsTravelCatalogSync
             'payload_hash' => $hash,
             'name' => $item['Name'] ?? '',
             'city_external_id' => $cityId,
-            'city_name' => $item['City']['Name'] ?? null,
+            'city_name' => is_array($city) ? ($city['Name'] ?? null) : null,
+            'country_external_id' => is_array($country) && isset($country['Id']) ? (string) $country['Id'] : null,
+            'country_name' => is_array($country) ? ($country['Name'] ?? null) : null,
             'category_title' => $item['Category']['Title'] ?? null,
             'stars' => $item['Category']['Star'] ?? null,
             'image' => $item['Image'] ?? null,
@@ -245,20 +251,29 @@ class OsTravelCatalogSync
     }
 
     /**
-     * Enrich new/changed hotels with HotelDetail, throttled between calls.
+     * Enrich hotels that have never had their HotelDetail fetched (brand-new
+     * hotels). Known hotels — including changed ones — are refreshed lazily by
+     * the first public/admin click each day (HotelPublisher::refreshDetail).
      */
     protected function enrichDetails(): void
     {
         foreach ($this->changedHotels as $entry) {
+            $hotel = OsTravelHotel::find($entry['id']);
+
+            if ($hotel !== null && ! empty($hotel->payload['HotelDetail'])) {
+                continue;
+            }
+
             if ($this->detailsCount > 0) {
                 usleep(config('ostravel.sync.throttle_ms') * 1000);
             }
 
             $detail = $this->client->hotelDetail($entry['external_id']);
 
-            $hotel = OsTravelHotel::find($entry['id']);
-            $hotel->payload = array_merge($hotel->payload ?? [], ['HotelDetail' => $detail['HotelDetail'] ?? []]);
-            $hotel->save();
+            if ($hotel !== null) {
+                $hotel->payload = array_merge($hotel->payload ?? [], ['HotelDetail' => $detail['HotelDetail'] ?? []]);
+                $hotel->save();
+            }
 
             $this->detailsCount++;
         }

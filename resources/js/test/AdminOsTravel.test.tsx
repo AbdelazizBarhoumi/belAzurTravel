@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as osTravelApi from '@/api/osTravel.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
+import { __setRefreshPollMs } from '@/hooks/useOsTravelAdmin';
 import AdminOsTravel from '@/pages/admin/AdminOsTravel';
 
 vi.mock('@/hooks/useAdminGuard', () => ({
@@ -21,14 +22,18 @@ vi.mock('@/api/osTravel.api', () => ({
     getOsTravelDashboard: vi.fn(),
     listOsTravelHotels: vi.fn(),
     getOsTravelHotel: vi.fn(),
+    getOsTravelReferences: vi.fn(),
     updateOsTravelHotel: vi.fn(),
     approveOsTravelHotel: vi.fn(),
     approveAllOsTravelHotels: vi.fn(),
     rejectOsTravelHotel: vi.fn(),
+    refreshOsTravelPrice: vi.fn(),
+    refreshOsTravelPrices: vi.fn(),
+    getOsTravelRefreshStatus: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
-    toast: { success: vi.fn(), error: vi.fn() },
+    toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
 const makeRow = (
@@ -39,12 +44,16 @@ const makeRow = (
     name: 'Hotel Test',
     city_external_id: '501',
     city_name: 'Sousse',
+    country_external_id: '219',
+    country_name: 'Tunisie',
     category_title: 'Resort',
     stars: 5,
     image: 'http://cdn.test/h.jpg',
     status: 'pending',
     has_base_price: true,
     base_price: 200,
+    price_status: 'has_price',
+    last_price_attempt_at: null,
     markup_percentage: '20.00',
     currency: 'TND',
     hotel_id: null,
@@ -53,6 +62,9 @@ const makeRow = (
     approved_at: null,
     rejected_at: null,
     last_synced_at: '2026-08-01 10:00:00',
+    live_status: null,
+    live_price: null,
+    live_currency: null,
     ...overrides,
 });
 
@@ -155,6 +167,51 @@ describe('AdminOsTravel page', () => {
         vi.mocked(osTravelApi.rejectOsTravelHotel).mockResolvedValue({
             data: makeRow({ status: 'rejected' }),
         } as never);
+        vi.mocked(osTravelApi.refreshOsTravelPrice).mockResolvedValue({
+            data: {
+                ...makeRow(),
+                refresh: { updated: 1, omitted: 0 },
+            },
+        } as never);
+        vi.mocked(osTravelApi.refreshOsTravelPrices).mockResolvedValue({
+            data: {
+                id: '42',
+                status: 'pending',
+                started_at: null,
+                finished_at: null,
+                updated: 0,
+                omitted: 0,
+                error: null,
+            },
+            already_running: false,
+        } as never);
+        vi.mocked(osTravelApi.getOsTravelRefreshStatus).mockResolvedValue({
+            data: {
+                id: '42',
+                status: 'completed',
+                started_at: '2026-08-14T10:00:00Z',
+                finished_at: '2026-08-14T10:01:00Z',
+                updated: 1,
+                omitted: 0,
+                omitted_ids: [],
+                failed_ids: [],
+                error: null,
+            },
+        } as never);
+        vi.mocked(osTravelApi.getOsTravelReferences).mockResolvedValue({
+            data: {
+                countries: [
+                    { id: '219', name: 'Tunisie' },
+                    { id: '220', name: 'Turquie' },
+                ],
+                cities: [
+                    { id: '12', name: 'Kelibia', country_id: '219' },
+                    { id: '501', name: 'Sousse', country_id: '219' },
+                ],
+            },
+        } as never);
+
+        __setRefreshPollMs(0);
     });
 
     afterEach(() => {
@@ -164,7 +221,7 @@ describe('AdminOsTravel page', () => {
         vi.clearAllMocks();
     });
 
-    it('renders pending list with the missing-price flag', async () => {
+    it('renders pending list with the missing-price reason', async () => {
         vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValueOnce({
             data: [
                 makeRow(),
@@ -174,6 +231,7 @@ describe('AdminOsTravel page', () => {
                     name: 'Hotel No Price',
                     has_base_price: false,
                     base_price: null,
+                    price_status: 'no_availability',
                 }),
             ],
         } as never);
@@ -182,7 +240,9 @@ describe('AdminOsTravel page', () => {
 
         expect(await screen.findByText('Hotel Test')).toBeInTheDocument();
         expect(await screen.findByText('Hotel No Price')).toBeInTheDocument();
-        expect(screen.getAllByText('Missing price').length).toBeGreaterThan(0);
+        expect(
+            screen.getAllByText('No availability at refresh').length,
+        ).toBeGreaterThan(0);
         expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
     });
 
@@ -324,6 +384,159 @@ describe('AdminOsTravel page', () => {
 
         await waitFor(() => {
             expect(osTravelApi.rejectOsTravelHotel).toHaveBeenCalledWith('1');
+        });
+    });
+
+    it('refreshes all staged prices through the bulk button', async () => {
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Refresh prices' }),
+        );
+
+        await waitFor(() => {
+            expect(osTravelApi.refreshOsTravelPrices).toHaveBeenCalledWith(
+                undefined,
+            );
+        });
+
+        // The polling loop observes the completed status and finishes.
+        await waitFor(() => {
+            expect(osTravelApi.getOsTravelRefreshStatus).toHaveBeenCalledWith(
+                '42',
+            );
+        });
+    });
+
+    it('refreshes a single hotel price from the row action', async () => {
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Refresh price' }),
+        );
+
+        await waitFor(() => {
+            expect(osTravelApi.refreshOsTravelPrice).toHaveBeenCalledWith('1');
+        });
+    });
+
+    it('fetches a live price in the preview and hydrates the form', async () => {
+        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValueOnce({
+            data: [
+                makeRow({
+                    id: '5',
+                    external_id: '105',
+                    name: 'Fetch Me',
+                    has_base_price: false,
+                    base_price: null,
+                }),
+            ],
+        } as never);
+        vi.mocked(osTravelApi.getOsTravelHotel).mockResolvedValueOnce({
+            data: makeDetail(
+                makeRow({
+                    id: '5',
+                    external_id: '105',
+                    name: 'Fetch Me',
+                    has_base_price: false,
+                    base_price: null,
+                }),
+            ),
+        } as never);
+        vi.mocked(osTravelApi.refreshOsTravelPrice).mockResolvedValueOnce({
+            data: {
+                ...makeRow({
+                    id: '5',
+                    external_id: '105',
+                    name: 'Fetch Me',
+                    has_base_price: true,
+                    base_price: 340,
+                }),
+                refresh: { updated: 1, omitted: 0 },
+            },
+        } as never);
+
+        renderAdminOsTravel();
+
+        await screen.findByText('Fetch Me');
+
+        fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
+
+        expect(
+            await screen.findByText('A lovely resort by the sea.'),
+        ).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Fetch price' }));
+
+        await waitFor(() => {
+            expect(osTravelApi.refreshOsTravelPrice).toHaveBeenCalledWith('5');
+        });
+
+        expect(await screen.findByDisplayValue('340')).toBeInTheDocument();
+    });
+
+    it('lists the live-check status per row when a date filter is active', async () => {
+        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValueOnce({
+            data: [
+                makeRow({
+                    id: '7',
+                    external_id: '107',
+                    name: 'Live Hotel',
+                    live_status: 'available',
+                    live_price: 180,
+                    live_currency: 'TND',
+                }),
+                makeRow({
+                    id: '8',
+                    external_id: '108',
+                    name: 'Live Off',
+                    live_status: 'no_availability',
+                    live_price: null,
+                }),
+            ],
+        } as never);
+
+        renderAdminOsTravel();
+
+        await screen.findByText('Live Hotel');
+
+        expect(screen.getByText('180 TND')).toBeInTheDocument();
+        expect(
+            screen.getAllByText('No availability on these dates').length,
+        ).toBeGreaterThan(0);
+    });
+
+    it('sends country and city filters to the hotels endpoint', async () => {
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+
+        const countrySelect = screen.getByRole('combobox', {
+            name: /country/i,
+        });
+        fireEvent.click(countrySelect);
+        fireEvent.click(
+            await screen.findByRole('option', { name: 'Tunisie' }),
+        );
+
+        await waitFor(() => {
+            expect(osTravelApi.listOsTravelHotels).toHaveBeenCalledWith(
+                expect.objectContaining({ country_id: '219' }),
+            );
+        });
+
+        const citySelect = screen.getByRole('combobox', { name: /city/i });
+        fireEvent.click(citySelect);
+        fireEvent.click(await screen.findByRole('option', { name: 'Kelibia' }));
+
+        await waitFor(() => {
+            expect(osTravelApi.listOsTravelHotels).toHaveBeenCalledWith(
+                expect.objectContaining({ city_id: '12' }),
+            );
         });
     });
 });

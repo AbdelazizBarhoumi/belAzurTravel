@@ -33,12 +33,16 @@ export interface OsTravelHotelRow {
     name: string;
     city_external_id: string;
     city_name: string;
+    country_external_id: string | null;
+    country_name: string | null;
     category_title: string;
     stars: number;
     image: string | null;
     status: OsTravelStatus;
     has_base_price: boolean;
     base_price: number | null;
+    price_status: 'has_price' | 'no_availability' | 'provider_error' | 'never_refreshed' | null;
+    last_price_attempt_at: string | null;
     markup_percentage: string | null;
     currency: string | null;
     hotel_id: string | null;
@@ -47,6 +51,9 @@ export interface OsTravelHotelRow {
     approved_at: string | null;
     rejected_at: string | null;
     last_synced_at: string | null;
+    live_status: 'available' | 'no_availability' | 'provider_error' | null;
+    live_price: number | null;
+    live_currency: string | null;
 }
 
 export interface OsTravelMappedPreview {
@@ -106,12 +113,60 @@ export interface OsTravelListResponse {
     data: OsTravelHotelRow[];
 }
 
+export interface OsTravelReferenceItem {
+    id: string;
+    name: string | null;
+}
+
+export interface OsTravelCityReference extends OsTravelReferenceItem {
+    country_id: string | null;
+}
+
+export interface OsTravelReferences {
+    countries: OsTravelReferenceItem[];
+    cities: OsTravelCityReference[];
+}
+
+export interface OsTravelReferencesResponse {
+    data: OsTravelReferences;
+}
+
 export interface OsTravelDetailResponse {
     data: OsTravelHotelDetail;
 }
 
 export interface OsTravelRowResponse {
     data: OsTravelHotelRow;
+}
+
+export interface OsTravelRefreshResult {
+    updated: number;
+    omitted: number;
+}
+
+export interface OsTravelRefreshRequest {
+    id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    started_at: string | null;
+    finished_at: string | null;
+    updated: number;
+    omitted: number;
+    omitted_ids: string[];
+    failed_ids: string[];
+    error: string | null;
+}
+
+export interface OsTravelRefreshResponse {
+    data: OsTravelRefreshRequest;
+    already_running?: boolean;
+}
+
+export interface OsTravelStatusResponse {
+    data: OsTravelRefreshRequest | null;
+}
+
+export interface OsTravelHotelRefreshResponse extends OsTravelRowResponse {
+    data: OsTravelHotelRow & { refresh: OsTravelRefreshResult };
 }
 
 export interface OsTravelApproveResponse {
@@ -122,17 +177,31 @@ export async function getOsTravelDashboard() {
     return apiFetch<{ data: OsTravelDashboard }>('/api/admin/os-travel');
 }
 
-export async function listOsTravelHotels(filters?: {
+export interface OsTravelListFilters {
     status?: OsTravelStatus | '';
     city?: string;
-}) {
+    country_id?: string;
+    city_id?: string;
+    check_in?: string;
+    check_out?: string;
+}
+
+export async function listOsTravelHotels(filters?: OsTravelListFilters) {
     const params = new URLSearchParams();
     if (filters?.status) params.append('status', filters.status);
     if (filters?.city) params.append('city', filters.city);
+    if (filters?.country_id) params.append('country_id', filters.country_id);
+    if (filters?.city_id) params.append('city_id', filters.city_id);
+    if (filters?.check_in) params.append('check_in', filters.check_in);
+    if (filters?.check_out) params.append('check_out', filters.check_out);
     const qs = params.toString();
     return apiFetch<OsTravelListResponse>(
         `/api/admin/os-travel/hotels${qs ? `?${qs}` : ''}`,
     );
+}
+
+export async function getOsTravelReferences() {
+    return apiFetch<OsTravelReferencesResponse>('/api/admin/os-travel/references');
 }
 
 export async function getOsTravelHotel(id: string) {
@@ -181,6 +250,34 @@ export async function rejectOsTravelHotel(id: string) {
     return apiFetch<OsTravelRowResponse>(
         `/api/admin/os-travel/hotels/${id}/reject`,
         { method: 'POST' },
+    );
+}
+
+export async function refreshOsTravelPrice(id: string) {
+    return apiFetch<OsTravelHotelRefreshResponse>(
+        `/api/admin/os-travel/hotels/${id}/refresh-price`,
+        { method: 'POST' },
+    );
+}
+
+export async function refreshOsTravelPrices(data?: {
+    ids?: string[];
+    check_in?: string;
+    check_out?: string;
+}) {
+    return apiFetch<OsTravelRefreshResponse>(
+        '/api/admin/os-travel/hotels/refresh-prices',
+        {
+            method: 'POST',
+            body: JSON.stringify(data ?? {}),
+        },
+    );
+}
+
+export async function getOsTravelRefreshStatus(id?: string) {
+    const qs = id ? `?id=${encodeURIComponent(id)}` : '';
+    return apiFetch<OsTravelStatusResponse>(
+        `/api/admin/os-travel/hotels/refresh-prices/status${qs}`,
     );
 }
 

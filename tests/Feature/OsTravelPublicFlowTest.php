@@ -52,6 +52,7 @@ class OsTravelPublicFlowTest extends TestCase
             'status' => $status,
             'base_price' => $basePrice,
             'last_synced_at' => now(),
+            'detail_fetched_at' => now(),
         ]);
     }
 
@@ -67,6 +68,8 @@ class OsTravelPublicFlowTest extends TestCase
             'category' => ['en' => '4 étoiles', 'fr' => '4 étoiles', 'ar' => '4 étoiles'],
             'price' => 300,
             'base_price' => 250,
+            'last_price' => 250,
+            'last_price_at' => now(),
             'markup_percentage' => 20,
             'currency' => 'TND',
             'rating' => 4.5,

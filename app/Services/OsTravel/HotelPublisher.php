@@ -23,6 +23,8 @@ use Throwable;
  */
 class HotelPublisher
 {
+    public function __construct(private readonly OsTravelClient $client) {}
+
     /**
      * Publish a staged hotel. `$overrides` may carry `base_price`,
      * `markup_percentage` and `currency`; `base_price` is required (either
@@ -54,37 +56,25 @@ class HotelPublisher
 
         $existing = Hotel::query()->where('code', $code)->first();
 
-        $name = $this->localized($list['Name'] ?? $detail['Name'] ?? '');
-        $city = $this->localized($list['City']['Name'] ?? $detail['City']['Name'] ?? '');
-        $country = $this->localized($this->countryName($list, $detail));
-        $categoryTitle = $list['Category']['Title'] ?? $detail['Category']['Title'] ?? '';
+        $name = $this->localized(self::cleanText($list['Name'] ?? $detail['Name'] ?? ''));
+        $city = $this->localized(self::cleanText($list['City']['Name'] ?? $detail['City']['Name'] ?? ''));
+        $country = $this->localized(self::cleanText($this->countryName($list, $detail)));
+        $categoryTitle = self::cleanText($list['Category']['Title'] ?? $detail['Category']['Title'] ?? '');
         $stars = $list['Category']['Star'] ?? $detail['Category']['Star'] ?? 0;
 
         $imageUrl = $list['Image'] ?? $detail['Image'] ?? null;
         $image = $this->syncImage($imageUrl, $existing?->image, $existing?->meta['image_hash'] ?? null);
-        $gallery = $this->syncGallery($detail['Album'] ?? []);
 
         $slug = $this->resolveSlug($existing, $name['en'] ?? 'hotel', $externalId, $code);
-
-        $details = $existing?->details ?? [];
-        $details = array_merge($details, [
-            'address' => $detail['Adress'] ?? $details['address'] ?? '',
-            'phone' => $detail['Phone'] ?? $details['phone'] ?? '',
-            'whatsapp' => $detail['Email'] ?? $details['whatsapp'] ?? '',
-            'city' => $city,
-            'country' => $country,
-            'description' => $this->localized($this->stripHtml($detail['LongDescription'] ?? '')),
-            'source' => 'ostravel',
-            'provider_hotel_id' => $externalId,
-            'gallery' => $gallery,
-        ]);
 
         $meta = $existing?->meta ?? [];
         if ($imageUrl !== null && $imageUrl !== '') {
             $meta['image_hash'] = sha1($imageUrl);
         }
 
-        $hotel = Hotel::updateOrCreate(['code' => $code], [
+        $mapped = $this->mapDetails($list, $detail, $existing, $externalId);
+
+        $hotel = Hotel::updateOrCreate(['code' => $code], array_merge([
             'slug' => $slug,
             'code' => $code,
             'destination_slug' => $existing?->destination_slug,
@@ -96,16 +86,18 @@ class HotelPublisher
             'base_price' => $basePrice,
             'markup_percentage' => $markupPercentage,
             'currency' => $currency,
+            'last_price' => $basePrice,
+            'last_price_at' => now(),
             'source' => 'ostravel',
             'booking_mode' => 'instant',
             'rating' => (float) ($list['Rating'] ?? $detail['Rating'] ?? 0),
             'stars' => (int) $stars,
             'reviews' => (int) ($list['Reviews'] ?? $detail['Reviews'] ?? 0),
             'image' => $image,
-            'tags' => array_values(array_filter($list['Theme'] ?? $detail['Theme'] ?? [])),
-            'details' => $details,
+            'tags' => $mapped['themes'],
+            'details' => $mapped['details'],
             'meta' => $meta,
-        ]);
+        ], $mapped['filter_booleans']));
 
         $staged->fill([
             'hotel_id' => $hotel->id,
@@ -119,11 +111,410 @@ class HotelPublisher
         return $hotel;
     }
 
+    /**
+     * Refresh a staged hotel's HotelDetail from the provider, at most once per
+     * day. Safe for concurrent requests (single-flight lock); the first visitor
+     * each day triggers the fetch and updates the published `hotels` row, later
+     * visitors reuse the stored detail. Provider failures keep existing data
+     * and leave `detail_fetched_at` untouched so the next click retries.
+     */
+    public function refreshDetail(OsTravelHotel $staged): void
+    {
+        $externalId = (string) $staged->external_id;
+        $lock = Cache::lock("ostravel.detail.{$externalId}", 30);
+
+        if (! $lock->get()) {
+            return;
+        }
+
+        try {
+            $staged->refresh();
+
+            if ($staged->detail_fetched_at !== null && $staged->detail_fetched_at->isToday()) {
+                return;
+            }
+
+            $detail = $this->client->hotelDetail($externalId)['HotelDetail'] ?? [];
+
+            $staged->fill([
+                'payload' => array_merge($staged->payload ?? [], ['HotelDetail' => $detail]),
+                'detail_fetched_at' => now(),
+            ])->save();
+
+            if ($staged->hotel_id !== null) {
+                $hotel = Hotel::query()->where('id', $staged->hotel_id)->first();
+
+                if ($hotel !== null) {
+                    $list = $staged->payload['ListHotel'] ?? [];
+                    $mapped = $this->mapDetails($list, $detail, $hotel, $externalId);
+
+                    $hotel->forceFill(array_merge([
+                        'tags' => $mapped['themes'],
+                        'details' => $mapped['details'],
+                    ], $mapped['filter_booleans']))->save();
+
+                    $this->flushAdminCache('hotels', $hotel->slug);
+                    Cache::forget("hotels.{$hotel->slug}");
+                }
+            }
+        } catch (Throwable $e) {
+            Log::warning('OS-TRAVEL detail refresh failed; keeping existing data.', [
+                'external_id' => $externalId,
+                'error' => $e->getMessage(),
+            ]);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Build the published `details`/`tags`/filter booleans shared by publish()
+     * and refreshDetail() so both stay in sync.
+     *
+     * @param  array<string, mixed>  $list  Raw ListHotel item.
+     * @param  array<string, mixed>  $detail  Raw HotelDetail item.
+     * @return array{details: array<string, mixed>, themes: list<string>, filter_booleans: array<string, bool>}
+     */
+    protected function mapDetails(array $list, array $detail, ?Hotel $existing, string $externalId): array
+    {
+        $details = $existing?->details ?? [];
+
+        [$gallery, $gallerySources] = $this->resolveGallery(
+            $detail['Album'] ?? [],
+            $details['gallery_sources'] ?? null,
+            $details['gallery'] ?? []
+        );
+
+        $details = array_merge($details, [
+            'address' => self::cleanText($detail['Adress'] ?? $list['Adress'] ?? $details['address'] ?? ''),
+            'phone' => self::cleanText($detail['Phone'] ?? $details['phone'] ?? ''),
+            'email' => self::cleanText($detail['Email'] ?? $details['email'] ?? ''),
+            'whatsapp' => $details['whatsapp'] ?? '',
+            'coordinates' => $this->coordinates($list, $detail) ?? $details['coordinates'] ?? null,
+            'check_in_time' => self::cleanText($detail['CheckIn'] ?? $details['check_in_time'] ?? ''),
+            'check_out_time' => self::cleanText($detail['CheckOut'] ?? $details['check_out_time'] ?? ''),
+            'hotel_type' => self::cleanText($detail['Type'] ?? $details['hotel_type'] ?? ''),
+            'note' => self::htmlToText($detail['Note'] ?? $list['Note'] ?? $details['note'] ?? ''),
+            'options' => $this->normalizeOptions($detail['Option'] ?? $details['options'] ?? []),
+            'boardings' => $this->normalizeBoardings($detail['Boarding'] ?? []),
+            'facilities' => $this->normalizeFacilities($detail['Facilitie'] ?? $list['Facilities'] ?? $details['facilities'] ?? []),
+            'amenity_tags' => $this->normalizeAmenityTags($detail['Tag'] ?? $details['amenity_tags'] ?? []),
+            'description' => $this->localized(self::htmlToText($detail['LongDescription'] ?? '')),
+            'city' => $this->localized(self::cleanText($list['City']['Name'] ?? $detail['City']['Name'] ?? '')),
+            'country' => $this->localized(self::cleanText($this->countryName($list, $detail))),
+            'source' => 'ostravel',
+            'provider_hotel_id' => $externalId,
+            'gallery' => $gallery,
+            'gallery_sources' => $gallerySources,
+        ]);
+
+        $themes = $this->themes($list, $detail);
+
+        return [
+            'details' => $details,
+            'themes' => $themes,
+            'filter_booleans' => $this->deriveFilterBooleans($list, $detail, $themes),
+        ];
+    }
+
+    /**
+     * Re-download the gallery only when the provider's Album URLs changed;
+     * otherwise reuse the already-downloaded local paths.
+     *
+     * @param  list<array{Url?: string}>  $album
+     * @param  list<string>|null  $existingSources
+     * @param  list<string>  $existingGallery
+     * @return array{0: list<string>, 1: list<string>} [local paths, source URLs]
+     */
+    protected function resolveGallery(array $album, ?array $existingSources, array $existingGallery): array
+    {
+        $sources = array_values(array_filter(array_map(
+            fn ($item) => is_array($item) ? (string) ($item['Url'] ?? '') : '',
+            $album
+        )));
+
+        if ($existingSources !== null && $existingSources === $sources && $sources !== []) {
+            return [$existingGallery, $sources];
+        }
+
+        return [$this->syncGallery($album), $sources];
+    }
+
     protected function countryName(array $list, array $detail): string
     {
         $country = $list['City']['Country'] ?? $detail['City']['Country'] ?? '';
 
         return is_array($country) ? ($country['Name'] ?? '') : (string) $country;
+    }
+
+    /**
+     * Normalize `Localization` into `{latitude, longitude}` floats, or null
+     * when the provider didn't report coordinates.
+     *
+     * @return array{latitude: float, longitude: float}|null
+     */
+    protected function coordinates(array $list, array $detail): ?array
+    {
+        $localization = $list['Localization'] ?? $detail['Localization'] ?? null;
+        if (! is_array($localization)) {
+            return null;
+        }
+
+        $latitude = $localization['Latitude'] ?? null;
+        $longitude = $localization['Longitude'] ?? null;
+
+        if ($latitude === null || $longitude === null || ! is_numeric($latitude) || ! is_numeric($longitude)) {
+            return null;
+        }
+
+        return ['latitude' => (float) $latitude, 'longitude' => (float) $longitude];
+    }
+
+    /**
+     * @param  list<array{Id?: int, Title?: string}>  $options
+     * @return list<array{id: int, title: string}>
+     */
+    protected function normalizeOptions(array $options): array
+    {
+        $normalized = [];
+
+        foreach ($options as $option) {
+            if (! is_array($option)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'id' => (int) ($option['Id'] ?? 0),
+                'title' => self::cleanText((string) ($option['Title'] ?? '')),
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param  list<array{Id?: int, Code?: string, Name?: string, Description?: string|null}>  $boardings
+     * @return list<array{id: int, code: string, name: string, description: string}>
+     */
+    protected function normalizeBoardings(array $boardings): array
+    {
+        $normalized = [];
+
+        foreach ($boardings as $boarding) {
+            if (! is_array($boarding)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'id' => (int) ($boarding['Id'] ?? 0),
+                'code' => (string) ($boarding['Code'] ?? ''),
+                'name' => self::cleanText((string) ($boarding['Name'] ?? '')),
+                'description' => self::cleanText((string) ($boarding['Description'] ?? '')),
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * The provider uses `Facilitie` (singular, detail) and `Facilities`
+     * (plural, list). Normalize either into `{title, category}`.
+     *
+     * @param  list<array{Title?: string, Category?: string}>  $facilities
+     * @return list<array{title: string, category: string}>
+     */
+    protected function normalizeFacilities(array $facilities): array
+    {
+        $normalized = [];
+
+        foreach ($facilities as $facility) {
+            if (! is_array($facility)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'title' => self::cleanText((string) ($facility['Title'] ?? '')),
+                'category' => self::cleanText((string) ($facility['Category'] ?? '')),
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Normalize the detail's `Tag[]` amenities into `{id, title, image}`,
+     * resolving relative image paths against the provider base URL.
+     *
+     * @param  list<array{Id?: int, Title?: string, Image?: string}>  $tags
+     * @return list<array{id: int, title: string, image: string}>
+     */
+    protected function normalizeAmenityTags(array $tags): array
+    {
+        $normalized = [];
+
+        foreach ($tags as $tag) {
+            if (! is_array($tag)) {
+                continue;
+            }
+
+            $normalized[] = [
+                'id' => (int) ($tag['Id'] ?? 0),
+                'title' => self::cleanText((string) ($tag['Title'] ?? '')),
+                'image' => $this->resolveProviderUrl((string) ($tag['Image'] ?? '')),
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Resolve a provider-relative URL (e.g. `uploads/...`) against the base
+     * URL, leaving absolute URLs untouched. Empty paths resolve to ''.
+     */
+    protected function resolveProviderUrl(string $path): string
+    {
+        $path = trim($path);
+
+        if ($path === '' || preg_match('#^https?://#i', $path)) {
+            return $path;
+        }
+
+        return rtrim(config('ostravel.base_url'), '/').'/'.ltrim($path, '/');
+    }
+
+    /**
+     * Resolve the hotel's theme tags, preferring ListHotel (richer) but
+     * falling back to HotelDetail when the list item has none.
+     *
+     * @param  array<string, mixed>  $list
+     * @param  array<string, mixed>  $detail
+     * @return list<string>
+     */
+    protected function themes(array $list, array $detail): array
+    {
+        $themes = $this->cleanThemes($list['Theme'] ?? []);
+
+        if ($themes !== []) {
+            return $themes;
+        }
+
+        return $this->cleanThemes($detail['Theme'] ?? []);
+    }
+
+    /**
+     * Normalize a provider `Theme` list: coerce values to strings, trim
+     * whitespace (fixtures carry trailing spaces e.g. "Réveillon "), and drop
+     * empties.
+     *
+     * @param  mixed  $themes  Raw provider `Theme` value.
+     * @return list<string>
+     */
+    protected function cleanThemes(mixed $themes): array
+    {
+        $themes = is_array($themes) ? $themes : [];
+
+        return array_values(array_filter(array_map(
+            static fn ($theme) => trim((string) $theme),
+            $themes
+        )));
+    }
+
+    /**
+     * Derive the existing `hotels` boolean filter columns from provider data so
+     * the public filter UI works for OS-TRAVEL hotels without manual entry.
+     *
+     * @param  array<string, mixed>  $list  Raw ListHotel item.
+     * @param  array<string, mixed>  $detail  Raw HotelDetail item.
+     * @param  list<string>  $themes  Resolved theme tags.
+     * @return array<string, bool>
+     */
+    protected function deriveFilterBooleans(array $list, array $detail, array $themes): array
+    {
+        $themes = array_map(fn ($theme) => trim(strtolower((string) $theme)), $themes);
+
+        $boardingCodes = array_map(
+            fn ($boarding) => strtoupper((string) ($boarding['Code'] ?? '')),
+            $detail['Boarding'] ?? []
+        );
+
+        $stars = (int) ($list['Category']['Star'] ?? $detail['Category']['Star'] ?? 0);
+
+        $themeMap = [
+            // Business
+            'affaires' => 'affaires',
+            'business' => 'affaires',
+            // Family
+            'famille' => 'famille',
+            'family' => 'famille',
+            'voyages de noces' => 'famille',
+            // Sports & leisure
+            'sport' => 'sport_loisir',
+            'loisirs' => 'sport_loisir',
+            'sport & loisirs' => 'sport_loisir',
+            'golf' => 'sport_loisir',
+            // Thalasso / spa / wellness
+            'thalasso' => 'thalasso_spa',
+            'spa' => 'thalasso_spa',
+            'thalassothérapie' => 'thalasso_spa',
+            'balnéothérapie' => 'thalasso_spa',
+            'thermalisme' => 'thalasso_spa',
+            'bien être' => 'thalasso_spa',
+            // Nature & adventure
+            'nature' => 'nature_aventure',
+            'aventure' => 'nature_aventure',
+            'découverte' => 'nature_aventure',
+            'randonnée' => 'nature_aventure',
+            'montagne' => 'nature_aventure',
+            'saharien' => 'nature_aventure',
+            'archéologie' => 'nature_aventure',
+            // Relaxation / charm / seaside / short break
+            'détente' => 'detente',
+            'charme' => 'detente',
+            'balnéaire' => 'detente',
+            'week-end' => 'detente',
+            // Promotional tariffs
+            'promo' => 'tarifs_promo',
+        ];
+
+        $themeFlags = [];
+        foreach ($themes as $theme) {
+            $target = $themeMap[$theme] ?? null;
+            if ($target !== null) {
+                $themeFlags[$target] = true;
+            }
+        }
+
+        $boardings = [
+            'logement_simple' => in_array('LS', $boardingCodes, true),
+            'petit_dejeuner' => in_array('LPD', $boardingCodes, true),
+            'demi_pension' => in_array('DP', $boardingCodes, true),
+            'pension_complete' => in_array('PC', $boardingCodes, true),
+        ];
+
+        // Every boolean filter column gets an explicit value so the public
+        // filter UI never sees nulls for provider hotels.
+        return array_merge([
+            'htel_recommande' => false,
+            'tarifs_promo' => false,
+            'enfant_gratuit' => false,
+            'disponible_seulement' => false,
+            'annulation_gratuite' => false,
+            'logement_simple' => false,
+            'petit_dejeuner' => false,
+            'demi_pension' => false,
+            'pension_complete' => false,
+            'categorie_4_etoiles' => $stars >= 4,
+            'chambre_double' => false,
+            'suite' => false,
+            'chambre_standard' => false,
+            'suite_junior' => false,
+            'thalasso_spa' => false,
+            'nature_aventure' => false,
+            'famille' => false,
+            'affaires' => false,
+            'sport_loisir' => false,
+            'detente' => false,
+        ], $boardings, $themeFlags);
     }
 
     protected function localized(string $value): array
@@ -134,6 +525,36 @@ class HotelPublisher
     protected function stripHtml(string $html): string
     {
         return trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
+    /**
+     * Decode HTML entities and strip tags from a provider text field,
+     * collapsing whitespace onto a single line.
+     */
+    public static function cleanText(string $text): string
+    {
+        $text = strip_tags($text);
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
+    /**
+     * Convert provider HTML (e.g. LongDescription with <p> blocks) to plain
+     * text, preserving paragraph and line breaks for frontend rendering.
+     */
+    public static function htmlToText(string $html): string
+    {
+        $text = (string) preg_replace(
+            ['#<\s*br\s*/?\s*>#i', '#</\s*(?:p|div|li|h[1-6])\s*>#i'],
+            "\n",
+            $html
+        );
+        $text = strip_tags($text);
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = (string) preg_replace("/\n{3,}/", "\n\n", $text);
+
+        return trim($text);
     }
 
     protected function resolveSlug(?Hotel $existing, string $name, string $externalId, string $code): string

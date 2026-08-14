@@ -90,7 +90,7 @@ class RefreshOsTravelLatestPricesTest extends TestCase
         $exit = Artisan::call('os-travel:refresh-latest-prices');
 
         $this->assertSame(Command::SUCCESS, $exit);
-        $this->assertStringContainsString('1 had no availability', Artisan::output());
+        $this->assertStringContainsString('1 had no live per-night availability', Artisan::output());
     }
 
     public function test_command_stays_successful_when_provider_errors(): void

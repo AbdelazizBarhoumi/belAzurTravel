@@ -17,11 +17,21 @@ class OsTravelHotel extends Model
 
     public const ORPHANED = 'orphaned';
 
+    public const PRICE_HAS_PRICE = 'has_price';
+
+    public const PRICE_NO_AVAILABILITY = 'no_availability';
+
+    public const PRICE_PROVIDER_ERROR = 'provider_error';
+
+    public const PRICE_NEVER_REFRESHED = 'never_refreshed';
+
     protected $fillable = [
         'external_id', 'sync_id', 'payload', 'payload_hash',
         'name', 'city_external_id', 'city_name', 'category_title', 'stars', 'image',
         'status', 'prior_status', 'hotel_id', 'base_price', 'markup_percentage', 'currency',
         'approved_by', 'approved_at', 'rejected_at', 'last_synced_at',
+        'detail_fetched_at',
+        'country_external_id', 'country_name', 'price_status', 'last_price_attempt_at',
     ];
 
     protected $casts = [
@@ -32,6 +42,8 @@ class OsTravelHotel extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'last_synced_at' => 'datetime',
+        'detail_fetched_at' => 'datetime',
+        'last_price_attempt_at' => 'datetime',
     ];
 
     public function sync(): BelongsTo

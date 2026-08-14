@@ -39,6 +39,24 @@ export type HotelDetailLookupData = {
     provider?: 'ostravel' | 'manual';
     last_price?: number | null;
     last_price_at?: string | null;
+    address?: string;
+    phone?: string;
+    email?: string;
+    whatsapp?: string;
+    coordinates?: { latitude: number; longitude: number } | null;
+    check_in_time?: string;
+    check_out_time?: string;
+    hotel_type?: string;
+    note?: string;
+    options?: Array<{ id: number; title: string }>;
+    boardings?: Array<{
+        id: number;
+        code: string;
+        name: string;
+        description: string;
+    }>;
+    facilities?: Array<{ title: string; category: string }>;
+    amenity_tags?: Array<{ id: number; title: string; image: string }>;
     amenities?: Array<string | Record<string, string>>;
     rooms?: Array<{
         id: string;
@@ -417,7 +435,6 @@ export interface HotelSearchResult {
         boarding: string | null;
         boarding_name: string | null;
         boarding_id?: number | null;
-        view: string;
         view_ids?: number[];
         price: number;
         price_total: number;

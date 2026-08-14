@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { LandingSectionConfig } from '@/api/siteSettings.api';
-import { AmenityIcons } from '@/components/cards/AmenityIcons';
+import { ThemeIcons } from '@/components/cards/ThemeIcons';
 import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -26,11 +26,12 @@ export function HotelsSection({ config }: Props) {
         const items = hotels.slice(0, 6).map((hotel) => ({
             id: hotel.slug,
             title: localizeText(hotel.name, lang),
-            price: `${hotel.price} TND`,
+            price: hotel.price !== null ? `${hotel.price} TND${t('hotelDetail.pernight')}` : '',
             meta: localizeText(hotel.location, lang),
             image: hotel.image,
             href: `/hotels/${hotel.slug}`,
             amenities: hotel.amenities,
+            tags: hotel.tags,
         }));
         return (
             <HorizontalDeals
@@ -57,7 +58,7 @@ export function HotelsSection({ config }: Props) {
                                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                                     <div className="relative h-48 overflow-hidden">
                                         <img src={hotel.image} alt={localizeText(hotel.name, lang)} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                        <div className="absolute right-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-bold shadow-md backdrop-blur">{hotel.price} TND</div>
+                                        <div className="absolute right-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-bold shadow-md backdrop-blur">{hotel.price !== null ? `${hotel.price} TND${t('hotelDetail.pernight')}` : t('hotelDetail.noPrice')}</div>
                                     </div>
                                     <div className="p-5">
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {localizeText(hotel.location, lang)}</div>
@@ -79,9 +80,9 @@ export function HotelsSection({ config }: Props) {
                                                 </div>
                                             );
                                         })()}
-                                        {hotel.amenities?.length > 0 && (
+                                        {(hotel.tags?.length || hotel.amenities?.length) && (
                                             <div className="mt-2.5">
-                                                <AmenityIcons amenities={hotel.amenities} maxVisible={6} />
+                                                <ThemeIcons tags={hotel.tags} amenities={hotel.amenities} maxVisible={6} />
                                             </div>
                                         )}
                                     </div>
@@ -106,7 +107,7 @@ export function HotelsSection({ config }: Props) {
                             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                                 <div className="relative h-56 overflow-hidden">
                                     <img src={hotel.image} alt={localizeText(hotel.name, lang)} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                    <div className="absolute right-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-bold shadow-md backdrop-blur">{hotel.price} TND</div>
+                                    <div className="absolute right-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-bold shadow-md backdrop-blur">{hotel.price !== null ? `${hotel.price} TND${t('hotelDetail.pernight')}` : t('hotelDetail.noPrice')}</div>
                                 </div>
                                 <div className="p-5">
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {localizeText(hotel.location, lang)}</div>
@@ -128,9 +129,9 @@ export function HotelsSection({ config }: Props) {
                                             </div>
                                         );
                                     })()}
-                                    {hotel.amenities?.length > 0 && (
+                                    {(hotel.tags?.length || hotel.amenities?.length) && (
                                         <div className="mt-2.5">
-                                            <AmenityIcons amenities={hotel.amenities} maxVisible={6} />
+                                            <ThemeIcons tags={hotel.tags} amenities={hotel.amenities} maxVisible={6} />
                                         </div>
                                     )}
                                 </div>

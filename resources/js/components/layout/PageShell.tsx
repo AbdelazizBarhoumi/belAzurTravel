@@ -31,7 +31,7 @@ export function PageShell({
 
     return (
         <div className="min-h-screen bg-background">
-            <main id="main-content" className="pb-16 pt-24">
+            <main id="main-content" className="pb-16 pt-[122px]">
                 <div className="container mx-auto px-4">
                     {breadcrumbs && (
                         <motion.div

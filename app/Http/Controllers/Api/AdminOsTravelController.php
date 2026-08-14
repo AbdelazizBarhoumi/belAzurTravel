@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\OsTravelHotel;
+use App\Models\OsTravelReference;
+use App\Models\OsTravelRefreshRequest;
 use App\Models\OsTravelSync;
 use App\Services\OsTravel\HotelPublisher;
+use App\Services\OsTravel\OsTravelSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +23,10 @@ use Throwable;
  */
 class AdminOsTravelController extends Controller
 {
-    public function __construct(private HotelPublisher $publisher) {}
+    public function __construct(
+        private HotelPublisher $publisher,
+        private OsTravelSearchService $searchService,
+    ) {}
 
     public function dashboard(): JsonResponse
     {
@@ -60,6 +66,10 @@ class AdminOsTravelController extends Controller
         $data = $request->validate([
             'status' => ['sometimes', 'nullable', 'string', 'in:'.implode(',', $validStatuses)],
             'city' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'country_id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'city_id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'check_in' => ['sometimes', 'nullable', 'date'],
+            'check_out' => ['sometimes', 'nullable', 'date', 'after_or_equal:check_in'],
         ]);
 
         $query = OsTravelHotel::query()->with(['hotel', 'approver']);
@@ -72,10 +82,59 @@ class AdminOsTravelController extends Controller
             $query->where('city_name', 'like', '%'.$data['city'].'%');
         }
 
+        if (! empty($data['country_id'])) {
+            $query->where('country_external_id', $data['country_id']);
+        }
+
+        if (! empty($data['city_id'])) {
+            $query->where('city_external_id', $data['city_id']);
+        }
+
         $hotels = $query->latest('id')->get();
 
+        $live = null;
+        if (! empty($data['check_in']) && ! empty($data['check_out'])) {
+            $live = $this->searchService->probeWindow(
+                $hotels->pluck('external_id')->filter()->values()->all(),
+                $data['check_in'],
+                $data['check_out'],
+            );
+        }
+
         return response()->json([
-            'data' => $hotels->map(fn (OsTravelHotel $hotel) => $this->reviewPayload($hotel)),
+            'data' => $hotels->map(fn (OsTravelHotel $hotel) => $this->reviewPayload($hotel, $live))->values(),
+        ]);
+    }
+
+    /**
+     * Countries and cities for the admin list filters, sourced from the synced
+     * provider reference data (not the ISO country-state-city package).
+     */
+    public function references(): JsonResponse
+    {
+        $countries = OsTravelReference::query()
+            ->where('type', OsTravelReference::TYPE_COUNTRY)
+            ->orderBy('name')
+            ->get(['external_id', 'name']);
+
+        $cities = OsTravelReference::query()
+            ->where('type', OsTravelReference::TYPE_CITY)
+            ->orderBy('name')
+            ->get(['external_id', 'name', 'payload']);
+
+        return response()->json([
+            'data' => [
+                'countries' => $countries->map(fn ($c) => ['id' => $c->external_id, 'name' => $c->name]),
+                'cities' => $cities->map(function ($c) {
+                    $payload = $c->payload['Country'] ?? [];
+
+                    return [
+                        'id' => $c->external_id,
+                        'name' => $c->name,
+                        'country_id' => isset($payload['Id']) ? (string) $payload['Id'] : null,
+                    ];
+                }),
+            ],
         ]);
     }
 
@@ -83,9 +142,13 @@ class AdminOsTravelController extends Controller
     {
         $hotel = OsTravelHotel::query()->with(['hotel', 'approver'])->findOrFail($id);
 
+        // Admin clicking a hotel's details also triggers the once-per-day
+        // provider detail refresh (single-flight inside HotelPublisher).
+        $this->publisher->refreshDetail($hotel);
+
         return response()->json([
             'data' => [
-                ...$this->reviewPayload($hotel),
+                ...$this->reviewPayload($hotel->refresh()),
                 'payload' => $hotel->payload,
                 'mapped_preview' => $this->mappedPreview($hotel),
             ],
@@ -163,6 +226,9 @@ class AdminOsTravelController extends Controller
         }
 
         try {
+            // Fetch provider detail once before publishing so a hotel approved
+            // from a never-viewed staging row still publishes rich content.
+            $this->publisher->refreshDetail($hotel);
             $published = $this->publisher->publish($hotel, $data, $request->user());
         } catch (InvalidArgumentException $e) {
             return response()->json([
@@ -254,6 +320,83 @@ class AdminOsTravelController extends Controller
         ]);
     }
 
+    /**
+     * Enqueue a bulk price refresh as a pending request. Processing is deferred
+     * to the scheduler (`os-travel:process-refresh-request`) so a large refresh
+     * never blocks this request. If a refresh is already pending/processing,
+     * the existing request is returned (idempotent).
+     */
+    public function refreshPrices(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['sometimes', 'array'],
+            'ids.*' => ['integer'],
+            'check_in' => ['sometimes', 'nullable', 'date', 'after_or_equal:today'],
+            'check_out' => ['sometimes', 'nullable', 'date', 'after:check_in'],
+        ]);
+
+        $active = OsTravelRefreshRequest::query()
+            ->whereIn('status', [OsTravelRefreshRequest::PENDING, OsTravelRefreshRequest::PROCESSING])
+            ->latest('id')
+            ->first();
+
+        if ($active !== null) {
+            return response()->json([
+                'data' => $this->refreshRequestPayload($active),
+                'already_running' => true,
+            ]);
+        }
+
+        $refresh = OsTravelRefreshRequest::create([
+            'status' => OsTravelRefreshRequest::PENDING,
+            'requested_by' => $request->user()?->id,
+            'ids' => $data['ids'] ?? null,
+            'check_in' => $data['check_in'] ?? null,
+            'check_out' => $data['check_out'] ?? null,
+        ]);
+
+        return response()->json([
+            'data' => $this->refreshRequestPayload($refresh),
+            'already_running' => false,
+        ]);
+    }
+
+    /**
+     * Return the status/counts of a refresh request (or the latest one).
+     */
+    public function refreshPriceStatus(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'id' => ['sometimes', 'nullable', 'integer'],
+        ]);
+
+        $refresh = isset($data['id']) && $data['id'] !== null
+            ? OsTravelRefreshRequest::query()->findOrFail($data['id'])
+            : OsTravelRefreshRequest::query()->latest('id')->first();
+
+        return response()->json([
+            'data' => $refresh ? $this->refreshRequestPayload($refresh) : null,
+        ]);
+    }
+
+    /**
+     * Refresh the provider's minimum price for a single staged hotel and
+     * persist it as `base_price`, returning the refreshed review payload.
+     */
+    public function refreshPrice(int|string $id): JsonResponse
+    {
+        $hotel = OsTravelHotel::query()->findOrFail($id);
+
+        $result = $this->searchService->refreshStagedPrices([$hotel->id]);
+
+        return response()->json([
+            'data' => [
+                ...$this->reviewPayload($hotel->refresh()),
+                'refresh' => $result,
+            ],
+        ]);
+    }
+
     public function reject(int|string $id): JsonResponse
     {
         $hotel = OsTravelHotel::query()->findOrFail($id);
@@ -272,10 +415,32 @@ class AdminOsTravelController extends Controller
 
     /**
      * Review columns for the staged list.
+     *
+     * When a live probe ran, the row carries the probe result for its exact
+     * date window: `live_price`/`live_currency` when available, otherwise a
+     * `live_status` explaining why not.
+     *
+     * @param  array{prices?: array<string, array{price: float, currency: string}>, omitted_ids?: list<string>, failed_ids?: list<string>}|null  $live
      */
-    private function reviewPayload(OsTravelHotel $hotel): array
+    private function reviewPayload(OsTravelHotel $hotel, ?array $live = null): array
     {
         $hotel->loadMissing(['hotel', 'approver']);
+
+        $liveStatus = null;
+        $livePrice = null;
+        $liveCurrency = null;
+
+        if ($live !== null) {
+            if (isset($live['prices'][$hotel->external_id])) {
+                $livePrice = $live['prices'][$hotel->external_id]['price'];
+                $liveCurrency = $live['prices'][$hotel->external_id]['currency'];
+                $liveStatus = 'available';
+            } elseif (in_array($hotel->external_id, $live['failed_ids'] ?? [], true)) {
+                $liveStatus = 'provider_error';
+            } else {
+                $liveStatus = 'no_availability';
+            }
+        }
 
         return [
             'id' => (string) $hotel->id,
@@ -283,12 +448,16 @@ class AdminOsTravelController extends Controller
             'name' => $hotel->name,
             'city_external_id' => $hotel->city_external_id,
             'city_name' => $hotel->city_name,
+            'country_external_id' => $hotel->country_external_id,
+            'country_name' => $hotel->country_name,
             'category_title' => $hotel->category_title,
             'stars' => $hotel->stars,
             'image' => $hotel->image,
             'status' => $hotel->status,
             'has_base_price' => $hotel->base_price !== null,
             'base_price' => $hotel->base_price,
+            'price_status' => $hotel->price_status,
+            'last_price_attempt_at' => $hotel->last_price_attempt_at,
             'markup_percentage' => $hotel->markup_percentage,
             'currency' => $hotel->currency,
             'hotel_id' => $hotel->hotel_id !== null ? (string) $hotel->hotel_id : null,
@@ -297,6 +466,9 @@ class AdminOsTravelController extends Controller
             'approved_at' => $hotel->approved_at,
             'rejected_at' => $hotel->rejected_at,
             'last_synced_at' => $hotel->last_synced_at,
+            'live_status' => $liveStatus,
+            'live_price' => $livePrice,
+            'live_currency' => $liveCurrency,
         ];
     }
 
@@ -317,19 +489,21 @@ class AdminOsTravelController extends Controller
         $basePrice = $hotel->base_price;
 
         return [
-            'name' => $list['Name'] ?? $detail['Name'] ?? '',
-            'city' => $list['City']['Name'] ?? $detail['City']['Name'] ?? '',
-            'country' => (string) $country,
+            'name' => HotelPublisher::cleanText($list['Name'] ?? $detail['Name'] ?? ''),
+            'city' => HotelPublisher::cleanText($list['City']['Name'] ?? $detail['City']['Name'] ?? ''),
+            'country' => HotelPublisher::cleanText((string) $country),
             'stars' => $list['Category']['Star'] ?? $detail['Category']['Star'] ?? 0,
-            'category' => $list['Category']['Title'] ?? $detail['Category']['Title'] ?? '',
+            'category' => HotelPublisher::cleanText($list['Category']['Title'] ?? $detail['Category']['Title'] ?? ''),
             'image' => $list['Image'] ?? $detail['Image'] ?? null,
             'gallery' => collect($detail['Album'] ?? [])->pluck('Url')->filter()->values()->all(),
-            'description' => $detail['LongDescription'] ?? '',
+            'description' => HotelPublisher::htmlToText($detail['LongDescription'] ?? ''),
             'themes' => $list['Theme'] ?? $detail['Theme'] ?? [],
-            'boarding' => collect($detail['Boarding'] ?? [])->map(fn (array $b) => $b['Name'] ?? '')->filter()->values()->all(),
-            'address' => $detail['Adress'] ?? '',
-            'phone' => $detail['Phone'] ?? '',
-            'email' => $detail['Email'] ?? '',
+            'boarding' => collect($detail['Boarding'] ?? [])
+                ->map(fn (array $b) => HotelPublisher::cleanText($b['Name'] ?? ''))
+                ->filter()->values()->all(),
+            'address' => HotelPublisher::cleanText($detail['Adress'] ?? ''),
+            'phone' => HotelPublisher::cleanText($detail['Phone'] ?? ''),
+            'email' => HotelPublisher::cleanText($detail['Email'] ?? ''),
             'price' => $basePrice !== null
                 ? (int) round((float) $basePrice * (1 + (float) $markup / 100))
                 : null,
@@ -337,6 +511,24 @@ class AdminOsTravelController extends Controller
             'markup_percentage' => $markup,
             'currency' => $hotel->currency ?? config('ostravel.currency.default', 'TND'),
             'code' => 'ostravel-'.$hotel->external_id,
+        ];
+    }
+
+    /**
+     * Status/counts payload for a bulk refresh request.
+     */
+    private function refreshRequestPayload(OsTravelRefreshRequest $refresh): array
+    {
+        return [
+            'id' => (string) $refresh->id,
+            'status' => $refresh->status,
+            'started_at' => $refresh->started_at,
+            'finished_at' => $refresh->finished_at,
+            'updated' => $refresh->updated,
+            'omitted' => $refresh->omitted,
+            'omitted_ids' => $refresh->omitted_ids ?? [],
+            'failed_ids' => $refresh->failed_ids ?? [],
+            'error' => $refresh->error,
         ];
     }
 }

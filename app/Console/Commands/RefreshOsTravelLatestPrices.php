@@ -24,7 +24,7 @@ class RefreshOsTravelLatestPrices extends Command
 
         $this->info(
             "OS-TRAVEL latest-price refresh finished: updated {$result['updated']} hotels, "
-            ."{$result['omitted']} had no availability and kept their previous value."
+            ."{$result['omitted']} had no live per-night availability and their price was cleared."
         );
 
         return self::SUCCESS;

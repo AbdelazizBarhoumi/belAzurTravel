@@ -58,8 +58,26 @@ return [
     ],
 
     'refresh' => [
-        // Default date window used by the browse-mode latest-price refresh.
-        'nights' => (int) env('OS_TRAVEL_REFRESH_NIGHTS', 7),
+        // Price-basis window for the browse-mode refresh. The stored price is
+        // a live PER-NIGHT minimum, so a 1-night window is queried and the
+        // provider total for it IS the per-night price (stored as-is, never
+        // divided). Hotels the provider won't price for a 1-night stay are
+        // reported as omitted and their stored price is cleared — browse
+        // shows only genuine live per-night API values.
+        'nights' => (int) env('OS_TRAVEL_REFRESH_NIGHTS', 1),
+
+        // How long a manual refresh request's single-flight lock is held before
+        // it can be overtaken (also used as the schedule's withoutOverlapping
+        // expiry for `os-travel:process-refresh-request`).
+        'lock_ttl_minutes' => (int) env('OS_TRAVEL_REFRESH_LOCK_TTL_MINUTES', 30),
+
+        // When a hotel has no availability in the default window, the refresh
+        // probes forward chronologically (step_days per attempt) until the
+        // nearest window that returns a price, up to `attempts` tries.
+        'probe' => [
+            'attempts' => (int) env('OS_TRAVEL_REFRESH_PROBE_ATTEMPTS', 6),
+            'step_days' => (int) env('OS_TRAVEL_REFRESH_PROBE_STEP_DAYS', 7),
+        ],
 
         // Scheduled cadence for `os-travel:refresh-latest-prices`.
         'schedule' => [

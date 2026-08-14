@@ -4,18 +4,36 @@ import {
     approveOsTravelHotel,
     getOsTravelDashboard,
     getOsTravelHotel,
+    getOsTravelReferences,
+    getOsTravelRefreshStatus,
     listOsTravelHotels,
+    refreshOsTravelPrice,
+    refreshOsTravelPrices,
     rejectOsTravelHotel,
     updateOsTravelHotel,
+    type OsTravelListFilters,
     type OsTravelPricePayload,
-    type OsTravelStatus,
+    type OsTravelRefreshRequest,
 } from '@/api/osTravel.api';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+let refreshPollMs = 5000;
+
+/**
+ * Test-only override for the refresh status poll interval. Set it to 0 in
+ * tests so the polling loop resolves without real timers.
+ */
+export const __setRefreshPollMs = (ms: number): void => {
+    refreshPollMs = ms;
+};
+
 export const osTravelKeys = {
     dashboard: ['admin', 'os-travel', 'dashboard'] as const,
-    hotels: (status: OsTravelStatus | '', city: string) =>
-        ['admin', 'os-travel', 'hotels', status, city] as const,
+    hotels: (filters: OsTravelListFilters) =>
+        ['admin', 'os-travel', 'hotels', filters] as const,
+    references: ['admin', 'os-travel', 'references'] as const,
     detail: (id: string) =>
         ['admin', 'os-travel', 'hotels', 'detail', id] as const,
 };
@@ -27,16 +45,17 @@ export function useOsTravelDashboard() {
     });
 }
 
-export function useOsTravelHotels(status: OsTravelStatus | '', city: string) {
+export function useOsTravelHotels(filters: OsTravelListFilters) {
     return useQuery({
-        queryKey: osTravelKeys.hotels(status, city),
-        queryFn: async () =>
-            (
-                await listOsTravelHotels({
-                    status: status || undefined,
-                    city: city || undefined,
-                })
-            ).data,
+        queryKey: osTravelKeys.hotels(filters),
+        queryFn: async () => (await listOsTravelHotels(filters)).data,
+    });
+}
+
+export function useOsTravelReferences() {
+    return useQuery({
+        queryKey: osTravelKeys.references,
+        queryFn: async () => (await getOsTravelReferences()).data,
     });
 }
 
@@ -83,6 +102,51 @@ export function useOsTravelAdmin() {
         return result.data;
     };
 
+    const refreshPrice = async (id: string) => {
+        const result = await refreshOsTravelPrice(id);
+        invalidateAll();
+        return result.data;
+    };
+
+    const refreshPrices = async (data?: {
+        ids?: string[];
+        check_in?: string;
+        check_out?: string;
+    }): Promise<OsTravelRefreshRequest> => {
+        // Enqueue the refresh, then poll its status until it reaches a
+        // terminal state. The actual work runs on the scheduler so a large
+        // catalog never blocks the admin's HTTP request.
+        const created = await refreshOsTravelPrices(data);
+        let req = created.data;
+
+        const startedAt = Date.now();
+        const timeoutMs = 10 * 60 * 1000;
+        while (req.status === 'pending' || req.status === 'processing') {
+            if (Date.now() - startedAt > timeoutMs) {
+                throw Object.assign(
+                    new Error(t('osTravel.refreshTimeout')),
+                    { status: 500, data: { message: t('osTravel.refreshTimeout') } },
+                );
+            }
+
+            await delay(refreshPollMs);
+            const status = await getOsTravelRefreshStatus(req.id);
+            req = status.data ?? req;
+        }
+
+        if (req.status === 'failed') {
+            const message = req.error || t('osTravel.refreshFailed');
+            throw Object.assign(new Error(message), {
+                status: 500,
+                data: { message },
+            });
+        }
+
+        invalidateAll();
+
+        return req;
+    };
+
     const toErrorMessage = (err: unknown, fallbackKey: string): string => {
         const e = err as {
             status?: number;
@@ -96,5 +160,5 @@ export function useOsTravelAdmin() {
         return t(fallbackKey);
     };
 
-    return { savePrice, approve, approveAll, reject, toErrorMessage };
+    return { savePrice, approve, approveAll, reject, refreshPrice, refreshPrices, toErrorMessage };
 }

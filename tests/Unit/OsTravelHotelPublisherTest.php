@@ -71,12 +71,105 @@ class OsTravelHotelPublisherTest extends TestCase
         $this->assertSame('TND', $hotel->currency);
         $this->assertSame(300, $hotel->price);
         $this->assertSame(250, $hotel->base_price);
-        $this->assertSame([], $hotel->tags);
         $this->assertSame('ostravel', $hotel->details['source']);
         $this->assertSame('178', $hotel->details['provider_hotel_id']);
+        $this->assertSame('tunsi.reservations@sheratonhotels.com', $hotel->details['email']);
+        $this->assertSame('', $hotel->details['whatsapp']);
+        $this->assertSame('14h', $hotel->details['check_in_time']);
+        $this->assertSame('12h', $hotel->details['check_out_time']);
+        $this->assertSame(['latitude' => 10.161106, 'longitude' => 36.831512], $hotel->details['coordinates']);
+        $this->assertSame('Hôtel', $hotel->details['hotel_type']);
+        $this->assertStringContainsString('taxe de séjour', $hotel->details['note']);
+        // LongDescription HTML entities + <p> blocks decoded with structure kept.
+        $description = $hotel->details['description']['fr'];
+        $this->assertStringContainsString('Le Sheraton Tunis Hotel & Towers surplombe toute la ville de Tunis.', $description);
+        $this->assertStringContainsString("Il dispose d'un spa de luxe", $description);
+        $this->assertStringContainsString('élégamment décorée', $description);
+        $this->assertStringContainsString("\n", $description);
+        $this->assertStringNotContainsString('<p>', $description);
+        $this->assertStringNotContainsString('&eacute;', $description);
+        $this->assertCount(6, $hotel->details['options']);
+        $this->assertSame(['Affaires'], $hotel->tags);
+        $this->assertCount(4, $hotel->details['boardings']);
+        // Facilities from detail `Facilitie`.
+        $this->assertSame('Spa et bien-être', $hotel->details['facilities'][0]['title']);
+        $this->assertSame('Bien-être', $hotel->details['facilities'][0]['category']);
+        // Amenity tags from detail `Tag`, relative image resolved via base_url.
+        $this->assertSame('Wifi gratuit', $hotel->details['amenity_tags'][0]['title']);
+        $this->assertSame(
+            'https://admin.mygo.co/uploads/d0be1cace167bc758be36b3bbe3c10eee507485f.jpeg',
+            $hotel->details['amenity_tags'][0]['image']
+        );
         $this->assertSame(sha1('https://admin.mygo.co/file_manager/source/photos/test.jpg'), $hotel->meta['image_hash']);
         $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
         $this->assertNotEmpty($hotel->details['gallery']);
+    }
+
+    public function test_publish_derives_filter_booleans_from_provider_data(): void
+    {
+        $staged = $this->stagedHotel();
+
+        $hotel = app(HotelPublisher::class)->publish($staged);
+
+        // Boardings from HotelDetail: LS/LPD/DP/PC.
+        $this->assertTrue($hotel->logement_simple);
+        $this->assertTrue($hotel->petit_dejeuner);
+        $this->assertTrue($hotel->demi_pension);
+        $this->assertTrue($hotel->pension_complete);
+        // Stars 4 from the fixture.
+        $this->assertTrue($hotel->categorie_4_etoiles);
+        // Theme "Affaires" from HotelDetail.
+        $this->assertTrue($hotel->affaires);
+        $this->assertFalse($hotel->famille);
+        $this->assertFalse($hotel->thalasso_spa);
+    }
+
+    public function test_publish_maps_extended_provider_themes_and_trims_tags(): void
+    {
+        $staged = $this->stagedHotel();
+
+        $payload = $staged->payload;
+        $payload['ListHotel']['Theme'] = [
+            'Affaires',
+            'Voyages de Noces',
+            'Sport & Loisirs',
+            'Golf',
+            'Thalassothérapie',
+            'Balnéothérapie',
+            'Thermalisme',
+            'Bien être',
+            'Randonnée',
+            'Montagne',
+            'Saharien',
+            'Archéologie',
+            'Week-end',
+            'Promo',
+            'Charme',
+            'Découverte',
+            'Balnéaire ',
+            'Réveillon ',
+            'Tourisme',
+            'Hôtel de Ville',
+            'Combinées',
+        ];
+        $staged->payload = $payload;
+        $staged->save();
+
+        $hotel = app(HotelPublisher::class)->publish($staged->refresh());
+
+        $this->assertTrue($hotel->affaires);
+        $this->assertTrue($hotel->famille);
+        $this->assertTrue($hotel->sport_loisir);
+        $this->assertTrue($hotel->thalasso_spa);
+        $this->assertTrue($hotel->nature_aventure);
+        $this->assertTrue($hotel->detente);
+        $this->assertTrue($hotel->tarifs_promo);
+
+        // Provider trailing whitespace is trimmed in stored tags.
+        $this->assertContains('Balnéaire', $hotel->tags);
+        $this->assertContains('Réveillon', $hotel->tags);
+        $this->assertNotContains('Balnéaire ', $hotel->tags);
+        $this->assertNotContains('Réveillon ', $hotel->tags);
     }
 
     public function test_publish_uses_markup_override_and_currency_override(): void

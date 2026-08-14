@@ -22,6 +22,12 @@
         "Latitude": "11.12502"
       },
       "Image": "https://admin.mygo.co/file_manager/source/photos/tunisie/Kelibia/kelibia%20beach/Kelibia_Beach_8.jpg",
+      "Facilities": [
+        {
+          "Title": "Piscine",
+          "Category": "Loisirs"
+        }
+      ],
       "Theme": [
         "Affaires",
         "Voyages de Noces",

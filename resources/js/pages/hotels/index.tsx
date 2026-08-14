@@ -3,7 +3,7 @@ import { MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Link, useSearchParams } from 'react-router-dom';
-import { AmenityIcons } from '@/components/cards/AmenityIcons';
+import { ThemeIcons } from '@/components/cards/ThemeIcons';
 import { HotelFilters } from '@/components/filters/HotelFilters';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
@@ -83,8 +83,9 @@ export default function Hotels() {
         return filters;
     }, [params]);
 
-    const maxPrice = hotels.length > 0 ? Math.max(...hotels.map((h) => h.price)) : 1000;
-    const minPrice = hotels.length > 0 ? Math.min(...hotels.map((h) => h.price)) : 0;
+    const pricedHotels = hotels.filter((h): h is HotelItem & { price: number } => h.price !== null);
+    const maxPrice = pricedHotels.length > 0 ? Math.max(...pricedHotels.map((h) => h.price)) : 1000;
+    const minPrice = pricedHotels.length > 0 ? Math.min(...pricedHotels.map((h) => h.price)) : 0;
 
     // Category type filters state
     const [categoryTypeFilters, setCategoryTypeFilters] =
@@ -437,8 +438,17 @@ export default function Hotels() {
                                                                     {t(
                                                                         'hotels.priceFrom',
                                                                     )}{' '}
-                                                                    {hotel.price.toLocaleString()}{' '}
-                                                                    TND
+                                                                    {hotel.price !== null ? (
+                                                                        <>
+                                                                            {hotel.price.toLocaleString()}{' '}
+                                                                            TND
+                                                                            {t(
+                                                                                'hotelDetail.pernight',
+                                                                            )}
+                                                                        </>
+                                                                    ) : (
+                                                                        t('hotelDetail.noPrice')
+                                                                    )}
                                                                     {hotel.last_price_at
                                                                         ? ` · ${t('hotels.lastKnown')}`
                                                                         : ''}
@@ -507,7 +517,7 @@ export default function Hotels() {
                                                         })()}
 
                                                         <div className="flex items-center justify-between gap-4">
-                                                            <AmenityIcons amenities={hotel.amenities} maxVisible={8} />
+                                                            <ThemeIcons tags={hotel.tags ?? []} amenities={hotel.amenities} maxVisible={8} />
                                                             <div className="flex shrink-0 flex-col items-end gap-1 text-right">
                                                                 {liveLoaded &&
                                                                     typeof hotel.price_per_night === 'number' && (
