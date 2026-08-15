@@ -10,13 +10,15 @@ afterEach(() => {
     cleanup();
 });
 
-const { mockHotelSearch, mockBookingDialogProps } = vi.hoisted(() => ({
-    mockHotelSearch: {
-        data: [] as unknown[],
-        calls: [] as unknown[],
-    },
-    mockBookingDialogProps: { open: false, provider: undefined as unknown },
-}));
+const { mockHotelSearch, mockBookingDialogProps, mockDateRangePickerProps } =
+    vi.hoisted(() => ({
+        mockHotelSearch: {
+            data: [] as unknown[],
+            calls: [] as unknown[],
+        },
+        mockBookingDialogProps: { open: false, provider: undefined as unknown },
+        mockDateRangePickerProps: {} as Record<string, unknown>,
+    }));
 
 vi.mock('@/hooks/usePublicData', () => ({
     useHotelById: (id?: string) => ({
@@ -71,6 +73,10 @@ vi.mock('@/hooks/usePublicData', () => ({
                   ],
                   note: 'Séjour avec taxe de séjour à régler sur place.',
                   amenities: [{ en: 'Wi-Fi', fr: 'Wi-Fi', ar: 'Wi-Fi' }],
+                  first_available_at: '2026-09-01',
+                  stop_sale_ranges: [
+                      { from: '2026-09-03', to: '2026-09-08' },
+                  ],
                   rooms: [
                       {
                           id: 'room-1',
@@ -113,20 +119,25 @@ vi.mock('@/hooks/usePublicData', () => ({
 }));
 
 vi.mock('@/components/ui/DateRangePicker', () => ({
-    DateRangePicker: ({ onChange }: { onChange: (value: unknown) => void }) => (
-        <button
-            type="button"
-            data-testid="set-dates"
-            onClick={() =>
-                onChange({
-                    from: new Date('2026-09-01T12:00:00'),
-                    to: new Date('2026-09-05T12:00:00'),
-                })
-            }
-        >
-            set-dates
-        </button>
-    ),
+    DateRangePicker: (props: Record<string, unknown>) => {
+        Object.assign(mockDateRangePickerProps, props);
+        return (
+            <button
+                type="button"
+                data-testid="set-dates"
+                onClick={() =>
+                    (
+                        props.onChange as (value: unknown) => void
+                    )({
+                        from: new Date('2026-09-01T12:00:00'),
+                        to: new Date('2026-09-05T12:00:00'),
+                    })
+                }
+            >
+                set-dates
+            </button>
+        );
+    },
 }));
 
 vi.mock('@/components/forms/BookingDialog', () => ({
@@ -170,6 +181,9 @@ describe('HotelDetail', () => {
         mockHotelSearch.calls = [];
         mockBookingDialogProps.open = false;
         mockBookingDialogProps.provider = undefined;
+        Object.keys(mockDateRangePickerProps).forEach(
+            (key) => delete mockDateRangePickerProps[key],
+        );
     });
 
     it('renders hotel data from the API hook', async () => {
@@ -760,6 +774,24 @@ describe('HotelDetail', () => {
 
         expect(screen.getAllByText(/1,500\s*EUR/).length).toBeGreaterThan(0);
         expect(screen.queryByText(/1,500\s*TND/)).not.toBeInTheDocument();
+    });
+
+    it('passes stop-sale ranges to the date picker to disable unavailable days', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+
+        expect(
+            (mockDateRangePickerProps.disabledRanges as unknown[] | undefined)
+                ?.length,
+        ).toBe(1);
+        expect(mockDateRangePickerProps.disabledRanges).toEqual([
+            {
+                from: new Date('2026-09-03T00:00:00'),
+                to: new Date('2026-09-08T00:00:00'),
+            },
+        ]);
+        expect(mockDateRangePickerProps.fromDate).toEqual(
+            new Date('2026-09-01T00:00:00'),
+        );
     });
 
     it('shows the unavailable sticky state when the searched dates have no availability', async () => {

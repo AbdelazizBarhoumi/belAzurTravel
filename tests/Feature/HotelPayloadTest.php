@@ -46,6 +46,7 @@ class HotelPayloadTest extends TestCase
             'last_price_at' => now()->subHours(3),
             'first_available_at' => now()->addDays(2)->toDateString(),
             'min_nights' => 1,
+            'stop_sale_ranges' => [['from' => '2026-09-01', 'to' => '2026-09-10']],
         ]);
         OsTravelHotel::create([
             'external_id' => '178',
@@ -73,6 +74,8 @@ class HotelPayloadTest extends TestCase
         // The probe's nearest available day + minimum stay travel with the price.
         $this->assertSame(now()->addDays(2)->toDateString(), $response->json('first_available_at'));
         $this->assertSame(1, $response->json('min_nights'));
+        // The picker-blocking stop-sale ranges travel with the price.
+        $this->assertSame([['from' => '2026-09-01', 'to' => '2026-09-10']], $response->json('stop_sale_ranges'));
     }
 
     public function test_payload_without_last_price_uses_stored_price(): void
@@ -112,6 +115,7 @@ class HotelPayloadTest extends TestCase
         $this->assertNull($response->json('last_price'));
         $this->assertNull($response->json('first_available_at'));
         $this->assertNull($response->json('min_nights'));
+        $this->assertSame([], $response->json('stop_sale_ranges'));
         $this->assertSame(1000, $response->json('base_price'));
         $this->assertSame(1200, $response->json('price'));
     }

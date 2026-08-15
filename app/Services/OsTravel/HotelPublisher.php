@@ -90,6 +90,7 @@ class HotelPublisher
             'last_price_at' => now(),
             'first_available_at' => $staged->first_available_at,
             'min_nights' => $staged->min_nights,
+            'stop_sale_ranges' => $staged->stop_sale_ranges ?? [],
             'source' => 'ostravel',
             'booking_mode' => 'instant',
             'rating' => (float) ($list['Rating'] ?? $detail['Rating'] ?? 0),

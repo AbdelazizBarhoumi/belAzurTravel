@@ -107,6 +107,7 @@ class HotelController extends Controller
             'last_price_at' => $item->last_price_at,
             'first_available_at' => $item->first_available_at?->toDateString(),
             'min_nights' => $item->min_nights,
+            'stop_sale_ranges' => $item->stop_sale_ranges ?? [],
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,
@@ -171,6 +172,12 @@ class HotelController extends Controller
             'boardings' => $details['boardings'] ?? [],
             'facilities' => $details['facilities'] ?? [],
             'amenity_tags' => $details['amenity_tags'] ?? [],
+            // Browse catalog captured during the price refresh: rooms, boardings
+            // and hotel promo metadata rendered with no live call.
+            'rooms_catalog' => $details['catalog']['rooms'] ?? [],
+            'promotion' => $details['catalog']['promotion'] ?? null,
+            'free_child' => $details['catalog']['free_child'] ?? [],
+            'recommended' => (bool) ($details['catalog']['recommended'] ?? false),
         ];
     }
 }

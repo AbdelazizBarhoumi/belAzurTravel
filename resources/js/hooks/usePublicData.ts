@@ -42,6 +42,7 @@ export type HotelDetailLookupData = {
     last_price_at?: string | null;
     first_available_at?: string | null;
     min_nights?: number | null;
+    stop_sale_ranges?: Array<{ from: string; to: string }> | null;
     address?: string;
     phone?: string;
     email?: string;

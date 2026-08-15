@@ -29,6 +29,8 @@ interface DateRangePickerProps {
     placeholderEmpty?: string;
     /** Earliest selectable date (react-day-picker `fromDate`). */
     fromDate?: Date;
+    /** Date ranges that must not be selectable (stop-sale / unavailable days). */
+    disabledRanges?: Array<{ from: Date; to: Date }>;
 }
 
 export function DateRangePicker({
@@ -40,6 +42,7 @@ export function DateRangePicker({
     placeholderSingle,
     placeholderEmpty,
     fromDate,
+    disabledRanges,
 }: DateRangePickerProps) {
     const { lang, t, dir } = useLanguage();
     const isRtl = dir === 'rtl';
@@ -88,6 +91,7 @@ export function DateRangePicker({
                     locale={getDatePickerLocale(lang)}
                     dir={dir}
                     fromDate={fromDate}
+                    disabled={disabledRanges}
                 />
             </PopoverContent>
         </Popover>

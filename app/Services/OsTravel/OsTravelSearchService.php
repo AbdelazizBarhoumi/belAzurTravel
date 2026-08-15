@@ -315,6 +315,8 @@ class OsTravelSearchService
                 'last_price_at' => now(),
                 'first_available_at' => $value['first_available_at'],
                 'min_nights' => $value['min_nights'],
+                'stop_sale_ranges' => $probe['ranges'][$externalId] ?? [],
+                'details' => $this->mergeCatalog($item->hotel->details ?? [], $probe['catalog'][$externalId] ?? null),
             ]);
             $updated++;
         }
@@ -333,6 +335,8 @@ class OsTravelSearchService
                 'last_price_at' => null,
                 'first_available_at' => $meta['first_available_at'],
                 'min_nights' => $meta['min_nights'],
+                'stop_sale_ranges' => $probe['ranges'][$externalId] ?? [],
+                'details' => $this->mergeCatalog($item->hotel->details ?? [], $probe['catalog'][$externalId] ?? null),
             ]);
         }
 
@@ -349,6 +353,8 @@ class OsTravelSearchService
                 'last_price_at' => null,
                 'first_available_at' => null,
                 'min_nights' => null,
+                'stop_sale_ranges' => [],
+                'details' => $this->mergeCatalog($item->hotel->details ?? [], null),
             ]);
         }
 
@@ -410,6 +416,8 @@ class OsTravelSearchService
                 'last_price_attempt_at' => now(),
                 'first_available_at' => $value['first_available_at'],
                 'min_nights' => $value['min_nights'],
+                'stop_sale_ranges' => $probe['ranges'][$externalId] ?? [],
+                'payload' => $this->mergeCatalog($item->payload ?? [], $probe['catalog'][$externalId] ?? null),
             ]);
 
             $this->syncPublishedHotel($item, (int) round($value['price']), $value['currency']);
@@ -435,6 +443,8 @@ class OsTravelSearchService
                 'last_price_attempt_at' => now(),
                 'first_available_at' => $meta['first_available_at'],
                 'min_nights' => $meta['min_nights'],
+                'stop_sale_ranges' => $probe['ranges'][$externalId] ?? [],
+                'payload' => $this->mergeCatalog($item->payload ?? [], $probe['catalog'][$externalId] ?? null),
             ]);
 
             $this->syncPublishedHotel($item, null, $item->currency);
@@ -458,6 +468,8 @@ class OsTravelSearchService
                 'last_price_attempt_at' => now(),
                 'first_available_at' => null,
                 'min_nights' => null,
+                'stop_sale_ranges' => [],
+                'payload' => $this->mergeCatalog($item->payload ?? [], null),
             ]);
 
             $this->syncPublishedHotel($item, null, $item->currency);
@@ -515,6 +527,7 @@ class OsTravelSearchService
             'last_price_at' => now(),
             'first_available_at' => $staged->first_available_at,
             'min_nights' => $staged->min_nights,
+            'stop_sale_ranges' => $staged->stop_sale_ranges ?? [],
         ])->save();
     }
 
@@ -543,7 +556,7 @@ class OsTravelSearchService
      *
      * @param  list<string>  $externalIds
      * @param  array<string, mixed>  $options
-     * @return array{prices: array<string, array{price: float, currency: string, first_available_at: string, min_nights: int}>, unavailable: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted: int, omitted_ids: list<string>, failed_ids: list<string>}
+     * @return array{prices: array<string, array{price: float, currency: string, first_available_at: string, min_nights: int}>, unavailable: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, catalog: array<string, array<string, mixed>>, omitted: int, omitted_ids: list<string>, failed_ids: list<string>}
      */
     private function probePrices(array $externalIds, array $options): array
     {
@@ -557,6 +570,8 @@ class OsTravelSearchService
 
         $prices = [];
         $unavailable = [];
+        $ranges = [];
+        $catalogs = [];
         $failedIds = [];
         $throttleMs = (int) config('ostravel.search.throttle_ms', 150);
         $calls = 0;
@@ -600,6 +615,8 @@ class OsTravelSearchService
                     $offers,
                     fn (array $offer) => $this->roomBookable($offer, $baseCheckIn, $baseCheckOut)
                 ));
+                $ranges[$externalId] = $this->hotelUnavailableRanges($offers);
+                $catalogs[$externalId] = $this->catalogOf($providerHotel);
 
                 if ($bookable !== []) {
                     $minPrice = $this->minOfferPrice($bookable);
@@ -636,6 +653,8 @@ class OsTravelSearchService
         return [
             'prices' => $prices,
             'unavailable' => $unavailable,
+            'ranges' => $ranges,
+            'catalog' => $catalogs,
             'omitted' => count($omittedIds),
             'omitted_ids' => $omittedIds,
             'failed_ids' => $failedIds,
@@ -1017,6 +1036,82 @@ class OsTravelSearchService
     }
 
     /**
+     * Normalized browse catalog for a returned provider hotel: the boardings it
+     * offers, its quoted rooms (deduplicated per room+boarding) with content
+     * fields, and the hotel-level promotion/free-child/recommended metadata.
+     * Persisted by the refresh flows so browse mode and the pre-search detail
+     * page render real snapshot data with no live call. Rooms carry their
+     * `boarding_id` so the frontend can group them by boarding like the live
+     * search rooms do.
+     *
+     * @param  array<string, mixed>  $providerHotel
+     * @return array<string, mixed>
+     */
+    private function catalogOf(array $providerHotel): array
+    {
+        $boardings = [];
+        $rooms = [];
+        $seenBoardings = [];
+        $seenRooms = [];
+
+        foreach ($this->roomOffers($providerHotel) as $offer) {
+            $boardingId = $offer['boarding_id'];
+
+            if ($boardingId !== null && ! isset($seenBoardings[$boardingId])) {
+                $seenBoardings[$boardingId] = true;
+                $boardings[] = [
+                    'id' => $boardingId,
+                    'code' => $offer['boarding'],
+                    'name' => $offer['boarding_name'],
+                ];
+            }
+
+            $roomKey = $offer['id'].':'.$boardingId;
+            if (! isset($seenRooms[$roomKey])) {
+                $seenRooms[$roomKey] = true;
+                $rooms[] = [
+                    'name' => $offer['name'],
+                    'photo' => OsTravelImageProxy::publicUrl($offer['photo']),
+                    'description' => $offer['description'],
+                    'features' => $offer['icones'],
+                    'min_stay' => $offer['min_stay'],
+                    'boarding_id' => $boardingId,
+                ];
+            }
+        }
+
+        $payload = $this->hotelPayload($providerHotel);
+
+        return [
+            'boardings' => $boardings,
+            'rooms' => $rooms,
+            'promotion' => $payload['promotion'],
+            'free_child' => $payload['free_child'],
+            'recommended' => $payload['recommended'],
+        ];
+    }
+
+    /**
+     * Merge a catalog onto a JSON details/payload array, or drop it when the
+     * catalog is null so a hotel the provider stopped returning never shows
+     * stale rooms/promo.
+     *
+     * @param  array<string, mixed>  $target
+     * @param  array<string, mixed>|null  $catalog
+     * @return array<string, mixed>
+     */
+    private function mergeCatalog(array $target, ?array $catalog): array
+    {
+        if ($catalog === null) {
+            unset($target['catalog']);
+        } else {
+            $target['catalog'] = $catalog;
+        }
+
+        return $target;
+    }
+
+    /**
      * Extract child ages from the provider `FreeChild` list.
      *
      * @param  array<int, mixed>  $freeChild
@@ -1179,6 +1274,48 @@ class OsTravelSearchService
 
         return Carbon::parse($checkIn)->lte(Carbon::parse($stopSales['to']))
             && Carbon::parse($checkOut)->gte(Carbon::parse($stopSales['from']));
+    }
+
+    /**
+     * Hotel-wide no-availability ranges for the date picker: the days that fall
+     * inside the stop-sale window of *every* non-stop-reserved room. If any
+     * such room has no stop-sale (it is open every day) the list is empty, so a
+     * single bookable room keeps every day selectable. Rooms under permanent
+     * stop-reservation never contribute availability and are ignored.
+     *
+     * @param  list<array<string, mixed>>  $offers
+     * @return list<array{from: string, to: string}>
+     */
+    private function hotelUnavailableRanges(array $offers): array
+    {
+        $windows = [];
+        foreach ($offers as $offer) {
+            if ($offer['stop_reservation']) {
+                continue;
+            }
+
+            if ($offer['stop_sales'] === null) {
+                return [];
+            }
+
+            $windows[] = $offer['stop_sales'];
+        }
+
+        if ($windows === []) {
+            return [];
+        }
+
+        $intersection = array_shift($windows);
+        foreach ($windows as $window) {
+            $from = max($intersection['from'], $window['from']);
+            $to = min($intersection['to'], $window['to']);
+            if ($from > $to) {
+                return [];
+            }
+            $intersection = ['from' => $from, 'to' => $to];
+        }
+
+        return [$intersection];
     }
 
     /**

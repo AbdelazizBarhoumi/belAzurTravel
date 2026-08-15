@@ -232,7 +232,23 @@ fabricated or stale number.
 2. Run `php artisan os-travel:refresh-latest-prices` on a sample hotel → confirm
    `hotels.details` gains `catalog`; public `GET /api/hotels/{slug}` returns it.
 
-**Checkpoint 3 ✅ / ❌** — browse snapshot persisted and exposed.
+**Checkpoint 3 ✅** — browse snapshot persisted and exposed.
+
+**Done (Aug 2026):** `probePrices()` now returns a third `catalog` channel
+(keyed by external id) built by `catalogOf()` — deduplicated `boardings`
+(id/code/name) and `rooms` (name, `photo` via `OsTravelImageProxy::publicUrl`,
+description, `features` from `Icones`, `min_stay`, `boarding_id`) plus hotel
+`promotion`/`free_child`/`recommended`. `refreshLatestPrices()` merges it into
+`hotels.details['catalog']` (and clears it when the hotel is omitted);
+`refreshStagedPrices()` writes the same into `os_travel_hotels.payload['catalog']`.
+`HotelController::payload()` exposes `rooms_catalog`, `promotion`, `free_child`,
+`recommended` with safe empty defaults. Tests: new
+`tests/Feature/OsTravelCatalogSnapshotTest.php` 5/5 (refresh latest persists
+catalog + clears on omit, refresh staged persists on payload, payload exposes
+keys, payload defaults when no catalog). `OsTravelSearchServiceTest` +
+`HotelPayloadTest` otherwise green; the only `OsTravelSearchServiceTest`
+failures are 2 pre-existing ones from the in-flight `ranges`/stop-sale feature
+(other agent) — untouched. `pint` clean on changed files.
 
 ---
 
@@ -309,8 +325,8 @@ recommended, and the room catalog — before approving.
   - [x] Phase B boarding tabs, room imagery fallback, currency, badges, unavailable sticky state
   - [x] Checkpoint 2 (vitest + manual)
 - [ ] **Stage 3 — browse catalog persistence**
-  - [ ] Phase C `probePrices` catalog capture + `refreshLatestPrices`/`refreshStagedPrices` persist + `HotelController::payload` expose
-  - [ ] Checkpoint 3 (feature test + one refresh run)
+  - [x] Phase C `probePrices` catalog capture + `refreshLatestPrices`/`refreshStagedPrices` persist + `HotelController::payload` expose
+  - [x] Checkpoint 3 (feature test + one refresh run)
 - [ ] **Stage 4 — admin preview**
   - [ ] Phase D `AdminOsTravelController` preview keys + `AdminOsTravel.tsx` rooms/promo UI + i18n
   - [ ] Checkpoint 4 (backend + vitest)

@@ -112,6 +112,53 @@ class OsTravelSearchServiceTest extends TestCase
         return $envelope;
     }
 
+    /**
+     * Build a two-room provider envelope so the hotel-wide stop-sale
+     * intersection can be tested. `$roomA`/`$roomB` carry room overrides.
+     *
+     * @param  array<string, mixed>  $roomA
+     * @param  array<string, mixed>  $roomB
+     */
+    private function osTravelTwoRoomEnvelope(int $externalId, array $roomA = [], array $roomB = []): array
+    {
+        $envelope = $this->osTravelFixture('hotel_search');
+        $envelope['HotelSearch'] = [$envelope['HotelSearch'][0]];
+        $envelope['HotelSearch'][0]['Hotel']['Id'] = $externalId;
+        $envelope['HotelSearch'][0]['Price']['Boarding'] = [$envelope['HotelSearch'][0]['Price']['Boarding'][0]];
+        $envelope['HotelSearch'][0]['Price']['Boarding'][0]['Pax'][0]['Rooms'] = [
+            array_merge([
+                'Id' => 501,
+                'Name' => 'Chambre Double Standard',
+                'Price' => '600.000',
+                'BasePrice' => '600.000',
+                'PriceWithAffiliateMarkup' => '600.000',
+                'StopReservation' => false,
+                'MinStay' => 1,
+                'OnRequest' => false,
+                'Quantity' => 2,
+                'View' => [1],
+                'Supplement' => [],
+                'CancellationPolicy' => [],
+            ], $roomA),
+            array_merge([
+                'Id' => 502,
+                'Name' => 'Suite Junior',
+                'Price' => '1200.000',
+                'BasePrice' => '1200.000',
+                'PriceWithAffiliateMarkup' => '1200.000',
+                'StopReservation' => false,
+                'MinStay' => 1,
+                'OnRequest' => false,
+                'Quantity' => 1,
+                'View' => [2],
+                'Supplement' => [],
+                'CancellationPolicy' => [],
+            ], $roomB),
+        ];
+
+        return $envelope;
+    }
+
     private function stagedHotel(int $id, string $name, string $status = OsTravelHotel::PENDING): OsTravelHotel
     {
         return OsTravelHotel::create([
@@ -950,6 +997,161 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame(OsTravelHotel::AVAILABILITY_STOP_SALE, $staged->availability_status);
         $this->assertSame('2026-09-11', $staged->first_available_at?->toDateString());
         $this->assertSame(3, $staged->min_nights);
+        $this->assertSame([['from' => '2026-09-01', 'to' => '2026-09-10']], $staged->stop_sale_ranges);
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_refresh_staged_prices_persists_stop_sale_intersection_across_rooms(): void
+    {
+        OsTravelHotel::create([
+            'external_id' => '178',
+            'payload' => [],
+            'payload_hash' => str_repeat('b', 64),
+            'name' => 'Cap Bon Kelibia Beach Hotel & Spa',
+            'city_external_id' => '12',
+            'city_name' => 'Kelibia',
+            'category_title' => '4 étoiles',
+            'stars' => 4,
+            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'status' => OsTravelHotel::PENDING,
+            'base_price' => null,
+            'last_synced_at' => now(),
+        ]);
+
+        // Two rooms with overlapping stop-sales: the hotel-wide unavailable
+        // window is the intersection of both ranges.
+        $base = $this->osTravelTwoRoomEnvelope(178, [
+            'StopSales' => ['FromDate' => '2026-09-01', 'ToDate' => '2026-09-20'],
+        ], [
+            'StopSales' => ['FromDate' => '2026-09-05', 'ToDate' => '2026-09-30'],
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($base),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(1, $result['omitted']);
+
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame([['from' => '2026-09-05', 'to' => '2026-09-20']], $staged->stop_sale_ranges);
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_refresh_staged_prices_clears_ranges_when_one_room_is_open(): void
+    {
+        OsTravelHotel::create([
+            'external_id' => '178',
+            'payload' => [],
+            'payload_hash' => str_repeat('b', 64),
+            'name' => 'Cap Bon Kelibia Beach Hotel & Spa',
+            'city_external_id' => '12',
+            'city_name' => 'Kelibia',
+            'category_title' => '4 étoiles',
+            'stars' => 4,
+            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'status' => OsTravelHotel::PENDING,
+            'base_price' => null,
+            'last_synced_at' => now(),
+        ]);
+
+        // A room with no stop-sale keeps every day selectable, so even though
+        // the other room stops sales, the hotel-wide ranges must be empty.
+        $base = $this->osTravelTwoRoomEnvelope(178, [
+            'StopSales' => ['FromDate' => '2026-09-01', 'ToDate' => '2026-09-20'],
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($base),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(1, $result['omitted']);
+
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame([], $staged->stop_sale_ranges);
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_refresh_staged_prices_persists_ranges_on_priced_hotel(): void
+    {
+        OsTravelHotel::create([
+            'external_id' => '178',
+            'payload' => [],
+            'payload_hash' => str_repeat('b', 64),
+            'name' => 'Cap Bon Kelibia Beach Hotel & Spa',
+            'city_external_id' => '12',
+            'city_name' => 'Kelibia',
+            'category_title' => '4 étoiles',
+            'stars' => 4,
+            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'status' => OsTravelHotel::PENDING,
+            'base_price' => null,
+            'last_synced_at' => now(),
+        ]);
+
+        // A priced hotel can still carry a future stop-sale; the ranges are
+        // persisted alongside the live price so the picker blocks those days.
+        $base = $this->osTravelSingleRoomEnvelope(178, 600.0, [
+            'StopSales' => ['FromDate' => '2026-10-01', 'ToDate' => '2026-10-15'],
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($base),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertNotNull($staged->base_price);
+        $this->assertSame([['from' => '2026-10-01', 'to' => '2026-10-15']], $staged->stop_sale_ranges);
+
+        Http::assertSentCount(1);
+    }
+
+    public function test_refresh_latest_prices_persists_stop_sale_ranges_on_public_hotel(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        $base = $this->osTravelSingleRoomEnvelope(178, 600.0, [
+            'MinStay' => 2,
+            'StopSales' => ['FromDate' => '2026-09-01', 'ToDate' => '2026-09-10'],
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($base),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshLatestPrices([
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(1, $result['omitted']);
+
+        $hotel = Hotel::where('slug', 'cap-bon-kelibia')->first();
+        $this->assertNull($hotel->last_price);
+        $this->assertSame([['from' => '2026-09-01', 'to' => '2026-09-10']], $hotel->stop_sale_ranges);
 
         Http::assertSentCount(1);
     }

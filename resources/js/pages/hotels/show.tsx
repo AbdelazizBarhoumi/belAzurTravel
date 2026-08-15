@@ -242,6 +242,12 @@ export default function HotelDetail() {
     const firstAvailableDate = detail.first_available_at
         ? new Date(`${detail.first_available_at}T00:00:00`)
         : undefined;
+    const disabledRanges = (detail.stop_sale_ranges ?? [])
+        .filter((range) => range?.from && range?.to)
+        .map((range) => ({
+            from: new Date(`${range.from}T00:00:00`),
+            to: new Date(`${range.to}T00:00:00`),
+        }));
     const otherImages = detail.gallery?.length
         ? detail.gallery
         : detail.images?.length
@@ -525,6 +531,7 @@ export default function HotelDetail() {
                                 onChange={setDateRange}
                                 className="flex-1"
                                 fromDate={firstAvailableDate}
+                                disabledRanges={disabledRanges}
                             />
                             <OccupancyPicker
                                 value={occupancy}
