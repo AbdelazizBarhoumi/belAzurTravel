@@ -430,7 +430,18 @@ export interface HotelSearchResult {
     nights: number;
     available: boolean;
     provider: string;
+    unavailable_reason: string | null;
+    first_available_at: string | null;
+    min_nights: number | null;
     source?: string;
+    promotion?: {
+        title: string | null;
+        description: string;
+        rate: string | null;
+    } | null;
+    free_child?: number[];
+    recommended?: boolean;
+    short_description?: string | null;
     rooms: Array<{
         id: string;
         name: string;
@@ -447,6 +458,10 @@ export interface HotelSearchResult {
         token: string | null;
         source: string | null;
         stop_reservation: boolean;
+        min_stay: number;
+        on_request: boolean;
+        quantity: number | null;
+        stop_sales: { from: string; to: string } | null;
         cancellation_policy: Array<{
             fees: number;
             type: string | null;
@@ -455,6 +470,12 @@ export interface HotelSearchResult {
             from_date: string | null;
         }>;
         supplements: unknown[];
+        image?: string | null;
+        description?: string;
+        features?: string[];
+        not_refundable?: boolean;
+        cancellation_deadline?: string | null;
+        retrocession?: string | null;
     }>;
 }
 

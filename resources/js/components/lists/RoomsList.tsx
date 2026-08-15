@@ -24,6 +24,10 @@ interface Room {
     images: string[];
     // Mandatory supplements quoted by the provider for this room offer.
     supplements?: RoomSupplement[];
+    // Provider bookability metadata powering the room badges.
+    minStay?: number;
+    onRequest?: boolean;
+    stopSales?: { from: string; to: string } | null;
 }
 
 interface RoomsListProps {
@@ -44,7 +48,15 @@ export function RoomsList({
     onBookRoom,
     bookDisabled = false,
 }: RoomsListProps) {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
+
+    const formatBadgeDate = (value: string) => {
+        const date = new Date(`${value}T00:00:00`);
+        if (Number.isNaN(date.getTime())) return value;
+        return date.toLocaleDateString(
+            lang === 'fr' ? 'fr-FR' : lang === 'ar' ? 'ar-TN' : 'en-GB',
+        );
+    };
 
     return (
         <>
@@ -80,6 +92,34 @@ export function RoomsList({
                                         <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
                                             {room.name}
                                         </h3>
+
+                                        <div className="mb-3 flex flex-wrap gap-2">
+                                            {room.onRequest && (
+                                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                    {t('hotelDetail.onRequest')}
+                                                </span>
+                                            )}
+                                            {room.minStay && room.minStay > 1 && (
+                                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                                                    {t(
+                                                        'hotelDetail.minimumNights',
+                                                    )}{' '}
+                                                    {room.minStay}
+                                                </span>
+                                            )}
+                                            {room.stopSales && (
+                                                <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-semibold text-red-700">
+                                                    {t('hotelDetail.stopSale')}{' '}
+                                                    {formatBadgeDate(
+                                                        room.stopSales.from,
+                                                    )}
+                                                    {' – '}
+                                                    {formatBadgeDate(
+                                                        room.stopSales.to,
+                                                    )}
+                                                </span>
+                                            )}
+                                        </div>
 
                                         <p className="mb-4 text-sm text-muted-foreground">
                                             {room.description}

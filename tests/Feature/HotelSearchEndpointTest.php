@@ -95,10 +95,18 @@ class HotelSearchEndpointTest extends TestCase
     public function test_search_returns_paginated_data_and_meta(): void
     {
         $this->publishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
-        $this->publishedHotel(999, 'stop-sales', 'Stop Sales Hotel', 800);
+        $this->publishedHotel(777, 'aqua-resort', 'Aqua Resort', 900);
+
+        $envelope = $this->osTravelFixture('hotel_search');
+        $envelope['HotelSearch'] = [$envelope['HotelSearch'][0]];
+        $other = $this->osTravelFixture('hotel_search');
+        $other['HotelSearch'] = [$other['HotelSearch'][0]];
+        $other['HotelSearch'][0]['Hotel']['Id'] = 777;
+        $other['HotelSearch'][0]['Price']['Boarding'][0]['Pax'][0]['Rooms'][0]['Price'] = '500.000';
+        $envelope['HotelSearch'][] = $other['HotelSearch'][0];
 
         Http::fake([
-            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($envelope),
         ]);
 
         $response = $this->postJson('/api/hotels/search', [
@@ -110,6 +118,7 @@ class HotelSearchEndpointTest extends TestCase
         ])->assertOk();
 
         $this->assertCount(1, $response->json('data'));
+        // 777 prices at 600, so it sorts before cap-bon-kelibia (1113): page 2.
         $this->assertSame('cap-bon-kelibia', $response->json('data.0.slug'));
         $this->assertSame([
             'current_page' => 2,

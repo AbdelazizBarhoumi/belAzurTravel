@@ -130,7 +130,13 @@ class OsTravelSearchService
                     }
                     $seenIds[$externalId] = true;
 
-                    $normalized = $this->normalize($item->hotel, $providerHotel, $nights);
+                    $normalized = $this->normalize(
+                        $item->hotel,
+                        $providerHotel,
+                        $nights,
+                        $searchDetails['check_in'],
+                        $searchDetails['check_out'],
+                    );
 
                     // Boarding is not a provider filter; drop rooms that don't
                     // match, and the hotel if no matching room remains.
@@ -148,6 +154,14 @@ class OsTravelSearchService
                         $normalized = array_merge($normalized, $aggregate);
                     }
 
+                    // `OnlyAvailable: true` must only ever surface bookable
+                    // hotels. A hotel the provider returned with no bookable
+                    // room for the searched window is dropped; with
+                    // `OnlyAvailable: false` it is kept and flagged instead.
+                    if ($options['only_available'] && ! $normalized['available']) {
+                        continue;
+                    }
+
                     $results[] = $normalized;
                 }
             }
@@ -162,6 +176,9 @@ class OsTravelSearchService
 
                     $result = $this->basePayload($item->hotel);
                     $result['available'] = false;
+                    $result['unavailable_reason'] = 'not_returned';
+                    $result['first_available_at'] = null;
+                    $result['min_nights'] = null;
                     $result['rooms'] = [];
                     $result = array_merge($result, [
                         'price' => $item->hotel->price,
@@ -259,12 +276,13 @@ class OsTravelSearchService
 
     /**
      * Best-known price used by the browse-mode scheduler. Runs a batched
-     * search for all published hotels, probing forward chronologically until
-     * each hotel gets a price, and persists `last_price` / `last_price_at` on
-     * `hotels` alongside the nearest available day (`first_available_at`) and
-     * the minimum stay (`min_nights`) the price is normalized from. Hotels
-     * with no live availability across the whole probe horizon have their
-     * price cleared so browse never shows a stale or approximated value.
+     * search for all published hotels on the default window and persists
+     * `last_price` / `last_price_at` on `hotels` alongside the nearest
+     * available day (`first_available_at`) and the minimum stay (`min_nights`)
+     * the price is normalized from. Hotels with no live availability in that
+     * window have their price cleared so browse never shows a stale or
+     * approximated value, but keep their availability metadata so the public
+     * site can still surface the reopen day.
      *
      * @param  array<string, mixed>  $options  Same options as {@see search()}.
      * @return array{updated: int, omitted: int}
@@ -301,9 +319,25 @@ class OsTravelSearchService
             $updated++;
         }
 
-        // No live price for this hotel anywhere in the probe horizon: clear
-        // the stored browse price and its availability metadata so it is never
-        // shown as stale.
+        // Returned but not bookable in the default window: no live price, so
+        // clear it, but keep the reopen metadata the provider returned so
+        // browse can still show when the hotel is back.
+        foreach ($probe['unavailable'] as $externalId => $meta) {
+            $item = $published->get($externalId);
+            if ($item === null || $item->hotel === null) {
+                continue;
+            }
+
+            $item->hotel->update([
+                'last_price' => null,
+                'last_price_at' => null,
+                'first_available_at' => $meta['first_available_at'],
+                'min_nights' => $meta['min_nights'],
+            ]);
+        }
+
+        // No live price for this hotel at all: clear the stored browse price
+        // and its availability metadata so it is never shown as stale.
         foreach ($probe['omitted_ids'] as $externalId) {
             $item = $published->get($externalId);
             if ($item === null || $item->hotel === null) {
@@ -318,17 +352,21 @@ class OsTravelSearchService
             ]);
         }
 
-        return ['updated' => $updated, 'omitted' => $probe['omitted']];
+        return [
+            'updated' => $updated,
+            'omitted' => count($probe['unavailable']) + count($probe['omitted_ids']),
+        ];
     }
 
     /**
      * Refresh the provider's minimum price for staged (pending/approved)
      * hotels and persist it as their `base_price`, so the admin can review
-     * and approve without typing a price by hand. Probes forward
-     * chronologically until each hotel gets a price, recording the nearest
-     * available day and minimum stay. Hotels with no live availability across
-     * the whole probe horizon have their `base_price` cleared so a stale or
-     * approximated value is never staged. Optionally restrict to a set of
+     * and approve without typing a price by hand. Probes the default window
+     * once per chunk and records the nearest available day and minimum stay.
+     * Hotels with no live availability in that window have their `base_price`
+     * cleared so a stale or approximated value is never staged, and their
+     * `availability_status` records why (stop-sale / stop-reservation /
+     * no bookable room / not returned). Optionally restrict to a set of
      * staging row ids.
      *
      * @param  list<int>  $ids
@@ -368,6 +406,7 @@ class OsTravelSearchService
                 'base_price' => (int) round($value['price']),
                 'currency' => $value['currency'],
                 'price_status' => OsTravelHotel::PRICE_HAS_PRICE,
+                'availability_status' => OsTravelHotel::AVAILABILITY_AVAILABLE,
                 'last_price_attempt_at' => now(),
                 'first_available_at' => $value['first_available_at'],
                 'min_nights' => $value['min_nights'],
@@ -377,18 +416,45 @@ class OsTravelSearchService
             $updated++;
         }
 
-        // No live price for this hotel anywhere in the probe horizon: clear
-        // the staged price and its availability metadata so it is never shown
-        // as stale.
+        // Returned but not bookable in the base window: record why and keep the
+        // nearest available day / minimum stay the provider returned so the
+        // admin sees the reopen info instead of a bare "no price".
+        $noPriceIds = [];
+        foreach ($probe['unavailable'] as $externalId => $meta) {
+            $item = $staged->get($externalId);
+            if ($item === null) {
+                continue;
+            }
+
+            $noPriceIds[] = (string) $externalId;
+
+            $item->update([
+                'base_price' => null,
+                'price_status' => OsTravelHotel::PRICE_NO_AVAILABILITY,
+                'availability_status' => $meta['reason'] ?? OsTravelHotel::AVAILABILITY_NO_BOOKABLE_ROOM,
+                'last_price_attempt_at' => now(),
+                'first_available_at' => $meta['first_available_at'],
+                'min_nights' => $meta['min_nights'],
+            ]);
+
+            $this->syncPublishedHotel($item, null, $item->currency);
+        }
+
+        // No live price for this hotel in the base window: clear the staged
+        // price and its availability metadata so it is never shown as stale,
+        // and flag it as not returned.
         foreach ($probe['omitted_ids'] as $externalId) {
             $item = $staged->get($externalId);
             if ($item === null) {
                 continue;
             }
 
+            $noPriceIds[] = (string) $externalId;
+
             $item->update([
                 'base_price' => null,
                 'price_status' => OsTravelHotel::PRICE_NO_AVAILABILITY,
+                'availability_status' => OsTravelHotel::AVAILABILITY_NOT_RETURNED,
                 'last_price_attempt_at' => now(),
                 'first_available_at' => null,
                 'min_nights' => null,
@@ -413,8 +479,8 @@ class OsTravelSearchService
 
         return [
             'updated' => $updated,
-            'omitted' => count($probe['omitted_ids']),
-            'omitted_ids' => $probe['omitted_ids'],
+            'omitted' => count($noPriceIds),
+            'omitted_ids' => $noPriceIds,
             'failed_ids' => $probe['failed_ids'],
         ];
     }
@@ -454,46 +520,30 @@ class OsTravelSearchService
 
     /**
      * Query the provider for the minimum bookable per-night price of a set of
-     * external ids, probing forward chronologically when a hotel has no
-     * availability in the default window.
+     * external ids.
      *
-     * The probe is two-phase so the reported nearest available day is exact
-     * rather than coarse:
+     * A single `OnlyAvailable: false` call per chunk on the default window
+     * (`ostravel.refresh.nights`, default 1). Unlike `OnlyAvailable: true`, the
+     * provider still returns hotels that are not bookable for that window,
+     * together with the room metadata that explains why: `MinStay` (the room's
+     * minimum stay), `StopSales` (a date range during which booking is closed —
+     * the day after its end is the nearest available day), `StopReservation`
+     * (permanently closed) and `OnRequest`. A hotel bookable in the base window
+     * is priced directly at its check-in.
      *
-     * 1. **Coarse phase** — steps forward in `step_days` increments (default 7)
-     *    across `attempts` windows, so the first window that returns a price
-     *    brackets the hotel's availability. Cheap enough to scan the whole
-     *    ~42-day horizon without probing every single day.
-     * 2. **Fine phase** — for each hotel priced at a stepped (attempt > 0)
-     *    window, **binary-searches** the gap between the previous coarse
-     *    check-in and the winning one (O(log step_days) ladder probes, chunked
-     *    across hotels that share a midpoint), so the exact nearest available
-     *    day is found even when it falls between two coarse check-ins — without
-     *    paying the full ladder on every day of the gap. Hotels priced in the
-     *    default window (attempt 0) are already at the earliest bookable day
-     *    and need no refinement.
-     *
-     * The provider has no explicit minimum-stay field, so per check-in window
-     * the probe walks a ladder of stay lengths in ascending order
-     * (`ostravel.refresh.probe.night_lengths`, default 1 → 7) and takes the
-     * first length that yields a price as the hotel's minimum stay. The
-     * provider total for that length is the shortest bookable stay's total:
-     * a 1-night total is already the per-night price and is stored as-is,
-     * while a longer stay is normalized to a per-night display price
-     * (total ÷ nights).
-     *
-     * A hotel is reported as omitted only when it is never returned by the
-     * provider across any probed window or stay length; provider failures
-     * abort probing for the affected chunk (no re-query) and are excluded
-     * from `omitted_ids` because they are transient errors rather than a lack
-     * of availability. A probe window past the provider's bookable horizon
-     * ("CheckIn dépasser") is not a failure either: probing further forward
-     * is pointless, so that chunk counts as omitted (no availability within
-     * the horizon).
+     * A hotel the provider returned but did not book is reported in
+     * `unavailable` with the reason and nearest available day, so the caller can
+     * record *why* it has no price instead of probing forward. A hotel is
+     * reported as omitted when it is never returned by the provider. Provider
+     * failures abort the affected chunk (no re-query) and are excluded from
+     * `omitted_ids` because they are transient errors rather than a lack of
+     * availability. A probe window past the provider's bookable horizon
+     * ("CheckIn dépasser") is not a failure either: it counts as omitted (no
+     * availability within the horizon).
      *
      * @param  list<string>  $externalIds
      * @param  array<string, mixed>  $options
-     * @return array{prices: array<string, array{price: float, currency: string, first_available_at: string, min_nights: int}>, omitted: int, omitted_ids: list<string>, failed_ids: list<string>}
+     * @return array{prices: array<string, array{price: float, currency: string, first_available_at: string, min_nights: int}>, unavailable: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted: int, omitted_ids: list<string>, failed_ids: list<string>}
      */
     private function probePrices(array $externalIds, array $options): array
     {
@@ -501,57 +551,91 @@ class OsTravelSearchService
         // provider envelope always yields strings. Normalize once.
         $externalIds = array_values(array_map('strval', $externalIds));
 
-        $attempts = max(1, (int) config('ostravel.refresh.probe.attempts', 6));
-        $stepDays = max(1, (int) config('ostravel.refresh.probe.step_days', 7));
+        $baseCheckIn = $options['check_in'] ?? Carbon::today()->addDay()->toDateString();
+        $baseNights = max(1, (int) config('ostravel.refresh.nights', 1));
+        $baseCheckOut = Carbon::parse($baseCheckIn)->addDays($baseNights)->toDateString();
 
         $prices = [];
+        $unavailable = [];
         $failedIds = [];
-        $refineWindows = [];
-        $remaining = $externalIds;
         $throttleMs = (int) config('ostravel.search.throttle_ms', 150);
         $calls = 0;
 
-        $baseCheckIn = $options['check_in'] ?? Carbon::today()->addDay()->toDateString();
+        $baseOptions = array_merge($options, [
+            'check_in' => $baseCheckIn,
+            'check_out' => $baseCheckOut,
+            'only_available' => false,
+        ]);
 
-        // Phase 1 — coarse forward scan (default `step_days` apart).
-        for ($attempt = 0; $attempt < $attempts && $remaining !== []; $attempt++) {
-            $attemptCheckIn = Carbon::parse($baseCheckIn)->addDays($attempt * $stepDays)->toDateString();
+        // A single `OnlyAvailable: false` call per chunk. The provider still
+        // returns hotels that are not bookable for the base window, together
+        // with the room metadata that explains why (MinStay, StopSales range,
+        // StopReservation, OnRequest). A hotel's minimum stay and nearest
+        // available day come straight from the response instead of being probed
+        // window by window.
+        foreach (array_chunk($externalIds, self::MAX_HOTELS_PER_REQUEST) as $chunk) {
+            $this->throttle($throttleMs, $calls);
 
-            $pricedBefore = array_keys($prices);
-            $remaining = $this->probeLadder($remaining, $attemptCheckIn, $options, $prices, $failedIds, $throttleMs, $calls);
+            try {
+                $envelope = $this->providerEnvelope($chunk, $this->searchDetails($baseOptions), $baseOptions);
+            } catch (OsTravelHorizonExceededException) {
+                // The base window is already past the provider's bookable
+                // horizon: no live price can exist, so the chunk is omitted.
+                continue;
+            }
+            if ($envelope === null) {
+                $failedIds = array_merge($failedIds, $chunk);
 
-            // A hotel first priced at a stepped (attempt > 0) window is only
-            // known to be available somewhere inside the gap between the
-            // previous coarse check-in and this one. Record the gap so the
-            // fine phase can locate the exact day.
-            if ($attempt > 0) {
-                $prevCheckIn = Carbon::parse($baseCheckIn)->addDays(($attempt - 1) * $stepDays)->toDateString();
+                continue;
+            }
 
-                foreach (array_values(array_diff(array_keys($prices), $pricedBefore)) as $externalId) {
-                    $refineWindows[$externalId] = [
-                        'from' => Carbon::parse($prevCheckIn)->addDay()->toDateString(),
-                        'to' => $attemptCheckIn,
-                    ];
+            foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
+                $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
+                if (! in_array($externalId, $externalIds, true)) {
+                    continue;
                 }
+
+                $offers = $this->roomOffers($providerHotel);
+                $bookable = array_values(array_filter(
+                    $offers,
+                    fn (array $offer) => $this->roomBookable($offer, $baseCheckIn, $baseCheckOut)
+                ));
+
+                if ($bookable !== []) {
+                    $minPrice = $this->minOfferPrice($bookable);
+                    if ($minPrice !== null) {
+                        $prices[$externalId] = [
+                            'price' => $baseNights === 1 ? round($minPrice, 2) : round($minPrice / $baseNights, 2),
+                            'currency' => $this->calculator->currency($providerHotel['Currency'] ?? null),
+                            'first_available_at' => $baseCheckIn,
+                            'min_nights' => (int) $this->minStayOf($bookable),
+                        ];
+                    }
+
+                    continue;
+                }
+
+                // No bookable room in the base window (stop-sale, or a longer
+                // minimum stay): record why and the nearest available day so the
+                // caller can store the availability status instead of treating
+                // the hotel as having no price at all.
+                $unavailable[$externalId] = $this->availabilityMeta($offers, $baseCheckIn, $baseCheckOut);
             }
         }
 
-        // Phase 2 — refine each stepped gap to the exact nearest available day.
-        if ($refineWindows !== []) {
-            $this->refineNearestAvailableDays($refineWindows, $options, $prices, $throttleMs, $calls);
-        }
-
-        // A hotel is "omitted" (no availability) when it was probed across the
-        // whole horizon but the provider never returned a price for it.
+        // A hotel is "omitted" (no availability) when it was never returned by
+        // the provider. Returned-but-not-bookable hotels are in `unavailable`.
         // Transient provider failures are not omitted: keep their previous value.
         $omittedIds = array_values(array_diff(
             $externalIds,
             array_keys($prices),
+            array_keys($unavailable),
             $failedIds,
         ));
 
         return [
             'prices' => $prices,
+            'unavailable' => $unavailable,
             'omitted' => count($omittedIds),
             'omitted_ids' => $omittedIds,
             'failed_ids' => $failedIds,
@@ -559,209 +643,14 @@ class OsTravelSearchService
     }
 
     /**
-     * Probe a single check-in window across the stay-length ladder for a set
-     * of external ids. Hotels that get a price are recorded in `$prices` with
-     * the given check-in as their nearest available day and the winning length
-     * as their minimum stay; provider failures abort the affected chunk (no
-     * re-query) and are reported via `$failedIds`.
-     *
-     * @param  list<string>  $externalIds
-     * @param  array<string, array{price: float, currency: string, first_available_at: string, min_nights: int}>  $prices
-     * @param  list<string>  $failedIds
-     * @return list<string> ids still without a price after the whole ladder.
-     */
-    private function probeLadder(
-        array $externalIds,
-        string $checkIn,
-        array $options,
-        array &$prices,
-        array &$failedIds,
-        int $throttleMs,
-        int &$calls,
-    ): array {
-        $remaining = $externalIds;
-        $newlyPriced = [];
-
-        foreach ($this->probeNightLengths() as $nightLength) {
-            if ($remaining === []) {
-                break;
-            }
-
-            $attemptOptions = $options;
-            $attemptOptions['check_in'] = $checkIn;
-            $attemptOptions['check_out'] = Carbon::parse($checkIn)->addDays($nightLength)->toDateString();
-
-            $searchDetails = $this->searchDetails($attemptOptions);
-
-            foreach (array_chunk($remaining, self::MAX_HOTELS_PER_REQUEST) as $chunk) {
-                if ($calls++ > 0 && $throttleMs > 0) {
-                    usleep($throttleMs * 1000);
-                }
-
-                try {
-                    $envelope = $this->providerEnvelope($chunk, $searchDetails, $attemptOptions);
-                } catch (OsTravelHorizonExceededException) {
-                    // The probe window is past the provider's bookable
-                    // horizon: this chunk has no live availability anywhere in
-                    // the horizon, so it is omitted rather than a provider
-                    // failure. Stop probing it (later windows are even further out).
-                    $remaining = array_values(array_diff($remaining, $chunk));
-
-                    continue;
-                }
-                if ($envelope === null) {
-                    // Provider failure: abort probing this chunk (no re-query)
-                    // and report it separately from "no availability".
-                    $failedIds = array_merge($failedIds, $chunk);
-                    $remaining = array_values(array_diff($remaining, $chunk));
-
-                    continue;
-                }
-
-                foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
-                    $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
-
-                    if (! in_array($externalId, $remaining, true)) {
-                        continue;
-                    }
-
-                    $minPrice = $this->minRoomPrice($providerHotel);
-                    if ($minPrice === null) {
-                        continue;
-                    }
-
-                    // The provider total for the shortest bookable stay is
-                    // normalized to a per-night display price: the 1-night
-                    // total is already per-night and is stored as-is,
-                    // while a longer stay total is divided by its length.
-                    $prices[$externalId] = [
-                        'price' => $nightLength === 1
-                            ? round($minPrice, 2)
-                            : round($minPrice / $nightLength, 2),
-                        'currency' => $this->calculator->currency($providerHotel['Currency'] ?? null),
-                        'first_available_at' => $checkIn,
-                        'min_nights' => $nightLength,
-                    ];
-                    $newlyPriced[] = $externalId;
-                }
-
-                // Only hotels priced during THIS window leave the probe set; a
-                // hotel that already holds a price from a previous window (e.g.
-                // a coarse phase result being refined to an earlier exact day)
-                // must keep being probed until a cheaper exact day is found. A
-                // hotel that was returned but has no bookable room (e.g.
-                // stop-sales) also
-                // keeps being probed at longer stays and later windows.
-                $remaining = array_values(array_diff($remaining, $newlyPriced));
-            }
-        }
-
-        return $remaining;
-    }
-
-    /**
-     * Phase 2 of the forward probe: a hotel priced at a coarse (stepped) window
-     * is known to be available somewhere between the previous coarse check-in
-     * and the winning one, but not on the previous coarse check-in itself.
-     * Locate the exact nearest available day with a **binary search** over the
-     * gap (O(log step_days) ladder probes per hotel, all hotels sharing a
-     * midpoint probed in one chunk) instead of scanning every day.
-     *
-     * This assumes availability inside a gap is monotone — once a hotel is
-     * bookable it stays bookable — the same assumption the coarse forward scan
-     * already makes across windows. Under that model the first day the ladder
-     * prices is the exact nearest available day. A fine-phase provider failure
-     * only loses refinement precision, never the coarse price, so it is
-     * ignored (the coarse result stands).
-     *
-     * @param  array<string, array{from: string, to: string}>  $windows
-     * @param  array<string, mixed>  $options
-     * @param  array<string, array{price: float, currency: string, first_available_at: string, min_nights: int}>  $prices
-     */
-    private function refineNearestAvailableDays(
-        array $windows,
-        array $options,
-        array &$prices,
-        int $throttleMs,
-        int &$calls,
-    ): void {
-        $bounds = [];
-        foreach ($windows as $externalId => $window) {
-            $bounds[(string) $externalId] = [
-                'lo' => $window['from'],
-                'hi' => $window['to'],
-            ];
-        }
-
-        $remaining = array_values(array_map('strval', array_keys($bounds)));
-        $ignoredFailures = [];
-
-        while ($remaining !== []) {
-            $midpoints = [];
-            foreach ($remaining as $externalId) {
-                $lo = Carbon::parse($bounds[$externalId]['lo']);
-                $hi = Carbon::parse($bounds[$externalId]['hi']);
-                $mid = $lo->eq($hi)
-                    ? $bounds[$externalId]['lo']
-                    : $lo->addDays(intdiv($lo->diffInDays($hi), 2))->toDateString();
-                $midpoints[$mid][] = $externalId;
-            }
-
-            foreach ($midpoints as $mid => $ids) {
-                $this->probeLadder($ids, $mid, $options, $prices, $ignoredFailures, $throttleMs, $calls);
-
-                foreach ($ids as $externalId) {
-                    $bound = $bounds[$externalId];
-                    // The winning probe overwrote this hotel's price with the
-                    // midpoint as its first available day, so a priced midpoint
-                    // means it is available at or before `mid` (search earlier);
-                    // an unpriced one means it becomes available later.
-                    $priced = ($prices[$externalId]['first_available_at'] ?? '') === $mid;
-
-                    $bounds[$externalId] = $priced
-                        ? ['lo' => $bound['lo'], 'hi' => Carbon::parse($mid)->subDay()->toDateString()]
-                        : ['lo' => Carbon::parse($mid)->addDay()->toDateString(), 'hi' => $bound['hi']];
-                }
-            }
-
-            // Continue only while a hotel's range can still shrink.
-            $remaining = array_values(array_filter(
-                $remaining,
-                fn (string $externalId): bool => $bounds[$externalId]['lo'] <= $bounds[$externalId]['hi'],
-            ));
-        }
-    }
-
-    /**
-     * Stay lengths probed per check-in window, in ascending order, so a
-     * hotel's minimum stay is found exactly (1 night first, then 2, 3, ... up
-     * to the configured maximum). The provider total for the first successful
-     * length is normalized to a per-night display price.
-     *
-     * @return list<int>
-     */
-    private function probeNightLengths(): array
-    {
-        $lengths = config('ostravel.refresh.probe.night_lengths', [1, 2, 3, 4, 5, 6, 7]);
-
-        if (! is_array($lengths) || $lengths === []) {
-            return [1];
-        }
-
-        $lengths = array_values(array_unique(array_map('intval', $lengths)));
-        sort($lengths);
-
-        return $lengths;
-    }
-
-    /**
      * Probe a single date window for a set of external ids (no forward
      * scanning). Used by the admin list's live-check filter: the admin picks
      * dates and the list reports, for that exact window, which hotels have a
-     * live price and which have no availability or a provider error.
+     * live price, which are unavailable and why (stop-sale with its reopen
+     * day, or no bookable room), and which hit a provider error.
      *
      * @param  list<string>  $externalIds
-     * @return array{prices: array<string, array{price: float, currency: string}>, omitted_ids: list<string>, failed_ids: list<string>}
+     * @return array{prices: array<string, array{price: float, currency: string}>, unavailable: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted_ids: list<string>, failed_ids: list<string>}
      */
     public function probeWindow(array $externalIds, string $checkIn, string $checkOut): array
     {
@@ -771,12 +660,12 @@ class OsTravelSearchService
         $options = [
             'check_in' => $checkIn,
             'check_out' => $checkOut,
-            'only_available' => true,
+            'only_available' => false,
         ];
         $searchDetails = $this->searchDetails($options);
 
         $prices = [];
-        $seenAll = [];
+        $unavailable = [];
         $failedIds = [];
         $remaining = $externalIds;
 
@@ -801,32 +690,40 @@ class OsTravelSearchService
 
             foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
                 $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
-
                 if (! in_array($externalId, $externalIds, true)) {
                     continue;
                 }
-                $seenAll[] = $externalId;
 
-                $minPrice = $this->minRoomPrice($providerHotel);
-                if ($minPrice === null) {
+                $offers = $this->roomOffers($providerHotel);
+                $bookable = array_values(array_filter(
+                    $offers,
+                    fn (array $offer) => $this->roomBookable($offer, $checkIn, $checkOut)
+                ));
+
+                $minPrice = $this->minOfferPrice($bookable);
+                if ($minPrice !== null) {
+                    $prices[$externalId] = [
+                        'price' => round($minPrice, 2),
+                        'currency' => $this->calculator->currency($providerHotel['Currency'] ?? null),
+                    ];
+
                     continue;
                 }
 
-                $prices[$externalId] = [
-                    'price' => round($minPrice, 2),
-                    'currency' => $this->calculator->currency($providerHotel['Currency'] ?? null),
-                ];
+                $unavailable[$externalId] = $this->availabilityMeta($offers, $checkIn, $checkOut);
             }
         }
 
         $omittedIds = array_values(array_diff(
             $externalIds,
             array_keys($prices),
+            array_keys($unavailable),
             $failedIds,
         ));
 
         return [
             'prices' => $prices,
+            'unavailable' => $unavailable,
             'omitted_ids' => $omittedIds,
             'failed_ids' => $failedIds,
         ];
@@ -914,12 +811,12 @@ class OsTravelSearchService
     private function providerRooms(array $rooms): array
     {
         if ($rooms === []) {
-            return [['Adult' => 2, 'Child' => []]];
+            return [['Adult' => 1, 'Child' => []]];
         }
 
         return array_map(
             fn (array $room) => [
-                'Adult' => (int) ($room['adults'] ?? 2),
+                'Adult' => (int) ($room['adults'] ?? 1),
                 'Child' => array_map('intval', $room['children'] ?? []),
             ],
             $rooms
@@ -957,11 +854,26 @@ class OsTravelSearchService
                         'adults' => $adults,
                         'price' => (float) ($room['Price'] ?? $room['BasePrice'] ?? 0),
                         'stop_reservation' => (bool) ($room['StopReservation'] ?? false),
+                        'min_stay' => max(1, (int) ($room['MinStay'] ?? 1)),
+                        'on_request' => (bool) ($room['OnRequest'] ?? false),
+                        'quantity' => isset($room['Quantity']) ? (int) $room['Quantity'] : null,
+                        'stop_sales' => $this->normalizeStopSales($room['StopSales'] ?? null),
                         'cancellation_policy' => $room['CancellationPolicy'] ?? [],
                         // View ids and the raw Supplement list are echoed to the
                         // provider during booking, so keep the provider shape.
                         'view_ids' => array_map('intval', $room['View'] ?? []),
                         'supplements' => $room['Supplement'] ?? [],
+                        // Content fields surfaced on the public room cards:
+                        // photo, description, feature icons (Icones), refund
+                        // status and the free-cancellation deadline.
+                        'photo' => $this->resolveImageUrl($room['Photo'] ?? null),
+                        'description' => (string) ($room['Description'] ?? ''),
+                        'icones' => $this->normalizeIcones($room['Icones'] ?? []),
+                        'not_refundable' => (bool) ($room['NotRefundable'] ?? false),
+                        'cancellation_deadline' => $this->parseProviderDate((string) ($room['CancellationDeadline'] ?? '')),
+                        'retrocession' => isset($room['Retrocession']) && (string) $room['Retrocession'] !== ''
+                            ? (string) $room['Retrocession']
+                            : null,
                     ];
                 }
             }
@@ -974,14 +886,19 @@ class OsTravelSearchService
      * @param  array<string, mixed>  $providerHotel
      * @return array<string, mixed>
      */
-    private function normalize(Hotel $hotel, array $providerHotel, int $nights): array
+    private function normalize(Hotel $hotel, array $providerHotel, int $nights, string $checkIn, string $checkOut): array
     {
         $markup = (float) $hotel->markup_percentage;
         $currency = $this->calculator->currency($providerHotel['Currency'] ?? $hotel->currency);
 
         $rooms = [];
+        $anyBookable = false;
         foreach ($this->roomOffers($providerHotel) as $offer) {
             $basePrice = $offer['price'];
+
+            if ($this->roomBookable($offer, $checkIn, $checkOut)) {
+                $anyBookable = true;
+            }
 
             $rooms[] = [
                 'id' => $offer['id'],
@@ -1002,12 +919,48 @@ class OsTravelSearchService
                 'token' => $providerHotel['Token'] ?? null,
                 'source' => $providerHotel['Source'] ?? null,
                 'stop_reservation' => $offer['stop_reservation'],
+                'min_stay' => $offer['min_stay'],
+                'on_request' => $offer['on_request'],
+                'quantity' => $offer['quantity'],
+                'stop_sales' => $offer['stop_sales'],
                 'cancellation_policy' => $this->cancellationPolicy($offer['cancellation_policy']),
                 'supplements' => $offer['supplements'],
+                'image' => $offer['photo'],
+                'description' => $offer['description'],
+                'features' => $offer['icones'],
+                'not_refundable' => $offer['not_refundable'],
+                'cancellation_deadline' => $offer['cancellation_deadline'],
+                'retrocession' => $offer['retrocession'],
             ];
         }
 
-        $result = $this->basePayload($hotel);
+        $result = array_merge($this->basePayload($hotel), $this->hotelPayload($providerHotel));
+
+        // The provider returns hotels with no bookable room for the searched
+        // window only when `OnlyAvailable: false`. Surface them as unavailable
+        // with the metadata the provider returned (StopSales range → nearest
+        // available day, MinStay → minimum nights) instead of pretending they
+        // are bookable — the `search()` caller drops them when
+        // `only_available=true`.
+        if (! $anyBookable) {
+            $meta = $this->availabilityMeta($this->roomOffers($providerHotel), $checkIn, $checkOut);
+
+            $result['available'] = false;
+            $result['rooms'] = [];
+            $result['unavailable_reason'] = $meta['reason'];
+            $result['first_available_at'] = $meta['first_available_at'];
+            $result['min_nights'] = $meta['min_nights'];
+
+            return array_merge($result, [
+                'price' => $hotel->price,
+                'price_total' => $hotel->price,
+                'price_per_night' => $this->calculator->perNight($hotel->price, $nights),
+                'base_price' => $hotel->base_price,
+                'currency' => $hotel->currency,
+                'nights' => $nights,
+            ]);
+        }
+
         $result['rooms'] = $rooms;
 
         return array_merge(
@@ -1038,6 +991,108 @@ class OsTravelSearchService
             'provider' => 'ostravel',
             'available' => true,
         ];
+    }
+
+    /**
+     * Hotel-level provider metadata surfaced on the search result: promotion,
+     * free-child ages, recommended flag and a short description.
+     *
+     * @param  array<string, mixed>  $providerHotel
+     * @return array<string, mixed>
+     */
+    private function hotelPayload(array $providerHotel): array
+    {
+        $promotion = $providerHotel['Promotion'] ?? null;
+
+        return [
+            'promotion' => is_array($promotion) ? [
+                'title' => ($promotion['Title'] ?? null) !== null ? (string) $promotion['Title'] : null,
+                'description' => (string) ($promotion['Description'] ?? ''),
+                'rate' => ($promotion['Rate'] ?? null) !== null ? (string) $promotion['Rate'] : null,
+            ] : null,
+            'free_child' => $this->freeChildAges($providerHotel['FreeChild'] ?? []),
+            'recommended' => (bool) ($providerHotel['Recommended'] ?? 0),
+            'short_description' => $this->shortDescription($providerHotel['Hotel'] ?? []),
+        ];
+    }
+
+    /**
+     * Extract child ages from the provider `FreeChild` list.
+     *
+     * @param  array<int, mixed>  $freeChild
+     * @return list<int>
+     */
+    private function freeChildAges(array $freeChild): array
+    {
+        $ages = [];
+        foreach ($freeChild as $child) {
+            if (is_array($child) && isset($child['Age']) && is_numeric($child['Age'])) {
+                $ages[] = (int) $child['Age'];
+            }
+        }
+
+        return array_values(array_unique($ages));
+    }
+
+    /**
+     * Normalize the provider short description (HTML) to plain text.
+     *
+     * @param  array<string, mixed>  $hotel
+     */
+    private function shortDescription(array $hotel): ?string
+    {
+        $raw = $hotel['ShortDescription'] ?? $hotel['HotelDescription'] ?? null;
+
+        if ($raw === null || (string) $raw === '') {
+            return null;
+        }
+
+        $text = HotelPublisher::htmlToText((string) $raw);
+        $text = implode("\n", array_map('trim', explode("\n", $text)));
+
+        return $text === '' ? null : $text;
+    }
+
+    /**
+     * Resolve a provider-relative image path against the base URL, keeping
+     * absolute URLs and nulls untouched.
+     */
+    private function resolveImageUrl(mixed $path): ?string
+    {
+        if (! is_scalar($path)) {
+            return null;
+        }
+
+        $path = trim((string) $path);
+
+        if ($path === '' || preg_match('#^https?://#i', $path)) {
+            return $path === '' ? null : $path;
+        }
+
+        return rtrim((string) config('ostravel.base_url'), '/').'/'.ltrim($path, '/');
+    }
+
+    /**
+     * Normalize a room's `Icones` list into feature badges. Entries may be
+     * plain strings, null, or objects carrying a `Title`.
+     *
+     * @param  array<int, mixed>  $icones
+     * @return list<string>
+     */
+    private function normalizeIcones(array $icones): array
+    {
+        $features = [];
+        foreach ($icones as $icone) {
+            if (is_array($icone)) {
+                $icone = $icone['Title'] ?? $icone['Name'] ?? null;
+            }
+            if (! is_scalar($icone) || trim((string) $icone) === '') {
+                continue;
+            }
+            $features[] = trim((string) $icone);
+        }
+
+        return array_values(array_unique($features));
     }
 
     /**
@@ -1096,19 +1151,160 @@ class OsTravelSearchService
     }
 
     /**
-     * @param  array<string, mixed>  $providerHotel
+     * A room offer is bookable for a stay when it is not permanently
+     * stop-reserved, its minimum stay fits the searched nights, and no
+     * stop-sale range covers the exact dates. On-request rooms are still
+     * bookable (they just need the hotel's confirmation), so `on_request` does
+     * not block booking.
+     *
+     * @param  array<string, mixed>  $offer
      */
-    private function minRoomPrice(array $providerHotel): ?float
+    private function roomBookable(array $offer, string $checkIn, string $checkOut): bool
     {
-        $prices = [];
-        foreach ($this->roomOffers($providerHotel) as $offer) {
+        if ($offer['stop_reservation'] || $offer['min_stay'] > $this->calculator->nightsBetween($checkIn, $checkOut)) {
+            return false;
+        }
+
+        return ! $this->stopSalesOverlaps($offer['stop_sales'], $checkIn, $checkOut);
+    }
+
+    /**
+     * @param  array{from: string, to: string}|null  $stopSales
+     */
+    private function stopSalesOverlaps(?array $stopSales, string $checkIn, string $checkOut): bool
+    {
+        if ($stopSales === null) {
+            return false;
+        }
+
+        return Carbon::parse($checkIn)->lte(Carbon::parse($stopSales['to']))
+            && Carbon::parse($checkOut)->gte(Carbon::parse($stopSales['from']));
+    }
+
+    /**
+     * Availability metadata for a hotel whose rooms are not bookable for a
+     * window: why it is unavailable, the nearest day it becomes bookable again
+     * (the earliest stop-sale end + 1 day, or the requested check-in when a
+     * room is only blocked by its minimum stay), and its minimum stay.
+     *
+     * @param  list<array<string, mixed>>  $offers
+     * @return array{reason: string|null, first_available_at: string|null, min_nights: int|null}
+     */
+    private function availabilityMeta(array $offers, string $checkIn, string $checkOut): array
+    {
+        $stays = [];
+        $reopens = [];
+
+        foreach ($offers as $offer) {
             if ($offer['stop_reservation']) {
                 continue;
             }
-            $prices[] = $offer['price'];
+
+            $stays[] = max(1, (int) $offer['min_stay']);
+
+            if ($this->stopSalesOverlaps($offer['stop_sales'], $checkIn, $checkOut)) {
+                $reopens[] = Carbon::parse($offer['stop_sales']['to'])->addDay()->toDateString();
+            }
         }
 
+        // Every room is permanently stop-reserved: no reopen info exists.
+        if ($stays === []) {
+            return ['reason' => 'stop_reservation', 'first_available_at' => null, 'min_nights' => null];
+        }
+
+        $reason = $reopens === [] ? 'no_bookable_room' : 'stop_sale';
+
+        return [
+            'reason' => $reason,
+            'first_available_at' => $reopens === [] ? $checkIn : min($reopens),
+            'min_nights' => (int) min($stays),
+        ];
+    }
+
+    /**
+     * Normalize a room's `StopSales` window ({@see `FromDate`/`ToDate`}).
+     *
+     * @return array{from: string, to: string}|null
+     */
+    private function normalizeStopSales(mixed $raw): ?array
+    {
+        if (! is_array($raw) || ! isset($raw['FromDate'], $raw['ToDate'])) {
+            return null;
+        }
+
+        $from = $this->parseProviderDate((string) $raw['FromDate']);
+        $to = $this->parseProviderDate((string) $raw['ToDate']);
+
+        if ($from === null || $to === null) {
+            return null;
+        }
+
+        return ['from' => $from, 'to' => $to];
+    }
+
+    /**
+     * Parse a provider date that may arrive as `Y-m-d` (StopSales) or
+     * `d-m-Y H:i` (CancellationPolicy). Returns `Y-m-d` or null.
+     */
+    private function parseProviderDate(string $value): ?string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        foreach (['Y-m-d', 'd-m-Y', 'd-m-Y H:i'] as $format) {
+            try {
+                $date = Carbon::createFromFormat($format, $value);
+            } catch (Throwable) {
+                continue;
+            }
+
+            if ($date !== false) {
+                return $date->toDateString();
+            }
+        }
+
+        try {
+            return Carbon::parse($value)->toDateString();
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Cheapest offer price from a list of room offers (already filtered for
+     * bookability by the caller).
+     *
+     * @param  list<array<string, mixed>>  $offers
+     */
+    private function minOfferPrice(array $offers): ?float
+    {
+        $prices = array_map(fn (array $offer) => (float) $offer['price'], $offers);
+
         return $prices === [] ? null : (float) min($prices);
+    }
+
+    /**
+     * Minimum stay across a list of room offers.
+     *
+     * @param  list<array<string, mixed>>  $offers
+     */
+    private function minStayOf(array $offers): ?int
+    {
+        $stays = array_map(fn (array $offer) => max(1, (int) $offer['min_stay']), $offers);
+
+        return $stays === [] ? null : (int) min($stays);
+    }
+
+    /**
+     * Throttle between provider calls.
+     */
+    private function throttle(int $throttleMs, int &$calls): void
+    {
+        if ($calls++ > 0 && $throttleMs > 0) {
+            usleep($throttleMs * 1000);
+        }
     }
 
     /**

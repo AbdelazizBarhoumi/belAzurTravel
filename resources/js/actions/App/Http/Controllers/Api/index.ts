@@ -7,6 +7,7 @@ import AdminCategoryController from './AdminCategoryController'
 import GalleryController from './GalleryController'
 import DestinationController from './DestinationController'
 import HotelController from './HotelController'
+import HotelImageController from './HotelImageController'
 import HotelSearchController from './HotelSearchController'
 import TourController from './TourController'
 import TravelController from './TravelController'
@@ -50,6 +51,7 @@ AdminCategoryController: Object.assign(AdminCategoryController, AdminCategoryCon
 GalleryController: Object.assign(GalleryController, GalleryController),
 DestinationController: Object.assign(DestinationController, DestinationController),
 HotelController: Object.assign(HotelController, HotelController),
+HotelImageController: Object.assign(HotelImageController, HotelImageController),
 HotelSearchController: Object.assign(HotelSearchController, HotelSearchController),
 TourController: Object.assign(TourController, TourController),
 TravelController: Object.assign(TravelController, TravelController),

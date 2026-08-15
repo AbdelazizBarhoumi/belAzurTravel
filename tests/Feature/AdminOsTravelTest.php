@@ -5,11 +5,9 @@ namespace Tests\Feature;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Models\OsTravelReference;
-use App\Models\OsTravelRefreshRequest;
 use App\Models\OsTravelSync;
 use App\Models\User;
 use App\Services\OsTravel\HotelPublisher;
-use App\Services\OsTravel\OsTravelRefreshProcessor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -513,19 +511,13 @@ class AdminOsTravelTest extends TestCase
             ->postJson('/api/admin/os-travel/hotels/refresh-prices')
             ->assertOk();
 
-        // The bulk refresh is enqueued, not run synchronously.
-        $this->assertSame('pending', $response->json('data.status'));
-        $this->assertFalse($response->json('already_running'));
-        $this->assertNull($response->json('data.updated'));
-
-        app(OsTravelRefreshProcessor::class)->process();
-
-        $request = OsTravelRefreshRequest::first();
-        $this->assertSame('completed', $request->status);
-        $this->assertSame(1, $request->updated);
+        // The bulk refresh runs synchronously in the request.
+        $this->assertSame(1, $response->json('data.updated'));
         // Stop Sales Hotel is returned but has no bookable room, so it has no
         // live price and counts as omitted.
-        $this->assertSame(1, $request->omitted);
+        $this->assertSame(1, $response->json('data.omitted'));
+        $this->assertSame(['999'], $response->json('data.omitted_ids'));
+        $this->assertSame([], $response->json('data.failed_ids'));
 
         $this->assertSame(928, OsTravelHotel::where('external_id', '178')->first()->base_price);
         $this->assertNull(OsTravelHotel::where('external_id', '999')->first()->base_price);
@@ -547,58 +539,33 @@ class AdminOsTravelTest extends TestCase
             ])
             ->assertOk();
 
-        $this->assertSame('pending', $response->json('data.status'));
-        $this->assertSame([(string) $other->id], OsTravelRefreshRequest::first()->ids);
-
-        app(OsTravelRefreshProcessor::class)->process();
-
         // Only the targeted (stop-sales) hotel was queried, which yields no price.
-        $this->assertSame(0, OsTravelRefreshRequest::first()->updated);
+        $this->assertSame(0, $response->json('data.updated'));
+        $this->assertSame(1, $response->json('data.omitted'));
         $this->assertNull(OsTravelHotel::where('external_id', '178')->first()->base_price);
         $this->assertNull(OsTravelHotel::where('external_id', '999')->first()->base_price);
     }
 
-    public function test_refresh_prices_returns_active_request_when_one_is_running(): void
+    public function test_refresh_prices_marks_unavailable_hotels_with_reason(): void
     {
         $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::PENDING, null);
+        $this->stagedHotel(999, 'Stop Sales Hotel', OsTravelHotel::PENDING, null);
 
-        OsTravelRefreshRequest::create([
-            'status' => OsTravelRefreshRequest::PROCESSING,
-            'requested_by' => $this->admin->id,
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
         ]);
 
-        $response = $this->actingAs($this->admin)
+        $this->actingAs($this->admin)
             ->postJson('/api/admin/os-travel/hotels/refresh-prices')
             ->assertOk();
 
-        $this->assertTrue($response->json('already_running'));
-        $this->assertSame('processing', $response->json('data.status'));
-        $this->assertSame(1, OsTravelRefreshRequest::count());
-    }
+        $available = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame(928, $available->base_price);
+        $this->assertSame(OsTravelHotel::AVAILABILITY_AVAILABLE, $available->availability_status);
 
-    public function test_refresh_price_status_returns_latest_or_requested(): void
-    {
-        OsTravelRefreshRequest::create([
-            'status' => OsTravelRefreshRequest::COMPLETED,
-            'updated' => 4,
-            'omitted' => 2,
-            'started_at' => now()->subMinute(),
-            'finished_at' => now(),
-        ]);
-
-        $latest = $this->actingAs($this->admin)
-            ->getJson('/api/admin/os-travel/hotels/refresh-prices/status')
-            ->assertOk();
-
-        $this->assertSame('completed', $latest->json('data.status'));
-        $this->assertSame(4, $latest->json('data.updated'));
-        $this->assertSame(2, $latest->json('data.omitted'));
-
-        $byId = $this->actingAs($this->admin)
-            ->getJson('/api/admin/os-travel/hotels/refresh-prices/status?id=1')
-            ->assertOk();
-
-        $this->assertSame('completed', $byId->json('data.status'));
+        $stopSales = OsTravelHotel::where('external_id', '999')->first();
+        $this->assertNull($stopSales->base_price);
+        $this->assertSame(OsTravelHotel::AVAILABILITY_STOP_RESERVATION, $stopSales->availability_status);
     }
 
     public function test_refresh_prices_validates_ids_and_dates(): void
@@ -752,9 +719,11 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame('TND', $rows['Cap Bon Kelibia Beach Hotel & Spa']['live_currency']);
         // Final price = live API price + markup (default 20%).
         $this->assertSame(1113, $rows['Cap Bon Kelibia Beach Hotel & Spa']['final_price']);
-        $this->assertSame('no_availability', $rows['Stop Sales Hotel']['live_status']);
+        // The stop-reserved hotel is flagged as unavailable with its reason.
+        $this->assertSame('stop_reservation', $rows['Stop Sales Hotel']['live_status']);
         $this->assertNull($rows['Stop Sales Hotel']['live_price']);
         $this->assertNull($rows['Stop Sales Hotel']['final_price']);
+        $this->assertNull($rows['Stop Sales Hotel']['live_until']);
     }
 
     public function test_index_returns_projected_final_price_from_scheduled_min(): void
@@ -803,33 +772,24 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame('219', $response->json('data.cities.0.country_id'));
     }
 
-    public function test_refresh_request_persists_omitted_and_failed_ids(): void
+    public function test_refresh_prices_reports_failed_provider_errors_per_hotel(): void
     {
         $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::PENDING, 250);
         $this->stagedHotel(999, 'Stop Sales Hotel', OsTravelHotel::PENDING, null);
 
-        $request = OsTravelRefreshRequest::create([
-            'status' => OsTravelRefreshRequest::PENDING,
-            'requested_by' => $this->admin->id,
-        ]);
-
         Http::fake([
-            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response('', 500),
         ]);
 
-        app(OsTravelRefreshProcessor::class)->process();
-
-        $request->refresh();
-        $this->assertSame(OsTravelRefreshRequest::COMPLETED, $request->status);
-        $this->assertSame(1, $request->updated);
-        $this->assertSame(1, $request->omitted);
-        $this->assertSame(['999'], $request->omitted_ids);
-        $this->assertSame([], $request->failed_ids);
-
-        $status = $this->actingAs($this->admin)
-            ->getJson("/api/admin/os-travel/hotels/refresh-prices/status?id={$request->id}")
+        $response = $this->actingAs($this->admin)
+            ->postJson('/api/admin/os-travel/hotels/refresh-prices')
             ->assertOk();
-        $this->assertSame(['999'], $status->json('data.omitted_ids'));
-        $this->assertSame([], $status->json('data.failed_ids'));
+
+        $this->assertSame(0, $response->json('data.updated'));
+        $this->assertSame(0, $response->json('data.omitted'));
+        $failed = $response->json('data.failed_ids');
+        $this->assertContains('178', $failed);
+        $this->assertContains('999', $failed);
+        $this->assertSame(OsTravelHotel::PRICE_PROVIDER_ERROR, OsTravelHotel::where('external_id', '178')->first()->price_status);
     }
 }

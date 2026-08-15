@@ -25,6 +25,16 @@ class OsTravelHotel extends Model
 
     public const PRICE_NEVER_REFRESHED = 'never_refreshed';
 
+    public const AVAILABILITY_AVAILABLE = 'available';
+
+    public const AVAILABILITY_STOP_SALE = 'stop_sale';
+
+    public const AVAILABILITY_STOP_RESERVATION = 'stop_reservation';
+
+    public const AVAILABILITY_NO_BOOKABLE_ROOM = 'no_bookable_room';
+
+    public const AVAILABILITY_NOT_RETURNED = 'not_returned';
+
     protected $fillable = [
         'external_id', 'sync_id', 'payload', 'payload_hash',
         'name', 'city_external_id', 'city_name', 'category_title', 'stars', 'image',
@@ -32,7 +42,7 @@ class OsTravelHotel extends Model
         'approved_by', 'approved_at', 'rejected_at', 'last_synced_at',
         'detail_fetched_at',
         'country_external_id', 'country_name', 'price_status', 'last_price_attempt_at',
-        'first_available_at', 'min_nights',
+        'first_available_at', 'min_nights', 'availability_status',
     ];
 
     protected $casts = [

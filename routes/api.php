@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\FlightController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\HotelController;
+use App\Http\Controllers\Api\HotelImageController;
 use App\Http\Controllers\Api\HotelSearchController;
 use App\Http\Controllers\Api\InteractionController;
 use App\Http\Controllers\Api\NotificationController;
@@ -63,6 +64,7 @@ Route::get('destinations', [DestinationController::class, 'index'])->middleware(
 Route::get('destinations/{slug}', [DestinationController::class, 'show'])->middleware(['check-nav-page:destinations']);
 
 Route::get('hotels', [HotelController::class, 'index'])->middleware(['check-nav-page:hotels']);
+Route::get('hotels/images/{token}', [HotelImageController::class, 'show'])->middleware(['check-nav-page:hotels']);
 Route::get('hotels/{slug}', [HotelController::class, 'show'])->middleware(['check-nav-page:hotels']);
 Route::post('hotels/search', [HotelSearchController::class, 'store'])->middleware(['check-nav-page:hotels']);
 
@@ -152,7 +154,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/os-travel/references', [AdminOsTravelController::class, 'references']);
         Route::post('/admin/os-travel/hotels/approve-all', [AdminOsTravelController::class, 'approveAll']);
         Route::post('/admin/os-travel/hotels/refresh-prices', [AdminOsTravelController::class, 'refreshPrices']);
-        Route::get('/admin/os-travel/hotels/refresh-prices/status', [AdminOsTravelController::class, 'refreshPriceStatus']);
         Route::get('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'show']);
         Route::put('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'update']);
         Route::post('/admin/os-travel/hotels/{id}/approve', [AdminOsTravelController::class, 'approve']);

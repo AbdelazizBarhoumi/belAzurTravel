@@ -106,9 +106,47 @@ const liveStatusMeta: Record<
         labelKey: 'osTravel.liveStatus.noAvailability',
         className: 'text-amber-600',
     },
+    stop_reservation: {
+        labelKey: 'osTravel.liveStatus.stopReservation',
+        className: 'text-red-600',
+    },
+    stop_sale: {
+        labelKey: 'osTravel.liveStatus.stopSale',
+        className: 'text-amber-600',
+    },
+    no_bookable_room: {
+        labelKey: 'osTravel.liveStatus.noBookableRoom',
+        className: 'text-amber-600',
+    },
     provider_error: {
         labelKey: 'osTravel.liveStatus.providerError',
         className: 'text-destructive',
+    },
+};
+
+const availabilityStatusMeta: Record<
+    NonNullable<OsTravelHotelRow['availability_status']>,
+    { labelKey: string; className: string }
+> = {
+    available: {
+        labelKey: 'osTravel.availability.available',
+        className: 'text-emerald-600',
+    },
+    stop_reservation: {
+        labelKey: 'osTravel.availability.stopReservation',
+        className: 'text-red-600',
+    },
+    stop_sale: {
+        labelKey: 'osTravel.availability.stopSale',
+        className: 'text-amber-600',
+    },
+    no_bookable_room: {
+        labelKey: 'osTravel.availability.noBookableRoom',
+        className: 'text-amber-600',
+    },
+    not_returned: {
+        labelKey: 'osTravel.availability.notReturned',
+        className: 'text-amber-600',
     },
 };
 
@@ -162,6 +200,10 @@ const AdminOsTravel = () => {
         omitted_ids: string[];
         failed_ids: string[];
         updated: number;
+    } | null>(null);
+    const [refreshProgress, setRefreshProgress] = useState<{
+        done: number;
+        total: number;
     } | null>(null);
 
     const { data: dashboard } = useOsTravelDashboard();
@@ -353,7 +395,13 @@ const AdminOsTravel = () => {
             ids?: string[];
             check_in?: string;
             check_out?: string;
-        }) => admin.refreshPrices(data),
+        }) =>
+            admin.refreshPrices(data, (done, total) =>
+                setRefreshProgress({ done, total }),
+            ),
+        onMutate: () => {
+            setRefreshProgress(null);
+        },
         onSuccess: (result) => {
             toast.success(
                 t('osTravel.refreshAllDone')
@@ -365,8 +413,10 @@ const AdminOsTravel = () => {
                 failed_ids: result.failed_ids,
                 updated: result.updated,
             });
+            setRefreshProgress(null);
         },
         onError: (err: unknown) => {
+            setRefreshProgress(null);
             toast.error(admin.toErrorMessage(err, 'osTravel.refreshFailed'));
         },
     });
@@ -618,7 +668,10 @@ const AdminOsTravel = () => {
                             }`}
                         />
                         {refreshAllMutation.isPending
-                            ? t('osTravel.refreshing')
+                            ? refreshProgress &&
+                              refreshProgress.total > 1
+                                ? `${t('osTravel.refreshing')} (${refreshProgress.done}/${refreshProgress.total})`
+                                : t('osTravel.refreshing')
                             : t('osTravel.refreshPrices')}
                     </Button>
                     {hasDateFilter && (
@@ -743,6 +796,22 @@ const AdminOsTravel = () => {
                                                     —
                                                 </span>
                                             )}
+                                            {h.base_price === null &&
+                                                h.availability_status &&
+                                                availabilityStatusMeta[
+                                                    h.availability_status
+                                                ] && (
+                                                    <p
+                                                        className={`mt-0.5 text-[10px] font-semibold ${availabilityStatusMeta[h.availability_status].className}`}
+                                                    >
+                                                        {t(
+                                                            availabilityStatusMeta[
+                                                                h
+                                                                    .availability_status
+                                                            ].labelKey,
+                                                        )}
+                                                    </p>
+                                                )}
                                             {h.first_available_at && (
                                                 <p className="mt-0.5 text-[10px] font-semibold text-primary">
                                                     {t(
@@ -766,15 +835,33 @@ const AdminOsTravel = () => {
                                                         'TND'}
                                                 </span>
                                             ) : h.live_status ? (
-                                                <span
-                                                    className={`text-xs font-semibold ${liveStatusMeta[h.live_status].className}`}
+                                                <div
+                                                    className="flex flex-col gap-0.5"
+                                                    title={
+                                                        h.live_reason ??
+                                                        undefined
+                                                    }
                                                 >
-                                                    {t(
-                                                        liveStatusMeta[
-                                                            h.live_status
-                                                        ].labelKey,
+                                                    <span
+                                                        className={`text-xs font-semibold ${liveStatusMeta[h.live_status].className}`}
+                                                    >
+                                                        {t(
+                                                            liveStatusMeta[
+                                                                h.live_status
+                                                            ].labelKey,
+                                                        )}
+                                                    </span>
+                                                    {h.live_until && (
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            {t(
+                                                                'osTravel.liveStatus.availableFrom',
+                                                            )}{' '}
+                                                            {displayDate(
+                                                                h.live_until,
+                                                            )}
+                                                        </span>
                                                     )}
-                                                </span>
+                                                </div>
                                             ) : (
                                                 <span className="text-muted-foreground">
                                                     —

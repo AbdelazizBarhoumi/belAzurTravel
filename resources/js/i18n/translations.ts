@@ -1657,6 +1657,16 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'لا يتوفر هذا الفندق للتواريخ المحددة. جرب تواريخ أخرى.',
         en: 'This hotel has no availability for the selected dates. Try other dates.',
     },
+    'hotelDetail.onRequest': {
+        fr: 'Sur demande',
+        ar: 'عند الطلب',
+        en: 'On request',
+    },
+    'hotelDetail.stopSale': {
+        fr: 'Vente suspendue',
+        ar: 'إيقاف البيع',
+        en: 'Sale stopped',
+    },
     'hotelDetail.mandatorySupplements': {
         fr: 'Suppléments obligatoires',
         ar: 'الرسوم الإضافية الإجبارية',
@@ -7044,11 +7054,6 @@ translations['osTravel.refreshFailed'] = {
     ar: 'فشل تحديث الأسعار.',
     en: 'Failed to refresh prices.',
 };
-translations['osTravel.refreshTimeout'] = {
-    fr: "L'actualisation a pris trop de temps. Réessayez.",
-    ar: 'استغرق تحديث الأسعار وقتاً طويلاً. أعد المحاولة.',
-    en: 'The refresh took too long. Please try again.',
-};
 translations['osTravel.refreshAllDone'] = {
     fr: '{updated} prix actualisés · {omitted} indisponibles',
     ar: 'تم تحديث {updated} سعر · {omitted} غير متوفر',
@@ -7148,6 +7153,51 @@ translations['osTravel.liveStatus.live'] = {
     fr: 'live',
     ar: 'مباشر',
     en: 'live',
+};
+translations['osTravel.liveStatus.stopReservation'] = {
+    fr: 'Réservation arrêtée',
+    ar: 'إيقاف الحجز',
+    en: 'Reservation stopped',
+};
+translations['osTravel.liveStatus.stopSale'] = {
+    fr: 'Vente suspendue',
+    ar: 'إيقاف البيع',
+    en: 'Sale stopped',
+};
+translations['osTravel.liveStatus.noBookableRoom'] = {
+    fr: 'Aucune chambre réservable',
+    ar: 'لا توجد غرفة قابلة للحجز',
+    en: 'No bookable room',
+};
+translations['osTravel.liveStatus.availableFrom'] = {
+    fr: 'De retour le',
+    ar: 'يعود التوفر في',
+    en: 'Back on',
+};
+translations['osTravel.availability.available'] = {
+    fr: 'Disponible',
+    ar: 'متوفر',
+    en: 'Available',
+};
+translations['osTravel.availability.stopReservation'] = {
+    fr: 'Réservation arrêtée',
+    ar: 'إيقاف الحجز',
+    en: 'Reservation stopped',
+};
+translations['osTravel.availability.stopSale'] = {
+    fr: 'Vente suspendue',
+    ar: 'إيقاف البيع',
+    en: 'Sale stopped',
+};
+translations['osTravel.availability.noBookableRoom'] = {
+    fr: 'Aucune chambre réservable',
+    ar: 'لا توجد غرفة قابلة للحجز',
+    en: 'No bookable room',
+};
+translations['osTravel.availability.notReturned'] = {
+    fr: 'Non retourné par le fournisseur',
+    ar: 'لم يتم إرجاعه من قبل المزود',
+    en: 'Not returned by the provider',
 };
 translations['osTravel.refreshResultTitle'] = {
     fr: 'Résultat de l’actualisation',

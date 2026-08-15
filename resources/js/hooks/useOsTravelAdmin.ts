@@ -5,7 +5,6 @@ import {
     getOsTravelDashboard,
     getOsTravelHotel,
     getOsTravelReferences,
-    getOsTravelRefreshStatus,
     listOsTravelHotels,
     refreshOsTravelPrice,
     refreshOsTravelPrices,
@@ -14,22 +13,10 @@ import {
     updateOsTravelHotel,
     type OsTravelListFilters,
     type OsTravelPricePayload,
-    type OsTravelRefreshRequest,
+    type OsTravelRefreshResult,
     type OsTravelStatus,
 } from '@/api/osTravel.api';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-let refreshPollMs = 5000;
-
-/**
- * Test-only override for the refresh status poll interval. Set it to 0 in
- * tests so the polling loop resolves without real timers.
- */
-export const __setRefreshPollMs = (ms: number): void => {
-    refreshPollMs = ms;
-};
 
 export const osTravelKeys = {
     dashboard: ['admin', 'os-travel', 'dashboard'] as const,
@@ -125,43 +112,53 @@ export function useOsTravelAdmin() {
         return result.data;
     };
 
-    const refreshPrices = async (data?: {
-        ids?: string[];
-        check_in?: string;
-        check_out?: string;
-    }): Promise<OsTravelRefreshRequest> => {
-        // Enqueue the refresh, then poll its status until it reaches a
-        // terminal state. The actual work runs on the scheduler so a large
-        // catalog never blocks the admin's HTTP request.
-        const created = await refreshOsTravelPrices(data);
-        let req = created.data;
-
-        const startedAt = Date.now();
-        const timeoutMs = 10 * 60 * 1000;
-        while (req.status === 'pending' || req.status === 'processing') {
-            if (Date.now() - startedAt > timeoutMs) {
-                throw Object.assign(
-                    new Error(t('osTravel.refreshTimeout')),
-                    { status: 500, data: { message: t('osTravel.refreshTimeout') } },
-                );
-            }
-
-            await delay(refreshPollMs);
-            const status = await getOsTravelRefreshStatus(req.id);
-            req = status.data ?? req;
+    /**
+     * Refresh provider prices for the selected hotels synchronously. The ids
+     * are split into chunks of ≤200 and each chunk is sent as its own request,
+     * awaiting the response before the next, so a refresh never blocks a
+     * single HTTP request for the whole catalog. Results are accumulated
+     * across chunks and returned together.
+     */
+    const refreshPrices = async (
+        data?: {
+            ids?: string[];
+            check_in?: string;
+            check_out?: string;
+        },
+        onProgress?: (doneChunks: number, totalChunks: number) => void,
+    ): Promise<OsTravelRefreshResult> => {
+        const ids = data?.ids ?? [];
+        const chunkSize = 200;
+        const chunks: string[][] = [];
+        for (let i = 0; i < ids.length; i += chunkSize) {
+            chunks.push(ids.slice(i, i + chunkSize));
         }
+        const batches = chunks.length > 0 ? chunks : [[]];
 
-        if (req.status === 'failed') {
-            const message = req.error || t('osTravel.refreshFailed');
-            throw Object.assign(new Error(message), {
-                status: 500,
-                data: { message },
+        const totals: OsTravelRefreshResult = {
+            updated: 0,
+            omitted: 0,
+            omitted_ids: [],
+            failed_ids: [],
+        };
+
+        for (let i = 0; i < batches.length; i++) {
+            const batch = batches[i];
+            const result = await refreshOsTravelPrices({
+                ...(batch.length > 0 ? { ids: batch } : {}),
+                ...(data?.check_in ? { check_in: data.check_in } : {}),
+                ...(data?.check_out ? { check_out: data.check_out } : {}),
             });
+            totals.updated += result.data.updated;
+            totals.omitted += result.data.omitted;
+            totals.omitted_ids.push(...result.data.omitted_ids);
+            totals.failed_ids.push(...result.data.failed_ids);
+            onProgress?.(i + 1, batches.length);
         }
 
         invalidateAll();
 
-        return req;
+        return totals;
     };
 
     const toErrorMessage = (err: unknown, fallbackKey: string): string => {

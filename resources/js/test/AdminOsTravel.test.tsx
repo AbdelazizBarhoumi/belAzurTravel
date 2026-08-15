@@ -11,7 +11,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as osTravelApi from '@/api/osTravel.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
-import { __setRefreshPollMs } from '@/hooks/useOsTravelAdmin';
 import AdminOsTravel from '@/pages/admin/AdminOsTravel';
 
 vi.mock('@/hooks/useAdminGuard', () => ({
@@ -30,7 +29,6 @@ vi.mock('@/api/osTravel.api', () => ({
     unapproveOsTravelHotel: vi.fn(),
     refreshOsTravelPrice: vi.fn(),
     refreshOsTravelPrices: vi.fn(),
-    getOsTravelRefreshStatus: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -58,6 +56,7 @@ const makeRow = (
     last_price_attempt_at: null,
     first_available_at: null,
     min_nights: null,
+    availability_status: null,
     markup_percentage: '20.00',
     currency: 'TND',
     hotel_id: null,
@@ -69,6 +68,8 @@ const makeRow = (
     live_status: null,
     live_price: null,
     live_currency: null,
+    live_reason: null,
+    live_until: null,
     ...overrides,
 });
 
@@ -183,27 +184,10 @@ describe('AdminOsTravel page', () => {
         } as never);
         vi.mocked(osTravelApi.refreshOsTravelPrices).mockResolvedValue({
             data: {
-                id: '42',
-                status: 'pending',
-                started_at: null,
-                finished_at: null,
-                updated: 0,
-                omitted: 0,
-                error: null,
-            },
-            already_running: false,
-        } as never);
-        vi.mocked(osTravelApi.getOsTravelRefreshStatus).mockResolvedValue({
-            data: {
-                id: '42',
-                status: 'completed',
-                started_at: '2026-08-14T10:00:00Z',
-                finished_at: '2026-08-14T10:01:00Z',
                 updated: 1,
                 omitted: 0,
                 omitted_ids: [],
                 failed_ids: [],
-                error: null,
             },
         } as never);
         vi.mocked(osTravelApi.getOsTravelReferences).mockResolvedValue({
@@ -218,8 +202,6 @@ describe('AdminOsTravel page', () => {
                 ],
             },
         } as never);
-
-        __setRefreshPollMs(0);
     });
 
     afterEach(() => {
@@ -460,13 +442,6 @@ describe('AdminOsTravel page', () => {
             expect(osTravelApi.refreshOsTravelPrices).toHaveBeenCalledWith({
                 ids: ['1'],
             });
-        });
-
-        // The polling loop observes the completed status and finishes.
-        await waitFor(() => {
-            expect(osTravelApi.getOsTravelRefreshStatus).toHaveBeenCalledWith(
-                '42',
-            );
         });
     });
 

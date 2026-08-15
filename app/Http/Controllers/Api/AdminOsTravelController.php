@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\OsTravelHotel;
 use App\Models\OsTravelReference;
-use App\Models\OsTravelRefreshRequest;
 use App\Models\OsTravelSync;
 use App\Services\OsTravel\HotelPublisher;
 use App\Services\OsTravel\OsTravelPriceCalculator;
@@ -380,13 +379,15 @@ class AdminOsTravelController extends Controller
     }
 
     /**
-     * Enqueue a bulk price refresh as a pending request. Processing is deferred
-     * to the scheduler (`os-travel:process-refresh-request`) so a large refresh
-     * never blocks this request. If a refresh is already pending/processing,
-     * the existing request is returned (idempotent).
+     * Refresh provider prices for the given staged hotels synchronously. The
+     * frontend splits the selected ids into chunks of ≤200 and calls this
+     * endpoint once per chunk, so a refresh never blocks a single request for
+     * the whole catalog.
      */
     public function refreshPrices(Request $request): JsonResponse
     {
+        set_time_limit(300);
+
         $data = $request->validate([
             'ids' => ['sometimes', 'array'],
             'ids.*' => ['integer'],
@@ -394,57 +395,20 @@ class AdminOsTravelController extends Controller
             'check_out' => ['sometimes', 'nullable', 'date', 'after:check_in'],
         ]);
 
-        $active = OsTravelRefreshRequest::query()
-            ->whereIn('status', [OsTravelRefreshRequest::PENDING, OsTravelRefreshRequest::PROCESSING])
-            ->latest('id')
-            ->first();
+        $result = $this->searchService->refreshStagedPrices(
+            array_map('intval', $data['ids'] ?? []),
+            [
+                'check_in' => $data['check_in'] ?? null,
+                'check_out' => $data['check_out'] ?? null,
+            ],
+        );
 
-        if ($active !== null) {
-            return response()->json([
-                'data' => $this->refreshRequestPayload($active),
-                'already_running' => true,
-            ]);
-        }
-
-        $refresh = OsTravelRefreshRequest::create([
-            'status' => OsTravelRefreshRequest::PENDING,
-            'requested_by' => $request->user()?->id,
-            'ids' => $data['ids'] ?? null,
-            'check_in' => $data['check_in'] ?? null,
-            'check_out' => $data['check_out'] ?? null,
-        ]);
-
-        return response()->json([
-            'data' => $this->refreshRequestPayload($refresh),
-            'already_running' => false,
-        ]);
-    }
-
-    /**
-     * Return the status/counts of a refresh request (or the latest one).
-     */
-    public function refreshPriceStatus(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'id' => ['sometimes', 'nullable', 'integer'],
-        ]);
-
-        $refresh = isset($data['id']) && $data['id'] !== null
-            ? OsTravelRefreshRequest::query()->findOrFail($data['id'])
-            : OsTravelRefreshRequest::query()->latest('id')->first();
-
-        return response()->json([
-            'data' => $refresh ? $this->refreshRequestPayload($refresh) : null,
-        ]);
+        return response()->json(['data' => $result]);
     }
 
     /**
      * Refresh the provider's minimum price for a single staged hotel and
      * persist it as `base_price`, returning the refreshed review payload.
-     *
-     * The probe can walk the full ~42-day horizon for a hotel with no
-     * availability at the base window, so raise PHP's execution limit well past
-     * the default 30s before doing the work (bulk refreshes stay async).
      */
     public function refreshPrice(int|string $id): JsonResponse
     {
@@ -521,7 +485,7 @@ class AdminOsTravelController extends Controller
      * priced this hotel, otherwise the projected `base_price` + markup from
      * the scheduled min. It is null when there is no price to mark up.
      *
-     * @param  array{prices?: array<string, array{price: float, currency: string}>, omitted_ids?: list<string>, failed_ids?: list<string>}|null  $live
+     * @param  array{prices?: array<string, array{price: float, currency: string}>, unavailable?: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted_ids?: list<string>, failed_ids?: list<string>}|null  $live
      */
     private function reviewPayload(OsTravelHotel $hotel, ?array $live = null): array
     {
@@ -530,12 +494,21 @@ class AdminOsTravelController extends Controller
         $liveStatus = null;
         $livePrice = null;
         $liveCurrency = null;
+        $liveReason = null;
+        $liveUntil = null;
 
         if ($live !== null) {
             if (isset($live['prices'][$hotel->external_id])) {
                 $livePrice = $live['prices'][$hotel->external_id]['price'];
                 $liveCurrency = $live['prices'][$hotel->external_id]['currency'];
                 $liveStatus = 'available';
+            } elseif (isset($live['unavailable'][$hotel->external_id])) {
+                $meta = $live['unavailable'][$hotel->external_id];
+                $liveStatus = $meta['reason'] ?? 'no_availability';
+                $liveUntil = $meta['first_available_at'];
+                $liveReason = $liveUntil !== null
+                    ? sprintf('first available %s (min %d night(s))', $liveUntil, $meta['min_nights'] ?? 1)
+                    : 'stop reservation — no reopen date known';
             } elseif (in_array($hotel->external_id, $live['failed_ids'] ?? [], true)) {
                 $liveStatus = 'provider_error';
             } else {
@@ -574,6 +547,7 @@ class AdminOsTravelController extends Controller
             'last_price_attempt_at' => $hotel->last_price_attempt_at,
             'first_available_at' => $hotel->first_available_at?->toDateString(),
             'min_nights' => $hotel->min_nights,
+            'availability_status' => $hotel->availability_status,
             'markup_percentage' => $hotel->markup_percentage,
             'currency' => $hotel->currency,
             'hotel_id' => $hotel->hotel_id !== null ? (string) $hotel->hotel_id : null,
@@ -585,6 +559,8 @@ class AdminOsTravelController extends Controller
             'live_status' => $liveStatus,
             'live_price' => $livePrice,
             'live_currency' => $liveCurrency,
+            'live_reason' => $liveReason,
+            'live_until' => $liveUntil,
         ];
     }
 
@@ -631,24 +607,6 @@ class AdminOsTravelController extends Controller
             'markup_percentage' => $markup,
             'currency' => $hotel->currency ?? config('ostravel.currency.default', 'TND'),
             'code' => 'ostravel-'.$hotel->external_id,
-        ];
-    }
-
-    /**
-     * Status/counts payload for a bulk refresh request.
-     */
-    private function refreshRequestPayload(OsTravelRefreshRequest $refresh): array
-    {
-        return [
-            'id' => (string) $refresh->id,
-            'status' => $refresh->status,
-            'started_at' => $refresh->started_at,
-            'finished_at' => $refresh->finished_at,
-            'updated' => $refresh->updated,
-            'omitted' => $refresh->omitted,
-            'omitted_ids' => $refresh->omitted_ids ?? [],
-            'failed_ids' => $refresh->failed_ids ?? [],
-            'error' => $refresh->error,
         ];
     }
 

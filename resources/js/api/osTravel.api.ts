@@ -46,6 +46,13 @@ export interface OsTravelHotelRow {
     last_price_attempt_at: string | null;
     first_available_at: string | null;
     min_nights: number | null;
+    availability_status:
+        | 'available'
+        | 'stop_sale'
+        | 'stop_reservation'
+        | 'no_bookable_room'
+        | 'not_returned'
+        | null;
     markup_percentage: string | null;
     currency: string | null;
     hotel_id: string | null;
@@ -54,9 +61,18 @@ export interface OsTravelHotelRow {
     approved_at: string | null;
     rejected_at: string | null;
     last_synced_at: string | null;
-    live_status: 'available' | 'no_availability' | 'provider_error' | null;
+    live_status:
+        | 'available'
+        | 'no_availability'
+        | 'stop_reservation'
+        | 'stop_sale'
+        | 'no_bookable_room'
+        | 'provider_error'
+        | null;
     live_price: number | null;
     live_currency: string | null;
+    live_reason: string | null;
+    live_until: string | null;
 }
 
 export interface OsTravelMappedPreview {
@@ -149,27 +165,8 @@ export interface OsTravelRowResponse {
 export interface OsTravelRefreshResult {
     updated: number;
     omitted: number;
-}
-
-export interface OsTravelRefreshRequest {
-    id: string;
-    status: 'pending' | 'processing' | 'completed' | 'failed';
-    started_at: string | null;
-    finished_at: string | null;
-    updated: number;
-    omitted: number;
     omitted_ids: string[];
     failed_ids: string[];
-    error: string | null;
-}
-
-export interface OsTravelRefreshResponse {
-    data: OsTravelRefreshRequest;
-    already_running?: boolean;
-}
-
-export interface OsTravelStatusResponse {
-    data: OsTravelRefreshRequest | null;
 }
 
 export interface OsTravelHotelRefreshResponse extends OsTravelRowResponse {
@@ -290,19 +287,12 @@ export async function refreshOsTravelPrices(data?: {
     check_in?: string;
     check_out?: string;
 }) {
-    return apiFetch<OsTravelRefreshResponse>(
+    return apiFetch<{ data: OsTravelRefreshResult }>(
         '/api/admin/os-travel/hotels/refresh-prices',
         {
             method: 'POST',
             body: JSON.stringify(data ?? {}),
         },
-    );
-}
-
-export async function getOsTravelRefreshStatus(id?: string) {
-    const qs = id ? `?id=${encodeURIComponent(id)}` : '';
-    return apiFetch<OsTravelStatusResponse>(
-        `/api/admin/os-travel/hotels/refresh-prices/status${qs}`,
     );
 }
 
@@ -345,6 +335,10 @@ export interface OsTravelSearchRoomResult {
     token: string | null;
     source: string | null;
     stop_reservation: boolean;
+    min_stay: number;
+    on_request: boolean;
+    quantity: number | null;
+    stop_sales: { from: string; to: string } | null;
     cancellation_policy: Array<{
         fees: number;
         type: string | null;
@@ -353,6 +347,12 @@ export interface OsTravelSearchRoomResult {
         from_date: string | null;
     }>;
     supplements: unknown[];
+    image: string | null;
+    description: string;
+    features: string[];
+    not_refundable: boolean;
+    cancellation_deadline: string | null;
+    retrocession: string | null;
 }
 
 export interface OsTravelSearchResult {
@@ -375,6 +375,17 @@ export interface OsTravelSearchResult {
     nights: number;
     available: boolean;
     provider: string;
+    unavailable_reason: string | null;
+    first_available_at: string | null;
+    min_nights: number | null;
+    promotion?: {
+        title: string | null;
+        description: string;
+        rate: string | null;
+    } | null;
+    free_child?: number[];
+    recommended?: boolean;
+    short_description?: string | null;
     rooms: OsTravelSearchRoomResult[];
 }
 

@@ -122,7 +122,7 @@ class HotelSearchPublicFlowTest extends TestCase
         $this->assertSame('cap-bon-kelibia', $response->json('data.0.slug'));
     }
 
-    public function test_search_defaults_to_all_published_hotels(): void
+    public function test_search_defaults_to_published_bookable_hotels(): void
     {
         $this->publishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
         $this->publishedHotel(999, 'stop-sales', 'Stop Sales Hotel', 800);
@@ -136,7 +136,10 @@ class HotelSearchPublicFlowTest extends TestCase
             'check_out' => '2026-09-08',
         ])->assertOk();
 
-        $this->assertCount(2, $response->json('data'));
+        // `OnlyAvailable` defaults to true: the provider-returned but
+        // stop-reserved hotel is dropped, so only the bookable hotel remains.
+        $this->assertCount(1, $response->json('data'));
+        $this->assertSame('cap-bon-kelibia', $response->json('data.0.slug'));
     }
 
     public function test_search_does_not_leak_provider_credentials(): void

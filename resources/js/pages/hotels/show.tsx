@@ -46,6 +46,10 @@ type RoomView = {
     boardingId?: number;
     viewIds?: number[];
     supplements?: Array<{ name: string; price: number; perNight?: boolean }>;
+    // Provider bookability metadata powering the room badges.
+    minStay?: number;
+    onRequest?: boolean;
+    stopSales?: { from: string; to: string } | null;
 };
 
 type AmenityView = {
@@ -246,7 +250,26 @@ export default function HotelDetail() {
     const staticRoomByName = new Map(rooms.map((room) => [room.name, room]));
 
     const liveRooms: RoomView[] = (liveHotel?.rooms ?? [])
-        .filter((room) => !room.stop_reservation)
+        .filter((room) => {
+            // Only offer rooms that are actually bookable for the searched
+            // window: not stop-reserved, minimum stay fits, and no stop-sale
+            // range covers the dates. Non-bookable rooms stay on the static
+            // list below with their badges.
+            if (room.stop_reservation) return false;
+            if ((room.min_stay ?? 1) > (room.nights ?? 1)) return false;
+            if (room.stop_sales && dateRange?.from && dateRange?.to) {
+                const checkIn = new Date(
+                    `${dateRange.from.toISOString().slice(0, 10)}T00:00:00`,
+                );
+                const checkOut = new Date(
+                    `${dateRange.to.toISOString().slice(0, 10)}T00:00:00`,
+                );
+                const saleFrom = new Date(`${room.stop_sales.from}T00:00:00`);
+                const saleTo = new Date(`${room.stop_sales.to}T00:00:00`);
+                if (checkIn <= saleTo && checkOut >= saleFrom) return false;
+            }
+            return true;
+        })
         .map((room, index) => {
             const staticRoom = staticRoomByName.get(room.name);
 
@@ -269,6 +292,9 @@ export default function HotelDetail() {
                 boardingId: room.boarding_id ?? undefined,
                 viewIds: room.view_ids ?? [],
                 supplements: normalizeSupplements(room.supplements ?? []),
+                minStay: room.min_stay,
+                onRequest: room.on_request,
+                stopSales: room.stop_sales,
             };
         });
     const liveRoomIds = new Set(liveRooms.map((room) => room.id));
