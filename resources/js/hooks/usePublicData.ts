@@ -35,6 +35,7 @@ export type HotelDetailLookupData = {
     gallery?: string[];
     image?: string;
     price?: number;
+    currency?: string;
     source?: 'ostravel' | 'manual';
     provider?: 'ostravel' | 'manual';
     last_price?: number | null;

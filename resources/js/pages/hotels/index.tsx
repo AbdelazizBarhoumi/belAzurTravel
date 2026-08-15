@@ -542,6 +542,24 @@ export default function Hotels() {
                                                             />
                                                         </div>
 
+                                                        {(liveLoaded && hotel.promotion?.rate) ||
+                                                            (liveLoaded &&
+                                                                hotel.free_child?.length) ? (
+                                                            <div className="mb-3 flex flex-wrap gap-2">
+                                                                {hotel.promotion?.rate && (
+                                                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                                        {t('hotelDetail.promo')}{' '}
+                                                                        {hotel.promotion.title}
+                                                                    </span>
+                                                                )}
+                                                                {hotel.free_child?.length ? (
+                                                                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                                        {t('hotelDetail.freeChild')}
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                        ) : null}
+
                                                         {(() => {
                                                             const catLabels = getHotelCategoryLabels(hotel.category_assignments, categoryTypes, lang, 3);
                                                             if (catLabels.length === 0) return null;

@@ -412,4 +412,367 @@ describe('HotelDetail', () => {
             supplements: [{ name: 'Insurance', price: 40, perNight: true }],
         });
     });
+
+    it('groups live rooms by boarding and defaults to the cheapest boarding tab', async () => {
+        mockHotelSearch.data = [
+            {
+                slug: 'sunset-paradise-resort',
+                name: {
+                    en: 'Sunset Paradise Resort',
+                    fr: 'Sunset Paradise Resort',
+                    ar: 'Sunset Paradise Resort',
+                },
+                location: {
+                    en: 'Santorini, Greece',
+                    fr: 'Santorin, Grèce',
+                    ar: 'سانتوريني، اليونان',
+                },
+                stars: 5,
+                rating: 4.9,
+                reviews: 234,
+                image: '/main-hotel.jpg',
+                price: 1500,
+                price_total: 1500,
+                price_per_night: 375,
+                base_price: 1300,
+                markup_percentage: '15.38',
+                currency: 'TND',
+                nights: 4,
+                available: true,
+                provider: 'ostravel',
+                rooms: [
+                    {
+                        id: '9001',
+                        name: 'Standard Double',
+                        boarding: null,
+                        boarding_name: 'All inclusive',
+                        boarding_id: 1,
+                        view: 'Sea view',
+                        view_ids: [7],
+                        price: 1500,
+                        price_total: 1500,
+                        price_per_night: 375,
+                        base_price: 1300,
+                        currency: 'TND',
+                        nights: 4,
+                        token: 'live-token-1',
+                        source: 'OS-TRAVEL-DIRECT',
+                        stop_reservation: false,
+                        cancellation_policy: [],
+                        supplements: [],
+                    },
+                    {
+                        id: '9002',
+                        name: 'Junior Suite',
+                        boarding: null,
+                        boarding_name: 'Demi-pension',
+                        boarding_id: 2,
+                        view: 'Garden view',
+                        view_ids: [3],
+                        price: 900,
+                        price_total: 900,
+                        price_per_night: 225,
+                        base_price: 780,
+                        currency: 'TND',
+                        nights: 4,
+                        token: 'live-token-2',
+                        source: 'OS-TRAVEL-DIRECT',
+                        stop_reservation: false,
+                        cancellation_policy: [],
+                        supplements: [],
+                    },
+                ],
+            },
+        ];
+
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres disponibles');
+
+        fireEvent.click(screen.getByTestId('set-dates'));
+        await screen.findByRole('button', { name: 'Demi-pension' });
+
+        // Default tab is the cheapest boarding (Demi-pension at 900 < 1500).
+        expect(screen.getByText('Junior Suite')).toBeInTheDocument();
+        expect(screen.queryByText('Standard Double')).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'All inclusive' }));
+
+        expect(screen.getByText('Standard Double')).toBeInTheDocument();
+        expect(screen.queryByText('Junior Suite')).not.toBeInTheDocument();
+    });
+
+    it('renders promo, free-child and recommended badges from the live result', async () => {
+        mockHotelSearch.data = [
+            {
+                slug: 'sunset-paradise-resort',
+                name: {
+                    en: 'Sunset Paradise Resort',
+                    fr: 'Sunset Paradise Resort',
+                    ar: 'Sunset Paradise Resort',
+                },
+                location: {
+                    en: 'Santorini, Greece',
+                    fr: 'Santorin, Grèce',
+                    ar: 'سانتوريني، اليونان',
+                },
+                stars: 5,
+                rating: 4.9,
+                reviews: 234,
+                image: '/main-hotel.jpg',
+                price: 1500,
+                price_total: 1500,
+                price_per_night: 375,
+                base_price: 1300,
+                markup_percentage: '15.38',
+                currency: 'TND',
+                nights: 4,
+                available: true,
+                provider: 'ostravel',
+                promotion: {
+                    title: 'Early booking',
+                    description: '-29% on select stays',
+                    rate: '29.00',
+                },
+                free_child: [5],
+                recommended: true,
+                rooms: [
+                    {
+                        id: '9001',
+                        name: 'Deluxe Ocean View',
+                        boarding: null,
+                        boarding_name: 'All inclusive',
+                        boarding_id: 2,
+                        view: 'Sea view',
+                        view_ids: [7],
+                        price: 1500,
+                        price_total: 1500,
+                        price_per_night: 375,
+                        base_price: 1300,
+                        currency: 'TND',
+                        nights: 4,
+                        token: 'live-token-1',
+                        source: 'OS-TRAVEL-DIRECT',
+                        stop_reservation: false,
+                        cancellation_policy: [],
+                        supplements: [],
+                    },
+                ],
+            },
+        ];
+
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres disponibles');
+
+        fireEvent.click(screen.getByTestId('set-dates'));
+        await screen.findByText('Promo Early booking');
+
+        expect(screen.getByText('Enfant gratuit')).toBeInTheDocument();
+        expect(screen.getByText('Recommandé')).toBeInTheDocument();
+    });
+
+    it('renders non-refundable and free-cancellation badges on live rooms', async () => {
+        mockHotelSearch.data = [
+            {
+                slug: 'sunset-paradise-resort',
+                name: {
+                    en: 'Sunset Paradise Resort',
+                    fr: 'Sunset Paradise Resort',
+                    ar: 'Sunset Paradise Resort',
+                },
+                location: {
+                    en: 'Santorini, Greece',
+                    fr: 'Santorin, Grèce',
+                    ar: 'سانتوريني، اليونان',
+                },
+                stars: 5,
+                rating: 4.9,
+                reviews: 234,
+                image: '/main-hotel.jpg',
+                price: 1500,
+                price_total: 1500,
+                price_per_night: 375,
+                base_price: 1300,
+                markup_percentage: '15.38',
+                currency: 'TND',
+                nights: 4,
+                available: true,
+                provider: 'ostravel',
+                rooms: [
+                    {
+                        id: '9001',
+                        name: 'Refundable Suite',
+                        boarding: null,
+                        boarding_name: 'All inclusive',
+                        boarding_id: 2,
+                        view: 'Sea view',
+                        view_ids: [7],
+                        price: 1500,
+                        price_total: 1500,
+                        price_per_night: 375,
+                        base_price: 1300,
+                        currency: 'TND',
+                        nights: 4,
+                        token: 'live-token-1',
+                        source: 'OS-TRAVEL-DIRECT',
+                        stop_reservation: false,
+                        cancellation_policy: [],
+                        supplements: [],
+                        not_refundable: true,
+                        cancellation_deadline: '2026-09-05',
+                    },
+                ],
+            },
+        ];
+
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres disponibles');
+
+        fireEvent.click(screen.getByTestId('set-dates'));
+        await screen.findByText('Non remboursable');
+
+        expect(
+            screen.getByText(/Annulation gratuite jusqu’au 05\/09\/2026/),
+        ).toBeInTheDocument();
+    });
+
+    it('falls back to the provider room photo when no static image exists', async () => {
+        mockHotelSearch.data = [
+            {
+                slug: 'sunset-paradise-resort',
+                name: {
+                    en: 'Sunset Paradise Resort',
+                    fr: 'Sunset Paradise Resort',
+                    ar: 'Sunset Paradise Resort',
+                },
+                location: {
+                    en: 'Santorini, Greece',
+                    fr: 'Santorin, Grèce',
+                    ar: 'سانتوريني، اليونان',
+                },
+                stars: 5,
+                rating: 4.9,
+                reviews: 234,
+                image: '/main-hotel.jpg',
+                price: 1500,
+                price_total: 1500,
+                price_per_night: 375,
+                base_price: 1300,
+                markup_percentage: '15.38',
+                currency: 'TND',
+                nights: 4,
+                available: true,
+                provider: 'ostravel',
+                rooms: [
+                    {
+                        id: '9001',
+                        name: 'Photo Suite',
+                        boarding: null,
+                        boarding_name: 'All inclusive',
+                        boarding_id: 2,
+                        view: 'Sea view',
+                        view_ids: [7],
+                        price: 1500,
+                        price_total: 1500,
+                        price_per_night: 375,
+                        base_price: 1300,
+                        currency: 'TND',
+                        nights: 4,
+                        token: 'live-token-1',
+                        source: 'OS-TRAVEL-DIRECT',
+                        stop_reservation: false,
+                        cancellation_policy: [],
+                        supplements: [],
+                        image: '/proxy/photo-suite.jpg',
+                    },
+                ],
+            },
+        ];
+
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres disponibles');
+
+        fireEvent.click(screen.getByTestId('set-dates'));
+        await screen.findByAltText('Photo Suite');
+
+        expect(screen.getByAltText('Photo Suite')).toHaveAttribute(
+            'src',
+            '/proxy/photo-suite.jpg',
+        );
+    });
+
+    it('uses the live hotel currency on room prices', async () => {
+        mockHotelSearch.data = [
+            {
+                slug: 'sunset-paradise-resort',
+                name: {
+                    en: 'Sunset Paradise Resort',
+                    fr: 'Sunset Paradise Resort',
+                    ar: 'Sunset Paradise Resort',
+                },
+                location: {
+                    en: 'Santorini, Greece',
+                    fr: 'Santorin, Grèce',
+                    ar: 'سانتوريني، اليونان',
+                },
+                stars: 5,
+                rating: 4.9,
+                reviews: 234,
+                image: '/main-hotel.jpg',
+                price: 1500,
+                price_total: 1500,
+                price_per_night: 375,
+                base_price: 1300,
+                markup_percentage: '15.38',
+                currency: 'EUR',
+                nights: 4,
+                available: true,
+                provider: 'ostravel',
+                rooms: [
+                    {
+                        id: '9001',
+                        name: 'Deluxe Ocean View',
+                        boarding: null,
+                        boarding_name: 'All inclusive',
+                        boarding_id: 2,
+                        view: 'Sea view',
+                        view_ids: [7],
+                        price: 1500,
+                        price_total: 1500,
+                        price_per_night: 375,
+                        base_price: 1300,
+                        currency: 'EUR',
+                        nights: 4,
+                        token: 'live-token-1',
+                        source: 'OS-TRAVEL-DIRECT',
+                        stop_reservation: false,
+                        cancellation_policy: [],
+                        supplements: [],
+                    },
+                ],
+            },
+        ];
+
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres disponibles');
+
+        fireEvent.click(screen.getByTestId('set-dates'));
+        await screen.findAllByText(/1,500\s*EUR/);
+
+        expect(screen.getAllByText(/1,500\s*EUR/).length).toBeGreaterThan(0);
+        expect(screen.queryByText(/1,500\s*TND/)).not.toBeInTheDocument();
+    });
+
+    it('shows the unavailable sticky state when the searched dates have no availability', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres disponibles');
+
+        fireEvent.click(screen.getByTestId('set-dates'));
+
+        expect(
+            await screen.findAllByText(/Indisponible pour ces dates/),
+        ).toHaveLength(2);
+        expect(
+            screen.queryByText(/1,500\s*TND/),
+        ).not.toBeInTheDocument();
+    });
 });

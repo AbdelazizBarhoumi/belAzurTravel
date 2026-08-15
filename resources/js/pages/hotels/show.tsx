@@ -25,6 +25,7 @@ import {
     type HotelDetailLookupData,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
+import { cn } from '@/lib/utils';
 
 type AmenityIcon = typeof Wifi | null;
 
@@ -44,12 +45,15 @@ type RoomView = {
     // OS-TRAVEL live-search context for the booking proxy.
     providerRoomId?: number;
     boardingId?: number;
+    boardingName?: string;
     viewIds?: number[];
     supplements?: Array<{ name: string; price: number; perNight?: boolean }>;
     // Provider bookability metadata powering the room badges.
     minStay?: number;
     onRequest?: boolean;
     stopSales?: { from: string; to: string } | null;
+    notRefundable?: boolean;
+    cancellationDeadline?: string;
 };
 
 type AmenityView = {
@@ -188,6 +192,9 @@ export default function HotelDetail() {
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
+    const [selectedBoarding, setSelectedBoarding] = useState<
+        string | undefined
+    >(undefined);
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [occupancy, setOccupancy] = useState<Occupancy>({
         adults: 2,
@@ -287,25 +294,82 @@ export default function HotelDetail() {
                 capacity: staticRoom?.capacity ?? 2,
                 size: staticRoom?.size ?? 0,
                 features: staticRoom?.features ?? [],
-                images: staticRoom?.images ?? [],
+                images: staticRoom?.images?.length
+                    ? staticRoom.images
+                    : room.image
+                      ? [room.image]
+                      : [],
                 providerRoomId: room.id ? Number(room.id) : undefined,
                 boardingId: room.boarding_id ?? undefined,
+                boardingName: room.boarding_name ?? undefined,
                 viewIds: room.view_ids ?? [],
                 supplements: normalizeSupplements(room.supplements ?? []),
                 minStay: room.min_stay,
                 onRequest: room.on_request,
                 stopSales: room.stop_sales,
+                notRefundable: room.not_refundable,
+                cancellationDeadline:
+                    room.cancellation_deadline ?? undefined,
             };
         });
-    const liveRoomIds = new Set(liveRooms.map((room) => room.id));
+    const boardingGroups = (() => {
+        const groups = new Map<
+            string,
+            { key: string; name: string; rooms: RoomView[] }
+        >();
+        for (const room of liveRooms) {
+            const key =
+                room.boardingId !== undefined
+                    ? `b-${room.boardingId}`
+                    : `n-${room.boardingName ?? 'standard'}`;
+            const name =
+                room.boardingName ||
+                t('hotelDetail.standardBoarding') ||
+                'Standard';
+            let group = groups.get(key);
+            if (!group) {
+                group = { key, name, rooms: [] };
+                groups.set(key, group);
+            }
+            group.rooms.push(room);
+        }
+        return [...groups.values()];
+    })();
+    // Default to the cheapest boarding (by minimum stay total), falling back to
+    // the user's selection only while it still matches the current live results.
+    const defaultBoardingKey = boardingGroups.length
+        ? boardingGroups.reduce((a, b) =>
+              Math.min(
+                  ...a.rooms.map((room) => room.priceTotal ?? room.pricePerNight),
+              ) <=
+              Math.min(
+                  ...b.rooms.map((room) => room.priceTotal ?? room.pricePerNight),
+              )
+                  ? a
+                  : b,
+          ).key
+        : undefined;
+    const activeBoardingKey =
+        selectedBoarding &&
+        boardingGroups.some((group) => group.key === selectedBoarding)
+            ? selectedBoarding
+            : defaultBoardingKey;
+    const activeLiveRooms =
+        boardingGroups.find((group) => group.key === activeBoardingKey)?.rooms ??
+        liveRooms;
+    const activeLiveIds = new Set(activeLiveRooms.map((room) => room.id));
     const displayRooms =
-        liveRooms.length > 0
-            ? [...liveRooms, ...rooms.filter((room) => !liveRoomIds.has(room.id))]
+        activeLiveRooms.length > 0
+            ? [
+                  ...activeLiveRooms,
+                  ...rooms.filter((room) => !activeLiveIds.has(room.id)),
+              ]
             : rooms;
     const displayMinPrice = displayRooms.length
         ? Math.min(...displayRooms.map((room) => room.priceTotal ?? room.pricePerNight))
         : (detail.price ?? 0);
     const minPrice = liveHotel?.price ?? displayMinPrice;
+    const currency = liveHotel?.currency ?? detail.currency ?? 'TND';
     const livePriceLabel = liveHotel
         ? t('hotelDetail.livePrices')
         : undefined;
@@ -394,8 +458,13 @@ export default function HotelDetail() {
 
                     <div className="lg:hidden">
                         <StickyBookingCard
-                            minPrice={minPrice}
-                            currency="TND"
+                            minPrice={searchedUnavailable ? 0 : minPrice}
+                            currency={currency}
+                            badge={
+                                searchedUnavailable
+                                    ? t('hotelDetail.unavailableSticky')
+                                    : undefined
+                            }
                             priceLabel={
                                 livePriceLabel ??
                                 (t('hotelDetail.startingFrom') || 'From')
@@ -490,10 +559,60 @@ export default function HotelDetail() {
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.15 }}
                         >
+                            {liveHotel && (liveHotel.promotion?.rate || liveHotel.free_child?.length || liveHotel.recommended) && (
+                                <div className="mb-4 flex flex-wrap gap-2">
+                                    {liveHotel.promotion?.rate && (
+                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                            {t('hotelDetail.promo')}{' '}
+                                            {liveHotel.promotion.title}
+                                        </span>
+                                    )}
+                                    {liveHotel.free_child?.length ? (
+                                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                            {t('hotelDetail.freeChild')}
+                                        </span>
+                                    ) : null}
+                                    {liveHotel.recommended && (
+                                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                                            {t('hotelDetail.recommended')}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
+                            {boardingGroups.length > 1 && (
+                                <div className="mb-6 flex flex-wrap gap-2">
+                                    {boardingGroups.map((group) => (
+                                        <button
+                                            key={group.key}
+                                            type="button"
+                                            onClick={() =>
+                                                setSelectedBoarding(group.key)
+                                            }
+                                            className={cn(
+                                                'rounded-full px-4 py-2 text-sm font-semibold transition-colors',
+                                                group.key === activeBoardingKey
+                                                    ? 'bg-primary text-primary-foreground'
+                                                    : 'bg-muted text-muted-foreground hover:bg-muted/70',
+                                            )}
+                                        >
+                                            {group.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {!liveQuery && rooms.length > 0 && (
+                                <p className="mb-4 text-sm text-muted-foreground">
+                                    {t('hotelDetail.pickDatesHint')}
+                                </p>
+                            )}
+
                             <RoomsList
                                 rooms={displayRooms}
                                 onBookRoom={handleBookRoom}
                                 bookDisabled={searchedUnavailable}
+                                currency={currency}
                             />
                         </motion.div>
                     )}
@@ -501,8 +620,13 @@ export default function HotelDetail() {
 
                 <aside className="sticky top-24 hidden self-start lg:block">
                     <StickyBookingCard
-                        minPrice={minPrice}
-                        currency="TND"
+                        minPrice={searchedUnavailable ? 0 : minPrice}
+                        currency={currency}
+                        badge={
+                            searchedUnavailable
+                                ? t('hotelDetail.unavailableSticky')
+                                : undefined
+                        }
                         priceLabel={
                             livePriceLabel ??
                             (t('hotelDetail.startingFrom') || 'From')

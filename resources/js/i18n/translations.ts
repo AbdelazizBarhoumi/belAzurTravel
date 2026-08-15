@@ -1732,6 +1732,42 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الخدمات والوسوم',
         en: 'Services & tags',
     },
+    'hotelDetail.standardBoarding': {
+        fr: 'Standard',
+        ar: 'قياسي',
+        en: 'Standard',
+    },
+    'hotelDetail.promo': { fr: 'Promo', ar: 'عرض', en: 'Promo' },
+    'hotelDetail.freeChild': {
+        fr: 'Enfant gratuit',
+        ar: 'طفل مجاني',
+        en: 'Free child',
+    },
+    'hotelDetail.recommended': {
+        fr: 'Recommandé',
+        ar: 'موصى به',
+        en: 'Recommended',
+    },
+    'hotelDetail.nonRefundable': {
+        fr: 'Non remboursable',
+        ar: 'غير قابلة للاسترداد',
+        en: 'Non-refundable',
+    },
+    'hotelDetail.freeCancellationUntil': {
+        fr: 'Annulation gratuite jusqu’au',
+        ar: 'إلغاء مجاني حتى',
+        en: 'Free cancellation until',
+    },
+    'hotelDetail.unavailableSticky': {
+        fr: 'Indisponible pour ces dates',
+        ar: 'غير متوفر لهذه التواريخ',
+        en: 'No availability for these dates',
+    },
+    'hotelDetail.pickDatesHint': {
+        fr: 'Sélectionnez vos dates pour voir la disponibilité en direct.',
+        ar: 'حدد تواريخك لعرض التوفر المباشر.',
+        en: 'Select your dates to see live availability.',
+    },
     'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
     'tourDetail.notIncluded': {
         fr: 'Non inclus',

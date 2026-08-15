@@ -168,7 +168,28 @@ correct currency, useful badges, and clear availability states.
 2. Manual: open a provider hotel → set dates → switch boardings → totals update;
    pick an unavailable window → sticky card shows the unavailable state.
 
-**Checkpoint 2 ✅ / ❌** — show-page rooms/pricing UX shipped.
+**Checkpoint 2 ✅** — show-page rooms/pricing UX shipped.
+
+**Phase B — DONE (Aug 2026).** `show.tsx` groups live rooms by
+`boarding_id`/`boarding_name` into a boarding tab selector that defaults to the
+cheapest boarding (min `price_total`) and filters the displayed rooms; static
+admin rooms merge by name as metadata fallback and a "pick dates" hint shows
+when no live search has run. Room imagery falls back to the live provider photo
+(`room.image` proxy URL) when no static image exists, and `RoomsList` renders a
+muted placeholder instead of a broken image. Currency is now
+`liveHotel?.currency ?? detail.currency ?? 'TND'` (with `currency` added to
+`HotelDetailLookupData`) and flows to both sticky cards and every room price.
+`RoomsList` accepts a `currency` prop and adds badges: red
+"Non-refundable" (`not_refundable`), green "Free cancellation until {date}"
+(`cancellation_deadline`), alongside the existing On-Request / Min-stay /
+Stop-sale. When `searchedUnavailable`, both sticky cards hide the price and
+show the "Indisponible pour ces dates" badge; hotel cards render promo
+(`promotion.title`) and free-child (`free_child`) badges in live mode. i18n keys
+added (fr/ar/en). Tests: `HotelDetail.test.tsx` 12/12 (boarding tabs + filter,
+promo/free-child/recommended, non-refundable/deadline, photo fallback,
+live currency, unavailable sticky), `Hotels.test.tsx` 8/8 (promo/free-child
+cards), `tsc` + `eslint` clean. Only pre-existing unrelated `AdminHotels`
+failures remain in the suite.
 
 ---
 
@@ -284,9 +305,9 @@ recommended, and the room catalog — before approving.
 - [x] **Stage 1 — backend normalization**
   - [x] Phase A room/hotel field capture (`OsTravelSearchService` + TS types + fixture + image proxy)
   - [x] Checkpoint 1 (unit + live pass)
-- [ ] **Stage 2 — show-page rooms + price/availability UX**
-  - [ ] Phase B boarding tabs, room imagery fallback, currency, badges, unavailable sticky state
-  - [ ] Checkpoint 2 (vitest + manual)
+- [x] **Stage 2 — show-page rooms + price/availability UX**
+  - [x] Phase B boarding tabs, room imagery fallback, currency, badges, unavailable sticky state
+  - [x] Checkpoint 2 (vitest + manual)
 - [ ] **Stage 3 — browse catalog persistence**
   - [ ] Phase C `probePrices` catalog capture + `refreshLatestPrices`/`refreshStagedPrices` persist + `HotelController::payload` expose
   - [ ] Checkpoint 3 (feature test + one refresh run)

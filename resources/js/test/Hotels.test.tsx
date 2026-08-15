@@ -269,6 +269,44 @@ describe('Hotels', () => {
         expect(unavailableBadge).toBeInTheDocument();
     });
 
+    it('renders promo and free-child badges on live cards', async () => {
+        mockHotelSearch.data = [
+            {
+                slug: 'sunset-bay',
+                name: { en: 'Sunset Bay', fr: 'Sunset Bay', ar: 'Sunset Bay' },
+                location: {
+                    en: 'Sousse, Tunisia',
+                    fr: 'Sousse, Tunisie',
+                    ar: 'سوسة، تونس',
+                },
+                stars: 5,
+                rating: 4.8,
+                reviews: 120,
+                image: '/hotel.jpg',
+                price: 1234,
+                price_total: 1234,
+                price_per_night: 176,
+                nights: 7,
+                available: true,
+                provider: 'ostravel',
+                currency: 'TND',
+                promotion: {
+                    title: 'Early booking',
+                    description: '-29% on select stays',
+                    rate: '29.00',
+                },
+                free_child: [5],
+                rooms: [],
+            },
+        ];
+
+        renderPage('/hotels?from=2026-08-20&to=2026-08-27&guests=2');
+
+        expect(await screen.findByText('Sunset Bay')).toBeInTheDocument();
+        expect(screen.getByText('Promo Early booking')).toBeInTheDocument();
+        expect(screen.getByText('Enfant gratuit')).toBeInTheDocument();
+    });
+
     it('shows a last-known label in browse mode and a live badge in live mode', async () => {
         // Browse mode: no dates, one hotel carries a last known price.
         const { unmount } = renderPage('/hotels');
