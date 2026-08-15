@@ -293,8 +293,11 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame("Rénovation totale 2025.\nPlage privée à 100 m.", $result['short_description']);
 
         // Room-level content fields surface on the cheapest room (boarding LPD).
+        // The photo is exposed through an opaque proxy URL — never the provider
+        // host, and never a broken image.
         $room = $result['rooms'][0];
-        $this->assertSame('https://admin.mygo.co/file_manager/source/photos/room-501.jpg', $room['image']);
+        $this->assertMatchesRegularExpression('#^/api/hotels/images/[A-Za-z0-9_-]+$#', $room['image']);
+        $this->assertStringNotContainsString('mygo.co', $room['image']);
         $this->assertSame('Chambre Double Standard avec balcon et vue mer partielle.', $room['description']);
         $this->assertSame(['Wifi', 'Climatisation'], $room['features']);
         $this->assertFalse($room['not_refundable']);

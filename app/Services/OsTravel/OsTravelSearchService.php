@@ -925,7 +925,7 @@ class OsTravelSearchService
                 'stop_sales' => $offer['stop_sales'],
                 'cancellation_policy' => $this->cancellationPolicy($offer['cancellation_policy']),
                 'supplements' => $offer['supplements'],
-                'image' => $offer['photo'],
+                'image' => OsTravelImageProxy::publicUrl($offer['photo']),
                 'description' => $offer['description'],
                 'features' => $offer['icones'],
                 'not_refundable' => $offer['not_refundable'],

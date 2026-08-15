@@ -46,11 +46,11 @@ class OsTravelImageProxy
     }
 
     /**
-     * Encode base64 into a URL-safe token (no `+`, `/`, or `=`).
+     * Make a base64 string URL-safe (no `+`, `/`, or `=`).
      */
     private static function encode(string $value): string
     {
-        return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+        return rtrim(strtr($value, '+/', '-_'), '=');
     }
 
     /**

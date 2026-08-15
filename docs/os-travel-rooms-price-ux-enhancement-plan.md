@@ -25,6 +25,7 @@ catalog so price & availability are honest without a live call.
 | Browse snapshot storage | Reuse existing JSON columns: `hotels.details['catalog']` + `os_travel_hotels.payload['catalog']` (no migration) |
 | Snapshot cadence | Written by the scheduled `os-travel:refresh-latest-prices` (and admin `refresh-prices`); backfill once after deploy |
 | Room imagery | Provider `Room.Photo` when present → graceful placeholder (never a broken `<img>`) |
+| Room photo exposure | **Encrypted proxy** (`/api/hotels/images/{token}` via `OsTravelImageProxy`) — the public response/markup never exposes the provider host (existing credential-leak guard) |
 | `PriceWithAffiliateMarkup` | Do not use for pricing (keep raw `Price` + own markup); add to open-items for OS-TRAVEL confirmation |
 
 ---
@@ -80,20 +81,23 @@ frontend can render rooms/prices/availability honestly.
 
 **Details**
 1. `app/Services/OsTravel/OsTravelSearchService.php`:
-   - `roomOffers()`: also capture
-     - `photo` (`Room.Photo`, resolve provider-relative URL like `HotelPublisher::resolveProviderUrl`)
-     - `description` (`Room.Description`)
-     - `icones` (normalized list of non-empty strings from `Room.Icones`)
-     - `not_refundable` (`Room.NotRefundable`)
-     - `cancellation_deadline` (`Room.CancellationDeadline` parsed via `parseProviderDate`)
-     - `retrocession` (`Room.Retrocession`, raw — admin-only)
-   - `normalize()`: map each offer onto the room result as
-     `image` / `description` / `features` (from `icones`) / `not_refundable` /
-     `cancellation_deadline` / `retrocession`.
-   - Hotel-level: add `promotion` (`{title, description, rate}`), `free_child`
-     (list of ages), `recommended` (bool) and `short_description` onto the result
-     from the provider envelope — surfaced in `basePayload()` too.
-   - Keep the pricing source of truth unchanged (`Room.Price` → `applyMarkup`).
+- `roomOffers()`: also capture
+      - `photo` (`Room.Photo`, resolve provider-relative URL like `HotelPublisher::resolveProviderUrl`)
+      - `description` (`Room.Description`)
+      - `icones` (normalized list of non-empty strings from `Room.Icones`)
+      - `not_refundable` (`Room.NotRefundable`)
+      - `cancellation_deadline` (`Room.CancellationDeadline` parsed via `parseProviderDate`)
+      - `retrocession` (`Room.Retrocession`, raw — admin-only)
+    - `normalize()`: map each offer onto the room result as
+      `image` / `description` / `features` (from `icones`) / `not_refundable` /
+      `cancellation_deadline` / `retrocession`. `image` is emitted through
+      `OsTravelImageProxy::publicUrl()` (encrypted, URL-safe token) so the public
+      JSON/markup never leaks the provider host; a `GET /api/hotels/images/{token}`
+      endpoint decrypts, SSRF-guards, fetches and streams the photo server-side.
+    - Hotel-level: add `promotion` (`{title, description, rate}`), `free_child`
+      (list of ages), `recommended` (bool) and `short_description` onto the result
+      from the provider envelope — surfaced in `basePayload()` too.
+    - Keep the pricing source of truth unchanged (`Room.Price` → `applyMarkup`).
 2. TypeScript types:
    - `resources/js/api/osTravel.api.ts` — extend `OsTravelSearchRoomResult` and
      `OsTravelSearchResult` with the new fields.
@@ -104,6 +108,8 @@ frontend can render rooms/prices/availability honestly.
   capture `photo`, `description`, `features` from icones, `not_refundable`,
   `cancellation_deadline`; hotel result carries `promotion`, `free_child`,
   `recommended`, `short_description`.
+- `tests/Feature/HotelImageProxyTest.php` (new): proxy round-trips a provider image,
+  rejects private hosts and tampered tokens, and 404s on upstream failure.
 - `tests/Fixtures/os_travel_hotel_search.json` — add the new fields to a fixture
   room/hotel so assertions cover them.
 
@@ -115,7 +121,7 @@ frontend can render rooms/prices/availability honestly.
 1. `php artisan test --filter=OsTravelSearchServiceTest`.
 2. One live `HotelSearch` for a known hotel → confirm the new fields appear in the JSON.
 
-**Checkpoint 1 ✅ / ❌** — normalization surfaces the full provider payload.
+**Checkpoint 1 ✅** — normalization surfaces the full provider payload.
 
 ---
 
@@ -275,9 +281,9 @@ recommended, and the room catalog — before approving.
 
 ## Checklist (tracking)
 
-- [ ] **Stage 1 — backend normalization**
-  - [ ] Phase A room/hotel field capture (`OsTravelSearchService` + TS types + fixture)
-  - [ ] Checkpoint 1 (unit + live pass)
+- [x] **Stage 1 — backend normalization**
+  - [x] Phase A room/hotel field capture (`OsTravelSearchService` + TS types + fixture + image proxy)
+  - [x] Checkpoint 1 (unit + live pass)
 - [ ] **Stage 2 — show-page rooms + price/availability UX**
   - [ ] Phase B boarding tabs, room imagery fallback, currency, badges, unavailable sticky state
   - [ ] Checkpoint 2 (vitest + manual)
