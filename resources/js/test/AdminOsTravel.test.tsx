@@ -9,6 +9,7 @@ import {
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as osTravelApi from '@/api/osTravel.api';
+import type { OsTravelCatalogRoom } from '@/api/osTravel.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import AdminOsTravel from '@/pages/admin/AdminOsTravel';
@@ -73,7 +74,9 @@ const makeRow = (
     ...overrides,
 });
 
-const makeDetail = (row: osTravelApi.OsTravelHotelRow) => ({
+const makeDetail = (
+    row: osTravelApi.OsTravelHotelRow,
+): osTravelApi.OsTravelHotelDetail => ({
     ...row,
     payload: {},
     mapped_preview: {
@@ -95,6 +98,27 @@ const makeDetail = (row: osTravelApi.OsTravelHotelRow) => ({
         markup_percentage: 20,
         currency: row.currency ?? 'TND',
         code: `ostravel-${row.external_id}`,
+        rooms_catalog: [
+            {
+                name: 'Double Standard',
+                photo: 'http://cdn.test/room.jpg',
+                description: 'A cosy double room.',
+                features: ['Sea view', 'Balcony'],
+                min_stay: 2,
+                boarding_id: 1,
+            },
+        ],
+        boardings: [
+            { id: 1, code: 'BB', name: 'Bed & Breakfast' },
+            { id: 2, code: 'HB', name: 'Half Board' },
+        ],
+        promotion: {
+            title: 'Early booking',
+            description: 'Book early and save.',
+            rate: '-15%',
+        },
+        free_child: [0, 2],
+        recommended: true,
     },
 });
 
@@ -252,6 +276,52 @@ describe('AdminOsTravel page', () => {
         expect(
             await screen.findByText('No hotels to display.'),
         ).toBeInTheDocument();
+    });
+
+    it('renders promo, free-child, recommended and the rooms list in the preview', async () => {
+        vi.mocked(osTravelApi.getOsTravelHotel).mockResolvedValueOnce({
+            data: makeDetail(makeRow()),
+        } as never);
+
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+
+        fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
+
+        expect(await screen.findByText('Double Standard')).toBeInTheDocument();
+        expect(screen.getByText(/Early booking/)).toBeInTheDocument();
+        expect(screen.getAllByText('Free child').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Recommended').length).toBeGreaterThan(0);
+        expect(
+            screen.getByText('Bed & Breakfast · Min. stay 2 nights'),
+        ).toBeInTheDocument();
+    });
+
+    it('shows a placeholder when a catalog room has no photo', async () => {
+        const detail = makeDetail(makeRow());
+        detail.mapped_preview = {
+            ...detail.mapped_preview,
+            rooms_catalog: detail.mapped_preview.rooms_catalog.map(
+                (r): OsTravelCatalogRoom => ({
+                    ...r,
+                    photo: null,
+                }),
+            ),
+        };
+        vi.mocked(osTravelApi.getOsTravelHotel).mockResolvedValueOnce({
+            data: detail,
+        } as never);
+
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+        fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
+
+        expect(
+            await screen.findByText('Double Standard'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Rooms')).toBeInTheDocument();
     });
 
     it('opens the preview dialog and saves the price without approving', async () => {

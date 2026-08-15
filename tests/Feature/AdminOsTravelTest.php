@@ -140,6 +140,59 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame(300, $response->json('data.mapped_preview.price'));
         $this->assertSame('TND', $response->json('data.mapped_preview.currency'));
         $this->assertGreaterThanOrEqual(1, count($response->json('data.mapped_preview.gallery')));
+        // No catalog captured yet: preview falls back to empty defaults.
+        $this->assertSame([], $response->json('data.mapped_preview.rooms_catalog'));
+        $this->assertNull($response->json('data.mapped_preview.promotion'));
+        $this->assertSame([], $response->json('data.mapped_preview.free_child'));
+        $this->assertFalse($response->json('data.mapped_preview.recommended'));
+    }
+
+    public function test_preview_surfaces_catalog_metadata_from_staging_payload(): void
+    {
+        $staged = $this->stagedHotel(12, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::PENDING, 250);
+
+        $staged->update([
+            'payload' => array_merge($staged->payload, [
+                'catalog' => [
+                    'boardings' => [
+                        ['id' => 1, 'code' => 'BB', 'name' => 'Bed & Breakfast'],
+                        ['id' => 2, 'code' => 'HB', 'name' => 'Half Board'],
+                    ],
+                    'rooms' => [
+                        [
+                            'name' => 'Double Standard',
+                            'photo' => '/api/hotels/images/abc123',
+                            'description' => 'A cosy double room',
+                            'features' => ['Sea view', 'Balcony'],
+                            'min_stay' => 2,
+                            'boarding_id' => 1,
+                        ],
+                    ],
+                    'promotion' => [
+                        'title' => 'Early booking',
+                        'description' => 'Book early and save',
+                        'rate' => '-15%',
+                    ],
+                    'free_child' => [0, 2],
+                    'recommended' => true,
+                ],
+            ]),
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->getJson("/api/admin/os-travel/hotels/{$staged->id}")
+            ->assertOk();
+
+        $preview = $response->json('data.mapped_preview');
+        $this->assertSame('Double Standard', $preview['rooms_catalog'][0]['name']);
+        $this->assertSame('/api/hotels/images/abc123', $preview['rooms_catalog'][0]['photo']);
+        $this->assertSame(2, $preview['rooms_catalog'][0]['min_stay']);
+        $this->assertSame(1, $preview['rooms_catalog'][0]['boarding_id']);
+        $this->assertSame('Bed & Breakfast', $preview['boardings'][0]['name']);
+        $this->assertSame('-15%', $preview['promotion']['rate']);
+        $this->assertSame('Early booking', $preview['promotion']['title']);
+        $this->assertSame([0, 2], $preview['free_child']);
+        $this->assertTrue($preview['recommended']);
     }
 
     public function test_update_persists_price_without_publishing(): void

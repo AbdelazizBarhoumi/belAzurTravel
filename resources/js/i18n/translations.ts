@@ -7065,6 +7065,31 @@ translations['osTravel.boarding'] = {
     ar: 'أنظمة الإقامة',
     en: 'Boarding',
 };
+translations['osTravel.promotion'] = {
+    fr: 'Promotion',
+    ar: 'عرض',
+    en: 'Promotion',
+};
+translations['osTravel.freeChild'] = {
+    fr: 'Enfant gratuit',
+    ar: 'طفل مجاني',
+    en: 'Free child',
+};
+translations['osTravel.recommended'] = {
+    fr: 'Recommandé',
+    ar: 'موصى به',
+    en: 'Recommended',
+};
+translations['osTravel.roomsCatalog'] = {
+    fr: 'Chambres',
+    ar: 'الغرف',
+    en: 'Rooms',
+};
+translations['osTravel.minStay'] = {
+    fr: 'Séjour min.',
+    ar: 'إقامة دنيا',
+    en: 'Min. stay',
+};
 translations['osTravel.refreshPrices'] = {
     fr: 'Actualiser les prix',
     ar: 'تحديث الأسعار',

@@ -579,6 +579,7 @@ class AdminOsTravelController extends Controller
 
         $markup = $hotel->markup_percentage ?? config('ostravel.markup.default', 20);
         $basePrice = $hotel->base_price;
+        $catalog = $hotel->payload['catalog'] ?? [];
 
         return [
             'name' => HotelPublisher::cleanText($list['Name'] ?? $detail['Name'] ?? ''),
@@ -607,6 +608,14 @@ class AdminOsTravelController extends Controller
             'markup_percentage' => $markup,
             'currency' => $hotel->currency ?? config('ostravel.currency.default', 'TND'),
             'code' => 'ostravel-'.$hotel->external_id,
+            // Browse catalog captured during the price refresh (staging
+            // `payload['catalog']`), mirroring HotelController::payload() so the
+            // admin preview shows exactly what ships to the public page.
+            'rooms_catalog' => $catalog['rooms'] ?? [],
+            'boardings' => $catalog['boardings'] ?? [],
+            'promotion' => $catalog['promotion'] ?? null,
+            'free_child' => $catalog['free_child'] ?? [],
+            'recommended' => (bool) ($catalog['recommended'] ?? false),
         ];
     }
 

@@ -282,7 +282,21 @@ recommended, and the room catalog — before approving.
 2. `npx vitest run AdminOsTravel.test.tsx`.
 3. Manual: refresh a staged hotel → open preview → promo/rooms visible.
 
-**Checkpoint 4 ✅ / ❌** — admin preview surfaces promo + rooms.
+**Checkpoint 4 ✅** — admin preview surfaces promo + rooms.
+
+**Done (Aug 2026):** `AdminOsTravelController::mappedPreview()` now surfaces the
+staging `payload['catalog']` keys with the same defaults as the public payload:
+`rooms_catalog`, `boardings`, `promotion`, `free_child`, `recommended`.
+`AdminOsTravel.tsx` preview dialog renders a promo/free-child/recommended badge
+line and a compact rooms grid (photo or placeholder, boarding label resolved
+from `boardings`, min-stay); i18n keys added (`osTravel.promotion`,
+`osTravel.freeChild`, `osTravel.recommended`, `osTravel.roomsCatalog`,
+`osTravel.minStay`). Tests: `AdminOsTravelTest` 36/36 (new
+`test_preview_surfaces_catalog_metadata_from_staging_payload` + default
+assertions on the existing preview test) and `AdminOsTravel.test.tsx` 17/17
+(promo/rooms render, no-photo placeholder). `pint` clean, `tsc --noEmit` clean,
+eslint clean on non-ignored files (admin pages remain in the eslint ignore
+list).
 
 ---
 
@@ -324,12 +338,12 @@ recommended, and the room catalog — before approving.
 - [x] **Stage 2 — show-page rooms + price/availability UX**
   - [x] Phase B boarding tabs, room imagery fallback, currency, badges, unavailable sticky state
   - [x] Checkpoint 2 (vitest + manual)
-- [ ] **Stage 3 — browse catalog persistence**
+- [x] **Stage 3 — browse catalog persistence**
   - [x] Phase C `probePrices` catalog capture + `refreshLatestPrices`/`refreshStagedPrices` persist + `HotelController::payload` expose
   - [x] Checkpoint 3 (feature test + one refresh run)
-- [ ] **Stage 4 — admin preview**
-  - [ ] Phase D `AdminOsTravelController` preview keys + `AdminOsTravel.tsx` rooms/promo UI + i18n
-  - [ ] Checkpoint 4 (backend + vitest)
+- [x] **Stage 4 — admin preview**
+  - [x] Phase D `AdminOsTravelController` preview keys + `AdminOsTravel.tsx` rooms/promo UI + i18n
+  - [x] Checkpoint 4 (backend + vitest)
 - [ ] **Stage 5 — E2E / QA**
   - [ ] pint / tsc / eslint / full test suites green
   - [ ] Browse catalog backfilled in the deployed environment

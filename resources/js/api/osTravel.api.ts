@@ -75,6 +75,27 @@ export interface OsTravelHotelRow {
     live_until: string | null;
 }
 
+export interface OsTravelCatalogBoarding {
+    id: number | null;
+    code: string | null;
+    name: string | null;
+}
+
+export interface OsTravelCatalogRoom {
+    name: string;
+    photo: string | null;
+    description: string;
+    features: string[];
+    min_stay: number;
+    boarding_id: number | null;
+}
+
+export interface OsTravelCatalogPromotion {
+    title: string | null;
+    description: string;
+    rate: string | null;
+}
+
 export interface OsTravelMappedPreview {
     name: string;
     city: string;
@@ -94,6 +115,11 @@ export interface OsTravelMappedPreview {
     markup_percentage: number;
     currency: string;
     code: string;
+    rooms_catalog: OsTravelCatalogRoom[];
+    boardings: OsTravelCatalogBoarding[];
+    promotion: OsTravelCatalogPromotion | null;
+    free_child: number[];
+    recommended: boolean;
 }
 
 export interface OsTravelHotelDetail extends OsTravelHotelRow {

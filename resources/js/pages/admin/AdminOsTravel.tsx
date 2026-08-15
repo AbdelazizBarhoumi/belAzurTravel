@@ -1,9 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
-import { Eye, RefreshCw, Star, Trash2, Undo2 } from 'lucide-react';
+import {
+    Eye,
+    Image as ImageIcon,
+    RefreshCw,
+    Star,
+    Trash2,
+    Undo2,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
 import {
+    type OsTravelCatalogBoarding,
     type OsTravelHotelRow,
     type OsTravelListFilters,
     type OsTravelStatus,
@@ -175,6 +183,14 @@ const displayDate = (value: string): string => {
     return Number.isNaN(parsed.getTime())
         ? value
         : `${parsed.getDate()}/${parsed.getMonth() + 1}/${parsed.getFullYear()}`;
+};
+
+const boardingLabel = (
+    boardingId: number | null,
+    boardings: OsTravelCatalogBoarding[],
+): string => {
+    const match = boardings.find((b) => b.id === boardingId);
+    return match?.name ?? '';
 };
 
 const AdminOsTravel = () => {
@@ -1084,6 +1100,86 @@ const AdminOsTravel = () => {
                                     </span>
                                     {preview.boarding.join(', ')}
                                 </p>
+                            )}
+
+                            {preview &&
+                                (preview.promotion?.rate ||
+                                    preview.free_child.length > 0 ||
+                                    preview.recommended) && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {preview.promotion?.rate && (
+                                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                {t('osTravel.promotion')}{' '}
+                                                {preview.promotion.title}
+                                            </span>
+                                        )}
+                                        {preview.free_child.length > 0 && (
+                                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                {t('osTravel.freeChild')}
+                                            </span>
+                                        )}
+                                        {preview.recommended && (
+                                            <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                                                {t('osTravel.recommended')}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                            {preview && preview.rooms_catalog.length > 0 && (
+                                <div className="rounded-xl border border-border bg-muted/20 p-4">
+                                    <p className="text-xs font-semibold uppercase text-muted-foreground">
+                                        {t('osTravel.roomsCatalog')}
+                                    </p>
+                                    <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+                                        {preview.rooms_catalog.map((room, i) => {
+                                            const boarding = boardingLabel(
+                                                room.boarding_id,
+                                                preview.boardings,
+                                            );
+                                            return (
+                                                <li
+                                                    key={`${room.name}-${room.boarding_id}-${i}`}
+                                                    className="flex items-start gap-3"
+                                                >
+                                                    {room.photo ? (
+                                                        <img
+                                                            src={room.photo}
+                                                            alt={room.name}
+                                                            className="h-14 w-20 shrink-0 rounded-lg object-cover"
+                                                            onError={(e) => {
+                                                                e.currentTarget.style.display =
+                                                                    'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground">
+                                                            <ImageIcon className="h-5 w-5" />
+                                                        </div>
+                                                    )}
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-foreground">
+                                                            {room.name}
+                                                        </p>
+                                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                                            {[boarding]
+                                                                .filter(Boolean)
+                                                                .concat(
+                                                                    room.min_stay >
+                                                                        1
+                                                                        ? [
+                                                                              `${t('osTravel.minStay')} ${room.min_stay} ${t('osTravel.nightsShort')}`,
+                                                                          ]
+                                                                        : [],
+                                                                )
+                                                                .join(' · ')}
+                                                        </p>
+                                                    </div>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
                             )}
 
                             {/* Price section */}
