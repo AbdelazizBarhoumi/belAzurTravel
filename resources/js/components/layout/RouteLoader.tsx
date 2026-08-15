@@ -36,6 +36,15 @@ export function RouteLoader() {
         },
     });
 
+    // Keep the latest fetching count in a ref so the hide-polling loop can read
+    // fresh values without re-running the (route-keyed) show/hide effect. The
+    // overlay must only appear on route navigation, not on action-triggered
+    // refetches (approve/reject/refresh/etc.).
+    const isFetchingRef = useRef(isFetching);
+    useEffect(() => {
+        isFetchingRef.current = isFetching;
+    }, [isFetching]);
+
     traceRoute('RouteLoader.render', {
         pathname: location.pathname,
         locationKey: location.key,
@@ -107,11 +116,11 @@ export function RouteLoader() {
             }
 
             // Min delay passed - now wait for React Query fetches to complete
-            if (isFetching > 0) {
+            if (isFetchingRef.current > 0) {
                 traceRoute('RouteLoader.waitForQueries', {
                     pathname: location.pathname,
                     locationKey: location.key,
-                    isFetching,
+                    isFetching: isFetchingRef.current,
                 });
                 // Poll every 100ms until queries complete
                 hideTimeoutRef.current = window.setTimeout(() => {
@@ -145,7 +154,7 @@ export function RouteLoader() {
             traceRoute('RouteLoader.maxWaitTimeout', {
                 pathname: location.pathname,
                 locationKey: location.key,
-                isFetching,
+                isFetching: isFetchingRef.current,
             });
             setLoading(false);
             setFirstLoad(false);
@@ -207,7 +216,7 @@ export function RouteLoader() {
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.pathname, isFetching]);
+    }, [location.pathname]);
     return (
         <AnimatePresence initial={false}>
             {loading && (

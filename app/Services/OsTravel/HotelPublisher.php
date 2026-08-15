@@ -88,6 +88,8 @@ class HotelPublisher
             'currency' => $currency,
             'last_price' => $basePrice,
             'last_price_at' => now(),
+            'first_available_at' => $staged->first_available_at,
+            'min_nights' => $staged->min_nights,
             'source' => 'ostravel',
             'booking_mode' => 'instant',
             'rating' => (float) ($list['Rating'] ?? $detail['Rating'] ?? 0),

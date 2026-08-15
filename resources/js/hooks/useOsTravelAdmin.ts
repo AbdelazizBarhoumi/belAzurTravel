@@ -10,10 +10,12 @@ import {
     refreshOsTravelPrice,
     refreshOsTravelPrices,
     rejectOsTravelHotel,
+    unapproveOsTravelHotel,
     updateOsTravelHotel,
     type OsTravelListFilters,
     type OsTravelPricePayload,
     type OsTravelRefreshRequest,
+    type OsTravelStatus,
 } from '@/api/osTravel.api';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -90,6 +92,15 @@ export function useOsTravelAdmin() {
     const approveAll = async (data: {
         markup_percentage?: number | null;
         currency?: string | null;
+        include_without_price?: boolean;
+        include_without_image?: boolean;
+        status?: OsTravelStatus | '';
+        city?: string;
+        country_id?: string;
+        city_id?: string;
+        stars?: number;
+        check_in?: string;
+        check_out?: string;
     }) => {
         const result = await approveAllOsTravelHotels(data);
         invalidateAll();
@@ -98,6 +109,12 @@ export function useOsTravelAdmin() {
 
     const reject = async (id: string) => {
         const result = await rejectOsTravelHotel(id);
+        invalidateAll();
+        return result.data;
+    };
+
+    const unapprove = async (id: string) => {
+        const result = await unapproveOsTravelHotel(id);
         invalidateAll();
         return result.data;
     };
@@ -160,5 +177,5 @@ export function useOsTravelAdmin() {
         return t(fallbackKey);
     };
 
-    return { savePrice, approve, approveAll, reject, refreshPrice, refreshPrices, toErrorMessage };
+    return { savePrice, approve, approveAll, reject, unapprove, refreshPrice, refreshPrices, toErrorMessage };
 }

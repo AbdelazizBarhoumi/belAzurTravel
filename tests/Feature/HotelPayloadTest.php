@@ -44,6 +44,8 @@ class HotelPayloadTest extends TestCase
         $hotel = $this->makeHotel([
             'last_price' => 927.52,
             'last_price_at' => now()->subHours(3),
+            'first_available_at' => now()->addDays(2)->toDateString(),
+            'min_nights' => 1,
         ]);
         OsTravelHotel::create([
             'external_id' => '178',
@@ -68,6 +70,9 @@ class HotelPayloadTest extends TestCase
         $this->assertNotNull($response->json('last_price_at'));
         // The displayed price is the last known price marked up, not the raw value.
         $this->assertSame(1113, $response->json('price'));
+        // The probe's nearest available day + minimum stay travel with the price.
+        $this->assertSame(now()->addDays(2)->toDateString(), $response->json('first_available_at'));
+        $this->assertSame(1, $response->json('min_nights'));
     }
 
     public function test_payload_without_last_price_uses_stored_price(): void
@@ -105,6 +110,8 @@ class HotelPayloadTest extends TestCase
         // No live per-night price: browse falls back to the approved min price
         // (the same value the admin review shows) rather than hiding it.
         $this->assertNull($response->json('last_price'));
+        $this->assertNull($response->json('first_available_at'));
+        $this->assertNull($response->json('min_nights'));
         $this->assertSame(1000, $response->json('base_price'));
         $this->assertSame(1200, $response->json('price'));
     }

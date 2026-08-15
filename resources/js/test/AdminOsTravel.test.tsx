@@ -27,6 +27,7 @@ vi.mock('@/api/osTravel.api', () => ({
     approveOsTravelHotel: vi.fn(),
     approveAllOsTravelHotels: vi.fn(),
     rejectOsTravelHotel: vi.fn(),
+    unapproveOsTravelHotel: vi.fn(),
     refreshOsTravelPrice: vi.fn(),
     refreshOsTravelPrices: vi.fn(),
     getOsTravelRefreshStatus: vi.fn(),
@@ -52,8 +53,11 @@ const makeRow = (
     status: 'pending',
     has_base_price: true,
     base_price: 200,
+    final_price: 240,
     price_status: 'has_price',
     last_price_attempt_at: null,
+    first_available_at: null,
+    min_nights: null,
     markup_percentage: '20.00',
     currency: 'TND',
     hotel_id: null,
@@ -156,10 +160,14 @@ describe('AdminOsTravel page', () => {
         vi.mocked(osTravelApi.approveAllOsTravelHotels).mockResolvedValue({
             data: {
                 published: [makeRow({ status: 'published' })],
+                failed: [],
                 skipped_no_price: [],
+                skipped_no_image: [],
                 skipped_over_cap: [],
                 published_count: 1,
+                failed_count: 0,
                 skipped_no_price_count: 0,
+                skipped_no_image_count: 0,
                 skipped_over_cap_count: 0,
                 cap: 50,
             },
@@ -284,7 +292,9 @@ describe('AdminOsTravel page', () => {
         expect(
             screen.getByText('Half Board, All Inclusive'),
         ).toBeInTheDocument();
-        expect(screen.getByText('Final price')).toBeInTheDocument();
+        expect(
+            screen.getAllByText('Final price').length,
+        ).toBeGreaterThan(0);
 
         const basePriceInput = screen.getByLabelText('Base price');
         fireEvent.change(basePriceInput, { target: { value: '250' } });
@@ -316,7 +326,7 @@ describe('AdminOsTravel page', () => {
         fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
 
         await screen.findByText('A lovely resort by the sea.');
-        await screen.findByText('Final price');
+        await screen.findAllByText('Final price');
 
         fireEvent.change(screen.getByLabelText('Base price'), {
             target: { value: '150' },
@@ -336,8 +346,8 @@ describe('AdminOsTravel page', () => {
         });
     });
 
-    it('shows a pre-flight skipped count and runs bulk approve', async () => {
-        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValueOnce({
+    it('shows warning checkboxes and runs bulk approve with opt-in flags', async () => {
+        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValue({
             data: [
                 makeRow(),
                 makeRow({
@@ -354,18 +364,36 @@ describe('AdminOsTravel page', () => {
 
         await screen.findByText('Hotel Test');
 
-        fireEvent.click(screen.getByRole('button', { name: 'Approve All' }));
+        fireEvent.click(
+            screen.getByRole('button', { name: /Pending/i }),
+        );
 
-        expect(
-            await screen.findByText(
-                '1 hotel(s) will be skipped for missing price.',
-            ),
-        ).toBeInTheDocument();
+        const approveAll = screen.getByRole('button', {
+            name: 'Approve All',
+        });
+        await waitFor(() => expect(approveAll).not.toBeDisabled());
+        fireEvent.click(approveAll);
 
-        fireEvent.click(screen.getByRole('button', { name: 'Approve All' }));
+        const warningCheckbox = screen.getByRole('checkbox', {
+            name: 'Also approve 1 hotel(s) without a price.',
+        });
+        expect(warningCheckbox).not.toBeChecked();
+
+        fireEvent.click(warningCheckbox);
+        expect(warningCheckbox).toBeChecked();
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Approve All' }),
+        );
 
         await waitFor(() => {
-            expect(osTravelApi.approveAllOsTravelHotels).toHaveBeenCalled();
+            expect(
+                osTravelApi.approveAllOsTravelHotels,
+            ).toHaveBeenCalledWith({
+                include_without_price: true,
+                include_without_image: false,
+                status: 'pending',
+            });
         });
     });
 
@@ -387,19 +415,51 @@ describe('AdminOsTravel page', () => {
         });
     });
 
+    it('unapproves an approved hotel through the confirm dialog', async () => {
+        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValue({
+            data: [makeRow({ status: 'approved' })],
+        } as never);
+
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+
+        fireEvent.click(
+            screen.getAllByRole('button', { name: 'Unapprove' })[0],
+        );
+
+        expect(
+            await screen.findByText('Unapprove this hotel?'),
+        ).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Unapprove' }));
+
+        await waitFor(() => {
+            expect(osTravelApi.unapproveOsTravelHotel).toHaveBeenCalledWith(
+                '1',
+            );
+        });
+    });
+
     it('refreshes all staged prices through the bulk button', async () => {
         renderAdminOsTravel();
 
         await screen.findByText('Hotel Test');
 
         fireEvent.click(
-            screen.getByRole('button', { name: 'Refresh prices' }),
+            screen.getByRole('button', { name: /Pending/i }),
         );
 
+        const refreshAll = screen.getByRole('button', {
+            name: 'Refresh prices',
+        });
+        await waitFor(() => expect(refreshAll).not.toBeDisabled());
+        fireEvent.click(refreshAll);
+
         await waitFor(() => {
-            expect(osTravelApi.refreshOsTravelPrices).toHaveBeenCalledWith(
-                undefined,
-            );
+            expect(osTravelApi.refreshOsTravelPrices).toHaveBeenCalledWith({
+                ids: ['1'],
+            });
         });
 
         // The polling loop observes the completed status and finishes.
@@ -489,6 +549,7 @@ describe('AdminOsTravel page', () => {
                     live_status: 'available',
                     live_price: 180,
                     live_currency: 'TND',
+                    final_price: 216,
                 }),
                 makeRow({
                     id: '8',
@@ -496,6 +557,7 @@ describe('AdminOsTravel page', () => {
                     name: 'Live Off',
                     live_status: 'no_availability',
                     live_price: null,
+                    final_price: null,
                 }),
             ],
         } as never);
@@ -504,7 +566,7 @@ describe('AdminOsTravel page', () => {
 
         await screen.findByText('Live Hotel');
 
-        expect(screen.getByText('180 TND')).toBeInTheDocument();
+        expect(screen.getByText('216 TND')).toBeInTheDocument();
         expect(
             screen.getAllByText('No availability on these dates').length,
         ).toBeGreaterThan(0);
@@ -538,5 +600,29 @@ describe('AdminOsTravel page', () => {
                 expect.objectContaining({ city_id: '12' }),
             );
         });
+    });
+
+    it('sends the stars filter to the hotels endpoint', async () => {
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+
+        fireEvent.change(screen.getByRole('combobox', { name: /stars/i }), {
+            target: { value: '4' },
+        });
+
+        await waitFor(() => {
+            expect(osTravelApi.listOsTravelHotels).toHaveBeenCalledWith(
+                expect.objectContaining({ stars: 4 }),
+            );
+        });
+    });
+
+    it('shows the orphaned badge from the dashboard', async () => {
+        renderAdminOsTravel();
+
+        expect(
+            await screen.findByText('1 orphaned hotel(s)'),
+        ).toBeInTheDocument();
     });
 });

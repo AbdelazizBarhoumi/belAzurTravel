@@ -105,6 +105,8 @@ class HotelController extends Controller
             'provider' => $item->isProviderLinked() ? 'ostravel' : 'manual',
             'last_price' => $item->last_price,
             'last_price_at' => $item->last_price_at,
+            'first_available_at' => $item->first_available_at?->toDateString(),
+            'min_nights' => $item->min_nights,
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,

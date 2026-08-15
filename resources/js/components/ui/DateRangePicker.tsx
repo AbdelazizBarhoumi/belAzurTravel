@@ -27,6 +27,8 @@ interface DateRangePickerProps {
     placeholderTo?: string;
     placeholderSingle?: string;
     placeholderEmpty?: string;
+    /** Earliest selectable date (react-day-picker `fromDate`). */
+    fromDate?: Date;
 }
 
 export function DateRangePicker({
@@ -37,6 +39,7 @@ export function DateRangePicker({
     placeholderTo,
     placeholderSingle,
     placeholderEmpty,
+    fromDate,
 }: DateRangePickerProps) {
     const { lang, t, dir } = useLanguage();
     const isRtl = dir === 'rtl';
@@ -84,6 +87,7 @@ export function DateRangePicker({
                     initialFocus
                     locale={getDatePickerLocale(lang)}
                     dir={dir}
+                    fromDate={fromDate}
                 />
             </PopoverContent>
         </Popover>

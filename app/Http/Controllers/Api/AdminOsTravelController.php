@@ -8,7 +8,9 @@ use App\Models\OsTravelReference;
 use App\Models\OsTravelRefreshRequest;
 use App\Models\OsTravelSync;
 use App\Services\OsTravel\HotelPublisher;
+use App\Services\OsTravel\OsTravelPriceCalculator;
 use App\Services\OsTravel\OsTravelSearchService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +28,7 @@ class AdminOsTravelController extends Controller
     public function __construct(
         private HotelPublisher $publisher,
         private OsTravelSearchService $searchService,
+        private OsTravelPriceCalculator $calculator,
     ) {}
 
     public function dashboard(): JsonResponse
@@ -54,6 +57,7 @@ class AdminOsTravelController extends Controller
                     OsTravelHotel::PUBLISHED => OsTravelHotel::query()->where('status', OsTravelHotel::PUBLISHED)->count(),
                     OsTravelHotel::REJECTED => OsTravelHotel::query()->where('status', OsTravelHotel::REJECTED)->count(),
                     OsTravelHotel::ORPHANED => OsTravelHotel::query()->where('status', OsTravelHotel::ORPHANED)->count(),
+                    'all' => OsTravelHotel::query()->count(),
                 ],
             ],
         ]);
@@ -68,12 +72,40 @@ class AdminOsTravelController extends Controller
             'city' => ['sometimes', 'nullable', 'string', 'max:255'],
             'country_id' => ['sometimes', 'nullable', 'string', 'max:255'],
             'city_id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'stars' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:7'],
             'check_in' => ['sometimes', 'nullable', 'date'],
             'check_out' => ['sometimes', 'nullable', 'date', 'after_or_equal:check_in'],
         ]);
 
         $query = OsTravelHotel::query()->with(['hotel', 'approver']);
 
+        $this->applyListFilters($query, $data);
+
+        $hotels = $query->latest('id')->get();
+
+        $live = null;
+        if (! empty($data['check_in']) && ! empty($data['check_out'])) {
+            $live = $this->searchService->probeWindow(
+                $hotels->pluck('external_id')->filter()->values()->all(),
+                $data['check_in'],
+                $data['check_out'],
+            );
+        }
+
+        return response()->json([
+            'data' => $hotels->map(fn (OsTravelHotel $hotel) => $this->reviewPayload($hotel, $live))->values(),
+        ]);
+    }
+
+    /**
+     * Apply the shared admin list filters onto a query. `check_in`/`check_out`
+     * are intentionally not applied here: they only drive the live price probe.
+     *
+     * @param  Builder<OsTravelHotel>  $query
+     * @param  array<string, mixed>  $data
+     */
+    private function applyListFilters($query, array $data): void
+    {
         if (! empty($data['status'])) {
             $query->where('status', $data['status']);
         }
@@ -90,20 +122,9 @@ class AdminOsTravelController extends Controller
             $query->where('city_external_id', $data['city_id']);
         }
 
-        $hotels = $query->latest('id')->get();
-
-        $live = null;
-        if (! empty($data['check_in']) && ! empty($data['check_out'])) {
-            $live = $this->searchService->probeWindow(
-                $hotels->pluck('external_id')->filter()->values()->all(),
-                $data['check_in'],
-                $data['check_out'],
-            );
+        if (! empty($data['stars'])) {
+            $query->where('stars', '>=', $data['stars']);
         }
-
-        return response()->json([
-            'data' => $hotels->map(fn (OsTravelHotel $hotel) => $this->reviewPayload($hotel, $live))->values(),
-        ]);
     }
 
     /**
@@ -253,34 +274,70 @@ class AdminOsTravelController extends Controller
     }
 
     /**
-     * Bulk approve: publish only hotels that already have a staged `base_price`.
-     * Skips already-published rows and reports no-price + over-cap separately.
+     * Bulk approve: publish only the hotels matching the currently applied
+     * admin filters. By default hotels without a price or without an image are
+     * skipped; passing `include_without_price` / `include_without_image` opts
+     * them back into the batch. Already-published rows are ignored and
+     * over-cap is reported separately.
      */
     public function approveAll(Request $request): JsonResponse
     {
+        $validStatuses = [OsTravelHotel::PENDING, OsTravelHotel::APPROVED, OsTravelHotel::PUBLISHED, OsTravelHotel::REJECTED, OsTravelHotel::ORPHANED];
+
         $data = $request->validate([
             'markup_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'currency' => ['sometimes', 'nullable', 'string', 'max:3'],
+            'include_without_price' => ['sometimes', 'boolean'],
+            'include_without_image' => ['sometimes', 'boolean'],
+            'status' => ['sometimes', 'nullable', 'string', 'in:'.implode(',', $validStatuses)],
+            'city' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'country_id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'city_id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'stars' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:7'],
+            'check_in' => ['sometimes', 'nullable', 'date'],
+            'check_out' => ['sometimes', 'nullable', 'date', 'after_or_equal:check_in'],
         ]);
 
-        $candidates = OsTravelHotel::query()
-            ->where('status', OsTravelHotel::PENDING)
-            ->whereNotNull('base_price')
-            ->orderBy('id')
-            ->get();
+        $includeWithoutPrice = (bool) ($data['include_without_price'] ?? false);
+        $includeWithoutImage = (bool) ($data['include_without_image'] ?? false);
+
+        $data['status'] = $data['status'] ?? OsTravelHotel::PENDING;
+
+        $baseQuery = OsTravelHotel::query();
+        $this->applyListFilters($baseQuery, $data);
+
+        $pending = (clone $baseQuery)->orderBy('id')->get();
 
         $cap = (int) config('ostravel.sync.bulk_approve_max', 50);
 
-        $withoutPrice = OsTravelHotel::query()
-            ->where('status', OsTravelHotel::PENDING)
-            ->whereNull('base_price')
-            ->orderBy('id')
-            ->pluck('id')
-            ->map(fn ($value) => (string) $value)
-            ->all();
+        $withoutPrice = $includeWithoutPrice
+            ? []
+            : $pending->where('base_price', null)->pluck('id')
+                ->map(fn ($value) => (string) $value)
+                ->values()
+                ->all();
+
+        $withoutImage = $includeWithoutImage
+            ? []
+            : $pending->filter(fn (OsTravelHotel $hotel) => self::isPlaceholderImageUrl($hotel->image))->pluck('id')
+                ->map(fn ($value) => (string) $value)
+                ->values()
+                ->all();
+
+        $candidates = $pending->filter(function (OsTravelHotel $hotel) use ($includeWithoutPrice, $includeWithoutImage) {
+            if (! $includeWithoutPrice && $hotel->base_price === null) {
+                return false;
+            }
+
+            if (! $includeWithoutImage && self::isPlaceholderImageUrl($hotel->image)) {
+                return false;
+            }
+
+            return true;
+        })->values();
 
         $candidatesSlice = $candidates->take($cap);
-        $overCap = $candidates->skip($cap)->pluck('id')->map(fn ($value) => (string) $value)->all();
+        $overCap = $candidates->slice($cap)->pluck('id')->map(fn ($value) => (string) $value)->all();
 
         $published = [];
         $failed = [];
@@ -310,10 +367,12 @@ class AdminOsTravelController extends Controller
                 'published' => $published,
                 'failed' => $failed,
                 'skipped_no_price' => $withoutPrice,
+                'skipped_no_image' => $withoutImage,
                 'skipped_over_cap' => $overCap,
                 'published_count' => count($published),
                 'failed_count' => count($failed),
                 'skipped_no_price_count' => count($withoutPrice),
+                'skipped_no_image_count' => count($withoutImage),
                 'skipped_over_cap_count' => count($overCap),
                 'cap' => $cap,
             ],
@@ -382,9 +441,15 @@ class AdminOsTravelController extends Controller
     /**
      * Refresh the provider's minimum price for a single staged hotel and
      * persist it as `base_price`, returning the refreshed review payload.
+     *
+     * The probe can walk the full ~42-day horizon for a hotel with no
+     * availability at the base window, so raise PHP's execution limit well past
+     * the default 30s before doing the work (bulk refreshes stay async).
      */
     public function refreshPrice(int|string $id): JsonResponse
     {
+        set_time_limit(300);
+
         $hotel = OsTravelHotel::query()->findOrFail($id);
 
         $result = $this->searchService->refreshStagedPrices([$hotel->id]);
@@ -414,11 +479,47 @@ class AdminOsTravelController extends Controller
     }
 
     /**
+     * Un-approve a staged hotel, moving it back to the pending review queue.
+     *
+     * An approved row just clears its approval. A published row is also
+     * un-published: the linked public `hotels` row is deleted (so it leaves the
+     * public site) and the staging row returns to pending. Deleting is safe
+     * because the staging row's `hotel_id` is null-on-delete and the publish
+     * path re-creates the hotel on the next approve.
+     */
+    public function unapprove(int|string $id): JsonResponse
+    {
+        $hotel = OsTravelHotel::query()->findOrFail($id);
+
+        if (! in_array($hotel->status, [OsTravelHotel::APPROVED, OsTravelHotel::PUBLISHED], true)) {
+            return response()->json(['message' => __('os_travel.cannot_unapprove')], 422);
+        }
+
+        if ($hotel->status === OsTravelHotel::PUBLISHED && $hotel->hotel_id !== null) {
+            $hotel->hotel?->delete();
+            $hotel->refresh();
+        }
+
+        $hotel->update([
+            'status' => OsTravelHotel::PENDING,
+            'hotel_id' => null,
+            'approved_by' => null,
+            'approved_at' => null,
+        ]);
+
+        return response()->json(['data' => $this->reviewPayload($hotel->refresh())]);
+    }
+
+    /**
      * Review columns for the staged list.
      *
      * When a live probe ran, the row carries the probe result for its exact
      * date window: `live_price`/`live_currency` when available, otherwise a
      * `live_status` explaining why not.
+     *
+     * `final_price` is the sell price: live API price + markup when the probe
+     * priced this hotel, otherwise the projected `base_price` + markup from
+     * the scheduled min. It is null when there is no price to mark up.
      *
      * @param  array{prices?: array<string, array{price: float, currency: string}>, omitted_ids?: list<string>, failed_ids?: list<string>}|null  $live
      */
@@ -442,6 +543,18 @@ class AdminOsTravelController extends Controller
             }
         }
 
+        // Sell price the admin sees: live API price + markup when a date
+        // filter probed this hotel, otherwise the projected price from the
+        // scheduled min price (base_price + markup). No availability or a
+        // provider error leaves it null so the frontend can explain why.
+        $markup = (float) ($hotel->markup_percentage ?? config('ostravel.markup.default', 20));
+        $finalPrice = null;
+        if ($liveStatus === 'available' && $livePrice !== null) {
+            $finalPrice = $this->calculator->applyMarkup($livePrice, $markup);
+        } elseif ($live === null && $hotel->base_price !== null) {
+            $finalPrice = $this->calculator->applyMarkup($hotel->base_price, $markup);
+        }
+
         return [
             'id' => (string) $hotel->id,
             'external_id' => $hotel->external_id,
@@ -452,12 +565,15 @@ class AdminOsTravelController extends Controller
             'country_name' => $hotel->country_name,
             'category_title' => $hotel->category_title,
             'stars' => $hotel->stars,
-            'image' => $hotel->image,
+            'image' => self::cleanImageUrl($hotel->image),
             'status' => $hotel->status,
             'has_base_price' => $hotel->base_price !== null,
             'base_price' => $hotel->base_price,
+            'final_price' => $finalPrice,
             'price_status' => $hotel->price_status,
             'last_price_attempt_at' => $hotel->last_price_attempt_at,
+            'first_available_at' => $hotel->first_available_at?->toDateString(),
+            'min_nights' => $hotel->min_nights,
             'markup_percentage' => $hotel->markup_percentage,
             'currency' => $hotel->currency,
             'hotel_id' => $hotel->hotel_id !== null ? (string) $hotel->hotel_id : null,
@@ -494,9 +610,13 @@ class AdminOsTravelController extends Controller
             'country' => HotelPublisher::cleanText((string) $country),
             'stars' => $list['Category']['Star'] ?? $detail['Category']['Star'] ?? 0,
             'category' => HotelPublisher::cleanText($list['Category']['Title'] ?? $detail['Category']['Title'] ?? ''),
-            'image' => $list['Image'] ?? $detail['Image'] ?? null,
-            'gallery' => collect($detail['Album'] ?? [])->pluck('Url')->filter()->values()->all(),
-            'description' => HotelPublisher::htmlToText($detail['LongDescription'] ?? ''),
+            'image' => self::cleanImageUrl($list['Image'] ?? $detail['Image'] ?? null),
+            'gallery' => collect($detail['Album'] ?? [])
+                ->pluck('Url')
+                ->map(fn ($url) => self::cleanImageUrl($url))
+                ->filter()
+                ->values()
+                ->all(),            'description' => HotelPublisher::htmlToText($detail['LongDescription'] ?? ''),
             'themes' => $list['Theme'] ?? $detail['Theme'] ?? [],
             'boarding' => collect($detail['Boarding'] ?? [])
                 ->map(fn (array $b) => HotelPublisher::cleanText($b['Name'] ?? ''))
@@ -530,5 +650,43 @@ class AdminOsTravelController extends Controller
             'failed_ids' => $refresh->failed_ids ?? [],
             'error' => $refresh->error,
         ];
+    }
+
+    /**
+     * True when the image URL is missing or comes from a known placeholder
+     * service, so callers can treat the hotel as having no usable picture.
+     */
+    private static function isPlaceholderImageUrl(mixed $url): bool
+    {
+        if (! is_string($url) || trim($url) === '') {
+            return true;
+        }
+
+        $host = parse_url(trim($url), PHP_URL_HOST);
+
+        if (! is_string($host)) {
+            return false;
+        }
+
+        return in_array(strtolower($host), [
+            'via.placeholder.com',
+            'placehold.co',
+            'placeholdit.co',
+            'dummyimage.com',
+        ], true);
+    }
+
+    /**
+     * Drop placeholder/empty image URLs (e.g. faker-generated
+     * `via.placeholder.com` fixtures stored in test payloads) so the admin
+     * never renders a broken image and the browser never fires a failing GET.
+     */
+    private static function cleanImageUrl(mixed $url): ?string
+    {
+        if (self::isPlaceholderImageUrl($url)) {
+            return null;
+        }
+
+        return is_string($url) ? $url : null;
     }
 }

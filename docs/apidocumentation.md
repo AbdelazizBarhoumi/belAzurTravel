@@ -32,6 +32,44 @@ marked **confirmed**; items needing provider clarification are marked
   received but not relied on; the local `markup_percentage` is applied to
   `Price`. **open** — confirm the two never diverge.
 
+## Min-stay discovery — no explicit field (confirmed)
+
+- The `HotelSearch` response has **no explicit minimum-stay field** (envelope
+  keys: `Hotel`, `Token`, `Price{Boarding/Pax/Rooms}`, `Source`, `Currency`,
+  `Recommended`; room keys include `StopReservation`, `CancellationPolicy`,
+  `CancellationDeadline`). Min-stay behavior is still real: on 2026-09-01,
+  **35/120** hotels priced a 7-night window but not a 1-night one.
+- The refresh probe (`probePrices`, used by `refreshLatestPrices` and
+  `refreshStagedPrices`) walks an exact stay-length ladder per check-in window
+  (`ostravel.refresh.probe.night_lengths`, default `[1,2,3,4,5,6,7]`) and
+  takes the **first length that prices** as the hotel's minimum stay:
+  - `min_nights` — that winning length.
+  - `first_available_at` — the check-in date of the winning window (the
+    nearest day the hotel can be booked).
+  - `price` — the provider total for the shortest bookable stay, normalized to
+    a per-night **display** price: stored as-is for a 1-night total; `total ÷
+    nights` for longer stays. This is a normalized figure derived from the
+    provider's shortest valid stay, never an approximation.
+- Both `os_travel_hotels` and `hotels` carry `first_available_at` (date,
+  nullable) + `min_nights` (unsigned tiny int, nullable). Hotels with no
+  bookable length are omitted and their stored browse price is cleared
+  (`last_price`/`base_price` → null; UI shows "Price unavailable"). The public
+  payload and admin review payload expose both fields.
+- The forward probe is **two-phase** so `first_available_at` is exact to the
+  day: a coarse pass steps `ostravel.refresh.probe.step_days` apart (default 7)
+  to bracket each hotel's availability at low call cost, then a **fine pass**
+  **binary-searches** each bracketed gap (O(log step_days) probes — same
+  stay-length ladder, unrefined hotels sharing a midpoint probed in one chunk)
+  to find the exact nearest available day even when it falls between two coarse
+  check-ins (e.g. Movenpick was truly bookable from 2026-08-17 but the coarse
+  7-day scan alone reported 2026-08-22). The binary search assumes availability
+  within a gap is monotone (once bookable, stays bookable) — the same assumption
+  the coarse scan already makes across windows. Hotels priced in the default
+  window skip refinement; a fine-phase provider failure keeps the coarse
+  result — precision is lost, the price never is.
+- The single exact-date live check (`probeWindow`) is unchanged — raw stay
+  total, no ladder.
+
 ## Currency (open)
 
 - `Currency` is read from the provider `HotelSearch`/`HotelDetail` envelope per

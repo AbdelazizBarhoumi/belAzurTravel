@@ -172,6 +172,22 @@ class OsTravelHotelPublisherTest extends TestCase
         $this->assertNotContains('Réveillon ', $hotel->tags);
     }
 
+    public function test_publish_carries_nearest_available_day_and_minimum_stay(): void
+    {
+        $staged = $this->stagedHotel();
+        $staged->update([
+            'first_available_at' => '2026-09-14',
+            'min_nights' => 3,
+        ]);
+
+        $hotel = app(HotelPublisher::class)->publish($staged->refresh());
+
+        // The probe metadata seeded on the staged row travels to the published
+        // hotels row so browse can render "available from / minimum nights".
+        $this->assertSame('2026-09-14', $hotel->first_available_at?->toDateString());
+        $this->assertSame(3, $hotel->min_nights);
+    }
+
     public function test_publish_uses_markup_override_and_currency_override(): void
     {
         $staged = $this->stagedHotel();

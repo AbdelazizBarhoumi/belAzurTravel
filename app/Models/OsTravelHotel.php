@@ -32,6 +32,7 @@ class OsTravelHotel extends Model
         'approved_by', 'approved_at', 'rejected_at', 'last_synced_at',
         'detail_fetched_at',
         'country_external_id', 'country_name', 'price_status', 'last_price_attempt_at',
+        'first_available_at', 'min_nights',
     ];
 
     protected $casts = [
@@ -44,6 +45,8 @@ class OsTravelHotel extends Model
         'last_synced_at' => 'datetime',
         'detail_fetched_at' => 'datetime',
         'last_price_attempt_at' => 'datetime',
+        'first_available_at' => 'date',
+        'min_nights' => 'integer',
     ];
 
     public function sync(): BelongsTo

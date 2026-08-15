@@ -157,6 +157,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'update']);
         Route::post('/admin/os-travel/hotels/{id}/approve', [AdminOsTravelController::class, 'approve']);
         Route::post('/admin/os-travel/hotels/{id}/reject', [AdminOsTravelController::class, 'reject']);
+        Route::post('/admin/os-travel/hotels/{id}/unapprove', [AdminOsTravelController::class, 'unapprove']);
         Route::post('/admin/os-travel/hotels/{id}/refresh-price', [AdminOsTravelController::class, 'refreshPrice']);
 
         Route::get('/admin/tours', [AdminTourController::class, 'index']);

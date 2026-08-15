@@ -21,6 +21,8 @@ export interface HotelItem {
     provider?: 'ostravel' | 'manual';
     last_price?: number | null;
     last_price_at?: string | null;
+    first_available_at?: string | null;
+    min_nights?: number | null;
     rating: number;
     stars: number;
     reviews: number;

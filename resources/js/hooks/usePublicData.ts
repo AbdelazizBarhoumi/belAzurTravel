@@ -39,6 +39,8 @@ export type HotelDetailLookupData = {
     provider?: 'ostravel' | 'manual';
     last_price?: number | null;
     last_price_at?: string | null;
+    first_available_at?: string | null;
+    min_nights?: number | null;
     address?: string;
     phone?: string;
     email?: string;

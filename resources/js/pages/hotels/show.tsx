@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+import { arSA, enUS, fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { Car, Coffee, Droplet, Dumbbell, Utensils, Wifi } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -62,6 +64,16 @@ const AMENITY_ICONS: Record<string, AmenityIcon> = {
     restaurant: Utensils,
     pool: Droplet,
 };
+
+function datePickerLocale(lang: Lang) {
+    if (lang === 'ar') return arSA;
+    if (lang === 'en') return enUS;
+    return fr;
+}
+
+function formatDate(date: Date, lang: Lang): string {
+    return format(date, 'PPP', { locale: datePickerLocale(lang) });
+}
 
 function normalizeAmenityKey(value: string): string {
     return value
@@ -216,6 +228,9 @@ export default function HotelDetail() {
     }
 
     const detail = hotel as HotelDetailLookupData;
+    const firstAvailableDate = detail.first_available_at
+        ? new Date(`${detail.first_available_at}T00:00:00`)
+        : undefined;
     const otherImages = detail.gallery?.length
         ? detail.gallery
         : detail.images?.length
@@ -414,6 +429,7 @@ export default function HotelDetail() {
                                 value={dateRange}
                                 onChange={setDateRange}
                                 className="flex-1"
+                                fromDate={firstAvailableDate}
                             />
                             <OccupancyPicker
                                 value={occupancy}
@@ -421,6 +437,17 @@ export default function HotelDetail() {
                                 compact
                             />
                         </div>
+                        {firstAvailableDate && (
+                            <p className="mt-3 text-xs text-muted-foreground">
+                                {t('hotelDetail.availableFrom')}{' '}
+                                <span className="font-semibold text-foreground">
+                                    {formatDate(firstAvailableDate, lang)}
+                                </span>
+                                {detail.min_nights && detail.min_nights > 1
+                                    ? ` · ${t('hotelDetail.minimumNights')} ${detail.min_nights} ${detail.min_nights > 1 ? t('hotelDetail.nightsLabel') : t('hotelDetail.night')}`
+                                    : ''}
+                            </p>
+                        )}
                     </div>
 
                     {searchedUnavailable && (
@@ -480,6 +507,7 @@ export default function HotelDetail() {
                     amount={
                         selectedRoom.priceTotal ?? selectedRoom.pricePerNight
                     }
+                    minDate={firstAvailableDate}
                     provider={
                         liveHotel
                             ? {

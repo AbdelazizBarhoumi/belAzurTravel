@@ -58,6 +58,15 @@ class OsTravelSearchServiceTest extends TestCase
         return $hotel;
     }
 
+    private function osTravelEnvelope(int $externalId): array
+    {
+        $envelope = $this->osTravelFixture('hotel_search');
+        $envelope['HotelSearch'] = [$envelope['HotelSearch'][0]];
+        $envelope['HotelSearch'][0]['Hotel']['Id'] = $externalId;
+
+        return $envelope;
+    }
+
     private function stagedHotel(int $id, string $name, string $status = OsTravelHotel::PENDING): OsTravelHotel
     {
         return OsTravelHotel::create([
@@ -101,6 +110,10 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame('TND', $kelibia->currency);
         $this->assertSame(OsTravelHotel::PRICE_HAS_PRICE, $kelibia->price_status);
         $this->assertNotNull($kelibia->last_price_attempt_at);
+        // 1-night window from the requested check-in: that date is the nearest
+        // available day, min stay is 1 night.
+        $this->assertSame('2026-09-01', $kelibia->first_available_at?->toDateString());
+        $this->assertSame(1, $kelibia->min_nights);
 
         // Stop Sales Hotel's only room is stopped, so no price is written.
         $stopSales = OsTravelHotel::where('external_id', '999')->first();
@@ -370,6 +383,10 @@ class OsTravelSearchServiceTest extends TestCase
         $kelibia = Hotel::where('slug', 'cap-bon-kelibia')->first();
         $this->assertSame(927.52, $kelibia->last_price);
         $this->assertNotNull($kelibia->last_price_at);
+        // The requested check-in window prices at 1 night, so that check-in is
+        // the nearest available day.
+        $this->assertSame('2026-09-01', $kelibia->first_available_at?->toDateString());
+        $this->assertSame(1, $kelibia->min_nights);
 
         // Stop Sales Hotel's only room is stopped, so no price is written.
         $stopSales = Hotel::where('slug', 'stop-sales')->first();
@@ -607,14 +624,32 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame(['cap-bon-kelibia', 'stop-sales'], array_column($results, 'slug'));
     }
 
-    public function test_refresh_latest_prices_probes_forward_to_nearest_available_window(): void
+    public function test_refresh_latest_prices_probes_forward_to_exact_nearest_available_day(): void
     {
         $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
 
+        // No availability in the first coarse check-in window (2026-09-01) at
+        // ANY probed stay length (1..7 nights), so the coarse phase steps
+        // forward one check-in (+7 days) where the hotel DOES price. The hotel
+        // is actually bookable from 2026-09-03 onward — between the two coarse
+        // windows — so the fine phase binary-searches the gap [09-02, 09-08]:
+        // probes 09-05 and 09-03 both price (monotone availability), then
+        // 09-02 does not, landing the exact day 2026-09-03 rather than coarse
+        // 2026-09-08.
+        $sequence = Http::sequence();
+        foreach (range(1, 7) as $i) {
+            $sequence->push(['HotelSearch' => [], 'CountResults' => 0]);
+        }
+        $sequence->push($this->osTravelFixture('hotel_search'));
+        // Fine phase: 09-05 prices, 09-03 prices, 09-02 does not (full ladder).
+        $sequence->push($this->osTravelFixture('hotel_search'));
+        $sequence->push($this->osTravelFixture('hotel_search'));
+        foreach (range(1, 7) as $i) {
+            $sequence->push(['HotelSearch' => [], 'CountResults' => 0]);
+        }
+
         Http::fake([
-            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::sequence()
-                ->push(['HotelSearch' => [], 'CountResults' => 0])
-                ->push($this->osTravelFixture('hotel_search')),
+            'https://admin.mygo.co/api/hotel/HotelSearch' => $sequence,
         ]);
 
         $result = app(OsTravelSearchService::class)->refreshLatestPrices([
@@ -622,25 +657,118 @@ class OsTravelSearchServiceTest extends TestCase
             'check_out' => '2026-09-08',
         ]);
 
-        // No availability in the first window, so the refresh probes forward
-        // one step (check_in + 7 days) and lands a price there. The price
-        // basis is a 1-night window, so the probe CheckOut is +1 night.
         $this->assertSame(1, $result['updated']);
         $this->assertSame(0, $result['omitted']);
 
         $hotel = Hotel::where('slug', 'cap-bon-kelibia')->first();
+        // The winning window is a 1-night stay, so the provider total is the
+        // per-night price and is stored as-is.
         $this->assertSame(927.52, $hotel->last_price);
+        $this->assertSame('2026-09-03', $hotel->first_available_at?->toDateString());
+        $this->assertSame(1, $hotel->min_nights);
 
         Http::assertSent(function ($request) {
             $body = $request->data();
 
-            // The successful probe used the stepped window, not the default.
-            return ($body['SearchDetails']['BookingDetails']['CheckIn'] ?? '') === '2026-09-08'
-                && ($body['SearchDetails']['BookingDetails']['CheckOut'] ?? '') === '2026-09-09';
+            // The exact (fine) probe landed the price at 2026-09-03.
+            return ($body['SearchDetails']['BookingDetails']['CheckIn'] ?? '') === '2026-09-03'
+                && ($body['SearchDetails']['BookingDetails']['CheckOut'] ?? '') === '2026-09-04';
         });
     }
 
-    public function test_refresh_staged_prices_probes_forward_to_nearest_available_window(): void
+    public function test_refresh_latest_prices_refines_each_hotel_to_its_own_exact_available_day(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+        $this->stagedPublishedHotel(777, 'aqua-resort', 'Aqua Resort', 900);
+
+        // Each hotel has its own gap between coarse windows, so the fine phase
+        // must refine them independently to their exact nearest available day:
+        // 777 is bookable from 2026-09-03 (two days past the default window,
+        // the Movenpick case) while 178 is only bookable from 2026-09-09 (the
+        // first day of its own gap after the 2026-09-08 coarse window).
+        $sequence = Http::sequence();
+        // Coarse 2026-09-01: neither hotel available at any stay length.
+        foreach (range(1, 7) as $i) {
+            $sequence->push(['HotelSearch' => [], 'CountResults' => 0]);
+        }
+        // Coarse 2026-09-08: 777 prices on a 1-night stay; 178 does not.
+        $sequence->push($this->osTravelEnvelope(777));
+        foreach (range(1, 6) as $i) {
+            $sequence->push(['HotelSearch' => [], 'CountResults' => 0]);
+        }
+        // Coarse 2026-09-15: 178 prices on a 1-night stay.
+        $sequence->push($this->osTravelEnvelope(178));
+        // Fine binary search — 777's gap [09-02,09-08]: probes 09-05, 09-03
+        // (both price, monotone), then 09-02 (empty). 178's gap [09-09,09-15]:
+        // probes 09-12, 09-10, 09-09 (all price). Each group shares its probe day.
+        $sequence->push($this->osTravelEnvelope(777)); // fine 09-05
+        $sequence->push($this->osTravelEnvelope(178)); // fine 09-12
+        $sequence->push($this->osTravelEnvelope(777)); // fine 09-03
+        $sequence->push($this->osTravelEnvelope(178)); // fine 09-10
+        foreach (range(1, 7) as $i) {
+            $sequence->push(['HotelSearch' => [], 'CountResults' => 0]); // fine 09-02 (777 not available)
+        }
+        $sequence->push($this->osTravelEnvelope(178)); // fine 09-09
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => $sequence,
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshLatestPrices([
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(2, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+
+        $aqua = Hotel::where('slug', 'aqua-resort')->first();
+        $this->assertSame(927.52, $aqua->last_price);
+        // Refined to the exact Movenpick-style day, not the coarse 2026-09-08.
+        $this->assertSame('2026-09-03', $aqua->first_available_at?->toDateString());
+        $this->assertSame(1, $aqua->min_nights);
+
+        $kelibia = Hotel::where('slug', 'cap-bon-kelibia')->first();
+        $this->assertSame(927.52, $kelibia->last_price);
+        // Refined to the first day of its own gap, not the coarse 2026-09-15.
+        $this->assertSame('2026-09-09', $kelibia->first_available_at?->toDateString());
+        $this->assertSame(1, $kelibia->min_nights);
+    }
+
+    public function test_refresh_latest_prices_prices_min_stay_hotel_from_shortest_bookable_stay(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        // The provider has no explicit min-stay field: a hotel can refuse a
+        // 1-night stay yet price a 2-night one. The probe walks the stay-length
+        // ladder in order and takes the first successful length.
+        $sequence = Http::sequence();
+        $sequence->push(['HotelSearch' => [], 'CountResults' => 0]);
+        $twoNight = $this->osTravelFixture('hotel_search');
+        // 500.000 is the 2-night stay total for the cheapest room.
+        $twoNight['HotelSearch'][0]['Price']['Boarding'][0]['Pax'][0]['Rooms'][0]['Price'] = '500.000';
+        $sequence->push($twoNight);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => $sequence,
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshLatestPrices([
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+
+        $hotel = Hotel::where('slug', 'cap-bon-kelibia')->first();
+        // 500.000 / 2 nights = 250.00 normalized per-night display price.
+        $this->assertSame(250.0, $hotel->last_price);
+        $this->assertSame('2026-09-01', $hotel->first_available_at?->toDateString());
+        $this->assertSame(2, $hotel->min_nights);
+    }
+
+    public function test_refresh_staged_prices_probes_forward_to_exact_nearest_available_day(): void
     {
         OsTravelHotel::create([
             'external_id' => '178',
@@ -657,10 +785,25 @@ class OsTravelSearchServiceTest extends TestCase
             'last_synced_at' => now(),
         ]);
 
+        // refreshStagedPrices() defaults to today+1. The hotel has no 1..7
+        // night availability there, so the coarse phase steps forward (+7
+        // days) where it prices; the fine phase then binary-searches the gap
+        // [today+2, today+8] — probes today+5 and today+3 price (available
+        // from today+3 onward, monotone), today+2 does not — landing the
+        // exact day today+3 rather than the coarse today+8.
+        $sequence = Http::sequence();
+        foreach (range(1, 7) as $i) {
+            $sequence->push(['HotelSearch' => [], 'CountResults' => 0]);
+        }
+        $sequence->push($this->osTravelFixture('hotel_search'));
+        $sequence->push($this->osTravelFixture('hotel_search'));
+        $sequence->push($this->osTravelFixture('hotel_search'));
+        foreach (range(1, 7) as $i) {
+            $sequence->push(['HotelSearch' => [], 'CountResults' => 0]);
+        }
+
         Http::fake([
-            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::sequence()
-                ->push(['HotelSearch' => [], 'CountResults' => 0])
-                ->push($this->osTravelFixture('hotel_search')),
+            'https://admin.mygo.co/api/hotel/HotelSearch' => $sequence,
         ]);
 
         $result = app(OsTravelSearchService::class)->refreshStagedPrices();
@@ -668,18 +811,65 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame(1, $result['updated']);
         $this->assertSame(0, $result['omitted']);
 
-        $this->assertSame(928, OsTravelHotel::where('external_id', '178')->first()->base_price);
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame(928, $staged->base_price);
+        // The exact nearest available day, refined into the coarse gap.
+        $this->assertSame(
+            now()->addDays(1 + 2)->toDateString(),
+            $staged->first_available_at?->toDateString()
+        );
+        $this->assertSame(1, $staged->min_nights);
     }
 
-    public function test_refresh_latest_prices_clears_stored_price_when_no_one_night_availability(): void
+    public function test_refresh_staged_prices_prices_min_stay_hotel_from_shortest_bookable_stay(): void
+    {
+        OsTravelHotel::create([
+            'external_id' => '178',
+            'payload' => [],
+            'payload_hash' => str_repeat('b', 64),
+            'name' => 'Cap Bon Kelibia Beach Hotel & Spa',
+            'city_external_id' => '12',
+            'city_name' => 'Kelibia',
+            'category_title' => '4 étoiles',
+            'stars' => 4,
+            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'status' => OsTravelHotel::PENDING,
+            'base_price' => null,
+            'last_synced_at' => now(),
+        ]);
+
+        // 1 night is refused; the 2-night stay wins the ladder.
+        $sequence = Http::sequence();
+        $sequence->push(['HotelSearch' => [], 'CountResults' => 0]);
+        $twoNight = $this->osTravelFixture('hotel_search');
+        $twoNight['HotelSearch'][0]['Price']['Boarding'][0]['Pax'][0]['Rooms'][0]['Price'] = '500.000';
+        $sequence->push($twoNight);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => $sequence,
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices();
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        // 500.000 / 2 nights = 250.00 → base_price 250 at the default window.
+        $this->assertSame(250, $staged->base_price);
+        $this->assertSame(now()->addDay()->toDateString(), $staged->first_available_at?->toDateString());
+        $this->assertSame(2, $staged->min_nights);
+    }
+
+    public function test_refresh_latest_prices_clears_stored_price_when_no_stay_length_available(): void
     {
         $hotel = $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
         $hotel->update(['last_price' => 777.5, 'last_price_at' => now()->subDay()]);
 
-        // The provider only books a longer stay (e.g. 7 nights) and never
-        // returns a 1-night price for this hotel. Since every stored browse
+        // The provider never returns this hotel at any probed stay length
+        // (1..7 nights) across the whole horizon. Since every stored browse
         // price must be a genuine live per-night API value, the stored price
-        // is cleared rather than shown as a stale stay-total.
+        // and its availability metadata are cleared rather than shown stale.
         Http::fake([
             'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response(['HotelSearch' => [], 'CountResults' => 0]),
         ]);
@@ -695,9 +885,11 @@ class OsTravelSearchServiceTest extends TestCase
         $hotel->refresh();
         $this->assertNull($hotel->last_price);
         $this->assertNull($hotel->last_price_at);
+        $this->assertNull($hotel->first_available_at);
+        $this->assertNull($hotel->min_nights);
     }
 
-    public function test_refresh_staged_prices_clears_stored_price_when_no_one_night_availability(): void
+    public function test_refresh_staged_prices_clears_stored_price_when_no_stay_length_available(): void
     {
         OsTravelHotel::create([
             'external_id' => '178',
@@ -728,6 +920,8 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertNull($hotel->base_price);
         $this->assertSame(OsTravelHotel::PRICE_NO_AVAILABILITY, $hotel->price_status);
         $this->assertNotNull($hotel->last_price_attempt_at);
+        $this->assertNull($hotel->first_available_at);
+        $this->assertNull($hotel->min_nights);
     }
 
     public function test_refresh_probe_counts_provider_failure_separately_from_omitted(): void

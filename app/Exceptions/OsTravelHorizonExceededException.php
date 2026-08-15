@@ -10,6 +10,4 @@ use RuntimeException;
  * Probing further forward is pointless, so callers treat the affected chunk as
  * having no availability rather than as a transient provider failure.
  */
-class OsTravelHorizonExceededException extends RuntimeException
-{
-}
+class OsTravelHorizonExceededException extends RuntimeException {}

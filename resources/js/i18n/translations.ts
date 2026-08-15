@@ -1637,6 +1637,21 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'سعر مباشر',
         en: 'Live price',
     },
+    'hotelDetail.availableFrom': {
+        fr: 'Disponible à partir du',
+        ar: 'متاح من',
+        en: 'Available from',
+    },
+    'hotelDetail.minimumNights': {
+        fr: 'Séjour minimum',
+        ar: 'الحد الأدنى للإقامة',
+        en: 'Minimum stay',
+    },
+    'hotelDetail.night': {
+        fr: 'nuit',
+        ar: 'ليلة',
+        en: 'night',
+    },
     'hotelDetail.unavailableNotice': {
         fr: 'Cet hôtel n\'a aucune disponibilité pour les dates sélectionnées. Essayez d\'autres dates.',
         ar: 'لا يتوفر هذا الفندق للتواريخ المحددة. جرب تواريخ أخرى.',
@@ -5501,6 +5516,16 @@ translations['admin.basePrice'] = {
     ar: 'السعر الأساسي',
     en: 'Base price',
 };
+translations['admin.minPrice'] = {
+    fr: 'Prix minimum',
+    ar: 'الحد الأدنى للسعر',
+    en: 'Min price',
+};
+translations['admin.finalPrice'] = {
+    fr: 'Prix final',
+    ar: 'السعر النهائي',
+    en: 'Final price',
+};
 translations['admin.hotelForm.basePricePlaceholder'] = {
     fr: 'Ex. : 250',
     ar: 'مثال: 250',
@@ -6769,10 +6794,20 @@ translations['osTravel.reactivated'] = {
     ar: 'تمت إعادة تفعيل {count} فندق',
     en: '{count} hotel(s) reactivated',
 };
+translations['osTravel.orphanedBadge'] = {
+    fr: '{count} hôtel(s) orphelin(s)',
+    ar: '{count} فندق يتيم',
+    en: '{count} orphaned hotel(s)',
+};
 translations['osTravel.status.pending'] = {
     fr: 'En attente',
     ar: 'قيد الانتظار',
     en: 'Pending',
+};
+translations['osTravel.status.all'] = {
+    fr: 'Tous',
+    ar: 'الكل',
+    en: 'All',
 };
 translations['osTravel.status.approved'] = {
     fr: 'Approuvés',
@@ -6804,6 +6839,11 @@ translations['osTravel.allStars'] = {
     ar: 'كل النجوم',
     en: 'All stars',
 };
+translations['osTravel.filterStars'] = {
+    fr: 'Filtrer par étoiles',
+    ar: 'تصفية حسب النجوم',
+    en: 'Filter by stars',
+};
 translations['osTravel.approveAll'] = {
     fr: 'Tout approuver',
     ar: 'اعتماد الكل',
@@ -6824,6 +6864,16 @@ translations['osTravel.preflightSkip'] = {
     ar: 'سيتم تخطي {count} فندق (سعر مفقود).',
     en: '{count} hotel(s) will be skipped for missing price.',
 };
+translations['osTravel.preflightIncludePrice'] = {
+    fr: 'Approuver aussi {count} hôtel(s) sans prix.',
+    ar: 'اعتماد {count} فندق بدون سعر أيضًا.',
+    en: 'Also approve {count} hotel(s) without a price.',
+};
+translations['osTravel.preflightIncludeImage'] = {
+    fr: 'Approuver aussi {count} hôtel(s) sans photo.',
+    ar: 'اعتماد {count} فندق بدون صورة أيضًا.',
+    en: 'Also approve {count} hotel(s) without pictures.',
+};
 translations['osTravel.capWarning'] = {
     fr: 'Le lot est plafonné au maximum configuré.',
     ar: 'يحدد الدفعة بالحد الأقصى المكوّن.',
@@ -6843,6 +6893,16 @@ translations['osTravel.skippedOverCap'] = {
     fr: '{count} ignorés (limite atteinte)',
     ar: 'تم تخطي {count} (تجاوز الحد)',
     en: '{count} skipped (over cap)',
+};
+translations['osTravel.skippedNoImage'] = {
+    fr: '{count} ignorés (photo manquante)',
+    ar: 'تم تخطي {count} (صورة مفقودة)',
+    en: '{count} skipped (missing image)',
+};
+translations['osTravel.failedCount'] = {
+    fr: '{count} échoués',
+    ar: 'فشل {count}',
+    en: '{count} failed',
 };
 translations['osTravel.approveAllFailed'] = {
     fr: "Échec de l'approbation groupée.",
@@ -6893,6 +6953,31 @@ translations['osTravel.rejectDescription'] = {
     fr: "L'hôtel ne sera pas publié et restera dans le catalogue comme rejeté.",
     ar: 'لن يتم نشر الفندق وسيبقى في الكتالوج كمرفوض.',
     en: 'The hotel will not be published and will stay in the catalog as rejected.',
+};
+translations['osTravel.unapproved'] = {
+    fr: 'Hôtel désapprouvé.',
+    ar: 'تم إلغاء اعتماد الفندق.',
+    en: 'Hotel unapproved.',
+};
+translations['osTravel.unapproveFailed'] = {
+    fr: "Échec de la désapprobation de l'hôtel.",
+    ar: 'فشل إلغاء اعتماد الفندق.',
+    en: 'Failed to unapprove hotel.',
+};
+translations['osTravel.unapprove'] = {
+    fr: 'Désapprouver',
+    ar: 'إلغاء الاعتماد',
+    en: 'Unapprove',
+};
+translations['osTravel.unapproveTitle'] = {
+    fr: 'Désapprouver cet hôtel ?',
+    ar: 'إلغاء اعتماد هذا الفندق؟',
+    en: 'Unapprove this hotel?',
+};
+translations['osTravel.unapproveDescription'] = {
+    fr: "L'hôtel reviendra à la file d'attente en attente.",
+    ar: 'سيعود الفندق إلى قائمة الانتظار.',
+    en: 'The hotel will move back to the pending review queue.',
 };
 translations['osTravel.preview'] = {
     fr: 'Aperçu',
@@ -6978,6 +7063,21 @@ translations['osTravel.noAvailability'] = {
     fr: 'Aucune disponibilité dans les ~42 prochains jours.',
     ar: 'لا توجد توفر خلال الـ 42 يوماً القادمة تقريباً.',
     en: 'No availability in the next ~42 days.',
+};
+translations['osTravel.availableFrom'] = {
+    fr: 'Disponible à partir du',
+    ar: 'متاح من',
+    en: 'Available from',
+};
+translations['osTravel.minNights'] = {
+    fr: 'Séjour min.',
+    ar: 'حد أدنى',
+    en: 'Min. stay',
+};
+translations['osTravel.nightsShort'] = {
+    fr: 'nuits',
+    ar: 'ليالي',
+    en: 'nights',
 };
 translations['osTravel.filterCountry'] = {
     fr: 'Pays…',

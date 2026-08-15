@@ -1,5 +1,7 @@
+import { format } from 'date-fns';
+import { arSA, enUS, fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
-import { MapPin } from 'lucide-react';
+import { CalendarDays, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -31,6 +33,7 @@ import {
     useCategoryTypesPublic,
     type HotelSearchResult,
 } from '@/hooks/usePublicData';
+import type { Lang } from '@/i18n/translations';
 
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
@@ -43,6 +46,16 @@ type HotelCard = Omit<HotelItem, 'name' | 'location' | 'category'> &
     Partial<HotelSearchResult>;
 
 type SortValue = 'price_asc' | 'price_desc' | 'stars_desc';
+
+function datePickerLocale(lang: Lang) {
+    if (lang === 'ar') return arSA;
+    if (lang === 'en') return enUS;
+    return fr;
+}
+
+function formatDate(date: Date, lang: Lang): string {
+    return format(date, 'PPP', { locale: datePickerLocale(lang) });
+}
 
 export default function Hotels() {
     const { t, lang, dir } = useLanguage();
@@ -227,6 +240,19 @@ export default function Hotels() {
         return matchesSearch && matchesCategoryTypes;
     });
 
+    // The shared date picker is always bounded to the earliest day any
+    // displayed hotel is available from, so users can't pick a window before
+    // any hotel can be booked.
+    const pickerMinDate = useMemo(() => {
+        const dates = filteredHotels
+            .map((h) => h.first_available_at)
+            .filter((d): d is string => Boolean(d))
+            .map((d) => new Date(`${d}T00:00:00`))
+            .filter((d) => !Number.isNaN(d.getTime()));
+        if (dates.length === 0) return undefined;
+        return new Date(Math.min(...dates.map((d) => d.getTime())));
+    }, [filteredHotels]);
+
     const handleClearAll = () => {
         setSearchQuery('');
         setCategoryTypeFilters({});
@@ -291,6 +317,7 @@ export default function Hotels() {
                         <DateRangePicker
                             value={dateRange}
                             onChange={setDateRange}
+                            fromDate={pickerMinDate}
                         />
                         <OccupancyPicker
                             value={occupancy}
@@ -449,9 +476,6 @@ export default function Hotels() {
                                                                     ) : (
                                                                         t('hotelDetail.noPrice')
                                                                     )}
-                                                                    {hotel.last_price_at
-                                                                        ? ` · ${t('hotels.lastKnown')}`
-                                                                        : ''}
                                                                 </>
                                                             )}
                                                         </div>
@@ -487,6 +511,22 @@ export default function Hotels() {
                                                                 lang,
                                                             )}
                                                         </div>
+
+                                                        {hotel.first_available_at && (
+                                                            <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-primary">
+                                                                <CalendarDays className="h-3.5 w-3.5" />
+                                                                {t('hotelDetail.availableFrom')}{' '}
+                                                                {formatDate(
+                                                                    new Date(
+                                                                        `${hotel.first_available_at}T00:00:00`,
+                                                                    ),
+                                                                    lang,
+                                                                )}
+                                                                {hotel.min_nights &&
+                                                                    hotel.min_nights > 1 &&
+                                                                    ` · ${t('hotelDetail.minimumNights')} ${hotel.min_nights}`}
+                                                            </div>
+                                                        )}
 
                                                         <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
                                                             {localizeText(

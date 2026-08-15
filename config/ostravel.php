@@ -72,11 +72,22 @@ return [
         'lock_ttl_minutes' => (int) env('OS_TRAVEL_REFRESH_LOCK_TTL_MINUTES', 30),
 
         // When a hotel has no availability in the default window, the refresh
-        // probes forward chronologically (step_days per attempt) until the
-        // nearest window that returns a price, up to `attempts` tries.
+        // probes forward chronologically until the nearest window that returns
+        // a price. The scan is two-phase: a coarse pass steps `step_days` apart
+        // (default 7, so the whole ~42-day horizon costs few calls), then a fine
+        // pass **binary-searches** the gap between the previous coarse check-in
+        // and the winning one (O(log step_days) probes, chunked) so the reported
+        // nearest available day is exact without scanning every day.
         'probe' => [
             'attempts' => (int) env('OS_TRAVEL_REFRESH_PROBE_ATTEMPTS', 6),
             'step_days' => (int) env('OS_TRAVEL_REFRESH_PROBE_STEP_DAYS', 7),
+
+            // Stay lengths probed per check-in window, in ascending order, so
+            // a hotel's minimum stay is detected exactly: 1 night first, then
+            // 2, 3, ... up to the configured maximum. The provider's stay-total
+            // for the first successful length is normalized to a per-night
+            // display price (total ÷ nights); a 1-night total is stored as-is.
+            'night_lengths' => [1, 2, 3, 4, 5, 6, 7],
         ],
 
         // Scheduled cadence for `os-travel:refresh-latest-prices`.

@@ -24,7 +24,7 @@ export interface OsTravelSyncInfo {
 
 export interface OsTravelDashboard {
     last_sync: OsTravelSyncInfo | null;
-    counts: Record<OsTravelStatus, number>;
+    counts: Record<OsTravelStatus, number> & { all?: number };
 }
 
 export interface OsTravelHotelRow {
@@ -41,8 +41,11 @@ export interface OsTravelHotelRow {
     status: OsTravelStatus;
     has_base_price: boolean;
     base_price: number | null;
+    final_price: number | null;
     price_status: 'has_price' | 'no_availability' | 'provider_error' | 'never_refreshed' | null;
     last_price_attempt_at: string | null;
+    first_available_at: string | null;
+    min_nights: number | null;
     markup_percentage: string | null;
     currency: string | null;
     hotel_id: string | null;
@@ -95,10 +98,14 @@ export interface OsTravelApproveResult extends OsTravelHotelRow {
 
 export interface OsTravelBulkApproveResult {
     published: OsTravelApproveResult[];
+    failed: string[];
     skipped_no_price: string[];
+    skipped_no_image: string[];
     skipped_over_cap: string[];
     published_count: number;
+    failed_count: number;
     skipped_no_price_count: number;
+    skipped_no_image_count: number;
     skipped_over_cap_count: number;
     cap: number;
 }
@@ -182,6 +189,7 @@ export interface OsTravelListFilters {
     city?: string;
     country_id?: string;
     city_id?: string;
+    stars?: number;
     check_in?: string;
     check_out?: string;
 }
@@ -192,6 +200,7 @@ export async function listOsTravelHotels(filters?: OsTravelListFilters) {
     if (filters?.city) params.append('city', filters.city);
     if (filters?.country_id) params.append('country_id', filters.country_id);
     if (filters?.city_id) params.append('city_id', filters.city_id);
+    if (filters?.stars) params.append('stars', String(filters.stars));
     if (filters?.check_in) params.append('check_in', filters.check_in);
     if (filters?.check_out) params.append('check_out', filters.check_out);
     const qs = params.toString();
@@ -236,6 +245,15 @@ export async function approveOsTravelHotel(
 export async function approveAllOsTravelHotels(data: {
     markup_percentage?: number | null;
     currency?: string | null;
+    include_without_price?: boolean;
+    include_without_image?: boolean;
+    status?: OsTravelStatus | '';
+    city?: string;
+    country_id?: string;
+    city_id?: string;
+    stars?: number;
+    check_in?: string;
+    check_out?: string;
 }) {
     return apiFetch<{ data: OsTravelBulkApproveResult }>(
         '/api/admin/os-travel/hotels/approve-all',
@@ -249,6 +267,13 @@ export async function approveAllOsTravelHotels(data: {
 export async function rejectOsTravelHotel(id: string) {
     return apiFetch<OsTravelRowResponse>(
         `/api/admin/os-travel/hotels/${id}/reject`,
+        { method: 'POST' },
+    );
+}
+
+export async function unapproveOsTravelHotel(id: string) {
+    return apiFetch<OsTravelRowResponse>(
+        `/api/admin/os-travel/hotels/${id}/unapprove`,
         { method: 'POST' },
     );
 }

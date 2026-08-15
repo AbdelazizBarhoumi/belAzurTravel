@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { Eye, RefreshCw, Star, Trash2 } from 'lucide-react';
+import { Eye, RefreshCw, Star, Trash2, Undo2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import {
 } from '@/api/osTravel.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import {
@@ -21,6 +22,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Select,
     SelectContent,
@@ -47,6 +50,8 @@ const STATUSES: OsTravelStatus[] = [
     'orphaned',
 ];
 
+const STATUS_CARDS: (OsTravelStatus | 'all')[] = ['all', ...STATUSES];
+
 const statusColors: Record<string, string> = {
     pending: 'bg-secondary/10 text-secondary',
     approved: 'bg-blue-100 text-blue-700',
@@ -56,6 +61,16 @@ const statusColors: Record<string, string> = {
 };
 
 const CURRENCIES = ['TND', 'EUR', 'USD', 'GBP'];
+
+interface ApproveAllOptions {
+    include_without_price: boolean;
+    include_without_image: boolean;
+}
+
+const EMPTY_APPROVE_ALL_OPTIONS: ApproveAllOptions = {
+    include_without_price: false,
+    include_without_image: false,
+};
 
 const priceStatusMeta: Record<
     NonNullable<OsTravelHotelRow['price_status']>,
@@ -117,12 +132,19 @@ const hotelLabel = (
     return match ? match.name : `#${externalId}`;
 };
 
+const displayDate = (value: string): string => {
+    const parsed = new Date(`${value}T00:00:00`);
+    return Number.isNaN(parsed.getTime())
+        ? value
+        : `${parsed.getDate()}/${parsed.getMonth() + 1}/${parsed.getFullYear()}`;
+};
+
 const AdminOsTravel = () => {
     useAdminGuard();
     const { t, dir } = useLanguage();
     const admin = useOsTravelAdmin();
 
-    const [status, setStatus] = useState<OsTravelStatus | ''>('pending');
+    const [status, setStatus] = useState<OsTravelStatus | ''>('');
     const [city, setCity] = useState('');
     const [countryId, setCountryId] = useState('');
     const [cityId, setCityId] = useState('');
@@ -131,7 +153,11 @@ const AdminOsTravel = () => {
     const [detailId, setDetailId] = useState<string | null>(null);
     const [priceForm, setPriceForm] = useState<PriceForm>(emptyPriceForm);
     const [rejectId, setRejectId] = useState<string | null>(null);
+    const [unapproveId, setUnapproveId] = useState<string | null>(null);
+    const [refreshingId, setRefreshingId] = useState<string | null>(null);
     const [approveAllOpen, setApproveAllOpen] = useState(false);
+    const [approveAllOptions, setApproveAllOptions] =
+        useState<ApproveAllOptions>(EMPTY_APPROVE_ALL_OPTIONS);
     const [refreshResult, setRefreshResult] = useState<{
         omitted_ids: string[];
         failed_ids: string[];
@@ -146,14 +172,16 @@ const AdminOsTravel = () => {
         if (city.trim()) f.city = city.trim();
         if (countryId) f.country_id = countryId;
         if (cityId) f.city_id = cityId;
+        if (starsFilter) f.stars = Number(starsFilter);
         if (dateRange?.from && dateRange.to) {
             f.check_in = dateRange.from.toISOString().slice(0, 10);
             f.check_out = dateRange.to.toISOString().slice(0, 10);
         }
         return f;
-    }, [status, city, countryId, cityId, dateRange]);
+    }, [status, city, countryId, cityId, starsFilter, dateRange]);
     const { data: hotels = [], isLoading } = useOsTravelHotels(filters);
-    const { data: detail } = useOsTravelHotelDetail(detailId);
+    const { data: detail, isFetching: detailLoading } =
+        useOsTravelHotelDetail(detailId);
 
     const computedPrice = useMemo(() => {
         const base = Number.parseFloat(priceForm.basePrice);
@@ -186,6 +214,11 @@ const AdminOsTravel = () => {
 
     const pendingWithoutPrice = useMemo(
         () => hotels.filter((h) => !h.has_base_price).length,
+        [hotels],
+    );
+
+    const pendingWithoutImage = useMemo(
+        () => hotels.filter((h) => !h.image).length,
         [hotels],
     );
 
@@ -241,7 +274,8 @@ const AdminOsTravel = () => {
     });
 
     const approveAllMutation = useMutation({
-        mutationFn: () => admin.approveAll({}),
+        mutationFn: (options: ApproveAllOptions & OsTravelListFilters) =>
+            admin.approveAll(options),
         onSuccess: (result) => {
             setApproveAllOpen(false);
             const summary = [
@@ -258,11 +292,27 @@ const AdminOsTravel = () => {
                     ),
                 );
             }
+            if (result.skipped_no_image_count > 0) {
+                summary.push(
+                    t('osTravel.skippedNoImage').replace(
+                        '{count}',
+                        String(result.skipped_no_image_count),
+                    ),
+                );
+            }
             if (result.skipped_over_cap_count > 0) {
                 summary.push(
                     t('osTravel.skippedOverCap').replace(
                         '{count}',
                         String(result.skipped_over_cap_count),
+                    ),
+                );
+            }
+            if (result.failed_count > 0) {
+                summary.push(
+                    t('osTravel.failedCount').replace(
+                        '{count}',
+                        String(result.failed_count),
                     ),
                 );
             }
@@ -286,9 +336,24 @@ const AdminOsTravel = () => {
         },
     });
 
+    const unapproveMutation = useMutation({
+        mutationFn: () => admin.unapprove(unapproveId as string),
+        onSuccess: () => {
+            setUnapproveId(null);
+            toast.success(t('osTravel.unapproved'));
+        },
+        onError: (err: unknown) => {
+            setUnapproveId(null);
+            toast.error(admin.toErrorMessage(err, 'osTravel.unapproveFailed'));
+        },
+    });
+
     const refreshAllMutation = useMutation({
-        mutationFn: (data?: { check_in?: string; check_out?: string }) =>
-            admin.refreshPrices(data),
+        mutationFn: (data?: {
+            ids?: string[];
+            check_in?: string;
+            check_out?: string;
+        }) => admin.refreshPrices(data),
         onSuccess: (result) => {
             toast.success(
                 t('osTravel.refreshAllDone')
@@ -308,6 +373,9 @@ const AdminOsTravel = () => {
 
     const refreshPriceMutation = useMutation({
         mutationFn: (id: string) => admin.refreshPrice(id),
+        onMutate: (id) => {
+            setRefreshingId(id);
+        },
         onSuccess: (row) => {
             if (row.base_price !== null) {
                 hydratedIdRef.current = detailId;
@@ -328,15 +396,28 @@ const AdminOsTravel = () => {
         onError: (err: unknown) => {
             toast.error(admin.toErrorMessage(err, 'osTravel.refreshFailed'));
         },
+        onSettled: () => {
+            setRefreshingId(null);
+        },
     });
 
     const activeHotel = hotels.find((h) => h.id === detailId) ?? null;
     const preview = detail?.mapped_preview ?? null;
 
-    const filteredHotels = useMemo(() => {
-        if (!starsFilter) return hotels;
-        return hotels.filter((h) => String(h.stars) === starsFilter);
-    }, [hotels, starsFilter]);
+    const filteredHotels = useMemo(() => hotels, [hotels]);
+
+    // The date filter drives the live probe; block any pick before the
+    // earliest day any displayed hotel is available from, so admins can't
+    // request a window where nothing is bookable yet.
+    const pickerMinDate = useMemo(() => {
+        const dates = filteredHotels
+            .map((h) => h.first_available_at)
+            .filter((d): d is string => Boolean(d))
+            .map((d) => new Date(`${d}T00:00:00`))
+            .filter((d) => !Number.isNaN(d.getTime()));
+        if (dates.length === 0) return undefined;
+        return new Date(Math.min(...dates.map((d) => d.getTime())));
+    }, [filteredHotels]);
 
     const availableCities = useMemo(() => {
         if (!references) return [];
@@ -393,6 +474,15 @@ const AdminOsTravel = () => {
                                 </p>
                             )}
                         </div>
+                        {dashboard?.last_sync?.orphaned_count != null &&
+                            dashboard.last_sync.orphaned_count > 0 && (
+                                <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-semibold text-destructive">
+                                    {t('osTravel.orphanedBadge').replace(
+                                        '{count}',
+                                        String(dashboard.last_sync.orphaned_count),
+                                    )}
+                                </span>
+                            )}
                         {dashboard?.last_sync?.reactivated_count != null &&
                             dashboard.last_sync.reactivated_count > 0 && (
                                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -407,20 +497,22 @@ const AdminOsTravel = () => {
                             )}
                     </div>
                     {counts && (
-                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                            {STATUSES.map((s) => (
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-6">
+                            {STATUS_CARDS.map((s) => (
                                 <button
                                     key={s}
                                     type="button"
-                                    onClick={() => setStatus(s)}
+                                    onClick={() => setStatus(s === 'all' ? '' : s)}
                                     className={`rounded-xl border p-3 text-start transition-colors ${
-                                        status === s
+                                        status === (s === 'all' ? '' : s)
                                             ? 'border-primary bg-primary/5'
                                             : 'border-border bg-background hover:bg-muted/20'
                                     }`}
                                 >
                                     <p className="text-2xl font-bold text-foreground">
-                                        {counts[s] ?? 0}
+                                        {s === 'all'
+                                            ? (counts.all ?? 0)
+                                            : (counts[s] ?? 0)}
                                     </p>
                                     <p className="text-xs font-medium text-muted-foreground">
                                         {t(`osTravel.status.${s}`)}
@@ -476,10 +568,12 @@ const AdminOsTravel = () => {
                         placeholderFrom={t('osTravel.filterFrom')}
                         placeholderTo={t('osTravel.filterTo')}
                         placeholderEmpty={t('osTravel.filterDates')}
+                        fromDate={pickerMinDate}
                     />
                     <select
                         value={starsFilter}
                         onChange={(e) => setStarsFilter(e.target.value)}
+                        aria-label={t('osTravel.filterStars')}
                         className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
                     >
                         <option value="">{t('osTravel.allStars')}</option>
@@ -491,7 +585,10 @@ const AdminOsTravel = () => {
                     </select>
                     {status === 'pending' && (
                         <Button
-                            onClick={() => setApproveAllOpen(true)}
+                            onClick={() => {
+                                setApproveAllOptions(EMPTY_APPROVE_ALL_OPTIONS);
+                                setApproveAllOpen(true);
+                            }}
                             disabled={
                                 approveAllMutation.isPending ||
                                 hotels.length === 0
@@ -500,31 +597,30 @@ const AdminOsTravel = () => {
                             {t('osTravel.approveAll')}
                         </Button>
                     )}
-                    {(status === 'pending' || status === 'approved') && (
-                        <Button
-                            variant="outline"
-                            onClick={() =>
-                                refreshAllMutation.mutate(
-                                    dateFilterValues ?? undefined,
-                                )
-                            }
-                            disabled={
-                                refreshAllMutation.isPending ||
-                                hotels.length === 0
-                            }
-                        >
-                            <RefreshCw
-                                className={`h-4 w-4 ${
-                                    refreshAllMutation.isPending
-                                        ? 'animate-spin'
-                                        : ''
-                                }`}
-                            />
-                            {refreshAllMutation.isPending
-                                ? t('osTravel.refreshing')
-                                : t('osTravel.refreshPrices')}
-                        </Button>
-                    )}
+                    <Button
+                        variant="outline"
+                        onClick={() =>
+                            refreshAllMutation.mutate({
+                                ids: hotels.map((h) => h.id),
+                                ...dateFilterValues,
+                            })
+                        }
+                        disabled={
+                            refreshAllMutation.isPending ||
+                            hotels.length === 0
+                        }
+                    >
+                        <RefreshCw
+                            className={`h-4 w-4 ${
+                                refreshAllMutation.isPending
+                                    ? 'animate-spin'
+                                    : ''
+                            }`}
+                        />
+                        {refreshAllMutation.isPending
+                            ? t('osTravel.refreshing')
+                            : t('osTravel.refreshPrices')}
+                    </Button>
                     {hasDateFilter && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                             {t('osTravel.liveCheckActive')}
@@ -544,7 +640,8 @@ const AdminOsTravel = () => {
                                         t('admin.country'),
                                         t('admin.stars'),
                                         t('admin.category'),
-                                        t('admin.basePrice'),
+                                        t('admin.minPrice'),
+                                        t('admin.finalPrice'),
                                         t('admin.status'),
                                         t('admin.actions'),
                                     ].map((h) => (
@@ -570,6 +667,10 @@ const AdminOsTravel = () => {
                                                         src={h.image}
                                                         alt={h.name}
                                                         className="h-10 w-14 rounded-lg object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display =
+                                                                'none';
+                                                        }}
                                                     />
                                                 )}
                                                 <div>
@@ -632,27 +733,47 @@ const AdminOsTravel = () => {
                                             {h.category_title}
                                         </td>
                                         <td className="px-4 py-3 text-sm">
-                                            {h.live_status ? (
-                                                h.live_status === 'available' ? (
-                                                    <span className="font-semibold text-emerald-600">
-                                                        {h.live_price}{' '}
-                                                        {h.live_currency ?? 'TND'}
-                                                    </span>
-                                                ) : (
-                                                    <span
-                                                        className={`text-xs font-semibold ${liveStatusMeta[h.live_status].className}`}
-                                                    >
-                                                        {t(
-                                                            liveStatusMeta[
-                                                                h.live_status
-                                                            ].labelKey,
-                                                        )}
-                                                    </span>
-                                                )
-                                            ) : h.base_price !== null ? (
+                                            {h.base_price !== null ? (
                                                 <span className="font-medium">
                                                     {h.base_price}{' '}
                                                     {h.currency ?? 'TND'}
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted-foreground">
+                                                    —
+                                                </span>
+                                            )}
+                                            {h.first_available_at && (
+                                                <p className="mt-0.5 text-[10px] font-semibold text-primary">
+                                                    {t(
+                                                        'osTravel.availableFrom',
+                                                    )}{' '}
+                                                    {displayDate(
+                                                        h.first_available_at,
+                                                    )}
+                                                    {h.min_nights &&
+                                                        h.min_nights > 1 &&
+                                                        ` · ${t('osTravel.minNights')} ${h.min_nights} ${t('osTravel.nightsShort')}`}
+                                                </p>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">
+                                            {h.final_price !== null ? (
+                                                <span className="font-semibold text-emerald-600">
+                                                    {h.final_price}{' '}
+                                                    {h.live_currency ??
+                                                        h.currency ??
+                                                        'TND'}
+                                                </span>
+                                            ) : h.live_status ? (
+                                                <span
+                                                    className={`text-xs font-semibold ${liveStatusMeta[h.live_status].className}`}
+                                                >
+                                                    {t(
+                                                        liveStatusMeta[
+                                                            h.live_status
+                                                        ].labelKey,
+                                                    )}
                                                 </span>
                                             ) : (
                                                 <span className="text-muted-foreground">
@@ -693,37 +814,56 @@ const AdminOsTravel = () => {
                                                         {t('osTravel.approve')}
                                                     </Button>
                                                 )}
-                                                {(h.status === 'pending' ||
-                                                    h.status === 'approved') && (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            refreshPriceMutation.mutate(
-                                                                h.id,
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            refreshPriceMutation.isPending
-                                                        }
-                                                        aria-label={t(
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        refreshPriceMutation.mutate(
+                                                            h.id,
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        refreshPriceMutation.isPending
+                                                    }
+                                                    aria-label={t(
+                                                        'osTravel.refreshPrice',
+                                                    )}
+                                                >
+                                                    <RefreshCw
+                                                        className={`h-4 w-4 ${
+                                                            refreshingId === h.id
+                                                                ? 'animate-spin'
+                                                                : ''
+                                                        }`}
+                                                    />
+                                                    <span className="sr-only">
+                                                        {t(
                                                             'osTravel.refreshPrice',
                                                         )}
-                                                    >
-                                                        <RefreshCw
-                                                            className={`h-4 w-4 ${
-                                                                refreshPriceMutation.isPending
-                                                                    ? 'animate-spin'
-                                                                    : ''
-                                                            }`}
-                                                        />
-                                                        <span className="sr-only">
-                                                            {t(
-                                                                'osTravel.refreshPrice',
+                                                    </span>
+                                                </Button>
+                                                {(h.status === 'approved' ||
+                                                    h.status === 'published') && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                setUnapproveId(
+                                                                    h.id,
+                                                                )
+                                                            }
+                                                            aria-label={t(
+                                                                'osTravel.unapprove',
                                                             )}
-                                                        </span>
-                                                    </Button>
-                                                )}
+                                                        >
+                                                            <Undo2 className="h-4 w-4" />
+                                                            <span className="sr-only">
+                                                                {t(
+                                                                    'osTravel.unapprove',
+                                                                )}
+                                                            </span>
+                                                        </Button>
+                                                    )}
                                                 {h.status !== 'published' && (
                                                     <Button
                                                         size="sm"
@@ -778,22 +918,67 @@ const AdminOsTravel = () => {
                         </DialogHeader>
 
                         <div className="space-y-4 overflow-y-auto pr-1">
+                            {detailLoading ? (
+                                <>
+                                    <Skeleton className="h-44 w-full rounded-xl" />
+                                    <div className="flex gap-2 overflow-x-auto">
+                                        {Array.from({ length: 4 }).map(
+                                            (_, i) => (
+                                                <Skeleton
+                                                    key={i}
+                                                    className="h-20 w-28 shrink-0 rounded-lg"
+                                                />
+                                            ),
+                                        )}
+                                    </div>
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-4 w-1/2" />
+                                    <div className="rounded-xl border border-border bg-muted/20 p-4">
+                                        <div className="flex items-center justify-between">
+                                            <Skeleton className="h-3 w-24" />
+                                            <Skeleton className="h-8 w-28 rounded-lg" />
+                                        </div>
+                                        <div className="mt-3 grid gap-3 sm:grid-cols-4">
+                                            {Array.from({ length: 4 }).map(
+                                                (_, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="space-y-1"
+                                                    >
+                                                        <Skeleton className="h-3 w-16" />
+                                                        <Skeleton className="h-10 rounded-xl" />
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
                             {preview?.image && (
                                 <img
                                     src={preview.image}
                                     alt={preview.name}
                                     className="h-44 w-full rounded-xl object-cover"
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                    }}
                                 />
                             )}
 
                             {preview && preview.gallery.length > 0 && (
                                 <div className="flex gap-2 overflow-x-auto">
-                                    {preview.gallery.map((url) => (
+                                    {preview.gallery.map((url, i) => (
                                         <img
-                                            key={url}
+                                            key={`${url}-${i}`}
                                             src={url}
                                             alt=""
                                             className="h-20 w-28 shrink-0 rounded-lg object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display =
+                                                    'none';
+                                            }}
                                         />
                                     ))}
                                 </div>
@@ -820,8 +1005,7 @@ const AdminOsTravel = () => {
                                     <p className="text-xs font-semibold uppercase text-muted-foreground">
                                         {t('osTravel.priceSection')}
                                     </p>
-                                    {activeHotel &&
-                                        activeHotel.status !== 'published' && (
+                                    {activeHotel && (
                                             <Button
                                                 size="sm"
                                                 variant="outline"
@@ -836,7 +1020,8 @@ const AdminOsTravel = () => {
                                             >
                                                 <RefreshCw
                                                     className={`h-3.5 w-3.5 ${
-                                                        refreshPriceMutation.isPending
+                                                        refreshingId ===
+                                                        activeHotel.id
                                                             ? 'animate-spin'
                                                             : ''
                                                     }`}
@@ -942,6 +1127,22 @@ const AdminOsTravel = () => {
                                         : t('osTravel.missingPrice')}
                                 </p>
                             )}
+
+                            {activeHotel?.first_available_at && (
+                                <p className="rounded-xl border border-border bg-muted/20 px-4 py-3 text-sm text-foreground">
+                                    <span className="font-medium text-muted-foreground">
+                                        {t('osTravel.availableFrom')}:{' '}
+                                    </span>
+                                    {displayDate(
+                                        activeHotel.first_available_at,
+                                    )}
+                                    {activeHotel.min_nights &&
+                                        activeHotel.min_nights > 1 &&
+                                        ` · ${t('osTravel.minNights')} ${activeHotel.min_nights} ${t('osTravel.nightsShort')}`}
+                                </p>
+                            )}
+                                </>
+                            )}
                         </div>
 
                         <DialogFooter className="gap-2">
@@ -977,6 +1178,18 @@ const AdminOsTravel = () => {
                     onConfirm={() => rejectMutation.mutate()}
                 />
 
+                {/* Unapprove confirm */}
+                <ConfirmDialog
+                    open={unapproveId !== null}
+                    onOpenChange={(open) => !open && setUnapproveId(null)}
+                    title={t('osTravel.unapproveTitle')}
+                    description={t('osTravel.unapproveDescription')}
+                    confirmText={t('osTravel.unapprove')}
+                    cancelText={t('actions.cancel')}
+                    dir={dir}
+                    onConfirm={() => unapproveMutation.mutate()}
+                />
+
                 {/* Approve-all confirm */}
                 <ConfirmDialog
                     open={approveAllOpen}
@@ -986,16 +1199,67 @@ const AdminOsTravel = () => {
                     confirmText={t('osTravel.approveAll')}
                     cancelText={t('actions.cancel')}
                     dir={dir}
-                    onConfirm={() => approveAllMutation.mutate()}
+                    onConfirm={() =>
+                        approveAllMutation.mutate({
+                            ...approveAllOptions,
+                            ...filters,
+                        })
+                    }
                 >
-                    <div className="space-y-2 px-6">
+                    <div className="space-y-3 px-6">
                         {pendingWithoutPrice > 0 && (
-                            <p className="text-sm text-destructive">
-                                {t('osTravel.preflightSkip').replace(
-                                    '{count}',
-                                    String(pendingWithoutPrice),
-                                )}
-                            </p>
+                            <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                                <Checkbox
+                                    id="approve-without-price"
+                                    checked={
+                                        approveAllOptions.include_without_price
+                                    }
+                                    onCheckedChange={(checked) =>
+                                        setApproveAllOptions((prev) => ({
+                                            ...prev,
+                                            include_without_price:
+                                                checked === true,
+                                        }))
+                                    }
+                                    className="mt-0.5"
+                                />
+                                <Label
+                                    htmlFor="approve-without-price"
+                                    className="cursor-pointer text-sm font-normal leading-relaxed"
+                                >
+                                    {t('osTravel.preflightIncludePrice').replace(
+                                        '{count}',
+                                        String(pendingWithoutPrice),
+                                    )}
+                                </Label>
+                            </div>
+                        )}
+                        {pendingWithoutImage > 0 && (
+                            <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                                <Checkbox
+                                    id="approve-without-image"
+                                    checked={
+                                        approveAllOptions.include_without_image
+                                    }
+                                    onCheckedChange={(checked) =>
+                                        setApproveAllOptions((prev) => ({
+                                            ...prev,
+                                            include_without_image:
+                                                checked === true,
+                                        }))
+                                    }
+                                    className="mt-0.5"
+                                />
+                                <Label
+                                    htmlFor="approve-without-image"
+                                    className="cursor-pointer text-sm font-normal leading-relaxed"
+                                >
+                                    {t('osTravel.preflightIncludeImage').replace(
+                                        '{count}',
+                                        String(pendingWithoutImage),
+                                    )}
+                                </Label>
+                            </div>
                         )}
                         <p className="text-sm text-muted-foreground">
                             {t('osTravel.capWarning')}

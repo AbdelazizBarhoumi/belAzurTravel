@@ -57,6 +57,8 @@ interface BookingDialogProps {
     itemId?: string;
     itemName: string;
     amount: number;
+    /** Earliest selectable start date (hotels: the probe's nearest available day). */
+    minDate?: Date;
     // OS-TRAVEL live-search context captured on the hotel detail page.
     provider?: {
         token?: string | null;
@@ -95,6 +97,7 @@ export function BookingDialog({
     itemId,
     itemName,
     amount,
+    minDate,
     provider,
 }: BookingDialogProps) {
     const { t } = useLanguage();
@@ -412,6 +415,7 @@ export function BookingDialog({
                                         date={effectiveStartDate}
                                         onDateChange={setStartDate}
                                         disabled={lockDates}
+                                        fromDate={minDate}
                                     />
                                 </div>
                                 <div className="space-y-2">
