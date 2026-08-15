@@ -58,12 +58,13 @@ return [
     ],
 
     'refresh' => [
-        // Price-basis window for the browse-mode refresh. The stored price is
-        // a live PER-NIGHT minimum, so a 1-night window is queried and the
-        // provider total for it IS the per-night price (stored as-is, never
-        // divided). Hotels the provider won't price for a 1-night stay are
-        // reported as omitted and their stored price is cleared — browse
-        // shows only genuine live per-night API values.
+        // Length of the discovery window used to learn each hotel's minimum
+        // stay. The stored price is the live TOTAL for the hotel's minimum
+        // stay, never a per-night figure: hotels bookable in this window keep
+        // its total as their price, and hotels with a longer `MinStay` are
+        // re-probed at that minimum stay so a MinStay-5 hotel is quoted for 5
+        // nights. Hotels the provider can't price for their minimum stay are
+        // reported as unavailable and their stored price is cleared.
         'nights' => (int) env('OS_TRAVEL_REFRESH_NIGHTS', 1),
 
         // Scheduled cadence for `os-travel:refresh-latest-prices`.

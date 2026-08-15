@@ -178,12 +178,14 @@ class OsTravelSearchService
                     $result['available'] = false;
                     $result['unavailable_reason'] = 'not_returned';
                     $result['first_available_at'] = null;
-                    $result['min_nights'] = null;
+                    $result['min_nights'] = $item->hotel->min_nights;
                     $result['rooms'] = [];
                     $result = array_merge($result, [
                         'price' => $item->hotel->price,
                         'price_total' => $item->hotel->price,
-                        'price_per_night' => $this->calculator->perNight($item->hotel->price, $nights),
+                        // The stored price is the total for the hotel's minimum
+                        // stay, so the per-night figure divides by that basis.
+                        'price_per_night' => $this->calculator->perNight($item->hotel->price, $item->hotel->min_nights ?? $nights),
                         'base_price' => $item->hotel->base_price,
                         'currency' => $item->hotel->currency,
                         'nights' => $nights,
@@ -532,17 +534,26 @@ class OsTravelSearchService
     }
 
     /**
-     * Query the provider for the minimum bookable per-night price of a set of
-     * external ids.
+     * Query the provider for the minimum bookable price of a set of external
+     * ids. A hotel's stored price is the total for its minimum stay, never a
+     * per-night figure: a room with `MinStay` 5 is quoted as the 5-night total.
      *
-     * A single `OnlyAvailable: false` call per chunk on the default window
-     * (`ostravel.refresh.nights`, default 1). Unlike `OnlyAvailable: true`, the
-     * provider still returns hotels that are not bookable for that window,
-     * together with the room metadata that explains why: `MinStay` (the room's
-     * minimum stay), `StopSales` (a date range during which booking is closed —
-     * the day after its end is the nearest available day), `StopReservation`
-     * (permanently closed) and `OnRequest`. A hotel bookable in the base window
-     * is priced directly at its check-in.
+     * Phase 1 probes every hotel with a single `OnlyAvailable: false` call per
+     * chunk on the base window (`ostravel.refresh.nights`, default 1). Unlike
+     * `OnlyAvailable: true`, the provider still returns hotels that are not
+     * bookable for that window, together with the room metadata that explains
+     * why: `MinStay` (the room's minimum stay), `StopSales` (a date range during
+     * which booking is closed — the day after its end is the nearest available
+     * day), `StopReservation` (permanently closed) and `OnRequest`. A hotel
+     * bookable in the base window is priced directly at its check-in: its
+     * minimum stay fits `refresh.nights`, so the base-window total is exactly
+     * its minimum-stay price.
+     *
+     * Phase 2 re-probes hotels whose minimum stay exceeds the base window at
+     * `check_in` + minstay nights, grouped by the number of nights so each call
+     * stays uniform (≤ `MAX_HOTELS_PER_REQUEST`). Their stored price is the
+     * total for that minimum stay. A group is skipped when every non-stopped-
+     * reserved room is already stop-sale-blocked for the minstay window.
      *
      * A hotel the provider returned but did not book is reported in
      * `unavailable` with the reason and nearest available day, so the caller can
@@ -556,7 +567,7 @@ class OsTravelSearchService
      *
      * @param  list<string>  $externalIds
      * @param  array<string, mixed>  $options
-     * @return array{prices: array<string, array{price: float, currency: string, first_available_at: string, min_nights: int}>, unavailable: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, catalog: array<string, array<string, mixed>>, omitted: int, omitted_ids: list<string>, failed_ids: list<string>}
+     * @return array{prices: array<string, array{price: float, currency: string, first_available_at: string, min_nights: int}>, unavailable: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, ranges: array<string, list<array{from: string, to: string}>>, catalog: array<string, array<string, mixed>>, omitted: int, omitted_ids: list<string>, failed_ids: list<string>}
      */
     private function probePrices(array $externalIds, array $options): array
     {
@@ -573,6 +584,13 @@ class OsTravelSearchService
         $ranges = [];
         $catalogs = [];
         $failedIds = [];
+        // Offers from the base-window probe, kept per hotel so phase 2 can
+        // still report availability metadata when the provider stops returning
+        // a hotel it returned for the base window.
+        $offersBy = [];
+        // Hotels whose minimum stay exceeds the base window, grouped by the
+        // number of nights their price must be quoted for (their minstay).
+        $minStayProbe = [];
         $throttleMs = (int) config('ostravel.search.throttle_ms', 150);
         $calls = 0;
 
@@ -582,12 +600,12 @@ class OsTravelSearchService
             'only_available' => false,
         ]);
 
-        // A single `OnlyAvailable: false` call per chunk. The provider still
-        // returns hotels that are not bookable for the base window, together
-        // with the room metadata that explains why (MinStay, StopSales range,
-        // StopReservation, OnRequest). A hotel's minimum stay and nearest
-        // available day come straight from the response instead of being probed
-        // window by window.
+        // Phase 1: a single `OnlyAvailable: false` call per chunk on the base
+        // window. The provider still returns hotels that are not bookable for
+        // it, together with the room metadata that explains why (MinStay,
+        // StopSales range, StopReservation, OnRequest). A hotel's minimum stay
+        // and nearest available day come straight from the response instead of
+        // being probed window by window.
         foreach (array_chunk($externalIds, self::MAX_HOTELS_PER_REQUEST) as $chunk) {
             $this->throttle($throttleMs, $calls);
 
@@ -611,18 +629,23 @@ class OsTravelSearchService
                 }
 
                 $offers = $this->roomOffers($providerHotel);
+                $offersBy[$externalId] = $offers;
+                $ranges[$externalId] = $this->hotelUnavailableRanges($offers);
+                $catalogs[$externalId] = $this->catalogOf($providerHotel);
+
                 $bookable = array_values(array_filter(
                     $offers,
                     fn (array $offer) => $this->roomBookable($offer, $baseCheckIn, $baseCheckOut)
                 ));
-                $ranges[$externalId] = $this->hotelUnavailableRanges($offers);
-                $catalogs[$externalId] = $this->catalogOf($providerHotel);
 
                 if ($bookable !== []) {
+                    // Bookable in the base window: its minimum stay fits
+                    // `baseNights`, so the base-window total is exactly its
+                    // minimum-stay price (no per-night division).
                     $minPrice = $this->minOfferPrice($bookable);
                     if ($minPrice !== null) {
                         $prices[$externalId] = [
-                            'price' => $baseNights === 1 ? round($minPrice, 2) : round($minPrice / $baseNights, 2),
+                            'price' => round($minPrice, 2),
                             'currency' => $this->calculator->currency($providerHotel['Currency'] ?? null),
                             'first_available_at' => $baseCheckIn,
                             'min_nights' => (int) $this->minStayOf($bookable),
@@ -632,11 +655,107 @@ class OsTravelSearchService
                     continue;
                 }
 
-                // No bookable room in the base window (stop-sale, or a longer
-                // minimum stay): record why and the nearest available day so the
-                // caller can store the availability status instead of treating
-                // the hotel as having no price at all.
+                // No bookable room in the base window. A longer minimum stay is
+                // the only recoverable case: quote the total for the real
+                // minimum stay in phase 2. Stop-sale/stop-reservation hotels
+                // are recorded with the reason and nearest available day.
+                $nonReserved = array_values(array_filter(
+                    $offers,
+                    fn (array $offer) => ! $offer['stop_reservation']
+                ));
+                $minstay = $this->minStayOf($nonReserved);
+
+                if ($minstay !== null && $minstay > $baseNights) {
+                    $minStayWindowCheckOut = Carbon::parse($baseCheckIn)->addDays($minstay)->toDateString();
+                    $canPriceAtMinStay = array_filter(
+                        $nonReserved,
+                        fn (array $offer) => $this->roomBookable($offer, $baseCheckIn, $minStayWindowCheckOut)
+                    );
+
+                    if ($canPriceAtMinStay !== []) {
+                        $minStayProbe[$minstay][] = $externalId;
+
+                        continue;
+                    }
+
+                    $unavailable[$externalId] = $this->availabilityMeta($offers, $baseCheckIn, $minStayWindowCheckOut);
+
+                    continue;
+                }
+
                 $unavailable[$externalId] = $this->availabilityMeta($offers, $baseCheckIn, $baseCheckOut);
+            }
+        }
+
+        // Phase 2: quote hotels whose minimum stay exceeds the base window at
+        // that minimum stay, one call per distinct minstay length so each chunk
+        // stays uniform. `OnlyAvailable: false` so every hotel in the group is
+        // returned whether or not it is bookable.
+        foreach ($minStayProbe as $minstay => $ids) {
+            $minStayCheckOut = Carbon::parse($baseCheckIn)->addDays($minstay)->toDateString();
+            $windowOptions = array_merge($options, [
+                'check_in' => $baseCheckIn,
+                'check_out' => $minStayCheckOut,
+                'only_available' => false,
+            ]);
+
+            foreach (array_chunk($ids, self::MAX_HOTELS_PER_REQUEST) as $chunk) {
+                $this->throttle($throttleMs, $calls);
+
+                try {
+                    $envelope = $this->providerEnvelope($chunk, $this->searchDetails($windowOptions), $windowOptions);
+                } catch (OsTravelHorizonExceededException) {
+                    // The minstay window is past the bookable horizon: no price
+                    // can exist there. Report why with the base-window offers.
+                    foreach ($chunk as $externalId) {
+                        $unavailable[$externalId] = $this->availabilityMeta($offersBy[$externalId] ?? [], $baseCheckIn, $minStayCheckOut);
+                    }
+
+                    continue;
+                }
+                if ($envelope === null) {
+                    $failedIds = array_merge($failedIds, $chunk);
+
+                    continue;
+                }
+
+                foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
+                    $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
+                    if (! in_array($externalId, $ids, true)) {
+                        continue;
+                    }
+
+                    $offers = $this->roomOffers($providerHotel);
+                    $bookable = array_values(array_filter(
+                        $offers,
+                        fn (array $offer) => $this->roomBookable($offer, $baseCheckIn, $minStayCheckOut)
+                    ));
+
+                    $minPrice = $this->minOfferPrice($bookable);
+                    if ($minPrice !== null) {
+                        // Total for the minimum stay, not a per-night figure.
+                        $prices[$externalId] = [
+                            'price' => round($minPrice, 2),
+                            'currency' => $this->calculator->currency($providerHotel['Currency'] ?? null),
+                            'first_available_at' => $baseCheckIn,
+                            'min_nights' => $minstay,
+                        ];
+                        $ranges[$externalId] = $this->hotelUnavailableRanges($offers);
+                        $catalogs[$externalId] = $this->catalogOf($providerHotel);
+
+                        continue;
+                    }
+
+                    $unavailable[$externalId] = $this->availabilityMeta($offers, $baseCheckIn, $minStayCheckOut);
+                }
+
+                // A hotel the base-window probe saw but phase 2 stopped
+                // returning is unavailable at its minstay window, not omitted.
+                foreach ($chunk as $externalId) {
+                    if (! isset($prices[$externalId]) && ! isset($unavailable[$externalId])) {
+                        $unavailable[$externalId] = $this->availabilityMeta($offersBy[$externalId] ?? [], $baseCheckIn, $minStayCheckOut);
+                    }
+                }
             }
         }
 
@@ -666,7 +785,11 @@ class OsTravelSearchService
      * scanning). Used by the admin list's live-check filter: the admin picks
      * dates and the list reports, for that exact window, which hotels have a
      * live price, which are unavailable and why (stop-sale with its reopen
-     * day, or no bookable room), and which hit a provider error.
+     * day, min-stay longer than the picked nights, or no bookable room), and
+     * which hit a provider error. A hotel is only priced when it is bookable
+     * for the exact picked window: shorter-than-min-stay picks are reported
+     * unavailable instead of being re-quoted at the minimum stay, so the
+     * admin's "full price" never contradicts the picked duration.
      *
      * @param  list<string>  $externalIds
      * @return array{prices: array<string, array{price: float, currency: string}>, unavailable: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted_ids: list<string>, failed_ids: list<string>}
@@ -686,12 +809,10 @@ class OsTravelSearchService
         $prices = [];
         $unavailable = [];
         $failedIds = [];
-        $remaining = $externalIds;
+        $calls = 0;
 
-        foreach (array_chunk($remaining, self::MAX_HOTELS_PER_REQUEST) as $index => $chunk) {
-            if ($index > 0 && $throttleMs > 0) {
-                usleep($throttleMs * 1000);
-            }
+        foreach (array_chunk($externalIds, self::MAX_HOTELS_PER_REQUEST) as $chunk) {
+            $this->throttle($throttleMs, $calls);
 
             try {
                 $envelope = $this->providerEnvelope($chunk, $searchDetails, $options);
@@ -729,6 +850,11 @@ class OsTravelSearchService
                     continue;
                 }
 
+                // No bookable room for the exact picked window (a minimum stay
+                // longer than the picked nights, a stop-sale covering the
+                // dates, or stop-reservation). The hotel is reported
+                // unavailable — never re-quoted at its minimum stay — so the
+                // admin's full price always reflects the picked duration.
                 $unavailable[$externalId] = $this->availabilityMeta($offers, $checkIn, $checkOut);
             }
         }
@@ -915,9 +1041,14 @@ class OsTravelSearchService
         foreach ($this->roomOffers($providerHotel) as $offer) {
             $basePrice = $offer['price'];
 
-            if ($this->roomBookable($offer, $checkIn, $checkOut)) {
-                $anyBookable = true;
+            // Only bookable rooms are offered: a room whose minimum stay
+            // exceeds the searched nights or whose stop-sale covers the dates
+            // cannot be booked and must not surface a price.
+            if (! $this->roomBookable($offer, $checkIn, $checkOut)) {
+                continue;
             }
+
+            $anyBookable = true;
 
             $rooms[] = [
                 'id' => $offer['id'],
@@ -973,7 +1104,9 @@ class OsTravelSearchService
             return array_merge($result, [
                 'price' => $hotel->price,
                 'price_total' => $hotel->price,
-                'price_per_night' => $this->calculator->perNight($hotel->price, $nights),
+                // The stored price is the total for the hotel's minimum stay,
+                // so the per-night figure divides by that basis.
+                'price_per_night' => $this->calculator->perNight($hotel->price, $hotel->min_nights ?? $meta['min_nights'] ?? $nights),
                 'base_price' => $hotel->base_price,
                 'currency' => $hotel->currency,
                 'nights' => $nights,
@@ -1238,7 +1371,7 @@ class OsTravelSearchService
             // every room is stopped.
             'price' => $minRoom['price'] ?? $hotel->price,
             'price_total' => $minRoom['price_total'] ?? $hotel->price,
-            'price_per_night' => $minRoom['price_per_night'] ?? $this->calculator->perNight($hotel->price, $nights),
+            'price_per_night' => $minRoom['price_per_night'] ?? $this->calculator->perNight($hotel->price, $hotel->min_nights ?? $nights),
             'base_price' => $minRoom['base_price'] ?? $hotel->base_price,
             'currency' => $minRoom['currency'] ?? $currency,
             'nights' => $nights,

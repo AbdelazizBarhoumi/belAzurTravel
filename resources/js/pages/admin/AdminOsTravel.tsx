@@ -337,9 +337,9 @@ const AdminOsTravel = () => {
         onSuccess: (result) => {
             setApproveAllOpen(false);
             const summary = [
-                t('osTravel.publishedCount').replace(
+                t('osTravel.approvedCount').replace(
                     '{count}',
-                    String(result.published_count),
+                    String(result.approved_count),
                 ),
             ];
             if (result.skipped_no_price_count > 0) {
@@ -355,14 +355,6 @@ const AdminOsTravel = () => {
                     t('osTravel.skippedNoImage').replace(
                         '{count}',
                         String(result.skipped_no_image_count),
-                    ),
-                );
-            }
-            if (result.skipped_over_cap_count > 0) {
-                summary.push(
-                    t('osTravel.skippedOverCap').replace(
-                        '{count}',
-                        String(result.skipped_over_cap_count),
                     ),
                 );
             }
@@ -858,6 +850,9 @@ const AdminOsTravel = () => {
                                                         undefined
                                                     }
                                                 >
+                                                    <span className="text-muted-foreground">
+                                                        —
+                                                    </span>
                                                     <span
                                                         className={`text-xs font-semibold ${liveStatusMeta[h.live_status].className}`}
                                                     >
@@ -1444,9 +1439,6 @@ const AdminOsTravel = () => {
                                 </Label>
                             </div>
                         )}
-                        <p className="text-sm text-muted-foreground">
-                            {t('osTravel.capWarning')}
-                        </p>
                     </div>
                 </ConfirmDialog>
 

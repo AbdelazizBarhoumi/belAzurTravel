@@ -184,17 +184,14 @@ describe('AdminOsTravel page', () => {
         } as never);
         vi.mocked(osTravelApi.approveAllOsTravelHotels).mockResolvedValue({
             data: {
-                published: [makeRow({ status: 'published' })],
+                approved: ['1'],
                 failed: [],
                 skipped_no_price: [],
                 skipped_no_image: [],
-                skipped_over_cap: [],
-                published_count: 1,
+                approved_count: 1,
                 failed_count: 0,
                 skipped_no_price_count: 0,
                 skipped_no_image_count: 0,
-                skipped_over_cap_count: 0,
-                cap: 50,
             },
         } as never);
         vi.mocked(osTravelApi.rejectOsTravelHotel).mockResolvedValue({
@@ -615,6 +612,9 @@ describe('AdminOsTravel page', () => {
         expect(
             screen.getAllByText('No availability on these dates').length,
         ).toBeGreaterThan(0);
+        // A hotel with no live price for the picked window shows "-" in the
+        // full-price column alongside the reason badge.
+        expect(screen.getAllByText('—').length).toBeGreaterThan(0);
     });
 
     it('sends country and city filters to the hotels endpoint', async () => {

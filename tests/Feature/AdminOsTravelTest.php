@@ -7,10 +7,8 @@ use App\Models\OsTravelHotel;
 use App\Models\OsTravelReference;
 use App\Models\OsTravelSync;
 use App\Models\User;
-use App\Services\OsTravel\HotelPublisher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\InteractsWithOsTravel;
@@ -300,7 +298,7 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame(144, Hotel::first()->price);
     }
 
-    public function test_bulk_approve_publishes_only_hotels_with_price_and_reports_skips(): void
+    public function test_bulk_approve_marks_only_hotels_with_price_approved_and_reports_skips(): void
     {
         $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
         $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::PENDING, null);
@@ -311,33 +309,15 @@ class AdminOsTravelTest extends TestCase
             ->postJson('/api/admin/os-travel/hotels/approve-all')
             ->assertOk();
 
-        $this->assertSame(2, $response->json('data.published_count'));
+        $this->assertSame(2, $response->json('data.approved_count'));
+        $this->assertSame(0, $response->json('data.failed_count'));
         $this->assertSame(['2'], $response->json('data.skipped_no_price'));
-        $this->assertSame([], $response->json('data.skipped_over_cap'));
 
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '1')->first()->status);
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '3')->first()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '1')->first()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '3')->first()->status);
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '2')->first()->status);
         $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '4')->first()->status);
-        $this->assertSame(2, Hotel::count());
-    }
-
-    public function test_bulk_approve_respects_cap_and_reports_over_cap(): void
-    {
-        Config::set('ostravel.sync.bulk_approve_max', 2);
-
-        $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
-        $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::PENDING, 100);
-        $this->stagedHotel(3, 'Hotel Three', OsTravelHotel::PENDING, 100);
-
-        $response = $this->actingAs($this->admin)
-            ->postJson('/api/admin/os-travel/hotels/approve-all')
-            ->assertOk();
-
-        $this->assertSame(2, $response->json('data.published_count'));
-        $this->assertSame(['3'], $response->json('data.skipped_over_cap'));
-        $this->assertSame(2, Hotel::count());
-        $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '3')->first()->status);
+        $this->assertSame(0, Hotel::count());
     }
 
     public function test_bulk_approve_skips_hotels_without_image_unless_opt_in(): void
@@ -349,12 +329,12 @@ class AdminOsTravelTest extends TestCase
             ->postJson('/api/admin/os-travel/hotels/approve-all')
             ->assertOk();
 
-        $this->assertSame(1, $response->json('data.published_count'));
+        $this->assertSame(1, $response->json('data.approved_count'));
         $this->assertSame(['2'], $response->json('data.skipped_no_image'));
         $this->assertSame([], $response->json('data.skipped_no_price'));
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '1')->first()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '1')->first()->status);
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '2')->first()->status);
-        $this->assertSame(1, Hotel::count());
+        $this->assertSame(0, Hotel::count());
 
         $this->stagedHotel(3, 'Hotel Three', OsTravelHotel::PENDING, 200, null);
 
@@ -364,14 +344,14 @@ class AdminOsTravelTest extends TestCase
             ])
             ->assertOk();
 
-        $this->assertSame(2, $response->json('data.published_count'));
+        $this->assertSame(2, $response->json('data.approved_count'));
         $this->assertSame([], $response->json('data.skipped_no_image'));
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '2')->first()->status);
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '3')->first()->status);
-        $this->assertSame(3, Hotel::count());
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '2')->first()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '3')->first()->status);
+        $this->assertSame(0, Hotel::count());
     }
 
-    public function test_bulk_approve_without_price_flag_attempts_no_price_hotels(): void
+    public function test_bulk_approve_without_price_flag_approves_no_price_hotels(): void
     {
         $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
         $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::PENDING, null);
@@ -382,13 +362,13 @@ class AdminOsTravelTest extends TestCase
             ])
             ->assertOk();
 
-        $this->assertSame(1, $response->json('data.published_count'));
-        $this->assertSame(1, $response->json('data.failed_count'));
-        $this->assertSame(['2'], $response->json('data.failed'));
+        $this->assertSame(2, $response->json('data.approved_count'));
+        $this->assertSame(0, $response->json('data.failed_count'));
+        $this->assertSame([], $response->json('data.failed'));
         $this->assertSame([], $response->json('data.skipped_no_price'));
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '1')->first()->status);
-        $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '2')->first()->status);
-        $this->assertSame(1, Hotel::count());
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '1')->first()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '2')->first()->status);
+        $this->assertSame(0, Hotel::count());
     }
 
     public function test_bulk_approve_flags_placeholder_image_as_missing_image(): void
@@ -401,13 +381,13 @@ class AdminOsTravelTest extends TestCase
             ->postJson('/api/admin/os-travel/hotels/approve-all')
             ->assertOk();
 
-        $this->assertSame(1, $response->json('data.published_count'));
+        $this->assertSame(1, $response->json('data.approved_count'));
         $this->assertSame(['2', '3'], $response->json('data.skipped_no_image'));
         $this->assertSame([], $response->json('data.skipped_no_price'));
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '1')->first()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '1')->first()->status);
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '2')->first()->status);
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '3')->first()->status);
-        $this->assertSame(1, Hotel::count());
+        $this->assertSame(0, Hotel::count());
 
         $response = $this->actingAs($this->admin)
             ->postJson('/api/admin/os-travel/hotels/approve-all', [
@@ -415,11 +395,11 @@ class AdminOsTravelTest extends TestCase
             ])
             ->assertOk();
 
-        $this->assertSame(2, $response->json('data.published_count'));
+        $this->assertSame(2, $response->json('data.approved_count'));
         $this->assertSame([], $response->json('data.skipped_no_image'));
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '2')->first()->status);
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '3')->first()->status);
-        $this->assertSame(3, Hotel::count());
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '2')->first()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '3')->first()->status);
+        $this->assertSame(0, Hotel::count());
     }
 
     public function test_bulk_approve_only_targets_hotels_matching_applied_filters(): void
@@ -434,12 +414,12 @@ class AdminOsTravelTest extends TestCase
             ])
             ->assertOk();
 
-        $this->assertSame(2, $response->json('data.published_count'));
+        $this->assertSame(2, $response->json('data.approved_count'));
         $this->assertSame([], $response->json('data.skipped_no_price'));
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '1')->first()->status);
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '2')->first()->status);
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '3')->first()->status);
-        $this->assertSame(2, Hotel::count());
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '2')->first()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '3')->first()->status);
+        $this->assertSame(0, Hotel::count());
     }
 
     public function test_reject_sets_status_without_creating_hotel(): void
@@ -667,44 +647,27 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame(OsTravelHotel::PUBLISHED, $staged->fresh()->status);
     }
 
-    public function test_bulk_approve_continues_when_single_publish_fails(): void
+    public function test_bulk_approve_persists_batch_wide_markup_and_currency(): void
     {
-        $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
-        $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::PENDING, 100);
-
-        $publisher = $this->createMock(HotelPublisher::class);
-        $publisher->expects($this->exactly(2))
-            ->method('publish')
-            ->willReturnCallback(function (OsTravelHotel $hotel) {
-                if ($hotel->external_id === '2') {
-                    throw new InvalidArgumentException('boom');
-                }
-
-                return Hotel::create([
-                    'slug' => 'ostravel-1',
-                    'code' => 'ostravel-1',
-                    'name' => ['en' => 'Hotel One'],
-                    'location' => ['en' => 'Kelibia'],
-                    'category' => ['en' => '4 étoiles'],
-                    'price' => 120,
-                    'base_price' => 100,
-                    'markup_percentage' => 20,
-                    'currency' => 'TND',
-                    'image' => 'test.jpg',
-                    'tags' => [],
-                    'details' => [],
-                    'meta' => [],
-                ]);
-            });
-        $this->app->instance(HotelPublisher::class, $publisher);
+        $staged = $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
 
         $response = $this->actingAs($this->admin)
-            ->postJson('/api/admin/os-travel/hotels/approve-all')
+            ->postJson('/api/admin/os-travel/hotels/approve-all', [
+                'markup_percentage' => 15,
+                'currency' => 'EUR',
+            ])
             ->assertOk();
 
-        $this->assertSame(1, $response->json('data.published_count'));
-        $this->assertSame(1, $response->json('data.failed_count'));
-        $this->assertSame([(string) OsTravelHotel::where('external_id', '2')->first()->id], $response->json('data.failed'));
+        $this->assertSame(1, $response->json('data.approved_count'));
+        $this->assertSame(0, $response->json('data.failed_count'));
+
+        $hotel = $staged->fresh();
+        $this->assertSame(OsTravelHotel::APPROVED, $hotel->status);
+        $this->assertSame('15.00', (string) $hotel->markup_percentage);
+        $this->assertSame('EUR', $hotel->currency);
+        $this->assertNotNull($hotel->approved_at);
+        $this->assertSame($this->admin->id, $hotel->approved_by);
+        $this->assertSame(0, Hotel::count());
     }
 
     public function test_index_filters_by_country_and_city(): void

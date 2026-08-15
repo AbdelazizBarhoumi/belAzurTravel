@@ -139,17 +139,14 @@ export interface OsTravelApproveResult extends OsTravelHotelRow {
 }
 
 export interface OsTravelBulkApproveResult {
-    published: OsTravelApproveResult[];
+    approved: string[];
     failed: string[];
     skipped_no_price: string[];
     skipped_no_image: string[];
-    skipped_over_cap: string[];
-    published_count: number;
+    approved_count: number;
     failed_count: number;
     skipped_no_price_count: number;
     skipped_no_image_count: number;
-    skipped_over_cap_count: number;
-    cap: number;
 }
 
 export interface OsTravelPricePayload {

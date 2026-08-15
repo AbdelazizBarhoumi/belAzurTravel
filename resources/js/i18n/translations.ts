@@ -6901,9 +6901,9 @@ translations['osTravel.approveAllTitle'] = {
     en: 'Approve All',
 };
 translations['osTravel.approveAllDescription'] = {
-    fr: 'Publier tous les hôtels en attente qui ont déjà un prix de base.',
-    ar: 'نشر جميع الفنادق قيد الانتظار التي لديها سعر أساسي بالفعل.',
-    en: 'Publish all pending hotels that already have a base price.',
+    fr: 'Approuver tous les hôtels en attente qui ont déjà un prix de base. Ils seront publiés individuellement ; le contenu de la fiche est chargé à la première visite.',
+    ar: 'اعتماد جميع الفنادق قيد الانتظار التي لديها سعر أساسي بالفعل. سيتم نشرها بشكل فردي؛ يتم تحميل تفاصيل الصفحة عند أول زيارة.',
+    en: 'Approve all pending hotels that already have a base price. They are published individually; page details load on first visit.',
 };
 translations['osTravel.preflightSkip'] = {
     fr: '{count} hôtel(s) seront ignorés (prix manquant).',
@@ -6920,25 +6920,15 @@ translations['osTravel.preflightIncludeImage'] = {
     ar: 'اعتماد {count} فندق بدون صورة أيضًا.',
     en: 'Also approve {count} hotel(s) without pictures.',
 };
-translations['osTravel.capWarning'] = {
-    fr: 'Le lot est plafonné au maximum configuré.',
-    ar: 'يحدد الدفعة بالحد الأقصى المكوّن.',
-    en: 'The batch is capped at the configured maximum.',
-};
-translations['osTravel.publishedCount'] = {
-    fr: '{count} publiés',
-    ar: 'تم نشر {count}',
-    en: '{count} published',
+translations['osTravel.approvedCount'] = {
+    fr: '{count} approuvés',
+    ar: 'تم اعتماد {count}',
+    en: '{count} approved',
 };
 translations['osTravel.skippedNoPrice'] = {
     fr: '{count} ignorés (prix manquant)',
     ar: 'تم تخطي {count} (سعر مفقود)',
     en: '{count} skipped (missing price)',
-};
-translations['osTravel.skippedOverCap'] = {
-    fr: '{count} ignorés (limite atteinte)',
-    ar: 'تم تخطي {count} (تجاوز الحد)',
-    en: '{count} skipped (over cap)',
 };
 translations['osTravel.skippedNoImage'] = {
     fr: '{count} ignorés (photo manquante)',
@@ -7126,9 +7116,9 @@ translations['osTravel.priceRefreshed'] = {
     en: 'Price updated: {price} {currency}',
 };
 translations['osTravel.noAvailability'] = {
-    fr: 'Aucune disponibilité dans les ~42 prochains jours.',
-    ar: 'لا توجد توفر خلال الـ 42 يوماً القادمة تقريباً.',
-    en: 'No availability in the next ~42 days.',
+    fr: 'Aucune disponibilité',
+    ar: 'لا توجد معلومات متوفرة',
+    en: 'No availability',
 };
 translations['osTravel.availableFrom'] = {
     fr: 'Disponible à partir du',

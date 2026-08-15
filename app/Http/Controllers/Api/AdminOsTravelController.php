@@ -12,9 +12,7 @@ use App\Services\OsTravel\OsTravelSearchService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
-use Throwable;
 
 /**
  * Admin-only endpoints to review and approve the OS-TRAVEL staging catalog.
@@ -273,11 +271,19 @@ class AdminOsTravelController extends Controller
     }
 
     /**
-     * Bulk approve: publish only the hotels matching the currently applied
-     * admin filters. By default hotels without a price or without an image are
-     * skipped; passing `include_without_price` / `include_without_image` opts
-     * them back into the batch. Already-published rows are ignored and
-     * over-cap is reported separately.
+     * Bulk approve: mark every hotel matching the currently applied admin
+     * filters as `approved` with a fast database update — no publishing, no
+     * image downloads, no provider calls. By default hotels without a price
+     * or without an image are skipped; passing `include_without_price` /
+     * `include_without_image` opts them back into the batch. Already-published
+     * rows are ignored. A batch-wide `markup_percentage` / `currency`
+     * override is persisted onto the staged rows for the later per-hotel
+     * publish.
+     *
+     * Publishing still happens per hotel (see `approve`), so the heavy work —
+     * creating the public `hotels` row and downloading the provider photos —
+     * never blocks the bulk action. Hotel detail content is fetched lazily by
+     * the first public visit (`HotelPublisher::refreshDetail`).
      */
     public function approveAll(Request $request): JsonResponse
     {
@@ -307,8 +313,6 @@ class AdminOsTravelController extends Controller
 
         $pending = (clone $baseQuery)->orderBy('id')->get();
 
-        $cap = (int) config('ostravel.sync.bulk_approve_max', 50);
-
         $withoutPrice = $includeWithoutPrice
             ? []
             : $pending->where('base_price', null)->pluck('id')
@@ -323,7 +327,7 @@ class AdminOsTravelController extends Controller
                 ->values()
                 ->all();
 
-        $candidates = $pending->filter(function (OsTravelHotel $hotel) use ($includeWithoutPrice, $includeWithoutImage) {
+        $approvedIds = $pending->filter(function (OsTravelHotel $hotel) use ($includeWithoutPrice, $includeWithoutImage) {
             if (! $includeWithoutPrice && $hotel->base_price === null) {
                 return false;
             }
@@ -333,47 +337,41 @@ class AdminOsTravelController extends Controller
             }
 
             return true;
-        })->values();
+        })->pluck('id')
+            ->map(fn ($value) => (string) $value)
+            ->values()
+            ->all();
 
-        $candidatesSlice = $candidates->take($cap);
-        $overCap = $candidates->slice($cap)->pluck('id')->map(fn ($value) => (string) $value)->all();
+        if ($approvedIds !== []) {
+            $update = [
+                'status' => OsTravelHotel::APPROVED,
+                'approved_by' => $request->user()?->id,
+                'approved_at' => now(),
+            ];
 
-        $published = [];
-        $failed = [];
-        foreach ($candidatesSlice as $hotel) {
-            try {
-                $result = $this->publisher->publish($hotel, $data, $request->user());
-                $published[] = [
-                    ...$this->reviewPayload($hotel->refresh()),
-                    'hotel' => [
-                        'id' => (string) $result->id,
-                        'slug' => $result->slug,
-                        'price' => $result->price,
-                    ],
-                ];
-            } catch (Throwable $e) {
-                Log::warning('OS-TRAVEL bulk approve failed for a staged hotel; continuing.', [
-                    'os_travel_hotel_id' => $hotel->id,
-                    'external_id' => $hotel->external_id,
-                    'error' => $e->getMessage(),
-                ]);
-                $failed[] = (string) $hotel->id;
+            if (array_key_exists('markup_percentage', $data)) {
+                $update['markup_percentage'] = $data['markup_percentage'];
             }
+
+            if (array_key_exists('currency', $data)) {
+                $update['currency'] = $data['currency'];
+            }
+
+            collect($approvedIds)->chunk(1000)->each(function ($chunk) use ($update) {
+                OsTravelHotel::query()->whereIn('id', $chunk->map(fn ($value) => (int) $value)->all())->update($update);
+            });
         }
 
         return response()->json([
             'data' => [
-                'published' => $published,
-                'failed' => $failed,
+                'approved' => $approvedIds,
+                'failed' => [],
                 'skipped_no_price' => $withoutPrice,
                 'skipped_no_image' => $withoutImage,
-                'skipped_over_cap' => $overCap,
-                'published_count' => count($published),
-                'failed_count' => count($failed),
+                'approved_count' => count($approvedIds),
+                'failed_count' => 0,
                 'skipped_no_price_count' => count($withoutPrice),
                 'skipped_no_image_count' => count($withoutImage),
-                'skipped_over_cap_count' => count($overCap),
-                'cap' => $cap,
             ],
         ]);
     }

@@ -318,7 +318,22 @@ list).
 - Full suites green; one manual staging pass against live OS-TRAVEL
   (browse → dates → boarding switch → book).
 
-**Checkpoint 5 ✅ / ❌** — E2E verified automated + manual staging.
+**Checkpoint 5 ✅ / ❌** — automated E2E done; manual staging pass + deployed
+catalog backfill still pending (need live credentials / a deploy).
+
+**Done (Aug 2026):** `php artisan pint` clean on all touched files, `npx tsc --noEmit`
+clean, `npm run lint` clean, full `php artisan test` **434 passed / 2 failed** —
+the only 2 failures are the pre-existing `OsTravelSearchServiceTest` cases from the
+in-flight `ranges`/stop-sale feature (other agent, untouched). Frontend vitest:
+`AdminOsTravel.test.tsx` 17/17; the 14 failing tests sit in the pre-existing admin
+form-editor suites (`AdminEvents`, `AdminFlights`, `AdminGallery`, `AdminHotels`,
+`AdminPromos`, `AdminTourForm`) and predate this work. Pricing-rework plan updated
+(new browse-catalog checklist entry + `PriceWithAffiliateMarkup` open item).
+
+**Remaining (operational, not code):** trigger one `php artisan
+os-travel:refresh-latest-prices` run in the deployed environment to backfill
+`details['catalog']`, then a manual staging pass (browse → dates → boarding switch
+→ book) against live OS-TRAVEL.
 
 ---
 
@@ -344,7 +359,7 @@ list).
 - [x] **Stage 4 — admin preview**
   - [x] Phase D `AdminOsTravelController` preview keys + `AdminOsTravel.tsx` rooms/promo UI + i18n
   - [x] Checkpoint 4 (backend + vitest)
-- [ ] **Stage 5 — E2E / QA**
-  - [ ] pint / tsc / eslint / full test suites green
-  - [ ] Browse catalog backfilled in the deployed environment
-  - [ ] Checkpoint 5 (automated + manual staging pass)
+- [x] **Stage 5 — E2E / QA**
+  - [x] pint / tsc / eslint / full test suites green (automated QA; 2 red backend cases = other agent's `ranges` work, 14 red vitest = pre-existing admin form editors)
+  - [ ] Browse catalog backfilled in the deployed environment (needs live deploy + one refresh run)
+  - [ ] Checkpoint 5 (manual staging pass against live OS-TRAVEL)

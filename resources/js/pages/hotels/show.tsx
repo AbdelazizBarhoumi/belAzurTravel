@@ -383,7 +383,9 @@ export default function HotelDetail() {
         ? liveHotel.nights
             ? `· ${liveHotel.nights} ${t('hotelDetail.nightsLabel')}`
             : undefined
-        : t('hotelDetail.pernight');
+        : detail.min_nights && detail.min_nights > 1
+          ? `· ${detail.min_nights} ${t('hotelDetail.nightsLabel')}`
+          : t('hotelDetail.pernight');
     const amenities = (detail.amenities ?? [])
         .filter((amenity) => {
             const nameData =
