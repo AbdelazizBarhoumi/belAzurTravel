@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
+    act,
     cleanup,
     fireEvent,
     render,
@@ -16,6 +17,17 @@ import AdminOsTravel from '@/pages/admin/AdminOsTravel';
 
 vi.mock('@/hooks/useAdminGuard', () => ({
     useAdminGuard: () => undefined,
+}));
+
+const mockDateRangePickerProps: {
+    onChange?: (range: { from?: Date; to?: Date } | undefined) => void;
+} = {};
+
+vi.mock('@/components/ui/DateRangePicker', () => ({
+    DateRangePicker: (props: Record<string, unknown>) => {
+        Object.assign(mockDateRangePickerProps, props);
+        return <div data-testid="date-range-picker" />;
+    },
 }));
 
 vi.mock('@/api/osTravel.api', () => ({
@@ -229,6 +241,7 @@ describe('AdminOsTravel page', () => {
         localStorage.removeItem('role');
         localStorage.removeItem('lang');
         vi.clearAllMocks();
+        delete mockDateRangePickerProps.onChange;
     });
 
     it('renders pending list with the missing-price reason', async () => {
@@ -614,6 +627,40 @@ describe('AdminOsTravel page', () => {
         // A hotel with no live price for the picked window shows "-" in the
         // full-price column alongside the reason badge.
         expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    });
+
+    it('explains a min-stay rejection with the picked vs required nights', async () => {
+        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValue({
+            data: [
+                makeRow({
+                    id: '10',
+                    external_id: '110',
+                    name: 'Min Stay Hotel',
+                    live_status: 'min_stay',
+                    live_price: null,
+                    final_price: null,
+                    min_nights: 5,
+                }),
+            ],
+        } as never);
+
+        renderAdminOsTravel();
+
+        await screen.findByText('Min Stay Hotel');
+
+        // Drive the (mocked) date filter with a 17 → 19 range (2 nights).
+        act(() => {
+            mockDateRangePickerProps.onChange?.({
+                from: new Date('2026-08-17T00:00:00'),
+                to: new Date('2026-08-19T00:00:00'),
+            });
+        });
+
+        expect(
+            await screen.findByText(
+                'Picked 2 night(s) — minimum stay for these dates is 5',
+            ),
+        ).toBeInTheDocument();
     });
 
     it('sends country and city filters to the hotels endpoint', async () => {

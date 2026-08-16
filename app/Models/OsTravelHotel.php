@@ -31,6 +31,8 @@ class OsTravelHotel extends Model
 
     public const AVAILABILITY_NO_BOOKABLE_ROOM = 'no_bookable_room';
 
+    public const AVAILABILITY_MIN_STAY = 'min_stay';
+
     public const AVAILABILITY_NOT_RETURNED = 'not_returned';
 
     protected $fillable = [

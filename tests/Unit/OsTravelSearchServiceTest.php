@@ -1428,7 +1428,7 @@ class OsTravelSearchServiceTest extends TestCase
         $result = app(OsTravelSearchService::class)->probeWindow(['178'], '2026-09-01', '2026-09-02');
 
         $this->assertArrayNotHasKey('178', $result['prices']);
-        $this->assertSame('no_bookable_room', $result['unavailable']['178']['reason']);
+        $this->assertSame('min_stay', $result['unavailable']['178']['reason']);
         $this->assertSame(3, $result['unavailable']['178']['min_nights']);
         $this->assertSame([], $result['omitted_ids']);
         $this->assertSame([], $result['failed_ids']);
@@ -1547,5 +1547,95 @@ class OsTravelSearchServiceTest extends TestCase
         // Available hotels sort before unavailable ones.
         $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
         $this->assertTrue($results[0]['available']);
+    }
+
+    public function test_refresh_staged_prices_probes_stored_min_stay_group_directly(): void
+    {
+        $staged = $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+        $staged->update(['min_nights' => 3]);
+
+        $base = $this->osTravelSingleRoomEnvelope(178, 300.0, ['MinStay' => 3]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($base),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame(300, $staged->base_price);
+        $this->assertSame('2026-09-01', $staged->first_available_at?->toDateString());
+        $this->assertSame(3, $staged->min_nights);
+
+        // A hotel with a known minimum stay skips the 1-night discovery probe.
+        Http::assertSentCount(1);
+    }
+
+    public function test_refresh_staged_prices_persists_discovered_min_stay_during_run(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+
+        // The 1-night discovery probe returns a MinStay-4 room. The minimum
+        // stay is persisted to the staging row immediately and the hotel is
+        // then quoted in its real 4-night group, so the stored price is the
+        // 4-night total and `min_nights` reflects what the provider returned.
+        $phaseOne = $this->osTravelSingleRoomEnvelope(178, 500.0, ['MinStay' => 4]);
+        $phaseTwo = $this->osTravelSingleRoomEnvelope(178, 500.0, ['MinStay' => 4]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::sequence()
+                ->push($phaseOne)
+                ->push($phaseTwo),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(1, $result['updated']);
+        $this->assertSame(0, $result['omitted']);
+
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame(500, $staged->base_price);
+        $this->assertSame(4, $staged->min_nights);
+
+        Http::assertSentCount(2);
+    }
+
+    public function test_refresh_staged_prices_caps_min_stay_group_at_max(): void
+    {
+        $staged = $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa');
+        $staged->update(['min_nights' => 31]);
+
+        // A room that needs 31 nights can never be priced within the capped
+        // horizon (default 30), so it is reported unavailable instead of being
+        // quoted at a window that can never book it.
+        $base = $this->osTravelSingleRoomEnvelope(178, 600.0, ['MinStay' => 31]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($base),
+        ]);
+
+        $result = app(OsTravelSearchService::class)->refreshStagedPrices([], [
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-08',
+        ]);
+
+        $this->assertSame(0, $result['updated']);
+        $this->assertSame(1, $result['omitted']);
+
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertNull($staged->base_price);
+        $this->assertSame(OsTravelHotel::PRICE_NO_AVAILABILITY, $staged->price_status);
+        $this->assertSame(31, $staged->min_nights);
+
+        Http::assertSentCount(1);
     }
 }

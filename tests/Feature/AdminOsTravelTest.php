@@ -808,6 +808,53 @@ class AdminOsTravelTest extends TestCase
         $this->assertNull($rows['Stop Sales Hotel']['live_price']);
         $this->assertNull($rows['Stop Sales Hotel']['final_price']);
         $this->assertNull($rows['Stop Sales Hotel']['live_until']);
+
+        // The probe result is persisted so the stored availability dates never
+        // disagree with what the list just showed.
+        $available = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame('2026-09-01', $available->first_available_at?->toDateString());
+        $this->assertSame(OsTravelHotel::AVAILABILITY_AVAILABLE, $available->availability_status);
+        $this->assertNotNull($available->last_price_attempt_at);
+
+        $stopSales = OsTravelHotel::where('external_id', '999')->first();
+        $this->assertNull($stopSales->first_available_at);
+        $this->assertNull($stopSales->min_nights);
+        $this->assertSame(OsTravelHotel::AVAILABILITY_STOP_RESERVATION, $stopSales->availability_status);
+        $this->assertNotNull($stopSales->last_price_attempt_at);
+    }
+
+    public function test_index_reports_min_stay_reason_when_picked_window_is_shorter_than_minimum_stay(): void
+    {
+        $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::PENDING, null);
+
+        // Single MinStay-3 room so every non-stop-reserved room needs 3 nights.
+        $envelope = $this->osTravelFixture('hotel_search');
+        $envelope['HotelSearch'] = [$envelope['HotelSearch'][0]];
+        $envelope['HotelSearch'][0]['Hotel']['Id'] = 178;
+        $boarding = $envelope['HotelSearch'][0]['Price']['Boarding'][0];
+        $boarding['Pax'][0]['Rooms'] = [array_merge($boarding['Pax'][0]['Rooms'][0], ['MinStay' => 3])];
+        $envelope['HotelSearch'][0]['Price']['Boarding'] = [$boarding];
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($envelope),
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->getJson('/api/admin/os-travel/hotels?check_in=2026-09-01&check_out=2026-09-02')
+            ->assertOk();
+
+        $row = $response->json('data.0');
+        $this->assertSame('min_stay', $row['live_status']);
+        $this->assertSame('2026-09-01', $row['live_until']);
+        $this->assertNull($row['live_price']);
+        $this->assertNull($row['final_price']);
+
+        // The reason is persisted so the stored availability matches the list.
+        $staged = OsTravelHotel::where('external_id', '178')->first();
+        $this->assertSame(OsTravelHotel::AVAILABILITY_MIN_STAY, $staged->availability_status);
+        $this->assertSame(3, $staged->min_nights);
+        $this->assertSame('2026-09-01', $staged->first_available_at?->toDateString());
+        $this->assertNotNull($staged->last_price_attempt_at);
     }
 
     public function test_index_returns_projected_final_price_from_scheduled_min(): void

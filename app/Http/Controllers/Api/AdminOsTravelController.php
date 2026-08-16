@@ -12,6 +12,7 @@ use App\Services\OsTravel\OsTravelSearchService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Throwable;
@@ -82,16 +83,28 @@ class AdminOsTravelController extends Controller
         $hotels = $query->latest('id')->get();
 
         $live = null;
+        $pickedNights = null;
         if (! empty($data['check_in']) && ! empty($data['check_out'])) {
             $live = $this->searchService->probeWindow(
                 $hotels->pluck('external_id')->filter()->values()->all(),
                 $data['check_in'],
                 $data['check_out'],
             );
+            $pickedNights = max(
+                1,
+                Carbon::parse($data['check_out'])->diffInDays(Carbon::parse($data['check_in'])),
+            );
+
+            // Keep the stored "available from" / minimum stay in sync with the
+            // live-check the admin just saw, otherwise the reference column
+            // goes stale and disagrees with the probe's own dates.
+            $this->persistProbeAvailability($hotels, $live, $data['check_in']);
         }
 
         return response()->json([
-            'data' => $hotels->map(fn (OsTravelHotel $hotel) => $this->reviewPayload($hotel, $live))->values(),
+            'data' => $hotels
+                ->map(fn (OsTravelHotel $hotel) => $this->reviewPayload($hotel, $live, $pickedNights))
+                ->values(),
         ]);
     }
 
@@ -479,6 +492,46 @@ class AdminOsTravelController extends Controller
     }
 
     /**
+     * Persist the availability metadata returned by the admin's live-check
+     * probe (date filter) onto the staged rows, so the stored "available
+     * from" / minimum stay never disagree with what the list just showed.
+     *
+     * Metadata only: the picked window is not a reference-price source, so
+     * `base_price` and the published price are left untouched (only the
+     * scheduled refresh writes those). Rows the probe did not cover keep
+     * their stored values.
+     *
+     * @param  \Illuminate\Support\Collection<int, OsTravelHotel>  $hotels
+     * @param  array{prices?: array<string, array{price: float, currency: string}>, unavailable?: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted_ids?: list<string>, failed_ids?: list<string>}  $live
+     */
+    private function persistProbeAvailability($hotels, array $live, string $checkIn): void
+    {
+        foreach ($hotels as $hotel) {
+            $externalId = (string) $hotel->external_id;
+            $attributes = ['last_price_attempt_at' => now()];
+
+            if (isset($live['prices'][$externalId])) {
+                $attributes['first_available_at'] = $checkIn;
+                $attributes['availability_status'] = OsTravelHotel::AVAILABILITY_AVAILABLE;
+            } elseif (isset($live['unavailable'][$externalId])) {
+                $meta = $live['unavailable'][$externalId];
+                $attributes['first_available_at'] = $meta['first_available_at'];
+                $attributes['min_nights'] = $meta['min_nights'];
+                $attributes['availability_status'] = match ($meta['reason']) {
+                    OsTravelHotel::AVAILABILITY_STOP_RESERVATION => OsTravelHotel::AVAILABILITY_STOP_RESERVATION,
+                    OsTravelHotel::AVAILABILITY_STOP_SALE => OsTravelHotel::AVAILABILITY_STOP_SALE,
+                    OsTravelHotel::AVAILABILITY_MIN_STAY => OsTravelHotel::AVAILABILITY_MIN_STAY,
+                    default => OsTravelHotel::AVAILABILITY_NO_BOOKABLE_ROOM,
+                };
+            }
+
+            if (count($attributes) > 1) {
+                $hotel->update($attributes);
+            }
+        }
+    }
+
+    /**
      * Review columns for the staged list.
      *
      * When a live probe ran, the row carries the probe result for its exact
@@ -490,8 +543,9 @@ class AdminOsTravelController extends Controller
      * the scheduled min. It is null when there is no price to mark up.
      *
      * @param  array{prices?: array<string, array{price: float, currency: string}>, unavailable?: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted_ids?: list<string>, failed_ids?: list<string>}|null  $live
+     * @param  int|null  $pickedNights  Nights spanned by the probed date window.
      */
-    private function reviewPayload(OsTravelHotel $hotel, ?array $live = null): array
+    private function reviewPayload(OsTravelHotel $hotel, ?array $live = null, ?int $pickedNights = null): array
     {
         $hotel->loadMissing(['hotel', 'approver']);
 
@@ -510,9 +564,11 @@ class AdminOsTravelController extends Controller
                 $meta = $live['unavailable'][$hotel->external_id];
                 $liveStatus = $meta['reason'] ?? 'no_availability';
                 $liveUntil = $meta['first_available_at'];
-                $liveReason = $liveUntil !== null
-                    ? sprintf('first available %s (min %d night(s))', $liveUntil, $meta['min_nights'] ?? 1)
-                    : 'stop reservation — no reopen date known';
+                $liveReason = $liveStatus === 'min_stay'
+                    ? sprintf('picked %d night(s) — minimum stay for these dates is %d', $pickedNights ?? 1, $meta['min_nights'] ?? 1)
+                    : ($liveUntil !== null
+                        ? sprintf('first available %s (min %d night(s))', $liveUntil, $meta['min_nights'] ?? 1)
+                        : 'stop reservation — no reopen date known');
             } elseif (in_array($hotel->external_id, $live['failed_ids'] ?? [], true)) {
                 $liveStatus = 'provider_error';
             } else {

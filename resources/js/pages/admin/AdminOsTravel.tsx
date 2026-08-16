@@ -126,6 +126,10 @@ const liveStatusMeta: Record<
         labelKey: 'osTravel.liveStatus.noBookableRoom',
         className: 'text-amber-600',
     },
+    min_stay: {
+        labelKey: 'osTravel.liveStatus.minStay',
+        className: 'text-amber-600',
+    },
     provider_error: {
         labelKey: 'osTravel.liveStatus.providerError',
         className: 'text-destructive',
@@ -150,6 +154,10 @@ const availabilityStatusMeta: Record<
     },
     no_bookable_room: {
         labelKey: 'osTravel.availability.noBookableRoom',
+        className: 'text-amber-600',
+    },
+    min_stay: {
+        labelKey: 'osTravel.availability.minStay',
         className: 'text-amber-600',
     },
     not_returned: {
@@ -480,16 +488,16 @@ const AdminOsTravel = () => {
         return references.cities.filter((c) => c.country_id === countryId);
     }, [references, countryId]);
 
-    const formatDate = (date: Date) => toLocalISODate(date) ?? '';
-
     const hasDateFilter = Boolean(dateRange?.from && dateRange.to);
 
-    const dateFilterValues = useMemo(() => {
+    // Nights spanned by the picked date filter, used to explain a min-stay
+    // rejection against the provider's minimum for those exact dates.
+    const pickedNights = useMemo(() => {
         if (!dateRange?.from || !dateRange.to) return null;
-        return {
-            check_in: formatDate(dateRange.from),
-            check_out: formatDate(dateRange.to),
-        };
+        const days = Math.round(
+            (dateRange.to.getTime() - dateRange.from.getTime()) / 86_400_000,
+        );
+        return Math.max(1, days);
     }, [dateRange]);
 
     const handleCountryChange = (value: string) => {
@@ -657,7 +665,6 @@ const AdminOsTravel = () => {
                         onClick={() =>
                             refreshAllMutation.mutate({
                                 ids: hotels.map((h) => h.id),
-                                ...dateFilterValues,
                             })
                         }
                         disabled={
@@ -904,22 +911,44 @@ const AdminOsTravel = () => {
                                                     <span
                                                         className={`text-[10px] font-semibold ${liveStatusMeta[h.live_status].className}`}
                                                     >
-                                                        {t(
-                                                            liveStatusMeta[
-                                                                h.live_status
-                                                            ].labelKey,
-                                                        )}
+                                                        {h.live_status ===
+                                                            'min_stay' &&
+                                                        h.min_nights
+                                                            ? t(
+                                                                  'osTravel.liveStatus.minStayPicked',
+                                                              )
+                                                                  .replace(
+                                                                      '{picked}',
+                                                                      String(
+                                                                          pickedNights ??
+                                                                              1,
+                                                                      ),
+                                                                  )
+                                                                  .replace(
+                                                                      '{min}',
+                                                                      String(
+                                                                          h.min_nights,
+                                                                      ),
+                                                                  )
+                                                            : t(
+                                                                  liveStatusMeta[
+                                                                      h
+                                                                          .live_status
+                                                                  ].labelKey,
+                                                              )}
                                                     </span>
-                                                    {h.live_until && (
-                                                        <span className="text-[10px] text-muted-foreground">
-                                                            {t(
-                                                                'osTravel.liveStatus.availableFrom',
-                                                            )}{' '}
-                                                            {displayDate(
-                                                                h.live_until,
-                                                            )}
-                                                        </span>
-                                                    )}
+                                                    {h.live_status ===
+                                                        'stop_sale' &&
+                                                        h.live_until && (
+                                                            <span className="text-[10px] text-muted-foreground">
+                                                                {t(
+                                                                    'osTravel.liveStatus.availableFrom',
+                                                                )}{' '}
+                                                                {displayDate(
+                                                                    h.live_until,
+                                                                )}
+                                                            </span>
+                                                        )}
                                                 </div>
                                             ) : (
                                                 <span className="text-muted-foreground">

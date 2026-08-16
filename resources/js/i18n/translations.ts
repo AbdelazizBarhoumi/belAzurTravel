@@ -7225,6 +7225,16 @@ translations['osTravel.liveStatus.noBookableRoom'] = {
     ar: 'لا توجد غرفة قابلة للحجز',
     en: 'No bookable room',
 };
+translations['osTravel.liveStatus.minStay'] = {
+    fr: 'Séjour minimum requis :',
+    ar: 'الحد الأدنى للإقامة :',
+    en: 'Needs at least',
+};
+translations['osTravel.liveStatus.minStayPicked'] = {
+    fr: '{picked} nuit(s) choisie(s) — séjour minimum de {min} nuit(s) pour ces dates',
+    ar: 'اخترت {picked} ليلة — الحد الأدنى للإقامة لهذه التواريخ هو {min}',
+    en: 'Picked {picked} night(s) — minimum stay for these dates is {min}',
+};
 translations['osTravel.liveStatus.availableFrom'] = {
     fr: 'De retour le',
     ar: 'يعود التوفر في',
@@ -7249,6 +7259,11 @@ translations['osTravel.availability.noBookableRoom'] = {
     fr: 'Aucune chambre réservable',
     ar: 'لا توجد غرفة قابلة للحجز',
     en: 'No bookable room',
+};
+translations['osTravel.availability.minStay'] = {
+    fr: 'Séjour minimum',
+    ar: 'الحد الأدنى للإقامة',
+    en: 'Minimum stay',
 };
 translations['osTravel.availability.notReturned'] = {
     fr: 'Non retourné par le fournisseur',

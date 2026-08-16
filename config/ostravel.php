@@ -67,6 +67,11 @@ return [
         // reported as unavailable and their stored price is cleared.
         'nights' => (int) env('OS_TRAVEL_REFRESH_NIGHTS', 1),
 
+        // Upper bound (in nights) for the ascending minimum-stay groups a price
+        // refresh probes. A hotel stored (or discovered) with a longer minimum
+        // stay than this is reported unavailable instead of being quoted.
+        'max_min_stay' => (int) env('OS_TRAVEL_REFRESH_MAX_MIN_STAY', 30),
+
         // Scheduled cadence for `os-travel:refresh-latest-prices`.
         'schedule' => [
             'interval' => 'everySixHours',
@@ -77,6 +82,20 @@ return [
     'search' => [
         // Delay between multi-chunk HotelSearch calls. 0 in tests.
         'throttle_ms' => (int) env('OS_TRAVEL_SEARCH_THROTTLE_MS', 150),
+    ],
+
+    'admin' => [
+        // The admin list's live date probe (`probeWindow`) runs synchronously
+        // inside the HTTP request. The provider's `HotelSearch` searches by
+        // hotel Id list only (max 200 per request, no city filter), so a
+        // date-only filter spans the whole catalog in multiple sequential
+        // calls — a single slow window can otherwise exceed PHP's execution
+        // limit. These bounds keep the probe finite: hotels past the wall-clock
+        // budget or the hotel cap are reported as "not probed" instead of
+        // blocking the page.
+        'live_probe_budget_seconds' => (int) env('OS_TRAVEL_ADMIN_LIVE_PROBE_BUDGET_SECONDS', 25),
+        'live_probe_max_hotels' => (int) env('OS_TRAVEL_ADMIN_LIVE_PROBE_MAX_HOTELS', 200),
+        'live_probe_cache_minutes' => (int) env('OS_TRAVEL_ADMIN_LIVE_PROBE_CACHE_MINUTES', 5),
     ],
 
 ];

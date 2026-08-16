@@ -50,6 +50,7 @@ export interface OsTravelHotelRow {
         | 'stop_sale'
         | 'stop_reservation'
         | 'no_bookable_room'
+        | 'min_stay'
         | 'not_returned'
         | null;
     markup_percentage: string | null;
@@ -66,6 +67,7 @@ export interface OsTravelHotelRow {
         | 'stop_reservation'
         | 'stop_sale'
         | 'no_bookable_room'
+        | 'min_stay'
         | 'provider_error'
         | null;
     live_price: number | null;
