@@ -7,7 +7,6 @@ use App\Models\OsTravelHotel;
 use App\Models\OsTravelReference;
 use App\Models\OsTravelSync;
 use App\Services\OsTravel\HotelPublisher;
-use App\Services\OsTravel\OsTravelPriceCalculator;
 use App\Services\OsTravel\OsTravelSearchService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -27,7 +26,6 @@ class AdminOsTravelController extends Controller
     public function __construct(
         private HotelPublisher $publisher,
         private OsTravelSearchService $searchService,
-        private OsTravelPriceCalculator $calculator,
     ) {}
 
     public function dashboard(): JsonResponse
@@ -409,8 +407,8 @@ class AdminOsTravelController extends Controller
      * date window: `live_price`/`live_currency` when available, otherwise a
      * `live_status` explaining why not.
      *
-     * `final_price` is the sell price: live API price + markup when the probe
-     * priced this hotel. It is null when there is no price to mark up.
+     * `final_price` is dropped: the live-check exposes the provider's raw
+     * `live_price`, and markup is applied at booking time.
      *
      * @param  array{prices?: array<string, array{price: float, currency: string}>, unavailable?: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted_ids?: list<string>, failed_ids?: list<string>}|null  $live
      * @param  int|null  $pickedNights  Nights spanned by the probed date window.
@@ -446,15 +444,8 @@ class AdminOsTravelController extends Controller
             }
         }
 
-        // Sell price the admin sees: live API price + markup when a date
-        // filter probed this hotel. No availability or a provider error leaves
-        // it null so the frontend can explain why.
-        $markup = (float) ($hotel->markup_percentage ?? config('ostravel.markup.default', 20));
-        $finalPrice = null;
-        if ($liveStatus === 'available' && $livePrice !== null) {
-            $finalPrice = $this->calculator->applyMarkup($livePrice, $markup);
-        }
-
+        // Sell price is applied at booking time; the list only exposes the
+        // provider's raw live price for the picked window.
         return [
             'id' => (string) $hotel->id,
             'external_id' => $hotel->external_id,
@@ -467,7 +458,6 @@ class AdminOsTravelController extends Controller
             'stars' => $hotel->stars,
             'image' => self::cleanImageUrl($hotel->image),
             'status' => $hotel->status,
-            'final_price' => $finalPrice,
             'markup_percentage' => $hotel->markup_percentage,
             'currency' => $hotel->currency,
             'hotel_id' => $hotel->hotel_id !== null ? (string) $hotel->hotel_id : null,

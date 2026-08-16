@@ -1,38 +1,63 @@
-import { format } from 'date-fns';
-import { arSA, enUS, fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
-import { Car, Coffee, Droplet, Dumbbell, Utensils, Wifi } from 'lucide-react';
+import {
+    BadgePercent,
+    Bed,
+    Building2,
+    Car,
+    Coffee,
+    Droplet,
+    Dumbbell,
+    Heart,
+    Map as MapIcon,
+    MapPin,
+    Ruler,
+    Search,
+    ShieldCheck,
+    Star,
+    Trees,
+    Users,
+    Utensils,
+    UtensilsCrossed,
+    Wifi,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Navigate, useParams } from 'react-router-dom';
 import { notifyInteraction } from '@/api/interactions.api';
 import { HotelInfo } from '@/components/cards/HotelInfo';
-import { StickyBookingCard } from '@/components/cards/StickyBookingCard';
 import { BookingDialog } from '@/components/forms/BookingDialog';
-import { PageShell } from '@/components/layout/PageShell';
-import { RoomsList } from '@/components/lists/RoomsList';
-import { Gallery } from '@/components/media/Gallery';
-import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import {
     OccupancyPicker,
     type Occupancy,
-} from '@/components/ui/OccupancyPicker';
+} from '@/components/hotel/OccupancyPicker';
+import {
+    RoomRatesTable,
+    type RateRoom,
+} from '@/components/hotel/RoomRatesTable';
+import { PageShell } from '@/components/layout/PageShell';
+import { Gallery } from '@/components/media/Gallery';
+import { Button } from '@/components/ui/button';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import {
     useHotelById,
     useHotelSearch,
     type HotelDetailLookupData,
+    type HotelSearchQuery,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
-import { cn, earliestCheckIn, toLocalISODate } from '@/lib/utils';
+import { toLocalISODate } from '@/lib/utils';
 
 type AmenityIcon = typeof Wifi | null;
 
 type RoomView = {
     id: string;
     name: string;
-    description: string;
+    description?: string;
     pricePerNight: number;
     // Live OS-TRAVEL rooms carry a TOTAL-stay price; static admin rooms only
     // have an admin-defined per-night price.
@@ -72,16 +97,6 @@ const AMENITY_ICONS: Record<string, AmenityIcon> = {
     restaurant: Utensils,
     pool: Droplet,
 };
-
-function datePickerLocale(lang: Lang) {
-    if (lang === 'ar') return arSA;
-    if (lang === 'en') return enUS;
-    return fr;
-}
-
-function formatDate(date: Date, lang: Lang): string {
-    return format(date, 'PPP', { locale: datePickerLocale(lang) });
-}
 
 function normalizeAmenityKey(value: string): string {
     return value
@@ -192,14 +207,14 @@ export default function HotelDetail() {
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
-    const [selectedBoarding, setSelectedBoarding] = useState<
-        string | undefined
-    >(undefined);
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [occupancy, setOccupancy] = useState<Occupancy>({
+        rooms: 1,
         adults: 2,
         childAges: [],
     });
+    const [advancedOpen, setAdvancedOpen] = useState(false);
+    const [selectedBoardingIds, setSelectedBoardingIds] = useState<number[]>([]);
 
     const liveQuery = useMemo(() => {
         if (!dateRange?.from || !dateRange?.to || !id) {
@@ -210,25 +225,43 @@ export default function HotelDetail() {
             check_in: toLocalISODate(dateRange.from) ?? '',
             check_out: toLocalISODate(dateRange.to) ?? '',
             hotel_slugs: [id],
-            rooms: [
-                {
-                    adults: occupancy.adults,
-                    children: occupancy.childAges,
-                },
-            ],
+            rooms: Array.from({ length: occupancy.rooms }, () => ({
+                adults: occupancy.adults,
+                children: occupancy.childAges,
+            })),
             only_available: true,
+            boarding_ids:
+                selectedBoardingIds.length > 0 ? selectedBoardingIds : undefined,
         };
-    }, [dateRange, occupancy.adults, occupancy.childAges, id]);
+    }, [dateRange, occupancy.rooms, occupancy.adults, occupancy.childAges, id, selectedBoardingIds]);
+
+    // The live search only fires after the user explicitly clicks the
+    // availability button; it never runs from stored price/availability data.
+    const [submittedQuery, setSubmittedQuery] = useState<
+        HotelSearchQuery | undefined
+    >(undefined);
+    const handleCheckAvailability = () => {
+        setSubmittedQuery(liveQuery);
+    };
+
+    // Results are trusted only while the submitted query still matches the
+    // current inputs; as soon as dates, occupancy or boardings change the
+    // query becomes stale and the search is cleared without a new request.
+    const submittedKey = JSON.stringify(submittedQuery);
+    const liveKey = JSON.stringify(liveQuery);
+    const resultsAreStale =
+        Boolean(submittedQuery) && submittedKey !== liveKey;
+    const activeQuery = resultsAreStale ? undefined : submittedQuery;
 
     const { data: liveResult, isLoading: liveSearchLoading } =
-        useHotelSearch(liveQuery);
+        useHotelSearch(activeQuery);
     const liveResults = liveResult?.data ?? [];
     const liveHotel = liveResults[0] ?? undefined;
 
     // A completed search with no result means the hotel has no availability
     // for the selected dates — never offer stale room prices for it.
     const searchedUnavailable =
-        Boolean(liveQuery) && !liveSearchLoading && !liveHotel;
+        Boolean(activeQuery) && !liveSearchLoading && !liveHotel;
 
     if (isLoading) {
         return null;
@@ -239,15 +272,6 @@ export default function HotelDetail() {
     }
 
     const detail = hotel as HotelDetailLookupData;
-    // Earliest selectable check-in: the hotel's first available day, but
-    // never before tomorrow (the provider cannot book same-day arrivals).
-    const firstAvailableDate = earliestCheckIn([detail.first_available_at]);
-    const disabledRanges = (detail.stop_sale_ranges ?? [])
-        .filter((range) => range?.from && range?.to)
-        .map((range) => ({
-            from: new Date(`${range.from}T00:00:00`),
-            to: new Date(`${range.to}T00:00:00`),
-        }));
     const otherImages = detail.gallery?.length
         ? detail.gallery
         : detail.images?.length
@@ -259,15 +283,18 @@ export default function HotelDetail() {
               ...otherImages.filter((image) => image !== detail.image),
           ]
         : otherImages;
-    const rooms = (detail.rooms ?? []).map((room) => toRoomView(room, lang));
-    const staticRoomByName = new Map(rooms.map((room) => [room.name, room]));
+    const staticRooms = (detail.rooms ?? []).map((room) =>
+        toRoomView(room, lang),
+    );
+    const staticRoomByName = new Map(
+        staticRooms.map((room) => [room.name, room]),
+    );
 
     const liveRooms: RoomView[] = (liveHotel?.rooms ?? [])
         .filter((room) => {
             // Only offer rooms that are actually bookable for the searched
             // window: not stop-reserved, minimum stay fits, and no stop-sale
-            // range covers the dates. Non-bookable rooms stay on the static
-            // list below with their badges.
+            // range covers the dates.
             if (room.stop_reservation) return false;
             if ((room.min_stay ?? 1) > (room.nights ?? 1)) return false;
             if (room.stop_sales && dateRange?.from && dateRange?.to) {
@@ -318,74 +345,30 @@ export default function HotelDetail() {
                     room.cancellation_deadline ?? undefined,
             };
         });
-    const boardingGroups = (() => {
-        const groups = new Map<
-            string,
-            { key: string; name: string; rooms: RoomView[] }
-        >();
-        for (const room of liveRooms) {
-            const key =
-                room.boardingId !== undefined
-                    ? `b-${room.boardingId}`
-                    : `n-${room.boardingName ?? 'standard'}`;
-            const name =
-                room.boardingName ||
-                t('hotelDetail.standardBoarding') ||
-                'Standard';
-            let group = groups.get(key);
-            if (!group) {
-                group = { key, name, rooms: [] };
-                groups.set(key, group);
-            }
-            group.rooms.push(room);
-        }
-        return [...groups.values()];
-    })();
-    // Default to the cheapest boarding (by minimum stay total), falling back to
-    // the user's selection only while it still matches the current live results.
-    const defaultBoardingKey = boardingGroups.length
-        ? boardingGroups.reduce((a, b) =>
-              Math.min(
-                  ...a.rooms.map((room) => room.priceTotal ?? room.pricePerNight),
-              ) <=
-              Math.min(
-                  ...b.rooms.map((room) => room.priceTotal ?? room.pricePerNight),
-              )
-                  ? a
-                  : b,
-          ).key
-        : undefined;
-    const activeBoardingKey =
-        selectedBoarding &&
-        boardingGroups.some((group) => group.key === selectedBoarding)
-            ? selectedBoarding
-            : defaultBoardingKey;
-    const activeLiveRooms =
-        boardingGroups.find((group) => group.key === activeBoardingKey)?.rooms ??
-        liveRooms;
-    const activeLiveIds = new Set(activeLiveRooms.map((room) => room.id));
-    const displayRooms =
-        activeLiveRooms.length > 0
-            ? [
-                  ...activeLiveRooms,
-                  ...rooms.filter((room) => !activeLiveIds.has(room.id)),
-              ]
-            : rooms;
-    const displayMinPrice = displayRooms.length
-        ? Math.min(...displayRooms.map((room) => room.priceTotal ?? room.pricePerNight))
+
+    // The rates table renders the bookable live rooms after a search; before
+    // any search (or for manual hotels) it falls back to the static catalog.
+    const rateRooms: RateRoom[] =
+        liveRooms.length > 0 ? liveRooms : staticRooms;
+
+    const displayMinPrice = staticRooms.length
+        ? Math.min(
+              ...staticRooms.map(
+                  (room) => room.priceTotal ?? room.pricePerNight,
+              ),
+          )
         : (detail.price ?? 0);
-    const minPrice = liveHotel?.price ?? displayMinPrice;
+    // Provider-linked hotels show no price until a live search returns one;
+    // manual hotels keep their stored price.
+    const minPrice =
+        liveHotel?.price ??
+        (detail.provider === 'manual' ? displayMinPrice : 0);
     const currency = liveHotel?.currency ?? detail.currency ?? 'TND';
-    const livePriceLabel = liveHotel
-        ? t('hotelDetail.livePrices')
-        : undefined;
-    const priceSuffix = liveHotel
-        ? liveHotel.nights
-            ? `· ${liveHotel.nights} ${t('hotelDetail.nightsLabel')}`
-            : undefined
-        : detail.min_nights && detail.min_nights > 1
-          ? `· ${detail.min_nights} ${t('hotelDetail.nightsLabel')}`
-          : t('hotelDetail.pernight');
+    const headerPerNight = liveHotel
+        ? liveHotel.price_per_night * occupancy.rooms
+        : detail.provider === 'manual'
+          ? displayMinPrice
+          : null;
     const amenities = (detail.amenities ?? [])
         .filter((amenity) => {
             const nameData =
@@ -412,30 +395,44 @@ export default function HotelDetail() {
     const title = localizeText(detail.name, lang);
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
-    const _city = detail.city ? localizeText(detail.city, lang) : '';
-    const _country = detail.country
-        ? localizeText(detail.country, lang)
-        : location;
+    const address = detail.address ?? location;
 
-    const handleReserve = () => {
-        const roomsElement = document.getElementById('rooms-list');
-        roomsElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const stars = Math.min(5, Math.max(0, detail.stars));
+    const scoreLabel = (rating: number) =>
+        rating >= 4.7
+            ? t('hotelDetail.scoreExcellent')
+            : rating >= 4.4
+              ? t('hotelDetail.scoreAdorable')
+              : rating >= 4
+                ? t('hotelDetail.scoreVeryGood')
+                : t('hotelDetail.scoreGood');
+
+    const hasMap =
+        typeof detail.coordinates?.latitude === 'number' &&
+        typeof detail.coordinates?.longitude === 'number';
+    const mapSrc = hasMap
+        ? `https://www.google.com/maps?q=${detail.coordinates!.longitude},${detail.coordinates!.latitude}&output=embed`
+        : undefined;
+    const mapLink = hasMap
+        ? `https://www.google.com/maps?q=${detail.coordinates!.longitude},${detail.coordinates!.latitude}`
+        : `https://www.google.com/maps?q=${encodeURIComponent(address)}`;
+
+    const scrollToRates = () => {
+        document
+            .getElementById('rates')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
-    const handleBookRoom = (roomId: string) => {
-        if (searchedUnavailable) {
-            return;
-        }
-        const room = displayRooms.find((r) => r.id === roomId);
-        if (room) {
-            setSelectedRoom(room);
-        }
+    const handleReserve = (room: RateRoom) => {
+        setSelectedRoom(room);
     };
 
     const handleWhatsAppInquiry = () => {
         notifyInteraction('whatsapp');
         window.open('/contact', '_self');
     };
+
+    const bookingRoom = selectedRoom;
 
     return (
         <PageShell
@@ -445,61 +442,498 @@ export default function HotelDetail() {
                 { label: title, active: true },
             ]}
         >
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="grid gap-10 lg:grid-cols-[2fr_1fr]"
-            >
-                <div className="flex flex-col">
-                    <Gallery
-                        images={gallery}
-                        hotelName={title}
-                        favoriteItem={{
-                            id: `hotel-${detail.id}`,
-                            type: 'hotel',
-                            name: title,
-                            image: gallery[0] ?? '',
-                            price: minPrice,
-                            location,
-                        }}
-                    />
-
-                    <div className="lg:hidden">
-                        <StickyBookingCard
-                            minPrice={searchedUnavailable ? 0 : minPrice}
-                            currency={currency}
-                            badge={
-                                searchedUnavailable
-                                    ? t('hotelDetail.unavailableSticky')
-                                    : undefined
-                            }
-                            priceLabel={
-                                livePriceLabel ??
-                                (t('hotelDetail.startingFrom') || 'From')
-                            }
-                            priceSuffix={priceSuffix}
-                            title={title}
-                            location={location}
-                            entityType="hotel"
-                            itemId={detail.id}
-                            rating={detail.stars}
-                            reviews={detail.reviews}
-                            primaryButtonLabel={
-                                t('hotelDetail.reserveNow') || 'Book now'
-                            }
-                            onBook={handleReserve}
-                            onWhatsApp={handleWhatsAppInquiry}
-                        />
+            <div className="grid items-start gap-8 lg:grid-cols-[320px_1fr]">
+                {/* ── Sticky search sidebar ─────────────────────────── */}
+                <aside className="space-y-4 lg:sticky lg:top-24">
+                    <div className="rounded-3xl border border-border bg-card p-5">
+                        <h2 className="mb-4 font-serif text-xl font-bold text-foreground">
+                            {t('hotelDetail.search')}
+                        </h2>
+                        <div className="space-y-3">
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                                <Input
+                                    value={address}
+                                    readOnly
+                                    aria-label={t('hotelDetail.destination')}
+                                    className="h-11 rounded-xl pl-9"
+                                />
+                            </div>
+                            <DateRangePicker
+                                value={dateRange}
+                                onChange={setDateRange}
+                            />
+                            <OccupancyPicker
+                                value={occupancy}
+                                onChange={setOccupancy}
+                            />
+                            {(detail.boardings?.length ?? 0) > 0 && (
+                                <div>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setAdvancedOpen((open) => !open)
+                                        }
+                                        className="text-xs text-primary underline underline-offset-4"
+                                    >
+                                        {t('hotelDetail.advancedSearch')}
+                                    </button>
+                                    {advancedOpen && (
+                                        <div className="mt-2 space-y-1.5">
+                                            {detail.boardings!.map(
+                                                (boarding) => {
+                                                    const checked =
+                                                        selectedBoardingIds.includes(
+                                                            boarding.id,
+                                                        );
+                                                    return (
+                                                        <label
+                                                            key={boarding.id}
+                                                            className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={checked}
+                                                                onChange={() =>
+                                                                    setSelectedBoardingIds(
+                                                                        (ids) =>
+                                                                            checked
+                                                                                ? ids.filter(
+                                                                                      (i) =>
+                                                                                          i !==
+                                                                                          boarding.id,
+                                                                                  )
+                                                                                : [
+                                                                                      ...ids,
+                                                                                      boarding.id,
+                                                                                  ],
+                                                                    )
+                                                                }
+                                                                className="h-4 w-4 accent-primary"
+                                                            />
+                                                            {boarding.name ||
+                                                                boarding.code}
+                                                        </label>
+                                                    );
+                                                },
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            <Button
+                                type="button"
+                                disabled={!liveQuery}
+                                onClick={handleCheckAvailability}
+                                className="h-11 w-full bg-primary text-primary-foreground"
+                            >
+                                <Search className="h-4 w-4" />
+                                {liveSearchLoading
+                                    ? t('hotelDetail.checkingAvailability')
+                                    : t('hotelDetail.search')}
+                            </Button>
+                        </div>
                     </div>
 
+                    {/* Map card */}
+                    <div className="relative h-44 overflow-hidden rounded-3xl border border-border">
+                        {mapSrc ? (
+                            <iframe
+                                title={`${t('hotelDetail.mapOf')} ${title}`}
+                                src={mapSrc}
+                                loading="lazy"
+                                className="h-full w-full border-0 saturate-50"
+                            />
+                        ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-muted">
+                                <MapPin className="h-8 w-8 text-muted-foreground/50" />
+                            </div>
+                        )}
+                        <a
+                            href={mapLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="absolute inset-x-6 bottom-4 inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-card text-xs font-medium text-foreground shadow-md hover:bg-card/90"
+                        >
+                            <MapIcon className="h-4 w-4" />
+                            {t('hotelDetail.viewOnMap')}
+                        </a>
+                    </div>
+
+                    {/* Best-rate guarantee card */}
+                    <div className="space-y-2 rounded-3xl border border-primary/20 bg-primary/5 p-5">
+                        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                            <ShieldCheck className="h-4 w-4 text-primary" />
+                            {t('hotelDetail.bestRateGuaranteed')}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            {t('hotelDetail.bestRateHint')}
+                        </p>
+                    </div>
+                </aside>
+
+                {/* ── Main content ──────────────────────────────────── */}
+                <div className="min-w-0 space-y-10">
+                    {/* Header */}
+                    <motion.header
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-wrap items-start justify-between gap-4"
+                    >
+                        <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
+                                    {title}
+                                </h1>
+                                <div className="flex text-secondary">
+                                    {Array.from({ length: stars }).map(
+                                        (_, i) => (
+                                            <Star
+                                                key={i}
+                                                className="h-4 w-4 fill-current"
+                                            />
+                                        ),
+                                    )}
+                                </div>
+                            </div>
+                            <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                                <MapPin className="h-3.5 w-3.5" />
+                                {location}
+                            </p>
+                            <div className="mt-3 flex items-center gap-4">
+                                <FavoriteButton
+                                    item={{
+                                        id: `hotel-${detail.id}`,
+                                        type: 'hotel',
+                                        name: title,
+                                        image: gallery[0] ?? '',
+                                        price: minPrice,
+                                        location,
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleWhatsAppInquiry}
+                                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                >
+                                    <Heart className="h-3.5 w-3.5" />
+                                    {t('hotelDetail.reserveNow')}
+                                </button>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            {headerPerNight !== null && headerPerNight > 0 ? (
+                                <>
+                                    <p className="text-3xl font-bold text-foreground">
+                                        {headerPerNight.toLocaleString()}
+                                        <span className="align-top text-sm font-semibold">
+                                            {' '}
+                                            {currency}
+                                        </span>
+                                    </p>
+                                    <p className="mb-3 text-xs text-muted-foreground">
+                                        {t('hotelDetail.perNightFrom')}
+                                    </p>
+                                </>
+                            ) : null}
+                            <Button
+                                type="button"
+                                onClick={scrollToRates}
+                                className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                            >
+                                {t('hotelDetail.roomsAndRates')}
+                            </Button>
+                        </div>
+                    </motion.header>
+
+                    {/* Gallery + score */}
+                    <section className="relative">
+                        <Gallery
+                            images={gallery}
+                            hotelName={title}
+                            favoriteItem={{
+                                id: `hotel-${detail.id}`,
+                                type: 'hotel',
+                                name: title,
+                                image: gallery[0] ?? '',
+                                price: minPrice,
+                                location,
+                            }}
+                        />
+                        <div className="absolute right-4 top-4 flex items-center gap-2 rounded-2xl bg-card/90 px-3 py-2 shadow-lg backdrop-blur">
+                            <span className="text-xs font-medium text-muted-foreground">
+                                {scoreLabel(detail.rating)}
+                            </span>
+                            <span className="rounded-xl bg-primary px-2 py-1 text-sm font-bold text-primary-foreground">
+                                {detail.rating.toFixed(1)}
+                            </span>
+                        </div>
+                    </section>
+
+                    {/* Services & équipements */}
+                    <section>
+                        <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
+                            {t('hotelDetail.servicesAndEquipments')}
+                        </h2>
+                        {amenities.length > 0 && (
+                            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                {amenities.map((amenity) => {
+                                    const Icon = amenity.icon;
+                                    return (
+                                        <div
+                                            key={amenity.id}
+                                            className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+                                        >
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                                                {Icon && (
+                                                    <Icon className="h-4 w-4 text-primary" />
+                                                )}
+                                            </div>
+                                            <span className="text-sm text-foreground">
+                                                {amenity.name}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        <div className="mt-5 space-y-3">
+                            <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                                <BadgePercent className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                                <p className="text-sm text-foreground">
+                                    {t('hotelDetail.bestPriceNote')}
+                                </p>
+                            </div>
+                            <div className="flex items-start gap-3 rounded-2xl border border-secondary/30 bg-secondary/10 p-4">
+                                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
+                                <p className="text-sm text-foreground">
+                                    {t('hotelDetail.freeCancellationNote')}
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Dates & Tarifs */}
+                    <section id="rates" className="scroll-mt-28">
+                        <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
+                            {t('hotelDetail.datesAndRates')}
+                        </h2>
+
+                        <div className="mt-4 grid items-end gap-3 rounded-3xl border border-border bg-card p-5 md:grid-cols-[1.4fr_1.2fr_auto]">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">
+                                    {t('hotelDetail.checkInOut')}
+                                </label>
+                                <DateRangePicker
+                                    value={dateRange}
+                                    onChange={setDateRange}
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-muted-foreground">
+                                    {t('hotelDetail.occupancy')}
+                                </label>
+                                <OccupancyPicker
+                                    value={occupancy}
+                                    onChange={setOccupancy}
+                                />
+                            </div>
+                            <Button
+                                type="button"
+                                disabled={!liveQuery}
+                                onClick={handleCheckAvailability}
+                                className="h-11 bg-primary text-primary-foreground"
+                            >
+                                {liveSearchLoading
+                                    ? t('hotelDetail.checkingAvailability')
+                                    : t('hotelDetail.checkAvailability')}
+                            </Button>
+                        </div>
+
+                        <div className="mt-5">
+                            {liveHotel &&
+                            (liveHotel.promotion?.rate ||
+                                liveHotel.free_child?.length ||
+                                liveHotel.recommended) ? (
+                                <div className="mb-4 flex flex-wrap gap-2">
+                                    {liveHotel.promotion?.rate &&
+                                    liveHotel.promotion.title ? (
+                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                            {t('hotelDetail.promo')}{' '}
+                                            {liveHotel.promotion.title}
+                                        </span>
+                                    ) : null}
+                                    {liveHotel.free_child?.length ? (
+                                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                            {t('hotelDetail.freeChild')}
+                                        </span>
+                                    ) : null}
+                                    {liveHotel.recommended && (
+                                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                                            {t('hotelDetail.recommended')}
+                                        </span>
+                                    )}
+                                </div>
+                            ) : null}
+
+                            {searchedUnavailable ? (
+                                <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-800">
+                                    {t('hotelDetail.unavailableNotice') ||
+                                        'This hotel has no availability for the selected dates. Try other dates.'}
+                                </div>
+                            ) : submittedQuery && liveHotel ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                >
+                                    <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                                        <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                                        {t('hotelDetail.livePrices')}
+                                    </div>
+                                    <RoomRatesTable
+                                        rooms={rateRooms}
+                                        occupancy={occupancy}
+                                        currency={currency}
+                                        onReserve={handleReserve}
+                                    />
+                                </motion.div>
+                            ) : (
+                                <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                                    {t('hotelDetail.ratesHint')}
+                                </p>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Hébergement */}
+                    <section>
+                        <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
+                            {t('hotelDetail.accommodation')}
+                        </h2>
+                        <div className="mt-4 max-w-3xl space-y-5">
+                            <div>
+                                <h3 className="mb-1 text-sm font-bold text-foreground">
+                                    {t('hotelDetail.discover')} {title}
+                                </h3>
+                                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+                                    {description}
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="mb-1 flex items-center gap-2 text-sm font-bold text-foreground">
+                                    <Building2 className="h-4 w-4 text-primary" />
+                                    {t('hotelDetail.locationTitle')}
+                                </h3>
+                                <p className="text-sm leading-relaxed text-muted-foreground">
+                                    {address}
+                                    {' — '}
+                                    {t(
+                                        'hotelDetail.accommodationLocationCopy',
+                                    )}
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="mb-1 flex items-center gap-2 text-sm font-bold text-foreground">
+                                    <UtensilsCrossed className="h-4 w-4 text-primary" />
+                                    {t('hotelDetail.diningAndBar')}
+                                </h3>
+                                <p className="text-sm leading-relaxed text-muted-foreground">
+                                    {t('hotelDetail.accommodationDiningCopy')}
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="mb-1 flex items-center gap-2 text-sm font-bold text-foreground">
+                                    <Trees className="h-4 w-4 text-primary" />
+                                    {t('hotelDetail.activitiesAndLeisure')}
+                                </h3>
+                                <p className="text-sm leading-relaxed text-muted-foreground">
+                                    {t(
+                                        'hotelDetail.accommodationActivitiesCopy',
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Chambres */}
+                    {staticRooms.length > 0 && (
+                        <section>
+                            <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
+                                {t('hotelDetail.roomsTitle')}
+                            </h2>
+                            <div className="mt-4 max-w-3xl space-y-3">
+                                {staticRooms.map((room) => (
+                                    <div
+                                        key={room.id}
+                                        className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-5"
+                                    >
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                                            <Bed className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <div className="min-w-[140px] flex-1">
+                                            <h3 className="font-serif text-lg font-bold text-foreground">
+                                                {room.name}
+                                            </h3>
+                                            <p className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                {room.size ? (
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <Ruler className="h-3 w-3" />{' '}
+                                                        {room.size} m²
+                                                    </span>
+                                                ) : null}
+                                                <span className="inline-flex items-center gap-1">
+                                                    <Users className="h-3 w-3" />{' '}
+                                                    {room.capacity}{' '}
+                                                    {t(
+                                                        'hotelDetail.guests',
+                                                    )}
+                                                </span>
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            {detail.provider === 'manual' ? (
+                                                <>
+                                                    <p className="text-xl font-bold text-primary">
+                                                        {room.pricePerNight.toLocaleString()}{' '}
+                                                        {currency}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {t(
+                                                            'hotelDetail.pernight',
+                                                        )}
+                                                    </p>
+                                                </>
+                                            ) : (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {t(
+                                                        'hotelDetail.livePriceHint',
+                                                    )}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            className="bg-primary text-primary-foreground"
+                                            onClick={scrollToRates}
+                                        >
+                                            {t('hotelDetail.reserve')}
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                    {/* Practical info + boardings + options + tags */}
                     <HotelInfo
-                        description={description}
+                        description=""
                         category={
                             detail.category
                                 ? localizeText(detail.category, lang)
                                 : ''
                         }
-                        amenities={amenities}
+                        amenities={[]}
                         checkIn={detail.check_in_time}
                         checkOut={detail.check_out_time}
                         address={detail.address}
@@ -512,178 +946,65 @@ export default function HotelDetail() {
                         note={detail.note}
                     />
 
-                    <div className="mt-8 rounded-3xl border border-border bg-card p-5">
-                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                            <h2 className="font-serif text-xl font-bold text-foreground">
-                                {t('hotelDetail.livePriceTitle')}
-                            </h2>
-                            {liveHotel && (
-                                <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                    <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                                    {t('hotelDetail.livePrices')}
-                                </span>
-                            )}
-                        </div>
-                        <p className="mb-4 text-sm text-muted-foreground">
-                            {t('hotelDetail.livePriceHint')}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <DateRangePicker
-                                value={dateRange}
-                                onChange={setDateRange}
-                                className="flex-1"
-                                fromDate={firstAvailableDate}
-                                disabledRanges={disabledRanges}
-                            />
-                            <OccupancyPicker
-                                value={occupancy}
-                                onChange={setOccupancy}
-                                compact
-                            />
-                        </div>
-                        {firstAvailableDate && (
-                            <p className="mt-3 text-xs text-muted-foreground">
-                                {t('hotelDetail.availableFrom')}{' '}
-                                <span className="font-semibold text-foreground">
-                                    {formatDate(firstAvailableDate, lang)}
-                                </span>
-                                {detail.min_nights && detail.min_nights > 1
-                                    ? ` · ${t('hotelDetail.minimumNights')} ${detail.min_nights} ${detail.min_nights > 1 ? t('hotelDetail.nightsLabel') : t('hotelDetail.night')}`
-                                    : ''}
+                    <Separator />
+
+                    {/* Reviews summary */}
+                    <section className="grid items-center gap-6 rounded-3xl border border-border bg-card p-6 sm:grid-cols-[auto_1fr]">
+                        <div className="text-center">
+                            <p className="text-4xl font-bold text-primary">
+                                {detail.rating.toFixed(1)}
                             </p>
-                        )}
-                    </div>
-
-                    {searchedUnavailable && (
-                        <div className="mt-6 rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-800">
-                            {t('hotelDetail.unavailableNotice') ||
-                                'This hotel has no availability for the selected dates. Try other dates.'}
+                            <div className="mt-1 flex justify-center text-secondary">
+                                {Array.from({ length: Math.round(stars) }).map(
+                                    (_, i) => (
+                                        <Star
+                                            key={i}
+                                            className="h-3.5 w-3.5 fill-current"
+                                        />
+                                    ),
+                                )}
+                            </div>
                         </div>
-                    )}
-
-                    {displayRooms.length > 0 && (
-                        <motion.div
-                            id="rooms-list"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.15 }}
-                        >
-                            {liveHotel && (liveHotel.promotion?.rate || liveHotel.free_child?.length || liveHotel.recommended) && (
-                                <div className="mb-4 flex flex-wrap gap-2">
-                                    {liveHotel.promotion?.rate && (
-                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                                            {t('hotelDetail.promo')}{' '}
-                                            {liveHotel.promotion.title}
-                                        </span>
-                                    )}
-                                    {liveHotel.free_child?.length ? (
-                                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                                            {t('hotelDetail.freeChild')}
-                                        </span>
-                                    ) : null}
-                                    {liveHotel.recommended && (
-                                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                                            {t('hotelDetail.recommended')}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-
-                            {boardingGroups.length > 1 && (
-                                <div className="mb-6 flex flex-wrap gap-2">
-                                    {boardingGroups.map((group) => (
-                                        <button
-                                            key={group.key}
-                                            type="button"
-                                            onClick={() =>
-                                                setSelectedBoarding(group.key)
-                                            }
-                                            className={cn(
-                                                'rounded-full px-4 py-2 text-sm font-semibold transition-colors',
-                                                group.key === activeBoardingKey
-                                                    ? 'bg-primary text-primary-foreground'
-                                                    : 'bg-muted text-muted-foreground hover:bg-muted/70',
-                                            )}
-                                        >
-                                            {group.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {!liveQuery && rooms.length > 0 && (
-                                <p className="mb-4 text-sm text-muted-foreground">
-                                    {t('hotelDetail.pickDatesHint')}
-                                </p>
-                            )}
-
-                            <RoomsList
-                                rooms={displayRooms}
-                                onBookRoom={handleBookRoom}
-                                bookDisabled={searchedUnavailable}
-                                currency={currency}
-                            />
-                        </motion.div>
-                    )}
+                        <div className="flex h-full items-center rounded-2xl bg-muted/40 p-4 text-sm text-muted-foreground">
+                            {scoreLabel(detail.rating)} —{' '}
+                            {t('hotelDetail.freeCancellationNote')}
+                        </div>
+                    </section>
                 </div>
+            </div>
 
-                <aside className="sticky top-24 hidden self-start lg:block">
-                    <StickyBookingCard
-                        minPrice={searchedUnavailable ? 0 : minPrice}
-                        currency={currency}
-                        badge={
-                            searchedUnavailable
-                                ? t('hotelDetail.unavailableSticky')
-                                : undefined
-                        }
-                        priceLabel={
-                            livePriceLabel ??
-                            (t('hotelDetail.startingFrom') || 'From')
-                        }
-                        priceSuffix={priceSuffix}
-                        title={title}
-                        location={location}
-                        entityType="hotel"
-                        itemId={detail.id}
-                        rating={detail.stars}
-                        reviews={detail.reviews}
-                        primaryButtonLabel={
-                            t('hotelDetail.reserveNow') || 'Book now'
-                        }
-                        onBook={handleReserve}
-                        onWhatsApp={handleWhatsAppInquiry}
-                    />
-                </aside>
-            </motion.div>
-
-            {selectedRoom && (
+            {bookingRoom && (
                 <BookingDialog
-                    open={!!selectedRoom}
+                    open={!!bookingRoom}
                     onOpenChange={(open) => !open && setSelectedRoom(null)}
                     type="hotel"
                     itemId={detail.id}
-                    itemName={`${title} - ${selectedRoom.name}`}
+                    itemName={`${title} - ${bookingRoom.name}`}
                     amount={
-                        selectedRoom.priceTotal ?? selectedRoom.pricePerNight
+                        (bookingRoom.priceTotal ??
+                            bookingRoom.pricePerNight) * occupancy.rooms
                     }
-                    minDate={firstAvailableDate}
+                    minDate={new Date()}
                     provider={
                         liveHotel
                             ? {
                                   token: liveHotel.rooms[0]?.token,
                                   source: liveHotel.rooms[0]?.source,
-                                  rooms: [
-                                      {
-                                          id: selectedRoom.providerRoomId
-                                              ? String(selectedRoom.providerRoomId)
+                                  rooms: Array.from(
+                                      { length: occupancy.rooms },
+                                      () => ({
+                                          id: bookingRoom.providerRoomId
+                                              ? String(
+                                                    bookingRoom.providerRoomId,
+                                                )
                                               : undefined,
                                           boardingId:
-                                              selectedRoom.boardingId,
-                                          viewIds: selectedRoom.viewIds,
+                                              bookingRoom.boardingId,
+                                          viewIds: bookingRoom.viewIds,
                                           supplements:
-                                              selectedRoom.supplements,
-                                      },
-                                  ],
+                                              bookingRoom.supplements,
+                                      }),
+                                  ),
                                   adults: occupancy.adults,
                                   children: occupancy.childAges.length,
                                   childrenAges: occupancy.childAges,

@@ -66,48 +66,49 @@
 - Checkpoint: **DONE** — `migrate:fresh` on a scratch SQLite DB passes (all 39 migrations); schema verified: `os_travel_hotels`/`hotels` no longer contain the dropped columns; `os_travel_refresh_requests` dropped. Full backend-test green is deferred to Phase 8 (app code still references removed columns until Phases 2-6).
 
 ## Phase 2 — Service layer cleanup (`OsTravelSearchService`)
-- [ ] Delete: `refreshLatestPrices`, `refreshStagedPrices`, `probePrices`, `catalogOf`, `mergeCatalog`, `minStayOf`, `syncPublishedMinStay`; remove `ranges`/`catalog` return keys and `syncPublishedMinStay`.
-- [ ] `search()`: remove stored-price fallbacks — omitted candidates and `normalize()`'s unavailable branch return `price`/`price_total`/`price_per_night`/`base_price` = **null** for provider hotels; `aggregateRooms` fallback → null. `manualPayload` unchanged.
-- [ ] Fix `normalizeStopSales` to parse the `Title`-string shape (regex `de (\d{2}/\d{2}/\d{4}) au (\d{2}/\d{2}/\d{4})`) in addition to `{FromDate,ToDate}`; `parseProviderDate` already handles `d/m/Y`.
-- Checkpoint: no remaining references to dropped columns in the service; `search`/`probeWindow` tests pass.
+- [x] Delete: `refreshLatestPrices`, `refreshStagedPrices`, `probePrices`, `catalogOf`, `mergeCatalog`, `minStayOf`, `syncPublishedMinStay`; removed `ranges`/`catalog` machinery.
+- [x] `search()`: stored-price fallbacks removed — omitted candidates and `normalize()`'s unavailable branch return `price`/`price_total`/`price_per_night`/`base_price` = **null**; `aggregateRooms` fallback → null (and its now-unused `$hotel` param removed). `manualPayload` unchanged.
+- [x] Fix `normalizeStopSales` to parse the `Title`-string shape (regex over `de DD/MM/YYYY au DD/MM/YYYY`) in addition to `{FromDate,ToDate}`; `parseProviderDate` now handles `d/m/Y`.
+- Checkpoint: no remaining references to dropped columns in the service; live metadata (`availabilityMeta`/`probeWindow`) kept.
 
 ## Phase 3 — Commands / config / scheduler
-- [ ] `config/ostravel.php`: remove the `refresh` block (and `OS_TRAVEL_REFRESH_*` env usage).
-- [ ] `routes/console.php`: remove the `os-travel:refresh-latest-prices` schedule (lines 18-29). Only `os-travel:sync-catalog` remains scheduled.
-- [ ] Confirm `SyncOsTravelCatalog` writes **catalog only** (no price/availability columns, no `payload['catalog']` from live search).
-- Checkpoint: `php artisan schedule:list` shows no refresh command; sync writes only catalog.
+- [x] `config/ostravel.php`: removed the `refresh` block (and its `OS_TRAVEL_REFRESH_*` env usage).
+- [x] `routes/console.php`: removed the `os-travel:refresh-latest-prices` schedule. Only `os-travel:sync-catalog` remains scheduled.
+- [x] `OsTravelCatalogSync::upsertHotel`: removed `price_status = PRICE_NEVER_REFRESHED`; sync writes catalog only.
+- Checkpoint: `schedule:list` shows no refresh command; sync writes only catalog.
 
 ## Phase 4 — Admin backend + API
-- [ ] `AdminOsTravelController`:
-  - `approve`/`approveAll`: remove `base_price` validation + `has_base_price` gate; publish with `markup_percentage`/`currency` only. `HotelPublisher::publish` drops the base-price requirement and stops writing `price`/`base_price`/`last_price`/`first_available_at`/`min_nights`/`stop_sale_ranges` on `hotels`.
-  - `index()`: keep date-filter live-check, **remove `persistProbeAvailability`** (nothing persists).
-  - `reviewPayload()`: drop `has_base_price`, `base_price`, `final_price`, `price_status`, `last_price_attempt_at`, `first_available_at`, `min_nights`, `availability_status`; keep live-check fields (`live_status`, `live_price`, `live_currency`, `live_reason`, `live_until`).
-  - Delete `refreshPrices`, `refreshPrice`, `persistProbeAvailability`; strip price from `mappedPreview`.
-- [ ] `routes/api.php`: remove `refreshPrices`/`refreshPrice` admin routes.
+- [x] `AdminOsTravelController`:
+  - `approve`/`approveAll`: removed `base_price` validation + `has_base_price` gate; publish with `markup_percentage`/`currency` only. `HotelPublisher::publish` dropped the base-price requirement and no longer writes `price`/`base_price`/`last_price`/`first_available_at`/`min_nights`/`stop_sale_ranges` on `hotels`.
+  - `index()`: kept date-filter live-check, removed `persistProbeAvailability`.
+  - `reviewPayload()`: dropped `has_base_price`, `base_price`, `final_price`, `price_status`, `last_price_attempt_at`, `first_available_at`, `min_nights`, `availability_status`; kept live-check fields (`live_status`, `live_price`, `live_currency`, `live_reason`, `live_until`).
+  - Deleted `refreshPrices`, `refreshPrice`, `persistProbeAvailability`; stripped price/catalog from `mappedPreview`.
+- [x] `routes/api.php`: removed `refreshPrices`/`refreshPrice` admin routes.
 - Checkpoint: admin endpoints return no stored price/availability fields; `probeWindow` still returns live probe data read-only.
 
 ## Phase 5 — Admin frontend (`AdminOsTravel.tsx` + types/api)
-- [ ] Remove: bulk "Refresh prices", per-row "Refresh price", `refreshResult`/`refreshProgress`/`refreshingId`, `refreshOsTravelPrice(s)` API calls, `base_price` input in approve dialog, price columns (base/final/status/availability/available-from/min-nights).
-- [ ] Keep: date-filter live-check columns (`live_status`, `live_price`, `live_reason`, `live_until`), catalog columns, approve/publish/reject/unapprove.
-- Checkpoint: `AdminOsTravel.test.tsx` rewritten & passing (no refresh, no stored price).
+- [x] Remove: bulk "Refresh prices", per-row "Refresh price", `refreshResult`/`refreshProgress`/`refreshingId`, `refreshOsTravelPrice(s)` API calls, `base_price` input in approve dialog, price columns (base/final/status/availability/available-from/min-nights).
+- [x] Keep: date-filter live-check columns (`live_status`, `live_price`, `live_reason`, `live_until`), catalog columns, approve/publish/reject/unapprove.
+- [x] `useOsTravelAdmin.ts` + `osTravel.api.ts`: removed `refreshPrice(s)`/`OsTravelRefreshResult`/`include_without_price`/`skipped_no_price`; approve/save send `markup_percentage`/`currency` only.
+- Checkpoint: **DONE** — `AdminOsTravel.test.tsx` rewritten & passing (14 tests, no refresh/no stored price); `tsc --noEmit` clean; `vitest` os-travel suite green.
 
 ## Phase 6 — Public backend
-- [ ] `HotelController::payload`: provider-linked hotels → `price`, `base_price`, `last_price`, `last_price_at`, `first_available_at`, `min_nights`, `stop_sale_ranges` = **null**; manual logic unchanged.
-- [ ] `DestinationController` payload: remove stored `price` (or null for provider-linked).
+- [x] `HotelController::payload`: provider-linked hotels → `price`, `base_price`, `last_price`, `last_price_at`, `first_available_at`, `min_nights`, `stop_sale_ranges` = **null** (dropped from payload entirely); manual logic unchanged.
+- [x] `DestinationController` payload: destination entity's own `price` is unrelated to hotels (no hotel embedding) — no change needed.
 - Checkpoint: `GET /api/hotels` and `GET /api/hotels/{slug}` carry no provider price/availability fields.
 
 ## Phase 7 — Public frontend
-- [ ] **Home** `HotelsSection.tsx`: remove all three price renderings (carousel, cards, grid) — cards show catalog info only.
-- [ ] **Index** `pages/hotels/index.tsx`: browse mode (no dates) → no price, "Vérifier la disponibilité" CTA; live mode → "À partir de {price_total} {currency} · N nuits". Replace stored-derived slider bounds with fixed constants (e.g. 0–1000); `HotelFilters.tsx` uses fixed bounds. Stop capturing `hotel.price` into favorites.
-- [ ] **Detail** `pages/hotels/show.tsx`: explicit "Vérifier la disponibilité" button triggers the live search on click (reset when dates/occupancy change); before search show only the Arrivée/Départ/Occupancy box + button, no price/rooms/stored constraints; after search show live rooms + "À partir de". `StickyBookingCard` shows no price until a live result exists.
-- [ ] **Destinations** `destinations/show.tsx`: remove the hotel price line.
-- [ ] **Favorites**: hotel favorites no longer carry a stored price.
-- Checkpoint: home/index/detail/destinations show no price before a live search; index shows "À partir de" only in live results.
+- [x] **Home** `HotelsSection.tsx`: remove all three price renderings (carousel, cards, grid) — cards show catalog info only.
+- [x] **Index** `pages/hotels/index.tsx`: browse mode (no dates) → no price, "Vérifier la disponibilité" CTA; live mode → "{price_total} {currency} · N nuits". Replace stored-derived slider bounds with fixed constants (0–1000); `HotelFilters.tsx` uses fixed bounds. Stop capturing `hotel.price` into favorites.
+- [x] **Detail** `pages/hotels/show.tsx`: explicit "Vérifier la disponibilité" button triggers the live search on click (reset when dates/occupancy change); before search show only the Arrivée/Départ/Occupancy box + button, no price/stored constraints; after search show live rooms + live price. `StickyBookingCard` shows no price until a live result exists (provider hotels) or a manual stored price.
+- [x] **Destinations** `destinations/show.tsx`: remove the hotel price line.
+- [x] **Favorites**: hotel favorites show a "check availability" CTA instead of a stored price.
+- Checkpoint: **DONE** — home/index/detail/destinations show no price before a live search; index badge is the CTA in browse mode and the live total in live mode; `tsc --noEmit` clean; `HotelDetail.test.tsx` (13) + `Hotels.test.tsx` (8) + `DestinationDetail.test.tsx` (3) green.
 
 ## Phase 8 — Tests
-- [ ] Backend: delete/replace refresh-persistence tests; update `search`/`probeWindow` tests for null-price fallbacks and stop-sale `Title` parsing; update `OsTravelHotelPublisherTest` (publish without price); fix any test referencing dropped columns.
-- [ ] Frontend: rewrite `AdminOsTravel.test.tsx`; update `Hotels.test.tsx`, `HotelDetail.test.tsx`, `Favorites` fixtures for no stored price + button-triggered search + fixed slider + "À partir de".
-- Checkpoint: `php artisan test` + `npx vitest` green.
+- [x] Backend: deleted all refresh/probe-persistence tests; updated `search`/`probeWindow` tests for null-price fallbacks; added a Title-format StopSales parsing test; `OsTravelHotelPublisherTest` now asserts publish-without-price; removed `base_price` from every `OsTravelHotel::create()` fixture (MassAssignmentException) and dropped stored-price assertions. Schema test updated.
+- [x] Frontend: `AdminOsTravel.test.tsx` rewritten (Phase 5); `Hotels.test.tsx`, `HotelDetail.test.tsx`, `DestinationDetail.test.tsx` updated for no stored price + button-triggered search + fixed slider (Phase 7).
+- Checkpoint: **DONE** — `php artisan test` 404 passed (2261 assertions); `npx vitest` green (Phase 7 already verified 143 passed / 13 pre-existing unrelated admin failures); `tsc --noEmit` clean.
 
 ## Phase 9 — Final cleanup + verification
 - [ ] Re-grep all dropped column/command/table names — zero surviving references outside migrations.

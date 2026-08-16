@@ -6,14 +6,11 @@ import {
     getOsTravelHotel,
     getOsTravelReferences,
     listOsTravelHotels,
-    refreshOsTravelPrice,
-    refreshOsTravelPrices,
     rejectOsTravelHotel,
     unapproveOsTravelHotel,
     updateOsTravelHotel,
     type OsTravelListFilters,
     type OsTravelPricePayload,
-    type OsTravelRefreshResult,
     type OsTravelStatus,
 } from '@/api/osTravel.api';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -82,7 +79,6 @@ export function useOsTravelAdmin() {
     const approveAll = async (data: {
         markup_percentage?: number | null;
         currency?: string | null;
-        include_without_price?: boolean;
         include_without_image?: boolean;
         status?: OsTravelStatus | '';
         city?: string;
@@ -109,61 +105,6 @@ export function useOsTravelAdmin() {
         return result.data;
     };
 
-    const refreshPrice = async (id: string) => {
-        const result = await refreshOsTravelPrice(id);
-        invalidateAll();
-        return result.data;
-    };
-
-    /**
-     * Refresh provider prices for the selected hotels synchronously. The ids
-     * are split into chunks of ≤200 and each chunk is sent as its own request,
-     * awaiting the response before the next, so a refresh never blocks a
-     * single HTTP request for the whole catalog. Results are accumulated
-     * across chunks and returned together.
-     */
-    const refreshPrices = async (
-        data?: {
-            ids?: string[];
-            check_in?: string;
-            check_out?: string;
-        },
-        onProgress?: (doneChunks: number, totalChunks: number) => void,
-    ): Promise<OsTravelRefreshResult> => {
-        const ids = data?.ids ?? [];
-        const chunkSize = 200;
-        const chunks: string[][] = [];
-        for (let i = 0; i < ids.length; i += chunkSize) {
-            chunks.push(ids.slice(i, i + chunkSize));
-        }
-        const batches = chunks.length > 0 ? chunks : [[]];
-
-        const totals: OsTravelRefreshResult = {
-            updated: 0,
-            omitted: 0,
-            omitted_ids: [],
-            failed_ids: [],
-        };
-
-        for (let i = 0; i < batches.length; i++) {
-            const batch = batches[i];
-            const result = await refreshOsTravelPrices({
-                ...(batch.length > 0 ? { ids: batch } : {}),
-                ...(data?.check_in ? { check_in: data.check_in } : {}),
-                ...(data?.check_out ? { check_out: data.check_out } : {}),
-            });
-            totals.updated += result.data.updated;
-            totals.omitted += result.data.omitted;
-            totals.omitted_ids.push(...result.data.omitted_ids);
-            totals.failed_ids.push(...result.data.failed_ids);
-            onProgress?.(i + 1, batches.length);
-        }
-
-        invalidateAll();
-
-        return totals;
-    };
-
     const toErrorMessage = (err: unknown, fallbackKey: string): string => {
         const e = err as {
             status?: number;
@@ -177,5 +118,5 @@ export function useOsTravelAdmin() {
         return t(fallbackKey);
     };
 
-    return { savePrice, approve, approveAll, reject, unapprove, refreshPrice, refreshPrices, toErrorMessage };
+    return { savePrice, approve, approveAll, reject, unapprove, toErrorMessage };
 }

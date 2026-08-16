@@ -32,7 +32,7 @@ class OsTravelPublicFlowTest extends TestCase
         Cache::flush();
     }
 
-    private function stagedHotel(int $id, string $name, string $status = OsTravelHotel::PENDING, ?int $basePrice = null): OsTravelHotel
+    private function stagedHotel(int $id, string $name, string $status = OsTravelHotel::PENDING): OsTravelHotel
     {
         $detail = $this->osTravelFixture('hotel_detail');
 
@@ -50,7 +50,6 @@ class OsTravelPublicFlowTest extends TestCase
             'stars' => 4,
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
             'status' => $status,
-            'base_price' => $basePrice,
             'last_synced_at' => now(),
             'detail_fetched_at' => now(),
         ]);
@@ -58,7 +57,7 @@ class OsTravelPublicFlowTest extends TestCase
 
     private function publishedHotel(): array
     {
-        $staged = $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::APPROVED, 250);
+        $staged = $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::APPROVED);
 
         $hotel = Hotel::create([
             'slug' => 'cap-bon-kelibia-beach-hotel-spa',
@@ -66,10 +65,6 @@ class OsTravelPublicFlowTest extends TestCase
             'name' => ['en' => 'Cap Bon Kelibia Beach Hotel & Spa', 'fr' => 'Cap Bon Kelibia Beach Hotel & Spa', 'ar' => 'Cap Bon Kelibia Beach Hotel & Spa'],
             'location' => ['en' => 'Kelibia', 'fr' => 'Kelibia', 'ar' => 'Kelibia'],
             'category' => ['en' => '4 étoiles', 'fr' => '4 étoiles', 'ar' => '4 étoiles'],
-            'price' => 300,
-            'base_price' => 250,
-            'last_price' => 250,
-            'last_price_at' => now(),
             'markup_percentage' => 20,
             'currency' => 'TND',
             'rating' => 4.5,
@@ -93,15 +88,16 @@ class OsTravelPublicFlowTest extends TestCase
     public function test_public_index_returns_only_published_hotel(): void
     {
         $this->publishedHotel();
-        $this->stagedHotel(100, 'Pending Hotel', OsTravelHotel::PENDING, null);
-        $this->stagedHotel(200, 'Orphan Hotel', OsTravelHotel::ORPHANED, null);
+        $this->stagedHotel(100, 'Pending Hotel', OsTravelHotel::PENDING);
+        $this->stagedHotel(200, 'Orphan Hotel', OsTravelHotel::ORPHANED);
 
         $response = $this->getJson('/api/hotels')->assertOk();
 
         $this->assertCount(1, $response->json());
         $this->assertSame('cap-bon-kelibia-beach-hotel-spa', $response->json('0.slug'));
-        $this->assertSame(300, $response->json('0.price'));
-        $this->assertSame(250, $response->json('0.base_price'));
+        // Provider-linked hotels carry no stored price in the browse payload.
+        $this->assertNull($response->json('0.price'));
+        $this->assertNull($response->json('0.base_price'));
         $this->assertSame('20.00', $response->json('0.markup_percentage'));
         $this->assertSame('TND', $response->json('0.currency'));
         $this->assertNotContains('Pending Hotel', array_column($response->json(), 'name'));
@@ -111,13 +107,13 @@ class OsTravelPublicFlowTest extends TestCase
     public function test_public_show_returns_published_and_404_for_pending_or_orphaned(): void
     {
         $this->publishedHotel();
-        $this->stagedHotel(100, 'Pending Hotel', OsTravelHotel::PENDING, null);
-        $this->stagedHotel(200, 'Orphan Hotel', OsTravelHotel::ORPHANED, null);
+        $this->stagedHotel(100, 'Pending Hotel', OsTravelHotel::PENDING);
+        $this->stagedHotel(200, 'Orphan Hotel', OsTravelHotel::ORPHANED);
 
         $this->getJson('/api/hotels/cap-bon-kelibia-beach-hotel-spa')
             ->assertOk()
-            ->assertJsonPath('base_price', 250)
-            ->assertJsonPath('price', 300)
+            ->assertJsonPath('base_price', null)
+            ->assertJsonPath('price', null)
             ->assertJsonPath('markup_percentage', '20.00')
             ->assertJsonPath('currency', 'TND');
 
@@ -128,8 +124,8 @@ class OsTravelPublicFlowTest extends TestCase
     public function test_admin_index_still_lists_pending_published_and_orphaned(): void
     {
         $this->publishedHotel();
-        $this->stagedHotel(100, 'Pending Hotel', OsTravelHotel::PENDING, null);
-        $this->stagedHotel(200, 'Orphan Hotel', OsTravelHotel::ORPHANED, null);
+        $this->stagedHotel(100, 'Pending Hotel', OsTravelHotel::PENDING);
+        $this->stagedHotel(200, 'Orphan Hotel', OsTravelHotel::ORPHANED);
 
         $response = $this->actingAs($this->admin)
             ->getJson('/api/admin/os-travel/hotels')
@@ -143,7 +139,7 @@ class OsTravelPublicFlowTest extends TestCase
         $published = collect($response->json('data'))->firstWhere('status', OsTravelHotel::APPROVED);
         $this->assertSame('178', $published['external_id']);
         $this->assertSame('cap-bon-kelibia-beach-hotel-spa', $published['hotel_slug']);
-        $this->assertSame(250, $published['base_price']);
+        $this->assertArrayNotHasKey('base_price', $published);
         $this->assertNotNull($published['hotel_id']);
     }
 

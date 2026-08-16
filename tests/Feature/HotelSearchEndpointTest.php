@@ -62,7 +62,6 @@ class HotelSearchEndpointTest extends TestCase
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
             'status' => OsTravelHotel::APPROVED,
             'hotel_id' => $hotel->id,
-            'base_price' => $basePrice,
             'last_synced_at' => now(),
         ]);
 
@@ -170,7 +169,9 @@ class HotelSearchEndpointTest extends TestCase
         $this->assertCount(2, $response->json('data'));
         $omitted = collect($response->json('data'))->firstWhere('slug', 'omitted-hotel');
         $this->assertFalse($omitted['available']);
-        $this->assertSame(600, $omitted['price']);
+        // Unavailable/omitted provider hotels carry no live price.
+        $this->assertNull($omitted['price']);
+        $this->assertNull($omitted['base_price']);
         $this->assertSame([], $omitted['rooms']);
     }
 }

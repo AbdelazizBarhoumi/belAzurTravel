@@ -20,83 +20,93 @@ const { mockHotelSearch, mockBookingDialogProps, mockDateRangePickerProps } =
         mockDateRangePickerProps: {} as Record<string, unknown>,
     }));
 
+// The provider normalizes the string `Localization` block into float
+// coordinates before the frontend ever sees them; these are the values the
+// mock exposes so the map embed path can be exercised.
+const mockHotel = vi.hoisted(() => ({
+    data: {
+        id: 'sunset-paradise-resort',
+        name: {
+            en: 'Sunset Paradise Resort',
+            fr: 'Sunset Paradise Resort',
+            ar: 'Sunset Paradise Resort',
+        },
+        city: { en: 'Santorini', fr: 'Santorin', ar: 'سانتوريني' },
+        country: { en: 'Greece', fr: 'Grèce', ar: 'اليونان' },
+        location: {
+            en: 'Santorini, Greece',
+            fr: 'Santorin, Grèce',
+            ar: 'سانتوريني، اليونان',
+        },
+        category_key: 'beach',
+        category: {
+            en: 'Beach Resort',
+            fr: 'Beach Resort',
+            ar: 'Beach Resort',
+        },
+        description: {
+            en: 'Luxury resort',
+            fr: 'Luxury resort',
+            ar: 'Luxury resort',
+        },
+        image: '/main-hotel.jpg',
+        gallery: ['/img1.jpg', '/main-hotel.jpg'],
+        stars: 5,
+        rating: 4.9,
+        reviews: 234,
+        whatsapp: '1234567890',
+        check_in_time: '14h',
+        check_out_time: '12h',
+        address: '123 Beach Road',
+        phone: '+216 71 000 000',
+        email: 'reservations@sunset.example',
+        coordinates: { latitude: 35.907306, longitude: 10.582870 },
+        options: [
+            { id: 1, title: 'Baby bed' },
+            { id: 2, title: 'Airport transfer' },
+        ],
+        boardings: [
+            {
+                id: 4,
+                code: 'DP',
+                name: 'Demi-pension',
+                description: 'Bed & half board',
+            },
+        ],
+        note: 'Séjour avec taxe de séjour à régler sur place.',
+        amenities: [{ en: 'Wi-Fi', fr: 'Wi-Fi', ar: 'Wi-Fi' }],
+        rooms: [
+            {
+                id: 'room-1',
+                name: {
+                    en: 'Deluxe Ocean View',
+                    fr: 'Deluxe Ocean View',
+                    ar: 'Deluxe Ocean View',
+                },
+                description: {
+                    en: 'Room desc',
+                    fr: 'Room desc',
+                    ar: 'Room desc',
+                },
+                pricePerNight: 320,
+                capacity: 2,
+                size: 45,
+                features: null,
+                images: null,
+            },
+        ],
+    },
+}));
+
 vi.mock('@/hooks/usePublicData', () => ({
     useHotelById: (id?: string) => ({
         data: id
             ? {
+                  ...mockHotel.data,
                   id,
-                  name: {
-                      en: 'Sunset Paradise Resort',
-                      fr: 'Sunset Paradise Resort',
-                      ar: 'Sunset Paradise Resort',
-                  },
-                  city: { en: 'Santorini', fr: 'Santorin', ar: 'سانتوريني' },
-                  country: { en: 'Greece', fr: 'Grèce', ar: 'اليونان' },
-                  location: {
-                      en: 'Santorini, Greece',
-                      fr: 'Santorin, Grèce',
-                      ar: 'سانتوريني، اليونان',
-                  },
-                  category_key: 'beach',
-                  category: {
-                      en: 'Beach Resort',
-                      fr: 'Beach Resort',
-                      ar: 'Beach Resort',
-                  },
-                  description: {
-                      en: 'Luxury resort',
-                      fr: 'Luxury resort',
-                      ar: 'Luxury resort',
-                  },
-                  image: '/main-hotel.jpg',
-                  gallery: ['/img1.jpg', '/main-hotel.jpg'],
-                  stars: 5,
-                  rating: 4.9,
-                  reviews: 234,
-                  whatsapp: '1234567890',
-                  check_in_time: '14h',
-                  check_out_time: '12h',
-                  address: '123 Beach Road',
-                  phone: '+216 71 000 000',
-                  email: 'reservations@sunset.example',
-                  options: [
-                      { id: 1, title: 'Baby bed' },
-                      { id: 2, title: 'Airport transfer' },
-                  ],
-                  boardings: [
-                      {
-                          id: 4,
-                          code: 'DP',
-                          name: 'Demi-pension',
-                          description: 'Bed & half board',
-                      },
-                  ],
-                  note: 'Séjour avec taxe de séjour à régler sur place.',
-                  amenities: [{ en: 'Wi-Fi', fr: 'Wi-Fi', ar: 'Wi-Fi' }],
-                  first_available_at: '2026-09-01',
-                  stop_sale_ranges: [
-                      { from: '2026-09-03', to: '2026-09-08' },
-                  ],
-                  rooms: [
-                      {
-                          id: 'room-1',
-                          name: {
-                              en: 'Deluxe Ocean View',
-                              fr: 'Deluxe Ocean View',
-                              ar: 'Deluxe Ocean View',
-                          },
-                          description: {
-                              en: 'Room desc',
-                              fr: 'Room desc',
-                              ar: 'Room desc',
-                          },
-                          pricePerNight: 320,
-                          capacity: 2,
-                          size: 45,
-                          features: null,
-                          images: null,
-                      },
-                  ],
+                  name: mockHotel.data.name,
+                  location: mockHotel.data.location,
+                  description: mockHotel.data.description,
               }
             : null,
         isLoading: false,
@@ -174,9 +184,82 @@ function renderPage(initialEntry: string) {
     );
 }
 
+// The page renders two date pickers (sticky sidebar + rates section); both are
+// driven by the same shared state so clicking either one sets the dates.
+function clickSetDates() {
+    fireEvent.click(screen.getAllByTestId('set-dates')[0]);
+}
+
+// Live availability only runs after an explicit button press, mirroring the
+// real UX where no price/availability is shown until the user asks for it.
+function clickCheckAvailability() {
+    fireEvent.click(
+        screen.getByRole('button', {
+            name: /Vérifier la disponibilité/i,
+        }),
+    );
+}
+
+function setLiveHotel(hotel: unknown) {
+    mockHotelSearch.data = [hotel];
+}
+
+const baseLiveHotel = {
+    slug: 'sunset-paradise-resort',
+    name: {
+        en: 'Sunset Paradise Resort',
+        fr: 'Sunset Paradise Resort',
+        ar: 'Sunset Paradise Resort',
+    },
+    location: {
+        en: 'Santorini, Greece',
+        fr: 'Santorin, Grèce',
+        ar: 'سانتوريني، اليونان',
+    },
+    stars: 5,
+    rating: 4.9,
+    reviews: 234,
+    image: '/main-hotel.jpg',
+    price: 1500,
+    price_total: 1500,
+    price_per_night: 375,
+    base_price: 1300,
+    markup_percentage: '15.38',
+    currency: 'TND',
+    nights: 4,
+    available: true,
+    provider: 'ostravel',
+    rooms: [
+        {
+            id: '9001',
+            name: 'Deluxe Ocean View',
+            boarding: null,
+            boarding_name: 'All inclusive',
+            boarding_id: 2,
+            view: 'Sea view',
+            view_ids: [7],
+            price: 1500,
+            price_total: 1500,
+            price_per_night: 375,
+            base_price: 1300,
+            currency: 'TND',
+            nights: 4,
+            token: 'live-token-1',
+            source: 'OS-TRAVEL-DIRECT',
+            stop_reservation: false,
+            cancellation_policy: [],
+            supplements: [],
+        },
+    ],
+};
+
 describe('HotelDetail', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        mockHotel.data = {
+            ...mockHotel.data,
+            coordinates: { latitude: 35.907306, longitude: 10.582870 },
+        };
         mockHotelSearch.data = [];
         mockHotelSearch.calls = [];
         mockBookingDialogProps.open = false;
@@ -193,7 +276,7 @@ describe('HotelDetail', () => {
         expect(
             screen.getAllByText('Sunset Paradise Resort').length,
         ).toBeGreaterThan(0);
-        expect(screen.getByText('Chambres disponibles')).toBeInTheDocument();
+        expect(screen.getByText('Chambres')).toBeInTheDocument();
         expect(
             screen.getByAltText('Sunset Paradise Resort main image'),
         ).toHaveAttribute('src', '/main-hotel.jpg');
@@ -202,9 +285,13 @@ describe('HotelDetail', () => {
     it('renders the practical info, boardings, options and note sections', async () => {
         renderPage('/hotels/sunset-paradise-resort');
 
-        expect(screen.getByText(/Arrivée: 14h/)).toBeInTheDocument();
-        expect(screen.getByText(/Départ: 12h/)).toBeInTheDocument();
-        expect(screen.getByText('Contact')).toBeInTheDocument();
+        expect(
+            screen.getByText('Informations pratiques'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Arrivée')).toBeInTheDocument();
+        expect(screen.getByText('14h')).toBeInTheDocument();
+        expect(screen.getByText('Départ')).toBeInTheDocument();
+        expect(screen.getByText('12h')).toBeInTheDocument();
         expect(screen.getByText('123 Beach Road')).toBeInTheDocument();
         expect(screen.getByText(/\+216 71 000 000/)).toBeInTheDocument();
         expect(
@@ -226,64 +313,64 @@ describe('HotelDetail', () => {
         expect(screen.queryByText('Wi-Fi')).not.toBeInTheDocument();
     });
 
-    it('re-searches live availability when dates are set and shows stay total, per-night and supplements', async () => {
-        mockHotelSearch.data = [
-            {
-                slug: 'sunset-paradise-resort',
-                name: {
-                    en: 'Sunset Paradise Resort',
-                    fr: 'Sunset Paradise Resort',
-                    ar: 'Sunset Paradise Resort',
-                },
-                location: {
-                    en: 'Santorini, Greece',
-                    fr: 'Santorin, Grèce',
-                    ar: 'سانتوريني، اليونان',
-                },
-                stars: 5,
-                rating: 4.9,
-                reviews: 234,
-                image: '/main-hotel.jpg',
-                price: 1500,
-                price_total: 1500,
-                price_per_night: 375,
-                base_price: 1300,
-                markup_percentage: '15.38',
-                currency: 'TND',
-                nights: 4,
-                available: true,
-                provider: 'ostravel',
-                rooms: [
-                    {
-                        id: '9001',
-                        name: 'Deluxe Ocean View',
-                        boarding: null,
-                        boarding_name: 'All inclusive',
-                        boarding_id: 2,
-                        view: 'Sea view',
-                        view_ids: [7],
-                        price: 1500,
-                        price_total: 1500,
-                        price_per_night: 375,
-                        base_price: 1300,
-                        currency: 'TND',
-                        nights: 4,
-                        token: 'live-token-1',
-                        source: 'OS-TRAVEL-DIRECT',
-                        stop_reservation: false,
-                        cancellation_policy: [],
-                        supplements: [
-                            { Name: 'Insurance', Price: 40, Mandatory: true },
-                        ],
-                    },
-                ],
+    it('renders the map embed from normalized float coordinates', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+
+        const iframe = screen.getByTitle(/Carte de/);
+        expect(iframe).toHaveAttribute(
+            'src',
+            'https://www.google.com/maps?q=35.907306,10.58287&output=embed',
+        );
+        const link = screen
+            .getByRole('link', { name: /Voir sur carte/ })
+            .closest('a');
+        expect(link).toHaveAttribute(
+            'href',
+            'https://www.google.com/maps?q=35.907306,10.58287',
+        );
+    });
+
+    it('falls back to a placeholder and an address map link without coordinates', async () => {
+        mockHotel.data = {
+            ...mockHotel.data,
+            coordinates: null as unknown as {
+                latitude: number;
+                longitude: number;
             },
-        ];
+        };
 
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
+        expect(
+            screen.queryByTitle(/Carte de/),
+        ).not.toBeInTheDocument();
+        const link = screen
+            .getByRole('link', { name: /Voir sur carte/ })
+            .closest('a');
+        expect(link).toHaveAttribute(
+            'href',
+            'https://www.google.com/maps?q=123%20Beach%20Road',
+        );
+    });
+
+    it('re-searches live availability when dates are set and shows stay total, per-night and supplements', async () => {
+        setLiveHotel({
+            ...baseLiveHotel,
+            rooms: [
+                {
+                    ...baseLiveHotel.rooms[0],
+                    supplements: [
+                        { Name: 'Insurance', Price: 40, Mandatory: true },
+                    ],
+                },
+            ],
+        });
+
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres');
+
+        clickSetDates();
+        clickCheckAvailability();
 
         expect(
             (await screen.findAllByText('Prix en direct')).length,
@@ -316,89 +403,47 @@ describe('HotelDetail', () => {
             screen.getAllByText(hasTotal).length,
         ).toBeGreaterThan(0);
         expect(screen.getAllByText(hasPerNight).length).toBeGreaterThan(0);
-        expect(screen.getByText('Insurance')).toBeInTheDocument();
-        expect(screen.getByText(/\+40\s*TND/)).toBeInTheDocument();
+        expect(screen.getAllByText(/Insurance/).length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/\+40\s*TND/).length).toBeGreaterThan(0);
     });
 
     it('shows the unavailable notice when the searched dates have no availability', async () => {
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
+        await screen.findByText('Chambres');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
+        clickSetDates();
+        clickCheckAvailability();
 
         expect(
             await screen.findByText(
                 /aucune disponibilité pour les dates sélectionnées/i,
             ),
         ).toBeInTheDocument();
-        expect(
-            screen.getByText('Sélectionner').closest('button'),
-        ).toBeDisabled();
     });
 
     it('opens the booking dialog with the provider offer context from the live search', async () => {
-        mockHotelSearch.data = [
-            {
-                slug: 'sunset-paradise-resort',
-                name: {
-                    en: 'Sunset Paradise Resort',
-                    fr: 'Sunset Paradise Resort',
-                    ar: 'Sunset Paradise Resort',
+        setLiveHotel({
+            ...baseLiveHotel,
+            rooms: [
+                {
+                    ...baseLiveHotel.rooms[0],
+                    supplements: [
+                        { Name: 'Insurance', Price: 40, Mandatory: true },
+                    ],
                 },
-                location: {
-                    en: 'Santorini, Greece',
-                    fr: 'Santorin, Grèce',
-                    ar: 'سانتوريني، اليونان',
-                },
-                stars: 5,
-                rating: 4.9,
-                reviews: 234,
-                image: '/main-hotel.jpg',
-                price: 1500,
-                price_total: 1500,
-                price_per_night: 375,
-                base_price: 1300,
-                markup_percentage: '15.38',
-                currency: 'TND',
-                nights: 4,
-                available: true,
-                provider: 'ostravel',
-                rooms: [
-                    {
-                        id: '9001',
-                        name: 'Deluxe Ocean View',
-                        boarding: null,
-                        boarding_name: 'All inclusive',
-                        boarding_id: 2,
-                        view: 'Sea view',
-                        view_ids: [7],
-                        price: 1500,
-                        price_total: 1500,
-                        price_per_night: 375,
-                        base_price: 1300,
-                        currency: 'TND',
-                        nights: 4,
-                        token: 'live-token-1',
-                        source: 'OS-TRAVEL-DIRECT',
-                        stop_reservation: false,
-                        cancellation_policy: [],
-                        supplements: [
-                            { Name: 'Insurance', Price: 40, Mandatory: true },
-                        ],
-                    },
-                ],
-            },
-        ];
+            ],
+        });
 
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
+        await screen.findByText('Chambres');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
+        clickSetDates();
+        clickCheckAvailability();
         expect(
             (await screen.findAllByText('Prix en direct')).length,
         ).toBeGreaterThan(0);
 
-        fireEvent.click(screen.getByText('Sélectionner'));
+        fireEvent.click(screen.getByTestId('reserve-rate'));
 
         expect(mockBookingDialogProps.open).toBe(true);
         const provider = mockBookingDialogProps.provider as {
@@ -427,157 +472,68 @@ describe('HotelDetail', () => {
         });
     });
 
-    it('groups live rooms by boarding and defaults to the cheapest boarding tab', async () => {
-        mockHotelSearch.data = [
-            {
-                slug: 'sunset-paradise-resort',
-                name: {
-                    en: 'Sunset Paradise Resort',
-                    fr: 'Sunset Paradise Resort',
-                    ar: 'Sunset Paradise Resort',
+    it('renders every live room with its boarding name in the rates table', async () => {
+        setLiveHotel({
+            ...baseLiveHotel,
+            rooms: [
+                {
+                    ...baseLiveHotel.rooms[0],
+                    id: '9001',
+                    name: 'Standard Double',
+                    boarding_name: 'All inclusive',
+                    boarding_id: 1,
+                    price: 1500,
+                    price_total: 1500,
+                    price_per_night: 375,
                 },
-                location: {
-                    en: 'Santorini, Greece',
-                    fr: 'Santorin, Grèce',
-                    ar: 'سانتوريني، اليونان',
+                {
+                    ...baseLiveHotel.rooms[0],
+                    id: '9002',
+                    name: 'Junior Suite',
+                    boarding_name: 'Demi-pension',
+                    boarding_id: 2,
+                    view: 'Garden view',
+                    view_ids: [3],
+                    price: 900,
+                    price_total: 900,
+                    price_per_night: 225,
+                    token: 'live-token-2',
                 },
-                stars: 5,
-                rating: 4.9,
-                reviews: 234,
-                image: '/main-hotel.jpg',
-                price: 1500,
-                price_total: 1500,
-                price_per_night: 375,
-                base_price: 1300,
-                markup_percentage: '15.38',
-                currency: 'TND',
-                nights: 4,
-                available: true,
-                provider: 'ostravel',
-                rooms: [
-                    {
-                        id: '9001',
-                        name: 'Standard Double',
-                        boarding: null,
-                        boarding_name: 'All inclusive',
-                        boarding_id: 1,
-                        view: 'Sea view',
-                        view_ids: [7],
-                        price: 1500,
-                        price_total: 1500,
-                        price_per_night: 375,
-                        base_price: 1300,
-                        currency: 'TND',
-                        nights: 4,
-                        token: 'live-token-1',
-                        source: 'OS-TRAVEL-DIRECT',
-                        stop_reservation: false,
-                        cancellation_policy: [],
-                        supplements: [],
-                    },
-                    {
-                        id: '9002',
-                        name: 'Junior Suite',
-                        boarding: null,
-                        boarding_name: 'Demi-pension',
-                        boarding_id: 2,
-                        view: 'Garden view',
-                        view_ids: [3],
-                        price: 900,
-                        price_total: 900,
-                        price_per_night: 225,
-                        base_price: 780,
-                        currency: 'TND',
-                        nights: 4,
-                        token: 'live-token-2',
-                        source: 'OS-TRAVEL-DIRECT',
-                        stop_reservation: false,
-                        cancellation_policy: [],
-                        supplements: [],
-                    },
-                ],
-            },
-        ];
+            ],
+        });
 
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
+        await screen.findByText('Chambres');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
-        await screen.findByRole('button', { name: 'Demi-pension' });
-
-        // Default tab is the cheapest boarding (Demi-pension at 900 < 1500).
-        expect(screen.getByText('Junior Suite')).toBeInTheDocument();
-        expect(screen.queryByText('Standard Double')).not.toBeInTheDocument();
-
-        fireEvent.click(screen.getByRole('button', { name: 'All inclusive' }));
+        clickSetDates();
+        clickCheckAvailability();
+        await screen.findByText('Junior Suite');
 
         expect(screen.getByText('Standard Double')).toBeInTheDocument();
-        expect(screen.queryByText('Junior Suite')).not.toBeInTheDocument();
+        expect(screen.getByText('Junior Suite')).toBeInTheDocument();
+        expect(screen.getByText('All inclusive')).toBeInTheDocument();
+        expect(
+            screen.getAllByText('Demi-pension').length,
+        ).toBeGreaterThan(0);
     });
 
     it('renders promo, free-child and recommended badges from the live result', async () => {
-        mockHotelSearch.data = [
-            {
-                slug: 'sunset-paradise-resort',
-                name: {
-                    en: 'Sunset Paradise Resort',
-                    fr: 'Sunset Paradise Resort',
-                    ar: 'Sunset Paradise Resort',
-                },
-                location: {
-                    en: 'Santorini, Greece',
-                    fr: 'Santorin, Grèce',
-                    ar: 'سانتوريني، اليونان',
-                },
-                stars: 5,
-                rating: 4.9,
-                reviews: 234,
-                image: '/main-hotel.jpg',
-                price: 1500,
-                price_total: 1500,
-                price_per_night: 375,
-                base_price: 1300,
-                markup_percentage: '15.38',
-                currency: 'TND',
-                nights: 4,
-                available: true,
-                provider: 'ostravel',
-                promotion: {
-                    title: 'Early booking',
-                    description: '-29% on select stays',
-                    rate: '29.00',
-                },
-                free_child: [5],
-                recommended: true,
-                rooms: [
-                    {
-                        id: '9001',
-                        name: 'Deluxe Ocean View',
-                        boarding: null,
-                        boarding_name: 'All inclusive',
-                        boarding_id: 2,
-                        view: 'Sea view',
-                        view_ids: [7],
-                        price: 1500,
-                        price_total: 1500,
-                        price_per_night: 375,
-                        base_price: 1300,
-                        currency: 'TND',
-                        nights: 4,
-                        token: 'live-token-1',
-                        source: 'OS-TRAVEL-DIRECT',
-                        stop_reservation: false,
-                        cancellation_policy: [],
-                        supplements: [],
-                    },
-                ],
+        setLiveHotel({
+            ...baseLiveHotel,
+            promotion: {
+                title: 'Early booking',
+                description: '-29% on select stays',
+                rate: '29.00',
             },
-        ];
+            free_child: [5],
+            recommended: true,
+        });
 
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
+        await screen.findByText('Chambres');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
+        clickSetDates();
+        clickCheckAvailability();
         await screen.findByText('Promo Early booking');
 
         expect(screen.getByText('Enfant gratuit')).toBeInTheDocument();
@@ -585,63 +541,23 @@ describe('HotelDetail', () => {
     });
 
     it('renders non-refundable and free-cancellation badges on live rooms', async () => {
-        mockHotelSearch.data = [
-            {
-                slug: 'sunset-paradise-resort',
-                name: {
-                    en: 'Sunset Paradise Resort',
-                    fr: 'Sunset Paradise Resort',
-                    ar: 'Sunset Paradise Resort',
+        setLiveHotel({
+            ...baseLiveHotel,
+            rooms: [
+                {
+                    ...baseLiveHotel.rooms[0],
+                    name: 'Refundable Suite',
+                    not_refundable: true,
+                    cancellation_deadline: '2026-09-05',
                 },
-                location: {
-                    en: 'Santorini, Greece',
-                    fr: 'Santorin, Grèce',
-                    ar: 'سانتوريني، اليونان',
-                },
-                stars: 5,
-                rating: 4.9,
-                reviews: 234,
-                image: '/main-hotel.jpg',
-                price: 1500,
-                price_total: 1500,
-                price_per_night: 375,
-                base_price: 1300,
-                markup_percentage: '15.38',
-                currency: 'TND',
-                nights: 4,
-                available: true,
-                provider: 'ostravel',
-                rooms: [
-                    {
-                        id: '9001',
-                        name: 'Refundable Suite',
-                        boarding: null,
-                        boarding_name: 'All inclusive',
-                        boarding_id: 2,
-                        view: 'Sea view',
-                        view_ids: [7],
-                        price: 1500,
-                        price_total: 1500,
-                        price_per_night: 375,
-                        base_price: 1300,
-                        currency: 'TND',
-                        nights: 4,
-                        token: 'live-token-1',
-                        source: 'OS-TRAVEL-DIRECT',
-                        stop_reservation: false,
-                        cancellation_policy: [],
-                        supplements: [],
-                        not_refundable: true,
-                        cancellation_deadline: '2026-09-05',
-                    },
-                ],
-            },
-        ];
+            ],
+        });
 
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
+        await screen.findByText('Chambres');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
+        clickSetDates();
+        clickCheckAvailability();
         await screen.findByText('Non remboursable');
 
         expect(
@@ -650,62 +566,22 @@ describe('HotelDetail', () => {
     });
 
     it('falls back to the provider room photo when no static image exists', async () => {
-        mockHotelSearch.data = [
-            {
-                slug: 'sunset-paradise-resort',
-                name: {
-                    en: 'Sunset Paradise Resort',
-                    fr: 'Sunset Paradise Resort',
-                    ar: 'Sunset Paradise Resort',
+        setLiveHotel({
+            ...baseLiveHotel,
+            rooms: [
+                {
+                    ...baseLiveHotel.rooms[0],
+                    name: 'Photo Suite',
+                    image: '/proxy/photo-suite.jpg',
                 },
-                location: {
-                    en: 'Santorini, Greece',
-                    fr: 'Santorin, Grèce',
-                    ar: 'سانتوريني، اليونان',
-                },
-                stars: 5,
-                rating: 4.9,
-                reviews: 234,
-                image: '/main-hotel.jpg',
-                price: 1500,
-                price_total: 1500,
-                price_per_night: 375,
-                base_price: 1300,
-                markup_percentage: '15.38',
-                currency: 'TND',
-                nights: 4,
-                available: true,
-                provider: 'ostravel',
-                rooms: [
-                    {
-                        id: '9001',
-                        name: 'Photo Suite',
-                        boarding: null,
-                        boarding_name: 'All inclusive',
-                        boarding_id: 2,
-                        view: 'Sea view',
-                        view_ids: [7],
-                        price: 1500,
-                        price_total: 1500,
-                        price_per_night: 375,
-                        base_price: 1300,
-                        currency: 'TND',
-                        nights: 4,
-                        token: 'live-token-1',
-                        source: 'OS-TRAVEL-DIRECT',
-                        stop_reservation: false,
-                        cancellation_policy: [],
-                        supplements: [],
-                        image: '/proxy/photo-suite.jpg',
-                    },
-                ],
-            },
-        ];
+            ],
+        });
 
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
+        await screen.findByText('Chambres');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
+        clickSetDates();
+        clickCheckAvailability();
         await screen.findByAltText('Photo Suite');
 
         expect(screen.getByAltText('Photo Suite')).toHaveAttribute(
@@ -715,96 +591,88 @@ describe('HotelDetail', () => {
     });
 
     it('uses the live hotel currency on room prices', async () => {
-        mockHotelSearch.data = [
-            {
-                slug: 'sunset-paradise-resort',
-                name: {
-                    en: 'Sunset Paradise Resort',
-                    fr: 'Sunset Paradise Resort',
-                    ar: 'Sunset Paradise Resort',
-                },
-                location: {
-                    en: 'Santorini, Greece',
-                    fr: 'Santorin, Grèce',
-                    ar: 'سانتوريني، اليونان',
-                },
-                stars: 5,
-                rating: 4.9,
-                reviews: 234,
-                image: '/main-hotel.jpg',
-                price: 1500,
-                price_total: 1500,
-                price_per_night: 375,
-                base_price: 1300,
-                markup_percentage: '15.38',
-                currency: 'EUR',
-                nights: 4,
-                available: true,
-                provider: 'ostravel',
-                rooms: [
-                    {
-                        id: '9001',
-                        name: 'Deluxe Ocean View',
-                        boarding: null,
-                        boarding_name: 'All inclusive',
-                        boarding_id: 2,
-                        view: 'Sea view',
-                        view_ids: [7],
-                        price: 1500,
-                        price_total: 1500,
-                        price_per_night: 375,
-                        base_price: 1300,
-                        currency: 'EUR',
-                        nights: 4,
-                        token: 'live-token-1',
-                        source: 'OS-TRAVEL-DIRECT',
-                        stop_reservation: false,
-                        cancellation_policy: [],
-                        supplements: [],
-                    },
-                ],
-            },
-        ];
+        setLiveHotel({
+            ...baseLiveHotel,
+            currency: 'EUR',
+            rooms: [
+                { ...baseLiveHotel.rooms[0], currency: 'EUR' },
+            ],
+        });
 
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
+        await screen.findByText('Chambres');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
+        clickSetDates();
+        clickCheckAvailability();
         await screen.findAllByText(/1,500\s*EUR/);
 
         expect(screen.getAllByText(/1,500\s*EUR/).length).toBeGreaterThan(0);
         expect(screen.queryByText(/1,500\s*TND/)).not.toBeInTheDocument();
     });
 
-    it('passes stop-sale ranges to the date picker to disable unavailable days', async () => {
-        renderPage('/hotels/sunset-paradise-resort');
+    it('sends one room per selected occupancy when rooms count is increased', async () => {
+        setLiveHotel(baseLiveHotel);
 
-        expect(
-            (mockDateRangePickerProps.disabledRanges as unknown[] | undefined)
-                ?.length,
-        ).toBe(1);
-        expect(mockDateRangePickerProps.disabledRanges).toEqual([
-            {
-                from: new Date('2026-09-03T00:00:00'),
-                to: new Date('2026-09-08T00:00:00'),
-            },
-        ]);
-        expect(mockDateRangePickerProps.fromDate).toEqual(
-            new Date('2026-09-01T00:00:00'),
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres');
+
+        clickSetDates();
+        // Open the sidebar occupancy picker and increase rooms to 2.
+        fireEvent.click(
+            screen.getAllByLabelText(/Occupation/)[0],
         );
+        fireEvent.click(screen.getByLabelText('increase rooms'));
+        fireEvent.click(
+            screen.getAllByLabelText(/Occupation/)[0],
+        );
+
+        clickCheckAvailability();
+
+        const searchCall = mockHotelSearch.calls.find(
+            (query) =>
+                typeof query === 'object' &&
+                query !== null &&
+                (query as { check_in?: string }).check_in === '2026-09-01',
+        ) as
+            | {
+                  rooms?: Array<{ adults: number; children: number[] }>;
+              }
+            | undefined;
+
+        expect(searchCall).toBeDefined();
+        expect(searchCall?.rooms).toEqual([
+            { adults: 2, children: [] },
+            { adults: 2, children: [] },
+        ]);
     });
 
-    it('shows the unavailable sticky state when the searched dates have no availability', async () => {
+    it('does not pass stored availability constraints to the date picker', async () => {
         renderPage('/hotels/sunset-paradise-resort');
-        await screen.findByText('Chambres disponibles');
 
-        fireEvent.click(screen.getByTestId('set-dates'));
+        // Stored availability is no longer part of the catalog: the date
+        // picker must not restrict days from the provider's stop-sale or
+        // first-available metadata.
+        expect(mockDateRangePickerProps.disabledRanges).toBeUndefined();
+        expect(mockDateRangePickerProps.fromDate).toBeUndefined();
+        expect(
+            await screen.findByRole('button', {
+                name: /Vérifier la disponibilité/i,
+            }),
+        ).toBeInTheDocument();
+    });
+
+    it('shows the unavailable notice and hides prices when the searched dates have no availability', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres');
+
+        clickSetDates();
+        clickCheckAvailability();
 
         expect(
-            await screen.findAllByText(/Indisponible pour ces dates/),
-        ).toHaveLength(2);
-        expect(
-            screen.queryByText(/1,500\s*TND/),
-        ).not.toBeInTheDocument();
+            await screen.findByText(
+                /aucune disponibilité pour les dates sélectionnées/i,
+            ),
+        ).toBeInTheDocument();
+        expect(screen.queryByText(/1,500\s*TND/)).not.toBeInTheDocument();
     });
 });

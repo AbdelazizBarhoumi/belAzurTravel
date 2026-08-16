@@ -14,15 +14,10 @@ export interface HotelItem {
     category_key?: string;
     category?: LocalizedText;
     price: number | null;
-    base_price?: number | null;
     markup_percentage?: string | number;
     currency?: string;
     source?: 'ostravel' | 'manual';
     provider?: 'ostravel' | 'manual';
-    last_price?: number | null;
-    last_price_at?: string | null;
-    first_available_at?: string | null;
-    min_nights?: number | null;
     rating: number;
     stars: number;
     reviews: number;

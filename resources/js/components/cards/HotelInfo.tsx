@@ -1,5 +1,19 @@
 import { Icon as IconifyIcon } from '@iconify/react';
-import type { Wifi } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+    CheckCircle2,
+    Info,
+    LogIn,
+    LogOut,
+    Mail,
+    MapPin,
+    Phone,
+    Sparkles,
+    Tag,
+    UtensilsCrossed,
+    type Wifi,
+} from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Amenity {
@@ -31,6 +45,76 @@ interface HotelInfoProps {
     note?: string;
 }
 
+// Shared scroll-reveal, matching the fade/slide used for the header and
+// live-rate results on the hotel detail page.
+const fadeInProps = {
+    initial: { opacity: 0, y: 16 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: '-60px' },
+    transition: { duration: 0.4 },
+} as const;
+
+// Underlined serif heading, matching "Services & équipements",
+// "Dates & Tarifs", etc. on the parent page.
+function SectionHeading({ children }: { children: ReactNode }) {
+    return (
+        <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
+            {children}
+        </h2>
+    );
+}
+
+// Icon + label/value tile, matching the amenity-card pattern from
+// HotelDetail's "Services & équipements" grid.
+function InfoTile({
+    icon: Icon,
+    label,
+    value,
+}: {
+    icon: typeof Wifi;
+    label: string;
+    value: string;
+}) {
+    return (
+        <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <Icon className="h-4 w-4 text-primary" />
+            </div>
+            <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="truncate text-sm font-semibold text-foreground">
+                    {value}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+// Rounded pill used for options/facilities — consistent with the
+// promo/recommended badges on the hotel header.
+function InfoPill({
+    icon: Icon,
+    children,
+    tone = 'card',
+}: {
+    icon: typeof Wifi;
+    children: ReactNode;
+    tone?: 'card' | 'muted';
+}) {
+    return (
+        <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-foreground ${
+                tone === 'card'
+                    ? 'border border-border bg-card'
+                    : 'bg-muted'
+            }`}
+        >
+            <Icon className="h-3.5 w-3.5 text-primary" />
+            {children}
+        </span>
+    );
+}
+
 export function HotelInfo({
     description,
     category: _category,
@@ -50,204 +134,244 @@ export function HotelInfo({
 
     const hasTimes = Boolean(checkIn || checkOut);
     const hasContact = Boolean(address || phone || email);
+    const hasPracticalInfo = hasTimes || hasContact || Boolean(note);
+
+    const facilityGroups = (facilities ?? []).reduce<Record<string, string[]>>(
+        (acc, facility) => {
+            const key = facility.category?.trim() ?? '';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(facility.title);
+            return acc;
+        },
+        {},
+    );
+    const facilityGroupEntries = Object.entries(facilityGroups);
 
     return (
-        <div className="mb-12 space-y-8">
+        <div className="space-y-10">
             {/* Description */}
             {description && (
-                <div>
-                    <h2 className="mb-4 mt-8 font-serif text-2xl font-bold text-foreground">
+                <motion.div {...fadeInProps}>
+                    <SectionHeading>
                         {t('hotelDetail.aboutHotel')}
-                    </h2>
-                    <div className="whitespace-pre-line text-muted-foreground">
+                    </SectionHeading>
+                    <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
                         {description}
-                    </div>
-                </div>
+                    </p>
+                </motion.div>
             )}
 
-            {/* Practical info: times + contact */}
-            {(hasTimes || hasContact) && (
-                <div>
-                    <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
+            {/* Practical information */}
+            {hasPracticalInfo && (
+                <motion.div {...fadeInProps}>
+                    <SectionHeading>
                         {t('hotelDetail.practicalInfo')}
-                    </h2>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {hasTimes && (
-                            <div className="rounded-lg border border-border bg-card p-4">
-                                <p className="mb-2 text-sm font-semibold text-foreground">
-                                    {t('hotelDetail.checkInOut')}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                    {checkIn && `${t('hotelDetail.checkIn')}: ${checkIn}`}
-                                    {checkIn && checkOut ? ' · ' : ''}
-                                    {checkOut && `${t('hotelDetail.checkOut')}: ${checkOut}`}
-                                </p>
-                            </div>
+                    </SectionHeading>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                        {checkIn && (
+                            <InfoTile
+                                icon={LogIn}
+                                label={t('hotelDetail.checkIn')}
+                                value={checkIn}
+                            />
                         )}
-                        {hasContact && (
-                            <div className="rounded-lg border border-border bg-card p-4">
-                                <p className="mb-2 text-sm font-semibold text-foreground">
-                                    {t('hotelDetail.contact')}
-                                </p>
-                                <div className="space-y-1 text-sm text-muted-foreground">
-                                    {address && <p>{address}</p>}
-                                    {phone && <p>{t('hotelDetail.phone')}: {phone}</p>}
-                                    {email && <p>{t('hotelDetail.email')}: {email}</p>}
-                                </div>
-                            </div>
+                        {checkOut && (
+                            <InfoTile
+                                icon={LogOut}
+                                label={t('hotelDetail.checkOut')}
+                                value={checkOut}
+                            />
+                        )}
+                        {address && (
+                            <InfoTile
+                                icon={MapPin}
+                                label={t('hotelDetail.locationTitle')}
+                                value={address}
+                            />
+                        )}
+                        {phone && (
+                            <InfoTile
+                                icon={Phone}
+                                label={t('hotelDetail.phone')}
+                                value={phone}
+                            />
+                        )}
+                        {email && (
+                            <InfoTile
+                                icon={Mail}
+                                label={t('hotelDetail.email')}
+                                value={email}
+                            />
                         )}
                     </div>
-                </div>
+                    {note && (
+                        <div className="mt-3 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                            <Info className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                            <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">
+                                {note}
+                            </p>
+                        </div>
+                    )}
+                </motion.div>
             )}
 
-            {/* Boarding options */}
+            {/* Meal plans */}
             {boardings && boardings.length > 0 && (
-                <div>
-                    <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
+                <motion.div {...fadeInProps}>
+                    <SectionHeading>
                         {t('hotelDetail.boardings')}
-                    </h2>
-                    <div className="flex flex-wrap gap-3">
+                    </SectionHeading>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {boardings.map((boarding) => (
                             <div
                                 key={boarding.id}
-                                className="rounded-lg border border-border bg-card p-4"
+                                className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4"
                             >
-                                <p className="text-sm font-semibold text-foreground">
-                                    {boarding.name || boarding.code}
-                                </p>
-                                {boarding.description && (
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        {boarding.description}
-                                    </p>
-                                )}
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                                    <UtensilsCrossed className="h-4 w-4 text-primary" />
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {boarding.name || boarding.code}
+                                        </p>
+                                        {boarding.code && boarding.name && (
+                                            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                                {boarding.code}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {boarding.description && (
+                                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                                            {boarding.description}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
-                </div>
+                </motion.div>
             )}
 
-            {/* Special request options */}
+            {/* Available options */}
             {options && options.length > 0 && (
-                <div>
-                    <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
-                        {t('hotelDetail.options')}
-                    </h2>
+                <motion.div {...fadeInProps}>
+                    <SectionHeading>{t('hotelDetail.options')}</SectionHeading>
                     <div className="flex flex-wrap gap-2">
                         {options.map((option) => (
-                            <span
-                                key={option.id}
-                                className="rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground"
-                            >
+                            <InfoPill key={option.id} icon={CheckCircle2}>
                                 {option.title}
-                            </span>
+                            </InfoPill>
                         ))}
                     </div>
-                </div>
+                </motion.div>
             )}
 
             {/* Facilities */}
-            {facilities && facilities.length > 0 && (
-                <div>
-                    <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
+            {facilityGroupEntries.length > 0 && (
+                <motion.div {...fadeInProps}>
+                    <SectionHeading>
                         {t('hotelDetail.facilities')}
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                        {facilities.map((facility, index) => (
-                            <span
-                                key={`${facility.title}-${index}`}
-                                className="rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground"
-                                title={facility.category || undefined}
-                            >
-                                {facility.title}
-                            </span>
+                    </SectionHeading>
+                    <div className="space-y-4 rounded-3xl border border-border bg-card p-5">
+                        {facilityGroupEntries.map(([category, titles]) => (
+                            <div key={category || 'uncategorized'}>
+                                {category && (
+                                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                        {category}
+                                    </p>
+                                )}
+                                <div className="flex flex-wrap gap-2">
+                                    {titles.map((title, index) => (
+                                        <InfoPill
+                                            key={`${title}-${index}`}
+                                            icon={Sparkles}
+                                            tone="muted"
+                                        >
+                                            {title}
+                                        </InfoPill>
+                                    ))}
+                                </div>
+                            </div>
                         ))}
                     </div>
-                </div>
+                </motion.div>
             )}
 
-            {/* Provider amenity tags */}
+            {/* Services & tags */}
             {amenityTags && amenityTags.length > 0 && (
-                <div>
-                    <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
-                        {t('hotelDetail.tags')}
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                <motion.div {...fadeInProps}>
+                    <SectionHeading>{t('hotelDetail.tags')}</SectionHeading>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                         {amenityTags.map((tag) => (
                             <div
                                 key={tag.id}
-                                className="flex items-center gap-3 rounded-lg border border-border bg-card p-4"
+                                className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
                             >
                                 {tag.image ? (
                                     <img
                                         src={tag.image}
                                         alt=""
                                         loading="lazy"
-                                        className="h-9 w-9 flex-shrink-0 rounded-lg object-cover"
+                                        className="h-9 w-9 shrink-0 rounded-lg object-cover"
                                         onError={(event) => {
                                             event.currentTarget.style.display =
                                                 'none';
                                         }}
                                     />
                                 ) : (
-                                    <div className="h-9 w-9 flex-shrink-0 rounded-lg bg-primary/10" />
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                                        <Tag className="h-4 w-4 text-primary" />
+                                    </div>
                                 )}
-                                <span className="text-sm font-medium">
+                                <span className="text-sm font-medium text-foreground">
                                     {tag.title}
                                 </span>
                             </div>
                         ))}
                     </div>
-                </div>
+                </motion.div>
             )}
 
-            {/* Amenities */}
+            {/* Amenities (custom icon/svg feed) */}
             {amenities.length > 0 && (
-                <div>
-                    <h2 className="mb-4 font-serif text-2xl font-bold text-foreground">
+                <motion.div {...fadeInProps}>
+                    <SectionHeading>
                         {t('hotelDetail.amenities')}
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                    </SectionHeading>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                         {amenities.map((amenity) => {
                             const Icon = amenity.icon;
                             return (
                                 <div
                                     key={amenity.id}
-                                    className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted"
+                                    className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                                 >
-                                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                                         {amenity.iconifyName ? (
                                             <IconifyIcon
                                                 icon={amenity.iconifyName}
-                                                className="h-5 w-5 flex-shrink-0 text-primary"
+                                                className="h-4 w-4 text-primary"
                                             />
                                         ) : amenity.customSvg ? (
                                             <span
-                                                className="h-5 w-5 flex-shrink-0 [&>svg]:h-5 [&>svg]:w-5"
+                                                className="h-4 w-4 [&>svg]:h-4 [&>svg]:w-4"
                                                 dangerouslySetInnerHTML={{
                                                     __html: amenity.customSvg,
                                                 }}
                                             />
                                         ) : Icon ? (
-                                            <Icon className="h-5 w-5 flex-shrink-0 text-primary" />
+                                            <Icon className="h-4 w-4 text-primary" />
                                         ) : null}
                                     </div>
-                                    <span className="text-sm font-medium">
+                                    <span className="text-sm text-foreground">
                                         {amenity.name}
                                     </span>
                                 </div>
                             );
                         })}
                     </div>
-                </div>
-            )}
-
-            {/* Note */}
-            {note && (
-                <div className="rounded-2xl border border-border bg-muted/40 p-4">
-                    <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
-                        {note}
-                    </p>
-                </div>
+                </motion.div>
             )}
         </div>
     );

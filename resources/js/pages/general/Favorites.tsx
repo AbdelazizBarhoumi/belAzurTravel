@@ -62,7 +62,11 @@ const Favorites = () => {
                                     </p>
                                 )}
                                 <div className="mt-4 flex items-center justify-between">
-                                    {f.price ? (
+                                    {f.type === 'hotel' ? (
+                                        <span className="text-xs font-medium text-primary">
+                                            {t('hotelDetail.checkAvailability')}
+                                        </span>
+                                    ) : f.price ? (
                                         <span className="font-bold text-primary">
                                             ${f.price.toLocaleString()}
                                         </span>

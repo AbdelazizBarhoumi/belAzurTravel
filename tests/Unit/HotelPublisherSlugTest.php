@@ -27,7 +27,7 @@ class HotelPublisherSlugTest extends TestCase
         ]);
     }
 
-    private function stagedHotel(int $id, string $name, ?int $basePrice = 100): OsTravelHotel
+    private function stagedHotel(int $id, string $name): OsTravelHotel
     {
         $detail = $this->osTravelFixture('hotel_detail');
 
@@ -45,7 +45,6 @@ class HotelPublisherSlugTest extends TestCase
             'stars' => 4,
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
             'status' => OsTravelHotel::PENDING,
-            'base_price' => $basePrice,
             'last_synced_at' => now(),
         ]);
     }

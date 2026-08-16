@@ -10,7 +10,6 @@ import {
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as osTravelApi from '@/api/osTravel.api';
-import type { OsTravelCatalogRoom } from '@/api/osTravel.api';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import AdminOsTravel from '@/pages/admin/AdminOsTravel';
@@ -40,8 +39,6 @@ vi.mock('@/api/osTravel.api', () => ({
     approveAllOsTravelHotels: vi.fn(),
     rejectOsTravelHotel: vi.fn(),
     unapproveOsTravelHotel: vi.fn(),
-    refreshOsTravelPrice: vi.fn(),
-    refreshOsTravelPrices: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -62,14 +59,6 @@ const makeRow = (
     stars: 5,
     image: 'http://cdn.test/h.jpg',
     status: 'pending',
-    has_base_price: true,
-    base_price: 200,
-    final_price: 240,
-    price_status: 'has_price',
-    last_price_attempt_at: null,
-    first_available_at: null,
-    min_nights: null,
-    availability_status: null,
     markup_percentage: '20.00',
     currency: 'TND',
     hotel_id: null,
@@ -105,32 +94,9 @@ const makeDetail = (
         address: '1 Avenue Habib Bourguiba',
         phone: '+216 000 000',
         email: 'hotel@example.com',
-        price: row.base_price !== null ? 240 : null,
-        base_price: row.base_price,
         markup_percentage: 20,
         currency: row.currency ?? 'TND',
         code: `ostravel-${row.external_id}`,
-        rooms_catalog: [
-            {
-                name: 'Double Standard',
-                photo: 'http://cdn.test/room.jpg',
-                description: 'A cosy double room.',
-                features: ['Sea view', 'Balcony'],
-                min_stay: 2,
-                boarding_id: 1,
-            },
-        ],
-        boardings: [
-            { id: 1, code: 'BB', name: 'Bed & Breakfast' },
-            { id: 2, code: 'HB', name: 'Half Board' },
-        ],
-        promotion: {
-            title: 'Early booking',
-            description: 'Book early and save.',
-            rate: '-15%',
-        },
-        free_child: [0, 2],
-        recommended: true,
     },
 });
 
@@ -197,30 +163,14 @@ describe('AdminOsTravel page', () => {
             data: {
                 approved: ['1'],
                 failed: [],
-                skipped_no_price: [],
                 skipped_no_image: [],
                 approved_count: 1,
                 failed_count: 0,
-                skipped_no_price_count: 0,
                 skipped_no_image_count: 0,
             },
         } as never);
         vi.mocked(osTravelApi.rejectOsTravelHotel).mockResolvedValue({
             data: makeRow({ status: 'rejected' }),
-        } as never);
-        vi.mocked(osTravelApi.refreshOsTravelPrice).mockResolvedValue({
-            data: {
-                ...makeRow(),
-                refresh: { updated: 1, omitted: 0 },
-            },
-        } as never);
-        vi.mocked(osTravelApi.refreshOsTravelPrices).mockResolvedValue({
-            data: {
-                updated: 1,
-                omitted: 0,
-                omitted_ids: [],
-                failed_ids: [],
-            },
         } as never);
         vi.mocked(osTravelApi.getOsTravelReferences).mockResolvedValue({
             data: {
@@ -244,17 +194,16 @@ describe('AdminOsTravel page', () => {
         delete mockDateRangePickerProps.onChange;
     });
 
-    it('renders pending list with the missing-price reason', async () => {
+    it('renders the pending list with hotel names', async () => {
         vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValueOnce({
             data: [
                 makeRow(),
                 makeRow({
                     id: '2',
                     external_id: '102',
-                    name: 'Hotel No Price',
-                    has_base_price: false,
-                    base_price: null,
-                    price_status: 'no_availability',
+                    name: 'Hotel No Live Price',
+                    live_price: null,
+                    live_status: null,
                 }),
             ],
         } as never);
@@ -262,10 +211,9 @@ describe('AdminOsTravel page', () => {
         renderAdminOsTravel();
 
         expect(await screen.findByText('Hotel Test')).toBeInTheDocument();
-        expect(await screen.findByText('Hotel No Price')).toBeInTheDocument();
         expect(
-            screen.getAllByText('No availability at refresh').length,
-        ).toBeGreaterThan(0);
+            await screen.findByText('Hotel No Live Price'),
+        ).toBeInTheDocument();
         expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
     });
 
@@ -287,7 +235,7 @@ describe('AdminOsTravel page', () => {
         ).toBeInTheDocument();
     });
 
-    it('renders promo, free-child, recommended and the rooms list in the preview', async () => {
+    it('renders the description and boarding in the preview', async () => {
         vi.mocked(osTravelApi.getOsTravelHotel).mockResolvedValueOnce({
             data: makeDetail(makeRow()),
         } as never);
@@ -298,42 +246,13 @@ describe('AdminOsTravel page', () => {
 
         fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
 
-        expect(await screen.findByText('Double Standard')).toBeInTheDocument();
-        expect(screen.getByText(/Early booking/)).toBeInTheDocument();
-        expect(screen.getAllByText('Free child').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Recommended').length).toBeGreaterThan(0);
         expect(
-            screen.getByText('Bed & Breakfast · Min. stay 2 nights'),
+            await screen.findByText('A lovely resort by the sea.'),
         ).toBeInTheDocument();
+        expect(screen.getByText('Half Board, All Inclusive')).toBeInTheDocument();
     });
 
-    it('shows a placeholder when a catalog room has no photo', async () => {
-        const detail = makeDetail(makeRow());
-        detail.mapped_preview = {
-            ...detail.mapped_preview,
-            rooms_catalog: detail.mapped_preview.rooms_catalog.map(
-                (r): OsTravelCatalogRoom => ({
-                    ...r,
-                    photo: null,
-                }),
-            ),
-        };
-        vi.mocked(osTravelApi.getOsTravelHotel).mockResolvedValueOnce({
-            data: detail,
-        } as never);
-
-        renderAdminOsTravel();
-
-        await screen.findByText('Hotel Test');
-        fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
-
-        expect(
-            await screen.findByText('Double Standard'),
-        ).toBeInTheDocument();
-        expect(screen.getByText('Rooms')).toBeInTheDocument();
-    });
-
-    it('opens the preview dialog and saves the price without approving', async () => {
+    it('opens the preview dialog and saves markup + currency without approving', async () => {
         vi.mocked(osTravelApi.getOsTravelHotel).mockResolvedValueOnce({
             data: makeDetail(makeRow()),
         } as never);
@@ -350,34 +269,23 @@ describe('AdminOsTravel page', () => {
         expect(
             await screen.findByText('A lovely resort by the sea.'),
         ).toBeInTheDocument();
-        expect(
-            screen.getByText('Half Board, All Inclusive'),
-        ).toBeInTheDocument();
-        expect(
-            screen.getAllByText('Final price').length,
-        ).toBeGreaterThan(0);
 
-        const basePriceInput = screen.getByLabelText('Base price');
-        fireEvent.change(basePriceInput, { target: { value: '250' } });
-
-        expect(screen.getByText('300 TND')).toBeInTheDocument();
+        const markupInput = screen.getByLabelText('Markup (%)');
+        fireEvent.change(markupInput, { target: { value: '15' } });
 
         fireEvent.click(screen.getByRole('button', { name: 'Save price' }));
 
         await waitFor(() => {
             expect(osTravelApi.updateOsTravelHotel).toHaveBeenCalledWith('1', {
-                base_price: 250,
-                markup_percentage: 20,
+                markup_percentage: 15,
                 currency: 'TND',
             });
         });
     });
 
-    it('approves a hotel with base price + markup + currency', async () => {
+    it('approves a hotel with markup + currency', async () => {
         vi.mocked(osTravelApi.getOsTravelHotel).mockResolvedValueOnce({
-            data: makeDetail(
-                makeRow({ has_base_price: false, base_price: null }),
-            ),
+            data: makeDetail(makeRow()),
         } as never);
 
         renderAdminOsTravel();
@@ -387,11 +295,7 @@ describe('AdminOsTravel page', () => {
         fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
 
         await screen.findByText('A lovely resort by the sea.');
-        await screen.findAllByText('Final price');
 
-        fireEvent.change(screen.getByLabelText('Base price'), {
-            target: { value: '150' },
-        });
         fireEvent.change(screen.getByLabelText('Markup (%)'), {
             target: { value: '15' },
         });
@@ -400,23 +304,21 @@ describe('AdminOsTravel page', () => {
 
         await waitFor(() => {
             expect(osTravelApi.approveOsTravelHotel).toHaveBeenCalledWith('1', {
-                base_price: 150,
                 markup_percentage: 15,
                 currency: 'TND',
             });
         });
     });
 
-    it('shows warning checkboxes and runs bulk approve with opt-in flags', async () => {
+    it('shows the missing-image checkbox and runs bulk approve with opt-in flags', async () => {
         vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValue({
             data: [
                 makeRow(),
                 makeRow({
                     id: '2',
                     external_id: '102',
-                    name: 'No Price Hotel',
-                    has_base_price: false,
-                    base_price: null,
+                    name: 'No Image Hotel',
+                    image: null,
                 }),
             ],
         } as never);
@@ -436,7 +338,7 @@ describe('AdminOsTravel page', () => {
         fireEvent.click(approveAll);
 
         const warningCheckbox = screen.getByRole('checkbox', {
-            name: 'Also approve 1 hotel(s) without a price.',
+            name: 'Also approve 1 hotel(s) without pictures.',
         });
         expect(warningCheckbox).not.toBeChecked();
 
@@ -451,8 +353,7 @@ describe('AdminOsTravel page', () => {
             expect(
                 osTravelApi.approveAllOsTravelHotels,
             ).toHaveBeenCalledWith({
-                include_without_price: true,
-                include_without_image: false,
+                include_without_image: true,
                 status: 'pending',
             });
         });
@@ -502,98 +403,7 @@ describe('AdminOsTravel page', () => {
         });
     });
 
-    it('refreshes all staged prices through the bulk button', async () => {
-        renderAdminOsTravel();
-
-        await screen.findByText('Hotel Test');
-
-        fireEvent.click(
-            screen.getByRole('button', { name: /Pending/i }),
-        );
-
-        const refreshAll = screen.getByRole('button', {
-            name: 'Refresh prices',
-        });
-        await waitFor(() => expect(refreshAll).not.toBeDisabled());
-        fireEvent.click(refreshAll);
-
-        await waitFor(() => {
-            expect(osTravelApi.refreshOsTravelPrices).toHaveBeenCalledWith({
-                ids: ['1'],
-            });
-        });
-    });
-
-    it('refreshes a single hotel price from the row action', async () => {
-        renderAdminOsTravel();
-
-        await screen.findByText('Hotel Test');
-
-        fireEvent.click(
-            screen.getByRole('button', { name: 'Refresh price' }),
-        );
-
-        await waitFor(() => {
-            expect(osTravelApi.refreshOsTravelPrice).toHaveBeenCalledWith('1');
-        });
-    });
-
-    it('fetches a live price in the preview and hydrates the form', async () => {
-        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValueOnce({
-            data: [
-                makeRow({
-                    id: '5',
-                    external_id: '105',
-                    name: 'Fetch Me',
-                    has_base_price: false,
-                    base_price: null,
-                }),
-            ],
-        } as never);
-        vi.mocked(osTravelApi.getOsTravelHotel).mockResolvedValueOnce({
-            data: makeDetail(
-                makeRow({
-                    id: '5',
-                    external_id: '105',
-                    name: 'Fetch Me',
-                    has_base_price: false,
-                    base_price: null,
-                }),
-            ),
-        } as never);
-        vi.mocked(osTravelApi.refreshOsTravelPrice).mockResolvedValueOnce({
-            data: {
-                ...makeRow({
-                    id: '5',
-                    external_id: '105',
-                    name: 'Fetch Me',
-                    has_base_price: true,
-                    base_price: 340,
-                }),
-                refresh: { updated: 1, omitted: 0 },
-            },
-        } as never);
-
-        renderAdminOsTravel();
-
-        await screen.findByText('Fetch Me');
-
-        fireEvent.click(screen.getAllByRole('button', { name: 'Preview' })[0]);
-
-        expect(
-            await screen.findByText('A lovely resort by the sea.'),
-        ).toBeInTheDocument();
-
-        fireEvent.click(screen.getByRole('button', { name: 'Fetch price' }));
-
-        await waitFor(() => {
-            expect(osTravelApi.refreshOsTravelPrice).toHaveBeenCalledWith('5');
-        });
-
-        expect(await screen.findByDisplayValue('340')).toBeInTheDocument();
-    });
-
-    it('lists the live-check status per row when a date filter is active', async () => {
+    it('lists the live-check price and status per row when a date filter is active', async () => {
         vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValueOnce({
             data: [
                 makeRow({
@@ -603,7 +413,6 @@ describe('AdminOsTravel page', () => {
                     live_status: 'available',
                     live_price: 180,
                     live_currency: 'TND',
-                    final_price: 216,
                 }),
                 makeRow({
                     id: '8',
@@ -611,7 +420,6 @@ describe('AdminOsTravel page', () => {
                     name: 'Live Off',
                     live_status: 'no_availability',
                     live_price: null,
-                    final_price: null,
                 }),
             ],
         } as never);
@@ -620,16 +428,16 @@ describe('AdminOsTravel page', () => {
 
         await screen.findByText('Live Hotel');
 
-        expect(screen.getByText('216 TND')).toBeInTheDocument();
+        expect(screen.getByText('180 TND')).toBeInTheDocument();
         expect(
             screen.getAllByText('No availability on these dates').length,
         ).toBeGreaterThan(0);
         // A hotel with no live price for the picked window shows "-" in the
-        // full-price column alongside the reason badge.
+        // live column alongside the reason badge.
         expect(screen.getAllByText('—').length).toBeGreaterThan(0);
     });
 
-    it('explains a min-stay rejection with the picked vs required nights', async () => {
+    it('explains a min-stay rejection in the live column', async () => {
         vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValue({
             data: [
                 makeRow({
@@ -638,8 +446,7 @@ describe('AdminOsTravel page', () => {
                     name: 'Min Stay Hotel',
                     live_status: 'min_stay',
                     live_price: null,
-                    final_price: null,
-                    min_nights: 5,
+                    live_reason: 'Minimum stay of 5 nights required',
                 }),
             ],
         } as never);
@@ -648,7 +455,7 @@ describe('AdminOsTravel page', () => {
 
         await screen.findByText('Min Stay Hotel');
 
-        // Drive the (mocked) date filter with a 17 → 19 range (2 nights).
+        // Drive the (mocked) date filter.
         act(() => {
             mockDateRangePickerProps.onChange?.({
                 from: new Date('2026-08-17T00:00:00'),
@@ -657,9 +464,7 @@ describe('AdminOsTravel page', () => {
         });
 
         expect(
-            await screen.findByText(
-                'Picked 2 night(s) — minimum stay for these dates is 5',
-            ),
+            await screen.findByText('Needs at least'),
         ).toBeInTheDocument();
     });
 

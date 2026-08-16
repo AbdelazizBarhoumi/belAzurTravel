@@ -39,7 +39,41 @@ class OsTravelCatalogSync
     /** @var list<array{external_id: string, id: int}> */
     private array $changedHotels = [];
 
+    /** @var callable(string):void|null */
+    private $reporter = null;
+
     public function __construct(private OsTravelClient $client) {}
+
+    /**
+     * Attach a callback that receives each progress line (prefixed with a
+     * timestamp) as the sync runs. Useful to stream step-by-step output to a
+     * console while the run executes.
+     *
+     * @param  callable(string):void|null  $reporter
+     */
+    public function report(?callable $reporter): static
+    {
+        $this->reporter = $reporter;
+
+        return $this;
+    }
+
+    /**
+     * Emit a timestamped progress line to the attached reporter and to the
+     * application log, so every phase of a run is visible after the fact.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    protected function note(string $message, array $context = []): void
+    {
+        $line = '['.now()->format('Y-m-d H:i:s').'] '.$message;
+
+        if ($this->reporter !== null) {
+            ($this->reporter)($line);
+        }
+
+        Log::info('OS-TRAVEL catalog sync: '.$message, $context);
+    }
 
     /**
      * Runs a single catalog sync. Returns null when another run holds the
@@ -72,15 +106,35 @@ class OsTravelCatalogSync
             'started_at' => now(),
         ]);
 
+        $this->note("sync started (batch {$this->sync->batch})");
+
         try {
             $countryIds = $this->syncCountries();
+            $this->note('countries synced: '.count($countryIds));
+
             $this->syncCities($this->selectedCountryIds($countryIds));
-            $this->syncReferences(OsTravelReference::TYPE_BOARDING, $this->client->listBoardings()['ListBoarding'] ?? []);
-            $this->syncReferences(OsTravelReference::TYPE_CATEGORY, $this->client->listCategories()['ListCategorie'] ?? []);
-            $this->syncReferences(OsTravelReference::TYPE_CURRENCY, $this->client->listCurrencies()['ListCurrency'] ?? []);
+            $this->note('cities synced: '.$this->citiesCount);
+
+            $boardings = $this->client->listBoardings()['ListBoarding'] ?? [];
+            $this->note('ListBoarding returned '.count($boardings).' items');
+            $this->syncReferences(OsTravelReference::TYPE_BOARDING, $boardings);
+
+            $categories = $this->client->listCategories()['ListCategorie'] ?? [];
+            $this->note('ListCategorie returned '.count($categories).' items');
+            $this->syncReferences(OsTravelReference::TYPE_CATEGORY, $categories);
+
+            $currencies = $this->client->listCurrencies()['ListCurrency'] ?? [];
+            $this->note('ListCurrency returned '.count($currencies).' items');
+            $this->syncReferences(OsTravelReference::TYPE_CURRENCY, $currencies);
+
             $this->syncHotels();
+            $this->note('hotels synced: '.$this->hotelsCount);
+
             $this->enrichDetails();
+            $this->note('hotel details fetched: '.$this->detailsCount);
+
             $this->detectOrphans();
+            $this->note('orphans detected: '.$this->orphanedCount);
 
             return $this->finishSuccess();
         } catch (Throwable $e) {
@@ -95,6 +149,7 @@ class OsTravelCatalogSync
      */
     protected function syncCountries(): array
     {
+        $this->note('calling ListCountry');
         $data = $this->client->listCountries();
 
         $ids = [];
@@ -104,6 +159,8 @@ class OsTravelCatalogSync
         }
 
         $this->countriesCount = count($ids);
+
+        $this->note("ListCountry returned {$this->countriesCount} countries");
 
         return $ids;
     }
@@ -116,6 +173,7 @@ class OsTravelCatalogSync
         $this->cityIds = [];
 
         foreach ($countryIds as $countryId) {
+            $this->note("calling ListCity for country={$countryId}");
             $data = $this->client->listCities($countryId);
 
             foreach ($data['ListCity'] ?? [] as $item) {
@@ -125,6 +183,8 @@ class OsTravelCatalogSync
         }
 
         $this->citiesCount = count($this->cityIds);
+
+        $this->note("ListCity complete: {$this->citiesCount} cities");
     }
 
     /**
@@ -161,6 +221,7 @@ class OsTravelCatalogSync
             $page = 1;
 
             do {
+                $this->note("calling ListHotel city={$cityId} page={$page}");
                 $response = $this->client->listHotels($cityId, $page === 1 ? null : $page);
                 $this->upsertHotelPage($cityId, $response);
                 $page++;
@@ -256,6 +317,9 @@ class OsTravelCatalogSync
      */
     protected function enrichDetails(): void
     {
+        $total = count($this->changedHotels);
+        $index = 0;
+
         foreach ($this->changedHotels as $entry) {
             $hotel = OsTravelHotel::find($entry['id']);
 
@@ -267,6 +331,8 @@ class OsTravelCatalogSync
                 usleep(config('ostravel.sync.throttle_ms') * 1000);
             }
 
+            $index++;
+            $this->note("calling HotelDetail external={$entry['external_id']} (".$index.'/'.$total.')');
             $detail = $this->client->hotelDetail($entry['external_id']);
 
             if ($hotel !== null) {
@@ -280,6 +346,7 @@ class OsTravelCatalogSync
 
     protected function detectOrphans(): void
     {
+        $this->note('detecting orphaned hotels');
         $missing = OsTravelHotel::where('last_synced_at', '<', $this->sync->started_at)->get();
 
         foreach ($missing as $hotel) {
@@ -311,6 +378,15 @@ class OsTravelCatalogSync
             'reactivated_count' => $this->reactivatedCount,
         ]);
 
+        $this->note(
+            'sync finished: countries='.$this->countriesCount
+            .', cities='.$this->citiesCount
+            .', hotels='.$this->hotelsCount
+            .', details='.$this->detailsCount
+            .', orphaned='.$this->orphanedCount
+            .', reactivated='.$this->reactivatedCount
+        );
+
         foreach (['admin.entity.hotels', 'entity.hotels.index', 'hotels.index'] as $key) {
             Cache::forget($key);
         }
@@ -325,6 +401,8 @@ class OsTravelCatalogSync
             'finished_at' => now(),
             'error' => $e->getMessage(),
         ]);
+
+        $this->note('sync failed: '.$e->getMessage());
 
         Log::error('OS-TRAVEL catalog sync failed', [
             'sync_id' => $this->sync->id,

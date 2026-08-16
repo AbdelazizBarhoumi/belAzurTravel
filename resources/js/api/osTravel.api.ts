@@ -38,21 +38,6 @@ export interface OsTravelHotelRow {
     stars: number;
     image: string | null;
     status: OsTravelStatus;
-    has_base_price: boolean;
-    base_price: number | null;
-    final_price: number | null;
-    price_status: 'has_price' | 'no_availability' | 'provider_error' | 'never_refreshed' | null;
-    last_price_attempt_at: string | null;
-    first_available_at: string | null;
-    min_nights: number | null;
-    availability_status:
-        | 'available'
-        | 'stop_sale'
-        | 'stop_reservation'
-        | 'no_bookable_room'
-        | 'min_stay'
-        | 'not_returned'
-        | null;
     markup_percentage: string | null;
     currency: string | null;
     hotel_id: string | null;
@@ -82,21 +67,6 @@ export interface OsTravelCatalogBoarding {
     name: string | null;
 }
 
-export interface OsTravelCatalogRoom {
-    name: string;
-    photo: string | null;
-    description: string;
-    features: string[];
-    min_stay: number;
-    boarding_id: number | null;
-}
-
-export interface OsTravelCatalogPromotion {
-    title: string | null;
-    description: string;
-    rate: string | null;
-}
-
 export interface OsTravelMappedPreview {
     name: string;
     city: string;
@@ -111,16 +81,9 @@ export interface OsTravelMappedPreview {
     address: string;
     phone: string;
     email: string;
-    price: number | null;
-    base_price: number | null;
     markup_percentage: number;
     currency: string;
     code: string;
-    rooms_catalog: OsTravelCatalogRoom[];
-    boardings: OsTravelCatalogBoarding[];
-    promotion: OsTravelCatalogPromotion | null;
-    free_child: number[];
-    recommended: boolean;
 }
 
 export interface OsTravelHotelDetail extends OsTravelHotelRow {
@@ -132,8 +95,6 @@ export interface OsTravelApproveResult extends OsTravelHotelRow {
     hotel?: {
         id: string;
         slug: string;
-        price: number;
-        base_price: number;
         markup_percentage: string;
         currency: string;
     };
@@ -142,16 +103,13 @@ export interface OsTravelApproveResult extends OsTravelHotelRow {
 export interface OsTravelBulkApproveResult {
     approved: string[];
     failed: string[];
-    skipped_no_price: string[];
     skipped_no_image: string[];
     approved_count: number;
     failed_count: number;
-    skipped_no_price_count: number;
     skipped_no_image_count: number;
 }
 
 export interface OsTravelPricePayload {
-    base_price?: number | null;
     markup_percentage?: number | null;
     currency?: string | null;
 }
@@ -184,17 +142,6 @@ export interface OsTravelDetailResponse {
 
 export interface OsTravelRowResponse {
     data: OsTravelHotelRow;
-}
-
-export interface OsTravelRefreshResult {
-    updated: number;
-    omitted: number;
-    omitted_ids: string[];
-    failed_ids: string[];
-}
-
-export interface OsTravelHotelRefreshResponse extends OsTravelRowResponse {
-    data: OsTravelHotelRow & { refresh: OsTravelRefreshResult };
 }
 
 export interface OsTravelApproveResponse {
@@ -266,7 +213,6 @@ export async function approveOsTravelHotel(
 export async function approveAllOsTravelHotels(data: {
     markup_percentage?: number | null;
     currency?: string | null;
-    include_without_price?: boolean;
     include_without_image?: boolean;
     status?: OsTravelStatus | '';
     city?: string;
@@ -296,27 +242,6 @@ export async function unapproveOsTravelHotel(id: string) {
     return apiFetch<OsTravelRowResponse>(
         `/api/admin/os-travel/hotels/${id}/unapprove`,
         { method: 'POST' },
-    );
-}
-
-export async function refreshOsTravelPrice(id: string) {
-    return apiFetch<OsTravelHotelRefreshResponse>(
-        `/api/admin/os-travel/hotels/${id}/refresh-price`,
-        { method: 'POST' },
-    );
-}
-
-export async function refreshOsTravelPrices(data?: {
-    ids?: string[];
-    check_in?: string;
-    check_out?: string;
-}) {
-    return apiFetch<{ data: OsTravelRefreshResult }>(
-        '/api/admin/os-travel/hotels/refresh-prices',
-        {
-            method: 'POST',
-            body: JSON.stringify(data ?? {}),
-        },
     );
 }
 

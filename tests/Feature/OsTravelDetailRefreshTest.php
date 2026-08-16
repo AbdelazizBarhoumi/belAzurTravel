@@ -50,7 +50,6 @@ class OsTravelDetailRefreshTest extends TestCase
             'stars' => 4,
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
             'status' => OsTravelHotel::APPROVED,
-            'base_price' => 250,
             'last_synced_at' => now(),
         ]);
 
@@ -62,8 +61,6 @@ class OsTravelDetailRefreshTest extends TestCase
             'category' => ['en' => '4 étoiles', 'fr' => '4 étoiles', 'ar' => '4 étoiles'],
             'price' => 300,
             'base_price' => 250,
-            'last_price' => 250,
-            'last_price_at' => now(),
             'markup_percentage' => 20,
             'currency' => 'TND',
             'rating' => 4.5,
@@ -155,10 +152,6 @@ class OsTravelDetailRefreshTest extends TestCase
             'name' => ['en' => 'Never Clicked', 'fr' => 'Never Clicked', 'ar' => 'Never Clicked'],
             'location' => ['en' => 'Kelibia', 'fr' => 'Kelibia', 'ar' => 'Kelibia'],
             'category' => ['en' => '4 étoiles', 'fr' => '4 étoiles', 'ar' => '4 étoiles'],
-            'price' => 200,
-            'base_price' => 160,
-            'last_price' => 160,
-            'last_price_at' => now(),
             'currency' => 'TND',
             'image' => '/storage/uploads/hotels/test.jpg',
             'details' => ['city' => ['en' => 'Kelibia'], 'country' => ['en' => 'Tunisie'], 'description' => ['en' => 'x'], 'gallery' => []],
@@ -232,6 +225,7 @@ class OsTravelDetailRefreshTest extends TestCase
                 'https://admin.mygo.co/file_manager/source/photos/tunisie/Tunis/sheraton-tunis/1.png',
             ],
         ])]);
+        Storage::disk('public')->put('uploads/hotels/existing.jpg', 'image-bytes');
 
         Http::fake([
             'https://admin.mygo.co/api/hotel/HotelDetail' => Http::response(
@@ -243,6 +237,7 @@ class OsTravelDetailRefreshTest extends TestCase
         $this->getJson('/api/hotels/cap-bon-kelibia-beach-hotel-spa')->assertOk();
 
         $this->assertSame(['/storage/uploads/hotels/existing.jpg'], Hotel::first()->details['gallery']);
+        $this->assertTrue(Storage::disk('public')->exists('uploads/hotels/existing.jpg'));
     }
 
     public function test_gallery_is_redownloaded_when_album_changed(): void
@@ -252,6 +247,7 @@ class OsTravelDetailRefreshTest extends TestCase
         $staged->update(['detail_fetched_at' => now()->subDay()]);
         $hotel = Hotel::first();
         $hotel->update(['details' => array_merge($hotel->details, ['gallery' => ['/storage/uploads/hotels/existing.jpg'], 'gallery_sources' => ['https://old.example.com/a.jpg']])]);
+        Storage::disk('public')->put('uploads/hotels/existing.jpg', 'image-bytes');
 
         Http::fake([
             'https://admin.mygo.co/api/hotel/HotelDetail' => Http::response(
@@ -265,5 +261,6 @@ class OsTravelDetailRefreshTest extends TestCase
         $gallery = Hotel::first()->details['gallery'];
         $this->assertNotContains('/storage/uploads/hotels/existing.jpg', $gallery);
         $this->assertNotEmpty($gallery);
+        $this->assertFalse(Storage::disk('public')->exists('uploads/hotels/existing.jpg'));
     }
 }

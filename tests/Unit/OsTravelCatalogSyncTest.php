@@ -60,7 +60,6 @@ class OsTravelCatalogSyncTest extends TestCase
         // Country is derived from the ListHotel payload's City.Country.
         $this->assertSame('219', $hotel->country_external_id);
         $this->assertSame('Tunisie', $hotel->country_name);
-        $this->assertSame(OsTravelHotel::PRICE_NEVER_REFRESHED, $hotel->price_status);
         $this->assertArrayHasKey('ListHotel', $hotel->payload);
         $this->assertArrayHasKey('HotelDetail', $hotel->payload);
         $this->assertSame('Sheraton Tunis Hotel', $hotel->payload['HotelDetail']['Name']);

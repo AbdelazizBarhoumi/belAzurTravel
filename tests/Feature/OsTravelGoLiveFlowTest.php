@@ -53,10 +53,9 @@ class OsTravelGoLiveFlowTest extends TestCase
         $staged = OsTravelHotel::where('external_id', '178')->first();
         $this->assertSame(OsTravelHotel::PENDING, $staged->status);
 
-        // 2. set prices -> approve -> published hotel exists.
+        // 2. approve -> published hotel exists.
         $this->actingAs($this->admin)
             ->putJson("/api/admin/os-travel/hotels/{$staged->id}", [
-                'base_price' => 833,
                 'markup_percentage' => 20,
                 'currency' => 'TND',
             ])
@@ -70,14 +69,16 @@ class OsTravelGoLiveFlowTest extends TestCase
         $this->assertSame(OsTravelHotel::APPROVED, $staged->status);
         $hotel = Hotel::first();
         $this->assertSame('cap-bon-kelibia-beach-hotel-spa', $hotel->slug);
-        $this->assertSame(1000, $hotel->price);
-        $this->assertSame(833, $hotel->base_price);
+        // Published provider hotels carry no stored price.
+        $this->assertNull($hotel->base_price);
+        $this->assertSame(0, $hotel->price);
 
-        // 3. browse (no dates): prices render from stored base; no provider calls.
+        // 3. browse (no dates): provider prices are null; no provider calls.
         Http::fake(['https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search'))]);
         $index = $this->getJson('/api/hotels')->assertOk();
         $browse = collect($index->json())->firstWhere('slug', $hotel->slug);
-        $this->assertSame(1000, $browse['price']);
+        $this->assertNull($browse['price']);
+        $this->assertNull($browse['base_price']);
 
         // 4. live search (dates): one batched HotelSearch; live markup prices + tokens.
         $search = $this->postJson('/api/hotels/search', [
@@ -277,7 +278,6 @@ class OsTravelGoLiveFlowTest extends TestCase
             'stars' => 5,
             'image' => 'https://admin.mygo.co/file_manager/source/photos/grand.jpg',
             'status' => OsTravelHotel::PENDING,
-            'base_price' => 500,
             'last_synced_at' => now(),
         ]);
 
@@ -310,7 +310,6 @@ class OsTravelGoLiveFlowTest extends TestCase
         $staged = OsTravelHotel::where('external_id', '178')->first();
         $this->actingAs($this->admin)
             ->putJson("/api/admin/os-travel/hotels/{$staged->id}", [
-                'base_price' => 833,
                 'markup_percentage' => 20,
                 'currency' => 'TND',
             ])

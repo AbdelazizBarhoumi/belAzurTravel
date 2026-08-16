@@ -9,7 +9,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use InvalidArgumentException;
 use Tests\Support\InteractsWithOsTravel;
 use Tests\TestCase;
 
@@ -29,7 +28,7 @@ class OsTravelHotelPublisherTest extends TestCase
         ]);
     }
 
-    private function stagedHotel(int $id = 178, string $name = 'Cap Bon Kelibia Beach Hotel & Spa', ?int $basePrice = 250): OsTravelHotel
+    private function stagedHotel(int $id = 178, string $name = 'Cap Bon Kelibia Beach Hotel & Spa'): OsTravelHotel
     {
         $detail = $this->osTravelFixture('hotel_detail');
 
@@ -47,7 +46,6 @@ class OsTravelHotelPublisherTest extends TestCase
             'stars' => 4,
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
             'status' => OsTravelHotel::PENDING,
-            'base_price' => $basePrice,
             'last_synced_at' => now(),
         ]);
     }
@@ -69,8 +67,10 @@ class OsTravelHotelPublisherTest extends TestCase
         $this->assertSame(4, $hotel->stars);
         $this->assertSame('20.00', (string) $hotel->markup_percentage);
         $this->assertSame('TND', $hotel->currency);
-        $this->assertSame(300, $hotel->price);
-        $this->assertSame(250, $hotel->base_price);
+        // Provider hotels carry no stored price: the public price is always
+        // resolved live from HotelSearch, so publish leaves price/base_price null.
+        $this->assertNull($hotel->price);
+        $this->assertNull($hotel->base_price);
         $this->assertSame('ostravel', $hotel->details['source']);
         $this->assertSame('178', $hotel->details['provider_hotel_id']);
         $this->assertSame('tunsi.reservations@sheratonhotels.com', $hotel->details['email']);
@@ -172,20 +172,24 @@ class OsTravelHotelPublisherTest extends TestCase
         $this->assertNotContains('Réveillon ', $hotel->tags);
     }
 
-    public function test_publish_carries_nearest_available_day_and_minimum_stay(): void
+    public function test_republish_updates_in_place_without_duplicating(): void
     {
         $staged = $this->stagedHotel();
-        $staged->update([
-            'first_available_at' => '2026-09-14',
-            'min_nights' => 3,
-        ]);
 
-        $hotel = app(HotelPublisher::class)->publish($staged->refresh());
+        $first = app(HotelPublisher::class)->publish($staged);
+        $second = app(HotelPublisher::class)->publish($staged->refresh());
 
-        // The probe metadata seeded on the staged row travels to the published
-        // hotels row so browse can render "available from / minimum nights".
-        $this->assertSame('2026-09-14', $hotel->first_available_at?->toDateString());
-        $this->assertSame(3, $hotel->min_nights);
+        $this->assertSame(1, Hotel::count());
+        $this->assertSame($first->id, $second->id);
+        // Re-publish updates the same row: slug, tags and details are kept,
+        // nothing is duplicated, and no stored price is carried.
+        $this->assertSame($first->slug, $second->slug);
+        $this->assertSame($first->tags, $second->tags);
+        $this->assertSame($first->details, $second->details);
+        // The price column defaults to 0 and base_price stays null on the row;
+        // neither carries a real stored price for provider hotels.
+        $this->assertSame(0, (int) $second->price);
+        $this->assertSame(0, (int) $second->base_price);
     }
 
     public function test_publish_uses_markup_override_and_currency_override(): void
@@ -199,24 +203,11 @@ class OsTravelHotelPublisherTest extends TestCase
 
         $this->assertSame('15.00', (string) $hotel->markup_percentage);
         $this->assertSame('EUR', $hotel->currency);
-        $this->assertSame(288, $hotel->price);
+        $this->assertNull($hotel->price);
 
         $staged->refresh();
         $this->assertSame('15.00', (string) $staged->markup_percentage);
         $this->assertSame('EUR', $staged->currency);
-    }
-
-    public function test_republish_updates_in_place_without_duplicating_and_carries_base_price(): void
-    {
-        $staged = $this->stagedHotel();
-
-        $first = app(HotelPublisher::class)->publish($staged);
-        $second = app(HotelPublisher::class)->publish($staged->refresh());
-
-        $this->assertSame(1, Hotel::count());
-        $this->assertSame($first->id, $second->id);
-        $this->assertSame(250, $second->base_price);
-        $this->assertSame(300, $second->price);
     }
 
     public function test_publish_flushes_entity_and_admin_hotel_cache(): void
@@ -244,18 +235,20 @@ class OsTravelHotelPublisherTest extends TestCase
         }
     }
 
-    public function test_publish_throws_when_base_price_is_missing(): void
+    public function test_publish_succeeds_without_base_price(): void
     {
-        $staged = $this->stagedHotel(basePrice: null);
+        $staged = $this->stagedHotel();
 
-        try {
-            app(HotelPublisher::class)->publish($staged);
-            $this->fail('Expected InvalidArgumentException to be thrown.');
-        } catch (InvalidArgumentException $e) {
-            $this->assertStringContainsString('base_price', $e->getMessage());
-        }
+        $hotel = app(HotelPublisher::class)->publish($staged);
 
-        $this->assertSame(0, Hotel::count());
-        $this->assertSame(OsTravelHotel::PENDING, $staged->fresh()->status);
+        $this->assertSame(1, Hotel::count());
+        // No base price is required anymore: the published hotel carries no
+        // stored price, only the markup and currency, and the staging row is
+        // approved.
+        $this->assertNull($hotel->price);
+        $this->assertNull($hotel->base_price);
+        $this->assertSame('20.00', (string) $hotel->markup_percentage);
+        $this->assertSame('TND', $hotel->currency);
+        $this->assertSame(OsTravelHotel::APPROVED, $staged->fresh()->status);
     }
 }

@@ -15,6 +15,8 @@ class SyncOsTravelCatalog extends Command
 
     public function handle(OsTravelCatalogSync $sync): int
     {
+        $sync->report(fn (string $line) => $this->line($line));
+
         try {
             $result = $sync->sync();
         } catch (OsTravelApiException $e) {

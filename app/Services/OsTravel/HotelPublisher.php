@@ -72,6 +72,11 @@ class HotelPublisher
 
         $mapped = $this->mapDetails($list, $detail, $existing, $externalId, $lazy);
 
+        $previous = [
+            $existing?->image,
+            ...($existing?->details['gallery'] ?? []),
+        ];
+
         $hotel = Hotel::updateOrCreate(['code' => $code], array_merge([
             'slug' => $slug,
             'code' => $code,
@@ -101,6 +106,11 @@ class HotelPublisher
         ])->save();
 
         $this->flushAdminCache('hotels', $slug);
+
+        // The new image/gallery replaced the previous ones; the DB no longer
+        // references the old files, so they can be deleted immediately instead
+        // of accumulating as orphans.
+        $this->deleteReplacedLocalImages($previous, array_merge([$image], $mapped['details']['gallery']));
 
         return $hotel;
     }
@@ -140,12 +150,17 @@ class HotelPublisher
 
                 if ($hotel !== null) {
                     $list = $staged->payload['ListHotel'] ?? [];
+                    $previousGallery = $hotel->details['gallery'] ?? [];
                     $mapped = $this->mapDetails($list, $detail, $hotel, $externalId);
 
                     $hotel->forceFill(array_merge([
                         'tags' => $mapped['themes'],
                         'details' => $mapped['details'],
                     ], $mapped['filter_booleans']))->save();
+
+                    // The refreshed gallery may have replaced previously
+                    // downloaded files; remove the ones no longer referenced.
+                    $this->deleteReplacedLocalImages($previousGallery, $mapped['details']['gallery'] ?? []);
 
                     $this->flushAdminCache('hotels', $hotel->slug);
                     Cache::forget("hotels.{$hotel->slug}");
@@ -689,6 +704,48 @@ class HotelPublisher
         Storage::disk('public')->put("{$folder}/{$filename}", $contents);
 
         return "/storage/{$folder}/{$filename}";
+    }
+
+    /**
+     * Delete local hotel image files that were replaced by a re-publish or a
+     * detail refresh. Values in `$current` (the files the hotel references
+     * now) are never touched, and remote/proxy URLs are not candidates.
+     *
+     * @param  list<mixed>  $previous  Previously referenced image values.
+     * @param  list<mixed>  $current  Currently referenced image values.
+     */
+    protected function deleteReplacedLocalImages(array $previous, array $current): void
+    {
+        $current = array_flip(array_values(array_filter(array_map(
+            fn (mixed $value) => is_string($value) ? $value : '',
+            $current
+        ))));
+
+        foreach ($previous as $path) {
+            if (! is_string($path) || $path === '' || isset($current[$path])) {
+                continue;
+            }
+
+            $this->deleteLocalImage($path);
+        }
+    }
+
+    /**
+     * Delete a single stored hotel image file when it is a local
+     * `/storage/uploads/hotels/*` upload (only top-level files, never the
+     * `rooms/` subfolder, never remote/proxy URLs).
+     */
+    protected function deleteLocalImage(?string $path): void
+    {
+        if ($path === null || ! preg_match('#^/storage/uploads/hotels/[^/]+\.(?:jpg|jpeg|png|webp|gif)$#i', $path)) {
+            return;
+        }
+
+        $relative = substr($path, strlen('/storage/'));
+
+        if (Storage::disk('public')->exists($relative)) {
+            Storage::disk('public')->delete($relative);
+        }
     }
 
     protected function extensionFromUrl(string $url): string

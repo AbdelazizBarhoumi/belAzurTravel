@@ -51,7 +51,7 @@ class OsTravelSchemaTest extends TestCase
         $columns = [
             'id', 'external_id', 'sync_id', 'payload', 'payload_hash',
             'name', 'city_external_id', 'city_name', 'category_title', 'stars', 'image',
-            'status', 'hotel_id', 'base_price', 'markup_percentage', 'currency',
+            'status', 'hotel_id', 'markup_percentage', 'currency',
             'approved_by', 'approved_at', 'rejected_at', 'last_synced_at',
             'created_at', 'updated_at',
         ];

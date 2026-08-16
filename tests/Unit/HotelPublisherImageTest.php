@@ -40,7 +40,6 @@ class HotelPublisherImageTest extends TestCase
             'stars' => 4,
             'image' => $image,
             'status' => OsTravelHotel::PENDING,
-            'base_price' => 250,
             'last_synced_at' => now(),
         ]);
     }
@@ -92,6 +91,56 @@ class HotelPublisherImageTest extends TestCase
 
         $this->assertNotSame($first->image, $republished->image);
         $this->assertSame(sha1('https://93.184.216.34/photos/new.jpg'), $republished->meta['image_hash']);
+    }
+
+    public function test_changed_image_url_deletes_the_replaced_local_file(): void
+    {
+        Http::fake([
+            'https://93.184.216.34/*' => Http::response('image-bytes'),
+            'https://admin.mygo.co/*' => Http::response('image-bytes'),
+        ]);
+
+        $staged = $this->stagedHotel('https://93.184.216.34/photos/old.jpg');
+        $first = app(HotelPublisher::class)->publish($staged);
+        $oldPath = ltrim($first->image, '/storage/');
+        $this->assertTrue(Storage::disk('public')->exists($oldPath));
+
+        $payload = $staged->payload;
+        $payload['ListHotel']['Image'] = 'https://93.184.216.34/photos/new.jpg';
+        $staged->payload = $payload;
+        $staged->save();
+
+        $republished = app(HotelPublisher::class)->publish($staged->refresh());
+
+        $this->assertNotSame($first->image, $republished->image);
+        $this->assertFalse(Storage::disk('public')->exists($oldPath));
+        $this->assertTrue(Storage::disk('public')->exists(ltrim($republished->image, '/storage/')));
+    }
+
+    public function test_download_failure_keeps_the_old_file(): void
+    {
+        Storage::disk('public')->put('uploads/hotels/existing.jpg', 'image-bytes');
+
+        Http::fake([
+            'https://93.184.216.34/photos/old.jpg' => Http::response('image-bytes'),
+            'https://93.184.216.34/photos/broken.jpg' => Http::response('', 500),
+            'https://admin.mygo.co/*' => Http::response('image-bytes'),
+        ]);
+
+        $staged = $this->stagedHotel('https://93.184.216.34/photos/old.jpg');
+        $first = app(HotelPublisher::class)->publish($staged);
+        $oldPath = ltrim($first->image, '/storage/');
+
+        $payload = $staged->payload;
+        $payload['ListHotel']['Image'] = 'https://93.184.216.34/photos/broken.jpg';
+        $staged->payload = $payload;
+        $staged->save();
+
+        $republished = app(HotelPublisher::class)->publish($staged->refresh());
+
+        // The failed download keeps the previous local file; it must survive.
+        $this->assertSame($first->image, $republished->image);
+        $this->assertTrue(Storage::disk('public')->exists($oldPath));
     }
 
     public function test_download_failure_falls_back_to_remote_url(): void

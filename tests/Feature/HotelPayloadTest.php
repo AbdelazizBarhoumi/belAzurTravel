@@ -39,15 +39,9 @@ class HotelPayloadTest extends TestCase
         ], $overrides));
     }
 
-    public function test_payload_exposes_last_known_price_and_timestamp(): void
+    public function test_provider_linked_payload_has_null_price_and_no_stored_price_keys(): void
     {
-        $hotel = $this->makeHotel([
-            'last_price' => 927.52,
-            'last_price_at' => now()->subHours(3),
-            'first_available_at' => now()->addDays(2)->toDateString(),
-            'min_nights' => 1,
-            'stop_sale_ranges' => [['from' => '2026-09-01', 'to' => '2026-09-10']],
-        ]);
+        $hotel = $this->makeHotel(['source' => 'ostravel']);
         OsTravelHotel::create([
             'external_id' => '178',
             'payload' => [],
@@ -60,64 +54,36 @@ class HotelPayloadTest extends TestCase
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
             'status' => OsTravelHotel::APPROVED,
             'hotel_id' => $hotel->id,
-            'base_price' => 1000,
             'last_synced_at' => now(),
         ]);
 
         $response = $this->getJson('/api/hotels/test-hotel')->assertOk();
 
-        // The browse payload carries the "last known" price + when it was fetched.
-        $this->assertSame(927.52, $response->json('last_price'));
-        $this->assertNotNull($response->json('last_price_at'));
-        // The displayed price is the last known price marked up, not the raw value.
-        $this->assertSame(1113, $response->json('price'));
-        // The probe's nearest available day + minimum stay travel with the price.
-        $this->assertSame(now()->addDays(2)->toDateString(), $response->json('first_available_at'));
-        $this->assertSame(1, $response->json('min_nights'));
-        // The picker-blocking stop-sale ranges travel with the price.
-        $this->assertSame([['from' => '2026-09-01', 'to' => '2026-09-10']], $response->json('stop_sale_ranges'));
+        // Provider-linked hotels carry no stored price: it is always resolved
+        // live from HotelSearch for the exact dates, never persisted.
+        $this->assertNull($response->json('price'));
+        $this->assertNull($response->json('base_price'));
+        $this->assertSame('ostravel', $response->json('provider'));
+        // The removed stored price/availability keys are never exposed.
+        foreach (['last_price', 'last_price_at', 'first_available_at', 'min_nights', 'stop_sale_ranges'] as $key) {
+            $this->assertArrayNotHasKey($key, $response->json());
+        }
     }
 
-    public function test_payload_without_last_price_uses_stored_price(): void
+    public function test_manual_hotel_payload_uses_stored_price(): void
     {
         $this->makeHotel();
 
         $response = $this->getJson('/api/hotels/test-hotel')->assertOk();
 
-        $this->assertNull($response->json('last_price'));
-        $this->assertNull($response->json('last_price_at'));
+        // A manual hotel keeps its stored price.
         $this->assertSame(1200, $response->json('price'));
-    }
-
-    public function test_provider_hotel_without_live_price_falls_back_to_base_price(): void
-    {
-        $hotel = $this->makeHotel();
-        OsTravelHotel::create([
-            'external_id' => '178',
-            'payload' => [],
-            'payload_hash' => str_repeat('a', 64),
-            'name' => 'Test Hotel',
-            'city_external_id' => '12',
-            'city_name' => 'Kelibia',
-            'category_title' => '4 étoiles',
-            'stars' => 4,
-            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
-            'status' => OsTravelHotel::APPROVED,
-            'hotel_id' => $hotel->id,
-            'base_price' => 1000,
-            'last_synced_at' => now(),
-        ]);
-
-        $response = $this->getJson('/api/hotels/test-hotel')->assertOk();
-
-        // No live per-night price: browse falls back to the approved min price
-        // (the same value the admin review shows) rather than hiding it.
-        $this->assertNull($response->json('last_price'));
-        $this->assertNull($response->json('first_available_at'));
-        $this->assertNull($response->json('min_nights'));
-        $this->assertSame([], $response->json('stop_sale_ranges'));
         $this->assertSame(1000, $response->json('base_price'));
-        $this->assertSame(1200, $response->json('price'));
+        $this->assertSame('manual', $response->json('provider'));
+        // The removed stored price/availability keys are never exposed.
+        foreach (['last_price', 'last_price_at', 'first_available_at', 'min_nights', 'stop_sale_ranges'] as $key) {
+            $this->assertArrayNotHasKey($key, $response->json());
+        }
     }
 
     public function test_payload_exposes_source_and_provider(): void

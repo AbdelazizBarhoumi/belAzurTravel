@@ -96,9 +96,8 @@ export default function Hotels() {
         return filters;
     }, [params]);
 
-    const pricedHotels = hotels.filter((h): h is HotelItem & { price: number } => h.price !== null);
-    const maxPrice = pricedHotels.length > 0 ? Math.max(...pricedHotels.map((h) => h.price)) : 1000;
-    const minPrice = pricedHotels.length > 0 ? Math.min(...pricedHotels.map((h) => h.price)) : 0;
+    const MIN_PRICE = 0;
+    const MAX_PRICE = 1000;
 
     // Category type filters state
     const [categoryTypeFilters, setCategoryTypeFilters] =
@@ -117,19 +116,10 @@ export default function Hotels() {
         }
         setCategoryTypeFilters(nextFilters);
     }
+    // Fixed slider bounds: prices are only known live after a search, so the
+    // browse slider uses constant bounds (per-night TND) instead of deriving
+    // them from stored hotel prices.
     const [hotelPriceRange, setHotelPriceRange] = useState<[number, number]>([0, 1000]);
-
-    // Adjust state during render when data loads (price range derived from hotels)
-    const [priceRangeSynced, setPriceRangeSynced] = useState<readonly [number, number] | null>(null);
-    if (
-        hotels.length > 0 &&
-        (priceRangeSynced === null ||
-            priceRangeSynced[0] !== minPrice ||
-            priceRangeSynced[1] !== maxPrice)
-    ) {
-        setPriceRangeSynced([minPrice, maxPrice]);
-        setHotelPriceRange([minPrice, maxPrice]);
-    }
 
     const hasLandingDateOrGuestFilters =
         occupancy.adults !== 2 ||
@@ -163,7 +153,7 @@ export default function Hotels() {
         ? Math.max(1, Math.round((to.getTime() - from.getTime()) / 86_400_000))
         : 0;
     const priceFilterActive =
-        (hotelPriceRange[0] !== minPrice || hotelPriceRange[1] !== maxPrice) && nights > 0;
+        (hotelPriceRange[0] !== MIN_PRICE || hotelPriceRange[1] !== MAX_PRICE) && nights > 0;
 
     const searchQueryForLive = useMemo(() => {
         if (!from || !to) {
@@ -253,7 +243,7 @@ export default function Hotels() {
     const handleClearAll = () => {
         setSearchQuery('');
         setCategoryTypeFilters({});
-        setHotelPriceRange([minPrice, maxPrice]);
+        setHotelPriceRange([MIN_PRICE, MAX_PRICE]);
         setDateRange(undefined);
     };
 
@@ -378,8 +368,8 @@ export default function Hotels() {
                                     lang={lang}
                                     priceRange={hotelPriceRange}
                                     onPriceChange={setHotelPriceRange}
-                                    maxPrice={maxPrice}
-                                    minPrice={minPrice}
+                                    maxPrice={MAX_PRICE}
+                                    minPrice={MIN_PRICE}
                                     categoryTypes={categoryTypes}
                                     categoryTypeFilters={categoryTypeFilters}
                                     onCategoryTypeChange={(typeKey, values) =>
@@ -458,22 +448,7 @@ export default function Hotels() {
                                                                         : ''}
                                                                 </>
                                                             ) : (
-                                                                <>
-                                                                    {t(
-                                                                        'hotels.priceFrom',
-                                                                    )}{' '}
-                                                                    {hotel.price !== null ? (
-                                                                        <>
-                                                                            {hotel.price.toLocaleString()}{' '}
-                                                                            TND
-                                                                            {t(
-                                                                                'hotelDetail.pernight',
-                                                                            )}
-                                                                        </>
-                                                                    ) : (
-                                                                        t('hotelDetail.noPrice')
-                                                                    )}
-                                                                </>
+                                                                t('hotelDetail.checkAvailability')
                                                             )}
                                                         </div>
 

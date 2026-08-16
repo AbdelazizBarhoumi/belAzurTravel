@@ -61,7 +61,6 @@ class BookingPriceConsistencyTest extends TestCase
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
             'status' => OsTravelHotel::APPROVED,
             'hotel_id' => $hotel->id,
-            'base_price' => 833,
             'last_synced_at' => now(),
         ]);
 

@@ -26,7 +26,7 @@ export function HotelsSection({ config }: Props) {
         const items = hotels.slice(0, 6).map((hotel) => ({
             id: hotel.slug,
             title: localizeText(hotel.name, lang),
-            price: hotel.price !== null ? `${hotel.price} TND${t('hotelDetail.pernight')}` : '',
+            price: '',
             meta: localizeText(hotel.location, lang),
             image: hotel.image,
             href: `/hotels/${hotel.slug}`,
@@ -58,7 +58,6 @@ export function HotelsSection({ config }: Props) {
                                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                                     <div className="relative h-48 overflow-hidden">
                                         <img src={hotel.image} alt={localizeText(hotel.name, lang)} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                        <div className="absolute right-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-bold shadow-md backdrop-blur">{hotel.price !== null ? `${hotel.price} TND${t('hotelDetail.pernight')}` : t('hotelDetail.noPrice')}</div>
                                     </div>
                                     <div className="p-5">
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {localizeText(hotel.location, lang)}</div>
@@ -107,7 +106,6 @@ export function HotelsSection({ config }: Props) {
                             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                                 <div className="relative h-56 overflow-hidden">
                                     <img src={hotel.image} alt={localizeText(hotel.name, lang)} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                                    <div className="absolute right-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-bold shadow-md backdrop-blur">{hotel.price !== null ? `${hotel.price} TND${t('hotelDetail.pernight')}` : t('hotelDetail.noPrice')}</div>
                                 </div>
                                 <div className="p-5">
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {localizeText(hotel.location, lang)}</div>
