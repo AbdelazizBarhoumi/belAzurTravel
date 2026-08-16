@@ -216,7 +216,7 @@ class OsTravelBookingService
         }
 
         $staged = OsTravelHotel::query()
-            ->where('status', OsTravelHotel::PUBLISHED)
+            ->whereNotNull('hotel_id')
             ->where('hotel_id', $hotel->id)
             ->first();
 

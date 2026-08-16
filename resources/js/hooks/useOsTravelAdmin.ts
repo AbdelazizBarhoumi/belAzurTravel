@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     approveAllOsTravelHotels,
     approveOsTravelHotel,
@@ -38,6 +38,9 @@ export function useOsTravelHotels(filters: OsTravelListFilters) {
     return useQuery({
         queryKey: osTravelKeys.hotels(filters),
         queryFn: async () => (await listOsTravelHotels(filters)).data,
+        // Keep the previous list visible while a new filter (e.g. a date range
+        // triggering the live price probe) is fetching.
+        placeholderData: keepPreviousData,
     });
 }
 

@@ -19,7 +19,11 @@ use Throwable;
  *
  * Applies the configured markup to compute the public price, produces a
  * collision-safe slug, downloads and deduplicates provider images behind an
- * SSRF guard, and wires the staging row to the published hotel.
+ * SSRF guard, and wires the staging row to the published hotel. In `lazy`
+ * mode the provider images are not downloaded; the main image and gallery
+ * are stored as opaque proxy URLs served through `HotelImageController`, so
+ * a bulk approval can go live with pure database work. A later eager pass
+ * (single approve or `refreshDetail`) upgrades those to local files.
  */
 class HotelPublisher
 {
@@ -32,7 +36,7 @@ class HotelPublisher
      *
      * @param  array{base_price?: int|float|string, markup_percentage?: int|float|string, currency?: string}  $overrides
      */
-    public function publish(OsTravelHotel $staged, array $overrides = [], ?User $actor = null): Hotel
+    public function publish(OsTravelHotel $staged, array $overrides = [], ?User $actor = null, bool $lazy = false): Hotel
     {
         $basePrice = $overrides['base_price'] ?? $staged->base_price;
         if ($basePrice === null || $basePrice === '') {
@@ -63,7 +67,9 @@ class HotelPublisher
         $stars = $list['Category']['Star'] ?? $detail['Category']['Star'] ?? 0;
 
         $imageUrl = $list['Image'] ?? $detail['Image'] ?? null;
-        $image = $this->syncImage($imageUrl, $existing?->image, $existing?->meta['image_hash'] ?? null);
+        $image = $lazy
+            ? $this->syncImageLazy($imageUrl, $existing?->image)
+            : $this->syncImage($imageUrl, $existing?->image, $existing?->meta['image_hash'] ?? null);
 
         $slug = $this->resolveSlug($existing, $name['en'] ?? 'hotel', $externalId, $code);
 
@@ -72,7 +78,7 @@ class HotelPublisher
             $meta['image_hash'] = sha1($imageUrl);
         }
 
-        $mapped = $this->mapDetails($list, $detail, $existing, $externalId);
+        $mapped = $this->mapDetails($list, $detail, $existing, $externalId, $lazy);
 
         $hotel = Hotel::updateOrCreate(['code' => $code], array_merge([
             'slug' => $slug,
@@ -104,7 +110,7 @@ class HotelPublisher
 
         $staged->fill([
             'hotel_id' => $hotel->id,
-            'status' => OsTravelHotel::PUBLISHED,
+            'status' => OsTravelHotel::APPROVED,
             'approved_by' => $actor?->id,
             'approved_at' => now(),
         ])->save();
@@ -178,14 +184,15 @@ class HotelPublisher
      * @param  array<string, mixed>  $detail  Raw HotelDetail item.
      * @return array{details: array<string, mixed>, themes: list<string>, filter_booleans: array<string, bool>}
      */
-    protected function mapDetails(array $list, array $detail, ?Hotel $existing, string $externalId): array
+    protected function mapDetails(array $list, array $detail, ?Hotel $existing, string $externalId, bool $lazy = false): array
     {
         $details = $existing?->details ?? [];
 
         [$gallery, $gallerySources] = $this->resolveGallery(
             $detail['Album'] ?? [],
             $details['gallery_sources'] ?? null,
-            $details['gallery'] ?? []
+            $details['gallery'] ?? [],
+            $lazy
         );
 
         $details = array_merge($details, [
@@ -222,19 +229,34 @@ class HotelPublisher
 
     /**
      * Re-download the gallery only when the provider's Album URLs changed;
-     * otherwise reuse the already-downloaded local paths.
+     * otherwise reuse the already-downloaded local paths. In `lazy` mode the
+     * provider photos are never downloaded: an existing gallery is kept, and a
+     * fresh one is stored as opaque proxy URLs served through the image proxy.
      *
      * @param  list<array{Url?: string}>  $album
      * @param  list<string>|null  $existingSources
      * @param  list<string>  $existingGallery
-     * @return array{0: list<string>, 1: list<string>} [local paths, source URLs]
+     * @return array{0: list<string>, 1: list<string>} [stored paths, source URLs]
      */
-    protected function resolveGallery(array $album, ?array $existingSources, array $existingGallery): array
+    protected function resolveGallery(array $album, ?array $existingSources, array $existingGallery, bool $lazy = false): array
     {
         $sources = array_values(array_filter(array_map(
             fn ($item) => is_array($item) ? (string) ($item['Url'] ?? '') : '',
             $album
         )));
+
+        if ($lazy) {
+            if ($existingGallery !== [] || ($existingSources !== null && $existingSources !== [])) {
+                return [$existingGallery, $existingSources ?? $sources];
+            }
+
+            $proxied = array_values(array_filter(array_map(
+                static fn (string $url) => OsTravelImageProxy::publicUrl($url),
+                $sources
+            )));
+
+            return [$proxied, $sources];
+        }
 
         if ($existingSources !== null && $existingSources === $sources && $sources !== []) {
             return [$existingGallery, $sources];
@@ -611,6 +633,29 @@ class HotelPublisher
         }
 
         return $existingImage ?: $url;
+    }
+
+    /**
+     * Lazy main-image resolution: never downloads. Keeps an existing stored
+     * image (local or already-proxied) and otherwise stores an opaque proxy
+     * URL for the provider photo, refusing to fetch private/loopback/
+     * link-local hosts.
+     */
+    protected function syncImageLazy(?string $url, ?string $existingImage): ?string
+    {
+        if ($existingImage !== null && $existingImage !== '') {
+            return $existingImage;
+        }
+
+        if ($url === null || $url === '') {
+            return null;
+        }
+
+        if (! $this->isSafeImageUrl($url)) {
+            return $url;
+        }
+
+        return OsTravelImageProxy::publicUrl($url) ?? $url;
     }
 
     /**

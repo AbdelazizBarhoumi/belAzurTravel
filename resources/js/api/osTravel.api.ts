@@ -3,7 +3,6 @@ import { apiFetch } from './http';
 export type OsTravelStatus =
     | 'pending'
     | 'approved'
-    | 'published'
     | 'rejected'
     | 'orphaned';
 

@@ -25,7 +25,7 @@ import {
     type HotelDetailLookupData,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
-import { cn } from '@/lib/utils';
+import { cn, earliestCheckIn, toLocalISODate } from '@/lib/utils';
 
 type AmenityIcon = typeof Wifi | null;
 
@@ -207,8 +207,8 @@ export default function HotelDetail() {
         }
 
         return {
-            check_in: dateRange.from.toISOString().slice(0, 10),
-            check_out: dateRange.to.toISOString().slice(0, 10),
+            check_in: toLocalISODate(dateRange.from) ?? '',
+            check_out: toLocalISODate(dateRange.to) ?? '',
             hotel_slugs: [id],
             rooms: [
                 {
@@ -239,9 +239,9 @@ export default function HotelDetail() {
     }
 
     const detail = hotel as HotelDetailLookupData;
-    const firstAvailableDate = detail.first_available_at
-        ? new Date(`${detail.first_available_at}T00:00:00`)
-        : undefined;
+    // Earliest selectable check-in: the hotel's first available day, but
+    // never before tomorrow (the provider cannot book same-day arrivals).
+    const firstAvailableDate = earliestCheckIn([detail.first_available_at]);
     const disabledRanges = (detail.stop_sale_ranges ?? [])
         .filter((range) => range?.from && range?.to)
         .map((range) => ({
@@ -272,10 +272,10 @@ export default function HotelDetail() {
             if ((room.min_stay ?? 1) > (room.nights ?? 1)) return false;
             if (room.stop_sales && dateRange?.from && dateRange?.to) {
                 const checkIn = new Date(
-                    `${dateRange.from.toISOString().slice(0, 10)}T00:00:00`,
+                    `${toLocalISODate(dateRange.from) ?? ''}T00:00:00`,
                 );
                 const checkOut = new Date(
-                    `${dateRange.to.toISOString().slice(0, 10)}T00:00:00`,
+                    `${toLocalISODate(dateRange.to) ?? ''}T00:00:00`,
                 );
                 const saleFrom = new Date(`${room.stop_sales.from}T00:00:00`);
                 const saleTo = new Date(`${room.stop_sales.to}T00:00:00`);
@@ -687,12 +687,8 @@ export default function HotelDetail() {
                                   adults: occupancy.adults,
                                   children: occupancy.childAges.length,
                                   childrenAges: occupancy.childAges,
-                                  checkIn:
-                                      dateRange?.from?.toISOString().slice(0, 10) ??
-                                      undefined,
-                                  checkOut:
-                                      dateRange?.to?.toISOString().slice(0, 10) ??
-                                      undefined,
+                                  checkIn: toLocalISODate(dateRange?.from),
+                                  checkOut: toLocalISODate(dateRange?.to),
                               }
                             : undefined
                     }

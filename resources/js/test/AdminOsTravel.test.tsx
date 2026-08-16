@@ -166,8 +166,7 @@ describe('AdminOsTravel page', () => {
                 },
                 counts: {
                     pending: 2,
-                    approved: 0,
-                    published: 1,
+                    approved: 1,
                     rejected: 1,
                     orphaned: 1,
                 },
@@ -180,7 +179,7 @@ describe('AdminOsTravel page', () => {
             data: makeRow(),
         } as never);
         vi.mocked(osTravelApi.approveOsTravelHotel).mockResolvedValue({
-            data: makeRow({ status: 'published', hotel_id: '99' }),
+            data: makeRow({ status: 'approved', hotel_id: '99' }),
         } as never);
         vi.mocked(osTravelApi.approveAllOsTravelHotels).mockResolvedValue({
             data: {

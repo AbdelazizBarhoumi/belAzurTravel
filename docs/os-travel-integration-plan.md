@@ -9,7 +9,7 @@ BelAzurTravel — integrate the OS-TRAVEL hotel catalog beside the existing `hot
 | Storage | Raw external payloads in **staging tables**; approval **publishes into existing `hotels`** |
 | Scope | **Catalog only** (ListCountry/City/Boarding/Categorie/Currency/ListHotel/HotelDetail). Transactional (HotelSearch/Booking*) deferred to Phase 9 |
 | Sync trigger | **Scheduled only** (cron via `Schedule::command`), **single-flight** (no overlapping runs) |
-| Approval | Per-hotel review + **bulk approve** (capped, requires staged `base_price`); reject supported |
+| Approval | Per-hotel review + **bulk approve** (publishes lazily, requires staged `base_price`); reject supported |
 | Markup | Default **+20%** (`OS_TRAVEL_MARKUP_DEFAULT`); **editable per hotel** |
 | Pricing input | `base_price` is set **per hotel on the staging row** (admin input) — never inferred, never defaulted to 0 |
 | Currency | Store `currency` on `hotels` (default `TND`) — future-proofs Phase 9 live pricing |
@@ -232,7 +232,7 @@ Publish flow:
 | `GET /admin/os-travel/hotels/{id}` | raw `payload` + mapped preview |
 | `PUT /admin/os-travel/hotels/{id}` | body `{ base_price, markup_percentage?, currency? }` → persist onto the staging row **without** publishing (used to pre-fill price ahead of a bulk approve) |
 | `POST /admin/os-travel/hotels/{id}/approve` | body `{ base_price?, markup_percentage?, currency? }` (base_price required if not already staged) → publish |
-| `POST /admin/os-travel/hotels/approve-all` | body `{ markup_percentage?, currency? }` (bulk; publishes only pending hotels that already have a staged `base_price`; **skips and reports** any without one; skips already-published; **capped at `config('ostravel.sync.bulk_approve_max')`**, response includes both the published list and the list of ids skipped for missing price / over-cap) |
+| `POST /admin/os-travel/hotels/approve-all` | body `{ markup_percentage?, currency?, include_without_price?, include_without_image?, status?, city?, country_id?, city_id?, stars?, check_in?, check_out? }` (bulk; publishes every hotel matching the applied admin filters straight into `hotels` in **lazy mode** — proxy image URLs, no image downloads, no provider calls; requires a staged `base_price`, so opted-in no-price hotels report as **failed**; placeholder-image hotels are skipped unless `include_without_image`; already-live rows ignored) |
 | `POST /admin/os-travel/hotels/{id}/reject` | set rejected |
 
 Use the existing `role:admin` middleware group; validate with the controller's existing validation style; reuse `flushAdminCache`.

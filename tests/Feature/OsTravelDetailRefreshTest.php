@@ -49,7 +49,7 @@ class OsTravelDetailRefreshTest extends TestCase
             'category_title' => '4 étoiles',
             'stars' => 4,
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
-            'status' => OsTravelHotel::PUBLISHED,
+            'status' => OsTravelHotel::APPROVED,
             'base_price' => 250,
             'last_synced_at' => now(),
         ]);
@@ -145,7 +145,7 @@ class OsTravelDetailRefreshTest extends TestCase
             'category_title' => '4 étoiles',
             'stars' => 4,
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
-            'status' => OsTravelHotel::PUBLISHED,
+            'status' => OsTravelHotel::APPROVED,
             'last_synced_at' => now(),
         ]);
 

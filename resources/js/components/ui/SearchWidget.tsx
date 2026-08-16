@@ -31,7 +31,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCountries } from '@/hooks/useCountries';
-import { cn } from '@/lib/utils';
+import { cn, toLocalISODate } from '@/lib/utils';
 
 type SearchTab = 'hotels' | 'tours' | 'flights';
 
@@ -659,12 +659,12 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         if (values.dateRange?.from) {
             params.set(
                 'from',
-                values.dateRange.from.toISOString().slice(0, 10),
+                toLocalISODate(values.dateRange.from) ?? '',
             );
         }
 
         if (values.dateRange?.to) {
-            params.set('to', values.dateRange.to.toISOString().slice(0, 10));
+            params.set('to', toLocalISODate(values.dateRange.to) ?? '');
         }
 
         params.set('guests', String(values.guests));

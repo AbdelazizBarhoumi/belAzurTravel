@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import {
     Eye,
     Image as ImageIcon,
+    Loader2,
     RefreshCw,
     Star,
     Trash2,
@@ -49,11 +50,11 @@ import {
     useOsTravelHotels,
     useOsTravelReferences,
 } from '@/hooks/useOsTravelAdmin';
+import { earliestCheckIn, toLocalISODate } from '@/lib/utils';
 
 const STATUSES: OsTravelStatus[] = [
     'pending',
     'approved',
-    'published',
     'rejected',
     'orphaned',
 ];
@@ -63,7 +64,6 @@ const STATUS_CARDS: (OsTravelStatus | 'all')[] = ['all', ...STATUSES];
 const statusColors: Record<string, string> = {
     pending: 'bg-secondary/10 text-secondary',
     approved: 'bg-blue-100 text-blue-700',
-    published: 'bg-primary/10 text-primary',
     rejected: 'bg-destructive/10 text-destructive',
     orphaned: 'bg-amber-100 text-amber-700',
 };
@@ -232,12 +232,13 @@ const AdminOsTravel = () => {
         if (cityId) f.city_id = cityId;
         if (starsFilter) f.stars = Number(starsFilter);
         if (dateRange?.from && dateRange.to) {
-            f.check_in = dateRange.from.toISOString().slice(0, 10);
-            f.check_out = dateRange.to.toISOString().slice(0, 10);
+            f.check_in = toLocalISODate(dateRange.from);
+            f.check_out = toLocalISODate(dateRange.to);
         }
         return f;
     }, [status, city, countryId, cityId, starsFilter, dateRange]);
-    const { data: hotels = [], isLoading } = useOsTravelHotels(filters);
+    const { data: hotels = [], isLoading, isFetching } =
+        useOsTravelHotels(filters);
     const { data: detail, isFetching: detailLoading } =
         useOsTravelHotelDetail(detailId);
 
@@ -465,17 +466,13 @@ const AdminOsTravel = () => {
     const filteredHotels = useMemo(() => hotels, [hotels]);
 
     // The date filter drives the live probe; block any pick before the
-    // earliest day any displayed hotel is available from, so admins can't
-    // request a window where nothing is bookable yet.
-    const pickerMinDate = useMemo(() => {
-        const dates = filteredHotels
-            .map((h) => h.first_available_at)
-            .filter((d): d is string => Boolean(d))
-            .map((d) => new Date(`${d}T00:00:00`))
-            .filter((d) => !Number.isNaN(d.getTime()));
-        if (dates.length === 0) return undefined;
-        return new Date(Math.min(...dates.map((d) => d.getTime())));
-    }, [filteredHotels]);
+    // earliest day any displayed hotel is available from (and never allow
+    // a same-day check-in, which the provider cannot book).
+    const pickerMinDate = useMemo(
+        () =>
+            earliestCheckIn(filteredHotels.map((h) => h.first_available_at)),
+        [filteredHotels],
+    );
 
     const availableCities = useMemo(() => {
         if (!references) return [];
@@ -483,7 +480,7 @@ const AdminOsTravel = () => {
         return references.cities.filter((c) => c.country_id === countryId);
     }, [references, countryId]);
 
-    const formatDate = (date: Date) => date.toISOString().slice(0, 10);
+    const formatDate = (date: Date) => toLocalISODate(date) ?? '';
 
     const hasDateFilter = Boolean(dateRange?.from && dateRange.to);
 
@@ -691,6 +688,12 @@ const AdminOsTravel = () => {
 
                 {/* Table */}
                 <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                    {isFetching && !isLoading && (
+                        <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-4 py-2 text-xs font-medium text-muted-foreground">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            {t('osTravel.fetching')}
+                        </div>
+                    )}
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
@@ -716,7 +719,51 @@ const AdminOsTravel = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {(isLoading ? [] : filteredHotels).map((h) => (
+                                {isLoading
+                                    ? Array.from({ length: 6 }).map((_, i) => (
+                                          <tr
+                                              key={`os-travel-skeleton-${i}`}
+                                              className="border-b border-border last:border-0"
+                                          >
+                                              <td className="px-4 py-3">
+                                                  <div className="flex items-center gap-3">
+                                                      <Skeleton className="h-10 w-14 rounded-lg" />
+                                                      <div className="space-y-2">
+                                                          <Skeleton className="h-3.5 w-40" />
+                                                          <Skeleton className="h-3 w-24" />
+                                                      </div>
+                                                  </div>
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-24" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-24" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-8" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-28" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-16" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-16" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-5 w-20 rounded-full" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <div className="flex items-center gap-2">
+                                                      <Skeleton className="h-8 w-8 rounded-lg" />
+                                                      <Skeleton className="h-8 w-8 rounded-lg" />
+                                                  </div>
+                                              </td>
+                                          </tr>
+                                      ))
+                                    : filteredHotels.map((h) => (
                                     <tr
                                         key={h.id}
                                         className="border-b border-border last:border-0 hover:bg-muted/20"
@@ -842,7 +889,8 @@ const AdminOsTravel = () => {
                                                         h.currency ??
                                                         'TND'}
                                                 </span>
-                                            ) : h.live_status ? (
+                                            ) : h.live_status &&
+                                              liveStatusMeta[h.live_status] ? (
                                                 <div
                                                     className="flex flex-col gap-0.5"
                                                     title={
@@ -854,7 +902,7 @@ const AdminOsTravel = () => {
                                                         —
                                                     </span>
                                                     <span
-                                                        className={`text-xs font-semibold ${liveStatusMeta[h.live_status].className}`}
+                                                        className={`text-[10px] font-semibold ${liveStatusMeta[h.live_status].className}`}
                                                     >
                                                         {t(
                                                             liveStatusMeta[
@@ -880,13 +928,15 @@ const AdminOsTravel = () => {
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span
-                                                className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[h.status] || ''}`}
-                                            >
-                                                {t(
-                                                    `osTravel.status.${h.status}`,
-                                                )}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span
+                                                    className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[h.status] || ''}`}
+                                                >
+                                                    {t(
+                                                        `osTravel.status.${h.status}`,
+                                                    )}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">
@@ -940,29 +990,28 @@ const AdminOsTravel = () => {
                                                         )}
                                                     </span>
                                                 </Button>
-                                                {(h.status === 'approved' ||
-                                                    h.status === 'published') && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                setUnapproveId(
-                                                                    h.id,
-                                                                )
-                                                            }
-                                                            aria-label={t(
+                                                {h.status === 'approved' && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            setUnapproveId(
+                                                                h.id,
+                                                            )
+                                                        }
+                                                        aria-label={t(
+                                                            'osTravel.unapprove',
+                                                        )}
+                                                    >
+                                                        <Undo2 className="h-4 w-4" />
+                                                        <span className="sr-only">
+                                                            {t(
                                                                 'osTravel.unapprove',
                                                             )}
-                                                        >
-                                                            <Undo2 className="h-4 w-4" />
-                                                            <span className="sr-only">
-                                                                {t(
-                                                                    'osTravel.unapprove',
-                                                                )}
-                                                            </span>
-                                                        </Button>
-                                                    )}
-                                                {h.status !== 'published' && (
+                                                        </span>
+                                                    </Button>
+                                                )}
+                                                {!h.hotel_id && (
                                                     <Button
                                                         size="sm"
                                                         variant="destructive"
@@ -985,7 +1034,7 @@ const AdminOsTravel = () => {
                             </tbody>
                         </table>
                     </div>
-                    {!isLoading && filteredHotels.length === 0 && (
+                    {!isLoading && !isFetching && filteredHotels.length === 0 && (
                         <p className="p-8 text-center text-muted-foreground">
                             {t('osTravel.emptyState')}
                         </p>
@@ -1332,7 +1381,9 @@ const AdminOsTravel = () => {
                                 <RefreshCw className="h-4 w-4" />
                                 {t('osTravel.savePrice')}
                             </Button>
-                            {activeHotel?.status === 'pending' && (
+                            {(activeHotel?.status === 'pending' ||
+                                (activeHotel?.status === 'approved' &&
+                                    !activeHotel?.hotel_id)) && (
                                 <Button
                                     disabled={approveMutation.isPending}
                                     onClick={() => approveMutation.mutate()}

@@ -12,7 +12,9 @@ use App\Services\OsTravel\OsTravelSearchService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Admin-only endpoints to review and approve the OS-TRAVEL staging catalog.
@@ -51,7 +53,6 @@ class AdminOsTravelController extends Controller
                 'counts' => [
                     OsTravelHotel::PENDING => OsTravelHotel::query()->where('status', OsTravelHotel::PENDING)->count(),
                     OsTravelHotel::APPROVED => OsTravelHotel::query()->where('status', OsTravelHotel::APPROVED)->count(),
-                    OsTravelHotel::PUBLISHED => OsTravelHotel::query()->where('status', OsTravelHotel::PUBLISHED)->count(),
                     OsTravelHotel::REJECTED => OsTravelHotel::query()->where('status', OsTravelHotel::REJECTED)->count(),
                     OsTravelHotel::ORPHANED => OsTravelHotel::query()->where('status', OsTravelHotel::ORPHANED)->count(),
                     'all' => OsTravelHotel::query()->count(),
@@ -62,7 +63,7 @@ class AdminOsTravelController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $validStatuses = [OsTravelHotel::PENDING, OsTravelHotel::APPROVED, OsTravelHotel::PUBLISHED, OsTravelHotel::REJECTED, OsTravelHotel::ORPHANED];
+        $validStatuses = [OsTravelHotel::PENDING, OsTravelHotel::APPROVED, OsTravelHotel::REJECTED, OsTravelHotel::ORPHANED];
 
         $data = $request->validate([
             'status' => ['sometimes', 'nullable', 'string', 'in:'.implode(',', $validStatuses)],
@@ -215,11 +216,12 @@ class AdminOsTravelController extends Controller
             'currency' => ['sometimes', 'nullable', 'string', 'max:3'],
         ]);
 
-        // Idempotent re-approve: an already-published staging row returns its
-        // linked hotel without re-publishing (no duplicate hotel, no re-download,
-        // no approved_at bump). A published row whose linked hotel was deleted
-        // (hotel_id nulled by nullOnDelete) falls through and re-publishes.
-        if ($hotel->status === OsTravelHotel::PUBLISHED && $hotel->hotel_id !== null) {
+        // Idempotent re-approve: a staging row that already has a linked public
+        // `hotels` row returns that hotel without re-publishing (no duplicate
+        // hotel, no re-download, no approved_at bump). A row whose linked hotel
+        // was deleted (hotel_id nulled by nullOnDelete) falls through and
+        // re-publishes.
+        if ($hotel->hotel_id !== null) {
             return response()->json([
                 'data' => [
                     ...$this->reviewPayload($hotel->refresh()),
@@ -271,23 +273,22 @@ class AdminOsTravelController extends Controller
     }
 
     /**
-     * Bulk approve: mark every hotel matching the currently applied admin
-     * filters as `approved` with a fast database update — no publishing, no
-     * image downloads, no provider calls. By default hotels without a price
-     * or without an image are skipped; passing `include_without_price` /
-     * `include_without_image` opts them back into the batch. Already-published
-     * rows are ignored. A batch-wide `markup_percentage` / `currency`
-     * override is persisted onto the staged rows for the later per-hotel
-     * publish.
-     *
-     * Publishing still happens per hotel (see `approve`), so the heavy work —
-     * creating the public `hotels` row and downloading the provider photos —
-     * never blocks the bulk action. Hotel detail content is fetched lazily by
-     * the first public visit (`HotelPublisher::refreshDetail`).
+     * Bulk approve: publish every hotel matching the currently applied admin
+     * filters straight into the public `hotels` table. Publishing runs in
+     * `lazy` mode, so it is pure database work — the provider photos are
+     * stored as opaque proxy URLs (streamed on-demand through the image proxy)
+     * and never downloaded in this request, and the heavy hotel-detail content
+     * is fetched lazily by the first public visit
+     * (`HotelPublisher::refreshDetail`). By default hotels without a price or
+     * without an image are skipped; passing `include_without_price` /
+     * `include_without_image` opts them back into the batch (a price is still
+     * required to publish, so a no-price hotel reports as failed). Already-live
+     * rows are ignored. A batch-wide `markup_percentage` / `currency` override
+     * is applied to every published hotel.
      */
     public function approveAll(Request $request): JsonResponse
     {
-        $validStatuses = [OsTravelHotel::PENDING, OsTravelHotel::APPROVED, OsTravelHotel::PUBLISHED, OsTravelHotel::REJECTED, OsTravelHotel::ORPHANED];
+        $validStatuses = [OsTravelHotel::PENDING, OsTravelHotel::APPROVED, OsTravelHotel::REJECTED, OsTravelHotel::ORPHANED];
 
         $data = $request->validate([
             'markup_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0'],
@@ -327,49 +328,54 @@ class AdminOsTravelController extends Controller
                 ->values()
                 ->all();
 
-        $approvedIds = $pending->filter(function (OsTravelHotel $hotel) use ($includeWithoutPrice, $includeWithoutImage) {
+        $approved = [];
+        $failed = [];
+
+        foreach ($pending as $hotel) {
             if (! $includeWithoutPrice && $hotel->base_price === null) {
-                return false;
+                continue;
             }
 
             if (! $includeWithoutImage && self::isPlaceholderImageUrl($hotel->image)) {
-                return false;
+                continue;
             }
 
-            return true;
-        })->pluck('id')
-            ->map(fn ($value) => (string) $value)
-            ->values()
-            ->all();
+            // Already-live rows are idempotently re-approvable via `approve`,
+            // but bulk approval never touches rows already on the public site.
+            if ($hotel->hotel_id !== null) {
+                continue;
+            }
 
-        if ($approvedIds !== []) {
-            $update = [
-                'status' => OsTravelHotel::APPROVED,
-                'approved_by' => $request->user()?->id,
-                'approved_at' => now(),
-            ];
+            $overrides = [];
 
             if (array_key_exists('markup_percentage', $data)) {
-                $update['markup_percentage'] = $data['markup_percentage'];
+                $overrides['markup_percentage'] = $data['markup_percentage'];
             }
 
             if (array_key_exists('currency', $data)) {
-                $update['currency'] = $data['currency'];
+                $overrides['currency'] = $data['currency'];
             }
 
-            collect($approvedIds)->chunk(1000)->each(function ($chunk) use ($update) {
-                OsTravelHotel::query()->whereIn('id', $chunk->map(fn ($value) => (int) $value)->all())->update($update);
-            });
+            try {
+                $this->publisher->publish($hotel, $overrides, $request->user(), true);
+                $approved[] = (string) $hotel->id;
+            } catch (Throwable $e) {
+                Log::warning('OS-TRAVEL bulk approve failed to publish a hotel.', [
+                    'external_id' => $hotel->external_id,
+                    'error' => $e->getMessage(),
+                ]);
+                $failed[] = (string) $hotel->id;
+            }
         }
 
         return response()->json([
             'data' => [
-                'approved' => $approvedIds,
-                'failed' => [],
+                'approved' => $approved,
+                'failed' => $failed,
                 'skipped_no_price' => $withoutPrice,
                 'skipped_no_image' => $withoutImage,
-                'approved_count' => count($approvedIds),
-                'failed_count' => 0,
+                'approved_count' => count($approved),
+                'failed_count' => count($failed),
                 'skipped_no_price_count' => count($withoutPrice),
                 'skipped_no_image_count' => count($withoutImage),
             ],
@@ -428,7 +434,7 @@ class AdminOsTravelController extends Controller
     {
         $hotel = OsTravelHotel::query()->findOrFail($id);
 
-        if ($hotel->status === OsTravelHotel::PUBLISHED) {
+        if ($hotel->hotel_id !== null) {
             return response()->json(['message' => __('os_travel.cannot_reject_published')], 422);
         }
 
@@ -443,8 +449,8 @@ class AdminOsTravelController extends Controller
     /**
      * Un-approve a staged hotel, moving it back to the pending review queue.
      *
-     * An approved row just clears its approval. A published row is also
-     * un-published: the linked public `hotels` row is deleted (so it leaves the
+     * An approved row just clears its approval. A row with a linked public
+     * `hotels` row is also un-published: that row is deleted (so it leaves the
      * public site) and the staging row returns to pending. Deleting is safe
      * because the staging row's `hotel_id` is null-on-delete and the publish
      * path re-creates the hotel on the next approve.
@@ -453,11 +459,11 @@ class AdminOsTravelController extends Controller
     {
         $hotel = OsTravelHotel::query()->findOrFail($id);
 
-        if (! in_array($hotel->status, [OsTravelHotel::APPROVED, OsTravelHotel::PUBLISHED], true)) {
+        if ($hotel->status !== OsTravelHotel::APPROVED) {
             return response()->json(['message' => __('os_travel.cannot_unapprove')], 422);
         }
 
-        if ($hotel->status === OsTravelHotel::PUBLISHED && $hotel->hotel_id !== null) {
+        if ($hotel->hotel_id !== null) {
             $hotel->hotel?->delete();
             $hotel->refresh();
         }

@@ -11,8 +11,6 @@ class OsTravelHotel extends Model
 
     public const APPROVED = 'approved';
 
-    public const PUBLISHED = 'published';
-
     public const REJECTED = 'rejected';
 
     public const ORPHANED = 'orphaned';

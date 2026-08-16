@@ -241,7 +241,7 @@ class AdminHotelController extends Controller
         $isProviderLinked = $existing !== null
             && $existing instanceof Hotel
             && OsTravelHotel::query()
-                ->where('status', OsTravelHotel::PUBLISHED)
+                ->whereNotNull('hotel_id')
                 ->where('hotel_id', $existing->id)
                 ->exists();
 

@@ -155,7 +155,7 @@ class BookingController extends Controller
                 }
             } elseif ($hotel !== null && ! empty($data['provider']['token'])) {
                 $staged = OsTravelHotel::query()
-                    ->where('status', OsTravelHotel::PUBLISHED)
+                    ->whereNotNull('hotel_id')
                     ->where('hotel_id', $hotel->id)
                     ->first();
 

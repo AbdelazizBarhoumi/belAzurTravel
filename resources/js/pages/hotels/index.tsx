@@ -37,7 +37,7 @@ import type { Lang } from '@/i18n/translations';
 
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
-import { cn } from '@/lib/utils';
+import { cn, earliestCheckIn, toLocalISODate } from '@/lib/utils';
 import type { HotelItem } from '@/types/public/hotel.types';
 
 // A card is either a stored browse record or a live result (name/location are
@@ -171,8 +171,8 @@ export default function Hotels() {
         }
 
         return {
-            check_in: from.toISOString().slice(0, 10),
-            check_out: to.toISOString().slice(0, 10),
+            check_in: toLocalISODate(from) ?? '',
+            check_out: toLocalISODate(to) ?? '',
             rooms: [
                 {
                     adults: occupancy.adults,
@@ -241,17 +241,14 @@ export default function Hotels() {
     });
 
     // The shared date picker is always bounded to the earliest day any
-    // displayed hotel is available from, so users can't pick a window before
-    // any hotel can be booked.
-    const pickerMinDate = useMemo(() => {
-        const dates = filteredHotels
-            .map((h) => h.first_available_at)
-            .filter((d): d is string => Boolean(d))
-            .map((d) => new Date(`${d}T00:00:00`))
-            .filter((d) => !Number.isNaN(d.getTime()));
-        if (dates.length === 0) return undefined;
-        return new Date(Math.min(...dates.map((d) => d.getTime())));
-    }, [filteredHotels]);
+    // displayed hotel is available from (and never allows a same-day
+    // check-in, which the provider cannot book), so users can't pick a
+    // window before any hotel can be booked.
+    const pickerMinDate = useMemo(
+        () =>
+            earliestCheckIn(filteredHotels.map((h) => h.first_available_at)),
+        [filteredHotels],
+    );
 
     const handleClearAll = () => {
         setSearchQuery('');

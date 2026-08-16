@@ -6860,10 +6860,10 @@ translations['osTravel.status.approved'] = {
     ar: 'معتمد',
     en: 'Approved',
 };
-translations['osTravel.status.published'] = {
-    fr: 'Publiés',
-    ar: 'منشور',
-    en: 'Published',
+translations['osTravel.live'] = {
+    fr: 'En ligne',
+    ar: 'مباشر',
+    en: 'Live',
 };
 translations['osTravel.status.rejected'] = {
     fr: 'Rejetés',
@@ -6946,9 +6946,9 @@ translations['osTravel.approveAllFailed'] = {
     en: 'Bulk approval failed.',
 };
 translations['osTravel.approved'] = {
-    fr: 'Hôtel publié.',
-    ar: 'تم نشر الفندق.',
-    en: 'Hotel published.',
+    fr: 'Hôtel approuvé et mis en ligne.',
+    ar: 'تم اعتماد الفندق ونشره.',
+    en: 'Hotel approved and live.',
 };
 translations['osTravel.approveFailed'] = {
     fr: "Échec de l'approbation de l'hôtel.",
@@ -6986,9 +6986,9 @@ translations['osTravel.rejectTitle'] = {
     en: 'Reject this hotel?',
 };
 translations['osTravel.rejectDescription'] = {
-    fr: "L'hôtel ne sera pas publié et restera dans le catalogue comme rejeté.",
+    fr: "L'hôtel ne sera pas mis en ligne et restera dans le catalogue comme rejeté.",
     ar: 'لن يتم نشر الفندق وسيبقى في الكتالوج كمرفوض.',
-    en: 'The hotel will not be published and will stay in the catalog as rejected.',
+    en: 'The hotel will not go live and will stay in the catalog as rejected.',
 };
 translations['osTravel.unapproved'] = {
     fr: 'Hôtel désapprouvé.',
@@ -7164,6 +7164,11 @@ translations['osTravel.liveCheckActive'] = {
     fr: 'Vérification live des dates',
     ar: 'فحص مباشر للتواريخ',
     en: 'Live check for dates',
+};
+translations['osTravel.fetching'] = {
+    fr: 'Chargement des prix en direct…',
+    ar: 'جارٍ تحميل الأسعار المباشرة…',
+    en: 'Fetching live prices…',
 };
 translations['osTravel.priceReason.neverRefreshed'] = {
     fr: 'Prix jamais actualisé',

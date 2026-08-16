@@ -74,7 +74,7 @@ class AdminOsTravelTest extends TestCase
     public function test_dashboard_returns_last_sync_and_counts(): void
     {
         $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, null);
-        $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::PUBLISHED, 200);
+        $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::APPROVED, 200);
         $this->stagedHotel(3, 'Hotel Three', OsTravelHotel::REJECTED, 300);
 
         $sync = OsTravelSync::create([
@@ -94,7 +94,7 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame('success', $response->json('data.last_sync.status'));
         $this->assertSame(1, $response->json('data.last_sync.reactivated_count'));
         $this->assertSame(1, $response->json('data.counts.pending'));
-        $this->assertSame(1, $response->json('data.counts.published'));
+        $this->assertSame(1, $response->json('data.counts.approved'));
         $this->assertSame(1, $response->json('data.counts.rejected'));
     }
 
@@ -236,7 +236,7 @@ class AdminOsTravelTest extends TestCase
             ->assertOk();
 
         $staged->refresh();
-        $this->assertSame(OsTravelHotel::PUBLISHED, $staged->status);
+        $this->assertSame(OsTravelHotel::APPROVED, $staged->status);
         $this->assertNotNull($staged->approved_at);
         $this->assertSame($this->admin->id, $staged->approved_by);
 
@@ -303,7 +303,7 @@ class AdminOsTravelTest extends TestCase
         $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
         $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::PENDING, null);
         $this->stagedHotel(3, 'Hotel Three', OsTravelHotel::PENDING, 200);
-        $this->stagedHotel(4, 'Hotel Four', OsTravelHotel::PUBLISHED, 300);
+        $this->stagedHotel(4, 'Hotel Four', OsTravelHotel::APPROVED, 300);
 
         $response = $this->actingAs($this->admin)
             ->postJson('/api/admin/os-travel/hotels/approve-all')
@@ -316,8 +316,11 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '1')->first()->status);
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '3')->first()->status);
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '2')->first()->status);
-        $this->assertSame(OsTravelHotel::PUBLISHED, OsTravelHotel::where('external_id', '4')->first()->status);
-        $this->assertSame(0, Hotel::count());
+        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '4')->first()->status);
+        $this->assertSame(2, Hotel::count());
+        $this->assertNotNull(OsTravelHotel::where('external_id', '1')->first()->hotel_id);
+        $this->assertNotNull(OsTravelHotel::where('external_id', '3')->first()->hotel_id);
+        $this->assertNull(OsTravelHotel::where('external_id', '4')->first()->hotel_id);
     }
 
     public function test_bulk_approve_skips_hotels_without_image_unless_opt_in(): void
@@ -334,7 +337,9 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame([], $response->json('data.skipped_no_price'));
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '1')->first()->status);
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '2')->first()->status);
-        $this->assertSame(0, Hotel::count());
+        $this->assertSame(1, Hotel::count());
+        $this->assertNotNull(OsTravelHotel::where('external_id', '1')->first()->hotel_id);
+        $this->assertNull(OsTravelHotel::where('external_id', '2')->first()->hotel_id);
 
         $this->stagedHotel(3, 'Hotel Three', OsTravelHotel::PENDING, 200, null);
 
@@ -348,10 +353,12 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame([], $response->json('data.skipped_no_image'));
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '2')->first()->status);
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '3')->first()->status);
-        $this->assertSame(0, Hotel::count());
+        $this->assertSame(3, Hotel::count());
+        $this->assertNotNull(OsTravelHotel::where('external_id', '2')->first()->hotel_id);
+        $this->assertNotNull(OsTravelHotel::where('external_id', '3')->first()->hotel_id);
     }
 
-    public function test_bulk_approve_without_price_flag_approves_no_price_hotels(): void
+    public function test_bulk_approve_without_price_flag_reports_no_price_hotels_as_failed(): void
     {
         $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
         $this->stagedHotel(2, 'Hotel Two', OsTravelHotel::PENDING, null);
@@ -362,13 +369,15 @@ class AdminOsTravelTest extends TestCase
             ])
             ->assertOk();
 
-        $this->assertSame(2, $response->json('data.approved_count'));
-        $this->assertSame(0, $response->json('data.failed_count'));
-        $this->assertSame([], $response->json('data.failed'));
+        $this->assertSame(1, $response->json('data.approved_count'));
+        $this->assertSame(1, $response->json('data.failed_count'));
+        $this->assertSame(['2'], $response->json('data.failed'));
         $this->assertSame([], $response->json('data.skipped_no_price'));
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '1')->first()->status);
-        $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '2')->first()->status);
-        $this->assertSame(0, Hotel::count());
+        $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '2')->first()->status);
+        $this->assertSame(1, Hotel::count());
+        $this->assertNotNull(OsTravelHotel::where('external_id', '1')->first()->hotel_id);
+        $this->assertNull(OsTravelHotel::where('external_id', '2')->first()->hotel_id);
     }
 
     public function test_bulk_approve_flags_placeholder_image_as_missing_image(): void
@@ -387,7 +396,10 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '1')->first()->status);
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '2')->first()->status);
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '3')->first()->status);
-        $this->assertSame(0, Hotel::count());
+        $this->assertSame(1, Hotel::count());
+        $this->assertNotNull(OsTravelHotel::where('external_id', '1')->first()->hotel_id);
+        $this->assertNull(OsTravelHotel::where('external_id', '2')->first()->hotel_id);
+        $this->assertNull(OsTravelHotel::where('external_id', '3')->first()->hotel_id);
 
         $response = $this->actingAs($this->admin)
             ->postJson('/api/admin/os-travel/hotels/approve-all', [
@@ -399,7 +411,9 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame([], $response->json('data.skipped_no_image'));
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '2')->first()->status);
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '3')->first()->status);
-        $this->assertSame(0, Hotel::count());
+        $this->assertSame(3, Hotel::count());
+        $this->assertNotNull(OsTravelHotel::where('external_id', '2')->first()->hotel_id);
+        $this->assertNotNull(OsTravelHotel::where('external_id', '3')->first()->hotel_id);
     }
 
     public function test_bulk_approve_only_targets_hotels_matching_applied_filters(): void
@@ -419,7 +433,10 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame(OsTravelHotel::PENDING, OsTravelHotel::where('external_id', '1')->first()->status);
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '2')->first()->status);
         $this->assertSame(OsTravelHotel::APPROVED, OsTravelHotel::where('external_id', '3')->first()->status);
-        $this->assertSame(0, Hotel::count());
+        $this->assertSame(2, Hotel::count());
+        $this->assertNull(OsTravelHotel::where('external_id', '1')->first()->hotel_id);
+        $this->assertNotNull(OsTravelHotel::where('external_id', '2')->first()->hotel_id);
+        $this->assertNotNull(OsTravelHotel::where('external_id', '3')->first()->hotel_id);
     }
 
     public function test_reject_sets_status_without_creating_hotel(): void
@@ -534,7 +551,22 @@ class AdminOsTravelTest extends TestCase
     {
         $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::PENDING, null);
         $this->stagedHotel(999, 'Stop Sales Hotel', OsTravelHotel::APPROVED, null);
-        $this->stagedHotel(200, 'Published Hotel', OsTravelHotel::PUBLISHED, 300);
+        $live = $this->stagedHotel(200, 'Live Hotel', OsTravelHotel::APPROVED, 300);
+        $liveHotel = Hotel::create([
+            'slug' => 'ostravel-200',
+            'code' => 'ostravel-200',
+            'name' => ['en' => 'Live Hotel', 'fr' => 'Live Hotel', 'ar' => 'Live Hotel'],
+            'location' => ['en' => 'Kelibia', 'fr' => 'Kelibia', 'ar' => 'Kelibia'],
+            'price' => 360,
+            'base_price' => 300,
+            'markup_percentage' => 20,
+            'currency' => 'TND',
+            'image' => 'test.jpg',
+            'tags' => [],
+            'details' => [],
+            'meta' => [],
+        ]);
+        $live->update(['hotel_id' => $liveHotel->id]);
 
         Http::fake([
             'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($this->osTravelFixture('hotel_search')),
@@ -615,15 +647,30 @@ class AdminOsTravelTest extends TestCase
             ->assertStatus(422);
     }
 
-    public function test_reject_published_hotel_is_forbidden(): void
+    public function test_reject_live_hotel_is_forbidden(): void
     {
-        $staged = $this->stagedHotel(178, 'Hotel One', OsTravelHotel::PUBLISHED, 100);
+        $staged = $this->stagedHotel(178, 'Hotel One', OsTravelHotel::APPROVED, 100);
+        $hotel = Hotel::create([
+            'slug' => 'ostravel-178',
+            'code' => 'ostravel-178',
+            'name' => ['en' => 'Hotel One', 'fr' => 'Hotel One', 'ar' => 'Hotel One'],
+            'location' => ['en' => 'Kelibia', 'fr' => 'Kelibia', 'ar' => 'Kelibia'],
+            'price' => 120,
+            'base_price' => 100,
+            'markup_percentage' => 20,
+            'currency' => 'TND',
+            'image' => 'test.jpg',
+            'tags' => [],
+            'details' => [],
+            'meta' => [],
+        ]);
+        $staged->update(['hotel_id' => $hotel->id]);
 
         $this->actingAs($this->admin)
             ->postJson("/api/admin/os-travel/hotels/{$staged->id}/reject")
             ->assertStatus(422);
 
-        $this->assertSame(OsTravelHotel::PUBLISHED, $staged->fresh()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, $staged->fresh()->status);
     }
 
     public function test_reapprove_is_idempotent_and_returns_existing_hotel(): void
@@ -644,7 +691,7 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame(1, Hotel::count());
         $this->assertSame((string) $hotelId, $response->json('data.hotel.id'));
         $this->assertTrue($staged->fresh()->approved_at->equalTo($approvedAt));
-        $this->assertSame(OsTravelHotel::PUBLISHED, $staged->fresh()->status);
+        $this->assertSame(OsTravelHotel::APPROVED, $staged->fresh()->status);
     }
 
     public function test_bulk_approve_persists_batch_wide_markup_and_currency(): void
@@ -667,7 +714,28 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame('EUR', $hotel->currency);
         $this->assertNotNull($hotel->approved_at);
         $this->assertSame($this->admin->id, $hotel->approved_by);
-        $this->assertSame(0, Hotel::count());
+        $this->assertSame(1, Hotel::count());
+        $this->assertNotNull($hotel->hotel_id);
+
+        $published = Hotel::first();
+        $this->assertNotNull($published);
+        $this->assertSame('15.00', (string) $published->markup_percentage);
+        $this->assertSame('EUR', $published->currency);
+    }
+
+    public function test_bulk_approve_publishes_with_proxy_image_and_no_downloads(): void
+    {
+        $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING, 100);
+
+        $this->actingAs($this->admin)
+            ->postJson('/api/admin/os-travel/hotels/approve-all')
+            ->assertOk();
+
+        $hotel = Hotel::first();
+        $this->assertNotNull($hotel);
+        $this->assertNotNull(OsTravelHotel::where('external_id', '1')->first()->hotel_id);
+        $this->assertStringStartsWith('/api/hotels/images/', $hotel->image);
+        Http::assertNothingSent();
     }
 
     public function test_index_filters_by_country_and_city(): void

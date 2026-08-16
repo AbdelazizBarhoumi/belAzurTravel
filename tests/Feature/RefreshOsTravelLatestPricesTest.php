@@ -52,7 +52,7 @@ class RefreshOsTravelLatestPricesTest extends TestCase
             'category_title' => '4 étoiles',
             'stars' => 4,
             'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
-            'status' => OsTravelHotel::PUBLISHED,
+            'status' => OsTravelHotel::APPROVED,
             'hotel_id' => $hotel->id,
             'base_price' => $basePrice,
             'last_synced_at' => now(),

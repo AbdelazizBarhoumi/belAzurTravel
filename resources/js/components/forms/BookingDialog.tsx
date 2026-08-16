@@ -26,18 +26,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { api } from '@/hooks/useBooking';
+import { toLocalISODate } from '@/lib/utils';
 
 type Civility = 'Mr' | 'Mrs' | 'Ms';
-
-// Serialize a Date as YYYY-MM-DD in local time (toISOString() shifts to UTC).
-const toLocalISODate = (date: Date | null | undefined): string | undefined =>
-    date
-        ? [
-              date.getFullYear(),
-              String(date.getMonth() + 1).padStart(2, '0'),
-              String(date.getDate()).padStart(2, '0'),
-          ].join('-')
-        : undefined;
 
 interface PassengerRow {
     civility: Civility;

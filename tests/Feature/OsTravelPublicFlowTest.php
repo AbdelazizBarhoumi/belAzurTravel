@@ -58,7 +58,7 @@ class OsTravelPublicFlowTest extends TestCase
 
     private function publishedHotel(): array
     {
-        $staged = $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::PUBLISHED, 250);
+        $staged = $this->stagedHotel(178, 'Cap Bon Kelibia Beach Hotel & Spa', OsTravelHotel::APPROVED, 250);
 
         $hotel = Hotel::create([
             'slug' => 'cap-bon-kelibia-beach-hotel-spa',
@@ -138,9 +138,9 @@ class OsTravelPublicFlowTest extends TestCase
         $this->assertCount(3, $response->json('data'));
 
         $statuses = collect($response->json('data'))->map(fn ($row) => $row['status'])->sort()->values()->all();
-        $this->assertSame([OsTravelHotel::ORPHANED, OsTravelHotel::PENDING, OsTravelHotel::PUBLISHED], $statuses);
+        $this->assertSame([OsTravelHotel::APPROVED, OsTravelHotel::ORPHANED, OsTravelHotel::PENDING], $statuses);
 
-        $published = collect($response->json('data'))->firstWhere('status', OsTravelHotel::PUBLISHED);
+        $published = collect($response->json('data'))->firstWhere('status', OsTravelHotel::APPROVED);
         $this->assertSame('178', $published['external_id']);
         $this->assertSame('cap-bon-kelibia-beach-hotel-spa', $published['hotel_slug']);
         $this->assertSame(250, $published['base_price']);

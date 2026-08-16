@@ -105,14 +105,14 @@ class Hotel extends Model
     }
 
     /**
-     * Whether this hotel is wired to a published OS-TRAVEL staging row. This is
-     * the authoritative signal that a hotel is provider-backed — regardless of
-     * the `source` column value.
+     * Whether this hotel is wired to an approved OS-TRAVEL staging row with a
+     * public `hotels` row linked. This is the authoritative signal that a hotel
+     * is provider-backed — regardless of the `source` column value.
      */
     public function isProviderLinked(): bool
     {
         return OsTravelHotel::query()
-            ->where('status', OsTravelHotel::PUBLISHED)
+            ->whereNotNull('hotel_id')
             ->where('hotel_id', $this->id)
             ->exists();
     }

@@ -235,7 +235,7 @@ class OsTravelCatalogSync
 
     protected function reactivate(OsTravelHotel $hotel): void
     {
-        $restoreStatus = in_array($hotel->prior_status, [OsTravelHotel::APPROVED, OsTravelHotel::PUBLISHED], true)
+        $restoreStatus = $hotel->prior_status === OsTravelHotel::APPROVED
             ? $hotel->prior_status
             : OsTravelHotel::PENDING;
 
@@ -290,8 +290,8 @@ class OsTravelCatalogSync
                     'prior_status' => $hotel->status,
                 ]);
                 $this->orphanedCount++;
-            } elseif ($hotel->status === OsTravelHotel::PUBLISHED) {
-                Log::warning('OS-TRAVEL published hotel missing from latest sync; admin review required.', [
+            } elseif ($hotel->hotel_id !== null) {
+                Log::warning('OS-TRAVEL live hotel missing from latest sync; admin review required.', [
                     'external_id' => $hotel->external_id,
                     'hotel_id' => $hotel->hotel_id,
                 ]);

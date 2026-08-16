@@ -45,7 +45,7 @@ class HotelController extends Controller
         // the cached payload with no provider call. Manual hotels never refresh.
         if ($item->isProviderLinked()) {
             $staged = OsTravelHotel::query()
-                ->where('status', OsTravelHotel::PUBLISHED)
+                ->whereNotNull('hotel_id')
                 ->where('hotel_id', $item->id)
                 ->first();
 

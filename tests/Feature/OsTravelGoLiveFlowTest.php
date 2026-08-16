@@ -67,7 +67,7 @@ class OsTravelGoLiveFlowTest extends TestCase
             ->assertOk();
 
         $staged->refresh();
-        $this->assertSame(OsTravelHotel::PUBLISHED, $staged->status);
+        $this->assertSame(OsTravelHotel::APPROVED, $staged->status);
         $hotel = Hotel::first();
         $this->assertSame('cap-bon-kelibia-beach-hotel-spa', $hotel->slug);
         $this->assertSame(1000, $hotel->price);

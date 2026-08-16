@@ -49,7 +49,7 @@ class OsTravelSearchService
 
         return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($hotelSlugs, $options, $searchDetails) {
             $query = OsTravelHotel::query()
-                ->where('status', OsTravelHotel::PUBLISHED)
+                ->whereNotNull('hotel_id')
                 ->with('hotel');
 
             if ($hotelSlugs !== []) {
@@ -74,7 +74,6 @@ class OsTravelSearchService
             $manualHotels = Hotel::query()
                 ->where('source', Hotel::SOURCE_MANUAL)
                 ->whereNotIn('id', OsTravelHotel::query()
-                    ->where('status', OsTravelHotel::PUBLISHED)
                     ->whereNotNull('hotel_id')
                     ->pluck('hotel_id'))
                 ->when($hotelSlugs !== [], fn ($q) => $q->whereIn('slug', $hotelSlugs))
@@ -292,7 +291,6 @@ class OsTravelSearchService
     public function refreshLatestPrices(array $options = []): array
     {
         $published = OsTravelHotel::query()
-            ->where('status', OsTravelHotel::PUBLISHED)
             ->whereNotNull('hotel_id')
             ->with('hotel')
             ->get()
@@ -386,12 +384,15 @@ class OsTravelSearchService
 
         if ($ids !== []) {
             // A targeted refresh may reprice any staging row — pending,
-            // approved, published (so the live price can be synced without
+            // approved, or live (so the live price can be synced without
             // unpublishing first), rejected, or orphaned — whatever the admin
             // is currently looking at.
             $query->whereIn('id', $ids);
         } else {
-            $query->whereIn('status', [OsTravelHotel::PENDING, OsTravelHotel::APPROVED]);
+            // The bulk refresh only targets staged rows that are not live yet;
+            // live hotels get their prices from the browse-mode scheduler.
+            $query->whereIn('status', [OsTravelHotel::PENDING, OsTravelHotel::APPROVED])
+                ->whereNull('hotel_id');
         }
 
         $staged = $query->get()->keyBy('external_id');
@@ -997,7 +998,10 @@ class OsTravelSearchService
                         'boarding' => $boardingCode,
                         'boarding_name' => $boardingName,
                         'adults' => $adults,
-                        'price' => (float) ($room['Price'] ?? $room['BasePrice'] ?? 0),
+                        // The room-level `Price` is the bookable sell price; the
+                        // top-level `Price.BasePrice` is a separate reference and
+                        // must never be used. Rooms always carry `Price`.
+                        'price' => (float) ($room['Price'] ?? 0),
                         'stop_reservation' => (bool) ($room['StopReservation'] ?? false),
                         'min_stay' => max(1, (int) ($room['MinStay'] ?? 1)),
                         'on_request' => (bool) ($room['OnRequest'] ?? false),
