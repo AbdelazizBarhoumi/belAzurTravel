@@ -57,28 +57,6 @@ return [
         ],
     ],
 
-    'refresh' => [
-        // Length of the discovery window used to learn each hotel's minimum
-        // stay. The stored price is the live TOTAL for the hotel's minimum
-        // stay, never a per-night figure: hotels bookable in this window keep
-        // its total as their price, and hotels with a longer `MinStay` are
-        // re-probed at that minimum stay so a MinStay-5 hotel is quoted for 5
-        // nights. Hotels the provider can't price for their minimum stay are
-        // reported as unavailable and their stored price is cleared.
-        'nights' => (int) env('OS_TRAVEL_REFRESH_NIGHTS', 1),
-
-        // Upper bound (in nights) for the ascending minimum-stay groups a price
-        // refresh probes. A hotel stored (or discovered) with a longer minimum
-        // stay than this is reported unavailable instead of being quoted.
-        'max_min_stay' => (int) env('OS_TRAVEL_REFRESH_MAX_MIN_STAY', 30),
-
-        // Scheduled cadence for `os-travel:refresh-latest-prices`.
-        'schedule' => [
-            'interval' => 'everySixHours',
-            'at' => null,
-        ],
-    ],
-
     'search' => [
         // Delay between multi-chunk HotelSearch calls. 0 in tests.
         'throttle_ms' => (int) env('OS_TRAVEL_SEARCH_THROTTLE_MS', 150),

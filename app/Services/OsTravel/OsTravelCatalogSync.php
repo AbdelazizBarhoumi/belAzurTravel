@@ -199,7 +199,6 @@ class OsTravelCatalogSync
 
         if (! $hotel->exists) {
             $hotel->status = OsTravelHotel::PENDING;
-            $hotel->price_status = OsTravelHotel::PRICE_NEVER_REFRESHED;
         } elseif ($hotel->status === OsTravelHotel::ORPHANED) {
             $this->reactivate($hotel);
         }
