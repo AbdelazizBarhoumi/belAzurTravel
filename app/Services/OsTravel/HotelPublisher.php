@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -30,25 +29,18 @@ class HotelPublisher
     public function __construct(private readonly OsTravelClient $client) {}
 
     /**
-     * Publish a staged hotel. `$overrides` may carry `base_price`,
-     * `markup_percentage` and `currency`; `base_price` is required (either
-     * already staged or passed in) and is persisted back to the staging row.
+     * Publish a staged hotel. `$overrides` may carry `markup_percentage` and
+     * `currency`. Provider hotels carry no stored price: their public price is
+     * always computed live from `HotelSearch`, so nothing is persisted here.
      *
-     * @param  array{base_price?: int|float|string, markup_percentage?: int|float|string, currency?: string}  $overrides
+     * @param  array{markup_percentage?: int|float|string, currency?: string}  $overrides
      */
     public function publish(OsTravelHotel $staged, array $overrides = [], ?User $actor = null, bool $lazy = false): Hotel
     {
-        $basePrice = $overrides['base_price'] ?? $staged->base_price;
-        if ($basePrice === null || $basePrice === '') {
-            throw new InvalidArgumentException('base_price is required before a staged hotel can be published.');
-        }
-
-        $basePrice = (int) $basePrice;
         $markupPercentage = (float) ($overrides['markup_percentage'] ?? $staged->markup_percentage ?? config('ostravel.markup.default', 20));
         $currency = (string) ($overrides['currency'] ?? $staged->currency ?? config('ostravel.currency.default', 'TND'));
 
         $staged->fill([
-            'base_price' => $basePrice,
             'markup_percentage' => $markupPercentage,
             'currency' => $currency,
         ])->save();
@@ -88,15 +80,8 @@ class HotelPublisher
             'location' => $city,
             'category_key' => $existing?->category_key,
             'category' => $this->localized($categoryTitle),
-            'price' => (int) round($basePrice * (1 + $markupPercentage / 100)),
-            'base_price' => $basePrice,
             'markup_percentage' => $markupPercentage,
             'currency' => $currency,
-            'last_price' => $basePrice,
-            'last_price_at' => now(),
-            'first_available_at' => $staged->first_available_at,
-            'min_nights' => $staged->min_nights,
-            'stop_sale_ranges' => $staged->stop_sale_ranges ?? [],
             'source' => 'ostravel',
             'booking_mode' => 'instant',
             'rating' => (float) ($list['Rating'] ?? $detail['Rating'] ?? 0),

@@ -8,7 +8,6 @@ use App\Models\Amenity;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Services\OsTravel\HotelPublisher;
-use App\Services\OsTravel\OsTravelPriceCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 
@@ -17,7 +16,6 @@ class HotelController extends Controller
     use HandlesAdminMedia;
 
     public function __construct(
-        private readonly OsTravelPriceCalculator $calculator,
         private readonly HotelPublisher $publisher,
     ) {}
 
@@ -70,17 +68,12 @@ class HotelController extends Controller
             $details['gallery'] = array_map(fn ($img) => $this->normalizeApiOutputPath($img), $details['gallery']);
         }
 
-        $markup = (float) ($item->markup_percentage ?? 0);
         if ($item->isProviderLinked()) {
-            // Provider-linked hotels prefer the live per-night price. When the
-            // browse refresh found no live 1-night availability we fall back to
-            // the approved `base_price` (the same min price the admin sees) so
-            // browse never hides a known price.
-            $reference = $item->last_price ?? $item->base_price;
-            $price = $reference !== null
-                ? $this->calculator->applyMarkup($reference, $markup)
-                : null;
-            $basePrice = $reference;
+            // Provider-linked hotels carry no stored price: it is always
+            // computed live from `HotelSearch` for the user's exact dates and
+            // occupancy, never persisted.
+            $price = null;
+            $basePrice = null;
         } else {
             $price = $item->price;
             $basePrice = $item->base_price;
@@ -103,11 +96,6 @@ class HotelController extends Controller
             'currency' => $item->currency,
             'source' => $item->source,
             'provider' => $item->isProviderLinked() ? 'ostravel' : 'manual',
-            'last_price' => $item->last_price,
-            'last_price_at' => $item->last_price_at,
-            'first_available_at' => $item->first_available_at?->toDateString(),
-            'min_nights' => $item->min_nights,
-            'stop_sale_ranges' => $item->stop_sale_ranges ?? [],
             'rating' => $item->rating,
             'stars' => $item->stars,
             'reviews' => $item->reviews,
@@ -172,12 +160,6 @@ class HotelController extends Controller
             'boardings' => $details['boardings'] ?? [],
             'facilities' => $details['facilities'] ?? [],
             'amenity_tags' => $details['amenity_tags'] ?? [],
-            // Browse catalog captured during the price refresh: rooms, boardings
-            // and hotel promo metadata rendered with no live call.
-            'rooms_catalog' => $details['catalog']['rooms'] ?? [],
-            'promotion' => $details['catalog']['promotion'] ?? null,
-            'free_child' => $details['catalog']['free_child'] ?? [],
-            'recommended' => (bool) ($details['catalog']['recommended'] ?? false),
         ];
     }
 }

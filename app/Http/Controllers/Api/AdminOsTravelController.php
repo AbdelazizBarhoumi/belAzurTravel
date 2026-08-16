@@ -14,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use InvalidArgumentException;
 use Throwable;
 
 /**
@@ -94,11 +93,6 @@ class AdminOsTravelController extends Controller
                 1,
                 Carbon::parse($data['check_out'])->diffInDays(Carbon::parse($data['check_in'])),
             );
-
-            // Keep the stored "available from" / minimum stay in sync with the
-            // live-check the admin just saw, otherwise the reference column
-            // goes stale and disagrees with the probe's own dates.
-            $this->persistProbeAvailability($hotels, $live, $data['check_in']);
         }
 
         return response()->json([
@@ -195,20 +189,16 @@ class AdminOsTravelController extends Controller
         $hotel = OsTravelHotel::query()->findOrFail($id);
 
         $data = $request->validate([
-            'base_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'markup_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'currency' => ['sometimes', 'nullable', 'string', 'max:3'],
         ]);
 
-        if (! isset($data['base_price'], $data['markup_percentage'], $data['currency'])
-            && ! array_key_exists('base_price', $data)
-            && ! array_key_exists('markup_percentage', $data)
+        if (! array_key_exists('markup_percentage', $data)
             && ! array_key_exists('currency', $data)) {
             return response()->json(['message' => __('messages.no_change')], 422);
         }
 
         $hotel->fill([
-            'base_price' => $data['base_price'] ?? $hotel->base_price,
             'markup_percentage' => $data['markup_percentage'] ?? $hotel->markup_percentage,
             'currency' => $data['currency'] ?? $hotel->currency,
         ])->save();
@@ -224,7 +214,6 @@ class AdminOsTravelController extends Controller
         $hotel = OsTravelHotel::query()->findOrFail($id);
 
         $data = $request->validate([
-            'base_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'markup_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'currency' => ['sometimes', 'nullable', 'string', 'max:3'],
         ]);
@@ -241,8 +230,6 @@ class AdminOsTravelController extends Controller
                     'hotel' => [
                         'id' => (string) $hotel->hotel->id,
                         'slug' => $hotel->hotel->slug,
-                        'price' => $hotel->hotel->price,
-                        'base_price' => $hotel->hotel->base_price,
                         'markup_percentage' => $hotel->hotel->markup_percentage,
                         'currency' => $hotel->hotel->currency,
                     ],
@@ -250,23 +237,14 @@ class AdminOsTravelController extends Controller
             ]);
         }
 
-        $hasBasePrice = $hotel->base_price !== null || isset($data['base_price']);
-        if (! $hasBasePrice) {
-            return response()->json([
-                'message' => __('os_travel.base_price_required'),
-                'errors' => ['base_price' => [__('os_travel.base_price_required')]],
-            ], 422);
-        }
-
         try {
             // Fetch provider detail once before publishing so a hotel approved
             // from a never-viewed staging row still publishes rich content.
             $this->publisher->refreshDetail($hotel);
             $published = $this->publisher->publish($hotel, $data, $request->user());
-        } catch (InvalidArgumentException $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => $e->getMessage(),
-                'errors' => ['base_price' => [$e->getMessage()]],
             ], 422);
         }
 
@@ -276,8 +254,6 @@ class AdminOsTravelController extends Controller
                 'hotel' => [
                     'id' => (string) $published->id,
                     'slug' => $published->slug,
-                    'price' => $published->price,
-                    'base_price' => $published->base_price,
                     'markup_percentage' => $published->markup_percentage,
                     'currency' => $published->currency,
                 ],
@@ -292,12 +268,10 @@ class AdminOsTravelController extends Controller
      * stored as opaque proxy URLs (streamed on-demand through the image proxy)
      * and never downloaded in this request, and the heavy hotel-detail content
      * is fetched lazily by the first public visit
-     * (`HotelPublisher::refreshDetail`). By default hotels without a price or
-     * without an image are skipped; passing `include_without_price` /
-     * `include_without_image` opts them back into the batch (a price is still
-     * required to publish, so a no-price hotel reports as failed). Already-live
-     * rows are ignored. A batch-wide `markup_percentage` / `currency` override
-     * is applied to every published hotel.
+     * (`HotelPublisher::refreshDetail`). By default hotels without an image
+     * are skipped; passing `include_without_image` opts them back into the
+     * batch. Already-live rows are ignored. A batch-wide `markup_percentage` /
+     * `currency` override is applied to every published hotel.
      */
     public function approveAll(Request $request): JsonResponse
     {
@@ -306,7 +280,6 @@ class AdminOsTravelController extends Controller
         $data = $request->validate([
             'markup_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'currency' => ['sometimes', 'nullable', 'string', 'max:3'],
-            'include_without_price' => ['sometimes', 'boolean'],
             'include_without_image' => ['sometimes', 'boolean'],
             'status' => ['sometimes', 'nullable', 'string', 'in:'.implode(',', $validStatuses)],
             'city' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -317,7 +290,6 @@ class AdminOsTravelController extends Controller
             'check_out' => ['sometimes', 'nullable', 'date', 'after_or_equal:check_in'],
         ]);
 
-        $includeWithoutPrice = (bool) ($data['include_without_price'] ?? false);
         $includeWithoutImage = (bool) ($data['include_without_image'] ?? false);
 
         $data['status'] = $data['status'] ?? OsTravelHotel::PENDING;
@@ -326,13 +298,6 @@ class AdminOsTravelController extends Controller
         $this->applyListFilters($baseQuery, $data);
 
         $pending = (clone $baseQuery)->orderBy('id')->get();
-
-        $withoutPrice = $includeWithoutPrice
-            ? []
-            : $pending->where('base_price', null)->pluck('id')
-                ->map(fn ($value) => (string) $value)
-                ->values()
-                ->all();
 
         $withoutImage = $includeWithoutImage
             ? []
@@ -345,10 +310,6 @@ class AdminOsTravelController extends Controller
         $failed = [];
 
         foreach ($pending as $hotel) {
-            if (! $includeWithoutPrice && $hotel->base_price === null) {
-                continue;
-            }
-
             if (! $includeWithoutImage && self::isPlaceholderImageUrl($hotel->image)) {
                 continue;
             }
@@ -385,60 +346,10 @@ class AdminOsTravelController extends Controller
             'data' => [
                 'approved' => $approved,
                 'failed' => $failed,
-                'skipped_no_price' => $withoutPrice,
                 'skipped_no_image' => $withoutImage,
                 'approved_count' => count($approved),
                 'failed_count' => count($failed),
-                'skipped_no_price_count' => count($withoutPrice),
                 'skipped_no_image_count' => count($withoutImage),
-            ],
-        ]);
-    }
-
-    /**
-     * Refresh provider prices for the given staged hotels synchronously. The
-     * frontend splits the selected ids into chunks of ≤200 and calls this
-     * endpoint once per chunk, so a refresh never blocks a single request for
-     * the whole catalog.
-     */
-    public function refreshPrices(Request $request): JsonResponse
-    {
-        set_time_limit(300);
-
-        $data = $request->validate([
-            'ids' => ['sometimes', 'array'],
-            'ids.*' => ['integer'],
-            'check_in' => ['sometimes', 'nullable', 'date', 'after_or_equal:today'],
-            'check_out' => ['sometimes', 'nullable', 'date', 'after:check_in'],
-        ]);
-
-        $result = $this->searchService->refreshStagedPrices(
-            array_map('intval', $data['ids'] ?? []),
-            [
-                'check_in' => $data['check_in'] ?? null,
-                'check_out' => $data['check_out'] ?? null,
-            ],
-        );
-
-        return response()->json(['data' => $result]);
-    }
-
-    /**
-     * Refresh the provider's minimum price for a single staged hotel and
-     * persist it as `base_price`, returning the refreshed review payload.
-     */
-    public function refreshPrice(int|string $id): JsonResponse
-    {
-        set_time_limit(300);
-
-        $hotel = OsTravelHotel::query()->findOrFail($id);
-
-        $result = $this->searchService->refreshStagedPrices([$hotel->id]);
-
-        return response()->json([
-            'data' => [
-                ...$this->reviewPayload($hotel->refresh()),
-                'refresh' => $result,
             ],
         ]);
     }
@@ -492,46 +403,6 @@ class AdminOsTravelController extends Controller
     }
 
     /**
-     * Persist the availability metadata returned by the admin's live-check
-     * probe (date filter) onto the staged rows, so the stored "available
-     * from" / minimum stay never disagree with what the list just showed.
-     *
-     * Metadata only: the picked window is not a reference-price source, so
-     * `base_price` and the published price are left untouched (only the
-     * scheduled refresh writes those). Rows the probe did not cover keep
-     * their stored values.
-     *
-     * @param  \Illuminate\Support\Collection<int, OsTravelHotel>  $hotels
-     * @param  array{prices?: array<string, array{price: float, currency: string}>, unavailable?: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted_ids?: list<string>, failed_ids?: list<string>}  $live
-     */
-    private function persistProbeAvailability($hotels, array $live, string $checkIn): void
-    {
-        foreach ($hotels as $hotel) {
-            $externalId = (string) $hotel->external_id;
-            $attributes = ['last_price_attempt_at' => now()];
-
-            if (isset($live['prices'][$externalId])) {
-                $attributes['first_available_at'] = $checkIn;
-                $attributes['availability_status'] = OsTravelHotel::AVAILABILITY_AVAILABLE;
-            } elseif (isset($live['unavailable'][$externalId])) {
-                $meta = $live['unavailable'][$externalId];
-                $attributes['first_available_at'] = $meta['first_available_at'];
-                $attributes['min_nights'] = $meta['min_nights'];
-                $attributes['availability_status'] = match ($meta['reason']) {
-                    OsTravelHotel::AVAILABILITY_STOP_RESERVATION => OsTravelHotel::AVAILABILITY_STOP_RESERVATION,
-                    OsTravelHotel::AVAILABILITY_STOP_SALE => OsTravelHotel::AVAILABILITY_STOP_SALE,
-                    OsTravelHotel::AVAILABILITY_MIN_STAY => OsTravelHotel::AVAILABILITY_MIN_STAY,
-                    default => OsTravelHotel::AVAILABILITY_NO_BOOKABLE_ROOM,
-                };
-            }
-
-            if (count($attributes) > 1) {
-                $hotel->update($attributes);
-            }
-        }
-    }
-
-    /**
      * Review columns for the staged list.
      *
      * When a live probe ran, the row carries the probe result for its exact
@@ -539,8 +410,7 @@ class AdminOsTravelController extends Controller
      * `live_status` explaining why not.
      *
      * `final_price` is the sell price: live API price + markup when the probe
-     * priced this hotel, otherwise the projected `base_price` + markup from
-     * the scheduled min. It is null when there is no price to mark up.
+     * priced this hotel. It is null when there is no price to mark up.
      *
      * @param  array{prices?: array<string, array{price: float, currency: string}>, unavailable?: array<string, array{reason: string|null, first_available_at: string|null, min_nights: int|null}>, omitted_ids?: list<string>, failed_ids?: list<string>}|null  $live
      * @param  int|null  $pickedNights  Nights spanned by the probed date window.
@@ -577,15 +447,12 @@ class AdminOsTravelController extends Controller
         }
 
         // Sell price the admin sees: live API price + markup when a date
-        // filter probed this hotel, otherwise the projected price from the
-        // scheduled min price (base_price + markup). No availability or a
-        // provider error leaves it null so the frontend can explain why.
+        // filter probed this hotel. No availability or a provider error leaves
+        // it null so the frontend can explain why.
         $markup = (float) ($hotel->markup_percentage ?? config('ostravel.markup.default', 20));
         $finalPrice = null;
         if ($liveStatus === 'available' && $livePrice !== null) {
             $finalPrice = $this->calculator->applyMarkup($livePrice, $markup);
-        } elseif ($live === null && $hotel->base_price !== null) {
-            $finalPrice = $this->calculator->applyMarkup($hotel->base_price, $markup);
         }
 
         return [
@@ -600,14 +467,7 @@ class AdminOsTravelController extends Controller
             'stars' => $hotel->stars,
             'image' => self::cleanImageUrl($hotel->image),
             'status' => $hotel->status,
-            'has_base_price' => $hotel->base_price !== null,
-            'base_price' => $hotel->base_price,
             'final_price' => $finalPrice,
-            'price_status' => $hotel->price_status,
-            'last_price_attempt_at' => $hotel->last_price_attempt_at,
-            'first_available_at' => $hotel->first_available_at?->toDateString(),
-            'min_nights' => $hotel->min_nights,
-            'availability_status' => $hotel->availability_status,
             'markup_percentage' => $hotel->markup_percentage,
             'currency' => $hotel->currency,
             'hotel_id' => $hotel->hotel_id !== null ? (string) $hotel->hotel_id : null,
@@ -638,8 +498,6 @@ class AdminOsTravelController extends Controller
         }
 
         $markup = $hotel->markup_percentage ?? config('ostravel.markup.default', 20);
-        $basePrice = $hotel->base_price;
-        $catalog = $hotel->payload['catalog'] ?? [];
 
         return [
             'name' => HotelPublisher::cleanText($list['Name'] ?? $detail['Name'] ?? ''),
@@ -661,21 +519,9 @@ class AdminOsTravelController extends Controller
             'address' => HotelPublisher::cleanText($detail['Adress'] ?? ''),
             'phone' => HotelPublisher::cleanText($detail['Phone'] ?? ''),
             'email' => HotelPublisher::cleanText($detail['Email'] ?? ''),
-            'price' => $basePrice !== null
-                ? (int) round((float) $basePrice * (1 + (float) $markup / 100))
-                : null,
-            'base_price' => $basePrice,
             'markup_percentage' => $markup,
             'currency' => $hotel->currency ?? config('ostravel.currency.default', 'TND'),
             'code' => 'ostravel-'.$hotel->external_id,
-            // Browse catalog captured during the price refresh (staging
-            // `payload['catalog']`), mirroring HotelController::payload() so the
-            // admin preview shows exactly what ships to the public page.
-            'rooms_catalog' => $catalog['rooms'] ?? [],
-            'boardings' => $catalog['boardings'] ?? [],
-            'promotion' => $catalog['promotion'] ?? null,
-            'free_child' => $catalog['free_child'] ?? [],
-            'recommended' => (bool) ($catalog['recommended'] ?? false),
         ];
     }
 
