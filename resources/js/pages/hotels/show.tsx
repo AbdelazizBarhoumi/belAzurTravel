@@ -396,33 +396,58 @@ export default function HotelDetail() {
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
     const address = detail.address ?? location;
+const rawLatitude = detail.coordinates?.latitude;
+const rawLongitude = detail.coordinates?.longitude;
 
-    const stars = Math.min(5, Math.max(0, detail.stars));
-    const scoreLabel = (rating: number) =>
-        rating >= 4.7
-            ? t('hotelDetail.scoreExcellent')
-            : rating >= 4.4
-              ? t('hotelDetail.scoreAdorable')
-              : rating >= 4
-                ? t('hotelDetail.scoreVeryGood')
-                : t('hotelDetail.scoreGood');
+let latitude = rawLatitude;
+let longitude = rawLongitude;
 
-    const hasMap =
-        typeof detail.coordinates?.latitude === 'number' &&
-        typeof detail.coordinates?.longitude === 'number';
-    const mapSrc = hasMap
-        ? `https://www.google.com/maps?q=${detail.coordinates!.longitude},${detail.coordinates!.latitude}&output=embed`
-        : undefined;
-    const mapLink = hasMap
-        ? `https://www.google.com/maps?q=${detail.coordinates!.longitude},${detail.coordinates!.latitude}`
-        : `https://www.google.com/maps?q=${encodeURIComponent(address)}`;
+if (
+    typeof rawLatitude === 'number' &&
+    typeof rawLongitude === 'number'
+) {
+    // Detect swapped Tunisia coordinates:
+    // latitude should be ~30–37.5
+    // longitude should be ~7.5–11.6
+    const latitudeLooksLikeLongitude =
+        rawLatitude >= 7.5 && rawLatitude <= 11.6;
 
-    const scrollToRates = () => {
-        document
-            .getElementById('rates')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
+    const longitudeLooksLikeLatitude =
+        rawLongitude >= 30.0 && rawLongitude <= 37.5;
 
+    if (latitudeLooksLikeLongitude && longitudeLooksLikeLatitude) {
+        [latitude, longitude] = [rawLongitude, rawLatitude];
+    }
+}
+
+const stars = Math.min(5, Math.max(0, detail.stars));
+
+const scoreLabel = (rating: number) =>
+    rating >= 4.7
+        ? t('hotelDetail.scoreExcellent')
+        : rating >= 4.4
+          ? t('hotelDetail.scoreAdorable')
+          : rating >= 4
+            ? t('hotelDetail.scoreVeryGood')
+            : t('hotelDetail.scoreGood');
+
+const hasMap =
+    typeof latitude === 'number' &&
+    typeof longitude === 'number';
+
+const mapSrc = hasMap
+    ? `https://www.google.com/maps?q=${latitude},${longitude}&output=embed`
+    : undefined;
+
+const mapLink = hasMap
+    ? `https://www.google.com/maps?q=${latitude},${longitude}`
+    : `https://www.google.com/maps?q=${encodeURIComponent(address)}`;
+
+const scrollToRates = () => {
+    document
+        .getElementById('rates')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
     const handleReserve = (room: RateRoom) => {
         setSelectedRoom(room);
     };
@@ -600,26 +625,6 @@ export default function HotelDetail() {
                                 <MapPin className="h-3.5 w-3.5" />
                                 {location}
                             </p>
-                            <div className="mt-3 flex items-center gap-4">
-                                <FavoriteButton
-                                    item={{
-                                        id: `hotel-${detail.id}`,
-                                        type: 'hotel',
-                                        name: title,
-                                        image: gallery[0] ?? '',
-                                        price: minPrice,
-                                        location,
-                                    }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleWhatsAppInquiry}
-                                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                                >
-                                    <Heart className="h-3.5 w-3.5" />
-                                    {t('hotelDetail.reserveNow')}
-                                </button>
-                            </div>
                         </div>
                         <div className="text-right">
                             {headerPerNight !== null && headerPerNight > 0 ? (
@@ -648,26 +653,24 @@ export default function HotelDetail() {
 
                     {/* Gallery + score */}
                     <section className="relative">
-                        <Gallery
-                            images={gallery}
-                            hotelName={title}
-                            favoriteItem={{
-                                id: `hotel-${detail.id}`,
-                                type: 'hotel',
-                                name: title,
-                                image: gallery[0] ?? '',
-                                price: minPrice,
-                                location,
-                            }}
-                        />
-                        <div className="absolute right-4 top-4 flex items-center gap-2 rounded-2xl bg-card/90 px-3 py-2 shadow-lg backdrop-blur">
-                            <span className="text-xs font-medium text-muted-foreground">
-                                {scoreLabel(detail.rating)}
-                            </span>
-                            <span className="rounded-xl bg-primary px-2 py-1 text-sm font-bold text-primary-foreground">
-                                {detail.rating.toFixed(1)}
-                            </span>
-                        </div>
+                        {gallery.length > 0 ? (
+                            <Gallery
+                                images={gallery}
+                                hotelName={title}
+                                favoriteItem={{
+                                    id: `hotel-${detail.id}`,
+                                    type: 'hotel',
+                                    name: title,
+                                    image: gallery[0] ?? '',
+                                    price: minPrice,
+                                    location,
+                                }}
+                            />
+                        ) : (
+                            <div className="flex h-[300px] w-full items-center justify-center rounded-3xl border border-border bg-muted md:h-[500px]">
+                                <Building2 className="h-12 w-12 text-muted-foreground" />
+                            </div>
+                        )}
                     </section>
 
                     {/* Services & équipements */}
@@ -945,31 +948,6 @@ export default function HotelDetail() {
                         amenityTags={detail.amenity_tags}
                         note={detail.note}
                     />
-
-                    <Separator />
-
-                    {/* Reviews summary */}
-                    <section className="grid items-center gap-6 rounded-3xl border border-border bg-card p-6 sm:grid-cols-[auto_1fr]">
-                        <div className="text-center">
-                            <p className="text-4xl font-bold text-primary">
-                                {detail.rating.toFixed(1)}
-                            </p>
-                            <div className="mt-1 flex justify-center text-secondary">
-                                {Array.from({ length: Math.round(stars) }).map(
-                                    (_, i) => (
-                                        <Star
-                                            key={i}
-                                            className="h-3.5 w-3.5 fill-current"
-                                        />
-                                    ),
-                                )}
-                            </div>
-                        </div>
-                        <div className="flex h-full items-center rounded-2xl bg-muted/40 p-4 text-sm text-muted-foreground">
-                            {scoreLabel(detail.rating)} —{' '}
-                            {t('hotelDetail.freeCancellationNote')}
-                        </div>
-                    </section>
                 </div>
             </div>
 

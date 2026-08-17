@@ -108,7 +108,7 @@ class AdminOsTravelTest extends TestCase
 
         $this->assertCount(1, $response->json('data'));
         $this->assertSame('Hotel One', $response->json('data.0.name'));
-        $this->assertArrayNotHasKey('base_price', $response->json('data.0'));
+        $this->assertNull($response->json('data.0.base_price'));
         $this->assertArrayNotHasKey('has_base_price', $response->json('data.0'));
 
         $response = $this->actingAs($this->admin)
@@ -116,7 +116,7 @@ class AdminOsTravelTest extends TestCase
             ->assertOk();
         $this->assertCount(1, $response->json('data'));
         $this->assertSame('Hotel Two', $response->json('data.0.name'));
-        $this->assertArrayNotHasKey('base_price', $response->json('data.0'));
+        $this->assertNull($response->json('data.0.base_price'));
 
         $this->actingAs($this->admin)
             ->getJson('/api/admin/os-travel/hotels?status=bogus')
@@ -183,7 +183,7 @@ class AdminOsTravelTest extends TestCase
 
         $this->assertSame('15.00', $response->json('data.markup_percentage'));
         $this->assertSame('EUR', $response->json('data.currency'));
-        $this->assertArrayNotHasKey('base_price', $response->json('data'));
+        $this->assertNull($response->json('data.base_price'));
 
         $staged->refresh();
         $this->assertSame('15.00', (string) $staged->markup_percentage);
@@ -272,7 +272,7 @@ class AdminOsTravelTest extends TestCase
 
         $this->assertSame('15.00', $response->json('data.markup_percentage'));
         $this->assertSame('EUR', $response->json('data.currency'));
-        $this->assertArrayNotHasKey('base_price', $response->json('data'));
+        $this->assertNull($response->json('data.base_price'));
 
         $this->assertSame('15.00', (string) $staged->fresh()->markup_percentage);
         $this->assertSame('EUR', $staged->fresh()->currency);
@@ -305,6 +305,40 @@ class AdminOsTravelTest extends TestCase
         $this->assertNotNull(OsTravelHotel::where('external_id', '2')->first()->hotel_id);
         $this->assertNotNull(OsTravelHotel::where('external_id', '3')->first()->hotel_id);
         $this->assertNull(OsTravelHotel::where('external_id', '4')->first()->hotel_id);
+    }
+
+    public function test_bulk_approve_confirms_live_pending_rows_without_republishing(): void
+    {
+        $staged = $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING);
+        $hotel = Hotel::create([
+            'slug' => 'ostravel-1',
+            'code' => 'ostravel-1',
+            'name' => ['en' => 'Hotel One', 'fr' => 'Hotel One', 'ar' => 'Hotel One'],
+            'location' => ['en' => 'Kelibia', 'fr' => 'Kelibia', 'ar' => 'Kelibia'],
+            'price' => 120,
+            'base_price' => 100,
+            'markup_percentage' => 20,
+            'currency' => 'TND',
+            'image' => 'test.jpg',
+            'tags' => [],
+            'details' => [],
+            'meta' => [],
+        ]);
+        $staged->update(['hotel_id' => $hotel->id]);
+
+        $response = $this->actingAs($this->admin)
+            ->postJson('/api/admin/os-travel/hotels/approve-all')
+            ->assertOk();
+
+        // The row was already on the public site: bulk approve confirms it
+        // instead of leaving it stuck in the pending queue.
+        $this->assertSame(1, $response->json('data.approved_count'));
+        $this->assertSame(0, $response->json('data.failed_count'));
+        $this->assertSame(1, Hotel::count());
+        $fresh = $staged->fresh();
+        $this->assertSame(OsTravelHotel::APPROVED, $fresh->status);
+        $this->assertSame($hotel->id, $fresh->hotel_id);
+        $this->assertNotNull($fresh->approved_at);
     }
 
     public function test_bulk_approve_skips_hotels_without_image_unless_opt_in(): void
@@ -430,6 +464,48 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame(OsTravelHotel::REJECTED, $staged->fresh()->status);
         $this->assertNotNull($staged->fresh()->rejected_at);
         $this->assertSame(0, Hotel::count());
+    }
+
+    public function test_approve_undoes_reject_and_publishes_hotel(): void
+    {
+        $staged = $this->stagedHotel(178, 'Hotel One', OsTravelHotel::REJECTED);
+
+        $response = $this->actingAs($this->admin)
+            ->postJson("/api/admin/os-travel/hotels/{$staged->id}/approve")
+            ->assertOk();
+
+        $this->assertSame(1, Hotel::count());
+        $published = Hotel::first();
+        $this->assertStringStartsWith('ostravel-', (string) $published->code);
+        $fresh = $staged->fresh();
+        $this->assertSame(OsTravelHotel::APPROVED, $fresh->status);
+        $this->assertNotNull($fresh->hotel_id);
+        $this->assertNotNull($response->json('data.hotel.id'));
+    }
+
+    public function test_reopen_moves_rejected_hotel_back_to_pending(): void
+    {
+        $staged = $this->stagedHotel(178, 'Hotel One', OsTravelHotel::REJECTED);
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/os-travel/hotels/{$staged->id}/reopen")
+            ->assertOk();
+
+        $fresh = $staged->fresh();
+        $this->assertSame(OsTravelHotel::PENDING, $fresh->status);
+        $this->assertNull($fresh->rejected_at);
+        $this->assertSame(0, Hotel::count());
+    }
+
+    public function test_reopen_non_rejected_hotel_is_forbidden(): void
+    {
+        $staged = $this->stagedHotel(178, 'Hotel One', OsTravelHotel::PENDING);
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/os-travel/hotels/{$staged->id}/reopen")
+            ->assertStatus(422);
+
+        $this->assertSame(OsTravelHotel::PENDING, $staged->fresh()->status);
     }
 
     public function test_unapprove_moves_approved_hotel_back_to_pending(): void
@@ -640,10 +716,16 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame('TND', $rows['Cap Bon Kelibia Beach Hotel & Spa']['live_currency']);
         $this->assertNull($rows['Cap Bon Kelibia Beach Hotel & Spa']['live_reason']);
         $this->assertNull($rows['Cap Bon Kelibia Beach Hotel & Spa']['live_until']);
+        // The priced hotel exposes the raw provider price and the sell price
+        // with the default 20% markup (927.52 × 1.2 = 1113).
+        $this->assertSame(927.52, $rows['Cap Bon Kelibia Beach Hotel & Spa']['base_price']);
+        $this->assertSame(1113, $rows['Cap Bon Kelibia Beach Hotel & Spa']['final_price']);
         // The stop-reserved hotel is flagged as unavailable with its reason.
         $this->assertSame('stop_reservation', $rows['Stop Sales Hotel']['live_status']);
         $this->assertNull($rows['Stop Sales Hotel']['live_price']);
         $this->assertNull($rows['Stop Sales Hotel']['live_until']);
+        $this->assertNull($rows['Stop Sales Hotel']['base_price']);
+        $this->assertNull($rows['Stop Sales Hotel']['final_price']);
         $this->assertStringContainsString('stop reservation', $rows['Stop Sales Hotel']['live_reason']);
     }
 

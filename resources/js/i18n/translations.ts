@@ -7091,9 +7091,9 @@ translations['osTravel.approveAllTitle'] = {
     en: 'Approve All',
 };
 translations['osTravel.approveAllDescription'] = {
-    fr: 'Approuver tous les hôtels en attente qui ont déjà un prix de base. Ils seront publiés individuellement ; le contenu de la fiche est chargé à la première visite.',
-    ar: 'اعتماد جميع الفنادق قيد الانتظار التي لديها سعر أساسي بالفعل. سيتم نشرها بشكل فردي؛ يتم تحميل تفاصيل الصفحة عند أول زيارة.',
-    en: 'Approve all pending hotels that already have a base price. They are published individually; page details load on first visit.',
+    fr: 'Approuver tous les hôtels en attente correspondant aux filtres actuels. Les hôtels sans photo sont ignorés sauf si la case est cochée. Chaque hôtel est publié individuellement ; le contenu de la fiche est chargé à la première visite.',
+    ar: 'اعتماد جميع الفنادق قيد الانتظار المطابقة للمرشحات الحالية. يتم تجاهل الفنادق بدون صورة ما لم يتم تحديد الخيار. سيتم نشر كل فندق بشكل فردي؛ يتم تحميل تفاصيل الصفحة عند أول زيارة.',
+    en: 'Approve all pending hotels matching the current filters. Hotels without a picture are skipped unless the option is checked. Each hotel is published individually; page details load on first visit.',
 };
 translations['osTravel.preflightSkip'] = {
     fr: '{count} hôtel(s) seront ignorés (prix manquant).',
@@ -7179,6 +7179,31 @@ translations['osTravel.rejectDescription'] = {
     fr: "L'hôtel ne sera pas mis en ligne et restera dans le catalogue comme rejeté.",
     ar: 'لن يتم نشر الفندق وسيبقى في الكتالوج كمرفوض.',
     en: 'The hotel will not go live and will stay in the catalog as rejected.',
+};
+translations['osTravel.reopened'] = {
+    fr: 'Hôtel remis en file d’attente.',
+    ar: 'تمت إعادة الفندق إلى قائمة الانتظار.',
+    en: 'Hotel returned to pending.',
+};
+translations['osTravel.reopenFailed'] = {
+    fr: 'Échec de la remise en file d’attente.',
+    ar: 'فشل إعادة الفندق إلى قائمة الانتظار.',
+    en: 'Failed to return hotel to pending.',
+};
+translations['osTravel.reopen'] = {
+    fr: 'Remettre en file d’attente',
+    ar: 'إعادة إلى قائمة الانتظار',
+    en: 'Return to pending',
+};
+translations['osTravel.reopenTitle'] = {
+    fr: 'Remettre cet hôtel en file d’attente ?',
+    ar: 'إعادة هذا الفندق إلى قائمة الانتظار؟',
+    en: 'Return this hotel to pending?',
+};
+translations['osTravel.reopenDescription'] = {
+    fr: "L'hôtel reviendra à la file d'attente en attente.",
+    ar: 'سيعود الفندق إلى قائمة الانتظار.',
+    en: 'The hotel will move back to the pending review queue.',
 };
 translations['osTravel.unapproved'] = {
     fr: 'Hôtel désapprouvé.',

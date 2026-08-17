@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { arSA, enUS, fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
-import { CalendarDays, MapPin } from 'lucide-react';
+import { Building2, CalendarDays, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -410,14 +410,20 @@ export default function Hotels() {
                                                     className="group block transform-gpu overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                                 >
                                                     <div className="relative h-56 overflow-hidden">
-                                                        <img
-                                                            src={hotel.image}
-                                                            alt={localizeText(
-                                                                hotel.name,
-                                                                lang,
-                                                            )}
-                                                            className="h-full w-full transform-gpu object-cover transition-transform duration-500 group-hover:scale-105"
-                                                        />
+                                                        {hotel.image ? (
+                                                            <img
+                                                                src={hotel.image}
+                                                                alt={localizeText(
+                                                                    hotel.name,
+                                                                    lang,
+                                                                )}
+                                                                className="h-full w-full transform-gpu object-cover transition-transform duration-500 group-hover:scale-105"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex h-full w-full items-center justify-center bg-muted">
+                                                                <Building2 className="h-12 w-12 text-muted-foreground" />
+                                                            </div>
+                                                        )}
 
                                                         <FavoriteButton
                                                             className="absolute left-4 top-4"

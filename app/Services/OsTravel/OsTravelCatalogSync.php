@@ -295,9 +295,9 @@ class OsTravelCatalogSync
 
     protected function reactivate(OsTravelHotel $hotel): void
     {
-        $restoreStatus = $hotel->prior_status === OsTravelHotel::APPROVED
-            ? $hotel->prior_status
-            : OsTravelHotel::PENDING;
+$restoreStatus = in_array($hotel->prior_status, [OsTravelHotel::APPROVED, OsTravelHotel::REJECTED], true)
+    ? $hotel->prior_status
+    : OsTravelHotel::PENDING;
 
         $hotel->status = $restoreStatus;
         $hotel->prior_status = null;
@@ -350,7 +350,7 @@ class OsTravelCatalogSync
         $missing = OsTravelHotel::where('last_synced_at', '<', $this->sync->started_at)->get();
 
         foreach ($missing as $hotel) {
-            if (in_array($hotel->status, [OsTravelHotel::PENDING, OsTravelHotel::APPROVED], true)) {
+            if (in_array($hotel->status, [OsTravelHotel::PENDING, OsTravelHotel::APPROVED, OsTravelHotel::REJECTED], true)) {
                 $hotel->update([
                     'status' => OsTravelHotel::ORPHANED,
                     'prior_status' => $hotel->status,

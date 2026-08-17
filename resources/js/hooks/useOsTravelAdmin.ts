@@ -7,6 +7,7 @@ import {
     getOsTravelReferences,
     listOsTravelHotels,
     rejectOsTravelHotel,
+    reopenOsTravelHotel,
     unapproveOsTravelHotel,
     updateOsTravelHotel,
     type OsTravelListFilters,
@@ -105,6 +106,12 @@ export function useOsTravelAdmin() {
         return result.data;
     };
 
+    const reopen = async (id: string) => {
+        const result = await reopenOsTravelHotel(id);
+        invalidateAll();
+        return result.data;
+    };
+
     const toErrorMessage = (err: unknown, fallbackKey: string): string => {
         const e = err as {
             status?: number;
@@ -118,5 +125,5 @@ export function useOsTravelAdmin() {
         return t(fallbackKey);
     };
 
-    return { savePrice, approve, approveAll, reject, unapprove, toErrorMessage };
+    return { savePrice, approve, approveAll, reject, unapprove, reopen, toErrorMessage };
 }

@@ -45,8 +45,8 @@ import {
     useOsTravelDashboard,
     useOsTravelHotelDetail,
     useOsTravelHotels,
-    useOsTravelReferences,
 } from '@/hooks/useOsTravelAdmin';
+import { getOstravelCities, getOstravelCountries } from '@/data/locations';
 import { toLocalISODate } from '@/lib/utils';
 
 const STATUSES: OsTravelStatus[] = [
@@ -128,7 +128,7 @@ const displayDate = (value: string): string => {
 
 const AdminOsTravel = () => {
     useAdminGuard();
-    const { t, dir } = useLanguage();
+    const { t, lang, dir } = useLanguage();
     const admin = useOsTravelAdmin();
 
     const [status, setStatus] = useState<OsTravelStatus | ''>('');
@@ -140,13 +140,13 @@ const AdminOsTravel = () => {
     const [detailId, setDetailId] = useState<string | null>(null);
     const [priceForm, setPriceForm] = useState<PriceForm>(emptyPriceForm);
     const [rejectId, setRejectId] = useState<string | null>(null);
+    const [reopenId, setReopenId] = useState<string | null>(null);
     const [unapproveId, setUnapproveId] = useState<string | null>(null);
     const [approveAllOpen, setApproveAllOpen] = useState(false);
     const [approveAllOptions, setApproveAllOptions] =
         useState<ApproveAllOptions>(EMPTY_APPROVE_ALL_OPTIONS);
 
     const { data: dashboard } = useOsTravelDashboard();
-    const { data: references } = useOsTravelReferences();
     const filters = useMemo<OsTravelListFilters>(() => {
         const f: OsTravelListFilters = {};
         if (status) f.status = status;
@@ -278,6 +278,18 @@ const AdminOsTravel = () => {
         },
     });
 
+    const reopenMutation = useMutation({
+        mutationFn: () => admin.reopen(reopenId as string),
+        onSuccess: () => {
+            setReopenId(null);
+            toast.success(t('osTravel.reopened'));
+        },
+        onError: (err: unknown) => {
+            setReopenId(null);
+            toast.error(admin.toErrorMessage(err, 'osTravel.reopenFailed'));
+        },
+    });
+
     const unapproveMutation = useMutation({
         mutationFn: () => admin.unapprove(unapproveId as string),
         onSuccess: () => {
@@ -295,11 +307,23 @@ const AdminOsTravel = () => {
 
     const filteredHotels = useMemo(() => hotels, [hotels]);
 
-    const availableCities = useMemo(() => {
-        if (!references) return [];
-        if (!countryId) return references.cities;
-        return references.cities.filter((c) => c.country_id === countryId);
-    }, [references, countryId]);
+    const countryOptions = useMemo(
+        () =>
+            getOstravelCountries().map((c) => ({
+                id: String(c.ostravelId),
+                label: c.name[lang] || c.name.en,
+            })),
+        [lang],
+    );
+
+    const availableCities = useMemo(
+        () =>
+            getOstravelCities(countryId).map((city) => ({
+                id: String(city.ostravelId),
+                name: city.name[lang] || city.name.en,
+            })),
+        [countryId, lang],
+    );
 
     const hasDateFilter = Boolean(dateRange?.from && dateRange.to);
 
@@ -405,9 +429,9 @@ const AdminOsTravel = () => {
                             <SelectValue placeholder={t('osTravel.filterCountry')} />
                         </SelectTrigger>
                         <SelectContent>
-                            {references?.countries.map((c) => (
+                            {countryOptions.map((c) => (
                                 <SelectItem key={c.id} value={c.id}>
-                                    {c.name ?? c.id}
+                                    {c.label}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -423,7 +447,7 @@ const AdminOsTravel = () => {
                         <SelectContent>
                             {availableCities.map((c) => (
                                 <SelectItem key={c.id} value={c.id}>
-                                    {c.name ?? c.id}
+                                    {c.name}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -487,7 +511,8 @@ const AdminOsTravel = () => {
                                         t('admin.country'),
                                         t('admin.stars'),
                                         t('admin.category'),
-                                        t('osTravel.liveStatus.live'),
+                                        t('admin.minPrice'),
+                                        t('admin.finalPrice'),
                                         t('admin.status'),
                                         t('admin.actions'),
                                     ].map((h) => (
@@ -530,6 +555,12 @@ const AdminOsTravel = () => {
                                               </td>
                                               <td className="px-4 py-3">
                                                   <Skeleton className="h-5 w-20 rounded-full" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-5 w-20 rounded-full" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-5 w-16 rounded-full" />
                                               </td>
                                               <td className="px-4 py-3">
                                                   <div className="flex items-center gap-2">
@@ -580,10 +611,26 @@ const AdminOsTravel = () => {
                                             {h.category_title}
                                         </td>
                                         <td className="px-4 py-3 text-sm">
-                                            {h.live_price !== null ? (
+                                            {h.base_price !== null ? (
+                                                <span className="font-medium">
+                                                    {h.base_price}{' '}
+                                                    {h.live_currency ??
+                                                        h.currency ??
+                                                        'TND'}
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted-foreground">
+                                                    —
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">
+                                            {h.final_price !== null ? (
                                                 <span className="font-semibold text-emerald-600">
-                                                    {h.live_price}{' '}
-                                                    {h.live_currency ?? 'TND'}
+                                                    {h.final_price}{' '}
+                                                    {h.live_currency ??
+                                                        h.currency ??
+                                                        'TND'}
                                                 </span>
                                             ) : h.live_status &&
                                               liveStatusMeta[h.live_status] ? (
@@ -650,7 +697,7 @@ const AdminOsTravel = () => {
                                                         {t('osTravel.preview')}
                                                     </span>
                                                 </Button>
-                                                {h.status === 'pending' && (
+                                                {(h.status === 'pending' || h.status === 'rejected') && (
                                                     <Button
                                                         size="sm"
                                                         onClick={() =>
@@ -684,15 +731,40 @@ const AdminOsTravel = () => {
                                                 {!h.hotel_id && (
                                                     <Button
                                                         size="sm"
-                                                        variant="destructive"
+                                                        variant={
+                                                            h.status ===
+                                                            'rejected'
+                                                                ? 'outline'
+                                                                : 'destructive'
+                                                        }
                                                         onClick={() =>
-                                                            setRejectId(h.id)
+                                                            h.status ===
+                                                            'rejected'
+                                                                ? setReopenId(
+                                                                      h.id,
+                                                                  )
+                                                                : setRejectId(
+                                                                      h.id,
+                                                                  )
+                                                        }
+                                                        aria-label={
+                                                            h.status ===
+                                                            'rejected'
+                                                                ? t(
+                                                                      'osTravel.reopen',
+                                                                  )
+                                                                : t(
+                                                                      'osTravel.reject',
+                                                                  )
                                                         }
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                         <span className="sr-only">
                                                             {t(
-                                                                'osTravel.reject',
+                                                                h.status ===
+                                                                    'rejected'
+                                                                    ? 'osTravel.reopen'
+                                                                    : 'osTravel.reject',
                                                             )}
                                                         </span>
                                                     </Button>
@@ -888,6 +960,7 @@ const AdminOsTravel = () => {
                                 {t('osTravel.savePrice')}
                             </Button>
                             {(activeHotel?.status === 'pending' ||
+                                activeHotel?.status === 'rejected' ||
                                 (activeHotel?.status === 'approved' &&
                                     !activeHotel?.hotel_id)) && (
                                 <Button
@@ -911,6 +984,18 @@ const AdminOsTravel = () => {
                     cancelText={t('actions.cancel')}
                     dir={dir}
                     onConfirm={() => rejectMutation.mutate()}
+                />
+
+                {/* Return-to-pending confirm */}
+                <ConfirmDialog
+                    open={reopenId !== null}
+                    onOpenChange={(open) => !open && setReopenId(null)}
+                    title={t('osTravel.reopenTitle')}
+                    description={t('osTravel.reopenDescription')}
+                    confirmText={t('osTravel.reopen')}
+                    cancelText={t('actions.cancel')}
+                    dir={dir}
+                    onConfirm={() => reopenMutation.mutate()}
                 />
 
                 {/* Unapprove confirm */}

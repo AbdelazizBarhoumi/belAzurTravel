@@ -28,7 +28,7 @@ class OsTravelHotelPublisherTest extends TestCase
         ]);
     }
 
-    private function stagedHotel(int $id = 178, string $name = 'Cap Bon Kelibia Beach Hotel & Spa'): OsTravelHotel
+    private function stagedHotel(int $id = 178, string $name = 'Cap Bon Kelibia Beach Hotel & Spa', ?string $image = 'https://admin.mygo.co/file_manager/source/photos/test.jpg'): OsTravelHotel
     {
         $detail = $this->osTravelFixture('hotel_detail');
 
@@ -44,7 +44,7 @@ class OsTravelHotelPublisherTest extends TestCase
             'city_name' => 'Kelibia',
             'category_title' => '4 étoiles',
             'stars' => 4,
-            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'image' => $image,
             'status' => OsTravelHotel::PENDING,
             'last_synced_at' => now(),
         ]);
@@ -250,5 +250,69 @@ class OsTravelHotelPublisherTest extends TestCase
         $this->assertSame('20.00', (string) $hotel->markup_percentage);
         $this->assertSame('TND', $hotel->currency);
         $this->assertSame(OsTravelHotel::APPROVED, $staged->fresh()->status);
+    }
+
+    public function test_publish_succeeds_without_an_image(): void
+    {
+        $staged = $this->stagedHotel(image: null);
+
+        // Simulate a provider hotel that truly carries no image anywhere:
+        // strip the Image key from both the list item and the detail.
+        $list = $staged->payload['ListHotel'];
+        unset($list['Image']);
+        $detail = $staged->payload['HotelDetail'];
+        unset($detail['Image']);
+        $staged->update([
+            'payload' => ['ListHotel' => $list, 'HotelDetail' => $detail],
+        ]);
+
+        $hotel = app(HotelPublisher::class)->publish($staged->refresh());
+
+        $this->assertSame(1, Hotel::count());
+        $this->assertNull($hotel->image);
+        $this->assertNull($hotel->meta['image_hash'] ?? null);
+        $this->assertSame(OsTravelHotel::APPROVED, $staged->fresh()->status);
+    }
+
+    public function test_publish_retires_duplicate_staging_row_instead_of_colliding(): void
+    {
+        // A deployed database can hold two staging rows for the same external
+        // hotel (e.g. when the `external_id` unique index is missing). The
+        // canonical row already owns the published hotel, so a later publish
+        // of the duplicate row must retire it instead of aborting the batch
+        // on the unique `hotel_id` constraint.
+        $canonical = $this->stagedHotel();
+        app(HotelPublisher::class)->publish($canonical);
+        $hotel = $canonical->refresh();
+
+        $this->assertNotNull($hotel->hotel_id);
+        $this->assertSame(1, Hotel::count());
+
+        \Illuminate\Support\Facades\Schema::table('os_travel_hotels', function ($table) {
+            $table->dropUnique(['external_id']);
+        });
+
+        $duplicate = OsTravelHotel::create([
+            'external_id' => '178',
+            'payload' => $hotel->payload,
+            'payload_hash' => $hotel->payload_hash,
+            'name' => $hotel->name,
+            'city_external_id' => '12',
+            'city_name' => 'Kelibia',
+            'category_title' => '4 étoiles',
+            'stars' => 4,
+            'image' => 'https://admin.mygo.co/file_manager/source/photos/test.jpg',
+            'status' => OsTravelHotel::PENDING,
+            'last_synced_at' => now(),
+        ]);
+
+        $result = app(HotelPublisher::class)->publish($duplicate);
+
+        // The duplicate row is retired and the canonical publish is untouched.
+        $this->assertSame($hotel->hotel_id, $result->id);
+        $this->assertSame(1, Hotel::count());
+        $this->assertNull(OsTravelHotel::find($duplicate->id));
+        $this->assertSame(OsTravelHotel::APPROVED, $hotel->fresh()->status);
+        $this->assertSame($hotel->hotel_id, $hotel->fresh()->hotel_id);
     }
 }

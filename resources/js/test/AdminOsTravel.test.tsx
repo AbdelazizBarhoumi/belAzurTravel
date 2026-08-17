@@ -39,6 +39,7 @@ vi.mock('@/api/osTravel.api', () => ({
     approveAllOsTravelHotels: vi.fn(),
     rejectOsTravelHotel: vi.fn(),
     unapproveOsTravelHotel: vi.fn(),
+    reopenOsTravelHotel: vi.fn(),
 }));
 
 vi.mock('sonner', () => ({
@@ -72,6 +73,8 @@ const makeRow = (
     live_currency: null,
     live_reason: null,
     live_until: null,
+    base_price: null,
+    final_price: null,
     ...overrides,
 });
 
@@ -215,6 +218,36 @@ describe('AdminOsTravel page', () => {
             await screen.findByText('Hotel No Live Price'),
         ).toBeInTheDocument();
         expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
+    });
+
+    it('shows the min price and the final price with markup', async () => {
+        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValueOnce({
+            data: [
+                makeRow({
+                    live_price: 200,
+                    live_currency: 'TND',
+                    base_price: 200,
+                    final_price: 240,
+                    markup_percentage: '20.00',
+                }),
+                makeRow({
+                    id: '2',
+                    external_id: '102',
+                    name: 'Hotel No Live Price',
+                    live_price: null,
+                    base_price: null,
+                    final_price: null,
+                }),
+            ],
+        } as never);
+
+        renderAdminOsTravel();
+
+        expect(await screen.findByText('Hotel Test')).toBeInTheDocument();
+        // Min price = raw provider price.
+        expect(screen.getByText('200 TND')).toBeInTheDocument();
+        // Final price = raw price + 20% markup.
+        expect(screen.getByText('240 TND')).toBeInTheDocument();
     });
 
     it('shows the reactivated indicator from the dashboard', async () => {
@@ -377,6 +410,49 @@ describe('AdminOsTravel page', () => {
         });
     });
 
+    it('shows an approve button on a rejected hotel to undo the reject', async () => {
+        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValue({
+            data: [makeRow({ status: 'rejected' })],
+        } as never);
+
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+
+        expect(
+            screen.getAllByRole('button', { name: 'Approve' }).length,
+        ).toBeGreaterThan(0);
+        expect(
+            screen.queryAllByRole('button', { name: 'Reject' }).length,
+        ).toBe(0);
+    });
+
+    it('returns a rejected hotel to pending through the trash button', async () => {
+        vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValue({
+            data: [makeRow({ status: 'rejected' })],
+        } as never);
+
+        renderAdminOsTravel();
+
+        await screen.findByText('Hotel Test');
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Return to pending' }),
+        );
+
+        expect(
+            await screen.findByText('Return this hotel to pending?'),
+        ).toBeInTheDocument();
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Return to pending' }),
+        );
+
+        await waitFor(() => {
+            expect(osTravelApi.reopenOsTravelHotel).toHaveBeenCalledWith('1');
+        });
+    });
+
     it('unapproves an approved hotel through the confirm dialog', async () => {
         vi.mocked(osTravelApi.listOsTravelHotels).mockResolvedValue({
             data: [makeRow({ status: 'approved' })],
@@ -413,6 +489,8 @@ describe('AdminOsTravel page', () => {
                     live_status: 'available',
                     live_price: 180,
                     live_currency: 'TND',
+                    base_price: 180,
+                    final_price: 216,
                 }),
                 makeRow({
                     id: '8',
@@ -478,7 +556,7 @@ describe('AdminOsTravel page', () => {
         });
         fireEvent.click(countrySelect);
         fireEvent.click(
-            await screen.findByRole('option', { name: 'Tunisie' }),
+            await screen.findByRole('option', { name: 'Tunisia' }),
         );
 
         await waitFor(() => {

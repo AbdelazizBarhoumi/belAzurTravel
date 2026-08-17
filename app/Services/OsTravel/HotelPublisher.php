@@ -5,6 +5,8 @@ namespace App\Services\OsTravel;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Models\User;
+use App\Support\CityNames;
+use App\Support\CountryNames;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -53,8 +55,12 @@ class HotelPublisher
         $existing = Hotel::query()->where('code', $code)->first();
 
         $name = $this->localized(self::cleanText($list['Name'] ?? $detail['Name'] ?? ''));
-        $city = $this->localized(self::cleanText($list['City']['Name'] ?? $detail['City']['Name'] ?? ''));
-        $country = $this->localized(self::cleanText($this->countryName($list, $detail)));
+        $cityName = self::cleanText($list['City']['Name'] ?? $detail['City']['Name'] ?? '');
+        $city = CityNames::normalize(['en' => $cityName, 'fr' => $cityName, 'ar' => $cityName])
+            ?? $this->localized($cityName);
+        $countryName = self::cleanText($this->countryName($list, $detail));
+        $country = CountryNames::normalize(['en' => $countryName, 'fr' => $countryName, 'ar' => $countryName])
+            ?? $this->localized($countryName);
         $categoryTitle = self::cleanText($list['Category']['Title'] ?? $detail['Category']['Title'] ?? '');
         $stars = $list['Category']['Star'] ?? $detail['Category']['Star'] ?? 0;
 
@@ -97,6 +103,23 @@ class HotelPublisher
             'details' => $mapped['details'],
             'meta' => $meta,
         ], $mapped['filter_booleans']));
+
+        // `hotel_id` is unique on `os_travel_hotels`, so a published `hotels`
+        // row can be wired to exactly one staging row. When the database holds
+        // duplicate staging rows for the same external hotel (e.g. produced by
+        // an older sync), the later publish would collide with that unique
+        // index and abort the whole bulk approval. Retire the redundant row
+        // instead: the canonical row already owns this hotel.
+        $currentOwner = OsTravelHotel::query()
+            ->where('hotel_id', $hotel->id)
+            ->where('id', '!=', $staged->id)
+            ->first();
+
+        if ($currentOwner !== null && (string) $currentOwner->external_id === $externalId) {
+            $staged->delete();
+
+            return $hotel;
+        }
 
         $staged->fill([
             'hotel_id' => $hotel->id,
@@ -188,6 +211,9 @@ class HotelPublisher
     {
         $details = $existing?->details ?? [];
 
+        $cityName = self::cleanText($list['City']['Name'] ?? $detail['City']['Name'] ?? '');
+        $countryName = self::cleanText($this->countryName($list, $detail));
+
         [$gallery, $gallerySources] = $this->resolveGallery(
             $detail['Album'] ?? [],
             $details['gallery_sources'] ?? null,
@@ -210,8 +236,10 @@ class HotelPublisher
             'facilities' => $this->normalizeFacilities($detail['Facilitie'] ?? $list['Facilities'] ?? $details['facilities'] ?? []),
             'amenity_tags' => $this->normalizeAmenityTags($detail['Tag'] ?? $details['amenity_tags'] ?? []),
             'description' => $this->localized(self::htmlToText($detail['LongDescription'] ?? '')),
-            'city' => $this->localized(self::cleanText($list['City']['Name'] ?? $detail['City']['Name'] ?? '')),
-            'country' => $this->localized(self::cleanText($this->countryName($list, $detail))),
+            'city' => CityNames::normalize(['en' => $cityName, 'fr' => $cityName, 'ar' => $cityName])
+                ?? $this->localized($cityName),
+            'country' => CountryNames::normalize(['en' => $countryName, 'fr' => $countryName, 'ar' => $countryName])
+                ?? $this->localized($countryName),
             'source' => 'ostravel',
             'provider_hotel_id' => $externalId,
             'gallery' => $gallery,

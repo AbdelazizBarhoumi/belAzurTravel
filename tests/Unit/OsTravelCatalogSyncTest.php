@@ -154,6 +154,63 @@ class OsTravelCatalogSyncTest extends TestCase
         $this->assertNull($hotel->prior_status);
     }
 
+    public function test_rejected_hotel_missing_from_catalog_is_orphaned_with_prior_status(): void
+    {
+        $this->fakeOsTravelChain();
+        app(OsTravelCatalogSync::class)->sync();
+
+        OsTravelHotel::create([
+            'external_id' => '999',
+            'payload_hash' => str_repeat('b', 64),
+            'payload' => ['ListHotel' => [$this->osTravelHotelItem(999, 'Rejected')]],
+            'name' => 'Rejected',
+            'city_external_id' => '12',
+            'status' => OsTravelHotel::REJECTED,
+            'last_synced_at' => now()->subDay(),
+        ]);
+
+        $this->fakeOsTravelChain();
+        $sync = app(OsTravelCatalogSync::class)->sync();
+
+        $this->assertSame(1, $sync->orphaned_count);
+        $this->assertSame(0, $sync->reactivated_count);
+
+        $orphaned = OsTravelHotel::where('external_id', '999')->first()->fresh();
+        $this->assertSame(OsTravelHotel::ORPHANED, $orphaned->status);
+        $this->assertSame(OsTravelHotel::REJECTED, $orphaned->prior_status);
+    }
+
+    public function test_reappearing_orphaned_rejected_hotel_is_restored_to_rejected(): void
+    {
+        OsTravelHotel::create([
+            'external_id' => '999',
+            'payload_hash' => str_repeat('b', 64),
+            'payload' => ['ListHotel' => [$this->osTravelHotelItem(999, 'Rejected')]],
+            'name' => 'Rejected',
+            'city_external_id' => '12',
+            'status' => OsTravelHotel::ORPHANED,
+            'prior_status' => OsTravelHotel::REJECTED,
+            'last_synced_at' => now()->subDay(),
+        ]);
+
+        $this->fakeOsTravelChain([
+            'ListHotel' => [
+                'ListHotel' => [$this->osTravelHotelItem(999, 'Rejected')],
+                'CountResults' => 1,
+                'ErrorMessage' => [],
+            ],
+        ]);
+
+        $sync = app(OsTravelCatalogSync::class)->sync();
+
+        $this->assertSame(1, $sync->reactivated_count);
+        $this->assertSame(0, $sync->orphaned_count);
+
+        $hotel = OsTravelHotel::where('external_id', '999')->first()->fresh();
+        $this->assertSame(OsTravelHotel::REJECTED, $hotel->status);
+        $this->assertNull($hotel->prior_status);
+    }
+
     public function test_api_failure_marks_sync_failed_preserves_rows_and_releases_lock(): void
     {
         Http::fake([

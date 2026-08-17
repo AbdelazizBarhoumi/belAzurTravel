@@ -18,13 +18,12 @@ import LangBadge from '@/components/forms/LangBadge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Switch } from '@/components/ui/switch';
-import { Country } from 'country-state-city';
-import countries from 'i18n-iso-countries';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { cn } from '@/lib/utils';
 import { LocationSelect } from '@/components/ui/LocationSelect';
+import { findCountryByCodeOrEnglishName } from '@/data/locations';
 import { countryCodeToFlag } from '@/lib/flagEmoji';
 
 type VisaLang = 'en' | 'fr' | 'ar';
@@ -229,10 +228,8 @@ const AdminVisas = () => {
                                     setField('code', val);
                                     // LocationSelect passes the English country name;
                                     // look up its ISO code to generate the flag emoji
-                                    const match = Country.getAllCountries().find(
-                                        (c) => countries.getName(c.isoCode, 'en') === val,
-                                    );
-                                    setField('flag', countryCodeToFlag(match?.isoCode ?? val));
+                                    const match = findCountryByCodeOrEnglishName(val);
+                                    setField('flag', countryCodeToFlag(match?.code ?? val));
                                     setField('name_en', val);
                                     setField('name_fr', val);
                                     setField('name_ar', val);

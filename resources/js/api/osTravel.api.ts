@@ -59,6 +59,8 @@ export interface OsTravelHotelRow {
     live_currency: string | null;
     live_reason: string | null;
     live_until: string | null;
+    base_price: number | null;
+    final_price: number | null;
 }
 
 export interface OsTravelCatalogBoarding {
@@ -241,6 +243,13 @@ export async function rejectOsTravelHotel(id: string) {
 export async function unapproveOsTravelHotel(id: string) {
     return apiFetch<OsTravelRowResponse>(
         `/api/admin/os-travel/hotels/${id}/unapprove`,
+        { method: 'POST' },
+    );
+}
+
+export async function reopenOsTravelHotel(id: string) {
+    return apiFetch<OsTravelRowResponse>(
+        `/api/admin/os-travel/hotels/${id}/reopen`,
         { method: 'POST' },
     );
 }
