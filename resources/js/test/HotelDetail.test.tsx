@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { useEffect } from 'react';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import HotelDetail from '@/pages/hotels/show';
@@ -20,6 +21,10 @@ const { mockHotelSearch, mockBookingDialogProps, mockDateRangePickerProps } =
         mockBookingDialogProps: { open: false, provider: undefined as unknown },
         mockDateRangePickerProps: {} as Record<string, unknown>,
     }));
+
+// The sidebar search redirects to the hotels listing; the capture route below
+// records the query string it lands on so tests can assert the carried values.
+const mockRedirect = vi.hoisted(() => ({ search: '' }));
 
 // The provider normalizes the string `Localization` block into float
 // coordinates before the frontend ever sees them; these are the values the
@@ -178,12 +183,24 @@ function renderPage(initialEntry: string) {
                                 path="/hotels/:id"
                                 element={<HotelDetail />}
                             />
+                            <Route
+                                path="/hotels"
+                                element={<RedirectCapture />}
+                            />
                         </Routes>
                     </MemoryRouter>
                 </FavoritesProvider>
             </LanguageProvider>
         </QueryClientProvider>,
     );
+}
+
+function RedirectCapture() {
+    const location = useLocation();
+    useEffect(() => {
+        mockRedirect.search = location.search;
+    }, [location.search]);
+    return <div data-testid="redirect-capture">{location.search}</div>;
 }
 
 // The page renders two date pickers (sticky sidebar + rates section); both are
@@ -199,6 +216,13 @@ function clickCheckAvailability() {
         screen.getByRole('button', {
             name: /Vérifier la disponibilité/i,
         }),
+    );
+}
+
+// The sticky sidebar search hands the selected values to the hotels listing.
+function clickSidebarSearch() {
+    fireEvent.click(
+        screen.getByRole('button', { name: /Rechercher/i }),
     );
 }
 
@@ -266,6 +290,7 @@ describe('HotelDetail', () => {
         mockHotelSearch.calls = [];
         mockBookingDialogProps.open = false;
         mockBookingDialogProps.provider = undefined;
+        mockRedirect.search = '';
         Object.keys(mockDateRangePickerProps).forEach(
             (key) => delete mockDateRangePickerProps[key],
         );
@@ -763,5 +788,36 @@ describe('HotelDetail', () => {
             ),
         ).toBeInTheDocument();
         expect(screen.queryByText(/1,500\s*TND/)).not.toBeInTheDocument();
+    });
+
+    it('redirects the sidebar search to the hotels listing with dates and guests', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres');
+
+        clickSetDates();
+        clickSidebarSearch();
+
+        await screen.findByTestId('redirect-capture');
+
+        const params = new URLSearchParams(mockRedirect.search);
+        expect(params.get('q')).toBe('Santorin, Grèce');
+        expect(params.get('from')).toBe('2026-09-01');
+        expect(params.get('to')).toBe('2026-09-05');
+        expect(params.get('guests')).toBe('2');
+    });
+
+    it('redirects the sidebar search without dates when none are picked', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres');
+
+        clickSidebarSearch();
+
+        await screen.findByTestId('redirect-capture');
+
+        const params = new URLSearchParams(mockRedirect.search);
+        expect(params.get('q')).toBe('Santorin, Grèce');
+        expect(params.get('from')).toBeNull();
+        expect(params.get('to')).toBeNull();
+        expect(params.get('guests')).toBe('2');
     });
 });

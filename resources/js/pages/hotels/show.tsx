@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { notifyInteraction } from '@/api/interactions.api';
 import { HotelInfo } from '@/components/cards/HotelInfo';
 import { BookingDialog } from '@/components/forms/BookingDialog';
@@ -211,6 +211,7 @@ function toRoomView(
 
 export default function HotelDetail() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
@@ -462,6 +463,34 @@ const scrollToRates = () => {
         setSelectedRoom(room);
     };
 
+    // The sidebar search hands the selected destination, dates and guest
+    // count over to the hotels listing, which reads them from the URL.
+    const handleSearchRedirect = () => {
+        const params = new URLSearchParams();
+
+        if (location.trim()) {
+            params.set('q', location.trim());
+        }
+
+        const checkIn = toLocalISODate(dateRange?.from);
+        const checkOut = toLocalISODate(dateRange?.to);
+        if (checkIn) {
+            params.set('from', checkIn);
+        }
+        if (checkOut) {
+            params.set('to', checkOut);
+        }
+
+        params.set('guests', String(occupancy.adults));
+
+        const queryString = params.toString();
+        navigate(
+            queryString
+                ? `/hotels?${queryString}`
+                : '/hotels',
+        );
+    };
+
     const handleWhatsAppInquiry = () => {
         notifyInteraction('whatsapp');
         window.open('/contact', '_self');
@@ -567,14 +596,11 @@ const scrollToRates = () => {
                             )}
                             <Button
                                 type="button"
-                                disabled={!liveQuery}
-                                onClick={handleCheckAvailability}
+                                onClick={handleSearchRedirect}
                                 className="h-11 w-full bg-primary text-primary-foreground"
                             >
                                 <Search className="h-4 w-4" />
-                                {liveSearchLoading
-                                    ? t('hotelDetail.checkingAvailability')
-                                    : t('hotelDetail.search')}
+                                {t('hotelDetail.search')}
                             </Button>
                         </div>
                     </div>
