@@ -2,6 +2,7 @@
 
 namespace App\Services\OsTravel;
 
+use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Models\OsTravelReference;
 use App\Models\OsTravelSync;
@@ -15,7 +16,11 @@ use Throwable;
  *
  * Runs are single-flight (Cache lock), idempotent across re-syncs, never flip
  * approved/published hotels back to pending, reactivate orphaned hotels that
- * reappear, and mark missing pending/approved hotels as orphaned.
+ * reappear, and mark missing pending/approved hotels as orphaned. The image
+ * available on each search result is downloaded into local storage the first
+ * time it is seen and whenever the provider changes it. Hotel details are
+ * intentionally not fetched here: they are filled on each hotel's first daily
+ * visit (HotelPublisher::refreshDetail).
  */
 class OsTravelCatalogSync
 {
@@ -33,16 +38,18 @@ class OsTravelCatalogSync
 
     private int $reactivatedCount = 0;
 
+    private int $imagesStoredCount = 0;
+
     /** @var list<int> */
     private array $cityIds = [];
-
-    /** @var list<array{external_id: string, id: int}> */
-    private array $changedHotels = [];
 
     /** @var callable(string):void|null */
     private $reporter = null;
 
-    public function __construct(private OsTravelClient $client) {}
+    public function __construct(
+        private OsTravelClient $client,
+        private HotelPublisher $publisher,
+    ) {}
 
     /**
      * Attach a callback that receives each progress line (prefixed with a
@@ -128,10 +135,7 @@ class OsTravelCatalogSync
             $this->syncReferences(OsTravelReference::TYPE_CURRENCY, $currencies);
 
             $this->syncHotels();
-            $this->note('hotels synced: '.$this->hotelsCount);
-
-            $this->enrichDetails();
-            $this->note('hotel details fetched: '.$this->detailsCount);
+            $this->note('hotels synced: '.$this->hotelsCount.' (images stored: '.$this->imagesStoredCount.')');
 
             $this->detectOrphans();
             $this->note('orphans detected: '.$this->orphanedCount);
@@ -264,8 +268,6 @@ class OsTravelCatalogSync
             $this->reactivate($hotel);
         }
 
-        $changed = ! $hotel->exists || $hotel->payload_hash !== $hash;
-
         $city = $item['City'] ?? [];
         $country = is_array($city) ? ($city['Country'] ?? []) : [];
 
@@ -280,7 +282,6 @@ class OsTravelCatalogSync
             'country_name' => is_array($country) ? ($country['Name'] ?? null) : null,
             'category_title' => $item['Category']['Title'] ?? null,
             'stars' => $item['Category']['Star'] ?? null,
-            'image' => $item['Image'] ?? null,
             'last_synced_at' => now(),
         ]);
 
@@ -288,16 +289,60 @@ class OsTravelCatalogSync
 
         $this->hotelsCount++;
 
-        if ($changed) {
-            $this->changedHotels[] = ['external_id' => $externalId, 'id' => (int) $hotel->id];
+        $this->storeSearchImage($hotel, $item);
+    }
+
+    /**
+     * Store the search result's image locally the first time it appears or
+     * whenever the provider changes it. Approved hotels usually already carry
+     * a local copy on their published row, which is reused instead of
+     * re-downloading. A failed download keeps the previous image and leaves
+     * `image_source` unchanged so the next run retries.
+     */
+    protected function storeSearchImage(OsTravelHotel $hotel, array $item): void
+    {
+        $source = (string) ($item['Image'] ?? '');
+
+        if ($source === '' || $source === $hotel->image_source) {
+            return;
         }
+
+        if ($hotel->hotel_id !== null) {
+            $published = Hotel::query()->where('id', $hotel->hotel_id)->first();
+
+            if ($published !== null
+                && ($published->meta['image_hash'] ?? null) === sha1($source)
+                && str_starts_with((string) $published->image, '/storage/')) {
+                $hotel->update(['image' => $published->image, 'image_source' => $source]);
+
+                return;
+            }
+        }
+
+        if ($this->imagesStoredCount > 0) {
+            usleep(config('ostravel.sync.throttle_ms') * 1000);
+        }
+
+        $local = $this->publisher->storeProviderImage($source);
+
+        if ($local === null) {
+            Log::warning('OS-TRAVEL search image download failed; retrying next sync.', [
+                'external_id' => $hotel->external_id,
+                'url' => $source,
+            ]);
+
+            return;
+        }
+
+        $hotel->update(['image' => $local, 'image_source' => $source]);
+        $this->imagesStoredCount++;
     }
 
     protected function reactivate(OsTravelHotel $hotel): void
     {
-$restoreStatus = in_array($hotel->prior_status, [OsTravelHotel::APPROVED, OsTravelHotel::REJECTED], true)
-    ? $hotel->prior_status
-    : OsTravelHotel::PENDING;
+        $restoreStatus = in_array($hotel->prior_status, [OsTravelHotel::APPROVED, OsTravelHotel::REJECTED], true)
+            ? $hotel->prior_status
+            : OsTravelHotel::PENDING;
 
         $hotel->status = $restoreStatus;
         $hotel->prior_status = null;
@@ -308,40 +353,6 @@ $restoreStatus = in_array($hotel->prior_status, [OsTravelHotel::APPROVED, OsTrav
             'external_id' => $hotel->external_id,
             'restored_status' => $restoreStatus,
         ]);
-    }
-
-    /**
-     * Enrich hotels that have never had their HotelDetail fetched (brand-new
-     * hotels). Known hotels — including changed ones — are refreshed lazily by
-     * the first public/admin click each day (HotelPublisher::refreshDetail).
-     */
-    protected function enrichDetails(): void
-    {
-        $total = count($this->changedHotels);
-        $index = 0;
-
-        foreach ($this->changedHotels as $entry) {
-            $hotel = OsTravelHotel::find($entry['id']);
-
-            if ($hotel !== null && ! empty($hotel->payload['HotelDetail'])) {
-                continue;
-            }
-
-            if ($this->detailsCount > 0) {
-                usleep(config('ostravel.sync.throttle_ms') * 1000);
-            }
-
-            $index++;
-            $this->note("calling HotelDetail external={$entry['external_id']} (".$index.'/'.$total.')');
-            $detail = $this->client->hotelDetail($entry['external_id']);
-
-            if ($hotel !== null) {
-                $hotel->payload = array_merge($hotel->payload ?? [], ['HotelDetail' => $detail['HotelDetail'] ?? []]);
-                $hotel->save();
-            }
-
-            $this->detailsCount++;
-        }
     }
 
     protected function detectOrphans(): void
@@ -432,7 +443,7 @@ $restoreStatus = in_array($hotel->prior_status, [OsTravelHotel::APPROVED, OsTrav
         $this->detailsCount = 0;
         $this->orphanedCount = 0;
         $this->reactivatedCount = 0;
+        $this->imagesStoredCount = 0;
         $this->cityIds = [];
-        $this->changedHotels = [];
     }
 }

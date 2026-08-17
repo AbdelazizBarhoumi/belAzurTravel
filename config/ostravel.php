@@ -62,6 +62,13 @@ return [
         'throttle_ms' => (int) env('OS_TRAVEL_SEARCH_THROTTLE_MS', 150),
     ],
 
+    'booking' => [
+        // Forward the guest-selected `Option[]` (booking preferences) from the
+        // HotelDetail payload into the provider HotelBooking request. Gated off
+        // until partner validation confirms the provider accepts them.
+        'send_options' => (bool) env('OS_TRAVEL_BOOKING_SEND_OPTIONS', false),
+    ],
+
     'admin' => [
         // The admin list's live date probe (`probeWindow`) runs synchronously
         // inside the HTTP request. The provider's `HotelSearch` searches by

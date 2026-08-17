@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import type { HotelItem } from '@/types/public/hotel.types';
+import { CityFilter } from './CityFilter';
 import { FilterRenderer } from './FilterRenderer';
 
 interface HotelFiltersProps {
@@ -16,6 +17,11 @@ interface HotelFiltersProps {
     onPriceChange: (range: [number, number]) => void;
     maxPrice: number;
     minPrice: number;
+    /** When true (live results shown) the price range applies to the whole
+     *  stay; otherwise it filters stored per-night prices. */
+    liveMode?: boolean;
+    /** When false (no prices retrieved) the Budget slider is hidden. */
+    hasPriceData?: boolean;
     categoryTypes: PublicCategoryType[];
     categoryTypeFilters: Record<string, string[]>;
     onCategoryTypeChange: (typeKey: string, values: string[]) => void;
@@ -30,6 +36,8 @@ export function HotelFilters({
     onPriceChange,
     maxPrice,
     minPrice,
+    liveMode = false,
+    hasPriceData = true,
     categoryTypes,
     categoryTypeFilters,
     onCategoryTypeChange,
@@ -55,6 +63,26 @@ export function HotelFilters({
             }
         }
         return Array.from(countriesMap.entries()).sort((a, b) => b[1].count - a[1].count);
+    }, [hotels]);
+
+    // Get unique cities from hotels
+    const availableCities = useMemo(() => {
+        const citiesMap = new Map<string, { count: number; label: { en: string; fr: string; ar: string } }>();
+        for (const hotel of hotels) {
+            const cityObj = hotel.city;
+            if (cityObj && typeof cityObj === 'object') {
+                const key = cityObj.en || '';
+                if (key) {
+                    const existing = citiesMap.get(key);
+                    if (existing) {
+                        existing.count++;
+                    } else {
+                        citiesMap.set(key, { count: 1, label: cityObj });
+                    }
+                }
+            }
+        }
+        return Array.from(citiesMap.entries()).sort((a, b) => b[1].count - a[1].count);
     }, [hotels]);
 
     // Get unique stars from hotels
@@ -136,6 +164,29 @@ export function HotelFilters({
                 </div>
             </div>
 
+            {/* City Filter */}
+            {availableCities.length > 0 && (
+                <div>
+                    <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 sm:mb-3">
+                        {lang === 'fr' ? 'Ville' : lang === 'ar' ? 'المدينة' : 'City'}
+                    </h3>
+                    <CityFilter
+                        cities={availableCities.map(([key, { count, label }]) => ({
+                            key,
+                            count,
+                            label,
+                        }))}
+                        selected={
+                            categoryTypeFilters['dynamic_city'] ?? []
+                        }
+                        onChange={(values) =>
+                            onCategoryTypeChange('dynamic_city', values)
+                        }
+                        lang={lang}
+                    />
+                </div>
+            )}
+
             {/* Occupancy Field */}
             <div className="border-t border-border my-3 sm:my-4 py-3 sm:py-4">
                 <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 sm:mb-3">
@@ -150,27 +201,36 @@ export function HotelFilters({
             </div>
 
             {/* Price Slider */}
-            <div className="border-t border-border my-3 sm:my-4 py-3 sm:py-4">
-                <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 sm:mb-3">
-                    {lang === 'fr' ? 'Budget' : lang === 'ar' ? 'الميزانية' : 'Budget'}
-                </h3>
-                <div className="space-y-2 sm:space-y-3">
-                    <Slider
-                        value={priceRange}
-                        onValueChange={(value) => onPriceChange(value as [number, number])}
-                        min={minPrice}
-                        max={maxPrice}
-                        step={1}
-                    />
-                    <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-foreground">
-                        <span>{minPrice} DT</span>
-                        <span className="font-medium text-foreground">
-                            {priceRange[0]} DT - {priceRange[1]} DT
+            {hasPriceData && (
+                <div className="border-t border-border my-3 sm:my-4 py-3 sm:py-4">
+                    <div className="flex items-baseline justify-between gap-2 mb-2 sm:mb-3">
+                        <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {lang === 'fr' ? 'Budget' : lang === 'ar' ? 'الميزانية' : 'Budget'}
+                        </h3>
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground/70">
+                            {liveMode
+                                ? t('hotels.priceUnitLive')
+                                : t('hotels.priceUnitBrowse')}
                         </span>
-                        <span>{maxPrice} DT</span>
+                    </div>
+                    <div className="space-y-2 sm:space-y-3">
+                        <Slider
+                            value={priceRange}
+                            onValueChange={(value) => onPriceChange(value as [number, number])}
+                            min={minPrice}
+                            max={maxPrice}
+                            step={1}
+                        />
+                        <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-foreground">
+                            <span>{minPrice} DT</span>
+                            <span className="font-medium text-foreground">
+                                {priceRange[0]} DT - {priceRange[1]} DT
+                            </span>
+                            <span>{maxPrice} DT</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Stars Filter */}
             <div className="border-t border-border my-3 sm:my-4 py-3 sm:py-4">

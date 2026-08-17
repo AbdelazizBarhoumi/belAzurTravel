@@ -45,7 +45,7 @@ class OsTravelBookingService
             ];
         }, $providerContext['rooms'] ?? []);
 
-        return [
+        $booking = [
             'City' => (int) ($providerContext['city'] ?? 0),
             'Hotel' => (int) ($providerContext['hotel'] ?? 0),
             'CheckIn' => $providerContext['check_in'],
@@ -54,6 +54,12 @@ class OsTravelBookingService
             'Token' => $providerContext['token'],
             'Rooms' => $rooms,
         ];
+
+        if (config('ostravel.booking.send_options')) {
+            $booking['Option'] = array_map('intval', $providerContext['options'] ?? []);
+        }
+
+        return $booking;
     }
 
     /**

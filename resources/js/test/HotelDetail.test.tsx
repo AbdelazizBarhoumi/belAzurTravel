@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import HotelDetail from '@/pages/hotels/show';
@@ -44,6 +45,7 @@ const mockHotel = vi.hoisted(() => ({
             fr: 'Beach Resort',
             ar: 'Beach Resort',
         },
+        hotel_type: 'Hôtel',
         description: {
             en: 'Luxury resort',
             fr: 'Luxury resort',
@@ -304,6 +306,29 @@ describe('HotelDetail', () => {
         expect(screen.getByText(/taxe de séjour/)).toBeInTheDocument();
     });
 
+    it('renders the hotel type chip from the detail payload', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+
+        expect(await screen.findByText('Hôtel')).toBeInTheDocument();
+    });
+
+    it('shows the boarding description under each advanced search checkbox', async () => {
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres');
+
+        // HotelInfo section already renders the boarding description once.
+        expect(screen.getAllByText('Bed & half board').length).toBe(1);
+
+        fireEvent.click(
+            screen.getByRole('button', {
+                name: /Recherche avancée/i,
+            }),
+        );
+
+        // Advanced boarding checkbox now shows the description as a subtext.
+        expect(screen.getAllByText('Bed & half board').length).toBe(2);
+    });
+
     it('does not crash when a room has null features', async () => {
         renderPage('/hotels/sunset-paradise-resort');
 
@@ -459,6 +484,7 @@ describe('HotelDetail', () => {
             }>;
             adults?: number;
             children?: number;
+            options?: Array<{ id: number; title: string }>;
         };
         expect(provider.token).toBe('live-token-1');
         expect(provider.source).toBe('OS-TRAVEL-DIRECT');
@@ -470,6 +496,10 @@ describe('HotelDetail', () => {
             viewIds: [7],
             supplements: [{ name: 'Insurance', price: 40, perNight: true }],
         });
+        expect(provider.options).toEqual([
+            { id: 1, title: 'Baby bed' },
+            { id: 2, title: 'Airport transfer' },
+        ]);
     });
 
     it('renders every live room with its boarding name in the rates table', async () => {
@@ -517,6 +547,55 @@ describe('HotelDetail', () => {
         ).toBeGreaterThan(0);
     });
 
+    it('renders the live room description, features and cancellation policy popover', async () => {
+        setLiveHotel({
+            ...baseLiveHotel,
+            rooms: [
+                {
+                    ...baseLiveHotel.rooms[0],
+                    name: 'Suite with Balcony',
+                    description: 'Spacious suite with a private balcony.',
+                    features: ['Vue mer', 'Jacuzzi'],
+                    cancellation_policy: [
+                        {
+                            fees: 30,
+                            type: 'PERCENT',
+                            nature: 'BEFORE_ARRIVAL',
+                            description:
+                                '30% of the stay if cancelled within 7 days.',
+                            from_date: '2026-08-30',
+                        },
+                    ],
+                },
+            ],
+        });
+
+        renderPage('/hotels/sunset-paradise-resort');
+        await screen.findByText('Chambres');
+
+        clickSetDates();
+        clickCheckAvailability();
+        await screen.findByText('Suite with Balcony');
+
+        expect(
+            screen.getByText('Spacious suite with a private balcony.'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Vue mer')).toBeInTheDocument();
+        expect(screen.getByText('Jacuzzi')).toBeInTheDocument();
+
+        // Cancellation policy trigger opens the popover with the policy text.
+        await userEvent.click(
+            screen.getByRole('button', {
+                name: /Conditions d’annulation/i,
+            }),
+        );
+        expect(
+            await screen.findByText(
+                /30% of the stay if cancelled within 7 days/,
+            ),
+        ).toBeInTheDocument();
+    });
+
     it('renders promo, free-child and recommended badges from the live result', async () => {
         setLiveHotel({
             ...baseLiveHotel,
@@ -534,10 +613,20 @@ describe('HotelDetail', () => {
 
         clickSetDates();
         clickCheckAvailability();
-        await screen.findByText('Promo Early booking');
+        await screen.findByText('Promo Early booking · -29%');
 
         expect(screen.getByText('Enfant gratuit')).toBeInTheDocument();
         expect(screen.getByText('Recommandé')).toBeInTheDocument();
+
+        // The promo discounts the header per-night price, the row/sticky totals
+        // and the per-night hint, keeping the original price struck through.
+        expect(
+            screen.getAllByText(/266\.25/).length,
+        ).toBeGreaterThan(0);
+        expect(screen.getAllByText(/1,065/).length).toBeGreaterThan(0);
+        expect(
+            screen.getAllByText(/1,500\s*TND/).length,
+        ).toBeGreaterThan(0);
     });
 
     it('renders non-refundable and free-cancellation badges on live rooms', async () => {

@@ -171,6 +171,7 @@ class BookingController extends Controller
                     'source' => $data['provider']['source'],
                     'token' => $data['provider']['token'],
                     'rooms' => $data['provider']['rooms'] ?? [],
+                    'options' => $data['provider']['options'] ?? [],
                 ], $data['provider']['pax'] ?? []);
 
                 try {

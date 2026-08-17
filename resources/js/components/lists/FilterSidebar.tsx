@@ -25,7 +25,7 @@ export function FilterSidebar({
             transition={{ delay: 0.05 }}
             className="hidden flex-shrink-0 md:block md:w-64 lg:w-72"
         >
-            <div className="sticky top-24 rounded-2xl lg:rounded-3xl border border-border bg-card p-4 lg:p-6">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-2xl lg:rounded-3xl border border-border bg-card p-4 lg:p-6">
                 <div className="mb-4 lg:mb-6 flex items-center justify-between gap-3 lg:gap-4">
                     <h2 className="font-serif text-base lg:text-lg font-bold text-foreground">
                         {title}

@@ -263,14 +263,13 @@ class AdminOsTravelController extends Controller
 
     /**
      * Bulk approve: publish every hotel matching the currently applied admin
-     * filters straight into the public `hotels` table. Publishing runs in
-     * `lazy` mode, so it is pure database work — the provider photos are
-     * stored as opaque proxy URLs (streamed on-demand through the image proxy)
-     * and never downloaded in this request, and the heavy hotel-detail content
-     * is fetched lazily by the first public visit
-     * (`HotelPublisher::refreshDetail`). By default hotels without an image
-     * are skipped; passing `include_without_image` opts them back into the
-     * batch. Already-live rows are ignored. A batch-wide `markup_percentage` /
+     * filters straight into the public `hotels` table. The catalog sync stores
+     * each search-result image locally in advance, so a publish is mostly pure
+     * database work; any image the sync could not store is downloaded here.
+     * Heavy hotel-detail content is fetched lazily by the first public visit
+     * (`HotelPublisher::refreshDetail`). By default hotels without an image are
+     * skipped; passing `include_without_image` opts them back into the batch.
+     * Already-live rows are ignored. A batch-wide `markup_percentage` /
      * `currency` override is applied to every published hotel.
      */
     public function approveAll(Request $request): JsonResponse
@@ -349,7 +348,7 @@ class AdminOsTravelController extends Controller
             }
 
             try {
-                $this->publisher->publish($hotel, $overrides, $request->user(), true);
+                $this->publisher->publish($hotel, $overrides, $request->user());
                 $approved[] = (string) $hotel->id;
             } catch (Throwable $e) {
                 Log::warning('OS-TRAVEL bulk approve failed to publish a hotel.', [

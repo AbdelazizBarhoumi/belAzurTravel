@@ -57,6 +57,10 @@ const providerOffer = {
     childrenAges: [6],
     checkIn: '2026-09-01',
     checkOut: '2026-09-05',
+    options: [
+        { id: 1, title: 'Baby bed' },
+        { id: 2, title: 'Airport transfer' },
+    ],
 };
 
 function renderDialog(overrides: Partial<React.ComponentProps<typeof BookingDialog>> = {}) {
@@ -143,6 +147,7 @@ describe('BookingDialog passenger form', () => {
                 };
                 search: { check_in: string; check_out: string };
                 rooms: Array<{ id: number; boarding_id: number; view_ids: number[] }>;
+                options: number[];
             };
             start_date: string;
             end_date: string;
@@ -150,6 +155,7 @@ describe('BookingDialog passenger form', () => {
 
         expect(payload.start_date).toBe('2026-09-01');
         expect(payload.end_date).toBe('2026-09-05');
+        expect(payload.provider.options).toEqual([]);
         expect(payload.provider.pax.adults).toEqual([
             { Civility: 'Mr', Name: 'John', Surname: 'Doe', Holder: true },
             { Civility: 'Mr', Name: 'Jane', Surname: 'Roe', Holder: false },
@@ -164,6 +170,24 @@ describe('BookingDialog passenger form', () => {
             check_in: '2026-09-01',
             check_out: '2026-09-05',
         });
+    });
+
+    it('renders the booking preferences as toggles and submits the selected ids', async () => {
+        renderDialog();
+
+        expect(await screen.findByText('Baby bed')).toBeInTheDocument();
+        expect(screen.getByText('Airport transfer')).toBeInTheDocument();
+
+        // Toggle "Baby bed" on and submit.
+        fireEvent.click(screen.getByText('Baby bed'));
+        fireEvent.submit(document.querySelector('form') as HTMLFormElement);
+
+        await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+
+        const payload = submitMock.mock.calls[0][0] as {
+            provider: { options: number[] };
+        };
+        expect(payload.provider.options).toEqual([1]);
     });
 
     it('shows the prebook-confirmed total before starting payment', async () => {

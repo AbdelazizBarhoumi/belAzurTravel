@@ -263,4 +263,61 @@ class OsTravelDetailRefreshTest extends TestCase
         $this->assertNotEmpty($gallery);
         $this->assertFalse(Storage::disk('public')->exists('uploads/hotels/existing.jpg'));
     }
+
+    public function test_first_visit_refreshes_main_image_when_provider_url_changed(): void
+    {
+        $this->publishedHotel();
+        $staged = OsTravelHotel::first();
+        $staged->update(['detail_fetched_at' => now()->subDay()]);
+
+        $payload = $staged->payload;
+        $payload['ListHotel']['Image'] = 'https://admin.mygo.co/file_manager/source/photos/renamed.jpg';
+        $staged->payload = $payload;
+        $staged->save();
+
+        $hotel = Hotel::first();
+        $hotel->update(['meta' => ['image_hash' => sha1('https://admin.mygo.co/file_manager/source/photos/test.jpg')]]);
+        Storage::disk('public')->put('uploads/hotels/test.jpg', 'image-bytes');
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelDetail' => Http::response(
+                $this->osTravelFixture('hotel_detail')
+            ),
+            'https://admin.mygo.co/file_manager/*' => Http::response('new-bytes'),
+        ]);
+
+        $this->getJson('/api/hotels/cap-bon-kelibia-beach-hotel-spa')->assertOk();
+
+        $hotel = Hotel::first();
+        $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
+        $this->assertSame(sha1('https://admin.mygo.co/file_manager/source/photos/renamed.jpg'), $hotel->meta['image_hash']);
+        // The replaced local file is cleaned up.
+        $this->assertFalse(Storage::disk('public')->exists('uploads/hotels/test.jpg'));
+    }
+
+    public function test_first_visit_converts_legacy_proxy_image_to_local(): void
+    {
+        $this->publishedHotel();
+        $staged = OsTravelHotel::first();
+        $staged->update(['detail_fetched_at' => now()->subDay()]);
+
+        $hotel = Hotel::first();
+        $hotel->update([
+            'image' => '/api/hotels/images/legacy-token',
+            'meta' => ['image_hash' => sha1('https://admin.mygo.co/file_manager/source/photos/test.jpg')],
+        ]);
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelDetail' => Http::response(
+                $this->osTravelFixture('hotel_detail')
+            ),
+            'https://admin.mygo.co/file_manager/*' => Http::response('image-bytes'),
+        ]);
+
+        $this->getJson('/api/hotels/cap-bon-kelibia-beach-hotel-spa')->assertOk();
+
+        $hotel = Hotel::first();
+        $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
+        $this->assertNotSame('/api/hotels/images/legacy-token', $hotel->image);
+    }
 }

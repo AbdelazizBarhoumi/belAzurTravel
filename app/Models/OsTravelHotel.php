@@ -17,7 +17,7 @@ class OsTravelHotel extends Model
 
     protected $fillable = [
         'external_id', 'sync_id', 'payload', 'payload_hash',
-        'name', 'city_external_id', 'city_name', 'category_title', 'stars', 'image',
+        'name', 'city_external_id', 'city_name', 'category_title', 'stars', 'image', 'image_source',
         'status', 'prior_status', 'hotel_id', 'markup_percentage', 'currency',
         'approved_by', 'approved_at', 'rejected_at', 'last_synced_at',
         'detail_fetched_at',

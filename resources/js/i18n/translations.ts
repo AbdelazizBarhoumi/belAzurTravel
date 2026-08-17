@@ -1472,6 +1472,31 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الفلاتر',
         en: 'Filters',
     },
+    'hotels.filtersButton': {
+        fr: 'Filtres',
+        ar: 'الفلاتر',
+        en: 'Filters',
+    },
+    'hotels.done': {
+        fr: 'Terminé',
+        ar: 'تم',
+        en: 'Done',
+    },
+    'hotels.checkingAvailability': {
+        fr: 'Vérification des disponibilités et des tarifs…',
+        ar: 'جارٍ التحقق من التوفر والأسعار…',
+        en: 'Checking availability & rates…',
+    },
+    'hotels.priceUnitBrowse': {
+        fr: 'prix/nuit enregistrés',
+        ar: 'السعر لكل ليلة (مسجّل)',
+        en: 'stored per-night prices',
+    },
+    'hotels.priceUnitLive': {
+        fr: 'total du séjour',
+        ar: 'إجمالي الإقامة',
+        en: 'total stay',
+    },
     'hotels.occupancy': {
         fr: 'Voyageurs',
         ar: 'المسافرون',
@@ -1757,6 +1782,11 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Annulation gratuite jusqu’au',
         ar: 'إلغاء مجاني حتى',
         en: 'Free cancellation until',
+    },
+    'hotelDetail.cancellationPolicy': {
+        fr: 'Conditions d’annulation',
+        ar: 'شروط الإلغاء',
+        en: 'Cancellation policy',
     },
     'hotelDetail.unavailableSticky': {
         fr: 'Indisponible pour ces dates',
@@ -4527,6 +4557,11 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Des demandes spéciales ?',
         ar: 'أي طلبات خاصة؟',
         en: 'Any special requests?',
+    },
+    'booking.preferences': {
+        fr: 'Préférences',
+        ar: 'التفضيلات',
+        en: 'Preferences',
     },
     'booking.travelers': {
         fr: 'Voyageurs',

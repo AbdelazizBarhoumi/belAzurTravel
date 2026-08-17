@@ -636,7 +636,7 @@ class AdminOsTravelTest extends TestCase
         $this->assertSame('EUR', $published->currency);
     }
 
-    public function test_bulk_approve_publishes_with_proxy_image_and_no_downloads(): void
+    public function test_bulk_approve_publishes_with_local_image(): void
     {
         $this->stagedHotel(1, 'Hotel One', OsTravelHotel::PENDING);
 
@@ -647,8 +647,7 @@ class AdminOsTravelTest extends TestCase
         $hotel = Hotel::first();
         $this->assertNotNull($hotel);
         $this->assertNotNull(OsTravelHotel::where('external_id', '1')->first()->hotel_id);
-        $this->assertStringStartsWith('/api/hotels/images/', $hotel->image);
-        Http::assertNothingSent();
+        $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
     }
 
     public function test_index_filters_by_country_and_city(): void

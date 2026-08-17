@@ -153,7 +153,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Api\BookingController::cancel
- * @see app/Http/Controllers/Api/BookingController.php:229
+ * @see app/Http/Controllers/Api/BookingController.php:230
  * @route '/api/bookings/{id}/cancel'
  */
 export const cancel = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -168,7 +168,7 @@ cancel.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\BookingController::cancel
- * @see app/Http/Controllers/Api/BookingController.php:229
+ * @see app/Http/Controllers/Api/BookingController.php:230
  * @route '/api/bookings/{id}/cancel'
  */
 cancel.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -196,7 +196,7 @@ cancel.url = (args: { id: string | number } | [id: string | number ] | string | 
 
 /**
 * @see \App\Http\Controllers\Api\BookingController::cancel
- * @see app/Http/Controllers/Api/BookingController.php:229
+ * @see app/Http/Controllers/Api/BookingController.php:230
  * @route '/api/bookings/{id}/cancel'
  */
 cancel.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -206,7 +206,7 @@ cancel.post = (args: { id: string | number } | [id: string | number ] | string |
 
     /**
 * @see \App\Http\Controllers\Api\BookingController::cancel
- * @see app/Http/Controllers/Api/BookingController.php:229
+ * @see app/Http/Controllers/Api/BookingController.php:230
  * @route '/api/bookings/{id}/cancel'
  */
     const cancelForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -216,7 +216,7 @@ cancel.post = (args: { id: string | number } | [id: string | number ] | string |
 
             /**
 * @see \App\Http\Controllers\Api\BookingController::cancel
- * @see app/Http/Controllers/Api/BookingController.php:229
+ * @see app/Http/Controllers/Api/BookingController.php:230
  * @route '/api/bookings/{id}/cancel'
  */
         cancelForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -305,7 +305,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\BookingController::confirm
- * @see app/Http/Controllers/Api/BookingController.php:293
+ * @see app/Http/Controllers/Api/BookingController.php:294
  * @route '/api/admin/bookings/{id}/confirm'
  */
 export const confirm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -320,7 +320,7 @@ confirm.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\BookingController::confirm
- * @see app/Http/Controllers/Api/BookingController.php:293
+ * @see app/Http/Controllers/Api/BookingController.php:294
  * @route '/api/admin/bookings/{id}/confirm'
  */
 confirm.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -348,7 +348,7 @@ confirm.url = (args: { id: string | number } | [id: string | number ] | string |
 
 /**
 * @see \App\Http\Controllers\Api\BookingController::confirm
- * @see app/Http/Controllers/Api/BookingController.php:293
+ * @see app/Http/Controllers/Api/BookingController.php:294
  * @route '/api/admin/bookings/{id}/confirm'
  */
 confirm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -358,7 +358,7 @@ confirm.post = (args: { id: string | number } | [id: string | number ] | string 
 
     /**
 * @see \App\Http\Controllers\Api\BookingController::confirm
- * @see app/Http/Controllers/Api/BookingController.php:293
+ * @see app/Http/Controllers/Api/BookingController.php:294
  * @route '/api/admin/bookings/{id}/confirm'
  */
     const confirmForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -368,7 +368,7 @@ confirm.post = (args: { id: string | number } | [id: string | number ] | string 
 
             /**
 * @see \App\Http\Controllers\Api\BookingController::confirm
- * @see app/Http/Controllers/Api/BookingController.php:293
+ * @see app/Http/Controllers/Api/BookingController.php:294
  * @route '/api/admin/bookings/{id}/confirm'
  */
         confirmForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -379,7 +379,7 @@ confirm.post = (args: { id: string | number } | [id: string | number ] | string 
     confirm.form = confirmForm
 /**
 * @see \App\Http\Controllers\Api\BookingController::adminCancel
- * @see app/Http/Controllers/Api/BookingController.php:309
+ * @see app/Http/Controllers/Api/BookingController.php:310
  * @route '/api/admin/bookings/{id}/cancel'
  */
 export const adminCancel = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -394,7 +394,7 @@ adminCancel.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\BookingController::adminCancel
- * @see app/Http/Controllers/Api/BookingController.php:309
+ * @see app/Http/Controllers/Api/BookingController.php:310
  * @route '/api/admin/bookings/{id}/cancel'
  */
 adminCancel.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -422,7 +422,7 @@ adminCancel.url = (args: { id: string | number } | [id: string | number ] | stri
 
 /**
 * @see \App\Http\Controllers\Api\BookingController::adminCancel
- * @see app/Http/Controllers/Api/BookingController.php:309
+ * @see app/Http/Controllers/Api/BookingController.php:310
  * @route '/api/admin/bookings/{id}/cancel'
  */
 adminCancel.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -432,7 +432,7 @@ adminCancel.post = (args: { id: string | number } | [id: string | number ] | str
 
     /**
 * @see \App\Http\Controllers\Api\BookingController::adminCancel
- * @see app/Http/Controllers/Api/BookingController.php:309
+ * @see app/Http/Controllers/Api/BookingController.php:310
  * @route '/api/admin/bookings/{id}/cancel'
  */
     const adminCancelForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -442,7 +442,7 @@ adminCancel.post = (args: { id: string | number } | [id: string | number ] | str
 
             /**
 * @see \App\Http\Controllers\Api\BookingController::adminCancel
- * @see app/Http/Controllers/Api/BookingController.php:309
+ * @see app/Http/Controllers/Api/BookingController.php:310
  * @route '/api/admin/bookings/{id}/cancel'
  */
         adminCancelForm.post = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

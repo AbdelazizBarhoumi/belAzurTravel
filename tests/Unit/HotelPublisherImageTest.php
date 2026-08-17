@@ -183,4 +183,25 @@ class HotelPublisherImageTest extends TestCase
         $this->assertSame('http://10.0.0.8/internal.jpg', $hotel->image);
         $this->assertSame(0, $this->countRequestsTo('http://10.0.0.8'));
     }
+
+    public function test_publish_reuses_the_local_image_stored_by_the_catalog_sync(): void
+    {
+        Http::fake([
+            'https://93.184.216.34/*' => Http::response('image-bytes'),
+            'https://admin.mygo.co/*' => Http::response('image-bytes'),
+        ]);
+
+        Storage::disk('public')->put('uploads/hotels/presynced.jpg', 'image-bytes');
+
+        $staged = $this->stagedHotel('https://93.184.216.34/photos/main.jpg');
+        $staged->update([
+            'image' => '/storage/uploads/hotels/presynced.jpg',
+            'image_source' => 'https://93.184.216.34/photos/main.jpg',
+        ]);
+
+        $hotel = app(HotelPublisher::class)->publish($staged->refresh());
+
+        $this->assertSame('/storage/uploads/hotels/presynced.jpg', $hotel->image);
+        $this->assertSame(0, $this->countRequestsTo('https://93.184.216.34'));
+    }
 }

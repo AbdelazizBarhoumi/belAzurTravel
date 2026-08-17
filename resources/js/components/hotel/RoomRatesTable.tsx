@@ -10,8 +10,13 @@ import { useMemo, useState } from 'react';
 import type { Occupancy } from '@/components/hotel/OccupancyPicker';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { cn, promoPrice } from '@/lib/utils';
 
 export interface RateRoom {
     id: string;
@@ -31,6 +36,13 @@ export interface RateRoom {
     stopSales?: { from: string; to: string } | null;
     notRefundable?: boolean;
     cancellationDeadline?: string;
+    cancellationPolicy?: Array<{
+        fees: number;
+        type: string | null;
+        nature: string | null;
+        description: string | null;
+        from_date: string | null;
+    }>;
     supplements?: Array<{ name: string; price: number; perNight?: boolean }>;
 }
 
@@ -38,6 +50,7 @@ interface RoomRatesTableProps {
     rooms: RateRoom[];
     occupancy: Occupancy;
     currency?: string;
+    promoRate?: string | null;
     bookDisabled?: boolean;
     onReserve: (room: RateRoom) => void;
 }
@@ -54,6 +67,7 @@ export function RoomRatesTable({
     rooms,
     occupancy,
     currency = 'TND',
+    promoRate = null,
     bookDisabled = false,
     onReserve,
 }: RoomRatesTableProps) {
@@ -71,6 +85,7 @@ export function RoomRatesTable({
     const activePerNight = active
         ? active.pricePerNight * occupancy.rooms
         : 0;
+    const activeTotalPromo = promoPrice(activeTotal, promoRate);
 
     return (
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
@@ -87,6 +102,8 @@ export function RoomRatesTable({
                 {rooms.map((room) => {
                     const isSelected = selected === room.id;
                     const total = (room.priceTotal ?? room.pricePerNight) * occupancy.rooms;
+                    const totalPromo = promoPrice(total, promoRate);
+                    const perNightPromo = promoPrice(activePerNight, promoRate);
                     return (
                         <div
                             key={room.id}
@@ -139,6 +156,25 @@ export function RoomRatesTable({
                                                 ? `${room.capacity} ${t('hotelDetail.guests')}`
                                                 : ''}
                                         </p>
+                                        {room.description ? (
+                                            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                                                {room.description}
+                                            </p>
+                                        ) : null}
+                                        {room.features?.length ? (
+                                            <div className="mt-1.5 flex flex-wrap gap-1">
+                                                {room.features
+                                                    .slice(0, 5)
+                                                    .map((feature) => (
+                                                        <span
+                                                            key={feature}
+                                                            className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                                                        >
+                                                            {feature}
+                                                        </span>
+                                                    ))}
+                                            </div>
+                                        ) : null}
 
                                         <div className="mt-1 flex flex-wrap gap-1.5">
                                             {room.onRequest && (
@@ -160,6 +196,53 @@ export function RoomRatesTable({
                                                     )}
                                                 </span>
                                             )}
+                                            {room.cancellationPolicy?.length
+                                                ? (
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <button
+                                                                type="button"
+                                                                className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
+                                                            >
+                                                                <Info className="h-3 w-3" />
+                                                                {t('hotelDetail.cancellationPolicy')}
+                                                            </button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-80">
+                                                            <p className="mb-2 text-xs font-semibold text-foreground">
+                                                                {t('hotelDetail.cancellationPolicy')}
+                                                            </p>
+                                                            <ul className="space-y-1.5 text-xs leading-relaxed text-muted-foreground">
+                                                                {room.cancellationPolicy.map(
+                                                                    (entry, i) => (
+                                                                        <li
+                                                                            key={i}
+                                                                            className="flex items-start gap-1.5"
+                                                                        >
+                                                                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                                                                            <span>
+                                                                                {entry.description ||
+                                                                                    (entry.type === 'PERCENT'
+                                                                                        ? `${entry.fees}%`
+                                                                                        : `${entry.fees} ${currency}`)}
+                                                                                {entry.from_date
+                                                                                    ? ` — ${formatBadgeDate(
+                                                                                          entry.from_date.slice(
+                                                                                              0,
+                                                                                              10,
+                                                                                          ),
+                                                                                          lang,
+                                                                                      )}`
+                                                                                    : ''}
+                                                                            </span>
+                                                                        </li>
+                                                                    ),
+                                                                )}
+                                                            </ul>
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                )
+                                                : null}
                                         </div>
 
                                         {room.supplements &&
@@ -204,11 +287,24 @@ export function RoomRatesTable({
 
                             <div className="text-right">
                                 <p className="text-lg font-bold text-foreground">
-                                    {total.toLocaleString()} {currency}
+                                    {(totalPromo
+                                        ? totalPromo.discounted
+                                        : total
+                                    ).toLocaleString()}{' '}
+                                    {currency}
                                 </p>
+                                {totalPromo && (
+                                    <p className="text-xs font-medium text-muted-foreground line-through">
+                                        {totalPromo.original.toLocaleString()}{' '}
+                                        {currency}
+                                    </p>
+                                )}
                                 {room.nights ? (
                                     <p className="text-[11px] text-muted-foreground">
-                                        ~{activePerNight.toLocaleString()}{' '}
+                                        ~{(perNightPromo
+                                            ? perNightPromo.discounted
+                                            : activePerNight
+                                        ).toLocaleString()}{' '}
                                         {currency} {t('hotelDetail.pernight')} ·{' '}
                                         {room.nights} {t('hotelDetail.nightsLabel')}
                                     </p>
@@ -234,8 +330,18 @@ export function RoomRatesTable({
                             {t('hotelDetail.stayTotalLabel')}
                         </p>
                         <p className="text-2xl font-bold text-primary">
-                            {activeTotal.toLocaleString()} {currency}
+                            {(activeTotalPromo
+                                ? activeTotalPromo.discounted
+                                : activeTotal
+                            ).toLocaleString()}{' '}
+                            {currency}
                         </p>
+                        {activeTotalPromo && (
+                            <p className="text-xs font-medium text-muted-foreground line-through">
+                                {activeTotalPromo.original.toLocaleString()}{' '}
+                                {currency}
+                            </p>
+                        )}
                     </div>
                     <Button
                         size="lg"

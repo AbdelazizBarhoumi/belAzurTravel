@@ -50,7 +50,7 @@ import {
     type HotelSearchQuery,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
-import { toLocalISODate } from '@/lib/utils';
+import { formatPromoRate, promoPrice, toLocalISODate } from '@/lib/utils';
 
 type AmenityIcon = typeof Wifi | null;
 
@@ -79,6 +79,13 @@ type RoomView = {
     stopSales?: { from: string; to: string } | null;
     notRefundable?: boolean;
     cancellationDeadline?: string;
+    cancellationPolicy?: Array<{
+        fees: number;
+        type: string | null;
+        nature: string | null;
+        description: string | null;
+        from_date: string | null;
+    }>;
 };
 
 type AmenityView = {
@@ -317,16 +324,18 @@ export default function HotelDetail() {
                 id: staticRoom?.id ?? `live-${room.id ?? index}`,
                 name: room.name,
                 description:
-                    staticRoom?.description ??
-                    (room.boarding_name
-                        ? `Boarding: ${room.boarding_name}`
-                        : ''),
+                    (room.description ?? '').trim() ||
+                    staticRoom?.description ||
+                    '',
                 pricePerNight: room.price_per_night,
                 priceTotal: room.price_total,
                 nights: room.nights,
                 capacity: staticRoom?.capacity ?? 2,
                 size: staticRoom?.size ?? 0,
-                features: staticRoom?.features ?? [],
+                features:
+                    room.features?.length
+                        ? room.features
+                        : (staticRoom?.features ?? []),
                 images: staticRoom?.images?.length
                     ? staticRoom.images
                     : room.image
@@ -343,6 +352,7 @@ export default function HotelDetail() {
                 notRefundable: room.not_refundable,
                 cancellationDeadline:
                     room.cancellation_deadline ?? undefined,
+                cancellationPolicy: room.cancellation_policy ?? [],
             };
         });
 
@@ -514,7 +524,7 @@ const scrollToRates = () => {
                                                     return (
                                                         <label
                                                             key={boarding.id}
-                                                            className="flex cursor-pointer items-center gap-2 text-sm text-foreground"
+                                                            className="flex cursor-pointer items-start gap-2 text-sm text-foreground"
                                                         >
                                                             <input
                                                                 type="checkbox"
@@ -534,10 +544,19 @@ const scrollToRates = () => {
                                                                                   ],
                                                                     )
                                                                 }
-                                                                className="h-4 w-4 accent-primary"
+                                                                className="mt-0.5 h-4 w-4 accent-primary"
                                                             />
-                                                            {boarding.name ||
-                                                                boarding.code}
+                                                            <span className="min-w-0">
+                                                                <span className="block">
+                                                                    {boarding.name ||
+                                                                        boarding.code}
+                                                                </span>
+                                                                {boarding.description ? (
+                                                                    <span className="block text-xs leading-relaxed text-muted-foreground">
+                                                                        {boarding.description}
+                                                                    </span>
+                                                                ) : null}
+                                                            </span>
                                                         </label>
                                                     );
                                                 },
@@ -610,6 +629,11 @@ const scrollToRates = () => {
                                 <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
                                     {title}
                                 </h1>
+                                {detail.hotel_type ? (
+                                    <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        {detail.hotel_type}
+                                    </span>
+                                ) : null}
                                 <div className="flex text-secondary">
                                     {Array.from({ length: stars }).map(
                                         (_, i) => (
@@ -628,18 +652,35 @@ const scrollToRates = () => {
                         </div>
                         <div className="text-right">
                             {headerPerNight !== null && headerPerNight > 0 ? (
-                                <>
-                                    <p className="text-3xl font-bold text-foreground">
-                                        {headerPerNight.toLocaleString()}
-                                        <span className="align-top text-sm font-semibold">
-                                            {' '}
-                                            {currency}
-                                        </span>
-                                    </p>
-                                    <p className="mb-3 text-xs text-muted-foreground">
-                                        {t('hotelDetail.perNightFrom')}
-                                    </p>
-                                </>
+                                (() => {
+                                    const promo = promoPrice(
+                                        headerPerNight,
+                                        liveHotel?.promotion?.rate,
+                                    );
+                                    const shown = promo
+                                        ? promo.discounted
+                                        : headerPerNight;
+                                    return (
+                                        <>
+                                            <p className="text-3xl font-bold text-foreground">
+                                                {shown.toLocaleString()}
+                                                <span className="align-top text-sm font-semibold">
+                                                    {' '}
+                                                    {currency}
+                                                </span>
+                                            </p>
+                                            {promo && (
+                                                <p className="text-xs font-medium text-muted-foreground line-through">
+                                                    {promo.original.toLocaleString()}{' '}
+                                                    {currency}
+                                                </p>
+                                            )}
+                                            <p className="mb-3 text-xs text-muted-foreground">
+                                                {t('hotelDetail.perNightFrom')}
+                                            </p>
+                                        </>
+                                    );
+                                })()
                             ) : null}
                             <Button
                                 type="button"
@@ -765,6 +806,12 @@ const scrollToRates = () => {
                                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
                                             {t('hotelDetail.promo')}{' '}
                                             {liveHotel.promotion.title}
+                                            {formatPromoRate(liveHotel.promotion.rate) && (
+                                                <>
+                                                    {' · '}
+                                                    {formatPromoRate(liveHotel.promotion.rate)}
+                                                </>
+                                            )}
                                         </span>
                                     ) : null}
                                     {liveHotel.free_child?.length ? (
@@ -798,6 +845,9 @@ const scrollToRates = () => {
                                         rooms={rateRooms}
                                         occupancy={occupancy}
                                         currency={currency}
+                                        promoRate={
+                                            liveHotel?.promotion?.rate
+                                        }
                                         onReserve={handleReserve}
                                     />
                                 </motion.div>
@@ -959,8 +1009,17 @@ const scrollToRates = () => {
                     itemId={detail.id}
                     itemName={`${title} - ${bookingRoom.name}`}
                     amount={
-                        (bookingRoom.priceTotal ??
-                            bookingRoom.pricePerNight) * occupancy.rooms
+                        (() => {
+                            const raw =
+                                (bookingRoom.priceTotal ??
+                                    bookingRoom.pricePerNight) *
+                                occupancy.rooms;
+                            const promo = promoPrice(
+                                raw,
+                                liveHotel?.promotion?.rate,
+                            );
+                            return promo ? promo.discounted : raw;
+                        })()
                     }
                     minDate={new Date()}
                     provider={
@@ -988,6 +1047,7 @@ const scrollToRates = () => {
                                   childrenAges: occupancy.childAges,
                                   checkIn: toLocalISODate(dateRange?.from),
                                   checkOut: toLocalISODate(dateRange?.to),
+                                  options: detail.options ?? [],
                               }
                             : undefined
                     }

@@ -94,6 +94,46 @@ class OsTravelBookingServiceTest extends TestCase
         $this->assertSame('John', $built['Rooms'][0]['Pax']['Adult'][0]['Name']);
     }
 
+    public function test_build_hotel_booking_omits_options_when_flag_disabled(): void
+    {
+        config()->set('ostravel.booking.send_options', false);
+
+        $service = app(OsTravelBookingService::class);
+
+        $built = $service->buildHotelBooking([
+            'city' => 10,
+            'hotel' => 100,
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-05',
+            'source' => 'OS-TRAVEL-DIRECT',
+            'token' => 'tok-1',
+            'rooms' => [],
+            'options' => [1, 2],
+        ], ['adults' => [], 'children' => []]);
+
+        $this->assertArrayNotHasKey('Option', $built);
+    }
+
+    public function test_build_hotel_booking_forwards_options_when_flag_enabled(): void
+    {
+        config()->set('ostravel.booking.send_options', true);
+
+        $service = app(OsTravelBookingService::class);
+
+        $built = $service->buildHotelBooking([
+            'city' => 10,
+            'hotel' => 100,
+            'check_in' => '2026-09-01',
+            'check_out' => '2026-09-05',
+            'source' => 'OS-TRAVEL-DIRECT',
+            'token' => 'tok-1',
+            'rooms' => [],
+            'options' => [1, 2],
+        ], ['adults' => [], 'children' => []]);
+
+        $this->assertSame([1, 2], $built['Option']);
+    }
+
     public function test_prebook_returns_normalized_breakdown_without_id(): void
     {
         Http::fake([

@@ -42,7 +42,7 @@ class OsTravelCatalogSyncTest extends TestCase
         $this->assertSame(1, $sync->countries_count);
         $this->assertSame(7, $sync->cities_count);
         $this->assertSame(7, $sync->hotels_count);
-        $this->assertSame(1, $sync->details_count);
+        $this->assertSame(0, $sync->details_count);
         $this->assertSame(0, $sync->orphaned_count);
         $this->assertSame(0, $sync->reactivated_count);
 
@@ -61,12 +61,20 @@ class OsTravelCatalogSyncTest extends TestCase
         $this->assertSame('219', $hotel->country_external_id);
         $this->assertSame('Tunisie', $hotel->country_name);
         $this->assertArrayHasKey('ListHotel', $hotel->payload);
-        $this->assertArrayHasKey('HotelDetail', $hotel->payload);
-        $this->assertSame('Sheraton Tunis Hotel', $hotel->payload['HotelDetail']['Name']);
+        // Details are not fetched by the schedule; they fill on first visit.
+        $this->assertArrayNotHasKey('HotelDetail', $hotel->payload);
+        // The search-result image is downloaded into local storage.
+        $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
+        $this->assertSame(
+            'https://admin.mygo.co/file_manager/source/photos/tunisie/Kelibia/kelibia%20beach/Kelibia_Beach_8.jpg',
+            $hotel->image_source
+        );
         $this->assertSame(
             sha1(json_encode($this->osTravelFixture('list_hotel')['ListHotel'][0])),
             $hotel->payload_hash
         );
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/file_manager/source/photos/'));
     }
 
     public function test_rerun_is_idempotent_and_skips_unchanged_details(): void
@@ -82,6 +90,20 @@ class OsTravelCatalogSyncTest extends TestCase
         $this->assertSame(0, $second->details_count);
         $this->assertSame(1, OsTravelHotel::where('external_id', '178')->count());
         $this->assertTrue($first->id !== $second->id);
+
+        // The stored local image is reused across runs, never re-downloaded.
+        $hotel = OsTravelHotel::first();
+        $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
+        $this->assertSame(
+            'https://admin.mygo.co/file_manager/source/photos/tunisie/Kelibia/kelibia%20beach/Kelibia_Beach_8.jpg',
+            $hotel->image_source
+        );
+        $this->assertSame(
+            1,
+            collect(Http::recorded())
+                ->filter(fn (array $pair) => str_contains($pair[0]->url(), '/file_manager/source/photos/'))
+                ->count()
+        );
     }
 
     public function test_resync_never_flips_approved_hotel_back_to_pending(): void
@@ -282,9 +304,59 @@ class OsTravelCatalogSyncTest extends TestCase
 
         $this->assertSame(OsTravelSync::SUCCESS, $sync->status);
         $this->assertSame(2, OsTravelHotel::count());
-        $this->assertSame(2, $sync->details_count);
+        $this->assertSame(0, $sync->details_count);
 
         Http::assertSent(fn ($request) => str_contains($request->url(), '/ListHotel')
             && data_get($request->data(), 'Paginator.Page') === 2);
+
+        // Each hotel's search image is stored locally during the sync.
+        foreach (OsTravelHotel::orderBy('external_id')->get() as $hotel) {
+            $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
+            $this->assertSame('https://admin.mygo.co/file_manager/source/photos/test.jpg', $hotel->image_source);
+        }
+    }
+
+    public function test_failed_image_download_is_retried_on_next_sync(): void
+    {
+        $brokenImage = 'https://admin.mygo.co/file_manager/source/photos/broken.jpg';
+
+        $listHotel = [
+            'ListHotel' => [array_merge(
+                $this->osTravelHotelItem(178, 'Cap Bon Kelibia Beach Hotel & Spa'),
+                ['Image' => $brokenImage]
+            )],
+            'CountResults' => 1,
+            'ErrorMessage' => [],
+        ];
+
+        // `Http::fake` appends stubs (first match wins), so a single stateful
+        // closure flips the image endpoint between the two runs.
+        $succeed = false;
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/ListCountry' => Http::response($this->osTravelFixture('list_country')),
+            'https://admin.mygo.co/api/hotel/ListCity' => Http::response($this->osTravelFixture('list_city')),
+            'https://admin.mygo.co/api/hotel/ListBoarding' => Http::response($this->osTravelFixture('list_boarding')),
+            'https://admin.mygo.co/api/hotel/ListCategorie' => Http::response($this->osTravelFixture('list_categorie')),
+            'https://admin.mygo.co/api/hotel/ListCurrency' => Http::response($this->osTravelFixture('list_currency')),
+            'https://admin.mygo.co/api/hotel/ListHotel' => Http::response($listHotel),
+            'https://admin.mygo.co/file_manager/*' => function () use (&$succeed) {
+                return Http::response($succeed ? 'image-bytes' : '', $succeed ? 200 : 500);
+            },
+        ]);
+
+        app(OsTravelCatalogSync::class)->sync();
+
+        $hotel = OsTravelHotel::first();
+        $this->assertNull($hotel->image);
+        $this->assertNull($hotel->image_source);
+
+        // The next run sees the same source URL and retries the download.
+        $succeed = true;
+        app(OsTravelCatalogSync::class)->sync();
+
+        $hotel = OsTravelHotel::first()->fresh();
+        $this->assertStringStartsWith('/storage/uploads/hotels/', $hotel->image);
+        $this->assertSame($brokenImage, $hotel->image_source);
     }
 }

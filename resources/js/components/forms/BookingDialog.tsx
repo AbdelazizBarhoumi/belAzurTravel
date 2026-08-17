@@ -66,6 +66,8 @@ interface BookingDialogProps {
         // The date window the offer was priced for; the booking is locked to it.
         checkIn?: string;
         checkOut?: string;
+        // Booking preferences (HotelDetail `Option[]`) the guest may select.
+        options?: Array<{ id: number; title: string }>;
     };
 }
 
@@ -102,6 +104,7 @@ export function BookingDialog({
     const [startDate, setStartDate] = useState<Date | undefined>(undefined);
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [notes, setNotes] = useState('');
+    const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
     const [passengers, setPassengers] = useState<PassengerRow[]>([]);
     // Step 2: booking created + provider prebook confirmed total awaiting payment.
     const [confirmedBooking, setConfirmedBooking] = useState<{
@@ -138,6 +141,10 @@ export function BookingDialog({
     const childCount = hasProviderOffer
         ? Math.max(0, provider?.children ?? 0)
         : 0;
+
+    useEffect(() => {
+        setSelectedOptionIds([]);
+    }, [open]);
 
     useEffect(() => {
         if (open && user) {
@@ -289,6 +296,7 @@ export function BookingDialog({
                     supplements: room.supplements ?? [],
                 })),
                 pax: passengerPayload,
+                options: selectedOptionIds,
                 search: {
                     check_in:
                         toLocalISODate(effectiveStartDate) ?? provider.checkIn,
@@ -642,6 +650,51 @@ export function BookingDialog({
                                     ))}
                                 </div>
                             )}
+
+                            {provider?.options?.length ? (
+                                <div className="space-y-2">
+                                    <Label>
+                                        {t('booking.preferences') ||
+                                            'Preferences'}
+                                    </Label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {provider.options.map((option) => {
+                                            const checked =
+                                                selectedOptionIds.includes(
+                                                    option.id,
+                                                );
+                                            return (
+                                                <button
+                                                    key={option.id}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setSelectedOptionIds(
+                                                            (ids) =>
+                                                                checked
+                                                                    ? ids.filter(
+                                                                          (i) =>
+                                                                              i !==
+                                                                              option.id,
+                                                                      )
+                                                                    : [
+                                                                          ...ids,
+                                                                          option.id,
+                                                                      ],
+                                                        )
+                                                    }
+                                                    className={
+                                                        checked
+                                                            ? 'rounded-full border border-primary bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary'
+                                                            : 'rounded-full border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40'
+                                                    }
+                                                >
+                                                    {option.title}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : null}
 
                             <div className="space-y-2">
                                 <Label htmlFor="notes">

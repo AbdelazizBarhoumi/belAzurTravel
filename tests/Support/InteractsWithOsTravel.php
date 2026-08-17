@@ -61,6 +61,7 @@ trait InteractsWithOsTravel
                 ? Http::response($chain['ListHotel'])
                 : $chain['ListHotel'],
             'https://admin.mygo.co/api/hotel/HotelDetail' => Http::response($chain['HotelDetail']),
+            'https://admin.mygo.co/file_manager/*' => Http::response('image-bytes'),
         ]);
     }
 

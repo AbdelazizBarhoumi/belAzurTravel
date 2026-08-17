@@ -40,3 +40,44 @@ export const earliestCheckIn = (
         ? minAvailable
         : tomorrow;
 };
+
+// Render the provider's promotion discount rate (a percentage string such as
+// "29.00") as "-29%", or an empty string when it is missing or not a positive
+// number. The rate carries no sign and no unit; the minus and percent are ours.
+export const formatPromoRate = (rate?: string | null): string => {
+    const value = rate ? Number.parseFloat(rate) : Number.NaN;
+    if (!Number.isFinite(value) || value <= 0) {
+        return '';
+    }
+    const digits = Number.isInteger(value) ? String(value) : String(Math.round(value * 10) / 10);
+
+    return `-${digits}%`;
+};
+
+export interface PromoPriceSplit {
+    original: number;
+    discounted: number;
+}
+
+// Split a base price into its original and discounted values when a valid
+// promotion rate applies. The provider prices are treated as the pre-discount
+// base (BasePrice == Price in their payload), so the discounted price is the
+// original minus the promotion percentage. Returns null when there is no rate
+// or the price/rate are not usable.
+export const promoPrice = (
+    price: number | null | undefined,
+    rate?: string | null,
+): PromoPriceSplit | null => {
+    if (price == null || !Number.isFinite(price) || price <= 0) {
+        return null;
+    }
+    const value = rate ? Number.parseFloat(rate) : Number.NaN;
+    if (!Number.isFinite(value) || value <= 0 || value >= 100) {
+        return null;
+    }
+
+    return {
+        original: price,
+        discounted: Math.round(price * (1 - value / 100) * 100) / 100,
+    };
+};
