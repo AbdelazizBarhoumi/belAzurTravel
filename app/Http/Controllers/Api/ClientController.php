@@ -154,6 +154,8 @@ class ClientController extends Controller
         $canCancel = in_array($booking->status, ['Pending', 'Approved', 'Confirmed'], true)
             && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay()));
 
+        $prebook = $booking->provider_payload['prebook'] ?? null;
+
         return [
             'id' => $booking->id,
             'type' => $booking->type,
@@ -164,13 +166,21 @@ class ClientController extends Controller
             'end_date' => $this->dateString($booking->end_date),
             'client' => $booking->client,
             'total_amount' => $booking->total_amount,
+            'currency' => is_array($prebook) ? ($prebook['currency'] ?? 'TND') : 'TND',
             'status' => $booking->status,
             'can_cancel' => $canCancel,
-            'cancel_reason' => $canCancel ? null : __('messages.cancellation_closed'),
+            'cancel_reason' => $booking->cancel_reason,
+            'cancel_closed_reason' => $canCancel ? null : __('messages.cancellation_closed'),
             'reject_reason' => $booking->reject_reason,
             'rejected_at' => $booking->rejected_at?->toJSON(),
+            'confirmed_at' => $booking->confirmed_at?->toJSON(),
+            'cancelled_at' => $booking->cancelled_at?->toJSON(),
             'expires_at' => $booking->expires_at?->toJSON(),
             'created_at' => $booking->created_at?->toJSON(),
+            // Voucher data — populated once an OS-TRAVEL hotel is confirmed.
+            'provider_booking_id' => $booking->provider_booking_id,
+            'provider_booking_reference' => $booking->provider_booking_reference,
+            'provider_prebook' => $prebook,
         ];
     }
 

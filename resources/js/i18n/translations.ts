@@ -7824,3 +7824,85 @@ translations['admin.queue.audit.updated'] = {
     ar: 'تم التحديث',
     en: 'Updated',
 };
+
+// Phase 3 — Client experience: voucher + booking status detail
+translations['voucher.title'] = {
+    fr: 'Bon de réservation',
+    ar: 'قسيمة الحجز',
+    en: 'Voucher',
+};
+translations['voucher.subtitle'] = {
+    fr: 'Votre réservation est confirmée.',
+    ar: 'تم تأكيد حجزك.',
+    en: 'Your booking is confirmed.',
+};
+translations['voucher.print'] = {
+    fr: 'Imprimer',
+    ar: 'طباعة',
+    en: 'Print',
+};
+translations['voucher.bookingRef'] = {
+    fr: 'Référence de réservation',
+    ar: 'مرجع الحجز',
+    en: 'Booking reference',
+};
+translations['voucher.item'] = {
+    fr: 'Prestation',
+    ar: 'الخدمة',
+    en: 'Service',
+};
+translations['voucher.dates'] = {
+    fr: 'Dates',
+    ar: 'التواريخ',
+    en: 'Dates',
+};
+translations['voucher.total'] = {
+    fr: 'Total',
+    ar: 'الإجمالي',
+    en: 'Total',
+};
+translations['voucher.providerRef'] = {
+    fr: 'Référence fournisseur',
+    ar: 'مرجع المورد',
+    en: 'Provider reference',
+};
+translations['voucher.summary'] = {
+    fr: 'Détail de la prestation',
+    ar: 'تفاصيل الخدمة',
+    en: 'Service summary',
+};
+translations['voucher.room'] = {
+    fr: 'Chambre',
+    ar: 'غرفة',
+    en: 'Room',
+};
+translations['voucher.boarding'] = {
+    fr: 'Régime',
+    ar: 'نظام الإقامة',
+    en: 'Boarding',
+};
+translations['voucher.nights'] = {
+    fr: 'Nuits',
+    ar: 'ليالٍ',
+    en: 'Nights',
+};
+translations['client.bookingDecisionWindow'] = {
+    fr: 'Décision attendue avant le',
+    ar: 'القرار متوقع قبل',
+    en: 'Decision expected by',
+};
+translations['client.bookingDecisionUnknown'] = {
+    fr: 'à déterminer',
+    ar: 'غير محدد',
+    en: 'to be determined',
+};
+translations['client.bookingRejectedReason'] = {
+    fr: 'Motif du refus',
+    ar: 'سبب الرفض',
+    en: 'Rejection reason',
+};
+translations['client.bookingCancelledReason'] = {
+    fr: "Motif de l'annulation",
+    ar: 'سبب الإلغاء',
+    en: 'Cancellation reason',
+};

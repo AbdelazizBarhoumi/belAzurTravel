@@ -110,6 +110,9 @@ export function NotificationCenter({
     const { data: notifications = [] } = useQuery({
         queryKey: ['notifications', 'all'],
         queryFn: () => apiFetch<AppNotification[]>('/api/notifications'),
+        staleTime: 15_000,
+        refetchInterval: 15_000,
+        refetchOnWindowFocus: true,
     });
 
     const refresh = () => {

@@ -179,3 +179,24 @@
         --tw-ring-color: var(--primary);
     }
 }
+
+/* Print-only voucher: hide everything except the print area so a client can
+   print a clean voucher for a confirmed booking. */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .print-area,
+    .print-area * {
+        visibility: visible;
+    }
+
+    .print-area {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        border: none;
+        border-radius: 0;
+    }
+}

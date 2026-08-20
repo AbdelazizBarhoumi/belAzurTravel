@@ -40,8 +40,8 @@ import {
     replyToClientComplaint,
     type Complaint,
 } from '@/api/complaint.api';
-import { retryPayment } from '@/api/payment.api';
 import { logout } from '@/auth';
+import { VoucherCard } from '@/components/booking/VoucherCard';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { Button } from '@/components/ui/button';
@@ -51,6 +51,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { useDestinations } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
+import { bookingStatusLabels } from '@/lib/adminI18n';
 import { cn } from '@/lib/utils';
 
 type LocalizedText = Record<Lang, string>;
@@ -74,7 +75,11 @@ const sidebarLinks = [
         to: '/client/payments',
     },
     { icon: User, labelKey: 'dashboard.profile', to: '/client/profile' },
-    { icon: AlertCircle, labelKey: 'client.complaints', to: '/client/complaints' },
+    {
+        icon: AlertCircle,
+        labelKey: 'client.complaints',
+        to: '/client/complaints',
+    },
     { icon: RotateCcw, labelKey: 'client.refunds', to: '/client/refunds' },
     { icon: Settings, labelKey: 'dashboard.settings', to: '/client/support' },
 ];
@@ -97,7 +102,9 @@ const ClientDashboard = () => {
     const [refundBookingId, setRefundBookingId] = useState<number | ''>('');
     const [refundSubject, setRefundSubject] = useState('');
     const [refundDescription, setRefundDescription] = useState('');
-    const [expandedComplaint, setExpandedComplaint] = useState<number | null>(null);
+    const [expandedComplaint, setExpandedComplaint] = useState<number | null>(
+        null,
+    );
     const [clientReplyMessage, setClientReplyMessage] = useState('');
 
     const { data: user } = useAuthUser();
@@ -138,18 +145,13 @@ const ClientDashboard = () => {
     const { data: complaints = [] } = useQuery<Complaint[]>({
         queryKey: ['client', 'complaints'],
         queryFn: getClientComplaints,
-        enabled: activeTab === 'client.complaints' || activeTab === 'client.refunds',
+        enabled:
+            activeTab === 'client.complaints' || activeTab === 'client.refunds',
     });
     const cancelMutation = useMutation({
         mutationFn: (id: number) => cancelBooking(id),
         onSuccess: () =>
             queryClient.invalidateQueries({ queryKey: ['client'] }),
-    });
-    const retryPayMutation = useMutation({
-        mutationFn: (id: number) => retryPayment(id),
-        onSuccess: (data) => {
-            window.location.href = data.formUrl;
-        },
     });
     const supportMutation = useMutation({
         mutationFn: () =>
@@ -175,8 +177,12 @@ const ClientDashboard = () => {
         onSuccess: () => {
             setComplaintSubject('');
             setComplaintDescription('');
-            queryClient.invalidateQueries({ queryKey: ['client', 'complaints'] });
-            toast.success(t('client.complaintSuccess') || 'Complaint submitted.');
+            queryClient.invalidateQueries({
+                queryKey: ['client', 'complaints'],
+            });
+            toast.success(
+                t('client.complaintSuccess') || 'Complaint submitted.',
+            );
         },
     });
 
@@ -192,8 +198,12 @@ const ClientDashboard = () => {
             setRefundBookingId('');
             setRefundSubject('');
             setRefundDescription('');
-            queryClient.invalidateQueries({ queryKey: ['client', 'complaints'] });
-            toast.success(t('client.refundSuccess') || 'Refund request submitted.');
+            queryClient.invalidateQueries({
+                queryKey: ['client', 'complaints'],
+            });
+            toast.success(
+                t('client.refundSuccess') || 'Refund request submitted.',
+            );
         },
     });
 
@@ -202,7 +212,9 @@ const ClientDashboard = () => {
             replyToClientComplaint(id, message),
         onSuccess: () => {
             setClientReplyMessage('');
-            queryClient.invalidateQueries({ queryKey: ['client', 'complaints'] });
+            queryClient.invalidateQueries({
+                queryKey: ['client', 'complaints'],
+            });
             toast.success(t('client.replySent') || 'Reply sent.');
         },
     });
@@ -259,6 +271,31 @@ const ClientDashboard = () => {
         ]
             .filter(Boolean)
             .join(' / ');
+
+    const bookingStatusColors: Record<string, string> = {
+        Pending: 'bg-secondary/10 text-secondary',
+        Approved: 'bg-blue-100 text-blue-700',
+        Confirmed: 'bg-primary/10 text-primary',
+        Rejected: 'bg-destructive/10 text-destructive',
+        Cancelled: 'bg-destructive/10 text-destructive',
+        Expired: 'bg-muted text-muted-foreground',
+        Completed: 'bg-green-100 text-green-700',
+    };
+
+    const statusLabel = (booking: ClientBookingRow) =>
+        bookingStatusLabels[booking.status]?.[lang] ?? booking.status;
+
+    const decisionByLabel = (booking: ClientBookingRow) => {
+        if (!booking.expires_at) return null;
+        const date = new Date(booking.expires_at);
+        if (Number.isNaN(date.getTime())) return null;
+        return date.toLocaleString();
+    };
+
+    const formattedAmount = (booking: ClientBookingRow) =>
+        `${Number(booking.total_amount).toLocaleString()} ${
+            booking.currency ?? 'TND'
+        }`;
 
     return (
         <div
@@ -420,91 +457,130 @@ const ClientDashboard = () => {
                                         key={booking.id}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
-                                        className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-card p-5 md:flex-row md:items-center"
+                                        className="space-y-3"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                                                <Hotel className="h-5 w-5 text-primary" />
+                                        <div className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-card p-5 md:flex-row md:items-center">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                                                    <Hotel className="h-5 w-5 text-primary" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-foreground">
+                                                        {formatBookingTitle(
+                                                            booking,
+                                                        )}
+                                                    </h3>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        #{booking.id}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h3 className="font-semibold text-foreground">
-                                                    {formatBookingTitle(
-                                                        booking,
+                                            <div className="flex flex-wrap items-center gap-3 text-sm">
+                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                    <Clock className="h-4 w-4" />
+                                                    {[
+                                                        booking.start_date,
+                                                        booking.end_date,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' - ') ||
+                                                        new Date(
+                                                            booking.created_at,
+                                                        ).toLocaleDateString()}
+                                                </div>
+                                                <span
+                                                    className={cn(
+                                                        'rounded-full px-3 py-1 text-xs font-semibold',
+                                                        bookingStatusColors[
+                                                            booking.status
+                                                        ] ??
+                                                            'bg-secondary/10 text-secondary',
                                                     )}
-                                                </h3>
-                                                <p className="text-sm text-muted-foreground">
-                                                    #{booking.id}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-6 text-sm">
-                                            <div className="flex items-center gap-2 text-muted-foreground">
-                                                <Clock className="h-4 w-4" />
-                                                {[
-                                                    booking.start_date,
-                                                    booking.end_date,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' - ') ||
-                                                    new Date(
-                                                        booking.created_at,
-                                                    ).toLocaleDateString()}
-                                            </div>
-                                            <span
-                                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                                    booking.status ===
-                                                    'Confirmed'
-                                                        ? 'bg-primary/10 text-primary'
-                                                        : booking.status ===
-                                                            'Cancelled'
-                                                          ? 'bg-destructive/10 text-destructive'
-                                                          : 'bg-secondary/10 text-secondary'
-                                                }`}
-                                            >
-                                                {booking.status}
-                                            </span>
-                                            <span className="font-bold text-foreground">
-                                                $
-                                                {Number(
-                                                    booking.total_amount,
-                                                ).toLocaleString()}
-                                            </span>
-                                            {booking.status === 'Pending' && (
+                                                >
+                                                    {statusLabel(booking)}
+                                                </span>
+                                                <span className="font-bold text-foreground">
+                                                    {formattedAmount(booking)}
+                                                </span>
                                                 <Button
+                                                    variant="outline"
                                                     size="sm"
-                                                    disabled={retryPayMutation.isPending}
+                                                    disabled={
+                                                        !booking.can_cancel ||
+                                                        cancelMutation.isPending
+                                                    }
+                                                    title={
+                                                        booking.can_cancel
+                                                            ? undefined
+                                                            : (booking.cancel_closed_reason ??
+                                                              booking.cancel_reason ??
+                                                              undefined)
+                                                    }
                                                     onClick={() =>
-                                                        retryPayMutation.mutate(
+                                                        cancelMutation.mutate(
                                                             booking.id,
                                                         )
                                                     }
-                                                    className="gap-1"
                                                 >
-                                                    {retryPayMutation.isPending
-                                                        ? '...'
-                                                        : t('payment.retryNow') || 'Pay Now'}
+                                                    {t('actions.cancel')}
                                                 </Button>
-                                            )}
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                disabled={
-                                                    !booking.can_cancel ||
-                                                    cancelMutation.isPending
-                                                }
-                                                title={
-                                                    booking.cancel_reason ??
-                                                    undefined
-                                                }
-                                                onClick={() =>
-                                                    cancelMutation.mutate(
-                                                        booking.id,
-                                                    )
-                                                }
-                                            >
-                                                {t('actions.cancel')}
-                                            </Button>
+                                            </div>
                                         </div>
+
+                                        {booking.status === 'Pending' && (
+                                            <div className="flex items-start gap-2 rounded-xl border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm">
+                                                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
+                                                <p className="text-muted-foreground">
+                                                    {t(
+                                                        'client.bookingDecisionWindow',
+                                                    )}{' '}
+                                                    <span className="font-semibold text-foreground">
+                                                        {decisionByLabel(
+                                                            booking,
+                                                        ) ??
+                                                            t(
+                                                                'client.bookingDecisionUnknown',
+                                                            )}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {booking.status === 'Rejected' &&
+                                            booking.reject_reason && (
+                                                <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+                                                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                                                    <p className="text-muted-foreground">
+                                                        <span className="font-semibold text-destructive">
+                                                            {t(
+                                                                'client.bookingRejectedReason',
+                                                            )}
+                                                            :
+                                                        </span>{' '}
+                                                        {booking.reject_reason}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                        {booking.status === 'Cancelled' &&
+                                            booking.cancel_reason && (
+                                                <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+                                                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                                                    <p className="text-muted-foreground">
+                                                        <span className="font-semibold text-destructive">
+                                                            {t(
+                                                                'client.bookingCancelledReason',
+                                                            )}
+                                                            :
+                                                        </span>{' '}
+                                                        {booking.cancel_reason}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                        {booking.status === 'Confirmed' && (
+                                            <VoucherCard booking={booking} />
+                                        )}
                                     </motion.div>
                                 ))}
                                 {bookings.length === 0 && (
@@ -604,15 +680,21 @@ const ClientDashboard = () => {
                                         onChange={(e) =>
                                             setComplaintSubject(e.target.value)
                                         }
-                                        placeholder={t('client.complaintSubject')}
+                                        placeholder={t(
+                                            'client.complaintSubject',
+                                        )}
                                         className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
                                     />
                                     <textarea
                                         value={complaintDescription}
                                         onChange={(e) =>
-                                            setComplaintDescription(e.target.value)
+                                            setComplaintDescription(
+                                                e.target.value,
+                                            )
                                         }
-                                        placeholder={t('client.complaintDescription')}
+                                        placeholder={t(
+                                            'client.complaintDescription',
+                                        )}
                                         className="min-h-32 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
                                     />
                                     <Button
@@ -621,7 +703,9 @@ const ClientDashboard = () => {
                                             !complaintDescription.trim() ||
                                             complaintMutation.isPending
                                         }
-                                        onClick={() => complaintMutation.mutate()}
+                                        onClick={() =>
+                                            complaintMutation.mutate()
+                                        }
                                     >
                                         {t('actions.submit')}
                                     </Button>
@@ -638,12 +722,16 @@ const ClientDashboard = () => {
                                     {complaints
                                         .filter((c) => c.type === 'complaint')
                                         .map((complaint) => (
-                                            <div key={complaint.id} className="p-5">
+                                            <div
+                                                key={complaint.id}
+                                                className="p-5"
+                                            >
                                                 <div
                                                     className="flex cursor-pointer items-center justify-between"
                                                     onClick={() =>
                                                         setExpandedComplaint(
-                                                            expandedComplaint === complaint.id
+                                                            expandedComplaint ===
+                                                                complaint.id
                                                                 ? null
                                                                 : complaint.id,
                                                         )
@@ -653,118 +741,216 @@ const ClientDashboard = () => {
                                                         <AlertCircle className="h-4 w-4 text-muted-foreground" />
                                                         <div>
                                                             <p className="font-medium text-foreground">
-                                                                {complaint.subject[lang] || complaint.subject.en}
+                                                                {complaint
+                                                                    .subject[
+                                                                    lang
+                                                                ] ||
+                                                                    complaint
+                                                                        .subject
+                                                                        .en}
                                                             </p>
                                                             <p className="text-xs text-muted-foreground">
-                                                                #{complaint.id} &middot;{' '}
-                                                                {new Date(complaint.created_at).toLocaleDateString()}
+                                                                #{complaint.id}{' '}
+                                                                &middot;{' '}
+                                                                {new Date(
+                                                                    complaint.created_at,
+                                                                ).toLocaleDateString()}
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <span
                                                             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                                                complaint.status === 'resolved'
+                                                                complaint.status ===
+                                                                'resolved'
                                                                     ? 'bg-primary/10 text-primary'
-                                                                    : complaint.status === 'rejected'
+                                                                    : complaint.status ===
+                                                                        'rejected'
                                                                       ? 'bg-destructive/10 text-destructive'
                                                                       : 'bg-secondary/10 text-secondary'
                                                             }`}
                                                         >
                                                             {complaint.status}
                                                         </span>
-                                                        {expandedComplaint === complaint.id ? (
+                                                        {expandedComplaint ===
+                                                        complaint.id ? (
                                                             <ChevronUp className="h-4 w-4 text-muted-foreground" />
                                                         ) : (
                                                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
                                                         )}
                                                     </div>
                                                 </div>
-                                                {expandedComplaint === complaint.id && (
+                                                {expandedComplaint ===
+                                                    complaint.id && (
                                                     <div className="mt-4 space-y-3 rounded-xl border border-border bg-background p-4">
                                                         <p className="text-sm text-foreground">
-                                                            {complaint.description[lang] || complaint.description.en}
+                                                            {complaint
+                                                                .description[
+                                                                lang
+                                                            ] ||
+                                                                complaint
+                                                                    .description
+                                                                    .en}
                                                         </p>
 
                                                         {/* Thread */}
-                                                        {complaint.replies && complaint.replies.length > 0 && (
-                                                            <div className="mt-4 space-y-3">
-                                                                <p className="text-xs font-semibold text-muted-foreground">
-                                                                    {t('client.conversation') || 'Conversation'}
-                                                                </p>
-                                                                {complaint.replies.map((reply) => (
-                                                                    <div
-                                                                        key={reply.id}
-                                                                        className={`rounded-xl p-4 ${
-                                                                            reply.sender === 'admin'
-                                                                                ? 'border border-primary/20 bg-primary/5'
-                                                                                : 'border border-border bg-card ml-8'
-                                                                        }`}
-                                                                    >
-                                                                        <div className="mb-2 flex items-center gap-2">
-                                                                            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                                                                            <span className="text-xs font-semibold text-muted-foreground">
-                                                                                {reply.sender === 'admin'
-                                                                                    ? t('admin.admin') || 'Admin'
-                                                                                    : t('client.you') || 'You'}
-                                                                            </span>
-                                                                            <span className="text-xs text-muted-foreground">
-                                                                                {new Date(reply.created_at).toLocaleString()}
-                                                                            </span>
-                                                                        </div>
-                                                                        <p className="text-sm text-foreground">
-                                                                            {reply.message[lang] || reply.message.en}
-                                                                        </p>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
+                                                        {complaint.replies &&
+                                                            complaint.replies
+                                                                .length > 0 && (
+                                                                <div className="mt-4 space-y-3">
+                                                                    <p className="text-xs font-semibold text-muted-foreground">
+                                                                        {t(
+                                                                            'client.conversation',
+                                                                        ) ||
+                                                                            'Conversation'}
+                                                                    </p>
+                                                                    {complaint.replies.map(
+                                                                        (
+                                                                            reply,
+                                                                        ) => (
+                                                                            <div
+                                                                                key={
+                                                                                    reply.id
+                                                                                }
+                                                                                className={`rounded-xl p-4 ${
+                                                                                    reply.sender ===
+                                                                                    'admin'
+                                                                                        ? 'border border-primary/20 bg-primary/5'
+                                                                                        : 'ml-8 border border-border bg-card'
+                                                                                }`}
+                                                                            >
+                                                                                <div className="mb-2 flex items-center gap-2">
+                                                                                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                                                                                    <span className="text-xs font-semibold text-muted-foreground">
+                                                                                        {reply.sender ===
+                                                                                        'admin'
+                                                                                            ? t(
+                                                                                                  'admin.admin',
+                                                                                              ) ||
+                                                                                              'Admin'
+                                                                                            : t(
+                                                                                                  'client.you',
+                                                                                              ) ||
+                                                                                              'You'}
+                                                                                    </span>
+                                                                                    <span className="text-xs text-muted-foreground">
+                                                                                        {new Date(
+                                                                                            reply.created_at,
+                                                                                        ).toLocaleString()}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <p className="text-sm text-foreground">
+                                                                                    {reply
+                                                                                        .message[
+                                                                                        lang
+                                                                                    ] ||
+                                                                                        reply
+                                                                                            .message
+                                                                                            .en}
+                                                                                </p>
+                                                                            </div>
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                            )}
 
                                                         {/* Legacy admin_reply fallback */}
-                                                        {complaint.admin_reply && (!complaint.replies || complaint.replies.length === 0) && (
-                                                            <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-                                                                <div className="mb-2 flex items-center gap-2">
-                                                                    <MessageSquare className="h-4 w-4 text-primary" />
-                                                                    <span className="text-xs font-semibold text-primary">
-                                                                        {t('client.adminReply')}
-                                                                    </span>
+                                                        {complaint.admin_reply &&
+                                                            (!complaint.replies ||
+                                                                complaint
+                                                                    .replies
+                                                                    .length ===
+                                                                    0) && (
+                                                                <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                                                                    <div className="mb-2 flex items-center gap-2">
+                                                                        <MessageSquare className="h-4 w-4 text-primary" />
+                                                                        <span className="text-xs font-semibold text-primary">
+                                                                            {t(
+                                                                                'client.adminReply',
+                                                                            )}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-sm text-foreground">
+                                                                        {complaint
+                                                                            .admin_reply[
+                                                                            lang
+                                                                        ] ||
+                                                                            complaint
+                                                                                .admin_reply
+                                                                                .en}
+                                                                    </p>
                                                                 </div>
-                                                                <p className="text-sm text-foreground">
-                                                                    {complaint.admin_reply[lang] || complaint.admin_reply.en}
-                                                                </p>
-                                                            </div>
-                                                        )}
+                                                            )}
 
                                                         {/* Client Reply Input */}
-                                                        {complaint.status !== 'resolved' && complaint.status !== 'rejected' && complaint.status !== 'refunded' && (
-                                                            <div className="mt-4 flex gap-2">
-                                                                <input
-                                                                    value={expandedComplaint === complaint.id ? clientReplyMessage : ''}
-                                                                    onChange={(e) => setClientReplyMessage(e.target.value)}
-                                                                    placeholder={t('client.writeReply') || 'Write a reply...'}
-                                                                    className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                />
-                                                                <Button
-                                                                    size="sm"
-                                                                    disabled={!clientReplyMessage.trim() || clientReplyMutation.isPending}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        clientReplyMutation.mutate({
-                                                                            id: complaint.id,
-                                                                            message: clientReplyMessage,
-                                                                        });
-                                                                    }}
-                                                                >
-                                                                    {t('assistant.send')}
-                                                                </Button>
-                                                            </div>
-                                                        )}
+                                                        {complaint.status !==
+                                                            'resolved' &&
+                                                            complaint.status !==
+                                                                'rejected' &&
+                                                            complaint.status !==
+                                                                'refunded' && (
+                                                                <div className="mt-4 flex gap-2">
+                                                                    <input
+                                                                        value={
+                                                                            expandedComplaint ===
+                                                                            complaint.id
+                                                                                ? clientReplyMessage
+                                                                                : ''
+                                                                        }
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) =>
+                                                                            setClientReplyMessage(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            )
+                                                                        }
+                                                                        placeholder={
+                                                                            t(
+                                                                                'client.writeReply',
+                                                                            ) ||
+                                                                            'Write a reply...'
+                                                                        }
+                                                                        className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) =>
+                                                                            e.stopPropagation()
+                                                                        }
+                                                                    />
+                                                                    <Button
+                                                                        size="sm"
+                                                                        disabled={
+                                                                            !clientReplyMessage.trim() ||
+                                                                            clientReplyMutation.isPending
+                                                                        }
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) => {
+                                                                            e.stopPropagation();
+                                                                            clientReplyMutation.mutate(
+                                                                                {
+                                                                                    id: complaint.id,
+                                                                                    message:
+                                                                                        clientReplyMessage,
+                                                                                },
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        {t(
+                                                                            'assistant.send',
+                                                                        )}
+                                                                    </Button>
+                                                                </div>
+                                                            )}
                                                     </div>
                                                 )}
                                             </div>
                                         ))}
-                                    {complaints.filter((c) => c.type === 'complaint').length === 0 && (
+                                    {complaints.filter(
+                                        (c) => c.type === 'complaint',
+                                    ).length === 0 && (
                                         <p className="p-8 text-center text-muted-foreground">
                                             {t('client.complaintsEmpty')}
                                         </p>
@@ -785,17 +971,24 @@ const ClientDashboard = () => {
                                         value={refundBookingId}
                                         onChange={(e) =>
                                             setRefundBookingId(
-                                                e.target.value ? Number(e.target.value) : '',
+                                                e.target.value
+                                                    ? Number(e.target.value)
+                                                    : '',
                                             )
                                         }
                                         className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
                                     >
-                                        <option value="">{t('client.selectBooking')}</option>
+                                        <option value="">
+                                            {t('client.selectBooking')}
+                                        </option>
                                         {bookings
-                                            .filter((b) => b.status !== 'Cancelled')
+                                            .filter(
+                                                (b) => b.status !== 'Cancelled',
+                                            )
                                             .map((b) => (
                                                 <option key={b.id} value={b.id}>
-                                                    #{b.id} - {b.type} ({b.total_amount} TND)
+                                                    #{b.id} - {b.type} (
+                                                    {b.total_amount} TND)
                                                 </option>
                                             ))}
                                     </select>
@@ -804,7 +997,9 @@ const ClientDashboard = () => {
                                         onChange={(e) =>
                                             setRefundSubject(e.target.value)
                                         }
-                                        placeholder={t('client.complaintSubject')}
+                                        placeholder={t(
+                                            'client.complaintSubject',
+                                        )}
                                         className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
                                     />
                                     <textarea
@@ -837,14 +1032,20 @@ const ClientDashboard = () => {
                                 </div>
                                 <div className="divide-y divide-border">
                                     {complaints
-                                        .filter((c) => c.type === 'refund_request')
+                                        .filter(
+                                            (c) => c.type === 'refund_request',
+                                        )
                                         .map((complaint) => (
-                                            <div key={complaint.id} className="p-5">
+                                            <div
+                                                key={complaint.id}
+                                                className="p-5"
+                                            >
                                                 <div
                                                     className="flex cursor-pointer items-center justify-between"
                                                     onClick={() =>
                                                         setExpandedComplaint(
-                                                            expandedComplaint === complaint.id
+                                                            expandedComplaint ===
+                                                                complaint.id
                                                                 ? null
                                                                 : complaint.id,
                                                         )
@@ -854,124 +1055,233 @@ const ClientDashboard = () => {
                                                         <RotateCcw className="h-4 w-4 text-muted-foreground" />
                                                         <div>
                                                             <p className="font-medium text-foreground">
-                                                                {complaint.subject[lang] || complaint.subject.en}
+                                                                {complaint
+                                                                    .subject[
+                                                                    lang
+                                                                ] ||
+                                                                    complaint
+                                                                        .subject
+                                                                        .en}
                                                             </p>
                                                             <p className="text-xs text-muted-foreground">
-                                                                #{complaint.id} &middot;{' '}
-                                                                Booking #{complaint.booking_id} &middot;{' '}
-                                                                {new Date(complaint.created_at).toLocaleDateString()}
+                                                                #{complaint.id}{' '}
+                                                                &middot; Booking
+                                                                #
+                                                                {
+                                                                    complaint.booking_id
+                                                                }{' '}
+                                                                &middot;{' '}
+                                                                {new Date(
+                                                                    complaint.created_at,
+                                                                ).toLocaleDateString()}
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <span
                                                             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                                                complaint.status === 'refunded'
+                                                                complaint.status ===
+                                                                'refunded'
                                                                     ? 'bg-primary/10 text-primary'
-                                                                    : complaint.status === 'rejected'
+                                                                    : complaint.status ===
+                                                                        'rejected'
                                                                       ? 'bg-destructive/10 text-destructive'
                                                                       : 'bg-secondary/10 text-secondary'
                                                             }`}
                                                         >
                                                             {complaint.status}
                                                         </span>
-                                                        {expandedComplaint === complaint.id ? (
+                                                        {expandedComplaint ===
+                                                        complaint.id ? (
                                                             <ChevronUp className="h-4 w-4 text-muted-foreground" />
                                                         ) : (
                                                             <ChevronDown className="h-4 w-4 text-muted-foreground" />
                                                         )}
                                                     </div>
                                                 </div>
-                                                {expandedComplaint === complaint.id && (
+                                                {expandedComplaint ===
+                                                    complaint.id && (
                                                     <div className="mt-4 space-y-3 rounded-xl border border-border bg-background p-4">
                                                         <p className="text-sm text-foreground">
-                                                            {complaint.description[lang] || complaint.description.en}
+                                                            {complaint
+                                                                .description[
+                                                                lang
+                                                            ] ||
+                                                                complaint
+                                                                    .description
+                                                                    .en}
                                                         </p>
                                                         {complaint.refund_amount && (
                                                             <p className="text-sm font-semibold text-primary">
-                                                                {t('client.refundAmount')}: {complaint.refund_amount} TND
+                                                                {t(
+                                                                    'client.refundAmount',
+                                                                )}
+                                                                :{' '}
+                                                                {
+                                                                    complaint.refund_amount
+                                                                }{' '}
+                                                                TND
                                                             </p>
                                                         )}
 
                                                         {/* Thread */}
-                                                        {complaint.replies && complaint.replies.length > 0 && (
-                                                            <div className="mt-4 space-y-3">
-                                                                <p className="text-xs font-semibold text-muted-foreground">
-                                                                    {t('client.conversation') || 'Conversation'}
-                                                                </p>
-                                                                {complaint.replies.map((reply) => (
-                                                                    <div
-                                                                        key={reply.id}
-                                                                        className={`rounded-xl p-4 ${
-                                                                            reply.sender === 'admin'
-                                                                                ? 'border border-primary/20 bg-primary/5'
-                                                                                : 'border border-border bg-card ml-8'
-                                                                        }`}
-                                                                    >
-                                                                        <div className="mb-2 flex items-center gap-2">
-                                                                            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                                                                            <span className="text-xs font-semibold text-muted-foreground">
-                                                                                {reply.sender === 'admin'
-                                                                                    ? t('admin.admin') || 'Admin'
-                                                                                    : t('client.you') || 'You'}
-                                                                            </span>
-                                                                            <span className="text-xs text-muted-foreground">
-                                                                                {new Date(reply.created_at).toLocaleString()}
-                                                                            </span>
-                                                                        </div>
-                                                                        <p className="text-sm text-foreground">
-                                                                            {reply.message[lang] || reply.message.en}
-                                                                        </p>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
+                                                        {complaint.replies &&
+                                                            complaint.replies
+                                                                .length > 0 && (
+                                                                <div className="mt-4 space-y-3">
+                                                                    <p className="text-xs font-semibold text-muted-foreground">
+                                                                        {t(
+                                                                            'client.conversation',
+                                                                        ) ||
+                                                                            'Conversation'}
+                                                                    </p>
+                                                                    {complaint.replies.map(
+                                                                        (
+                                                                            reply,
+                                                                        ) => (
+                                                                            <div
+                                                                                key={
+                                                                                    reply.id
+                                                                                }
+                                                                                className={`rounded-xl p-4 ${
+                                                                                    reply.sender ===
+                                                                                    'admin'
+                                                                                        ? 'border border-primary/20 bg-primary/5'
+                                                                                        : 'ml-8 border border-border bg-card'
+                                                                                }`}
+                                                                            >
+                                                                                <div className="mb-2 flex items-center gap-2">
+                                                                                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                                                                                    <span className="text-xs font-semibold text-muted-foreground">
+                                                                                        {reply.sender ===
+                                                                                        'admin'
+                                                                                            ? t(
+                                                                                                  'admin.admin',
+                                                                                              ) ||
+                                                                                              'Admin'
+                                                                                            : t(
+                                                                                                  'client.you',
+                                                                                              ) ||
+                                                                                              'You'}
+                                                                                    </span>
+                                                                                    <span className="text-xs text-muted-foreground">
+                                                                                        {new Date(
+                                                                                            reply.created_at,
+                                                                                        ).toLocaleString()}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <p className="text-sm text-foreground">
+                                                                                    {reply
+                                                                                        .message[
+                                                                                        lang
+                                                                                    ] ||
+                                                                                        reply
+                                                                                            .message
+                                                                                            .en}
+                                                                                </p>
+                                                                            </div>
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                            )}
 
                                                         {/* Legacy admin_reply fallback */}
-                                                        {complaint.admin_reply && (!complaint.replies || complaint.replies.length === 0) && (
-                                                            <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-                                                                <div className="mb-2 flex items-center gap-2">
-                                                                    <MessageSquare className="h-4 w-4 text-primary" />
-                                                                    <span className="text-xs font-semibold text-primary">
-                                                                        {t('client.adminReply')}
-                                                                    </span>
+                                                        {complaint.admin_reply &&
+                                                            (!complaint.replies ||
+                                                                complaint
+                                                                    .replies
+                                                                    .length ===
+                                                                    0) && (
+                                                                <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                                                                    <div className="mb-2 flex items-center gap-2">
+                                                                        <MessageSquare className="h-4 w-4 text-primary" />
+                                                                        <span className="text-xs font-semibold text-primary">
+                                                                            {t(
+                                                                                'client.adminReply',
+                                                                            )}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p className="text-sm text-foreground">
+                                                                        {complaint
+                                                                            .admin_reply[
+                                                                            lang
+                                                                        ] ||
+                                                                            complaint
+                                                                                .admin_reply
+                                                                                .en}
+                                                                    </p>
                                                                 </div>
-                                                                <p className="text-sm text-foreground">
-                                                                    {complaint.admin_reply[lang] || complaint.admin_reply.en}
-                                                                </p>
-                                                            </div>
-                                                        )}
+                                                            )}
 
                                                         {/* Client Reply Input */}
-                                                        {complaint.status !== 'resolved' && complaint.status !== 'rejected' && complaint.status !== 'refunded' && (
-                                                            <div className="mt-4 flex gap-2">
-                                                                <input
-                                                                    value={expandedComplaint === complaint.id ? clientReplyMessage : ''}
-                                                                    onChange={(e) => setClientReplyMessage(e.target.value)}
-                                                                    placeholder={t('client.writeReply') || 'Write a reply...'}
-                                                                    className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                />
-                                                                <Button
-                                                                    size="sm"
-                                                                    disabled={!clientReplyMessage.trim() || clientReplyMutation.isPending}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        clientReplyMutation.mutate({
-                                                                            id: complaint.id,
-                                                                            message: clientReplyMessage,
-                                                                        });
-                                                                    }}
-                                                                >
-                                                                    {t('assistant.send')}
-                                                                </Button>
-                                                            </div>
-                                                        )}
+                                                        {complaint.status !==
+                                                            'resolved' &&
+                                                            complaint.status !==
+                                                                'rejected' &&
+                                                            complaint.status !==
+                                                                'refunded' && (
+                                                                <div className="mt-4 flex gap-2">
+                                                                    <input
+                                                                        value={
+                                                                            expandedComplaint ===
+                                                                            complaint.id
+                                                                                ? clientReplyMessage
+                                                                                : ''
+                                                                        }
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) =>
+                                                                            setClientReplyMessage(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            )
+                                                                        }
+                                                                        placeholder={
+                                                                            t(
+                                                                                'client.writeReply',
+                                                                            ) ||
+                                                                            'Write a reply...'
+                                                                        }
+                                                                        className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) =>
+                                                                            e.stopPropagation()
+                                                                        }
+                                                                    />
+                                                                    <Button
+                                                                        size="sm"
+                                                                        disabled={
+                                                                            !clientReplyMessage.trim() ||
+                                                                            clientReplyMutation.isPending
+                                                                        }
+                                                                        onClick={(
+                                                                            e,
+                                                                        ) => {
+                                                                            e.stopPropagation();
+                                                                            clientReplyMutation.mutate(
+                                                                                {
+                                                                                    id: complaint.id,
+                                                                                    message:
+                                                                                        clientReplyMessage,
+                                                                                },
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        {t(
+                                                                            'assistant.send',
+                                                                        )}
+                                                                    </Button>
+                                                                </div>
+                                                            )}
                                                     </div>
                                                 )}
                                             </div>
                                         ))}
-                                    {complaints.filter((c) => c.type === 'refund_request').length === 0 && (
+                                    {complaints.filter(
+                                        (c) => c.type === 'refund_request',
+                                    ).length === 0 && (
                                         <p className="p-8 text-center text-muted-foreground">
                                             {t('client.refundsEmpty')}
                                         </p>

@@ -27,6 +27,7 @@ export interface ClientBookingRow {
     start_date?: string | null;
     end_date?: string | null;
     total_amount: number;
+    currency?: string;
     status:
         | 'Pending'
         | 'Approved'
@@ -37,10 +38,34 @@ export interface ClientBookingRow {
         | 'Completed';
     can_cancel?: boolean;
     cancel_reason?: string | null;
+    cancel_closed_reason?: string | null;
     reject_reason?: string | null;
     rejected_at?: string | null;
+    confirmed_at?: string | null;
+    cancelled_at?: string | null;
     expires_at?: string | null;
     created_at: string;
+    provider_booking_id?: string | null;
+    provider_booking_reference?: string | null;
+    provider_prebook?: {
+        total?: number;
+        currency?: string;
+        breakdown?: {
+            check_in?: string | null;
+            check_out?: string | null;
+            nights?: number;
+            voucher?: {
+                Num?: string | null;
+            } | null;
+            rooms?: Array<{
+                id?: number | null;
+                boarding?: string | null;
+                total?: number;
+                currency?: string;
+                price_per_night?: number;
+            }>;
+        } | null;
+    } | null;
 }
 
 export interface ClientDashboardPayload {
