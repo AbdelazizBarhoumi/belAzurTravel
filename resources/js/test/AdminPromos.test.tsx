@@ -47,6 +47,35 @@ describe('Admin promos editor', () => {
         vi.clearAllMocks();
     });
 
+    const fillRequiredFields = async () => {
+        const textboxes = screen.getAllByRole('textbox');
+        fireEvent.change(textboxes[0], {
+            target: { value: 'PROMO-2026' },
+        });
+        fireEvent.change(textboxes[1], {
+            target: { value: 'Summer Promo' },
+        });
+        const discountInput = screen
+            .getAllByRole('spinbutton')
+            .find((el) => el.nextElementSibling?.textContent === '%');
+        expect(discountInput).toBeDefined();
+        fireEvent.change(discountInput as HTMLInputElement, {
+            target: { value: '10' },
+        });
+
+        // Pick a date range so the `expires` field (a daterange) validates.
+        fireEvent.click(screen.getByRole('button', { name: /choose dates/i }));
+        const clickDay = (day: string) => {
+            const dayButton = Array.from(
+                document.querySelectorAll('button[name="day"]'),
+            ).find((b) => (b.textContent ?? '').trim() === day);
+            expect(dayButton).toBeDefined();
+            fireEvent.click(dayButton as HTMLButtonElement);
+        };
+        clickDay('15');
+        clickDay('20');
+    };
+
     it('marks localized language tabs when the save request returns validation errors', async () => {
         vi.mocked(adminApi.saveAdminEntity).mockRejectedValueOnce({
             status: 422,
@@ -63,13 +92,7 @@ describe('Admin promos editor', () => {
         fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
         await screen.findByRole('dialog');
 
-        const textboxes = screen.getAllByRole('textbox');
-        fireEvent.change(textboxes[0], {
-            target: { value: 'PROMO-2026' },
-        });
-        fireEvent.change(textboxes[1], {
-            target: { value: 'Summer Promo' },
-        });
+        await fillRequiredFields();
 
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
@@ -90,13 +113,7 @@ describe('Admin promos editor', () => {
         fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
         await screen.findByRole('dialog');
 
-        const textboxes = screen.getAllByRole('textbox');
-        fireEvent.change(textboxes[0], {
-            target: { value: 'PROMO-2026' },
-        });
-        fireEvent.change(textboxes[1], {
-            target: { value: 'Summer Promo' },
-        });
+        await fillRequiredFields();
 
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
 

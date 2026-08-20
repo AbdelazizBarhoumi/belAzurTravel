@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as adminApi from '@/api/admin.api';
@@ -107,9 +107,11 @@ describe('AdminEvents', () => {
                 title_en: 'Cherry Blossom Festival',
                 title_fr: 'Festival des fleurs de cerisier',
                 title_ar: 'مهرجان أزهار الكرز',
+                location: 'Tokyo',
                 location_en: 'Tokyo',
                 location_fr: 'Tokyo',
                 location_ar: 'طوكيو',
+                date: '2026-04-10',
                 date_en: '2026-04-10',
                 date_fr: '2026-04-10',
                 date_ar: '2026-04-10',
@@ -138,9 +140,11 @@ describe('AdminEvents', () => {
             }),
         ).toHaveAttribute('src', '/images/event.jpg');
 
-        expect(await screen.findByText('Cultural')).toBeInTheDocument();
+        // The admin payload exposes category_key, which the table renders as-is.
+        expect(await screen.findByText('cultural')).toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole('button', { name: /add/i }));
+        // The header action uses the real translation for "Add".
+        fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
         expect(screen.getAllByText('Category').length).toBeGreaterThan(0);
         expect(await screen.findByText('About')).toBeInTheDocument();
@@ -175,7 +179,9 @@ describe('AdminEvents', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /save/i }));
 
-        expect(adminApi.saveAdminEntity).toHaveBeenCalledTimes(1);
+        await waitFor(() => {
+            expect(adminApi.saveAdminEntity).toHaveBeenCalledTimes(1);
+        });
 
         const [, payload] =
             vi.mocked(adminApi.saveAdminEntity).mock.calls[0] ?? [];

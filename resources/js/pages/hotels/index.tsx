@@ -14,7 +14,6 @@ import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     OccupancyPicker,
     type Occupancy,
@@ -35,6 +34,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { Skeleton } from '@/components/ui/skeleton';
 import { StarRating } from '@/components/ui/StarRating';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -841,18 +841,6 @@ export default function Hotels() {
 
                                                         {liveLoaded && (
                                                             <div className="absolute bottom-3 right-4 left-4 flex items-center justify-between gap-2">
-                                                                <span
-                                                                    className={cn(
-                                                                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold',
-                                                                        hotel.provider === 'manual'
-                                                                            ? 'bg-muted text-muted-foreground'
-                                                                            : 'bg-primary/90 text-primary-foreground',
-                                                                    )}
-                                                                >
-                                                                    {hotel.provider === 'manual'
-                                                                        ? t('hotels.manualBadge')
-                                                                        : t('hotels.providerBadge')}
-                                                                </span>
                                                                 {unavailable && (
                                                                     <span className="inline-flex items-center rounded-full bg-red-500/90 px-2.5 py-0.5 text-[10px] font-semibold text-white">
                                                                         {t('hotels.unavailable')}
@@ -893,24 +881,6 @@ export default function Hotels() {
                                                                 lang,
                                                             )}
                                                         </h3>
-
-                                                        {(() => {
-                                                            const teaser =
-                                                                liveLoaded
-                                                                    ? hotel.short_description
-                                                                    : localizeText(
-                                                                          hotel.description,
-                                                                          lang,
-                                                                      );
-                                                            if (!teaser) {
-                                                                return null;
-                                                            }
-                                                            return (
-                                                                <p className="mb-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                                                                    {teaser}
-                                                                </p>
-                                                            );
-                                                        })()}
 
                                                         <div className="mb-3 flex items-center gap-3">
                                                             <StarRating
@@ -989,27 +959,6 @@ export default function Hotels() {
                                                         <div className="flex items-center justify-between gap-4">
                                                             <ThemeIcons tags={hotel.tags ?? []} amenities={hotel.amenities} maxVisible={8} />
                                                             <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-                                                                {liveLoaded &&
-                                                                    typeof hotel.price_per_night === 'number' &&
-                                                                    (() => {
-                                                                        const promo = promoPrice(hotel.price_per_night, hotel.promotion?.rate);
-                                                                        const shown = promo ? promo.discounted : hotel.price_per_night;
-                                                                        return (
-                                                                            <>
-                                                                                <span className="text-sm font-bold text-primary">
-                                                                                    {shown.toLocaleString()}{' '}
-                                                                                    {hotel.currency ?? 'TND'}
-                                                                                    {t('hotelDetail.pernight')}
-                                                                                </span>
-                                                                                {promo && (
-                                                                                    <span className="text-[11px] font-medium text-muted-foreground line-through">
-                                                                                        {promo.original.toLocaleString()}{' '}
-                                                                                        {hotel.currency ?? 'TND'}
-                                                                                    </span>
-                                                                                )}
-                                                                            </>
-                                                                        );
-                                                                    })()}
                                                                 <span className="text-xs font-medium text-primary">
                                                                     {t('common.viewAll')}
                                                                 </span>

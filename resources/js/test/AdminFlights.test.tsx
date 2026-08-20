@@ -61,7 +61,7 @@ describe('AdminFlights page', () => {
     it('exposes full flight sections in the add dialog', async () => {
         renderAdminFlights();
 
-        fireEvent.click(screen.getByRole('button', { name: /add|ajouter/i }));
+        fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
         expect(
             (

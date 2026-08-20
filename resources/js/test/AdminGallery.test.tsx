@@ -104,8 +104,6 @@ describe('AdminGallery', () => {
             }
         ).mockResolvedValue(mockGallery);
 
-        window.confirm = vi.fn(() => true);
-
         renderWithProviders(<AdminGallery />);
 
         await waitFor(() => {
@@ -119,7 +117,13 @@ describe('AdminGallery', () => {
         const deleteButton = deleteButtons[deleteButtons.length - 1];
         fireEvent.click(deleteButton);
 
-        expect(deleteGalleryImage).toHaveBeenCalledWith(1);
+        // Deletion is gated behind a confirm dialog, so confirm it first.
+        await screen.findByRole('button', { name: 'Delete' });
+        fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+        await waitFor(() => {
+            expect(deleteGalleryImage).toHaveBeenCalledWith(1);
+        });
     });
 
     it('marks localized language tabs when gallery validation fails', async () => {
@@ -132,7 +136,10 @@ describe('AdminGallery', () => {
 
         renderWithProviders(<AdminGallery />);
 
-        fireEvent.click(screen.getByRole('button', { name: 'admin.addImage' }));
+        // The header action uses the real translation for "Add Image".
+        fireEvent.click(
+            screen.getByRole('button', { name: /add image/i }),
+        );
 
         await screen.findByRole('dialog');
 

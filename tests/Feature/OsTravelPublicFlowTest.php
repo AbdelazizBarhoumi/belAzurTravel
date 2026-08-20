@@ -139,7 +139,13 @@ class OsTravelPublicFlowTest extends TestCase
         $published = collect($response->json('data'))->firstWhere('status', OsTravelHotel::APPROVED);
         $this->assertSame('178', $published['external_id']);
         $this->assertSame('cap-bon-kelibia-beach-hotel-spa', $published['hotel_slug']);
-        $this->assertArrayNotHasKey('base_price', $published);
+        // The admin review payload deliberately exposes the provider raw price
+        // (`base_price`) and the sell price (`final_price`); both stay null
+        // when no live probe priced the hotel.
+        $this->assertArrayHasKey('base_price', $published);
+        $this->assertNull($published['base_price']);
+        $this->assertArrayHasKey('final_price', $published);
+        $this->assertNull($published['final_price']);
         $this->assertNotNull($published['hotel_id']);
     }
 

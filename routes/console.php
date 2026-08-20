@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SiteSetting;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -17,5 +18,22 @@ Schedule::command('os-travel:sync-catalog')
 
 Schedule::command('bookings:expire')
     ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Schedule::command('send:trip-reminders')
+    ->dailyAt('09:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+$digestTime = '08:00';
+try {
+    $digestTime = SiteSetting::query()->value('digest_time') ?: $digestTime;
+} catch (Throwable) {
+    // Database not available yet; fall back to the default digest time.
+}
+
+Schedule::command('send:admin-digest')
+    ->dailyAt($digestTime)
     ->withoutOverlapping()
     ->onOneServer();

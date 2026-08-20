@@ -54,6 +54,8 @@ export interface FieldDef {
     disabled?: boolean;
     rows?: number;
     colSpan?: 1 | 2 | 3 | 4;
+    dateFromKey?: string;
+    dateToKey?: string;
 }
 
 export interface SectionDef {
@@ -191,8 +193,10 @@ function DateRangeField({
     error?: string;
 }) {
     const { t } = useLanguage();
-    const from = parseDateFieldValue(String(values[DATE_FROM_KEY] ?? ''));
-    const to = parseDateFieldValue(String(values[DATE_TO_KEY] ?? ''));
+    const fromKey = field.dateFromKey ?? DATE_FROM_KEY;
+    const toKey = field.dateToKey ?? DATE_TO_KEY;
+    const from = parseDateFieldValue(String(values[fromKey] ?? ''));
+    const to = parseDateFieldValue(String(values[toKey] ?? ''));
 
     return (
         <div className={`space-y-2 ${normalizeSpan(field.colSpan)}`}>
@@ -205,11 +209,11 @@ function DateRangeField({
                 value={from || to ? { from, to } : undefined}
                 onChange={(range) => {
                     setField(
-                        DATE_FROM_KEY,
+                        fromKey,
                         range?.from ? format(range.from, 'yyyy-MM-dd') : '',
                     );
                     setField(
-                        DATE_TO_KEY,
+                        toKey,
                         range?.to ? format(range.to, 'yyyy-MM-dd') : '',
                     );
                 }}

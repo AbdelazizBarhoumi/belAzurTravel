@@ -312,6 +312,11 @@ describe('HotelDetail', () => {
     it('renders the practical info, boardings, options and note sections', async () => {
         renderPage('/hotels/sunset-paradise-resort');
 
+        // HotelInfo shows one tab at a time: switch to the practical tab to
+        // reveal check-in/out times, address, phone and email tiles.
+        await userEvent.click(
+            screen.getByRole('tab', { name: /Infos pratiques/ }),
+        );
         expect(
             screen.getByText('Informations pratiques'),
         ).toBeInTheDocument();
@@ -319,15 +324,30 @@ describe('HotelDetail', () => {
         expect(screen.getByText('14h')).toBeInTheDocument();
         expect(screen.getByText('Départ')).toBeInTheDocument();
         expect(screen.getByText('12h')).toBeInTheDocument();
-        expect(screen.getByText('123 Beach Road')).toBeInTheDocument();
-        expect(screen.getByText(/\+216 71 000 000/)).toBeInTheDocument();
+        // The address/phone/email also appear in the sidebar, so they can
+        // match more than once across the page.
         expect(
-            screen.getByText(/reservations@sunset.example/),
-        ).toBeInTheDocument();
+            screen.getAllByText('123 Beach Road').length,
+        ).toBeGreaterThan(0);
+        expect(
+            screen.getAllByText(/\+216 71 000 000/).length,
+        ).toBeGreaterThan(0);
+        expect(
+            screen.getAllByText(/reservations@sunset.example/).length,
+        ).toBeGreaterThan(0);
+
+        // Boardings and on-request options live in the dining tab.
+        await userEvent.click(
+            screen.getByRole('tab', {
+                name: /Restauration & options/,
+            }),
+        );
         expect(screen.getByText('Demi-pension')).toBeInTheDocument();
         expect(screen.getByText('Bed & half board')).toBeInTheDocument();
         expect(screen.getByText('Baby bed')).toBeInTheDocument();
         expect(screen.getByText('Airport transfer')).toBeInTheDocument();
+
+        // The local-tax note renders in the page, independent of the tabs.
         expect(screen.getByText(/taxe de séjour/)).toBeInTheDocument();
     });
 
@@ -341,7 +361,10 @@ describe('HotelDetail', () => {
         renderPage('/hotels/sunset-paradise-resort');
         await screen.findByText('Chambres');
 
-        // HotelInfo section already renders the boarding description once.
+        // The HotelInfo dining tab renders the boarding description once.
+        await userEvent.click(
+            screen.getByRole('tab', { name: /Restauration & options/ }),
+        );
         expect(screen.getAllByText('Bed & half board').length).toBe(1);
 
         fireEvent.click(
@@ -765,9 +788,10 @@ describe('HotelDetail', () => {
 
         // Stored availability is no longer part of the catalog: the date
         // picker must not restrict days from the provider's stop-sale or
-        // first-available metadata.
+        // first-available metadata. It still keeps the generic minimum
+        // "tomorrow" date so past stays can never be searched.
         expect(mockDateRangePickerProps.disabledRanges).toBeUndefined();
-        expect(mockDateRangePickerProps.fromDate).toBeUndefined();
+        expect(mockDateRangePickerProps.fromDate).toBeInstanceOf(Date);
         expect(
             await screen.findByRole('button', {
                 name: /Vérifier la disponibilité/i,

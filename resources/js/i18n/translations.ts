@@ -6598,6 +6598,26 @@ translations['admin.type'] = {
     ar: 'النوع',
     en: 'Type',
 };
+translations['admin.client'] = {
+    fr: 'Client',
+    ar: 'العميل',
+    en: 'Client',
+};
+translations['admin.date'] = {
+    fr: 'Date',
+    ar: 'التاريخ',
+    en: 'Date',
+};
+translations['admin.amount'] = {
+    fr: 'Montant',
+    ar: 'المبلغ',
+    en: 'Amount',
+};
+translations['admin.status'] = {
+    fr: 'Statut',
+    ar: 'الحالة',
+    en: 'Status',
+};
 translations['admin.subject'] = {
     fr: 'Sujet',
     ar: 'الموضوع',

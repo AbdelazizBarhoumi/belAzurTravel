@@ -1,7 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Trash2 } from 'lucide-react';
+import { Inbox, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { Button } from '@/components/ui/button';
 import { StatusSelect } from '@/components/ui/StatusSelect';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -63,6 +65,14 @@ const AdminBookings = () => {
         <AdminLayout
             title={t('admin.bookings')}
             subtitle={t('admin.bookingsSubtitle')}
+            actions={
+                <Button asChild variant="outline" size="sm" className="gap-2">
+                    <Link to="/admin/queue">
+                        <Inbox className="h-4 w-4" />
+                        {t('admin.queue')}
+                    </Link>
+                </Button>
+            }
         >
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">

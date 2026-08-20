@@ -190,20 +190,21 @@ describe('BookingDialog passenger form', () => {
         expect(payload.provider.options).toEqual([1]);
     });
 
-    it('shows the prebook-confirmed total before starting payment', async () => {
+    it('shows the submitted booking summary and never starts payment', async () => {
         renderDialog();
 
-        await screen.findByText(/Réserver et Payer|Book & Pay/);
+        await screen.findByText(/Request Booking|Demander la réservation/);
         fireEvent.submit(document.querySelector('form') as HTMLFormElement);
 
-        // Step 2 shows the confirmed total from the provider prebook.
-        expect(await screen.findByText(/1,234/)).toBeInTheDocument();
+        // Every reservation goes through admin approval now — the dialog
+        // surfaces the submitted request with its provider-prebook total and
+        // never redirects to a payment session.
+        expect(
+            await screen.findByText(/Request submitted|Demande envoyée/),
+        ).toBeInTheDocument();
+        expect(screen.getByText(/1,234/)).toBeInTheDocument();
+        expect(screen.getByText(/Done|Terminé/)).toBeInTheDocument();
         expect(paymentMock).not.toHaveBeenCalled();
-
-        fireEvent.click(screen.getByText(/Payer maintenant|Pay now/));
-        await waitFor(() =>
-            expect(paymentMock).toHaveBeenCalledWith(1),
-        );
     });
 
     it('keeps the dates locked to the searched offer', async () => {

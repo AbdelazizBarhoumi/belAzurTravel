@@ -374,6 +374,11 @@ const AdminTours = () => {
 
         return {
             ...editing,
+            location: asText(
+                (editing as any).location ??
+                    (editing as any).location_en ??
+                    '',
+            ),
             imagePath: asText(editing.image),
             imageFile: null,
             gallery: '',

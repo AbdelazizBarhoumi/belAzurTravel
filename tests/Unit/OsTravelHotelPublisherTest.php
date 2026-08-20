@@ -63,7 +63,7 @@ class OsTravelHotelPublisherTest extends TestCase
             'fr' => 'Cap Bon Kelibia Beach Hotel & Spa',
             'ar' => 'Cap Bon Kelibia Beach Hotel & Spa',
         ], $hotel->name);
-        $this->assertSame(['en' => 'Kelibia', 'fr' => 'Kelibia', 'ar' => 'Kelibia'], $hotel->location);
+        $this->assertSame(['en' => 'Kelibia', 'fr' => 'Kélibia', 'ar' => 'قليبية'], $hotel->location);
         $this->assertSame(4, $hotel->stars);
         $this->assertSame('20.00', (string) $hotel->markup_percentage);
         $this->assertSame('TND', $hotel->currency);

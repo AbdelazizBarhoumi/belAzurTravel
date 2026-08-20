@@ -557,7 +557,17 @@ const AdminHotels = () => {
                                 </div>
                                 <Select
                                     value={String(values[`category_${catType.key}`] || '')}
-                                    onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                    onValueChange={(val) => {
+                                        setField(`category_${catType.key}`, val);
+                                        const selected = catType.values.find(
+                                            (v) => v.key === val,
+                                        );
+                                        syncCategoryFields(
+                                            setField,
+                                            selected,
+                                            val,
+                                        );
+                                    }}
                                 >
                                     <SelectTrigger
                                         className={baseFieldClass(false)}
@@ -589,6 +599,7 @@ const AdminHotels = () => {
                             {t('admin.pricePerNight')}
                         </label>
                         <Input
+                            id="price"
                             type="number"
                             min={0}
                             step={0.01}
@@ -844,14 +855,6 @@ const AdminHotels = () => {
 
         if (!values.location) errs.location = t('admin.required');
 
-        if (!values.city_en) errs.city_en = t('admin.required');
-        if (!values.city_fr) errs.city_fr = t('admin.required');
-        if (!values.city_ar) errs.city_ar = t('admin.required');
-
-        if (!values.country_en) errs.country_en = t('admin.required');
-        if (!values.country_fr) errs.country_fr = t('admin.required');
-        if (!values.country_ar) errs.country_ar = t('admin.required');
-
         if (
             !resolveCategoryKey(
                 values.category_key,
@@ -865,7 +868,6 @@ const AdminHotels = () => {
         }
         if (!values.price || Number(values.price) <= 0)
             errs.price = t('admin.invalidPrice');
-        if (!values.destinationSlug) errs.destinationSlug = t('admin.required');
 
         return errs;
     };
