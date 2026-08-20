@@ -502,6 +502,18 @@ const ClientDashboard = () => {
                                                 <span className="font-bold text-foreground">
                                                     {formattedAmount(booking)}
                                                 </span>
+                                                <Link
+                                                    to={`/client/bookings/${booking.id}`}
+                                                >
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                    >
+                                                        {t(
+                                                            'bookingDetail.title',
+                                                        ) || 'Details'}
+                                                    </Button>
+                                                </Link>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"

@@ -64,8 +64,31 @@ export interface ClientBookingRow {
                 currency?: string;
                 price_per_night?: number;
             }>;
+            cancellation_policy?: Array<{
+                fees?: number | string;
+                type?: string | null;
+                nature?: string | null;
+                description?: string | null;
+                from_date?: string | null;
+            }>;
         } | null;
     } | null;
+}
+
+/**
+ * Single-booking payload returned by GET /api/bookings/{id}. Superset of
+ * `ClientBookingRow` with the extra fields only the detail endpoint exposes.
+ */
+export interface BookingDetailRow extends ClientBookingRow {
+    client?: {
+        name?: string;
+        email?: string;
+        phone?: string;
+    };
+    travelers?: Array<{ name?: string }> | null;
+    notes?: string | null;
+    promo_code?: string | null;
+    amount?: number;
 }
 
 export interface ClientDashboardPayload {
@@ -92,7 +115,7 @@ export async function createBooking(payload: Record<string, unknown>) {
 }
 
 export async function getBooking(id: number) {
-    return apiFetch(`/api/bookings/${id}`);
+    return apiFetch<BookingDetailRow>(`/api/bookings/${id}`);
 }
 
 export async function getAdminBookings() {

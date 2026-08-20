@@ -7926,3 +7926,65 @@ translations['client.bookingCancelledReason'] = {
     ar: 'سبب الإلغاء',
     en: 'Cancellation reason',
 };
+
+// Booking detail page (Phase 2)
+translations['bookingDetail.title'] = {
+    fr: 'Détails de la réservation',
+    ar: 'تفاصيل الحجز',
+    en: 'Booking details',
+};
+translations['bookingDetail.back'] = {
+    fr: 'Retour à mes réservations',
+    ar: 'العودة إلى حجوزاتي',
+    en: 'Back to my bookings',
+};
+translations['bookingDetail.notFound'] = {
+    fr: 'Réservation introuvable.',
+    ar: 'الحجز غير موجود.',
+    en: 'Booking not found.',
+};
+translations['bookingDetail.bookedOn'] = {
+    fr: 'Réservé le',
+    ar: 'تم الحجز في',
+    en: 'Booked on',
+};
+translations['bookingDetail.decisionBy'] = {
+    fr: 'Décision avant le',
+    ar: 'القرار قبل',
+    en: 'Decision by',
+};
+translations['bookingDetail.approvedNote'] = {
+    fr: 'Votre réservation est approuvée. En attente de confirmation de l’hôtel.',
+    ar: 'تمت الموافقة على حجزك. في انتظار تأكيد الفندق.',
+    en: 'Your booking is approved. Waiting for the hotel to confirm.',
+};
+translations['bookingDetail.expiredNote'] = {
+    fr: 'Cette demande de réservation a expiré avant qu’une décision ne soit prise.',
+    ar: 'انتهت صلاحية طلب الحجز هذا قبل اتخاذ قرار.',
+    en: 'This booking request expired before a decision was made.',
+};
+translations['bookingDetail.client'] = {
+    fr: 'Client',
+    ar: 'العميل',
+    en: 'Client',
+};
+translations['bookingDetail.passengers'] = {
+    fr: 'Passagers',
+    ar: 'المسافرون',
+    en: 'Passengers',
+};
+translations['bookingDetail.priceBreakdown'] = {
+    fr: 'Détail du prix',
+    ar: 'تفاصيل السعر',
+    en: 'Price breakdown',
+};
+translations['bookingDetail.cancellationPolicy'] = {
+    fr: 'Politique d’annulation',
+    ar: 'سياسة الإلغاء',
+    en: 'Cancellation policy',
+};
+translations['bookingDetail.perNight'] = {
+    fr: 'par nuit',
+    ar: 'لليلة',
+    en: 'per night',
+};

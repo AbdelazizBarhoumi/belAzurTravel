@@ -70,11 +70,12 @@ implementation plan with checkable status.
 - [x] `pages/hotels/show.tsx` — replaced blank `null` loading with a skeleton layout.
 - [x] `pages/hotels/show.tsx` — `handleSearchRedirect` now forwards `rooms`/`children` too.
 
-### Phase 2 — Client booking detail page (G2, G4)
-- [ ] New `pages/client/BookingDetail.tsx` wired at `/client/bookings/:id` in `app.tsx`.
-- [ ] Consume existing `getBooking(id)` (`resources/js/api/booking.api.ts:94`).
-- [ ] Show: status + decision window (Pending) / reasons (Rejected/Cancelled), item, dates, passengers, price breakdown from `provider_prebook`, `VoucherCard` (Confirmed), cancellation policy, Cancel action.
-- [ ] Fix notification deep-link target resolution (`BookingStatusNotification` already points to `/client/bookings/:id`).
+### Phase 2 — Client booking detail page (G2, G4) ✅
+- [x] New `pages/dashboards/BookingDetail.tsx` wired at `/client/bookings/:id` in `app.tsx`.
+- [x] Consume existing `getBooking(id)` (`resources/js/api/booking.api.ts:94`, now typed `BookingDetailRow`).
+- [x] Show: status + decision window (Pending) / reasons (Rejected/Cancelled), item, dates, passengers, price breakdown from `provider_prebook`, `VoucherCard` (Confirmed), cancellation policy, Cancel action.
+- [x] Fix notification deep-link target resolution (`BookingStatusNotification` already points to `/client/bookings/:id`).
+- [x] Dashboard booking cards now link to the detail page (Details button).
 
 ### Phase 3 — Make `Approved` meaningful (G4)
 - [ ] `pages/dashboards/Client.tsx` — add "awaiting provider confirmation" banner on Approved cards (mirror Pending decision-window banner).
@@ -122,3 +123,4 @@ implementation plan with checkable status.
 |------|--------|-------|
 | 2026-08-20 | Audited · plan approved | Journey documented, 16 gaps recorded, 8 phases planned. |
 | 2026-08-20 | Phase 1 done | Search context preserved list→detail; detail auto-searches + skeleton loading. |
+| 2026-08-21 | Phase 2 done | Client booking detail page at `/client/bookings/:id` (status banners, passengers, price breakdown, voucher, cancellation policy, cancel); dashboard cards link to it. `tsc` + `eslint` pass. |

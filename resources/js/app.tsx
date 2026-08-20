@@ -61,6 +61,7 @@ import Blog from './pages/blog';
 import BlogPostDetail from './pages/blog/show';
 import Cars from './pages/cars';
 import CarDetail from './pages/cars/show';
+import BookingDetail from './pages/dashboards/BookingDetail';
 import ClientDashboard from './pages/dashboards/Client';
 import Deals from './pages/deals';
 import DealDetail from './pages/deals/show';
@@ -199,7 +200,7 @@ const LayoutWrapper = () => {
                     />
                     <Route
                         path="/client/bookings/:id"
-                        element={clientGuard(<ClientDashboard />)}
+                        element={clientGuard(<BookingDetail />)}
                     />
                     <Route
                         path="/client/profile"
