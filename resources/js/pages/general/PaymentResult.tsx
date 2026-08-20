@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, AlertTriangle, ArrowLeft, CreditCard } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooking, type ClientBookingRow } from '@/api/booking.api';
-import { retryPayment } from '@/api/payment.api';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -22,16 +21,6 @@ const PaymentResult = () => {
         queryFn: () => getBooking(Number(bookingId)) as Promise<ClientBookingRow>,
         enabled: !!bookingId,
     });
-
-    const handleRetry = async () => {
-        if (!bookingId) return;
-        try {
-            const result = await retryPayment(Number(bookingId));
-            window.location.href = result.formUrl;
-        } catch {
-            // Error handled by toast
-        }
-    };
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -103,12 +92,6 @@ const PaymentResult = () => {
                 )}
 
                 <div className="flex flex-col gap-3">
-                    {(isFailed || isError) && bookingId && (
-                        <Button onClick={handleRetry} className="w-full gap-2">
-                            <CreditCard className="h-4 w-4" />
-                            {t('payment.retryNow') || 'Retry Payment'}
-                        </Button>
-                    )}
                     <Link to="/client/dashboard">
                         <Button variant={isSuccess ? 'default' : 'outline'} className="w-full gap-2">
                             <ArrowLeft className="h-4 w-4" />

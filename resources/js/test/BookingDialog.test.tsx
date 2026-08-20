@@ -5,9 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BookingDialog } from '@/components/forms/BookingDialog';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 
-const { submitMock, paymentMock } = vi.hoisted(() => ({
+const { submitMock } = vi.hoisted(() => ({
     submitMock: vi.fn(),
-    paymentMock: vi.fn(),
 }));
 
 vi.mock('@/hooks/useAuthUser', () => ({
@@ -30,9 +29,7 @@ vi.mock('@/hooks/useBooking', () => ({
     },
 }));
 
-vi.mock('@/api/payment.api', () => ({
-    initiatePayment: paymentMock,
-}));
+vi.mock('@/api/payment.api', () => ({}));
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -97,7 +94,6 @@ describe('BookingDialog passenger form', () => {
             total_amount: 1234,
             provider_prebook: { currency: 'TND' },
         });
-        paymentMock.mockResolvedValue({ formUrl: 'https://pay.example', orderId: 'ord-1' });
     });
 
     it('builds a passenger row per adult and child with the searched ages', async () => {
@@ -204,7 +200,6 @@ describe('BookingDialog passenger form', () => {
         ).toBeInTheDocument();
         expect(screen.getByText(/1,234/)).toBeInTheDocument();
         expect(screen.getByText(/Done|Terminé/)).toBeInTheDocument();
-        expect(paymentMock).not.toHaveBeenCalled();
     });
 
     it('keeps the dates locked to the searched offer', async () => {

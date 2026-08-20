@@ -4747,16 +4747,6 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'الإجمالي المؤكد',
         en: 'Confirmed total',
     },
-    'booking.payHint': {
-        fr: 'Vous serez redirigé vers la page de paiement sécurisée.',
-        ar: 'سيتم توجيهك إلى صفحة الدفع الآمنة.',
-        en: 'You will be redirected to the secure payment page.',
-    },
-    'booking.confirmedPay': {
-        fr: 'Payer maintenant',
-        ar: 'ادفع الآن',
-        en: 'Pay now',
-    },
     'booking.submittedTitle': {
         fr: 'Demande envoyée',
         ar: 'تم إرسال الطلب',
@@ -4786,21 +4776,6 @@ export const translations: Record<string, TranslationEntry> = {
 };
 
 // Payment translations
-translations['payment.payNow'] = {
-    fr: 'Réserver et Payer',
-    ar: 'احجز وادفع',
-    en: 'Book & Pay',
-};
-translations['payment.processing'] = {
-    fr: 'Traitement du paiement...',
-    ar: 'جاري معالجة الدفع...',
-    en: 'Processing payment...',
-};
-translations['payment.redirecting'] = {
-    fr: 'Redirection vers la page de paiement...',
-    ar: 'جاري التحويل إلى صفحة الدفع...',
-    en: 'Redirecting to payment page...',
-};
 translations['payment.successTitle'] = {
     fr: 'Paiement Réussi!',
     ar: 'تم الدفع بنجاح!',
@@ -4830,16 +4805,6 @@ translations['payment.errorMessage'] = {
     fr: 'Une erreur est survenue lors du traitement du paiement.',
     ar: 'حدث خطأ أثناء معالجة الدفع.',
     en: 'An error occurred while processing the payment.',
-};
-translations['payment.initError'] = {
-    fr: "Échec de l'initialisation du paiement. Veuillez payer depuis votre tableau de bord.",
-    ar: 'فشل تهيئة الدفع. يرجى الدفع من لوحة التحكم.',
-    en: 'Payment initiation failed. Please pay from your dashboard.',
-};
-translations['payment.retryNow'] = {
-    fr: 'Réessayer le paiement',
-    ar: 'إعادة محاولة الدفع',
-    en: 'Retry Payment',
 };
 translations['client.conversation'] = {
     fr: 'Conversation',

@@ -94,10 +94,11 @@ implementation plan with checkable status.
 - [x] `pages/hotels/index.tsx` — on search `isError`, render error block with retry button instead of endless skeletons.
 - [x] `pages/hotels/show.tsx` — surface `useHotelSearch` errors with error block + retry before the unavailable notice.
 
-### Phase 7 — Payment out-of-band cleanup (G1, G15)
-- [ ] Remove unused `initiatePayment`/`retryPayment` client exports (`api/payment.api.ts`).
-- [ ] Remove `PaymentResult` retry button + dead i18n keys (`payment.payNow/processing/redirecting/initError`, `booking.confirmedPay`).
-- [ ] Keep backend `PaymentController` + callback route intact (future phase); document offline payment flow.
+### Phase 7 — Payment out-of-band cleanup (G1, G15) ✅
+- [x] Remove unused `initiatePayment`/`retryPayment` client exports (`api/payment.api.ts` deleted).
+- [x] Remove `PaymentResult` retry button + dead i18n keys (`payment.payNow/processing/redirecting/initError/retryNow`, `booking.confirmedPay`, `booking.payHint`).
+- [x] Keep backend `PaymentController` + callback route intact (future phase); payment result page preserved for provider redirects.
+- [x] Test mock updated; all 5 BookingDialog tests pass.
 
 ### Phase 8 — Low-priority polish (G9–G13, G15, G16)
 - [ ] Browse-mode "From X TND/night" using `hotels.priceFrom`.
@@ -129,3 +130,4 @@ implementation plan with checkable status.
 | 2026-08-21 | Phase 4 done | `bookings:expire` was already scheduled hourly (`routes/console.php`); tightened to `everyFiveMinutes()` so bookings expire within ~5 min past the 72h TTL. `schedule:list` confirms single entry. |
 | 2026-08-21 | Phase 5 done | Admin queue drawer shows provider prebook breakdown + provider ref; AdminBookings StatusSelect restricted to valid transitions + fake delete removed; admin dashboard status colors fixed. `tsc` + `php -l` pass. |
 | 2026-08-21 | Phase 6 done | Search error states: `index.tsx` + `show.tsx` now show error block with retry on `useHotelSearch` failure instead of endless skeletons. `tsc` + `eslint` pass (6 pre-existing unused-var errors only). |
+| 2026-08-21 | Phase 7 done | Payment dead-code sweep: `payment.api.ts` deleted, `PaymentResult` retry removed, 7 dead i18n keys removed, test mock cleaned. `tsc` + `eslint` + all 5 BookingDialog tests pass. |
