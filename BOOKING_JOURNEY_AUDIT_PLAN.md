@@ -81,8 +81,9 @@ implementation plan with checkable status.
 - [x] `pages/dashboards/Client.tsx` — add "awaiting provider confirmation" banner on Approved cards (mirror Pending decision-window banner).
 - [x] Same treatment on the new booking detail page.
 
-### Phase 4 — Enforce booking expiry (G5)
-- [ ] Schedule `bookings:expire` in `bootstrap/app.php` via `->withSchedule()` (e.g. every 5 minutes).
+### Phase 4 — Enforce booking expiry (G5) ✅
+- [x] Schedule `bookings:expire` in `bootstrap/app.php` via `->withSchedule()` (e.g. every 5 minutes).
+- [x] Actually already scheduled hourly in `routes/console.php:19-22`; changed to `->everyFiveMinutes()` so expired bookings transition within ~5 min of the 72h TTL instead of up to an hour late.
 
 ### Phase 5 — Admin-side truth & honesty (G6, G7, G14)
 - [ ] Include `provider_prebook`/voucher breakdown in `AdminQueueController` response + `QueueBooking` type; show in admin queue booking drawer.
@@ -125,3 +126,4 @@ implementation plan with checkable status.
 | 2026-08-20 | Phase 1 done | Search context preserved list→detail; detail auto-searches + skeleton loading. |
 | 2026-08-21 | Phase 2 done | Client booking detail page at `/client/bookings/:id` (status banners, passengers, price breakdown, voucher, cancellation policy, cancel); dashboard cards link to it. `tsc` + `eslint` pass. |
 | 2026-08-21 | Phase 3 done | "Awaiting provider confirmation" banner on Approved cards (dashboard + detail). `tsc` + `eslint` pass. |
+| 2026-08-21 | Phase 4 done | `bookings:expire` was already scheduled hourly (`routes/console.php`); tightened to `everyFiveMinutes()` so bookings expire within ~5 min past the 72h TTL. `schedule:list` confirms single entry. |

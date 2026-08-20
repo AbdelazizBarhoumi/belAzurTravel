@@ -17,7 +17,7 @@ Schedule::command('os-travel:sync-catalog')
     ->onOneServer();
 
 Schedule::command('bookings:expire')
-    ->hourly()
+    ->everyFiveMinutes()
     ->withoutOverlapping()
     ->onOneServer();
 
