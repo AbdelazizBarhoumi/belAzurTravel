@@ -813,6 +813,7 @@ function BookingDetail({
     pending: boolean;
 }) {
     const { t, lang } = useLanguage();
+    const prebook = booking.provider_prebook;
     return (
         <div className="space-y-5">
             <div className="rounded-2xl border border-border bg-card p-4">
@@ -931,6 +932,76 @@ function BookingDetail({
                     </Button>
                 </div>
             </div>
+
+            {/* Prebook / voucher breakdown */}
+            {prebook?.breakdown?.rooms?.length ? (
+                <div className="rounded-2xl border border-border bg-card p-4">
+                    <h3 className="mb-3 flex items-center gap-2 font-serif text-base font-bold text-foreground">
+                        <CloudIcon />
+                        {t('admin.queue.prebook')}
+                    </h3>
+                    {booking.provider_booking_reference ? (
+                        <p className="mb-3 text-xs text-muted-foreground">
+                            {t('voucher.providerRef')}:{' '}
+                            <span className="font-semibold text-foreground">
+                                {booking.provider_booking_reference}
+                            </span>
+                        </p>
+                    ) : null}
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
+                                    <th className="px-2 py-1.5 font-medium">
+                                        {t('voucher.room') || 'Room'}
+                                    </th>
+                                    <th className="px-2 py-1.5 font-medium">
+                                        {t('voucher.boarding') || 'Boarding'}
+                                    </th>
+                                    <th className="px-2 py-1.5 font-medium">
+                                        {t('voucher.nights') || 'Nights'}
+                                    </th>
+                                    <th className="px-2 py-1.5 text-right font-medium">
+                                        {t('voucher.total') || 'Total'}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {prebook.breakdown.rooms.map(
+                                    (room, index) => (
+                                        <tr
+                                            key={
+                                                room.id?.toString() ?? index
+                                            }
+                                            className="border-b border-border/60 last:border-0"
+                                        >
+                                            <td className="px-2 py-2 font-medium text-foreground">
+                                                {t('voucher.room') || 'Room'}{' '}
+                                                {index + 1}
+                                            </td>
+                                            <td className="px-2 py-2 text-muted-foreground">
+                                                {room.boarding || '—'}
+                                            </td>
+                                            <td className="px-2 py-2 text-muted-foreground">
+                                                {prebook.breakdown?.nights ??
+                                                    '—'}
+                                            </td>
+                                            <td className="px-2 py-2 text-right font-semibold text-foreground">
+                                                {Number(
+                                                    room.total ?? 0,
+                                                ).toLocaleString()}{' '}
+                                                {room.currency ??
+                                                    prebook?.currency ??
+                                                    'TND'}
+                                            </td>
+                                        </tr>
+                                    ),
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ) : null}
 
             {/* Audit timeline */}
             <div className="rounded-2xl border border-border bg-card p-4">

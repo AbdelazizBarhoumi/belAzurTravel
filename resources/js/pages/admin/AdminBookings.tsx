@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Inbox, Trash2 } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -19,6 +19,12 @@ interface BookingItem {
     total_amount: number;
     status: string;
 }
+
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+    Pending: ['Approved', 'Rejected', 'Cancelled'],
+    Approved: ['Confirmed', 'Rejected', 'Cancelled'],
+    Confirmed: ['Cancelled'],
+};
 
 const AdminBookings = () => {
     useAdminGuard();
@@ -87,7 +93,6 @@ const AdminBookings = () => {
                                     t('admin.date'),
                                     t('admin.amount'),
                                     t('admin.status'),
-                                    t('admin.actions'),
                                 ].map((h) => (
                                     <th
                                         key={h}
@@ -134,27 +139,24 @@ const AdminBookings = () => {
                                                 onValueChange={(val) =>
                                                     updateStatus(b, val)
                                                 }
-                                                options={Object.entries(
-                                                    bookingStatusLabels,
-                                                ).map(([value, labels]) => ({
+                                                disabled={
+                                                    !ALLOWED_TRANSITIONS[
+                                                        b.status
+                                                    ]
+                                                }
+                                                options={[
+                                                    b.status,
+                                                    ...(ALLOWED_TRANSITIONS[
+                                                        b.status
+                                                    ] ?? []),
+                                                ].map((value) => ({
                                                     value,
                                                     label:
-                                                        labels?.[lang] ?? value,
+                                                        bookingStatusLabels[
+                                                            value
+                                                        ]?.[lang] ?? value,
                                                 }))}
                                             />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <button
-                                                onClick={() => {
-                                                    // TODO: implement delete via API
-                                                    toast.success(
-                                                        t('actions.deleted'),
-                                                    );
-                                                }}
-                                                className="rounded-lg p-1.5 hover:bg-destructive/10"
-                                            >
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </button>
                                         </td>
                                     </tr>
                                 ),

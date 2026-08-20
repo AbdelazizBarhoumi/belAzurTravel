@@ -7988,3 +7988,8 @@ translations['bookingDetail.perNight'] = {
     ar: 'لليلة',
     en: 'per night',
 };
+translations['admin.queue.prebook'] = {
+    fr: 'Détail du prix (prebook)',
+    ar: 'تفاصيل السعر (الحجز الأولي)',
+    en: 'Price breakdown (prebook)',
+};

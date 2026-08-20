@@ -31,6 +31,26 @@ export interface QueueBooking {
     reject_reason?: string | null;
     cancel_reason?: string | null;
     provider_booking_id?: string | null;
+    provider_booking_reference?: string | null;
+    provider_prebook?: {
+        total?: number;
+        currency?: string;
+        breakdown?: {
+            check_in?: string | null;
+            check_out?: string | null;
+            nights?: number;
+            voucher?: {
+                Num?: string | null;
+            } | null;
+            rooms?: Array<{
+                id?: number | null;
+                boarding?: string | null;
+                total?: number;
+                currency?: string;
+                price_per_night?: number;
+            }>;
+        } | null;
+    } | null;
     is_provider: boolean;
     audits: QueueAudit[];
 }

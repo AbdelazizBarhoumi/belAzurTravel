@@ -111,6 +111,8 @@ class AdminQueueController extends Controller
                 'reject_reason' => $booking->reject_reason,
                 'cancel_reason' => $booking->cancel_reason,
                 'provider_booking_id' => $booking->provider_booking_id,
+                'provider_booking_reference' => $booking->provider_booking_reference,
+                'provider_prebook' => $booking->provider_payload['prebook'] ?? null,
                 'is_provider' => $booking->provider_booking_id !== null
                     || ! empty($booking->provider_payload),
                 'audits' => $booking->audits

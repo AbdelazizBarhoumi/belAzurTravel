@@ -85,10 +85,10 @@ implementation plan with checkable status.
 - [x] Schedule `bookings:expire` in `bootstrap/app.php` via `->withSchedule()` (e.g. every 5 minutes).
 - [x] Actually already scheduled hourly in `routes/console.php:19-22`; changed to `->everyFiveMinutes()` so expired bookings transition within ~5 min of the 72h TTL instead of up to an hour late.
 
-### Phase 5 — Admin-side truth & honesty (G6, G7, G14)
-- [ ] Include `provider_prebook`/voucher breakdown in `AdminQueueController` response + `QueueBooking` type; show in admin queue booking drawer.
-- [ ] `pages/admin/AdminBookings.tsx` — disable unsupported StatusSelect options; remove/disable fake delete button.
-- [ ] `pages/admin/index.tsx:261-273` — fix status colors.
+### Phase 5 — Admin-side truth & honesty (G6, G7, G14) ✅
+- [x] Include `provider_prebook`/voucher breakdown in `AdminQueueController` response + `QueueBooking` type; show in admin queue booking drawer (provider ref + rooms/nights/boarding/total table).
+- [x] `pages/admin/AdminBookings.tsx` — StatusSelect now only offers valid transitions per current status (Pending→Approved/Rejected/Cancelled, Approved→Confirmed/Rejected/Cancelled, Confirmed→Cancelled); disabled for terminal statuses; fake delete button removed (column dropped).
+- [x] `pages/admin/index.tsx:261-273` — fix status colors (full 7-status map instead of Confirmed/Pending/else-destructive).
 
 ### Phase 6 — Kill silent failures (G8)
 - [ ] `pages/hotels/index.tsx` — on search `isError`, render error + retry block instead of endless skeletons.
@@ -127,3 +127,4 @@ implementation plan with checkable status.
 | 2026-08-21 | Phase 2 done | Client booking detail page at `/client/bookings/:id` (status banners, passengers, price breakdown, voucher, cancellation policy, cancel); dashboard cards link to it. `tsc` + `eslint` pass. |
 | 2026-08-21 | Phase 3 done | "Awaiting provider confirmation" banner on Approved cards (dashboard + detail). `tsc` + `eslint` pass. |
 | 2026-08-21 | Phase 4 done | `bookings:expire` was already scheduled hourly (`routes/console.php`); tightened to `everyFiveMinutes()` so bookings expire within ~5 min past the 72h TTL. `schedule:list` confirms single entry. |
+| 2026-08-21 | Phase 5 done | Admin queue drawer shows provider prebook breakdown + provider ref; AdminBookings StatusSelect restricted to valid transitions + fake delete removed; admin dashboard status colors fixed. `tsc` + `php -l` pass. |
