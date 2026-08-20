@@ -24,7 +24,14 @@ export function pickLocalized(value: LocalizedText, lang: Lang = 'en'): string {
 /**
  * Booking status types
  */
-export type BookingStatus = 'Pending' | 'Confirmed' | 'Cancelled';
+export type BookingStatus =
+    | 'Pending'
+    | 'Approved'
+    | 'Confirmed'
+    | 'Rejected'
+    | 'Cancelled'
+    | 'Expired'
+    | 'Completed';
 
 /**
  * User roles

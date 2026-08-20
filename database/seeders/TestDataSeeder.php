@@ -1010,6 +1010,9 @@ class TestDataSeeder extends Seeder
                 ['dayKey' => 'footer.sun', 'ranges' => [], 'closed' => true],
             ],
             'content' => $this->buildSiteContent(),
+            'booking_expiry_hours' => 72,
+            'trip_reminder_days' => 3,
+            'digest_time' => '08:00',
         ]);
     }
 

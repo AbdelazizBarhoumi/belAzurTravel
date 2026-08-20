@@ -1988,6 +1988,112 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Very good',
     },
     'hotelDetail.scoreGood': { fr: 'Bien', ar: 'جيد', en: 'Good' },
+    'hotelInfo.tabAbout': {
+        fr: 'Présentation',
+        ar: 'نظرة عامة',
+        en: 'About',
+    },
+    'hotelInfo.tabEquipment': {
+        fr: 'Équipements',
+        ar: 'المرافق',
+        en: 'Amenities',
+    },
+    'hotelInfo.tabDining': {
+        fr: 'Restauration & options',
+        ar: 'الإقامة والخيارات',
+        en: 'Dining & options',
+    },
+    'hotelInfo.tabPractical': {
+        fr: 'Infos pratiques',
+        ar: 'معلومات عملية',
+        en: 'Practical info',
+    },
+    'hotelInfo.about': {
+        fr: 'À propos de l’hôtel',
+        ar: 'عن الفندق',
+        en: 'About the hotel',
+    },
+    'hotelInfo.more': {
+        fr: 'Lire plus',
+        ar: 'اقرأ المزيد',
+        en: 'Read more',
+    },
+    'hotelInfo.less': {
+        fr: 'Réduire',
+        ar: 'إخفاء',
+        en: 'Show less',
+    },
+    'hotelInfo.highlights': {
+        fr: 'Points forts',
+        ar: 'أبرز المزايا',
+        en: 'Highlights',
+    },
+    'hotelInfo.amenities': {
+        fr: 'Services & équipements',
+        ar: 'الخدمات والمرافق',
+        en: 'Services & amenities',
+    },
+    'hotelInfo.facilities': {
+        fr: 'Installations',
+        ar: 'التجهيزات',
+        en: 'Facilities',
+    },
+    'hotelInfo.general': {
+        fr: 'Général',
+        ar: 'عام',
+        en: 'General',
+    },
+    'hotelInfo.boardings': {
+        fr: 'Formules de pension',
+        ar: 'أنظمة الإقامة',
+        en: 'Meal plans',
+    },
+    'hotelInfo.options': {
+        fr: 'Options à la demande',
+        ar: 'خيارات حسب الطلب',
+        en: 'On-request options',
+    },
+    'hotelInfo.onRequest': {
+        fr: 'Sous réserve de disponibilité',
+        ar: 'حسب التوفر',
+        en: 'Subject to availability',
+    },
+    'hotelInfo.practical': {
+        fr: 'Informations pratiques',
+        ar: 'معلومات عملية',
+        en: 'Practical information',
+    },
+    'hotelInfo.checkIn': {
+        fr: 'Arrivée',
+        ar: 'تسجيل الدخول',
+        en: 'Check-in',
+    },
+    'hotelInfo.checkOut': {
+        fr: 'Départ',
+        ar: 'تسجيل الخروج',
+        en: 'Check-out',
+    },
+    'hotelInfo.address': {
+        fr: 'Adresse',
+        ar: 'العنوان',
+        en: 'Address',
+    },
+    'hotelInfo.phone': {
+        fr: 'Téléphone',
+        ar: 'الهاتف',
+        en: 'Phone',
+    },
+    'hotelInfo.email': {
+        fr: 'E-mail',
+        ar: 'البريد الإلكتروني',
+        en: 'Email',
+    },
+    'hotelInfo.copy': { fr: 'Copier', ar: 'نسخ', en: 'Copy' },
+    'hotelInfo.importantNote': {
+        fr: 'À savoir avant de réserver',
+        ar: 'ملاحظات مهمة',
+        en: 'Things to know',
+    },
     'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
     'tourDetail.notIncluded': {
         fr: 'Non inclus',

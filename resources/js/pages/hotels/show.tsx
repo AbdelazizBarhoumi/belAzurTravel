@@ -112,6 +112,23 @@ function normalizeAmenityKey(value: string): string {
         .trim();
 }
 
+const cleanDescription = (raw?: string | null): string => {
+    if (!raw) return "";
+
+    return raw
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<\/p>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/gi, " ")
+        .replace(/&amp;/gi, "&")
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;|&apos;/gi, "'")
+        .replace(/&lt;/gi, "<")
+        .replace(/&gt;/gi, ">")
+        .replace(/\\r\\n|\\r|\\n/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+};
 function toAmenityView(
     amenity: { name: Record<string, string>; icon?: string | null },
     lang: Lang,
@@ -164,18 +181,18 @@ function normalizeSupplements(
                 typeof s.Name === 'string'
                     ? s.Name
                     : s.name && typeof s.name === 'object'
-                      ? (s.name as Record<string, string>).en ??
+                        ? (s.name as Record<string, string>).en ??
                         (s.name as Record<string, string>).fr ??
                         ''
-                      : typeof s.name === 'string'
-                        ? s.name
-                        : '';
+                        : typeof s.name === 'string'
+                            ? s.name
+                            : '';
             const rawPrice =
                 typeof s.Price === 'number' || typeof s.Price === 'string'
                     ? Number(s.Price)
                     : typeof s.price === 'number'
-                      ? s.price
-                      : 0;
+                        ? s.price
+                        : 0;
 
             return {
                 name: rawName || 'Supplement',
@@ -184,8 +201,8 @@ function normalizeSupplements(
                     typeof s.Mandatory === 'boolean'
                         ? Boolean(s.Mandatory)
                         : typeof s.PerNight === 'boolean'
-                          ? Boolean(s.PerNight)
-                          : false,
+                            ? Boolean(s.PerNight)
+                            : false,
             };
         });
 }
@@ -283,13 +300,13 @@ export default function HotelDetail() {
     const otherImages = detail.gallery?.length
         ? detail.gallery
         : detail.images?.length
-          ? detail.images
-          : [];
+            ? detail.images
+            : [];
     const gallery = detail.image
         ? [
-              detail.image,
-              ...otherImages.filter((image) => image !== detail.image),
-          ]
+            detail.image,
+            ...otherImages.filter((image) => image !== detail.image),
+        ]
         : otherImages;
     const staticRooms = (detail.rooms ?? []).map((room) =>
         toRoomView(room, lang),
@@ -340,8 +357,8 @@ export default function HotelDetail() {
                 images: staticRoom?.images?.length
                     ? staticRoom.images
                     : room.image
-                      ? [room.image]
-                      : [],
+                        ? [room.image]
+                        : [],
                 providerRoomId: room.id ? Number(room.id) : undefined,
                 boardingId: room.boarding_id ?? undefined,
                 boardingName: room.boarding_name ?? undefined,
@@ -364,10 +381,10 @@ export default function HotelDetail() {
 
     const displayMinPrice = staticRooms.length
         ? Math.min(
-              ...staticRooms.map(
-                  (room) => room.priceTotal ?? room.pricePerNight,
-              ),
-          )
+            ...staticRooms.map(
+                (room) => room.priceTotal ?? room.pricePerNight,
+            ),
+        )
         : (detail.price ?? 0);
     // Provider-linked hotels show no price until a live search returns one;
     // manual hotels keep their stored price.
@@ -378,16 +395,16 @@ export default function HotelDetail() {
     const headerPerNight = liveHotel
         ? liveHotel.price_per_night * occupancy.rooms
         : detail.provider === 'manual'
-          ? displayMinPrice
-          : null;
+            ? displayMinPrice
+            : null;
     const amenities = (detail.amenities ?? [])
         .filter((amenity) => {
             const nameData =
                 typeof amenity === 'object' &&
-                amenity !== null &&
-                'name' in amenity
+                    amenity !== null &&
+                    'name' in amenity
                     ? ((amenity as { name?: Record<string, string> }).name ??
-                      {})
+                        {})
                     : {};
             return Boolean(
                 nameData && (nameData.en || nameData.fr || nameData.ar),
@@ -407,58 +424,58 @@ export default function HotelDetail() {
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
     const address = detail.address ?? location;
-const rawLatitude = detail.coordinates?.latitude;
-const rawLongitude = detail.coordinates?.longitude;
+    const rawLatitude = detail.coordinates?.latitude;
+    const rawLongitude = detail.coordinates?.longitude;
 
-let latitude = rawLatitude;
-let longitude = rawLongitude;
+    let latitude = rawLatitude;
+    let longitude = rawLongitude;
 
-if (
-    typeof rawLatitude === 'number' &&
-    typeof rawLongitude === 'number'
-) {
-    // Detect swapped Tunisia coordinates:
-    // latitude should be ~30–37.5
-    // longitude should be ~7.5–11.6
-    const latitudeLooksLikeLongitude =
-        rawLatitude >= 7.5 && rawLatitude <= 11.6;
+    if (
+        typeof rawLatitude === 'number' &&
+        typeof rawLongitude === 'number'
+    ) {
+        // Detect swapped Tunisia coordinates:
+        // latitude should be ~30–37.5
+        // longitude should be ~7.5–11.6
+        const latitudeLooksLikeLongitude =
+            rawLatitude >= 7.5 && rawLatitude <= 11.6;
 
-    const longitudeLooksLikeLatitude =
-        rawLongitude >= 30.0 && rawLongitude <= 37.5;
+        const longitudeLooksLikeLatitude =
+            rawLongitude >= 30.0 && rawLongitude <= 37.5;
 
-    if (latitudeLooksLikeLongitude && longitudeLooksLikeLatitude) {
-        [latitude, longitude] = [rawLongitude, rawLatitude];
+        if (latitudeLooksLikeLongitude && longitudeLooksLikeLatitude) {
+            [latitude, longitude] = [rawLongitude, rawLatitude];
+        }
     }
-}
 
-const stars = Math.min(5, Math.max(0, detail.stars));
+    const stars = Math.min(5, Math.max(0, detail.stars));
 
-const scoreLabel = (rating: number) =>
-    rating >= 4.7
-        ? t('hotelDetail.scoreExcellent')
-        : rating >= 4.4
-          ? t('hotelDetail.scoreAdorable')
-          : rating >= 4
-            ? t('hotelDetail.scoreVeryGood')
-            : t('hotelDetail.scoreGood');
+    const scoreLabel = (rating: number) =>
+        rating >= 4.7
+            ? t('hotelDetail.scoreExcellent')
+            : rating >= 4.4
+                ? t('hotelDetail.scoreAdorable')
+                : rating >= 4
+                    ? t('hotelDetail.scoreVeryGood')
+                    : t('hotelDetail.scoreGood');
 
-const hasMap =
-    typeof latitude === 'number' &&
-    typeof longitude === 'number';
+    const hasMap =
+        typeof latitude === 'number' &&
+        typeof longitude === 'number';
 
-const mapSrc = hasMap
-    ? `https://www.google.com/maps?q=${latitude},${longitude}&output=embed`
-    : undefined;
+    const mapSrc = hasMap
+        ? `https://www.google.com/maps?q=${latitude},${longitude}&output=embed`
+        : undefined;
 
-const mapLink = hasMap
-    ? `https://www.google.com/maps?q=${latitude},${longitude}`
-    : `https://www.google.com/maps?q=${encodeURIComponent(address)}`;
+    const mapLink = hasMap
+        ? `https://www.google.com/maps?q=${latitude},${longitude}`
+        : `https://www.google.com/maps?q=${encodeURIComponent(address)}`;
 
-const scrollToRates = () => {
-    document
-        .getElementById('rates')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
+    const scrollToRates = () => {
+        document
+            .getElementById('rates')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
     const handleReserve = (room: RateRoom) => {
         setSelectedRoom(room);
     };
@@ -563,14 +580,14 @@ const scrollToRates = () => {
                                                                         (ids) =>
                                                                             checked
                                                                                 ? ids.filter(
-                                                                                      (i) =>
-                                                                                          i !==
-                                                                                          boarding.id,
-                                                                                  )
+                                                                                    (i) =>
+                                                                                        i !==
+                                                                                        boarding.id,
+                                                                                )
                                                                                 : [
-                                                                                      ...ids,
-                                                                                      boarding.id,
-                                                                                  ],
+                                                                                    ...ids,
+                                                                                    boarding.id,
+                                                                                ],
                                                                     )
                                                                 }
                                                                 className="mt-0.5 h-4 w-4 accent-primary"
@@ -823,12 +840,12 @@ const scrollToRates = () => {
 
                         <div className="mt-5">
                             {liveHotel &&
-                            (liveHotel.promotion?.rate ||
-                                liveHotel.free_child?.length ||
-                                liveHotel.recommended) ? (
+                                (liveHotel.promotion?.rate ||
+                                    liveHotel.free_child?.length ||
+                                    liveHotel.recommended) ? (
                                 <div className="mb-4 flex flex-wrap gap-2">
                                     {liveHotel.promotion?.rate &&
-                                    liveHotel.promotion.title ? (
+                                        liveHotel.promotion.title ? (
                                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
                                             {t('hotelDetail.promo')}{' '}
                                             {liveHotel.promotion.title}
@@ -890,46 +907,15 @@ const scrollToRates = () => {
                         <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
                             {t('hotelDetail.accommodation')}
                         </h2>
+
                         <div className="mt-4 max-w-3xl space-y-5">
                             <div>
                                 <h3 className="mb-1 text-sm font-bold text-foreground">
                                     {t('hotelDetail.discover')} {title}
                                 </h3>
-                                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                                    {description}
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="mb-1 flex items-center gap-2 text-sm font-bold text-foreground">
-                                    <Building2 className="h-4 w-4 text-primary" />
-                                    {t('hotelDetail.locationTitle')}
-                                </h3>
+
                                 <p className="text-sm leading-relaxed text-muted-foreground">
-                                    {address}
-                                    {' — '}
-                                    {t(
-                                        'hotelDetail.accommodationLocationCopy',
-                                    )}
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="mb-1 flex items-center gap-2 text-sm font-bold text-foreground">
-                                    <UtensilsCrossed className="h-4 w-4 text-primary" />
-                                    {t('hotelDetail.diningAndBar')}
-                                </h3>
-                                <p className="text-sm leading-relaxed text-muted-foreground">
-                                    {t('hotelDetail.accommodationDiningCopy')}
-                                </p>
-                            </div>
-                            <div>
-                                <h3 className="mb-1 flex items-center gap-2 text-sm font-bold text-foreground">
-                                    <Trees className="h-4 w-4 text-primary" />
-                                    {t('hotelDetail.activitiesAndLeisure')}
-                                </h3>
-                                <p className="text-sm leading-relaxed text-muted-foreground">
-                                    {t(
-                                        'hotelDetail.accommodationActivitiesCopy',
-                                    )}
+                                    {cleanDescription(description)}
                                 </p>
                             </div>
                         </div>
@@ -1051,30 +1037,30 @@ const scrollToRates = () => {
                     provider={
                         liveHotel
                             ? {
-                                  token: liveHotel.rooms[0]?.token,
-                                  source: liveHotel.rooms[0]?.source,
-                                  rooms: Array.from(
-                                      { length: occupancy.rooms },
-                                      () => ({
-                                          id: bookingRoom.providerRoomId
-                                              ? String(
-                                                    bookingRoom.providerRoomId,
-                                                )
-                                              : undefined,
-                                          boardingId:
-                                              bookingRoom.boardingId,
-                                          viewIds: bookingRoom.viewIds,
-                                          supplements:
-                                              bookingRoom.supplements,
-                                      }),
-                                  ),
-                                  adults: occupancy.adults,
-                                  children: occupancy.childAges.length,
-                                  childrenAges: occupancy.childAges,
-                                  checkIn: toLocalISODate(dateRange?.from),
-                                  checkOut: toLocalISODate(dateRange?.to),
-                                  options: detail.options ?? [],
-                              }
+                                token: liveHotel.rooms[0]?.token,
+                                source: liveHotel.rooms[0]?.source,
+                                rooms: Array.from(
+                                    { length: occupancy.rooms },
+                                    () => ({
+                                        id: bookingRoom.providerRoomId
+                                            ? String(
+                                                bookingRoom.providerRoomId,
+                                            )
+                                            : undefined,
+                                        boardingId:
+                                            bookingRoom.boardingId,
+                                        viewIds: bookingRoom.viewIds,
+                                        supplements:
+                                            bookingRoom.supplements,
+                                    }),
+                                ),
+                                adults: occupancy.adults,
+                                children: occupancy.childAges.length,
+                                childrenAges: occupancy.childAges,
+                                checkIn: toLocalISODate(dateRange?.from),
+                                checkOut: toLocalISODate(dateRange?.to),
+                                options: detail.options ?? [],
+                            }
                             : undefined
                     }
                 />
