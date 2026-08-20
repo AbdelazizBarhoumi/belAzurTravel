@@ -8,11 +8,15 @@ import {
     Droplet,
     Dumbbell,
     Heart,
+    Info,
+    LogIn,
+    LogOut,
     Map as MapIcon,
     MapPin,
     Ruler,
     Search,
     ShieldCheck,
+    Sparkles,
     Star,
     Trees,
     Users,
@@ -38,7 +42,6 @@ import { PageShell } from '@/components/layout/PageShell';
 import { Gallery } from '@/components/media/Gallery';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
-import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -50,7 +53,7 @@ import {
     type HotelSearchQuery,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
-import { formatPromoRate, promoPrice, toLocalISODate } from '@/lib/utils';
+import { cn, formatPromoRate, promoPrice, toLocalISODate } from '@/lib/utils';
 
 type AmenityIcon = typeof Wifi | null;
 
@@ -240,6 +243,10 @@ export default function HotelDetail() {
     });
     const [advancedOpen, setAdvancedOpen] = useState(false);
     const [selectedBoardingIds, setSelectedBoardingIds] = useState<number[]>([]);
+    // Policy notice (e.g. "couples & families only", tourist tax) is
+    // collapsed to 2 lines by default but always visible — this used to be
+    // buried inside a closed accordion three levels deep.
+    const [noteExpanded, setNoteExpanded] = useState(false);
 
     const liveQuery = useMemo(() => {
         if (!dateRange?.from || !dateRange?.to || !id) {
@@ -450,14 +457,18 @@ export default function HotelDetail() {
 
     const stars = Math.min(5, Math.max(0, detail.stars));
 
-    const scoreLabel = (rating: number) =>
-        rating >= 4.7
-            ? t('hotelDetail.scoreExcellent')
-            : rating >= 4.4
-                ? t('hotelDetail.scoreAdorable')
-                : rating >= 4
-                    ? t('hotelDetail.scoreVeryGood')
-                    : t('hotelDetail.scoreGood');
+    // -- New: surfaced fields that previously had no home in the layout --
+    // A short teaser of the richest amenity data (icons + real photos) sits
+    // right under the hero instead of the old, mostly-empty "Services &
+    // amenities" block. The full set still lives in the Equipment tab below.
+    const topTags = (detail.amenity_tags ?? []).slice(0, 8);
+    // NOTE: `themes` isn't on HotelDetailLookupData yet in the snippet I was
+    // given — it maps 1:1 to the raw `Theme` string array in your API
+    // payload. Wire it through your data layer (or tell me the actual field
+    // name) and this renders immediately; until then it's a no-op.
+    const themes = (detail as { themes?: string[] }).themes ?? [];
+    const noteText = cleanDescription(detail.note);
+    const noteIsLong = noteText.length > 170;
 
     const hasMap =
         typeof latitude === 'number' &&
@@ -543,6 +554,8 @@ export default function HotelDetail() {
                             <DateRangePicker
                                 value={dateRange}
                                 onChange={setDateRange}
+                                className="w-full"
+                                fromDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
                             />
                             <OccupancyPicker
                                 value={occupancy}
@@ -735,7 +748,7 @@ export default function HotelDetail() {
                         </div>
                     </motion.header>
 
-                    {/* Gallery + score */}
+                    {/* Gallery */}
                     <section className="relative">
                         {gallery.length > 0 ? (
                             <Gallery
@@ -757,35 +770,46 @@ export default function HotelDetail() {
                         )}
                     </section>
 
-                    {/* Services & équipements */}
+                    {/* Highlights — a teaser of the richest amenity data
+                        (icons + real photos), replacing what used to be a
+                        section header with almost nothing under it. */}
                     <section>
                         <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
-                            {t('hotelDetail.servicesAndEquipments')}
+                            {t('hotelInfo.highlights')}
                         </h2>
-                        {amenities.length > 0 && (
-                            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                                {amenities.map((amenity) => {
-                                    const Icon = amenity.icon;
-                                    return (
-                                        <div
-                                            key={amenity.id}
-                                            className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
-                                        >
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                                                {Icon && (
-                                                    <Icon className="h-4 w-4 text-primary" />
-                                                )}
-                                            </div>
-                                            <span className="text-sm text-foreground">
-                                                {amenity.name}
+
+                        {topTags.length > 0 && (
+                            <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                                {topTags.map((tag) => (
+                                    <div
+                                        key={tag.id}
+                                        className="flex shrink-0 items-center gap-2 rounded-full border border-border bg-card py-2 pl-2 pr-4"
+                                    >
+                                        {tag.image ? (
+                                            <img
+                                                src={tag.image}
+                                                alt=""
+                                                loading="lazy"
+                                                className="h-7 w-7 rounded-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display =
+                                                        'none';
+                                                }}
+                                            />
+                                        ) : (
+                                            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+                                                <Sparkles className="h-3.5 w-3.5 text-primary" />
                                             </span>
-                                        </div>
-                                    );
-                                })}
+                                        )}
+                                        <span className="whitespace-nowrap text-xs font-medium text-foreground">
+                                            {tag.title}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
                         )}
 
-                        <div className="mt-5 space-y-3">
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
                             <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
                                 <BadgePercent className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                                 <p className="text-sm text-foreground">
@@ -801,6 +825,46 @@ export default function HotelDetail() {
                         </div>
                     </section>
 
+                    {/* Booking policy notice — moved out of a closed
+                        accordion three levels deep, placed right where the
+                        booking decision happens. Always visible, not
+                        dismissible. */}
+                    {noteText && (
+                        <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4">
+                            <div className="flex items-start gap-3">
+                                <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-semibold text-amber-900">
+                                        {t('hotelInfo.importantNote')}
+                                    </p>
+                                    <p
+                                        className={cn(
+                                            'mt-1 text-sm leading-relaxed text-amber-900/90',
+                                            !noteExpanded &&
+                                            noteIsLong &&
+                                            'line-clamp-2',
+                                        )}
+                                    >
+                                        {noteText}
+                                    </p>
+                                    {noteIsLong && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setNoteExpanded((v) => !v)
+                                            }
+                                            className="mt-1 text-xs font-semibold text-amber-700 underline underline-offset-2"
+                                        >
+                                            {noteExpanded
+                                                ? t('hotelInfo.less')
+                                                : t('hotelInfo.more')}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Dates & Tarifs */}
                     <section id="rates" className="scroll-mt-28">
                         <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
@@ -808,16 +872,29 @@ export default function HotelDetail() {
                         </h2>
 
                         <div className="mt-4 grid items-end gap-3 rounded-3xl border border-border bg-card p-5 md:grid-cols-[1.4fr_1.2fr_auto]">
-                            <div className="space-y-1.5">
+                            {/* flex flex-col (not space-y-1.5) is load-bearing
+                                here: DateRangePicker's root is a plain
+                                <button> (Popover adds no wrapper element), so
+                                it's an inline-level sibling of the <label>.
+                                space-y-1.5 only adds margin-top — it can't
+                                force a line break between inline elements,
+                                which is why the label and button were
+                                crowding onto the same row. A flex column
+                                stacks any child regardless of its own
+                                display type, so this fix holds even if
+                                DateRangePicker's internals change later. */}
+                            <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-medium text-muted-foreground">
                                     {t('hotelDetail.checkInOut')}
                                 </label>
                                 <DateRangePicker
                                     value={dateRange}
                                     onChange={setDateRange}
+                                    className="w-full"
+                                    fromDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
                                 />
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-medium text-muted-foreground">
                                     {t('hotelDetail.occupancy')}
                                 </label>
@@ -894,30 +971,66 @@ export default function HotelDetail() {
                                         onReserve={handleReserve}
                                     />
                                 </motion.div>
-                            ) : (
-                                <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                                    {t('hotelDetail.ratesHint')}
-                                </p>
-                            )}
+                            ) : null}
                         </div>
                     </section>
 
-                    {/* Hébergement */}
+                    {/* Hébergement — description now sits alongside an
+                        "at a glance" card instead of leaving the right half
+                        of the row empty. Themes fill it further. */}
                     <section>
                         <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
                             {t('hotelDetail.accommodation')}
                         </h2>
 
-                        <div className="mt-4 max-w-3xl space-y-5">
+                        <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_280px]">
                             <div>
                                 <h3 className="mb-1 text-sm font-bold text-foreground">
                                     {t('hotelDetail.discover')} {title}
                                 </h3>
-
                                 <p className="text-sm leading-relaxed text-muted-foreground">
                                     {cleanDescription(description)}
                                 </p>
                             </div>
+
+                            <aside className="h-fit space-y-3 rounded-2xl border border-border bg-card p-4">
+                                <div className="flex items-start gap-2.5">
+                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    <span className="text-xs text-muted-foreground">
+                                        {address}
+                                    </span>
+                                </div>
+                                {detail.check_in_time && (
+                                    <div className="flex items-center gap-2.5">
+                                        <LogIn className="h-4 w-4 shrink-0 text-primary" />
+                                        <span className="text-xs text-muted-foreground">
+                                            {t('hotelInfo.checkIn')}{' '}
+                                            {detail.check_in_time}
+                                        </span>
+                                    </div>
+                                )}
+                                {detail.check_out_time && (
+                                    <div className="flex items-center gap-2.5">
+                                        <LogOut className="h-4 w-4 shrink-0 text-primary" />
+                                        <span className="text-xs text-muted-foreground">
+                                            {t('hotelInfo.checkOut')}{' '}
+                                            {detail.check_out_time}
+                                        </span>
+                                    </div>
+                                )}
+                                {themes.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {themes.map((theme) => (
+                                            <span
+                                                key={theme}
+                                                className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                                            >
+                                                {theme}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </aside>
                         </div>
                     </section>
 
@@ -990,14 +1103,12 @@ export default function HotelDetail() {
                         </section>
                     )}
 
-                    {/* Practical info + boardings + options + tags */}
+                    {/* Practical info + boardings + options + tags.
+                        `description`, `category` and `note` are no longer
+                        passed here — they're now owned by the sections
+                        above, so this component isn't rendering a second,
+                        emptier copy of the same content. */}
                     <HotelInfo
-                        description=""
-                        category={
-                            detail.category
-                                ? localizeText(detail.category, lang)
-                                : ''
-                        }
                         amenities={[]}
                         checkIn={detail.check_in_time}
                         checkOut={detail.check_out_time}
@@ -1008,7 +1119,6 @@ export default function HotelDetail() {
                         boardings={detail.boardings}
                         facilities={detail.facilities}
                         amenityTags={detail.amenity_tags}
-                        note={detail.note}
                     />
                 </div>
             </div>

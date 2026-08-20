@@ -84,6 +84,10 @@ class OsTravelBookingService
      * Confirm — actually create the reservation. Idempotent: if the booking
      * already holds a provider id, returns the stored payload unchanged.
      *
+     * Persists the provider reference and payload, but never touches the local
+     * status: the approval pipeline owns the local lifecycle and records the
+     * transition on the audit trail.
+     *
      * @param  array<string, mixed>  $hotelBooking
      * @return array{id: string|null, reference: string|null, status: string, breakdown: array<string, mixed>}
      */
@@ -103,8 +107,6 @@ class OsTravelBookingService
             'provider_booking_id' => (string) ($data['Id'] ?? ''),
             'provider_booking_reference' => $data['Voucher']['Num'] ?? null,
             'provider_payload' => $response,
-            'status' => $status,
-            'confirmed_at' => $status === 'Confirmed' ? now() : $booking->confirmed_at,
         ]);
 
         return [

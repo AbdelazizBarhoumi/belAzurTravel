@@ -166,7 +166,7 @@ class OsTravelBookingServiceTest extends TestCase
         $this->assertSame(231.88, $result['breakdown']['rooms'][0]['price_per_night']);
     }
 
-    public function test_confirm_returns_id_voucher_and_confirms_status(): void
+    public function test_confirm_persists_provider_fields_without_writing_local_status(): void
     {
         Http::fake([
             'https://admin.mygo.co/api/hotel/BookingCreation' => Http::response($this->osTravelFixture('booking_creation_confirm')),
@@ -182,8 +182,11 @@ class OsTravelBookingServiceTest extends TestCase
         $booking->refresh();
         $this->assertSame('98765', $booking->provider_booking_id);
         $this->assertSame('VOUCH-98765', $booking->provider_booking_reference);
-        $this->assertSame('Confirmed', $booking->status);
         $this->assertNotNull($booking->provider_payload);
+        // The local lifecycle is owned by the approval pipeline — confirm()
+        // never touches status or confirmed_at.
+        $this->assertSame('Pending', $booking->status);
+        $this->assertNull($booking->confirmed_at);
     }
 
     public function test_confirm_is_idempotent_when_provider_id_already_exists(): void

@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\BookingAction;
+use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\BookingAudit;
 use App\Models\Car;
 use App\Models\Destination;
 use App\Models\Flight;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;
-use App\Models\Payment;
 use App\Models\Promo;
+use App\Models\SiteSetting;
 use App\Models\Tour;
 use App\Models\User;
 use App\Notifications\BookingActivityNotification;
@@ -129,14 +132,13 @@ class BookingController extends Controller
 
         $this->findBookable($data['type'], $data['item_slug'] ?? $data['item_id']);
 
-        // OS-TRAVEL hotel: PreBook to verify availability + final price, then
-        // persist the provider context so the payment callback can Confirm.
-        // Manual hotels (Stage 2) never call the provider: `instant` ones are
-        // confirmed immediately, `request` ones wait for an admin to confirm.
+        // Every reservation lands `pending` — no type auto-confirms anymore.
+        // OS-TRAVEL hotels: PreBook to verify availability + final price, then
+        // persist the provider context so an admin approve() can Confirm.
+        // Manual hotels (Stage 2) never call the provider; both `instant` and
+        // `request` modes wait for an admin to approve.
         $providerContext = null;
         $prebookTotal = null;
-        $status = 'Pending';
-        $confirmedAt = null;
 
         if ($data['type'] === 'hotel') {
             $hotel = Hotel::query()
@@ -149,10 +151,7 @@ class BookingController extends Controller
             // `source` column was never set). Only genuinely manual hotels —
             // no published staging row — skip the provider entirely.
             if ($hotel !== null && ! $hotel->isProviderLinked()) {
-                if ($hotel->booking_mode === Hotel::BOOKING_INSTANT) {
-                    $status = 'Confirmed';
-                    $confirmedAt = now();
-                }
+                // Manual hotel: nothing to prebook; stays pending for approval.
             } elseif ($hotel !== null && ! empty($data['provider']['token'])) {
                 $staged = OsTravelHotel::query()
                     ->whereNotNull('hotel_id')
@@ -192,6 +191,8 @@ class BookingController extends Controller
             }
         }
 
+        $expiryHours = (int) (SiteSetting::first()?->booking_expiry_hours ?? 72);
+
         $booking = Booking::create([
             'user_id' => $request->user()->id,
             'type' => $data['type'],
@@ -209,22 +210,23 @@ class BookingController extends Controller
             'promo_code' => $data['promo_code'] ?? null,
             'notes' => $data['notes'] ?? null,
             'total_amount' => $prebookTotal ?? (int) $data['amount'],
-            'status' => $status,
-            'confirmed_at' => $confirmedAt,
+            'status' => BookingStatus::Pending->value,
+            'expires_at' => now()->addHours($expiryHours),
             'provider_payload' => $providerContext,
         ]);
 
-        $this->notifyOperations($booking, 'booking.created');
+        BookingAudit::log(
+            booking: $booking,
+            action: BookingAction::Created,
+            from: null,
+            to: BookingStatus::Pending,
+            actor: $request->user(),
+            notes: 'Booking submitted',
+        );
 
-        // Manual `instant` bookings are confirmed at creation (no payment
-        // callback drives it), so record the payment and notify both sides.
-        if ($status === 'Confirmed' && $confirmedAt !== null) {
-            $this->recordPayment($booking->refresh());
-            $this->notifyOperations($booking->refresh(), 'booking.confirmed');
-            $this->notifyClient($booking->refresh());
-        }
+        $this->notifyOperations($booking, 'booking.submitted');
 
-        return response()->json($this->payload($booking), 201);
+        return response()->json($this->payload($booking->refresh()), 201);
     }
 
     public function cancel(Request $request, int $id): JsonResponse
@@ -246,6 +248,8 @@ class BookingController extends Controller
             return response()->json($this->payload($booking));
         }
 
+        $reason = $request->input('reason');
+
         // OS-TRAVEL hotel: preview the penalty, then confirm the cancellation
         // with the provider. Cancel on an already-cancelled booking is a no-op.
         if ($booking->type === 'hotel' && $booking->provider_booking_id) {
@@ -262,6 +266,8 @@ class BookingController extends Controller
                 ]);
             }
 
+            $fromStatus = $booking->statusEnum();
+
             try {
                 $result = $this->osTravelBookingService->cancel($booking, $bookingContext);
             } catch (Throwable $e) {
@@ -271,6 +277,20 @@ class BookingController extends Controller
             }
 
             $booking->refresh();
+
+            BookingAudit::log(
+                booking: $booking,
+                action: BookingAction::Cancelled,
+                from: $fromStatus,
+                to: $booking->statusEnum(),
+                actor: $request->user(),
+                notes: $reason,
+            );
+
+            if ($result['status'] === 'Cancelled' && $reason) {
+                $booking->update(['cancel_reason' => $reason]);
+            }
+
             $this->notifyOperations($booking, 'booking.cancelled');
             $this->notifyClient($booking);
 
@@ -280,10 +300,7 @@ class BookingController extends Controller
             ]));
         }
 
-        $booking->update([
-            'status' => 'Cancelled',
-            'cancelled_at' => now(),
-        ]);
+        $booking->transitionTo(BookingStatus::Cancelled, $request->user(), $reason);
 
         $this->notifyOperations($booking->refresh(), 'booking.cancelled');
         $this->notifyClient($booking);
@@ -291,15 +308,90 @@ class BookingController extends Controller
         return response()->json($this->payload($booking->refresh()));
     }
 
-    public function confirm(int $id): JsonResponse
+    /**
+     * Approve a pending demand. Sets `approved` and, unless the provider kept
+     * the reservation OnRequest, `confirmed` right away (payment is deferred).
+     *
+     * OS-TRAVEL hotels are re-prebooked to re-verify the offer token before
+     * calling confirm(); a stale token fails gracefully and keeps the booking
+     * pending for the client to re-search.
+     */
+    public function approve(Request $request, int $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
-        $booking->update([
-            'status' => 'Confirmed',
-            'confirmed_at' => now(),
-            'cancelled_at' => null,
-        ]);
-        $this->recordPayment($booking->refresh());
+        $actor = $request->user();
+
+        abort_unless(in_array($booking->status, ['Pending', 'Approved'], true), 422, 'Only a pending or approved booking can be approved.');
+
+        $isProviderBooking = $booking->type === 'hotel'
+            && $this->osTravelBookingService->providerContextFromPayload($booking) !== null;
+
+        if ($isProviderBooking) {
+            $hotelBooking = $this->osTravelBookingService->providerContextFromPayload($booking);
+
+            // Re-verify the offer token before confirming; a stale token means
+            // the client must re-search.
+            if (! $booking->provider_booking_id) {
+                try {
+                    $this->osTravelBookingService->preBook($hotelBooking);
+                } catch (Throwable $e) {
+                    BookingAudit::log(
+                        booking: $booking,
+                        action: BookingAction::Updated,
+                        from: $booking->statusEnum(),
+                        to: $booking->statusEnum(),
+                        actor: $actor,
+                        notes: 'Provider prebook failed — offer expired, client must re-search.',
+                    );
+
+                    throw ValidationException::withMessages([
+                        'provider' => __('messages.booking_offer_expired'),
+                    ]);
+                }
+            }
+
+            try {
+                $result = $this->osTravelBookingService->confirm($booking, $hotelBooking);
+            } catch (Throwable $e) {
+                throw ValidationException::withMessages([
+                    'provider' => __('messages.booking_confirm_failed'),
+                ]);
+            }
+
+            $booking->refresh();
+
+            if ($result['status'] === 'Confirmed') {
+                $from = $booking->statusEnum();
+                if ($from === BookingStatus::Pending) {
+                    $booking->transitionTo(BookingStatus::Approved, $actor, 'Approved');
+                }
+                $booking->refresh();
+                $booking->transitionTo(BookingStatus::Confirmed, $actor, 'Provider confirmed');
+
+                $this->notifyOperations($booking->refresh(), 'booking.confirmed');
+                $this->notifyClient($booking);
+
+                return response()->json($this->payload($booking->refresh()));
+            }
+
+            // Provider kept the reservation OnRequest — the booking stays
+            // `approved` until the provider finalises it.
+            if ($booking->statusEnum() === BookingStatus::Pending) {
+                $booking->transitionTo(BookingStatus::Approved, $actor, 'Approved — awaiting provider confirmation');
+            }
+
+            $this->notifyOperations($booking->refresh(), 'booking.approved');
+            $this->notifyClient($booking);
+
+            return response()->json($this->payload($booking->refresh()));
+        }
+
+        // Local bookings: approve then confirm atomically (payment deferred).
+        if ($booking->statusEnum() === BookingStatus::Pending) {
+            $booking->transitionTo(BookingStatus::Approved, $actor, 'Approved');
+            $booking->refresh();
+        }
+        $booking->transitionTo(BookingStatus::Confirmed, $actor, 'Confirmed');
 
         $this->notifyOperations($booking->refresh(), 'booking.confirmed');
         $this->notifyClient($booking);
@@ -307,13 +399,45 @@ class BookingController extends Controller
         return response()->json($this->payload($booking->refresh()));
     }
 
-    public function adminCancel(int $id): JsonResponse
+    /**
+     * Reject a pending demand. A reason is required and surfaced to the client.
+     */
+    public function reject(Request $request, int $id): JsonResponse
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $booking = Booking::query()->findOrFail($id);
+        $actor = $request->user();
+
+        abort_unless(in_array($booking->status, ['Pending', 'Approved'], true), 422, 'Only a pending or approved booking can be rejected.');
+
+        $booking->transitionTo(BookingStatus::Rejected, $actor, $data['reason']);
+
+        $this->notifyOperations($booking->refresh(), 'booking.rejected');
+        $this->notifyClient($booking);
+
+        return response()->json($this->payload($booking->refresh()));
+    }
+
+    /**
+     * Backwards-compatible alias used by the existing admin UI.
+     */
+    public function confirm(Request $request, int $id): JsonResponse
+    {
+        return $this->approve($request, $id);
+    }
+
+    public function adminCancel(Request $request, int $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
-        $booking->update([
-            'status' => 'Cancelled',
-            'cancelled_at' => now(),
-        ]);
+
+        $reason = $request->input('reason');
+
+        // Provider-backed bookings cancelled by an admin stay local: the
+        // reservation itself is not re-sent to the provider (ops handles it).
+        $booking->transitionTo(BookingStatus::Cancelled, $request->user(), $reason);
 
         $this->notifyOperations($booking->refresh(), 'booking.cancelled');
         $this->notifyClient($booking);
@@ -360,21 +484,6 @@ class BookingController extends Controller
         }
     }
 
-    private function recordPayment(Booking $booking): void
-    {
-        Payment::query()->firstOrCreate(
-            ['booking_id' => $booking->id],
-            [
-                'user_id' => $booking->user_id,
-                'amount' => $booking->total_amount,
-                'currency' => 'TND',
-                'status' => 'paid',
-                'paid_at' => now(),
-                'reference' => 'PAY-'.$booking->id.'-'.now()->format('YmdHis'),
-            ]
-        );
-    }
-
     /** @return array<string, mixed> */
     private function payload(Booking $booking): array
     {
@@ -397,10 +506,14 @@ class BookingController extends Controller
             'created_at' => $booking->created_at?->toJSON(),
             'confirmed_at' => $booking->confirmed_at?->toJSON(),
             'cancelled_at' => $booking->cancelled_at?->toJSON(),
+            'rejected_at' => $booking->rejected_at?->toJSON(),
+            'expires_at' => $booking->expires_at?->toJSON(),
+            'reject_reason' => $booking->reject_reason,
+            'cancel_reason' => $booking->cancel_reason,
             'provider_booking_id' => $booking->provider_booking_id,
             'provider_booking_reference' => $booking->provider_booking_reference,
             'provider_prebook' => $booking->provider_payload['prebook'] ?? null,
-            'can_cancel' => $booking->status !== 'Cancelled'
+            'can_cancel' => in_array($booking->status, ['Pending', 'Approved', 'Confirmed'], true)
                 && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay())),
         ];
     }

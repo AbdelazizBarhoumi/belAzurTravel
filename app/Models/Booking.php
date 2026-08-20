@@ -60,8 +60,10 @@ class Booking extends Model
             $updates['cancelled_at'] = null;
         } elseif ($to === BookingStatus::Cancelled) {
             $updates['cancelled_at'] = now();
+            $updates['cancel_reason'] = $notes;
         } elseif ($to === BookingStatus::Rejected) {
             $updates['rejected_at'] = now();
+            $updates['reject_reason'] = $notes;
         }
 
         $this->update($updates);

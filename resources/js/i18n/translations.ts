@@ -1948,11 +1948,6 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'المبلغ الإجمالي للإقامة',
         en: 'Total stay amount',
     },
-    'hotelDetail.ratesHint': {
-        fr: 'Choisissez vos dates et votre occupation puis vérifiez la disponibilité pour afficher les tarifs en temps réel.',
-        ar: 'اختر تواريخك وعدد النزلاء ثم تحقق من التوفر لعرض الأسعار في الوقت الفعلي.',
-        en: 'Pick your dates and occupancy then check availability to see real-time rates.',
-    },
     'hotelDetail.taxesIncluded': {
         fr: 'Les tarifs incluent les taxes de service. La taxe de séjour locale est à régler sur place.',
         ar: 'الأسعار تشمل ضرائب الخدمة. تُدفع ضريبة الإقامة المحلية في مكان الإقامة.',
@@ -4753,6 +4748,26 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Payer maintenant',
         ar: 'ادفع الآن',
         en: 'Pay now',
+    },
+    'booking.submittedTitle': {
+        fr: 'Demande envoyée',
+        ar: 'تم إرسال الطلب',
+        en: 'Request submitted',
+    },
+    'booking.submittedDescription': {
+        fr: 'Nous avons bien reçu votre demande. Vous serez notifié(e) dès qu’elle sera confirmée.',
+        ar: 'لقد استلمنا طلبك. سيتم إشعارك بمجرد تأكيده.',
+        en: "We've received your request. You'll be notified once it's confirmed.",
+    },
+    'booking.submittedTotal': {
+        fr: 'Montant estimé',
+        ar: 'المبلغ التقديري',
+        en: 'Estimated total',
+    },
+    'booking.submittedDone': {
+        fr: 'Terminé',
+        ar: 'تم',
+        en: 'Done',
     },
     'common.processing': {
         fr: 'Traitement...',

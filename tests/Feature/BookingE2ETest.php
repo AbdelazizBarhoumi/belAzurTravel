@@ -56,24 +56,22 @@ class BookingE2ETest extends TestCase
             $admin,
             BookingActivityNotification::class,
             function ($notification) {
-                return $notification->toDatabase($admin ?? new User)['type'] === 'booking.created';
+                return $notification->toDatabase($admin ?? new User)['type'] === 'booking.submitted';
             }
         );
 
-        // 3. Admin confirms the booking
-        $confirmResponse = $this->actingAs($admin)->postJson("/api/admin/bookings/{$bookingId}/confirm");
+        // 3. Admin approves the booking
+        $approveResponse = $this->actingAs($admin)->postJson("/api/admin/bookings/{$bookingId}/approve");
 
-        $confirmResponse->assertStatus(200);
+        $approveResponse->assertStatus(200);
         $this->assertDatabaseHas('bookings', [
             'id' => $bookingId,
             'status' => 'Confirmed',
         ]);
 
-        // Verify Payment record created
-        $this->assertDatabaseHas('payments', [
+        // No payment record is fabricated on approval.
+        $this->assertDatabaseMissing('payments', [
             'booking_id' => $bookingId,
-            'amount' => 1500,
-            'status' => 'paid',
         ]);
 
         // Verify Client notified

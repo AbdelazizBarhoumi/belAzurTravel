@@ -157,7 +157,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'update']);
         Route::post('/admin/os-travel/hotels/{id}/approve', [AdminOsTravelController::class, 'approve'])->middleware('extend-timeout');
         Route::post('/admin/os-travel/hotels/{id}/reject', [AdminOsTravelController::class, 'reject']);
-Route::post('/admin/os-travel/hotels/{id}/reopen', [AdminOsTravelController::class, 'reopen']);
+        Route::post('/admin/os-travel/hotels/{id}/reopen', [AdminOsTravelController::class, 'reopen']);
         Route::post('/admin/os-travel/hotels/{id}/unapprove', [AdminOsTravelController::class, 'unapprove']);
 
         Route::get('/admin/tours', [AdminTourController::class, 'index']);
@@ -212,7 +212,9 @@ Route::post('/admin/os-travel/hotels/{id}/reopen', [AdminOsTravelController::cla
         Route::post('/admin/users/{user}/toggle-active', [AdminUserController::class, 'toggleActive']);
         Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
         Route::get('/admin/bookings', [BookingController::class, 'index']);
-        Route::post('/admin/bookings/{id}/confirm', [BookingController::class, 'confirm']);
+        Route::post('/admin/bookings/{id}/confirm', [BookingController::class, 'approve']);
+        Route::post('/admin/bookings/{id}/approve', [BookingController::class, 'approve']);
+        Route::post('/admin/bookings/{id}/reject', [BookingController::class, 'reject']);
         Route::post('/admin/bookings/{id}/cancel', [BookingController::class, 'adminCancel']);
 
         // Complaints & Refunds

@@ -120,7 +120,7 @@ class ManualHotelTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_manual_instant_booking_is_confirmed_immediately(): void
+    public function test_manual_instant_booking_stays_pending_until_admin_approves(): void
     {
         Hotel::create([
             'slug' => 'maison-de-la-plage',
@@ -156,8 +156,10 @@ class ManualHotelTest extends TestCase
             ])
             ->assertStatus(201);
 
-        $this->assertSame('Confirmed', $response->json('status'));
-        $this->assertNotNull($response->json('confirmed_at'));
+        // All types go through admin approval now — no instant auto-confirm.
+        $this->assertSame('Pending', $response->json('status'));
+        $this->assertNull($response->json('confirmed_at'));
+        $this->assertNotNull($response->json('expires_at'));
         $this->assertNull($response->json('provider_booking_id'));
         $this->assertSame(480, $response->json('total_amount'));
 
@@ -165,13 +167,17 @@ class ManualHotelTest extends TestCase
         Http::assertNothingSent();
 
         $booking = Booking::findOrFail($response->json('id'));
-        $this->assertNotNull($booking->confirmed_at);
-        // Payment is recorded on the spot.
-        $this->assertDatabaseHas('payments', [
-            'booking_id' => $booking->id,
-            'status' => 'paid',
-            'amount' => 480,
-        ]);
+        $this->assertNull($booking->confirmed_at);
+        // No fabricated "paid" record until the gateway is back.
+        $this->assertDatabaseMissing('payments', ['booking_id' => $booking->id]);
+
+        // Admin approval confirms the reservation locally.
+        $approved = $this->actingAs($this->admin)
+            ->postJson("/api/admin/bookings/{$booking->id}/approve")
+            ->assertOk();
+
+        $this->assertSame('Confirmed', $approved->json('status'));
+        $this->assertDatabaseMissing('payments', ['booking_id' => $booking->id]);
     }
 
     public function test_manual_request_booking_stays_pending_until_admin_confirms(): void
@@ -216,17 +222,17 @@ class ManualHotelTest extends TestCase
 
         $id = $response->json('id');
 
-        // Admin confirms the request-mode booking locally (no provider call).
+        // Admin approves the request-mode booking locally (no provider call).
         $confirmed = $this->actingAs($this->admin)
-            ->postJson("/api/admin/bookings/{$id}/confirm")
+            ->postJson("/api/admin/bookings/{$id}/approve")
             ->assertOk();
 
         $this->assertSame('Confirmed', $confirmed->json('status'));
         Http::assertNothingSent();
 
-        $this->assertDatabaseHas('payments', [
+        // No payment row is fabricated on approval.
+        $this->assertDatabaseMissing('payments', [
             'booking_id' => $id,
-            'status' => 'paid',
         ]);
     }
 

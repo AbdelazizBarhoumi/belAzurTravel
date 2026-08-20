@@ -26,7 +26,7 @@ class ClientController extends Controller
 
         return response()->json([
             'stats' => [
-                'upcomingTrips' => $bookings->whereIn('status', ['Pending', 'Confirmed'])->count(),
+                'upcomingTrips' => $bookings->whereIn('status', ['Pending', 'Approved', 'Confirmed'])->count(),
                 'totalBookings' => $bookings->count(),
                 'payments' => Payment::query()->where('user_id', $request->user()->id)->count(),
                 'unreadNotifications' => $request->user()->unreadNotifications()->count(),
@@ -151,7 +151,7 @@ class ClientController extends Controller
 
     private function bookingPayload(Booking $booking): array
     {
-        $canCancel = $booking->status !== 'Cancelled'
+        $canCancel = in_array($booking->status, ['Pending', 'Approved', 'Confirmed'], true)
             && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay()));
 
         return [
@@ -167,6 +167,9 @@ class ClientController extends Controller
             'status' => $booking->status,
             'can_cancel' => $canCancel,
             'cancel_reason' => $canCancel ? null : __('messages.cancellation_closed'),
+            'reject_reason' => $booking->reject_reason,
+            'rejected_at' => $booking->rejected_at?->toJSON(),
+            'expires_at' => $booking->expires_at?->toJSON(),
             'created_at' => $booking->created_at?->toJSON(),
         ];
     }

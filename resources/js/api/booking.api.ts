@@ -8,7 +8,14 @@ export interface AdminBookingRow {
     client?: { name?: string };
     created_at: string;
     total_amount: number;
-    status: 'Pending' | 'Confirmed' | 'Cancelled';
+    status:
+        | 'Pending'
+        | 'Approved'
+        | 'Confirmed'
+        | 'Rejected'
+        | 'Cancelled'
+        | 'Expired'
+        | 'Completed';
 }
 
 export interface ClientBookingRow {
@@ -20,9 +27,19 @@ export interface ClientBookingRow {
     start_date?: string | null;
     end_date?: string | null;
     total_amount: number;
-    status: 'Pending' | 'Confirmed' | 'Cancelled' | 'Completed';
+    status:
+        | 'Pending'
+        | 'Approved'
+        | 'Confirmed'
+        | 'Rejected'
+        | 'Cancelled'
+        | 'Expired'
+        | 'Completed';
     can_cancel?: boolean;
     cancel_reason?: string | null;
+    reject_reason?: string | null;
+    rejected_at?: string | null;
+    expires_at?: string | null;
     created_at: string;
 }
 
@@ -106,9 +123,16 @@ export async function updateClientLanguage(language: string) {
     });
 }
 
-export async function confirmBooking(id: number) {
-    return apiFetch(`/api/admin/bookings/${id}/confirm`, {
+export async function approveBooking(id: number) {
+    return apiFetch(`/api/admin/bookings/${id}/approve`, {
         method: 'POST',
+    });
+}
+
+export async function rejectBooking(id: number, reason: string) {
+    return apiFetch(`/api/admin/bookings/${id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
     });
 }
 

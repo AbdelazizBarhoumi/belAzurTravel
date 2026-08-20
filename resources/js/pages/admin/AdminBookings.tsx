@@ -24,21 +24,39 @@ const AdminBookings = () => {
     const queryClient = useQueryClient();
     const statusMutation = useMutation({
         mutationFn: ({ id, status }: { id: number; status: string }) => {
-            if (status === 'Confirmed') return api.confirmBooking(id);
+            if (status === 'Confirmed') return api.approveBooking(id);
+            if (status === 'Rejected') {
+                const reason = window.prompt(
+                    t('admin.rejectReasonPrompt') || 'Reason for rejection:',
+                );
+                if (!reason?.trim()) {
+                    throw new Error('Rejection reason is required');
+                }
+                return api.rejectBooking(id, reason.trim());
+            }
             if (status === 'Cancelled') return api.adminCancelBooking(id);
             return Promise.resolve();
         },
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ['admin-bookings'] }),
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+            toast.success(
+                `${t('admin.booking')} → ${
+                    bookingStatusLabels[variables.status]?.[lang] ??
+                    variables.status
+                }`,
+            );
+        },
+        onError: (err) => {
+            const message =
+                err instanceof Error ? err.message : 'Action failed';
+            toast.error(message);
+        },
     });
     const { lang } = useLanguage();
     const { t } = useLanguage();
 
     const updateStatus = (_b: BookingItem, status: string) => {
         statusMutation.mutate({ id: _b.id, status });
-        toast.success(
-            `${t('admin.booking')} → ${bookingStatusLabels[status][lang]}`,
-        );
     };
 
     return (

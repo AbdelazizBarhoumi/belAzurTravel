@@ -14,3 +14,8 @@ Schedule::command('os-travel:sync-catalog')
     ->{($schedule['interval'] ?? 'daily').'At'}($schedule['at'] ?? '02:00')
     ->withoutOverlapping(config('ostravel.sync.lock_ttl_minutes'))
     ->onOneServer();
+
+Schedule::command('bookings:expire')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer();

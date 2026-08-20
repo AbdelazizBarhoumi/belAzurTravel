@@ -176,8 +176,12 @@ export const bookingTypeLabels: Record<string, LocalizedText> = {
 
 export const bookingStatusLabels: Record<string, LocalizedText> = {
     Pending: { fr: 'En attente', ar: 'قيد الانتظار', en: 'Pending' },
+    Approved: { fr: 'Approuvé', ar: 'مقبول', en: 'Approved' },
     Confirmed: { fr: 'Confirmé', ar: 'مؤكد', en: 'Confirmed' },
+    Rejected: { fr: 'Refusé', ar: 'مرفوض', en: 'Rejected' },
     Cancelled: { fr: 'Annulé', ar: 'ملغي', en: 'Cancelled' },
+    Expired: { fr: 'Expiré', ar: 'منتهي', en: 'Expired' },
+    Completed: { fr: 'Terminé', ar: 'مكتمل', en: 'Completed' },
 };
 
 export const teamRoleLabels: Record<string, LocalizedText> = {

@@ -363,8 +363,8 @@ class OsTravelGoLiveFlowTest extends TestCase
         $this->assertSame('manual', $manualRequest['provider']);
         Http::assertNothingSent();
 
-        // Instant booking confirms immediately, request stays Pending then an
-        // admin confirms it — both without provider calls.
+        // Instant and request bookings both land Pending, then an admin approves —
+        // all types go through the approval pipeline now, without provider calls.
         Http::fake();
         $instant = $this->actingAs($this->client)
             ->postJson('/api/bookings', [
@@ -377,7 +377,7 @@ class OsTravelGoLiveFlowTest extends TestCase
             ])
             ->assertStatus(201)
             ->json();
-        $this->assertSame('Confirmed', $instant['status']);
+        $this->assertSame('Pending', $instant['status']);
 
         $request = $this->actingAs($this->client)
             ->postJson('/api/bookings', [
@@ -392,8 +392,17 @@ class OsTravelGoLiveFlowTest extends TestCase
             ->json();
         $this->assertSame('Pending', $request['status']);
 
+        // Approve the instant booking and confirm the request-mode booking.
         $this->actingAs($this->admin)
-            ->postJson("/api/admin/bookings/{$request['id']}/confirm")
+            ->postJson("/api/admin/bookings/{$instant['id']}/approve")
+            ->assertOk();
+        $this->assertDatabaseHas('bookings', [
+            'id' => $instant['id'],
+            'status' => 'Confirmed',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->postJson("/api/admin/bookings/{$request['id']}/approve")
             ->assertOk();
         $this->assertDatabaseHas('bookings', [
             'id' => $request['id'],

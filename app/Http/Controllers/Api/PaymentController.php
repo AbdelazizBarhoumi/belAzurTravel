@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\BookingAction;
+use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\BookingAudit;
 use App\Models\Payment;
 use App\Models\User;
 use App\Notifications\BookingActivityNotification;
@@ -131,6 +134,14 @@ class PaymentController extends Controller
                     'confirmed_at' => now(),
                     'cancelled_at' => null,
                 ]);
+
+                BookingAudit::log(
+                    booking: $booking,
+                    action: BookingAction::Confirmed,
+                    from: $booking->statusEnum(),
+                    to: BookingStatus::Confirmed,
+                    notes: 'Payment confirmed via gateway',
+                );
 
                 // OS-TRAVEL hotel: Confirm the reservation with the provider
                 // now that payment succeeded, using the stored Phase 9 context.

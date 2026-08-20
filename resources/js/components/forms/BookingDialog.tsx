@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
-import { initiatePayment } from '@/api/payment.api';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/DatePicker';
 import {
@@ -106,8 +105,8 @@ export function BookingDialog({
     const [notes, setNotes] = useState('');
     const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
     const [passengers, setPassengers] = useState<PassengerRow[]>([]);
-    // Step 2: booking created + provider prebook confirmed total awaiting payment.
-    const [confirmedBooking, setConfirmedBooking] = useState<{
+    // Step 2: booking created — the request is awaiting admin approval.
+    const [submittedBooking, setSubmittedBooking] = useState<{
         id: number;
         total: number;
         currency: string;
@@ -197,26 +196,19 @@ export function BookingDialog({
                 queryKey: ['client', 'dashboard'],
             });
 
-            // Manual `instant` hotels are confirmed at creation — no payment
-            // session to start.
+            // Every reservation goes through admin approval now — no payment
+            // session to start. Surface the submitted request until it's
+            // confirmed.
             if (data.status === 'Confirmed') {
                 onOpenChange(false);
                 return;
             }
 
-            // Provider hotels: the server ran the prebook and returned the
-            // confirmed total. Show it before starting payment.
-            if (hasProviderOffer) {
-                setConfirmedBooking({
-                    id: data.id,
-                    total: data.total_amount ?? amount,
-                    currency: data.provider_prebook?.currency ?? 'TND',
-                });
-                return;
-            }
-
-            // Everything else goes straight to the payment gateway.
-            await pay(data.id);
+            setSubmittedBooking({
+                id: data.id,
+                total: data.total_amount ?? amount,
+                currency: data.provider_prebook?.currency ?? 'TND',
+            });
         },
         onError: () => {
             toast.error(
@@ -224,20 +216,6 @@ export function BookingDialog({
             );
         },
     });
-
-    const pay = async (bookingId: number) => {
-        try {
-            const paymentResult = await initiatePayment(bookingId);
-            // Redirect to ClictoPay payment page
-            window.location.href = paymentResult.formUrl;
-        } catch {
-            toast.error(
-                t('payment.initError') ||
-                    'Payment initiation failed. Please pay from your dashboard.',
-            );
-            onOpenChange(false);
-        }
-    };
 
     const passengerPayload = useMemo(() => {
         const adults = passengers
@@ -318,40 +296,33 @@ export function BookingDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[560px]">
-                {confirmedBooking ? (
+                {submittedBooking ? (
                     <>
                         <DialogHeader>
                             <DialogTitle>
-                                {t('booking.confirmTitle') ||
-                                    'Confirm your booking'}
+                                {t('booking.submittedTitle') ||
+                                    'Request submitted'}
                             </DialogTitle>
                             <DialogDescription>
-                                {t('booking.confirmDescription') ||
-                                    'Availability and price confirmed by the provider. Proceed to payment to finalize.'}
+                                {t('booking.submittedDescription') ||
+                                    "We've received your request. You'll be notified once it's confirmed."}
                             </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 p-4">
                                 <span className="text-sm text-muted-foreground">
-                                    {t('booking.confirmedTotal') ||
-                                        'Confirmed total'}
+                                    {t('booking.submittedTotal') ||
+                                        'Estimated total'}
                                 </span>
                                 <span className="font-serif text-2xl font-bold text-primary">
-                                    {confirmedBooking.total.toLocaleString()}{' '}
-                                    {confirmedBooking.currency}
+                                    {submittedBooking.total.toLocaleString()}{' '}
+                                    {submittedBooking.currency}
                                 </span>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                {t('booking.payHint') ||
-                                    'You will be redirected to the secure payment page.'}
-                            </p>
                         </div>
                         <DialogFooter>
-                            <Button
-                                onClick={() => pay(confirmedBooking.id)}
-                                disabled={mutation.isPending}
-                            >
-                                {t('booking.confirmedPay') || 'Pay now'}
+                            <Button onClick={() => onOpenChange(false)}>
+                                {t('booking.submittedDone') || 'Done'}
                             </Button>
                         </DialogFooter>
                     </>
@@ -718,7 +689,8 @@ export function BookingDialog({
                                     {mutation.isPending
                                         ? t('common.processing') ||
                                           'Processing...'
-                                        : t('payment.payNow') || 'Book & Pay'}
+                                        : t('booking.submit') ||
+                                          'Request booking'}
                                 </Button>
                             </DialogFooter>
                         </form>

@@ -52,7 +52,7 @@ class NotificationE2ETest extends TestCase
         // Check if admin got a notification
         $admin = User::where('role', 'admin')->first();
         $this->assertEquals(1, $admin->unreadNotifications()->count());
-        $this->assertEquals('booking.created', $admin->unreadNotifications()->first()->data['type']);
+        $this->assertEquals('booking.submitted', $admin->unreadNotifications()->first()->data['type']);
 
     }
 
