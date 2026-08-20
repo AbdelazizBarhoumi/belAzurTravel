@@ -77,9 +77,9 @@ implementation plan with checkable status.
 - [x] Fix notification deep-link target resolution (`BookingStatusNotification` already points to `/client/bookings/:id`).
 - [x] Dashboard booking cards now link to the detail page (Details button).
 
-### Phase 3 — Make `Approved` meaningful (G4)
-- [ ] `pages/dashboards/Client.tsx` — add "awaiting provider confirmation" banner on Approved cards (mirror Pending decision-window banner).
-- [ ] Same treatment on the new booking detail page.
+### Phase 3 — Make `Approved` meaningful (G4) ✅
+- [x] `pages/dashboards/Client.tsx` — add "awaiting provider confirmation" banner on Approved cards (mirror Pending decision-window banner).
+- [x] Same treatment on the new booking detail page.
 
 ### Phase 4 — Enforce booking expiry (G5)
 - [ ] Schedule `bookings:expire` in `bootstrap/app.php` via `->withSchedule()` (e.g. every 5 minutes).
@@ -124,3 +124,4 @@ implementation plan with checkable status.
 | 2026-08-20 | Audited · plan approved | Journey documented, 16 gaps recorded, 8 phases planned. |
 | 2026-08-20 | Phase 1 done | Search context preserved list→detail; detail auto-searches + skeleton loading. |
 | 2026-08-21 | Phase 2 done | Client booking detail page at `/client/bookings/:id` (status banners, passengers, price breakdown, voucher, cancellation policy, cancel); dashboard cards link to it. `tsc` + `eslint` pass. |
+| 2026-08-21 | Phase 3 done | "Awaiting provider confirmation" banner on Approved cards (dashboard + detail). `tsc` + `eslint` pass. |

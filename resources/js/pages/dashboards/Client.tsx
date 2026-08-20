@@ -17,6 +17,7 @@ import {
     Mail,
     Trash2,
     AlertCircle,
+    Info,
     RotateCcw,
     ChevronDown,
     ChevronUp,
@@ -554,6 +555,18 @@ const ClientDashboard = () => {
                                                                 'client.bookingDecisionUnknown',
                                                             )}
                                                     </span>
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {booking.status === 'Approved' && (
+                                            <div className="flex items-start gap-2 rounded-xl border border-blue-300/50 bg-blue-50 px-4 py-3 text-sm">
+                                                <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                                                <p className="text-blue-900">
+                                                    {t(
+                                                        'bookingDetail.approvedNote',
+                                                    ) ||
+                                                        'Your booking is approved. Waiting for the hotel to confirm.'}
                                                 </p>
                                             </div>
                                         )}
