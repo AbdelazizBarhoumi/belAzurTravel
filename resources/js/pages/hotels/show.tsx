@@ -333,7 +333,7 @@ export default function HotelDetail() {
         Boolean(submittedQuery) && submittedKey !== liveKey;
     const activeQuery = resultsAreStale ? undefined : submittedQuery;
 
-    const { data: liveResult, isLoading: liveSearchLoading } =
+    const { data: liveResult, isLoading: liveSearchLoading, isError: liveSearchError, refetch: refetchSearch } =
         useHotelSearch(activeQuery);
     const liveResults = liveResult?.data ?? [];
     const liveHotel = liveResults[0] ?? undefined;
@@ -1024,7 +1024,24 @@ export default function HotelDetail() {
                                 </div>
                             ) : null}
 
-                            {searchedUnavailable ? (
+                            {liveSearchError ? (
+                                <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm">
+                                    <p className="font-semibold text-destructive">
+                                        {t('search.error.title')}
+                                    </p>
+                                    <p className="mt-1 text-muted-foreground">
+                                        {t('search.error.description')}
+                                    </p>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-3"
+                                        onClick={() => refetchSearch()}
+                                    >
+                                        {t('search.error.retry')}
+                                    </Button>
+                                </div>
+                            ) : searchedUnavailable ? (
                                 <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-800">
                                     {t('hotelDetail.unavailableNotice') ||
                                         'This hotel has no availability for the selected dates. Try other dates.'}

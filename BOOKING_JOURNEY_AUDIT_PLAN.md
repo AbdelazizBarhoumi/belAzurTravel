@@ -90,9 +90,9 @@ implementation plan with checkable status.
 - [x] `pages/admin/AdminBookings.tsx` — StatusSelect now only offers valid transitions per current status (Pending→Approved/Rejected/Cancelled, Approved→Confirmed/Rejected/Cancelled, Confirmed→Cancelled); disabled for terminal statuses; fake delete button removed (column dropped).
 - [x] `pages/admin/index.tsx:261-273` — fix status colors (full 7-status map instead of Confirmed/Pending/else-destructive).
 
-### Phase 6 — Kill silent failures (G8)
-- [ ] `pages/hotels/index.tsx` — on search `isError`, render error + retry block instead of endless skeletons.
-- [ ] `pages/hotels/show.tsx` — surface `useHotelSearch` errors.
+### Phase 6 — Kill silent failures (G8) ✅
+- [x] `pages/hotels/index.tsx` — on search `isError`, render error block with retry button instead of endless skeletons.
+- [x] `pages/hotels/show.tsx` — surface `useHotelSearch` errors with error block + retry before the unavailable notice.
 
 ### Phase 7 — Payment out-of-band cleanup (G1, G15)
 - [ ] Remove unused `initiatePayment`/`retryPayment` client exports (`api/payment.api.ts`).
@@ -128,3 +128,4 @@ implementation plan with checkable status.
 | 2026-08-21 | Phase 3 done | "Awaiting provider confirmation" banner on Approved cards (dashboard + detail). `tsc` + `eslint` pass. |
 | 2026-08-21 | Phase 4 done | `bookings:expire` was already scheduled hourly (`routes/console.php`); tightened to `everyFiveMinutes()` so bookings expire within ~5 min past the 72h TTL. `schedule:list` confirms single entry. |
 | 2026-08-21 | Phase 5 done | Admin queue drawer shows provider prebook breakdown + provider ref; AdminBookings StatusSelect restricted to valid transitions + fake delete removed; admin dashboard status colors fixed. `tsc` + `php -l` pass. |
+| 2026-08-21 | Phase 6 done | Search error states: `index.tsx` + `show.tsx` now show error block with retry on `useHotelSearch` failure instead of endless skeletons. `tsc` + `eslint` pass (6 pre-existing unused-var errors only). |

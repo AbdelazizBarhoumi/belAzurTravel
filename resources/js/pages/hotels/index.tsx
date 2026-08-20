@@ -417,7 +417,7 @@ export default function Hotels() {
         600,
     );
 
-    const { data: liveResult, isFetching: liveFetching } = useHotelSearch(liveQuery);
+    const { data: liveResult, isFetching: liveFetching, isError: liveSearchError, refetch: refetchSearch } = useHotelSearch(liveQuery);
     const liveResults = useMemo(() => liveResult?.data ?? [], [liveResult]);
 
     const browseBySlug = useMemo(
@@ -763,12 +763,29 @@ export default function Hotels() {
                         </motion.aside>
                         {/* Main Content */}
                         <div className="min-w-0 flex-1">
-                            {hasDates && liveQuery !== undefined && (liveResult === undefined || liveFetching) && (
+                            {hasDates && liveQuery !== undefined && liveSearchError ? (
+                                <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm">
+                                    <p className="font-semibold text-destructive">
+                                        {t('search.error.title')}
+                                    </p>
+                                    <p className="mt-1 text-muted-foreground">
+                                        {t('search.error.description')}
+                                    </p>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-3"
+                                        onClick={() => refetchSearch()}
+                                    >
+                                        {t('search.error.retry')}
+                                    </Button>
+                                </div>
+                            ) : hasDates && liveQuery !== undefined && (liveResult === undefined || liveFetching) ? (
                                 <div className="mb-6 flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/80 px-4 py-3 text-sm text-muted-foreground">
                                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                     {t('hotels.checkingAvailability')}
                                 </div>
-                            )}
+                            ) : null}
                             {priceLoading ? (
                                 <div
                                     data-testid="hotel-skeletons"

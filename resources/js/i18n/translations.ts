@@ -7993,3 +7993,18 @@ translations['admin.queue.prebook'] = {
     ar: 'تفاصيل السعر (الحجز الأولي)',
     en: 'Price breakdown (prebook)',
 };
+translations['search.error.title'] = {
+    fr: 'Échec de la recherche',
+    ar: 'فشلت البحث',
+    en: 'Search failed',
+};
+translations['search.error.description'] = {
+    fr: 'Une erreur est survenue lors de la vérification des disponibilités.',
+    ar: 'حدث خطأ أثناء التحقق من التوفر.',
+    en: 'Something went wrong while checking availability.',
+};
+translations['search.error.retry'] = {
+    fr: 'Réessayer',
+    ar: 'إعادة المحاولة',
+    en: 'Retry',
+};
