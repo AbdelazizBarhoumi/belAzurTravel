@@ -8,7 +8,6 @@
     @include('emails.partials.booking-summary', [
         'booking' => $booking,
         'bookingLabel' => $bookingLabel,
-        'clientLabel' => $clientLabel ?? null,
         'refLabel' => $refLabel,
         'typeLabel' => $typeLabel,
         'itemLabel' => $itemLabel ?? null,
@@ -17,6 +16,13 @@
         'statusLabel' => $statusLabel,
         'reasonLabel' => $reasonLabel ?? null,
         'showStatus' => true,
+    ])
+
+    @include('emails.partials.notice', [
+        'noticeText' => $nextStepsLine ?? null,
+        'noticeColor' => '#92400e',
+        'noticeBg' => '#fef3c7',
+        'noticeBorder' => '#fde68a',
     ])
 
     @include('emails.partials.action-button', [

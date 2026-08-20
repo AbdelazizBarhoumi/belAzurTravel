@@ -8,7 +8,6 @@
     @include('emails.partials.booking-summary', [
         'booking' => $booking,
         'bookingLabel' => $bookingLabel,
-        'clientLabel' => $clientLabel ?? null,
         'refLabel' => $refLabel,
         'typeLabel' => $typeLabel,
         'itemLabel' => $itemLabel ?? null,
@@ -17,6 +16,22 @@
         'statusLabel' => $statusLabel,
         'reasonLabel' => $reasonLabel ?? null,
         'showStatus' => true,
+    ])
+
+    @if(! empty($penaltyLine))
+    @include('emails.partials.notice', [
+        'noticeText' => $penaltyLine,
+        'noticeColor' => '#7c2d12',
+        'noticeBg' => '#fff7ed',
+        'noticeBorder' => '#fed7aa',
+    ])
+    @endif
+
+    @include('emails.partials.notice', [
+        'noticeText' => $nextStepsLine ?? null,
+        'noticeColor' => '#065f46',
+        'noticeBg' => '#ecfdf5',
+        'noticeBorder' => '#a7f3d0',
     ])
 
     @include('emails.partials.action-button', [
