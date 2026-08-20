@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\AdminHotelController;
 use App\Http\Controllers\Api\AdminOsTravelController;
 use App\Http\Controllers\Api\AdminPartnerController;
 use App\Http\Controllers\Api\AdminPromoController;
+use App\Http\Controllers\Api\AdminQueueController;
+use App\Http\Controllers\Api\AdminSupportInquiryController;
 use App\Http\Controllers\Api\AdminTeamController;
 use App\Http\Controllers\Api\AdminTourController;
 use App\Http\Controllers\Api\AdminTravelController;
@@ -223,6 +225,15 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/complaints/{id}', [AdminComplaintController::class, 'update']);
         Route::post('/admin/complaints/{id}/reply', [AdminComplaintController::class, 'reply']);
         Route::post('/admin/complaints/{id}/resolve', [AdminComplaintController::class, 'resolve']);
+
+        // Unified "Needs action" queue
+        Route::get('/admin/queue', [AdminQueueController::class, 'index']);
+        Route::get('/admin/queue/counts', [AdminQueueController::class, 'counts']);
+
+        // Support inquiries
+        Route::get('/admin/support-inquiries', [AdminSupportInquiryController::class, 'index']);
+        Route::put('/admin/support-inquiries/{inquiry}', [AdminSupportInquiryController::class, 'update']);
+        Route::post('/admin/support-inquiries/{inquiry}/reply', [AdminSupportInquiryController::class, 'reply']);
 
         Route::get('/admin/categories', [AdminCategoryController::class, 'index']);
         Route::post('/admin/categories', [AdminCategoryController::class, 'store']);

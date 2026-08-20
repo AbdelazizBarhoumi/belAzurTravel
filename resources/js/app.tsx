@@ -41,6 +41,7 @@ import AdminHotels from './pages/admin/AdminHotels';
 import AdminOsTravel from './pages/admin/AdminOsTravel';
 import AdminPartners from './pages/admin/AdminPartners';
 import AdminPromos from './pages/admin/AdminPromos';
+import AdminQueue from './pages/admin/AdminQueue';
 import AdminReports from './pages/admin/AdminReports';
 import AdminTeam from './pages/admin/AdminTeam';
 import AdminTours from './pages/admin/AdminTours';
@@ -256,6 +257,10 @@ const LayoutWrapper = () => {
                     <Route
                         path="/admin/bookings"
                         element={adminGuard(<AdminBookings />)}
+                    />
+                    <Route
+                        path="/admin/queue"
+                        element={adminGuard(<AdminQueue />)}
                     />
                     <Route
                         path="/admin/complaints"

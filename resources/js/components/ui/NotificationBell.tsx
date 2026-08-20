@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck, ListChecks } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '@/api/http';
+import { getAdminQueueCounts } from '@/api/queue.api';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
@@ -37,9 +38,11 @@ function relativeTime(value?: string | null): string {
 
 export function NotificationBell({
     feedPath,
+    queueFeedPath,
     className,
 }: {
     feedPath: string;
+    queueFeedPath?: string;
     className?: string;
 }) {
     const { lang, t, dir } = useLanguage();
@@ -52,6 +55,15 @@ export function NotificationBell({
             apiFetch<NotificationSummaryResponse>(
                 '/api/notifications?limit=10&include_count=1',
             ),
+        staleTime: 10_000,
+        refetchInterval: 15_000,
+        refetchOnWindowFocus: true,
+    });
+
+    const { data: queueCounts } = useQuery({
+        queryKey: ['admin-queue-counts'],
+        queryFn: getAdminQueueCounts,
+        enabled: !!queueFeedPath,
         staleTime: 10_000,
         refetchInterval: 15_000,
         refetchOnWindowFocus: true,
@@ -73,6 +85,18 @@ export function NotificationBell({
 
     return (
         <div className={cn('group relative', className)}>
+            {queueFeedPath && (queueCounts?.total ?? 0) > 0 && (
+                <Link
+                    to={queueFeedPath}
+                    className="relative inline-flex items-center rounded-lg p-2 transition-colors hover:bg-muted"
+                    aria-label={t('admin.queue')}
+                >
+                    <ListChecks className="h-5 w-5 text-muted-foreground" />
+                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+                        {queueCounts?.total}
+                    </span>
+                </Link>
+            )}
             <button
                 type="button"
                 className="relative rounded-lg p-2 transition-colors hover:bg-muted"

@@ -37,6 +37,8 @@ import AdminPromoController from './AdminPromoController'
 import AdminBlogPostController from './AdminBlogPostController'
 import AdminUserController from './AdminUserController'
 import AdminComplaintController from './AdminComplaintController'
+import AdminQueueController from './AdminQueueController'
+import AdminSupportInquiryController from './AdminSupportInquiryController'
 import AdminCategoryTypeController from './AdminCategoryTypeController'
 import AdminTeamController from './AdminTeamController'
 import AdminVisaController from './AdminVisaController'
@@ -81,6 +83,8 @@ AdminPromoController: Object.assign(AdminPromoController, AdminPromoController),
 AdminBlogPostController: Object.assign(AdminBlogPostController, AdminBlogPostController),
 AdminUserController: Object.assign(AdminUserController, AdminUserController),
 AdminComplaintController: Object.assign(AdminComplaintController, AdminComplaintController),
+AdminQueueController: Object.assign(AdminQueueController, AdminQueueController),
+AdminSupportInquiryController: Object.assign(AdminSupportInquiryController, AdminSupportInquiryController),
 AdminCategoryTypeController: Object.assign(AdminCategoryTypeController, AdminCategoryTypeController),
 AdminTeamController: Object.assign(AdminTeamController, AdminTeamController),
 AdminVisaController: Object.assign(AdminVisaController, AdminVisaController),

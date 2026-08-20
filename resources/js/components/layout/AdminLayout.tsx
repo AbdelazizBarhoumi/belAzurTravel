@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
     LayoutDashboard,
     Layout,
@@ -27,9 +28,11 @@ import {
     AlertCircle,
     FileCheck,
     CloudDownload,
+    ListChecks,
 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { getAdminQueueCounts } from '@/api/queue.api';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import {
@@ -82,6 +85,7 @@ interface NavLink {
     labelKey: string;
     exact?: boolean;
     roles?: string[];
+    badge?: boolean;
 }
 
 type LinkItem = GroupLink | NavLink;
@@ -157,6 +161,12 @@ const links: LinkItem[] = [
     { to: '/admin/blog', icon: Newspaper, labelKey: 'admin.blog' },
     { to: '/admin/bookings', icon: Calendar, labelKey: 'admin.bookings' },
     {
+        to: '/admin/queue',
+        icon: ListChecks,
+        labelKey: 'admin.queue',
+        badge: true,
+    },
+    {
         to: '/admin/complaints',
         icon: AlertCircle,
         labelKey: 'admin.complaints',
@@ -190,6 +200,13 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
     const [settingsOpen, setSettingsOpen] = useState(() =>
         pathname.startsWith('/admin/site-settings'),
     );
+
+    const { data: queueCounts } = useQuery({
+        queryKey: ['admin-queue-counts'],
+        queryFn: getAdminQueueCounts,
+        staleTime: 15_000,
+        refetchInterval: 30_000,
+    });
 
     const handleLogout = async () => {
         await logout();
@@ -348,6 +365,13 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                             >
                                                 <link.icon className="h-4 w-4" />
                                                 <span>{label}</span>
+                                                {link.badge &&
+                                                    (queueCounts?.total ?? 0) >
+                                                        0 && (
+                                                        <span className="ms-auto rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+                                                            {queueCounts?.total}
+                                                        </span>
+                                                    )}
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
@@ -396,7 +420,10 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <NotificationBell feedPath="/admin/notifications" />
+                        <NotificationBell
+                            feedPath="/admin/notifications"
+                            queueFeedPath="/admin/queue"
+                        />
                         <LanguageSwitcher />
                         {actions}
                     </div>
@@ -449,6 +476,12 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                 <span className="xs:inline hidden">
                                     {label}
                                 </span>
+                                {link.badge &&
+                                    (queueCounts?.total ?? 0) > 0 && (
+                                        <span className="ms-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+                                            {queueCounts?.total}
+                                        </span>
+                                    )}
                             </Link>
                         );
                     })}

@@ -1523,7 +1523,11 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'أقل من 12 سنة',
         en: 'Under 12 years',
     },
-    'hotels.addChild': { fr: 'Ajouter un enfant', ar: 'إضافة طفل', en: 'Add child' },
+    'hotels.addChild': {
+        fr: 'Ajouter un enfant',
+        ar: 'إضافة طفل',
+        en: 'Add child',
+    },
     'hotels.removeChild': {
         fr: 'Retirer l’enfant',
         ar: 'إزالة الطفل',
@@ -1636,7 +1640,11 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Select room',
     },
     'hotelDetail.pernight': { fr: '/nuit', ar: '/ليلة', en: '/night' },
-    'hotelDetail.noPrice': { fr: 'Prix non disponible', ar: 'السعر غير متوفر', en: 'Price unavailable' },
+    'hotelDetail.noPrice': {
+        fr: 'Prix non disponible',
+        ar: 'السعر غير متوفر',
+        en: 'Price unavailable',
+    },
     'hotelDetail.totalForStay': {
         fr: 'Total pour le séjour',
         ar: 'الإجمالي للإقامة',
@@ -1678,7 +1686,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'night',
     },
     'hotelDetail.unavailableNotice': {
-        fr: 'Cet hôtel n\'a aucune disponibilité pour les dates sélectionnées. Essayez d\'autres dates.',
+        fr: "Cet hôtel n'a aucune disponibilité pour les dates sélectionnées. Essayez d'autres dates.",
         ar: 'لا يتوفر هذا الفندق للتواريخ المحددة. جرب تواريخ أخرى.',
         en: 'This hotel has no availability for the selected dates. Try other dates.',
     },
@@ -1708,7 +1716,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Practical information',
     },
     'hotelDetail.checkInOut': {
-        fr: 'Heures d\'arrivée / départ',
+        fr: "Heures d'arrivée / départ",
         ar: 'أوقات الوصول والمغادرة',
         en: 'Check-in / check-out',
     },
@@ -1835,7 +1843,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Best rate guaranteed',
     },
     'hotelDetail.bestRateHint': {
-        fr: 'Confirmez aujourd\'hui : les prix peuvent augmenter à l\'approche des dates.',
+        fr: "Confirmez aujourd'hui : les prix peuvent augmenter à l'approche des dates.",
         ar: 'أكّد اليوم: قد ترتفع الأسعار مع اقتراب المواعيد.',
         en: 'Confirm today: prices can increase as your dates approach.',
     },
@@ -1845,12 +1853,12 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Services & amenities',
     },
     'hotelDetail.bestPriceNote': {
-        fr: 'Garantissez-vous un super tarif pour votre prochain séjour. Confirmez votre réservation aujourd\'hui car les prix peuvent augmenter.',
+        fr: "Garantissez-vous un super tarif pour votre prochain séjour. Confirmez votre réservation aujourd'hui car les prix peuvent augmenter.",
         ar: 'تأكّد من الحصول على سعر ممتاز لإقامتك القادمة. أكّد حجزك اليوم لأن الأسعار قد ترتفع.',
         en: 'Lock in a great rate for your stay. Confirm your booking today as prices may rise.',
     },
     'hotelDetail.freeCancellationNote': {
-        fr: 'Sur notre site, l\'annulation est gratuite pour la plupart des hébergements et vous recevez une confirmation instantanée.',
+        fr: "Sur notre site, l'annulation est gratuite pour la plupart des hébergements et vous recevez une confirmation instantanée.",
         ar: 'على موقعنا، الإلغاء مجاني لمعظم أماكن الإقامة وستتلقى تأكيداً فورياً.',
         en: 'Free cancellation on most stays and instant confirmation when you book on our site.',
     },
@@ -1870,7 +1878,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Discover',
     },
     'hotelDetail.accommodationLocationCopy': {
-        fr: 'L\'établissement est idéalement situé, à proximité des principaux sites d\'intérêt et des accès pratiques.',
+        fr: "L'établissement est idéalement situé, à proximité des principaux sites d'intérêt et des accès pratiques.",
         ar: 'يقع مكان الإقامة في موقع مثالي، بالقرب من أبرز المعالم ووسائل الوصول المريحة.',
         en: 'The property is ideally located, close to the main points of interest and convenient transport links.',
     },
@@ -1954,7 +1962,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Rates include service taxes. Local city tax is payable on site.',
     },
     'hotelDetail.priceMayIncrease': {
-        fr: 'Ce prix risque d\'augmenter',
+        fr: "Ce prix risque d'augmenter",
         ar: 'قد يرتفع هذا السعر',
         en: 'This price may increase',
     },
@@ -4680,7 +4688,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Request Booking',
     },
     'booking.datesLocked': {
-        fr: 'Dates verrouillées à l\'offre recherchée',
+        fr: "Dates verrouillées à l'offre recherchée",
         ar: 'التواريخ مثبتة على العرض الذي تم البحث عنه',
         en: 'Dates locked to the searched offer',
     },
@@ -7665,4 +7673,154 @@ translations['osTravel.refreshNoIssues'] = {
     fr: 'Tous les hôtels ont été actualisés avec succès.',
     ar: 'تم تحديث جميع الفنادق بنجاح.',
     en: 'All hotels refreshed successfully.',
+};
+translations['admin.queue'] = {
+    fr: "File d'attente",
+    ar: 'قائمة الانتظار',
+    en: 'Queue',
+};
+translations['admin.queueSubtitle'] = {
+    fr: 'Tout ce qui nécessite votre action',
+    ar: 'كل ما يتطلب إجراءك',
+    en: 'Everything that needs your action',
+};
+translations['admin.queue.tab.bookings'] = {
+    fr: 'Réservations',
+    ar: 'الحجوزات',
+    en: 'Bookings',
+};
+translations['admin.queue.tab.complaints'] = {
+    fr: 'Réclamations',
+    ar: 'الشكاوى',
+    en: 'Complaints',
+};
+translations['admin.queue.tab.refunds'] = {
+    fr: 'Remboursements',
+    ar: 'الاستردادات',
+    en: 'Refunds',
+};
+translations['admin.queue.tab.support'] = {
+    fr: 'Support',
+    ar: 'الدعم',
+    en: 'Support',
+};
+translations['admin.queue.empty'] = {
+    fr: 'Rien à traiter ici.',
+    ar: 'لا يوجد شيء للمعالجة هنا.',
+    en: 'Nothing to handle here.',
+};
+translations['admin.queue.refresh'] = {
+    fr: 'Actualiser',
+    ar: 'تحديث',
+    en: 'Refresh',
+};
+translations['admin.queue.detail'] = {
+    fr: 'Détails',
+    ar: 'التفاصيل',
+    en: 'Details',
+};
+translations['admin.queue.auditTimeline'] = {
+    fr: 'Chronologie',
+    ar: 'الخط الزمني',
+    en: 'Audit timeline',
+};
+translations['admin.queue.expiresAt'] = {
+    fr: 'Expire le',
+    ar: 'ينتهي في',
+    en: 'Expires',
+};
+translations['admin.queue.providerBooking'] = {
+    fr: 'Réservation fournisseur',
+    ar: 'حجز المزود',
+    en: 'Provider booking',
+};
+translations['admin.queue.replies'] = {
+    fr: 'Conversation',
+    ar: 'المحادثة',
+    en: 'Conversation',
+};
+translations['admin.queue.noReplies'] = {
+    fr: 'Aucune réponse pour le moment.',
+    ar: 'لا توجد ردود بعد.',
+    en: 'No replies yet.',
+};
+translations['admin.queue.sendReply'] = {
+    fr: 'Envoyer la réponse',
+    ar: 'إرسال الرد',
+    en: 'Send reply',
+};
+translations['admin.queue.approve'] = {
+    fr: 'Approuver',
+    ar: 'موافقة',
+    en: 'Approve',
+};
+translations['admin.queue.reject'] = {
+    fr: 'Refuser',
+    ar: 'رفض',
+    en: 'Reject',
+};
+translations['admin.queue.cancel'] = {
+    fr: 'Annuler',
+    ar: 'إلغاء',
+    en: 'Cancel',
+};
+translations['admin.rejectReason'] = {
+    fr: 'Motif du refus',
+    ar: 'سبب الرفض',
+    en: 'Rejection reason',
+};
+translations['admin.cancelReason'] = {
+    fr: "Motif de l'annulation",
+    ar: 'سبب الإلغاء',
+    en: 'Cancellation reason',
+};
+translations['admin.rejectReasonPrompt'] = {
+    fr: 'Motif du refus :',
+    ar: 'سبب الرفض:',
+    en: 'Reason for rejection:',
+};
+translations['admin.queue.audit.created'] = {
+    fr: 'Créé',
+    ar: 'تم الإنشاء',
+    en: 'Created',
+};
+translations['admin.queue.audit.submitted'] = {
+    fr: 'Soumis',
+    ar: 'تم الإرسال',
+    en: 'Submitted',
+};
+translations['admin.queue.audit.approved'] = {
+    fr: 'Approuvé',
+    ar: 'تمت الموافقة',
+    en: 'Approved',
+};
+translations['admin.queue.audit.rejected'] = {
+    fr: 'Refusé',
+    ar: 'مرفوض',
+    en: 'Rejected',
+};
+translations['admin.queue.audit.confirmed'] = {
+    fr: 'Confirmé',
+    ar: 'مؤكد',
+    en: 'Confirmed',
+};
+translations['admin.queue.audit.cancelled'] = {
+    fr: 'Annulé',
+    ar: 'ملغي',
+    en: 'Cancelled',
+};
+translations['admin.queue.audit.expired'] = {
+    fr: 'Expiré',
+    ar: 'منتهي',
+    en: 'Expired',
+};
+translations['admin.queue.audit.completed'] = {
+    fr: 'Terminé',
+    ar: 'مكتمل',
+    en: 'Completed',
+};
+translations['admin.queue.audit.updated'] = {
+    fr: 'Mis à jour',
+    ar: 'تم التحديث',
+    en: 'Updated',
 };
