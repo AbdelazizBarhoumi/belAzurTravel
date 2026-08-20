@@ -24,9 +24,14 @@ import {
     UtensilsCrossed,
     Wifi,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import {
+    Navigate,
+    useNavigate,
+    useParams,
+    useSearchParams,
+} from 'react-router-dom';
 import { notifyInteraction } from '@/api/interactions.api';
 import { HotelInfo } from '@/components/cards/HotelInfo';
 import { BookingDialog } from '@/components/forms/BookingDialog';
@@ -44,6 +49,7 @@ import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import {
@@ -235,11 +241,37 @@ export default function HotelDetail() {
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
-    const [dateRange, setDateRange] = useState<DateRange | undefined>();
+
+    // Search context preserved from the hotels listing: ?from&to&guests&rooms&children
+    // pre-fill the availability search so the user doesn't re-enter it here.
+    const [searchParams] = useSearchParams();
+    const urlCheckIn = searchParams.get('from') || '';
+    const urlCheckOut = searchParams.get('to') || '';
+    const urlGuests = Number(searchParams.get('guests') || 2);
+    const urlRooms = Number(searchParams.get('rooms') || 1);
+    const urlChildren = (searchParams.get('children') || '')
+        .split(',')
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value >= 0 && value <= 17);
+
+    // A lone check-in date defaults check-out to +1 night, matching the
+    // listing page's behavior when only a start date was chosen.
+    const initialFrom = urlCheckIn
+        ? new Date(`${urlCheckIn}T00:00:00`)
+        : undefined;
+    const initialTo = urlCheckOut
+        ? new Date(`${urlCheckOut}T00:00:00`)
+        : initialFrom
+            ? new Date(initialFrom.getTime() + 86_400_000)
+            : undefined;
+
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(
+        initialFrom ? { from: initialFrom, to: initialTo } : undefined,
+    );
     const [occupancy, setOccupancy] = useState<Occupancy>({
-        rooms: 1,
-        adults: 2,
-        childAges: [],
+        rooms: Number.isFinite(urlRooms) && urlRooms > 0 ? urlRooms : 1,
+        adults: Number.isFinite(urlGuests) && urlGuests > 0 ? urlGuests : 2,
+        childAges: urlChildren,
     });
     const [advancedOpen, setAdvancedOpen] = useState(false);
     const [selectedBoardingIds, setSelectedBoardingIds] = useState<number[]>([]);
@@ -267,14 +299,30 @@ export default function HotelDetail() {
         };
     }, [dateRange, occupancy.rooms, occupancy.adults, occupancy.childAges, id, selectedBoardingIds]);
 
-    // The live search only fires after the user explicitly clicks the
-    // availability button; it never runs from stored price/availability data.
+    // The live search fires when the user clicks the availability button, or
+    // automatically on arrival when the URL carries a search window from the
+    // hotels listing. It never runs from stored price/availability data.
     const [submittedQuery, setSubmittedQuery] = useState<
         HotelSearchQuery | undefined
     >(undefined);
     const handleCheckAvailability = () => {
         setSubmittedQuery(liveQuery);
     };
+
+    // Arriving with ?from&to&guests&children in the URL (from the hotels
+    // listing) auto-runs the availability search for that exact window once.
+    const autoSearchFired = useRef(false);
+    useEffect(() => {
+        if (autoSearchFired.current) {
+            return;
+        }
+        if (!dateRange?.from || !dateRange?.to) {
+            return;
+        }
+        autoSearchFired.current = true;
+        setSubmittedQuery(liveQuery);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dateRange, id]);
 
     // Results are trusted only while the submitted query still matches the
     // current inputs; as soon as dates, occupancy or boardings change the
@@ -296,7 +344,30 @@ export default function HotelDetail() {
         Boolean(activeQuery) && !liveSearchLoading && !liveHotel;
 
     if (isLoading) {
-        return null;
+        return (
+            <PageShell
+                breadcrumbs={[
+                    { label: t('common.home'), href: '/' },
+                    { label: t('nav.hotels'), href: '/hotels' },
+                ]}
+            >
+                <div className="grid items-start gap-8 lg:grid-cols-[320px_1fr]">
+                    <aside className="space-y-4">
+                        <Skeleton className="h-96 rounded-3xl" />
+                        <Skeleton className="h-44 rounded-3xl" />
+                    </aside>
+                    <div className="min-w-0 space-y-10">
+                        <Skeleton className="h-16 w-2/3 rounded-2xl" />
+                        <Skeleton className="h-[300px] w-full rounded-3xl md:h-[500px]" />
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <Skeleton className="h-24 rounded-2xl" />
+                            <Skeleton className="h-24 rounded-2xl" />
+                        </div>
+                        <Skeleton className="h-40 w-full rounded-3xl" />
+                    </div>
+                </div>
+            </PageShell>
+        );
     }
 
     if (!hotel) {
@@ -510,6 +581,12 @@ export default function HotelDetail() {
         }
 
         params.set('guests', String(occupancy.adults));
+        if (occupancy.rooms > 1) {
+            params.set('rooms', String(occupancy.rooms));
+        }
+        if (occupancy.childAges.length > 0) {
+            params.set('children', occupancy.childAges.join(','));
+        }
 
         const queryString = params.toString();
         navigate(

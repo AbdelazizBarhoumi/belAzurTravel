@@ -66,6 +66,15 @@ function datePickerLocale(lang: Lang) {
     return fr;
 }
 
+// `children` is a comma-separated list of child ages (e.g. "5,8") carried in
+// the URL to preserve occupancy across the list <-> detail navigation.
+function parseChildAges(raw: string | null): number[] {
+    return (raw ?? '')
+        .split(',')
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value >= 0 && value <= 17);
+}
+
 function formatDate(date: Date, lang: Lang): string {
     return format(date, 'PPP', { locale: datePickerLocale(lang) });
 }
@@ -157,7 +166,7 @@ export default function Hotels() {
             Number.isFinite(initialGuests) && initialGuests > 0
                 ? initialGuests
                 : 2,
-        childAges: [],
+        childAges: parseChildAges(params.get('children')),
     });
     const [sort, setSort] = useState<SortValue>('price_asc');
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -222,7 +231,7 @@ export default function Hotels() {
                 Number.isFinite(guestsParam) && guestsParam > 0
                     ? guestsParam
                     : 2,
-            childAges: [],
+            childAges: parseChildAges(params.get('children')),
         });
     }
 
@@ -520,6 +529,25 @@ export default function Hotels() {
         [displayedHotels],
     );
 
+    // Preserve the current search context into each hotel detail link so the
+    // detail page can pre-fill dates/occupancy and auto-run availability.
+    const detailLinkParams = useMemo(() => {
+        const params = new URLSearchParams();
+        const checkIn = toLocalISODate(dateRange?.from);
+        const checkOut = toLocalISODate(dateRange?.to);
+        if (checkIn) {
+            params.set('from', checkIn);
+        }
+        if (checkOut) {
+            params.set('to', checkOut);
+        }
+        params.set('guests', String(occupancy.adults));
+        if (occupancy.childAges.length > 0) {
+            params.set('children', occupancy.childAges.join(','));
+        }
+        return params.toString();
+    }, [dateRange, occupancy.adults, occupancy.childAges]);
+
     const handlePriceChange = (range: [number, number]) => {
         setHotelPriceRange(range);
         setPriceRangeTouched(true);
@@ -774,7 +802,11 @@ export default function Hotels() {
                                                 )}
                                             >
                                                 <Link
-                                                    to={`/hotels/${hotel.slug}`}
+                                                    to={`/hotels/${hotel.slug}${
+                                                        detailLinkParams
+                                                            ? `?${detailLinkParams}`
+                                                            : ''
+                                                    }`}
                                                     className="group block transform-gpu overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                                 >
                                                     <div className="relative h-56 overflow-hidden">

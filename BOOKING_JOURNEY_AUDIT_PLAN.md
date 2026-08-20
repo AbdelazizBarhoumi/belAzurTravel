@@ -64,10 +64,11 @@ implementation plan with checkable status.
 
 ## 4. Implementation plan
 
-### Phase 1 — Preserve search context (G3, part of G8)
-- [ ] `pages/hotels/index.tsx:777` — card `<Link>` appends `?from&to&guests&rooms&children` from current `dateRange`/`occupancy` when present.
-- [ ] `pages/hotels/show.tsx` — read params, pre-fill `dateRange` + `occupancy` (incl. `rooms`, `childAges`), auto-fire `handleCheckAvailability` on mount when a valid range exists.
-- [ ] `pages/hotels/show.tsx:298-300` — replace blank `null` loading with a skeleton.
+### Phase 1 — Preserve search context (G3, part of G8) ✅
+- [x] `pages/hotels/index.tsx` — card `<Link>` appends `?from&to&guests&children` from current `dateRange`/`occupancy` when present; list also parses the `children` param (round-trip).
+- [x] `pages/hotels/show.tsx` — reads params, pre-fills `dateRange` + `occupancy` (rooms/adults/childAges), auto-runs availability once on mount when a valid window exists; lone check-in defaults check-out to +1 night.
+- [x] `pages/hotels/show.tsx` — replaced blank `null` loading with a skeleton layout.
+- [x] `pages/hotels/show.tsx` — `handleSearchRedirect` now forwards `rooms`/`children` too.
 
 ### Phase 2 — Client booking detail page (G2, G4)
 - [ ] New `pages/client/BookingDetail.tsx` wired at `/client/bookings/:id` in `app.tsx`.
@@ -120,3 +121,4 @@ implementation plan with checkable status.
 | Date | Status | Notes |
 |------|--------|-------|
 | 2026-08-20 | Audited · plan approved | Journey documented, 16 gaps recorded, 8 phases planned. |
+| 2026-08-20 | Phase 1 done | Search context preserved list→detail; detail auto-searches + skeleton loading. |
