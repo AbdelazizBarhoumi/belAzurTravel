@@ -126,10 +126,6 @@ export async function getClientDashboard() {
     return apiFetch<ClientDashboardPayload>('/api/client/dashboard');
 }
 
-export async function getClientBookings() {
-    return apiFetch<ClientBookingRow[]>('/api/client/bookings');
-}
-
 export async function getClientPayments() {
     return apiFetch<
         Array<{

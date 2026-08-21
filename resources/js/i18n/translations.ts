@@ -1159,6 +1159,8 @@ export const translations: Record<string, TranslationEntry> = {
     'common.call': { fr: 'Appeler', ar: 'اتصال', en: 'Call' },
     'common.travelers': { fr: 'voyageurs', ar: 'مسافرون', en: 'travelers' },
     'common.search': { fr: 'Rechercher...', ar: 'بحث...', en: 'Search...' },
+    'common.loading': { fr: 'Chargement...', ar: 'جاري التحميل...', en: 'Loading...' },
+    'common.loadMore': { fr: 'Charger plus', ar: 'تحميل المزيد', en: 'Load more' },
     'common.results': { fr: 'résultats', ar: 'نتائج', en: 'results' },
     'common.noResults': {
         fr: 'Aucun résultat trouvé.',
@@ -1416,6 +1418,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Handpicked accommodations offering the perfect blend of comfort, luxury, and unforgettable experiences.',
     },
     'hotels.perNight': { fr: '/nuit', ar: '/ليلة', en: '/night' },
+    'hotels.from': { fr: 'Dès', ar: 'يبدأ من', en: 'From' },
     'hotels.reviews': { fr: 'avis', ar: 'تقييمات', en: 'reviews' },
     'hotels.book': BOOK,
     'hotels.filterByTags': {

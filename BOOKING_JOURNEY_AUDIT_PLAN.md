@@ -100,14 +100,14 @@ implementation plan with checkable status.
 - [x] Keep backend `PaymentController` + callback route intact (future phase); payment result page preserved for provider redirects.
 - [x] Test mock updated; all 5 BookingDialog tests pass.
 
-### Phase 8 — Low-priority polish (G9–G13, G15, G16)
-- [ ] Browse-mode "From X TND/night" using `hotels.priceFrom`.
-- [ ] Pagination via existing `meta`.
-- [ ] List filter-bar URL write-back.
-- [ ] Child ages encoded in URL (`children=5,8`).
-- [ ] Cancel success toast.
-- [ ] Dead-code sweep: `HotelSummary.tsx`, `hotelinfotemp.tsx`, unused `getClientBookings` (used by Phase 2).
-- [ ] (Optional) `favorite` interaction server tracking.
+### Phase 8 — Low-priority polish (G9–G13, G15, G16) ✅
+- [x] Browse-mode "From X TND/night" using `hotel.price` (stored per-night price shown when no live prices).
+- [x] Pagination via existing `meta` ("Load more" button on search results).
+- [x] List filter-bar URL write-back (active filters synced to URL with `replace: true` for bookmarkability).
+- [x] Child ages encoded in URL (`children=5,8`) — done in Phase 1.
+- [x] Cancel success toast added to `Client.tsx` cancelMutation.
+- [x] Dead-code sweep: `HotelSummary.tsx`, `hotelinfotemp.tsx`, unused `getClientBookings` removed.
+- [ ] (Optional) `favorite` interaction server tracking — skipped (requires backend changes).
 
 ---
 
@@ -131,3 +131,4 @@ implementation plan with checkable status.
 | 2026-08-21 | Phase 5 done | Admin queue drawer shows provider prebook breakdown + provider ref; AdminBookings StatusSelect restricted to valid transitions + fake delete removed; admin dashboard status colors fixed. `tsc` + `php -l` pass. |
 | 2026-08-21 | Phase 6 done | Search error states: `index.tsx` + `show.tsx` now show error block with retry on `useHotelSearch` failure instead of endless skeletons. `tsc` + `eslint` pass (6 pre-existing unused-var errors only). |
 | 2026-08-21 | Phase 7 done | Payment dead-code sweep: `payment.api.ts` deleted, `PaymentResult` retry removed, 7 dead i18n keys removed, test mock cleaned. `tsc` + `eslint` + all 5 BookingDialog tests pass. |
+| 2026-08-21 | Phase 8 done | Browse-mode price label ("From X TND/night"), "Load more" pagination, URL write-back, cancel toast, dead-code sweep (HotelSummary, hotelinfotemp, getClientBookings removed). `tsc` + `eslint` pass. |

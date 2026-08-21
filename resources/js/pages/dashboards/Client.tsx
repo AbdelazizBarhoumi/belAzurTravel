@@ -151,8 +151,10 @@ const ClientDashboard = () => {
     });
     const cancelMutation = useMutation({
         mutationFn: (id: number) => cancelBooking(id),
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ['client'] }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['client'] });
+            toast.success(t('booking.cancelled') || 'Booking cancelled successfully.');
+        },
     });
     const supportMutation = useMutation({
         mutationFn: () =>

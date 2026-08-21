@@ -153,7 +153,7 @@ function HotelCardSkeleton() {
 
 export default function Hotels() {
     const { t, lang, dir } = useLanguage();
-    const [params] = useSearchParams();
+    const [params, setSearchParams] = useSearchParams();
     // Accept landing widget params as fallback (destination -> q)
     const initialSearch = params.get('q') || params.get('destination') || '';
     const initialGuests = Number(params.get('guests') || 2);
@@ -169,6 +169,7 @@ export default function Hotels() {
         childAges: parseChildAges(params.get('children')),
     });
     const [sort, setSort] = useState<SortValue>('price_asc');
+    const [page, setPage] = useState(1);
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: initialFromDate ? new Date(initialFromDate) : undefined,
         to: initialToDate ? new Date(initialToDate) : undefined,
@@ -255,6 +256,21 @@ export default function Hotels() {
 
     const hasActiveCategoryTypeFilters = Object.values(categoryTypeFilters).some((v) => v.length > 0);
 
+    // Sync active filters back to the URL so users can bookmark/share.
+    useEffect(() => {
+        const next = new URLSearchParams();
+        if (searchQuery) next.set('q', searchQuery);
+        if (sort !== 'price_asc') next.set('sort', sort);
+        const checkIn = toLocalISODate(dateRange?.from);
+        const checkOut = toLocalISODate(dateRange?.to);
+        if (checkIn) next.set('from', checkIn);
+        if (checkOut) next.set('to', checkOut);
+        if (occupancy.adults !== 2) next.set('guests', String(occupancy.adults));
+        if (occupancy.childAges.length > 0) next.set('children', occupancy.childAges.join(','));
+        setSearchParams(next, { replace: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchQuery, sort, dateRange?.from?.getTime(), dateRange?.to?.getTime(), occupancy.adults, occupancy.childAges.join(',')]);
+
     // Phase E: once a full date range (+ occupancy) is chosen, the list is
     // server-driven — the filter bar maps to the server search request
     // (stars, price range, sort, rooms with child ages). Client-side
@@ -300,6 +316,12 @@ export default function Hotels() {
     // browse mode it filters stored per-night prices client-side, and once
     // dates are set it is sent to the provider as a per-stay range.
     const priceFilterActive = priceRangeTouched;
+
+    // Reset to page 1 when filters change.
+    useEffect(() => {
+        setPage(1);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchQuery, sort, checkInISO, checkOutISO, occupancy.adults, occupancy.childAges.join(','), starsMin, priceFilterActive, priceRangeSynced?.toString()]);
 
     // Client-only refinements (search text, country, category type groups,
     // stars). These work on the browse list AND on the live results; the
@@ -406,9 +428,10 @@ export default function Hotels() {
                 : {}),
             sort,
             per_page: 50,
+            page,
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [checkInISO, checkOutISO, clientFilteredSlugs, occupancy.adults, occupancy.childAges, starsMin, hotelPriceRange[0], hotelPriceRange[1], priceFilterActive, nights, sort]);
+    }, [checkInISO, checkOutISO, clientFilteredSlugs, occupancy.adults, occupancy.childAges, starsMin, hotelPriceRange[0], hotelPriceRange[1], priceFilterActive, nights, sort, page]);
 
     // Rapid filter interactions must not each fire an expensive search; batch
     // them and search once the user settles.
@@ -419,6 +442,7 @@ export default function Hotels() {
 
     const { data: liveResult, isFetching: liveFetching, isError: liveSearchError, refetch: refetchSearch } = useHotelSearch(liveQuery);
     const liveResults = useMemo(() => liveResult?.data ?? [], [liveResult]);
+    const liveMeta = liveResult?.meta;
 
     const browseBySlug = useMemo(
         () => new Map(hotels.map((h) => [h.slug, h as HotelCard])),
@@ -804,7 +828,8 @@ export default function Hotels() {
                                     }
                                 />
                             ) : (
-                                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <>
+                                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                     {sortedHotels.map((hotel, index) => {
                                         const unavailable = hotel.available === false;
                                         return (
@@ -861,31 +886,43 @@ export default function Hotels() {
                                                             }}
                                                         />
 
-                                                        <div className="absolute right-4 top-4 rounded-full bg-card/95 px-3 py-1 text-xs font-bold text-foreground shadow-md backdrop-blur">
+                                                        <div className="absolute right-4 top-4 rounded-2xl bg-card/95 px-3 py-2 text-xs font-bold text-foreground shadow-md backdrop-blur">
                                                             {liveLoaded ? (
                                                                 (() => {
                                                                     const promo = promoPrice(hotel.price_total, hotel.promotion?.rate);
-                                                                    return (
-                                                                        <div className="flex flex-col items-end gap-0.5 text-right">
-                                                                            <span>
-                                                                                {(promo ? promo.discounted : hotel.price_total)?.toLocaleString()}{' '}
-                                                                                {hotel.currency ?? 'TND'}
-                                                                                {hotel.nights
-                                                                                    ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
-                                                                                    : ''}
-                                                                            </span>
-                                                                            {promo && (
-                                                                                <span className="text-[10px] font-medium text-muted-foreground line-through">
-                                                                                    {promo.original.toLocaleString()}{' '}
-                                                                                    {hotel.currency ?? 'TND'}
+                                                                    const currency = hotel.currency ?? 'TND';
+                                                                    if (promo) {
+                                                                        return (
+                                                                            <div className="flex items-center gap-3">
+                                                                                <span className="text-base font-extrabold text-primary">
+                                                                                    {promo.discounted?.toLocaleString()} {currency}
                                                                                 </span>
-                                                                            )}
-                                                                        </div>
+                                                                                <div className="flex flex-col items-end gap-0 text-right">
+                                                                                    {hotel.nights ? (
+                                                                                        <span className="text-[10px] font-medium text-muted-foreground">
+                                                                                            {hotel.nights} {t('hotelDetail.nightsLabel')}
+                                                                                        </span>
+                                                                                    ) : null}
+                                                                                    <span className="text-[10px] font-medium text-destructive line-through">
+                                                                                        {promo.original.toLocaleString()} {currency}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                    return (
+                                                                        <span>
+                                                                            {hotel.price_total?.toLocaleString()}{' '}
+                                                                            {currency}
+                                                                            {hotel.nights
+                                                                                ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
+                                                                                : ''}
+                                                                        </span>
                                                                     );
                                                                 })()
-                                                            ) : (
-                                                                t('hotelDetail.checkAvailability')
-                                                            )}
+                                                            ) : typeof hotel.price === 'number'
+                                                                ? `${t('hotels.from')} ${hotel.price.toLocaleString()} ${hotel.currency ?? 'TND'}${t('hotels.perNight')}`
+                                                                : t('hotelDetail.checkAvailability')}
                                                         </div>
 
                                                         {liveLoaded && (
@@ -1019,6 +1056,18 @@ export default function Hotels() {
                                         );
                                     })}
                                 </div>
+                                {liveMeta && liveMeta.current_page < liveMeta.last_page && (
+                                    <div className="mt-8 flex justify-center">
+                                        <Button
+                                            variant="outline"
+                                            disabled={liveFetching}
+                                            onClick={() => setPage((p) => p + 1)}
+                                        >
+                                            {liveFetching ? t('common.loading') || 'Loading...' : t('common.loadMore') || 'Load more'}
+                                        </Button>
+                                    </div>
+                                )}
+                                </>
                             )}
                         </div>{' '}
                     </div>
