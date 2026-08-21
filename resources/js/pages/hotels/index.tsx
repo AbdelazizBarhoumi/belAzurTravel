@@ -339,17 +339,11 @@ export default function Hotels() {
                 return false;
             }
 
-            // Price is per-night; a hotel with no known price must not
+            // Price is total stay; a hotel with no known price must not
             // silently match once the user has actually touched the slider.
             if (priceFilterActive) {
-                const perNightPrice =
-                    typeof hotel.price_per_night === 'number'
-                        ? hotel.price_per_night
-                        : typeof hotel.price === 'number'
-                          ? hotel.price
-                          : null;
-                if (perNightPrice === null) return false;
-                if (perNightPrice < hotelPriceRange[0] || perNightPrice > hotelPriceRange[1]) {
+                if (typeof hotel.price !== 'number') return false;
+                if (hotel.price < hotelPriceRange[0] || hotel.price > hotelPriceRange[1]) {
                     return false;
                 }
             }
@@ -455,11 +449,18 @@ export default function Hotels() {
     }, [livePages]);
     const displayPages = livePages ?? lastGoodPages;
     const liveResults = useMemo(() => displayPages?.pages.flatMap((p) => p.data) ?? [], [displayPages]);
-    const liveMeta = useMemo(() => displayPages?.pages[displayPages.pages.length - 1]?.meta, [displayPages]);
 
     const sentinelRef = useRef<HTMLDivElement | null>(null);
     const prevCountRef = useRef(0);
     useInfiniteScroll(sentinelRef, fetchNextPage, { hasNextPage: hasNextPage ?? false, isFetchingNextPage });
+
+    // Automatically fetch all remaining pages so the price slider has the
+    // full range and the client-side filter works on every hotel.
+    useEffect(() => {
+        if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     const browseBySlug = useMemo(
         () => new Map(hotels.map((h) => [h.slug, h as HotelCard])),
@@ -477,18 +478,22 @@ export default function Hotels() {
     // `isFetchingNextPage` (bottom spinner) and the "checking availability"
     // banner respectively, without unmounting the already-rendered list.
     const priceLoading = hasDates && displayPages === undefined;
-    // The slider's min/max must represent the full result, not whatever the
-    // user has already filtered down to. The backend returns the true
-    // price bounds across ALL results in the meta response, so use those
-    // directly — they're instantly available from the first page load and
-    // never change for the same search parameters. Before any dates are
-    // picked, fall back to the catalog-wide bounds from the browse listing.
+    // Price slider bounds come from the hotels already loaded (via infinite
+    // scroll), so the range always matches what the client filter can work
+    // with. As more pages stream in, the range naturally widens. Before any
+    // dates are picked, fall back to the catalog-wide browse bounds.
+    const liveStayPrices = liveResults
+        .map((h) => h.price)
+        .filter((p): p is number => typeof p === 'number');
     const priceBounds: readonly [number, number] =
-        liveLoaded && liveMeta?.min_price != null && liveMeta?.max_price != null
-            ? [liveMeta.min_price, liveMeta.max_price]
+        liveLoaded && liveStayPrices.length > 0
+            ? [
+                  Math.floor(Math.min(...liveStayPrices)),
+                  Math.ceil(Math.max(...liveStayPrices)),
+              ]
             : [dataMinPrice, dataMaxPrice];
     const priceBoundsChanged =
-        (liveLoaded || storedPrices.length > 0) &&
+        (liveStayPrices.length > 0 || storedPrices.length > 0) &&
         (priceRangeSynced === null ||
             priceRangeSynced[0] !== priceBounds[0] ||
             priceRangeSynced[1] !== priceBounds[1]);
@@ -696,7 +701,7 @@ export default function Hotels() {
                                         </SheetDescription>
                                     </SheetHeader>
                                     <HotelFilters
-                                        hotels={hotels}
+                                        hotels={liveLoaded ? (displayedHotels as unknown as HotelItem[]) : hotels}
                                         lang={lang}
                                         priceRange={hotelPriceRange}
                                         onPriceChange={handlePriceChange}
@@ -810,7 +815,7 @@ export default function Hotels() {
                                 </div>
 
                                 <HotelFilters
-                                    hotels={hotels}
+                                    hotels={liveLoaded ? (displayedHotels as unknown as HotelItem[]) : hotels}
                                     lang={lang}
                                     priceRange={hotelPriceRange}
                                     onPriceChange={handlePriceChange}
