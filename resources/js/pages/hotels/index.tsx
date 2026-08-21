@@ -920,9 +920,7 @@ export default function Hotels() {
                                                                         </span>
                                                                     );
                                                                 })()
-                                                            ) : typeof hotel.price === 'number'
-                                                                ? `${t('hotels.from')} ${hotel.price.toLocaleString()} ${hotel.currency ?? 'TND'}${t('hotels.perNight')}`
-                                                                : t('hotelDetail.checkAvailability')}
+                                                            ) : t('hotelDetail.checkAvailability')}
                                                         </div>
 
                                                         {liveLoaded && (

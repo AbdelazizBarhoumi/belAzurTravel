@@ -1949,25 +1949,10 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'متوفر',
         en: 'Available',
     },
-    'hotelDetail.instantConfirmation': {
-        fr: 'Confirmation instantanée · Paiement sécurisé',
-        ar: 'تأكيد فوري · دفع آمن',
-        en: 'Instant confirmation · Secure payment',
-    },
     'hotelDetail.stayTotalLabel': {
         fr: 'Montant total du séjour',
         ar: 'المبلغ الإجمالي للإقامة',
         en: 'Total stay amount',
-    },
-    'hotelDetail.taxesIncluded': {
-        fr: 'Les tarifs incluent les taxes de service. La taxe de séjour locale est à régler sur place.',
-        ar: 'الأسعار تشمل ضرائب الخدمة. تُدفع ضريبة الإقامة المحلية في مكان الإقامة.',
-        en: 'Rates include service taxes. Local city tax is payable on site.',
-    },
-    'hotelDetail.priceMayIncrease': {
-        fr: "Ce prix risque d'augmenter",
-        ar: 'قد يرتفع هذا السعر',
-        en: 'This price may increase',
     },
     'hotelDetail.freeCancellationBefore': {
         fr: 'Annulation gratuite avant le',

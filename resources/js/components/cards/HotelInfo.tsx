@@ -2,12 +2,9 @@ import { Icon as IconifyIcon } from "@iconify/react";
 import { motion } from "framer-motion";
 import {
     CheckCircle2,
-    Copy,
     LogIn,
     LogOut,
-    Mail,
     MapPin,
-    Phone,
     Sparkles,
     Tag,
     UtensilsCrossed,
@@ -39,8 +36,6 @@ interface HotelInfoProps {
     checkIn?: string;
     checkOut?: string;
     address?: string;
-    phone?: string;
-    email?: string;
     options?: Array<{
         id: number;
         title: string;
@@ -199,32 +194,12 @@ export function HotelInfo({
     checkIn,
     checkOut,
     address,
-    phone,
-    email,
     options,
     boardings,
     facilities,
     amenityTags,
 }: HotelInfoProps) {
     const { t, dir } = useLanguage();
-
-    const emails = useMemo(
-        () =>
-            (email ?? "")
-                .split(/[;,]/)
-                .map((e) => e.trim())
-                .filter(Boolean),
-        [email]
-    );
-
-    const phones = useMemo(
-        () =>
-            (phone ?? "")
-                .split(/[;,/]/)
-                .map((p) => p.trim())
-                .filter(Boolean),
-        [phone]
-    );
 
     const facilityGroups = useMemo(() => {
         const acc: Record<string, string[]> = {};
@@ -263,9 +238,7 @@ export function HotelInfo({
             show: Boolean(
                 checkIn ||
                     checkOut ||
-                    address ||
-                    phones.length ||
-                    emails.length
+                    address
             ),
         },
     ].filter((tab) => tab.show);
@@ -551,62 +524,8 @@ export function HotelInfo({
                                     dir={dir}
                                 />
                             )}
-
-                            {phones.map((p) => (
-                                <Tile
-                                    key={p}
-                                    icon={Phone}
-                                    label={t("hotelInfo.phone")}
-                                    value={p}
-                                    href={`tel:${p.replace(/\s/g, "")}`}
-                                    dir={dir}
-                                    valueDir="ltr"
-                                />
-                            ))}
                         </div>
                     </div>
-
-                    {emails.length > 0 && (
-                        <div
-                            dir={dir}
-                            className="rounded-2xl border border-border bg-card p-4"
-                        >
-                            <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-                                <Mail className="h-4 w-4 shrink-0 text-primary" />
-                                {t("hotelInfo.email")}
-                            </p>
-
-                            <div className="flex flex-wrap gap-2">
-                                {emails.map((e) => (
-                                    <span
-                                        key={e}
-                                        dir="ltr"
-                                        className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground"
-                                    >
-                                        <a
-                                            href={`mailto:${e}`}
-                                            className="hover:text-primary"
-                                        >
-                                            {e}
-                                        </a>
-
-                                        <button
-                                            type="button"
-                                            aria-label={t("hotelInfo.copy")}
-                                            onClick={() =>
-                                                navigator.clipboard?.writeText(
-                                                    e
-                                                )
-                                            }
-                                            className="text-muted-foreground transition-colors hover:text-primary"
-                                        >
-                                            <Copy className="h-3.5 w-3.5" />
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
                 </TabsContent>
             </Tabs>
         </motion.section>

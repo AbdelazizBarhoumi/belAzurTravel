@@ -2,8 +2,6 @@ import {
     Baby,
     BedDouble,
     Info,
-    ShieldCheck,
-    TrendingUp,
     User,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -82,9 +80,6 @@ export function RoomRatesTable({
     const activeTotal = active
         ? (active.priceTotal ?? active.pricePerNight) * occupancy.rooms
         : 0;
-    const activePerNight = active
-        ? active.pricePerNight * occupancy.rooms
-        : 0;
     const activeTotalPromo = promoPrice(activeTotal, promoRate);
 
     return (
@@ -103,7 +98,6 @@ export function RoomRatesTable({
                     const isSelected = selected === room.id;
                     const total = (room.priceTotal ?? room.pricePerNight) * occupancy.rooms;
                     const totalPromo = promoPrice(total, promoRate);
-                    const perNightPromo = promoPrice(activePerNight, promoRate);
                     return (
                         <div
                             key={room.id}
@@ -299,31 +293,13 @@ export function RoomRatesTable({
                                         {currency}
                                     </p>
                                 )}
-                                {room.nights ? (
-                                    <p className="text-[11px] text-muted-foreground">
-                                        ~{(perNightPromo
-                                            ? perNightPromo.discounted
-                                            : activePerNight
-                                        ).toLocaleString()}{' '}
-                                        {currency} {t('hotelDetail.pernight')} ·{' '}
-                                        {room.nights} {t('hotelDetail.nightsLabel')}
-                                    </p>
-                                ) : null}
-                                <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                                    <TrendingUp className="h-3 w-3" />{' '}
-                                    {t('hotelDetail.priceMayIncrease')}
-                                </p>
                             </div>
                         </div>
                     );
                 })}
             </div>
 
-            <div className="flex flex-col items-center justify-between gap-4 border-t border-border bg-muted/50 px-5 py-4 sm:flex-row">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <ShieldCheck className="h-4 w-4 text-primary" />{' '}
-                    {t('hotelDetail.instantConfirmation')}
-                </div>
+            <div className="flex flex-col items-center justify-end gap-4 border-t border-border bg-muted/50 px-5 py-4 sm:flex-row">
                 <div className="flex items-center gap-4">
                     <div className="text-right">
                         <p className="text-xs text-muted-foreground">
@@ -353,11 +329,6 @@ export function RoomRatesTable({
                         {t('hotelDetail.reserve')}
                     </Button>
                 </div>
-            </div>
-
-            <div className="flex items-start gap-2 border-t border-border px-5 py-3 text-[11px] text-muted-foreground">
-                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                {t('hotelDetail.taxesIncluded')}
             </div>
         </div>
     );

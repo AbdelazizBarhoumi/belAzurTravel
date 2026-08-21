@@ -3,11 +3,6 @@ import {
     BadgePercent,
     Bed,
     Building2,
-    Car,
-    Coffee,
-    Droplet,
-    Dumbbell,
-    Heart,
     Info,
     LogIn,
     LogOut,
@@ -18,11 +13,7 @@ import {
     ShieldCheck,
     Sparkles,
     Star,
-    Trees,
     Users,
-    Utensils,
-    UtensilsCrossed,
-    Wifi,
 } from 'lucide-react';
 import { useMemo, useEffect, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
@@ -32,7 +23,6 @@ import {
     useParams,
     useSearchParams,
 } from 'react-router-dom';
-import { notifyInteraction } from '@/api/interactions.api';
 import { HotelInfo } from '@/components/cards/HotelInfo';
 import { BookingDialog } from '@/components/forms/BookingDialog';
 import {
@@ -48,7 +38,6 @@ import { Gallery } from '@/components/media/Gallery';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -60,8 +49,6 @@ import {
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 import { cn, formatPromoRate, promoPrice, toLocalISODate } from '@/lib/utils';
-
-type AmenityIcon = typeof Wifi | null;
 
 type RoomView = {
     id: string;
@@ -97,30 +84,6 @@ type RoomView = {
     }>;
 };
 
-type AmenityView = {
-    id: string;
-    name: string;
-    icon: AmenityIcon;
-    customSvg?: string | null;
-    iconifyName?: string | null;
-};
-
-const AMENITY_ICONS: Record<string, AmenityIcon> = {
-    wifi: Wifi,
-    parking: Car,
-    breakfast: Coffee,
-    gym: Dumbbell,
-    restaurant: Utensils,
-    pool: Droplet,
-};
-
-function normalizeAmenityKey(value: string): string {
-    return value
-        .toLowerCase()
-        .replace(/[^a-z]+/g, ' ')
-        .trim();
-}
-
 const cleanDescription = (raw?: string | null): string => {
     if (!raw) return "";
 
@@ -138,40 +101,6 @@ const cleanDescription = (raw?: string | null): string => {
         .replace(/\s+/g, " ")
         .trim();
 };
-function toAmenityView(
-    amenity: { name: Record<string, string>; icon?: string | null },
-    lang: Lang,
-    index: number,
-): AmenityView {
-    const nameData = amenity.name;
-    const name = localizeText(nameData, lang);
-    const key = normalizeAmenityKey(name);
-
-    let icon: AmenityIcon = (AMENITY_ICONS[key] ?? Wifi) as AmenityIcon;
-    let customSvg: string | null = null;
-    let iconifyName: string | null = null;
-
-    if (amenity.icon) {
-        const iconVal = String(amenity.icon);
-        if (iconVal.trim().startsWith('<svg')) {
-            customSvg = iconVal;
-            icon = null;
-        } else if (iconVal.includes(':')) {
-            iconifyName = iconVal;
-            icon = null;
-        } else {
-            icon = (AMENITY_ICONS[iconVal] ?? icon) as AmenityIcon;
-        }
-    }
-
-    return {
-        id: `amenity-${index + 1}`,
-        name,
-        icon,
-        customSvg,
-        iconifyName,
-    };
-}
 
 function normalizeSupplements(
     supplements: unknown[],
@@ -470,34 +399,14 @@ export default function HotelDetail() {
         liveHotel?.price ??
         (detail.provider === 'manual' ? displayMinPrice : 0);
     const currency = liveHotel?.currency ?? detail.currency ?? 'TND';
-    const headerPerNight = liveHotel
-        ? liveHotel.price_per_night * occupancy.rooms
+    const headerNights = liveHotel?.nights ?? 0;
+    const headerDisplayPrice = liveHotel
+        ? headerNights === 1
+            ? liveHotel.price_per_night * occupancy.rooms
+            : liveHotel.price_total
         : detail.provider === 'manual'
             ? displayMinPrice
             : null;
-    const amenities = (detail.amenities ?? [])
-        .filter((amenity) => {
-            const nameData =
-                typeof amenity === 'object' &&
-                    amenity !== null &&
-                    'name' in amenity
-                    ? ((amenity as { name?: Record<string, string> }).name ??
-                        {})
-                    : {};
-            return Boolean(
-                nameData && (nameData.en || nameData.fr || nameData.ar),
-            );
-        })
-        .map((amenity, index) =>
-            toAmenityView(
-                amenity as unknown as {
-                    name: Record<string, string>;
-                    icon?: string | null;
-                },
-                lang,
-                index,
-            ),
-        );
     const title = localizeText(detail.name, lang);
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
@@ -594,11 +503,6 @@ export default function HotelDetail() {
                 ? `/hotels?${queryString}`
                 : '/hotels',
         );
-    };
-
-    const handleWhatsAppInquiry = () => {
-        notifyInteraction('whatsapp');
-        window.open('/contact', '_self');
     };
 
     const bookingRoom = selectedRoom;
@@ -784,15 +688,15 @@ export default function HotelDetail() {
                             </p>
                         </div>
                         <div className="text-right">
-                            {headerPerNight !== null && headerPerNight > 0 ? (
+                            {headerDisplayPrice !== null && headerDisplayPrice > 0 ? (
                                 (() => {
                                     const promo = promoPrice(
-                                        headerPerNight,
+                                        headerDisplayPrice,
                                         liveHotel?.promotion?.rate,
                                     );
                                     const shown = promo
                                         ? promo.discounted
-                                        : headerPerNight;
+                                        : headerDisplayPrice;
                                     return (
                                         <>
                                             <p className="text-3xl font-bold text-foreground">
@@ -808,9 +712,16 @@ export default function HotelDetail() {
                                                     {currency}
                                                 </p>
                                             )}
-                                            <p className="mb-3 text-xs text-muted-foreground">
-                                                {t('hotelDetail.perNightFrom')}
-                                            </p>
+                                            {headerNights === 1 && (
+                                                <p className="mb-3 text-xs text-muted-foreground">
+                                                    {t('hotelDetail.perNightFrom')}
+                                                </p>
+                                            )}
+                                            {headerNights > 1 && (
+                                                <p className="mb-3 text-xs text-muted-foreground">
+                                                    {headerNights} {t('hotelDetail.nightsLabel')}
+                                                </p>
+                                            )}
                                         </>
                                     );
                                 })()
@@ -1207,8 +1118,6 @@ export default function HotelDetail() {
                         checkIn={detail.check_in_time}
                         checkOut={detail.check_out_time}
                         address={detail.address}
-                        phone={detail.phone}
-                        email={detail.email}
                         options={detail.options}
                         boardings={detail.boardings}
                         facilities={detail.facilities}
