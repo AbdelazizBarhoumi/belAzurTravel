@@ -1598,6 +1598,21 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'غير متوفر لهذه التواريخ',
         en: 'Unavailable for these dates',
     },
+    'hotels.showUnavailable': {
+        fr: 'Afficher les indisponibles',
+        ar: 'إظهار غير المتاح',
+        en: 'Show unavailable',
+    },
+    'hotels.hideUnavailable': {
+        fr: 'Masquer les indisponibles',
+        ar: 'إخفاء غير المتاح',
+        en: 'Hide unavailable',
+    },
+    'hotels.perRequest': {
+        fr: 'Sur demande',
+        ar: 'طلب',
+        en: 'Per request',
+    },
     'hotels.noAvailabilityResults': {
         fr: 'Aucun hôtel disponible pour vos dates. Essayez d’autres dates.',
         ar: 'لا توجد فنادق متاحة لتواريخك. جرب تواريخ أخرى.',
@@ -1692,6 +1707,21 @@ export const translations: Record<string, TranslationEntry> = {
         fr: "Cet hôtel n'a aucune disponibilité pour les dates sélectionnées. Essayez d'autres dates.",
         ar: 'لا يتوفر هذا الفندق للتواريخ المحددة. جرب تواريخ أخرى.',
         en: 'This hotel has no availability for the selected dates. Try other dates.',
+    },
+    'hotelDetail.requestTitle': {
+        fr: 'Sur demande',
+        ar: 'طلب',
+        en: 'Per request',
+    },
+    'hotelDetail.requestNotice': {
+        fr: "Cet hôtel n'a aucune disponibilité pour vos dates, mais vous pouvez soumettre une demande.",
+        ar: 'لا يتوفر هذا الفندق لتواريخك، لكن يمكنك تقديم طلب.',
+        en: 'This hotel has no availability for your selected dates, but you can submit a request.',
+    },
+    'hotelDetail.requestBooking': {
+        fr: 'Demander une réservation',
+        ar: 'طلب حجز',
+        en: 'Request Booking',
     },
     'hotelDetail.onRequest': {
         fr: 'Sur demande',
@@ -4674,6 +4704,21 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Demander la réservation',
         ar: 'طلب الحجز',
         en: 'Request Booking',
+    },
+    'booking.requestNotice': {
+        fr: "Ceci est une demande de réservation. Nous contacterons l'hôtel pour vérifier la disponibilité.",
+        ar: 'هذا طلب حجز. سنتواصل مع الفندق للتحقق من التوفر.',
+        en: "This is a request booking. We'll contact the hotel to check availability.",
+    },
+    'booking.requestBanner': {
+        fr: "Votre demande est en cours de traitement. Nous contacterons l'hôtel pour vérifier la disponibilité.",
+        ar: 'طلبك قيد المعالجة. سنتواصل مع الفندق للتحقق من التوفر.',
+        en: "Your request is being processed. We'll contact the hotel to check availability.",
+    },
+    'booking.requestBadge': {
+        fr: 'Demande',
+        ar: 'طلب',
+        en: 'Request',
     },
     'booking.datesLocked': {
         fr: "Dates verrouillées à l'offre recherchée",

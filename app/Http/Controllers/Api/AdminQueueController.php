@@ -110,6 +110,7 @@ class AdminQueueController extends Controller
                 'expires_at' => $booking->expires_at?->toJSON(),
                 'reject_reason' => $booking->reject_reason,
                 'cancel_reason' => $booking->cancel_reason,
+                'is_request' => (bool) $booking->is_request,
                 'provider_booking_id' => $booking->provider_booking_id,
                 'provider_booking_reference' => $booking->provider_booking_reference,
                 'provider_prebook' => $booking->provider_payload['prebook'] ?? null,

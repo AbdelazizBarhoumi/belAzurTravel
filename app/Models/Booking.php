@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Booking extends Model
 {
-    protected $fillable = ['user_id', 'type', 'item_slug', 'item_id', 'items', 'start_date', 'end_date', 'client', 'travelers', 'promo_code', 'notes', 'total_amount', 'status', 'confirmed_at', 'cancelled_at', 'rejected_at', 'expires_at', 'reject_reason', 'cancel_reason', 'provider_booking_id', 'provider_booking_reference', 'provider_payload'];
+    protected $fillable = ['user_id', 'type', 'item_slug', 'item_id', 'items', 'start_date', 'end_date', 'client', 'travelers', 'promo_code', 'notes', 'total_amount', 'status', 'confirmed_at', 'cancelled_at', 'rejected_at', 'expires_at', 'reject_reason', 'cancel_reason', 'is_request', 'provider_booking_id', 'provider_booking_reference', 'provider_payload'];
 
-    protected $casts = ['items' => 'array', 'client' => 'array', 'travelers' => 'array', 'start_date' => 'date', 'end_date' => 'date', 'total_amount' => 'integer', 'confirmed_at' => 'datetime', 'cancelled_at' => 'datetime', 'rejected_at' => 'datetime', 'expires_at' => 'datetime', 'provider_payload' => 'array'];
+    protected $casts = ['items' => 'array', 'client' => 'array', 'travelers' => 'array', 'start_date' => 'date', 'end_date' => 'date', 'total_amount' => 'integer', 'confirmed_at' => 'datetime', 'cancelled_at' => 'datetime', 'rejected_at' => 'datetime', 'expires_at' => 'datetime', 'is_request' => 'boolean', 'provider_payload' => 'array'];
 
     public function user(): BelongsTo
     {

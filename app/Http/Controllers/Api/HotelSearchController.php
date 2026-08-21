@@ -76,6 +76,12 @@ class HotelSearchController extends Controller
         $lastPage = max(1, (int) ceil($total / $perPage));
         $sliced = array_slice($results, ($page - 1) * $perPage, $perPage);
 
+        $perNightPrices = array_values(array_filter(
+            array_map(fn ($r) => $r['price_per_night'] ?? null, $results),
+        ));
+        $minPrice = $perNightPrices !== [] ? (int) floor(min($perNightPrices)) : null;
+        $maxPrice = $perNightPrices !== [] ? (int) ceil(max($perNightPrices)) : null;
+
         return response()->json([
             'data' => $sliced,
             'meta' => [
@@ -83,6 +89,8 @@ class HotelSearchController extends Controller
                 'last_page' => $lastPage,
                 'total' => $total,
                 'per_page' => $perPage,
+                'min_price' => $minPrice,
+                'max_price' => $maxPrice,
             ],
         ]);
     }

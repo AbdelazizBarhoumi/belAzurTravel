@@ -502,6 +502,11 @@ const ClientDashboard = () => {
                                                 >
                                                     {statusLabel(booking)}
                                                 </span>
+                                                {booking.is_request && (
+                                                    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                                                        {t('booking.requestBadge') || 'Request'}
+                                                    </span>
+                                                )}
                                                 <span className="font-bold text-foreground">
                                                     {formattedAmount(booking)}
                                                 </span>
@@ -546,17 +551,10 @@ const ClientDashboard = () => {
                                             <div className="flex items-start gap-2 rounded-xl border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm">
                                                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
                                                 <p className="text-muted-foreground">
-                                                    {t(
-                                                        'client.bookingDecisionWindow',
-                                                    )}{' '}
-                                                    <span className="font-semibold text-foreground">
-                                                        {decisionByLabel(
-                                                            booking,
-                                                        ) ??
-                                                            t(
-                                                                'client.bookingDecisionUnknown',
-                                                            )}
-                                                    </span>
+                                                    {booking.is_request
+                                                        ? (t('booking.requestBanner') || 'Your request is being processed. We\'ll contact the hotel to check availability.')
+                                                        : (<>{t('client.bookingDecisionWindow')}{' '}<span className="font-semibold text-foreground">{decisionByLabel(booking) ?? t('client.bookingDecisionUnknown')}</span></>)
+                                                    }
                                                 </p>
                                             </div>
                                         )}

@@ -49,6 +49,8 @@ interface BookingDialogProps {
     amount: number;
     /** Earliest selectable start date (hotels: the probe's nearest available day). */
     minDate?: Date;
+    /** When true, this is a request booking for an unavailable hotel — no provider context. */
+    isRequest?: boolean;
     // OS-TRAVEL live-search context captured on the hotel detail page.
     provider?: {
         token?: string | null;
@@ -90,6 +92,7 @@ export function BookingDialog({
     itemName,
     amount,
     minDate,
+    isRequest,
     provider,
 }: BookingDialogProps) {
     const { t } = useLanguage();
@@ -112,7 +115,7 @@ export function BookingDialog({
         currency: string;
     } | null>(null);
 
-    const hasProviderOffer = Boolean(
+    const hasProviderOffer = !isRequest && Boolean(
         provider?.token &&
             provider.rooms?.length &&
             provider.checkIn &&
@@ -121,7 +124,9 @@ export function BookingDialog({
 
     // Hotels booked from a live offer are locked to the searched dates; the
     // token prices that exact window and cannot be re-booked for others.
+    // Request bookings have no offer, so dates are never locked.
     const lockDates =
+        !isRequest &&
         type === 'hotel' &&
         Boolean(provider?.token && provider.checkIn && provider.checkOut);
 
@@ -257,6 +262,7 @@ export function BookingDialog({
             },
             notes,
             amount,
+            is_request: isRequest || undefined,
             travelers: passengers
                 .map((row) => `${row.firstName} ${row.lastName}`.trim())
                 .filter(Boolean)
@@ -337,6 +343,12 @@ export function BookingDialog({
                                     'Fill in the details below to request a booking.'}
                             </DialogDescription>
                         </DialogHeader>
+                        {isRequest && (
+                            <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                {t('booking.requestNotice') ||
+                                    'This is a request booking. We\'ll contact the hotel to check availability.'}
+                            </div>
+                        )}
                         <form
                             onSubmit={handleSubmit}
                             className="space-y-4 py-4"

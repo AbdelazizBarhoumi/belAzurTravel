@@ -584,6 +584,11 @@ function BookingsTable({
                                             lang
                                         ] ?? b.status}
                                     </span>
+                                    {b.is_request && (
+                                        <span className="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                                            {t('booking.requestBadge') || 'Request'}
+                                        </span>
+                                    )}
                                 </td>
                                 <td className="px-4 py-3">
                                     <Button
@@ -840,6 +845,11 @@ function BookingDetail({
                         {bookingStatusLabels[booking.status]?.[lang] ??
                             booking.status}
                     </span>
+                    {booking.is_request && (
+                        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                            {t('booking.requestBadge') || 'Request'}
+                        </span>
+                    )}
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">

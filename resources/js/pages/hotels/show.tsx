@@ -170,6 +170,7 @@ export default function HotelDetail() {
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
+    const [requestMode, setRequestMode] = useState(false);
 
     // Search context preserved from the hotels listing: ?from&to&guests&rooms&children
     // pre-fill the availability search so the user doesn't re-enter it here.
@@ -228,14 +229,21 @@ export default function HotelDetail() {
         };
     }, [dateRange, occupancy.rooms, occupancy.adults, occupancy.childAges, id, selectedBoardingIds]);
 
-    // The live search fires when the user clicks the availability button, or
-    // automatically on arrival when the URL carries a search window from the
-    // hotels listing. It never runs from stored price/availability data.
+    // Phase 1: search with only_available: true — if the hotel has rooms, we're done.
+    // Phase 2: if nothing returned, re-fire with only_available: false to get the
+    // hotel flagged as unavailable so we can show the "Per request" section.
     const [submittedQuery, setSubmittedQuery] = useState<
         HotelSearchQuery | undefined
     >(undefined);
+    const [unavailableQuery, setUnavailableQuery] = useState<
+        HotelSearchQuery | undefined
+    >(undefined);
+    const unavailableFiredFor = useRef<string | null>(null);
+
     const handleCheckAvailability = () => {
         setSubmittedQuery(liveQuery);
+        setUnavailableQuery(undefined);
+        unavailableFiredFor.current = null;
     };
 
     // Arriving with ?from&to&guests&children in the URL (from the hotels
@@ -253,9 +261,7 @@ export default function HotelDetail() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dateRange, id]);
 
-    // Results are trusted only while the submitted query still matches the
-    // current inputs; as soon as dates, occupancy or boardings change the
-    // query becomes stale and the search is cleared without a new request.
+    // Phase 1: only_available: true
     const submittedKey = JSON.stringify(submittedQuery);
     const liveKey = JSON.stringify(liveQuery);
     const resultsAreStale =
@@ -267,10 +273,36 @@ export default function HotelDetail() {
     const liveResults = liveResult?.data ?? [];
     const liveHotel = liveResults[0] ?? undefined;
 
-    // A completed search with no result means the hotel has no availability
-    // for the selected dates — never offer stale room prices for it.
+    // Phase 2: when the first search completes with no result, fire the
+    // fallback with only_available: false so the backend returns the hotel
+    // flagged as unavailable (available: false, empty rooms).
+    const firstSearchDone = Boolean(activeQuery) && !liveSearchLoading && liveResult !== undefined;
+    const noRoomsFound = firstSearchDone && !liveHotel;
+
+    useEffect(() => {
+        if (!noRoomsFound || !activeQuery) return;
+        const key = JSON.stringify(activeQuery);
+        if (unavailableFiredFor.current === key) return;
+        unavailableFiredFor.current = key;
+        setUnavailableQuery({ ...activeQuery, only_available: false });
+    }, [noRoomsFound, activeQuery]);
+
+    // Phase 2 result
+    const { data: unavailableResult, isLoading: unavailableLoading } =
+        useHotelSearch(unavailableQuery);
+    const unavailableHotel = unavailableResult?.data?.[0] ?? undefined;
+
+    // Merge: use phase 1 if it found rooms, otherwise use phase 2
+    const effectiveHotel = liveHotel ?? unavailableHotel;
+    const effectiveLoading = liveSearchLoading || (noRoomsFound && unavailableLoading);
+
+    // A completed two-phase search where the hotel exists but has no rooms
+    // for the selected dates.
     const searchedUnavailable =
-        Boolean(activeQuery) && !liveSearchLoading && !liveHotel;
+        Boolean(activeQuery) && !effectiveLoading && !liveHotel && unavailableHotel !== undefined && unavailableHotel.available === false;
+    // A completed search where the hotel truly doesn't exist.
+    const hotelNotFound =
+        Boolean(activeQuery) && !effectiveLoading && !liveHotel && !unavailableHotel;
 
     if (isLoading) {
         return (
@@ -322,7 +354,7 @@ export default function HotelDetail() {
         staticRooms.map((room) => [room.name, room]),
     );
 
-    const liveRooms: RoomView[] = (liveHotel?.rooms ?? [])
+    const liveRooms: RoomView[] = (effectiveHotel?.rooms ?? [])
         .filter((room) => {
             // Only offer rooms that are actually bookable for the searched
             // window: not stop-reserved, minimum stay fits, and no stop-sale
@@ -396,14 +428,14 @@ export default function HotelDetail() {
     // Provider-linked hotels show no price until a live search returns one;
     // manual hotels keep their stored price.
     const minPrice =
-        liveHotel?.price ??
+        effectiveHotel?.price ??
         (detail.provider === 'manual' ? displayMinPrice : 0);
-    const currency = liveHotel?.currency ?? detail.currency ?? 'TND';
-    const headerNights = liveHotel?.nights ?? 0;
-    const headerDisplayPrice = liveHotel
+    const currency = effectiveHotel?.currency ?? detail.currency ?? 'TND';
+    const headerNights = effectiveHotel?.nights ?? 0;
+    const headerDisplayPrice = effectiveHotel
         ? headerNights === 1
-            ? liveHotel.price_per_night * occupancy.rooms
-            : liveHotel.price_total
+            ? effectiveHotel.price_per_night * occupancy.rooms
+            : effectiveHotel.price_total
         : detail.provider === 'manual'
             ? displayMinPrice
             : null;
@@ -692,7 +724,7 @@ export default function HotelDetail() {
                                 (() => {
                                     const promo = promoPrice(
                                         headerDisplayPrice,
-                                        liveHotel?.promotion?.rate,
+                                        effectiveHotel?.promotion?.rate,
                                     );
                                     const shown = promo
                                         ? promo.discounted
@@ -904,30 +936,30 @@ export default function HotelDetail() {
                         </div>
 
                         <div className="mt-5">
-                            {liveHotel &&
-                                (liveHotel.promotion?.rate ||
-                                    liveHotel.free_child?.length ||
-                                    liveHotel.recommended) ? (
+                            {effectiveHotel &&
+                                (effectiveHotel.promotion?.rate ||
+                                    effectiveHotel.free_child?.length ||
+                                    effectiveHotel.recommended) ? (
                                 <div className="mb-4 flex flex-wrap gap-2">
-                                    {liveHotel.promotion?.rate &&
-                                        liveHotel.promotion.title ? (
+                                    {effectiveHotel.promotion?.rate &&
+                                        effectiveHotel.promotion.title ? (
                                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
                                             {t('hotelDetail.promo')}{' '}
-                                            {liveHotel.promotion.title}
-                                            {formatPromoRate(liveHotel.promotion.rate) && (
+                                            {effectiveHotel.promotion.title}
+                                            {formatPromoRate(effectiveHotel.promotion.rate) && (
                                                 <>
                                                     {' · '}
-                                                    {formatPromoRate(liveHotel.promotion.rate)}
+                                                    {formatPromoRate(effectiveHotel.promotion.rate)}
                                                 </>
                                             )}
                                         </span>
                                     ) : null}
-                                    {liveHotel.free_child?.length ? (
+                                    {effectiveHotel.free_child?.length ? (
                                         <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                                             {t('hotelDetail.freeChild')}
                                         </span>
                                     ) : null}
-                                    {liveHotel.recommended && (
+                                    {effectiveHotel.recommended && (
                                         <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
                                             {t('hotelDetail.recommended')}
                                         </span>
@@ -953,11 +985,43 @@ export default function HotelDetail() {
                                     </Button>
                                 </div>
                             ) : searchedUnavailable ? (
+                                <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-6">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                                            <span className="text-amber-700 text-lg">?</span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-serif text-lg font-bold text-amber-900">
+                                                {t('hotelDetail.requestTitle') || 'Per request'}
+                                            </h3>
+                                            <p className="mt-1 text-sm text-amber-800">
+                                                {t('hotelDetail.requestNotice') ||
+                                                    'This hotel has no availability for your selected dates, but you can submit a request.'}
+                                            </p>
+                                            {unavailableHotel?.first_available_at && (
+                                                <p className="mt-2 text-xs font-semibold text-amber-700">
+                                                    {t('hotelDetail.availableFrom')} {unavailableHotel.first_available_at}
+                                                    {unavailableHotel.min_nights && unavailableHotel.min_nights > 1 &&
+                                                        ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
+                                                </p>
+                                            )}
+                                            <Button
+                                                className="mt-4 bg-amber-600 text-white hover:bg-amber-700"
+                                                onClick={() => {
+                                                    setRequestMode(true);
+                                                }}
+                                            >
+                                                {t('hotelDetail.requestBooking') || 'Request Booking'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : hotelNotFound ? (
                                 <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-800">
                                     {t('hotelDetail.unavailableNotice') ||
                                         'This hotel has no availability for the selected dates. Try other dates.'}
                                 </div>
-                            ) : submittedQuery && liveHotel ? (
+                            ) : submittedQuery && effectiveHotel ? (
                                 <motion.div
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -971,7 +1035,7 @@ export default function HotelDetail() {
                                         occupancy={occupancy}
                                         currency={currency}
                                         promoRate={
-                                            liveHotel?.promotion?.rate
+                                            effectiveHotel?.promotion?.rate
                                         }
                                         onReserve={handleReserve}
                                     />
@@ -1141,17 +1205,17 @@ export default function HotelDetail() {
                                 occupancy.rooms;
                             const promo = promoPrice(
                                 raw,
-                                liveHotel?.promotion?.rate,
+                                effectiveHotel?.promotion?.rate,
                             );
                             return promo ? promo.discounted : raw;
                         })()
                     }
                     minDate={new Date()}
                     provider={
-                        liveHotel
+                        effectiveHotel
                             ? {
-                                token: liveHotel.rooms[0]?.token,
-                                source: liveHotel.rooms[0]?.source,
+                                token: effectiveHotel.rooms[0]?.token,
+                                source: effectiveHotel.rooms[0]?.source,
                                 rooms: Array.from(
                                     { length: occupancy.rooms },
                                     () => ({
@@ -1176,6 +1240,24 @@ export default function HotelDetail() {
                             }
                             : undefined
                     }
+                />
+            )}
+
+            {requestMode && (
+                <BookingDialog
+                    open={requestMode}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setRequestMode(false);
+                        }
+                    }}
+                    type="hotel"
+                    itemSlug={id}
+                    itemId={detail.id}
+                    itemName={title}
+                    amount={detail.price ?? 0}
+                    minDate={new Date()}
+                    isRequest
                 />
             )}
         </PageShell>

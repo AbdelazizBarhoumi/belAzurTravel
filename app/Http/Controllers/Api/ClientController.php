@@ -177,6 +177,7 @@ class ClientController extends Controller
             'cancelled_at' => $booking->cancelled_at?->toJSON(),
             'expires_at' => $booking->expires_at?->toJSON(),
             'created_at' => $booking->created_at?->toJSON(),
+            'is_request' => (bool) $booking->is_request,
             // Voucher data — populated once an OS-TRAVEL hotel is confirmed.
             'provider_booking_id' => $booking->provider_booking_id,
             'provider_booking_reference' => $booking->provider_booking_reference,

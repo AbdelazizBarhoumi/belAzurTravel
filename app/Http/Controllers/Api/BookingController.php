@@ -65,6 +65,7 @@ class BookingController extends Controller
             'promo_code' => ['nullable', 'string', 'max:64'],
             'notes' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
+            'is_request' => ['nullable', 'boolean'],
             // OS-TRAVEL live-search context captured during Phase 9.
             'provider.token' => ['nullable', 'string', 'max:2048'],
             'provider.source' => ['nullable', 'string', 'max:255'],
@@ -140,7 +141,7 @@ class BookingController extends Controller
         $providerContext = null;
         $prebookTotal = null;
 
-        if ($data['type'] === 'hotel') {
+        if ($data['type'] === 'hotel' && empty($data['is_request'])) {
             $hotel = Hotel::query()
                 ->where(fn (Builder $query) => $query
                     ->where('slug', $data['item_slug'] ?? '')
@@ -212,6 +213,7 @@ class BookingController extends Controller
             'total_amount' => $prebookTotal ?? (int) $data['amount'],
             'status' => BookingStatus::Pending->value,
             'expires_at' => now()->addHours($expiryHours),
+            'is_request' => ! empty($data['is_request']),
             'provider_payload' => $providerContext,
         ]);
 
@@ -510,6 +512,7 @@ class BookingController extends Controller
             'expires_at' => $booking->expires_at?->toJSON(),
             'reject_reason' => $booking->reject_reason,
             'cancel_reason' => $booking->cancel_reason,
+            'is_request' => (bool) $booking->is_request,
             'provider_booking_id' => $booking->provider_booking_id,
             'provider_booking_reference' => $booking->provider_booking_reference,
             'provider_prebook' => $booking->provider_payload['prebook'] ?? null,

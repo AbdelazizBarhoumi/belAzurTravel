@@ -2,7 +2,7 @@ import { addDays, format } from 'date-fns';
 import { arSA, enUS, fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { Building2, CalendarDays, Loader2, MapPin, SlidersHorizontal } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ThemeIcons } from '@/components/cards/ThemeIcons';
@@ -36,14 +36,15 @@ import {
 } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StarRating } from '@/components/ui/StarRating';
+import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCountryByCode } from '@/hooks/useCountries';
 import {
     useHotels,
-    useHotelSearch,
+    useHotelSearchInfinite,
     useCategoryTypesPublic,
-    type HotelSearchQuery,
+    type HotelSearchInfiniteQuery,
     type HotelSearchResult,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
@@ -52,6 +53,7 @@ import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 import { cn, earliestCheckIn, formatPromoRate, promoPrice, toLocalISODate } from '@/lib/utils';
 import type { HotelItem } from '@/types/public/hotel.types';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 // A card is either a stored browse record or a live result (name/location are
 // wider `Record<string, string>` after merging the live spread over browse).
@@ -169,7 +171,7 @@ export default function Hotels() {
         childAges: parseChildAges(params.get('children')),
     });
     const [sort, setSort] = useState<SortValue>('price_asc');
-    const [page, setPage] = useState(1);
+    const [showUnavailable, setShowUnavailable] = useState(false);
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: initialFromDate ? new Date(initialFromDate) : undefined,
         to: initialToDate ? new Date(initialToDate) : undefined,
@@ -289,9 +291,9 @@ export default function Hotels() {
     const checkOutISO = toLocalISODate(effectiveTo) ?? '';
 
     // Star checkboxes form an exact OR group: selecting "3 Stars" shows only
-    // 3-star hotels, not "3 stars and up". The server `stars` parameter is a
-    // minimum, so the strictest selected value is forwarded as a safe
-    // pre-filter for the provider search.
+    // 3-star hotels, not "3 stars and up". Applied purely client-side (see
+    // `clientFilterMatches` below) since the server is only queried on a
+    // date/occupancy change now.
     const selectedStarValues = useMemo(
         () =>
             Object.entries(categoryTypeFilters)
@@ -303,30 +305,20 @@ export default function Hotels() {
                 .filter((v) => Number.isFinite(v)),
         [categoryTypeFilters],
     );
-    const starsMin = selectedStarValues.length > 0
-        ? Math.min(...selectedStarValues)
-        : undefined;
 
-    // The browse slider is per-night; the server price filter is stay-total,
-    // so convert the slider bounds with the stay length.
-    const nights = from && effectiveTo
-        ? Math.max(1, Math.round((effectiveTo.getTime() - from.getTime()) / 86_400_000))
-        : 0;
-    // The price filter is "active" as soon as the user moves the slider; in
-    // browse mode it filters stored per-night prices client-side, and once
-    // dates are set it is sent to the provider as a per-stay range.
+    // The price filter is "active" as soon as the user moves the slider.
+    // It used to be split between a client-side pass (browse mode) and a
+    // server-side `price_min`/`price_max` param (live mode); now it's
+    // always applied client-side in `clientFilterMatches`, per-night, so it
+    // never needs to trigger a new search.
     const priceFilterActive = priceRangeTouched;
 
-    // Reset to page 1 when filters change.
-    useEffect(() => {
-        setPage(1);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchQuery, sort, checkInISO, checkOutISO, occupancy.adults, occupancy.childAges.join(','), starsMin, priceFilterActive, priceRangeSynced?.toString()]);
-
-    // Client-only refinements (search text, country, category type groups,
-    // stars). These work on the browse list AND on the live results; the
-    // server-owned dimensions (price, sort, dates, occupancy) are handled by
-    // the search itself.
+    // Client-only refinements. Only the date range and occupancy ever
+    // trigger a new server request (see `searchQueryForLive` below); every
+    // other control — search text, country/city/category groups, stars,
+    // price, and the "show unavailable" toggle — is applied here, against
+    // whichever full result set is already loaded (the browse catalog, or
+    // the live results for the chosen dates).
     const clientFilterMatches = useCallback(
         (hotel: HotelCard): boolean => {
             const matchesSearch = matchesSearchText(searchQuery, [
@@ -344,6 +336,28 @@ export default function Hotels() {
                 selectedStarValues.length > 0 &&
                 !selectedStarValues.includes(hotel.stars ?? 0)
             ) {
+                return false;
+            }
+
+            // Price is per-night; a hotel with no known price must not
+            // silently match once the user has actually touched the slider.
+            if (priceFilterActive) {
+                const perNightPrice =
+                    typeof hotel.price_per_night === 'number'
+                        ? hotel.price_per_night
+                        : typeof hotel.price === 'number'
+                          ? hotel.price
+                          : null;
+                if (perNightPrice === null) return false;
+                if (perNightPrice < hotelPriceRange[0] || perNightPrice > hotelPriceRange[1]) {
+                    return false;
+                }
+            }
+
+            // Availability is only known once live results are in; browse
+            // records have no `available` field, so they're unaffected by
+            // this toggle.
+            if (!showUnavailable && hotel.available === false) {
                 return false;
             }
 
@@ -384,102 +398,120 @@ export default function Hotels() {
 
             return true;
         },
-        [searchQuery, selectedStarValues, categoryTypeFilters, lang],
+        [
+            searchQuery,
+            selectedStarValues,
+            priceFilterActive,
+            hotelPriceRange,
+            showUnavailable,
+            categoryTypeFilters,
+            lang,
+        ],
     );
-
-    // When client-side refinements are active, narrow the live provider search
-    // to the matching browse candidates so each search is a small provider call
-    // (≤200 hotels per request) instead of the whole catalog.
-    const hasClientFilters =
-        searchQuery.trim().length > 0 ||
-        Object.values(categoryTypeFilters).some((v) => v.length > 0);
-    const clientFilteredSlugs = useMemo(() => {
-        if (!hasClientFilters) return undefined;
-        const slugs = hotels
-            .filter((hotel) => clientFilterMatches(hotel as HotelCard))
-            .map((hotel) => hotel.slug);
-        return slugs.length > 0 && slugs.length <= 200 ? slugs : undefined;
-    }, [hotels, hasClientFilters, clientFilterMatches]);
 
     const searchQueryForLive = useMemo(() => {
         if (!hasDates || !checkInISO || !checkOutISO) {
             return undefined;
         }
 
+        // Only the date range and occupancy define this request. Fetching
+        // the complete result set (available + unavailable, every star
+        // rating, every price) for the chosen dates means the price slider's
+        // bounds can be read straight off it (see `priceBounds` below), and
+        // every other control below can filter/sort what's already loaded
+        // instead of re-hitting the provider.
         return {
             check_in: checkInISO,
             check_out: checkOutISO,
-            ...(clientFilteredSlugs !== undefined
-                ? { hotel_slugs: clientFilteredSlugs }
-                : {}),
             rooms: [
                 {
                     adults: occupancy.adults,
                     children: occupancy.childAges,
                 },
             ],
-            only_available: true,
-            ...(starsMin !== undefined ? { stars: starsMin } : {}),
-            ...(priceFilterActive && nights > 0
-                ? {
-                      price_min: Math.round(hotelPriceRange[0] * nights),
-                      price_max: Math.round(hotelPriceRange[1] * nights),
-                  }
-                : {}),
-            sort,
-            per_page: 50,
-            page,
+            only_available: false,
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [checkInISO, checkOutISO, clientFilteredSlugs, occupancy.adults, occupancy.childAges, starsMin, hotelPriceRange[0], hotelPriceRange[1], priceFilterActive, nights, sort, page]);
+    }, [checkInISO, checkOutISO, occupancy.adults, occupancy.childAges]);
 
     // Rapid filter interactions must not each fire an expensive search; batch
     // them and search once the user settles.
-    const liveQuery = useDebouncedValue<HotelSearchQuery | undefined>(
+    const liveQuery = useDebouncedValue<HotelSearchInfiniteQuery | undefined>(
         searchQueryForLive,
         600,
     );
 
-    const { data: liveResult, isFetching: liveFetching, isError: liveSearchError, refetch: refetchSearch } = useHotelSearch(liveQuery);
-    const liveResults = useMemo(() => liveResult?.data ?? [], [liveResult]);
-    const liveMeta = liveResult?.meta;
+    const { data: livePages, isFetching: liveFetching, isError: liveSearchError, refetch: refetchSearch, fetchNextPage, hasNextPage, isFetchingNextPage } = useHotelSearchInfinite(liveQuery);
+    // React Query clears `data` back to undefined for a moment whenever the
+    // query key changes (any filter edit while dates are set), even though we
+    // already have a perfectly good previous result set on screen. Caching
+    // the last non-empty pages and falling back to them keeps the grid
+    // mounted (with the "checking availability" banner on top) instead of
+    // unmounting the whole list into skeletons on every filter tweak.
+    const [lastGoodPages, setLastGoodPages] = useState<typeof livePages>(undefined);
+    useEffect(() => {
+        if (livePages !== undefined) {
+            setLastGoodPages(livePages);
+        }
+    }, [livePages]);
+    const displayPages = livePages ?? lastGoodPages;
+    const liveResults = useMemo(() => displayPages?.pages.flatMap((p) => p.data) ?? [], [displayPages]);
+    const liveMeta = useMemo(() => displayPages?.pages[displayPages.pages.length - 1]?.meta, [displayPages]);
+
+    const sentinelRef = useRef<HTMLDivElement | null>(null);
+    const prevCountRef = useRef(0);
+    useInfiniteScroll(sentinelRef, fetchNextPage, { hasNextPage: hasNextPage ?? false, isFetchingNextPage });
 
     const browseBySlug = useMemo(
         () => new Map(hotels.map((h) => [h.slug, h as HotelCard])),
         [hotels],
     );
-    const liveLoaded = hasDates && liveResult !== undefined;
+    const liveLoaded = hasDates && displayPages !== undefined;
     // Prices only exist once a date picker has produced live results; before
     // that the Budget slider and the price sort control are meaningless and
     // hidden. A hotel with no price must never match a price filter anyway.
     const hasPriceData = liveLoaded;
-    // While a date search is in flight (still debouncing or fetching) the
-    // stored browse cards carry no prices for the chosen dates, so show
-    // skeleton cards instead of misleading placeholders.
-    const priceLoading = hasDates && (liveResult === undefined || liveFetching);
-    // The slider bounds follow the data on screen: the stored per-night prices
-    // in browse mode, and the min/max per-night price of the live results once
-    // dates are picked (so the range reflects real availability instead of the
-    // stored fallback prices).
-    const livePerNightPrices = liveResults
-        .map((h) => h.price_per_night)
-        .filter((p): p is number => typeof p === 'number');
+    // Full-grid skeleton only for a genuine first load, i.e. we have never
+    // had any live data at all yet. Once `displayPages` has a value it keeps
+    // it (see the sticky fallback above), so neither pagination nor a filter
+    // change ever forces this back to true — those are surfaced instead by
+    // `isFetchingNextPage` (bottom spinner) and the "checking availability"
+    // banner respectively, without unmounting the already-rendered list.
+    const priceLoading = hasDates && displayPages === undefined;
+    // The slider's min/max must represent the full result, not whatever the
+    // user has already filtered down to. The backend returns the true
+    // price bounds across ALL results in the meta response, so use those
+    // directly — they're instantly available from the first page load and
+    // never change for the same search parameters. Before any dates are
+    // picked, fall back to the catalog-wide bounds from the browse listing.
     const priceBounds: readonly [number, number] =
-        liveLoaded && livePerNightPrices.length > 0
-            ? [
-                  Math.floor(Math.min(...livePerNightPrices)),
-                  Math.ceil(Math.max(...livePerNightPrices)),
-              ]
-            : ([dataMinPrice, dataMaxPrice] as const);
-    if (
-        (livePerNightPrices.length > 0 || storedPrices.length > 0) &&
+        liveLoaded && liveMeta?.min_price != null && liveMeta?.max_price != null
+            ? [liveMeta.min_price, liveMeta.max_price]
+            : [dataMinPrice, dataMaxPrice];
+    const priceBoundsChanged =
+        (liveLoaded || storedPrices.length > 0) &&
         (priceRangeSynced === null ||
             priceRangeSynced[0] !== priceBounds[0] ||
-            priceRangeSynced[1] !== priceBounds[1])
-    ) {
+            priceRangeSynced[1] !== priceBounds[1]);
+    if (priceBoundsChanged) {
         setPriceRangeSynced(priceBounds);
-        setHotelPriceRange([priceBounds[0], priceBounds[1]]);
-        setPriceRangeTouched(false);
+        if (priceRangeTouched) {
+            // The user already picked a range — keep it, just clamp it into
+            // the new bounds instead of discarding it. Previously this
+            // block always reset to the full range AND cleared
+            // `priceRangeTouched`, so the instant a filtered search came
+            // back with a different price spread (which happens on almost
+            // every search once dates are set — including the one caused
+            // by the price filter itself), the slider silently snapped back
+            // to "no filter". That's why price filtering looked broken and
+            // why the slider appeared to jump on its own.
+            setHotelPriceRange(([lo, hi]) => {
+                const clampedLo = Math.min(Math.max(lo, priceBounds[0]), priceBounds[1]);
+                const clampedHi = Math.min(Math.max(hi, priceBounds[0]), priceBounds[1]);
+                return clampedLo === lo && clampedHi === hi ? [lo, hi] : [clampedLo, clampedHi];
+            });
+        } else {
+            setHotelPriceRange([priceBounds[0], priceBounds[1]]);
+        }
     }
     // Live results carry the price/availability; the stored browse record
     // supplies the richer card metadata (amenities, category assignments).
@@ -496,32 +528,21 @@ export default function Hotels() {
     // server-owned and already applied by the search.
     const filteredHotels = baseList.filter(clientFilterMatches);
 
-    // In browse mode (no live prices yet) the price slider filters the stored
-    // per-night prices client-side; once live results are shown the provider
-    // search already applied the price range, so skip it here.
-    const matchesBrowsePrice = (hotel: HotelCard): boolean => {
-        // With the slider untouched every hotel stays visible; once the user
-        // actually filters by price, a hotel with no price must not silently
-        // match the range.
-        if (!priceFilterActive) return true;
-        const price = typeof hotel.price === 'number' ? hotel.price : null;
-        if (price === null) return false;
-        return price >= hotelPriceRange[0] && price <= hotelPriceRange[1];
-    };
-    const displayedHotels = liveLoaded
-        ? filteredHotels
-        : filteredHotels.filter(matchesBrowsePrice);
+    // Price filtering now happens inside `clientFilterMatches` for both
+    // browse and live results, so no separate pass is needed here.
+    const displayedHotels = filteredHotels;
 
-    // The server returns a fully-sorted live list; in browse mode (no live
-    // prices yet) apply the chosen sort client-side so the control works.
+    // The server is no longer asked to sort (sort would otherwise trigger a
+    // new request), so the chosen sort is always applied client-side here,
+    // over whatever's currently loaded.
     const sortedHotels = useMemo(() => {
         const list = [...displayedHotels];
-        if (liveLoaded) {
-            return list;
-        }
 
-        const priceOf = (hotel: HotelCard) =>
-            typeof hotel.price === 'number' ? hotel.price : null;
+        const priceOf = (hotel: HotelCard) => {
+            if (typeof hotel.price_per_night === 'number') return hotel.price_per_night;
+            if (typeof hotel.price === 'number') return hotel.price;
+            return null;
+        };
 
         const byPrice = (a: HotelCard, b: HotelCard, direction: 1 | -1) => {
             const pa = priceOf(a);
@@ -541,7 +562,13 @@ export default function Hotels() {
         }
 
         return list.sort((a, b) => byPrice(a, b, -1));
-    }, [displayedHotels, sort, liveLoaded]);
+    }, [displayedHotels, sort]);
+
+    // Track how many hotels were visible before infinite scroll appends more,
+    // so new items only fade in without the y-shift that causes scroll jumps.
+    useEffect(() => {
+        prevCountRef.current = sortedHotels.length;
+    }, [sortedHotels.length]);
 
     // The shared date picker is always bounded to the earliest day any
     // displayed hotel is available from (and never allows a same-day
@@ -737,6 +764,22 @@ export default function Hotels() {
                         )}
                     </ListFilterBar>
 
+                    {hasDates && liveLoaded && (
+                        <div className="mb-4 flex items-center gap-3">
+                            <Switch
+                                id="show-unavailable"
+                                checked={showUnavailable}
+                                onCheckedChange={setShowUnavailable}
+                            />
+                            <label
+                                htmlFor="show-unavailable"
+                                className="text-sm font-medium text-muted-foreground cursor-pointer select-none"
+                            >
+                                {showUnavailable ? t('hotels.hideUnavailable') : t('hotels.showUnavailable')}
+                            </label>
+                        </div>
+                    )}
+
                     {/* Main Layout: Sidebar + Content */}
                     <div
                         className={`flex gap-6 ${isRtl ? 'flex-row-reverse' : 'flex-row'}`}
@@ -804,7 +847,7 @@ export default function Hotels() {
                                         {t('search.error.retry')}
                                     </Button>
                                 </div>
-                            ) : hasDates && liveQuery !== undefined && (liveResult === undefined || liveFetching) ? (
+                            ) : hasDates && liveQuery !== undefined && (displayPages === undefined || liveFetching) && !isFetchingNextPage ? (
                                 <div className="mb-6 flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/80 px-4 py-3 text-sm text-muted-foreground">
                                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                     {t('hotels.checkingAvailability')}
@@ -832,12 +875,13 @@ export default function Hotels() {
                                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                     {sortedHotels.map((hotel, index) => {
                                         const unavailable = hotel.available === false;
+                                        const isNewFromScroll = index >= prevCountRef.current;
                                         return (
                                             <motion.article
                                                 key={hotel.slug}
-                                                initial={{ opacity: 0, y: 20 }}
+                                                initial={isNewFromScroll ? { opacity: 0 } : { opacity: 0, y: 20 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: index * 0.05 }}
+                                                transition={isNewFromScroll ? { duration: 0.25 } : { delay: index * 0.05 }}
                                                 className={cn(
                                                     unavailable &&
                                                         'opacity-60 grayscale',
@@ -926,8 +970,8 @@ export default function Hotels() {
                                                         {liveLoaded && (
                                                             <div className="absolute bottom-3 right-4 left-4 flex items-center justify-between gap-2">
                                                                 {unavailable && (
-                                                                    <span className="inline-flex items-center rounded-full bg-red-500/90 px-2.5 py-0.5 text-[10px] font-semibold text-white">
-                                                                        {t('hotels.unavailable')}
+                                                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                                        {t('hotels.perRequest')}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -1054,16 +1098,13 @@ export default function Hotels() {
                                         );
                                     })}
                                 </div>
-                                {liveMeta && liveMeta.current_page < liveMeta.last_page && (
+                                {isFetchingNextPage && (
                                     <div className="mt-8 flex justify-center">
-                                        <Button
-                                            variant="outline"
-                                            disabled={liveFetching}
-                                            onClick={() => setPage((p) => p + 1)}
-                                        >
-                                            {liveFetching ? t('common.loading') || 'Loading...' : t('common.loadMore') || 'Load more'}
-                                        </Button>
+                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
                                     </div>
+                                )}
+                                {hasNextPage && !isFetchingNextPage && (
+                                    <div ref={sentinelRef} className="h-4" />
                                 )}
                                 </>
                             )}

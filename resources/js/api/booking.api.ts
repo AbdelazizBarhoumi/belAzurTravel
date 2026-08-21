@@ -8,6 +8,7 @@ export interface AdminBookingRow {
     client?: { name?: string };
     created_at: string;
     total_amount: number;
+    is_request?: boolean;
     status:
         | 'Pending'
         | 'Approved'
@@ -28,6 +29,7 @@ export interface ClientBookingRow {
     end_date?: string | null;
     total_amount: number;
     currency?: string;
+    is_request?: boolean;
     status:
         | 'Pending'
         | 'Approved'

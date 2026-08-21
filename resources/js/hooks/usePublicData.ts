@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import {
     type CarItem,
     type DealItem,
@@ -405,6 +405,8 @@ export interface HotelSearchMeta {
     last_page: number;
     total: number;
     per_page: number;
+    min_price: number | null;
+    max_price: number | null;
 }
 
 export interface HotelSearchResult {
@@ -494,5 +496,37 @@ export function useHotelSearch(query?: HotelSearchQuery) {
         },
         enabled: Boolean(query && query.check_in && query.check_out),
         staleTime: 1000 * 60 * 5,
+    });
+}
+
+export type HotelSearchInfiniteQuery = Omit<HotelSearchQuery, 'page' | 'per_page'>;
+
+export function useHotelSearchInfinite(baseQuery?: HotelSearchInfiniteQuery) {
+    return useInfiniteQuery<{
+        data: HotelSearchResult[];
+        meta: HotelSearchMeta;
+    }>({
+        queryKey: ['hotels', 'search', 'infinite', baseQuery],
+        queryFn: async ({ pageParam }) => {
+            const resp = await apiFetch<{
+                data: HotelSearchResult[];
+                meta: HotelSearchMeta;
+            }>('/api/hotels/search', {
+                method: 'POST',
+                body: JSON.stringify({
+                    ...baseQuery,
+                    page: pageParam,
+                    per_page: 50,
+                }),
+            });
+            return resp;
+        },
+        getNextPageParam: (lastPage) =>
+            lastPage.meta.current_page < lastPage.meta.last_page
+                ? lastPage.meta.current_page + 1
+                : undefined,
+        enabled: Boolean(baseQuery && baseQuery.check_in && baseQuery.check_out),
+        staleTime: 1000 * 60 * 5,
+        initialPageParam: 1,
     });
 }

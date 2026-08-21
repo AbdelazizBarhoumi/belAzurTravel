@@ -52,6 +52,7 @@ export interface QueueBooking {
         } | null;
     } | null;
     is_provider: boolean;
+    is_request?: boolean;
     audits: QueueAudit[];
 }
 

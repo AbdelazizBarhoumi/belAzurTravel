@@ -100,20 +100,26 @@ vi.mock('@/hooks/usePublicData', () => ({
         data: [],
         isLoading: false,
     }),
-    useHotelSearch: vi.fn((query?: unknown) => {
+    useHotelSearchInfinite: vi.fn((query?: unknown) => {
         mockHotelSearch.calls.push(query);
         return {
             data: {
-                data: mockHotelSearch.data,
-                meta: {
-                    current_page: 1,
-                    last_page: 1,
-                    total: mockHotelSearch.data.length,
-                    per_page: 50,
-                },
+                pages: [{
+                    data: mockHotelSearch.data,
+                    meta: {
+                        current_page: 1,
+                        last_page: 1,
+                        total: mockHotelSearch.data.length,
+                        per_page: 50,
+                    },
+                }],
+                pageParams: [1],
             },
             isLoading: false,
             isFetching: mockHotelSearch.fetching,
+            isFetchingNextPage: false,
+            hasNextPage: false,
+            fetchNextPage: vi.fn(),
         };
     }),
 }));
