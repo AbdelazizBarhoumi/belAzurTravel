@@ -24,9 +24,9 @@ class TripReminderNotification extends Notification
             'type' => 'trip.reminder',
             'booking_id' => $this->booking->id,
             'url' => '/client/bookings/'.$this->booking->id,
-            'fr' => "Votre voyage commence dans {$this->daysUntil} jour(s) - réservation #{$this->booking->id}",
-            'ar' => "تبدأ رحلتك خلال {$this->daysUntil} يوم - الحجز #{$this->booking->id}",
-            'en' => "Your trip starts in {$this->daysUntil} day(s) - booking #{$this->booking->id}",
+            'fr' => "Votre voyage commence dans {$this->daysUntil} jour(s) - réservation #{$this->booking->booking_ref}",
+            'ar' => "تبدأ رحلتك خلال {$this->daysUntil} يوم - الحجز #{$this->booking->booking_ref}",
+            'en' => "Your trip starts in {$this->daysUntil} day(s) - booking #{$this->booking->booking_ref}",
         ];
     }
 
@@ -47,7 +47,7 @@ class TripReminderNotification extends Notification
                 'headerSubtitle' => $subject,
                 'greeting' => $translate('trip_reminder.greeting'),
                 'introLine' => $translate('trip_reminder.intro', [
-                    'id' => $this->booking->id,
+                    'id' => $this->booking->booking_ref,
                     'date' => $start ? $start->format('d M Y') : '-',
                 ]),
                 'nextStepsLine' => $translate('trip_reminder.next_steps'),

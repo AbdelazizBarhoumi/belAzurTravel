@@ -4,6 +4,13 @@ import { useState, type FormEvent } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { CitySelect } from '@/components/ui/CitySelect';
+import { CountrySelect } from '@/components/ui/CountrySelect';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import {
+    OccupancyPicker,
+    type Occupancy,
+} from '@/components/ui/OccupancyPicker';
 import {
     Select,
     SelectContent,
@@ -12,14 +19,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CitySelect } from '@/components/ui/CitySelect';
-import { CountrySelect } from '@/components/ui/CountrySelect';
-import { DateRangePicker } from '@/components/ui/DateRangePicker';
-import {
-    OccupancyPicker,
-    type Occupancy,
-    DEFAULT_OCCUPANCY,
-} from '@/components/ui/OccupancyPicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { LocalizedName } from '@/data/locations';
 import { cn, toLocalISODate } from '@/lib/utils';
@@ -264,6 +263,8 @@ function SearchButton({ label }: { label: string }) {
     );
 }
 
+const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
 function ActiveSearchForm({
     tab,
     values,
@@ -327,7 +328,7 @@ function ActiveSearchForm({
             key="dates"
             value={values.dateRange}
             onChange={onDateRangeChange}
-            fromDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
+            fromDate={tomorrow}
         />,
         <OccupancyPicker
             key="guests"

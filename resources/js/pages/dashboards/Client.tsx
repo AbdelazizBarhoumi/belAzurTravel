@@ -150,7 +150,7 @@ const ClientDashboard = () => {
             activeTab === 'client.complaints' || activeTab === 'client.refunds',
     });
     const cancelMutation = useMutation({
-        mutationFn: (id: number) => cancelBooking(id),
+        mutationFn: (id: string) => cancelBooking(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['client'] });
             toast.success(t('booking.cancelled') || 'Booking cancelled successfully.');
@@ -195,7 +195,7 @@ const ClientDashboard = () => {
                 type: 'refund_request',
                 subject: refundSubject,
                 description: refundDescription,
-                booking_id: Number(refundBookingId),
+                booking_id: refundBookingId ? String(refundBookingId) : undefined,
             }),
         onSuccess: () => {
             setRefundBookingId('');
@@ -474,7 +474,7 @@ const ClientDashboard = () => {
                                                         )}
                                                     </h3>
                                                     <p className="text-sm text-muted-foreground">
-                                                        #{booking.id}
+                                                        #{booking.booking_ref}
                                                     </p>
                                                 </div>
                                             </div>
@@ -635,7 +635,7 @@ const ClientDashboard = () => {
                                         </span>
                                         <span className="text-muted-foreground">
                                             {t('admin.booking')} #
-                                            {payment.booking_id}
+                                            {payment.booking_ref ?? payment.booking_id}
                                         </span>
                                         <span className="font-semibold text-foreground">
                                             {payment.currency}{' '}
@@ -1093,7 +1093,7 @@ const ClientDashboard = () => {
                                                                 &middot; Booking
                                                                 #
                                                                 {
-                                                                    complaint.booking_id
+                                                                    complaint.booking?.booking_ref ?? complaint.booking_id
                                                                 }{' '}
                                                                 &middot;{' '}
                                                                 {new Date(

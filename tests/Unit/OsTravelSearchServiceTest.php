@@ -866,5 +866,4 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
         $this->assertTrue($results[0]['available']);
     }
-
 }

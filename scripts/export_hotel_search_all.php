@@ -1,12 +1,13 @@
 <?php
 
 use App\Services\OsTravel\OsTravelClient;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Carbon;
 
 require __DIR__.'/../vendor/autoload.php';
 
 $app = require __DIR__.'/../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 $client = new OsTravelClient;
 $maxPerRequest = 200;

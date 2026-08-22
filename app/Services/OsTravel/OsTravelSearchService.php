@@ -135,14 +135,14 @@ class OsTravelSearchService
                 }
                 $seenIds[$externalId] = true;
 
-                    $normalized = $this->normalize(
-                        $item->hotel,
-                        $providerHotel,
-                        $nights,
-                        $searchDetails['check_in'],
-                        $searchDetails['check_out'],
-                        $options['only_available'] !== true,
-                    );
+                $normalized = $this->normalize(
+                    $item->hotel,
+                    $providerHotel,
+                    $nights,
+                    $searchDetails['check_in'],
+                    $searchDetails['check_out'],
+                    $options['only_available'] !== true,
+                );
 
                 // Boarding is not a provider filter; drop rooms that don't
                 // match, and the hotel if no matching room remains.

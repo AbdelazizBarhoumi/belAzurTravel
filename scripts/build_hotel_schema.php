@@ -1,9 +1,11 @@
 <?php
 
+use Illuminate\Contracts\Console\Kernel;
+
 require 'D:/projects/belAzurTravel/vendor/autoload.php';
 
 $app = require 'D:/projects/belAzurTravel/bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$app->make(Kernel::class)->bootstrap();
 
 $path = $app->storagePath('app/os_travel_hotel_search_all.json');
 $data = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);

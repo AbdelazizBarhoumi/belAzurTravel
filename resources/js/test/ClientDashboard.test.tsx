@@ -19,7 +19,8 @@ const now = new Date();
 
 const bookings = [
     {
-        id: 1,
+        id: '550e8400-e29b-41d4-a716-446655440001',
+        booking_ref: 1,
         type: 'hotel',
         item_slug: 'azur-hotel',
         items: [{ slug: 'azur-hotel', qty: 1 }],
@@ -33,7 +34,8 @@ const bookings = [
         created_at: now.toISOString(),
     },
     {
-        id: 2,
+        id: '550e8400-e29b-41d4-a716-446655440002',
+        booking_ref: 2,
         type: 'hotel',
         item_slug: 'seaside-paradise',
         items: [{ slug: 'seaside-paradise', qty: 1 }],
@@ -66,7 +68,8 @@ const bookings = [
         },
     },
     {
-        id: 3,
+        id: '550e8400-e29b-41d4-a716-446655440003',
+        booking_ref: 3,
         type: 'tour',
         items: [],
         total_amount: 400,
@@ -78,7 +81,8 @@ const bookings = [
         created_at: now.toISOString(),
     },
     {
-        id: 4,
+        id: '550e8400-e29b-41d4-a716-446655440004',
+        booking_ref: 4,
         type: 'tour',
         items: [],
         total_amount: 250,

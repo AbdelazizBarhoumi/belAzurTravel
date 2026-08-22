@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 vi.mock('@/hooks/usePublicData', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('@/hooks/usePublicData')>();
+    const actual = await importOriginal<Record<string, unknown>>();
     return {
         ...actual,
         useHotelById: (id?: string) => ({

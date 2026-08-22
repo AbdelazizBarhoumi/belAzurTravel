@@ -12,7 +12,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/DatePicker';
 import {
     Dialog,
     DialogContent,
@@ -143,7 +142,7 @@ export function BookingDialog({
     itemId,
     itemName,
     amount,
-    minDate,
+    minDate: _minDate,
     isRequest,
     provider,
     image,
@@ -170,8 +169,8 @@ export function BookingDialog({
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-    const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+    const [startDate] = useState<Date | undefined>(undefined);
+    const [endDate] = useState<Date | undefined>(undefined);
     const [notes, setNotes] = useState('');
     const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
     const [guests, setGuests] = useState<GuestRow[]>([]);
@@ -199,14 +198,20 @@ export function BookingDialog({
 
     // Locked dates are derived straight from the offer (never editable); local
     // state only drives the unlocked case.
-    const effectiveStartDate =
-        lockDates && provider?.checkIn
-            ? new Date(`${provider.checkIn}T00:00:00`)
-            : startDate;
-    const effectiveEndDate =
-        lockDates && provider?.checkOut
-            ? new Date(`${provider.checkOut}T00:00:00`)
-            : endDate;
+    const effectiveStartDate = useMemo(
+        () =>
+            lockDates && provider?.checkIn
+                ? new Date(`${provider.checkIn}T00:00:00`)
+                : startDate,
+        [lockDates, provider?.checkIn, startDate],
+    );
+    const effectiveEndDate = useMemo(
+        () =>
+            lockDates && provider?.checkOut
+                ? new Date(`${provider.checkOut}T00:00:00`)
+                : endDate,
+        [lockDates, provider?.checkOut, endDate],
+    );
 
     const adultCount = hasProviderOffer ? Math.max(1, provider?.adults ?? 1) : 0;
     const childCount = hasProviderOffer

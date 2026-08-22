@@ -3,36 +3,38 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
+    BedDouble,
     CheckCheck,
     ChevronRight,
     Clock,
     Inbox,
     RefreshCcw,
     Send,
-    X,
 } from 'lucide-react';
 import {
-    adminCancelBooking,
-    approveBooking,
-    rejectBooking,
+    getAdminBookings,
+    getBooking,
+    type AdminBookingRow,
+    type BookingDetailRow,
 } from '@/api/booking.api';
 import {
+    getAdminComplaints,
     replyToComplaint,
     resolveComplaint,
     updateAdminComplaint,
+    type Complaint,
 } from '@/api/complaint.api';
 import {
     getAdminQueue,
     replyToSupportInquiry,
     updateSupportInquiry,
     type AdminQueuePayload,
-    type QueueBooking,
-    type QueueComplaint,
     type QueueSection,
     type QueueSupportInquiry,
 } from '@/api/queue.api';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
+import { StatusSelect } from '@/components/ui/StatusSelect';
 import {
     Sheet,
     SheetContent,
@@ -41,6 +43,7 @@ import {
 } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
+import { api } from '@/hooks/useBooking';
 import { bookingStatusLabels } from '@/lib/adminI18n';
 import { cn } from '@/lib/utils';
 
@@ -82,9 +85,15 @@ const auditActionColors: Record<string, string> = {
     updated: 'bg-muted text-muted-foreground',
 };
 
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+    Pending: ['Approved', 'Rejected', 'Cancelled'],
+    Approved: ['Confirmed', 'Rejected', 'Cancelled'],
+    Confirmed: ['Cancelled'],
+};
+
 type Detail =
-    | { kind: 'booking'; item: QueueBooking }
-    | { kind: 'complaint'; item: QueueComplaint }
+    | { kind: 'booking'; item: AdminBookingRow }
+    | { kind: 'complaint'; item: Complaint }
     | { kind: 'support'; item: QueueSupportInquiry };
 
 const SECTIONS: Array<{ key: QueueSection; labelKey: string }> = [
@@ -129,6 +138,30 @@ function EmptyState() {
     );
 }
 
+function formatDate(value?: string | null): string {
+    if (!value) return '—';
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString();
+}
+
+function bookingLabel(b: AdminBookingRow) {
+    if (b.details?.room_name) {
+        const parts = [b.details.room_name];
+        if (b.details.boarding_name) parts.push(b.details.boarding_name);
+        return parts.join(' · ');
+    }
+    return (
+        b.items
+            .map((item: unknown) => {
+                const obj = item as Record<string, unknown>;
+                return (obj.slug ?? obj.id ?? '') as string;
+            })
+            .filter(Boolean)
+            .join(', ') || `#${b.booking_ref}`
+    );
+}
+
 const AdminQueue = () => {
     useAdminGuard();
     const { t, lang, dir } = useLanguage();
@@ -152,6 +185,10 @@ const AdminQueue = () => {
         {},
     );
 
+    const [complaintTypeFilter, setComplaintTypeFilter] = useState<string>('');
+    const [complaintStatusFilter, setComplaintStatusFilter] =
+        useState<string>('');
+
     const { data, isLoading } = useQuery<AdminQueuePayload>({
         queryKey: ['admin-queue'],
         queryFn: getAdminQueue,
@@ -159,35 +196,62 @@ const AdminQueue = () => {
         refetchInterval: 30_000,
     });
 
+    const { data: allBookings = [], isLoading: bookingsLoading } = useQuery<
+        AdminBookingRow[]
+    >({
+        queryKey: ['admin-bookings'],
+        queryFn: getAdminBookings,
+        staleTime: 60_000,
+    });
+
+    const { data: allComplaints = [], isLoading: complaintsLoading } = useQuery<
+        Complaint[]
+    >({
+        queryKey: ['admin-complaints', complaintTypeFilter, complaintStatusFilter],
+        queryFn: () =>
+            getAdminComplaints({
+                type: complaintTypeFilter || undefined,
+                status: complaintStatusFilter || undefined,
+            }),
+    });
+
     const refresh = () => {
         queryClient.invalidateQueries({
-            queryKey: ['admin-queue', 'admin-queue-counts'],
+            queryKey: [
+                'admin-queue',
+                'admin-queue-counts',
+                'admin-bookings',
+                'admin-complaints',
+            ],
         });
     };
 
-    const bookingActionMutation = useMutation({
-        mutationFn: ({
-            id,
-            action,
-        }: {
-            id: number;
-            action: 'approve' | 'reject' | 'cancel';
-        }) => {
-            if (action === 'approve') return approveBooking(id);
-            if (action === 'reject') {
+    const bookingStatusMutation = useMutation({
+        mutationFn: ({ id, status }: { id: string; status: string }) => {
+            if (status === 'Confirmed' || status === 'Approved')
+                return api.approveBooking(id);
+            if (status === 'Rejected') {
                 const reason = window.prompt(
                     t('admin.rejectReasonPrompt') || 'Reason for rejection:',
                 );
                 if (!reason?.trim()) {
                     throw new Error('Rejection reason is required');
                 }
-                return rejectBooking(id, reason.trim());
+                return api.rejectBooking(id, reason.trim());
             }
-            return adminCancelBooking(id);
+            if (status === 'Cancelled') return api.adminCancelBooking(id);
+            return Promise.resolve();
         },
-        onSuccess: () => {
-            refresh();
-            toast.success(t('actions.updated'));
+        onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: ['admin-bookings', 'admin-queue'],
+            });
+            toast.success(
+                `${t('admin.booking')} → ${
+                    bookingStatusLabels[variables.status]?.[lang] ??
+                    variables.status
+                }`,
+            );
         },
         onError: (err) => {
             toast.error(err instanceof Error ? err.message : 'Action failed');
@@ -270,7 +334,15 @@ const AdminQueue = () => {
     });
 
     const counts = data?.counts;
-    const countFor = (section: QueueSection) => counts?.[section] ?? 0;
+    const countFor = (section: QueueSection) => {
+        if (section === 'bookings') return allBookings.length;
+        if (section === 'complaints')
+            return allComplaints.filter((c) => c.type === 'complaint').length;
+        if (section === 'refund_requests')
+            return allComplaints.filter((c) => c.type === 'refund_request')
+                .length;
+        return counts?.[section] ?? 0;
+    };
 
     const openDetail = (kind: Detail['kind'], item: Detail['item']) =>
         setDetail({ kind, item } as Detail);
@@ -334,20 +406,51 @@ const AdminQueue = () => {
                     <>
                         {activeTab === 'bookings' && (
                             <BookingsTable
-                                bookings={data?.bookings ?? []}
+                                bookings={allBookings}
+                                loading={bookingsLoading}
                                 onOpen={(item) => openDetail('booking', item)}
+                                onStatusChange={(id, status) =>
+                                    bookingStatusMutation.mutate({ id, status })
+                                }
+                                statusPending={bookingStatusMutation.isPending}
                             />
                         )}
                         {activeTab === 'complaints' && (
                             <ComplaintsTable
-                                items={data?.complaints ?? []}
+                                items={allComplaints.filter(
+                                    (c) => c.type === 'complaint',
+                                )}
+                                loading={complaintsLoading}
+                                typeFilter={complaintTypeFilter}
+                                statusFilter={complaintStatusFilter}
+                                onTypeFilterChange={setComplaintTypeFilter}
+                                onStatusFilterChange={setComplaintStatusFilter}
                                 onOpen={(item) => openDetail('complaint', item)}
+                                onStatusChange={(id, status) =>
+                                    complaintMutation.mutate({
+                                        id,
+                                        data: { status },
+                                    })
+                                }
                             />
                         )}
                         {activeTab === 'refund_requests' && (
                             <ComplaintsTable
-                                items={data?.refund_requests ?? []}
+                                items={allComplaints.filter(
+                                    (c) => c.type === 'refund_request',
+                                )}
+                                loading={complaintsLoading}
+                                typeFilter="refund_request"
+                                statusFilter={complaintStatusFilter}
+                                onTypeFilterChange={() => {}}
+                                onStatusFilterChange={setComplaintStatusFilter}
                                 onOpen={(item) => openDetail('complaint', item)}
+                                onStatusChange={(id, status) =>
+                                    complaintMutation.mutate({
+                                        id,
+                                        data: { status },
+                                    })
+                                }
                             />
                         )}
                         {activeTab === 'support' && (
@@ -360,7 +463,6 @@ const AdminQueue = () => {
                 )}
             </div>
 
-            {/* Drill-in detail drawer */}
             <Sheet
                 open={detail !== null}
                 onOpenChange={(open) => {
@@ -401,32 +503,7 @@ const AdminQueue = () => {
 
                     <div className="mt-4 space-y-4">
                         {detail?.kind === 'booking' && (
-                            <BookingDetail
-                                booking={detail.item}
-                                onApprove={() =>
-                                    bookingActionMutation.mutate({
-                                        id: detail.item.id,
-                                        action: 'approve',
-                                    })
-                                }
-                                onReject={() =>
-                                    bookingActionMutation.mutate({
-                                        id: detail.item.id,
-                                        action: 'reject',
-                                    })
-                                }
-                                onCancel={() =>
-                                    bookingActionMutation.mutate({
-                                        id: detail.item.id,
-                                        action: 'cancel',
-                                    })
-                                }
-                                pending={
-                                    bookingActionMutation.isPending &&
-                                    bookingActionMutation.variables?.id ===
-                                        detail.item.id
-                                }
-                            />
+                            <BookingDetailView booking={detail.item} />
                         )}
                         {detail?.kind === 'complaint' && (
                             <ComplaintDetail
@@ -527,10 +604,16 @@ const AdminQueue = () => {
 
 function BookingsTable({
     bookings,
+    loading,
     onOpen,
+    onStatusChange,
+    statusPending,
 }: {
-    bookings: QueueBooking[];
-    onOpen: (item: QueueBooking) => void;
+    bookings: AdminBookingRow[];
+    loading: boolean;
+    onOpen: (item: AdminBookingRow) => void;
+    onStatusChange: (id: string, status: string) => void;
+    statusPending: boolean;
 }) {
     const { t, lang } = useLanguage();
     return (
@@ -542,11 +625,10 @@ function BookingsTable({
                             {[
                                 'ID',
                                 t('admin.client'),
-                                t('admin.type'),
+                                t('admin.table.item'),
                                 t('admin.date'),
                                 t('admin.amount'),
                                 t('admin.status'),
-                                t('admin.actions'),
                             ].map((h) => (
                                 <th
                                     key={h}
@@ -558,163 +640,213 @@ function BookingsTable({
                         </tr>
                     </thead>
                     <tbody>
-                        {bookings.map((b) => (
+                        {(loading ? [] : bookings).map((b) => (
                             <tr
                                 key={b.id}
                                 className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/20"
                                 onClick={() => onOpen(b)}
                             >
                                 <td className="px-4 py-3 text-sm font-medium">
-                                    {b.id}
+                                    #{b.booking_ref}
                                 </td>
                                 <td className="px-4 py-3 text-sm">
-                                    {b.client?.name ?? b.user_id ?? 'Guest'}
+                                    {b.client?.name || b.user_id || t('admin.table.guest')}
+                                </td>
+                                <td className="px-4 py-3 text-sm">
+                                    <div className="flex items-center gap-2">
+                                        {b.details?.image ? (
+                                            <img
+                                                src={b.details.image}
+                                                alt=""
+                                                className="h-10 w-12 shrink-0 rounded-lg object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-10 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
+                                                <BedDouble className="h-4 w-4 text-muted-foreground/50" />
+                                            </div>
+                                        )}
+                                        <div className="min-w-0">
+                                            <p className="truncate text-sm font-medium text-foreground">
+                                                {bookingLabel(b)}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {formatDate(b.start_date)}
+                                                {b.end_date ? ` \u2014 ${formatDate(b.end_date)}` : ''}
+                                                {b.details?.nights ? ` \u00b7 ${b.details.nights} nights` : ''}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td className="px-4 py-3 text-sm text-muted-foreground">
-                                    {b.type}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-muted-foreground">
-                                    {b.start_date
-                                        ? `${b.start_date} → ${b.end_date ?? '…'}`
-                                        : new Date(
-                                              b.created_at,
-                                          ).toLocaleDateString()}
+                                    {formatDate(b.created_at)}
                                 </td>
                                 <td className="px-4 py-3 text-sm font-semibold">
-                                    {b.total_amount.toLocaleString()} TND
+                                    {b.total_amount.toLocaleString()} {b.details?.currency ?? 'TND'}
                                 </td>
                                 <td className="px-4 py-3">
-                                    <span
-                                        className={cn(
-                                            'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold',
-                                            bookingStatusColors[b.status],
-                                        )}
-                                    >
-                                        {b.is_provider && <CloudIcon />}
-                                        {bookingStatusLabels[b.status]?.[
-                                            lang
-                                        ] ?? b.status}
-                                    </span>
-                                    {b.is_request && (
-                                        <span className="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-                                            {t('booking.requestBadge') || 'Request'}
-                                        </span>
-                                    )}
-                                </td>
-                                <td className="px-4 py-3">
-                                    <Button
-                                        size="sm"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onOpen(b);
-                                        }}
-                                    >
-                                        <ChevronRight className="mr-1 h-3.5 w-3.5" />
-                                        {t('admin.queue.detail')}
-                                    </Button>
+                                    <StatusSelect
+                                        value={b.status}
+                                        onValueChange={(val) => onStatusChange(b.id, val)}
+                                        disabled={statusPending || !ALLOWED_TRANSITIONS[b.status]}
+                                        options={[
+                                            b.status,
+                                            ...(ALLOWED_TRANSITIONS[b.status] ?? []),
+                                        ].map((value) => ({
+                                            value,
+                                            label: bookingStatusLabels[value]?.[lang] ?? value,
+                                        }))}
+                                    />
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-            {bookings.length === 0 && <EmptyState />}
+            {!loading && bookings.length === 0 && <EmptyState />}
         </div>
     );
 }
 
 function ComplaintsTable({
     items,
+    loading,
+    typeFilter,
+    statusFilter,
+    onTypeFilterChange,
+    onStatusFilterChange,
     onOpen,
+    onStatusChange,
 }: {
-    items: QueueComplaint[];
-    onOpen: (item: QueueComplaint) => void;
+    items: Complaint[];
+    loading: boolean;
+    typeFilter: string;
+    statusFilter: string;
+    onTypeFilterChange: (value: string) => void;
+    onStatusFilterChange: (value: string) => void;
+    onOpen: (item: Complaint) => void;
+    onStatusChange: (id: number, status: string) => void;
 }) {
     const { t, lang } = useLanguage();
     return (
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/30">
-                            {[
-                                'ID',
-                                t('admin.client'),
-                                t('admin.subject'),
-                                t('admin.date'),
-                                t('admin.priority'),
-                                t('admin.status'),
-                                t('admin.actions'),
-                            ].map((h) => (
-                                <th
-                                    key={h}
-                                    className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground"
-                                >
-                                    {h}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map((c) => (
-                            <tr
-                                key={c.id}
-                                className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/20"
-                                onClick={() => onOpen(c)}
-                            >
-                                <td className="px-4 py-3 text-sm font-medium">
-                                    {c.id}
-                                </td>
-                                <td className="px-4 py-3 text-sm">
-                                    {c.user?.name ?? 'N/A'}
-                                </td>
-                                <td className="max-w-[220px] truncate px-4 py-3 text-sm">
-                                    {localize(lang, c.subject)}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-muted-foreground">
-                                    {new Date(
-                                        c.created_at,
-                                    ).toLocaleDateString()}
-                                </td>
-                                <td className="px-4 py-3">
-                                    <span
-                                        className={cn(
-                                            'rounded-full px-3 py-1 text-xs font-semibold',
-                                            priorityColors[c.priority],
-                                        )}
-                                    >
-                                        {t(`complaint.priority.${c.priority}`)}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-3">
-                                    <span
-                                        className={cn(
-                                            'rounded-full px-3 py-1 text-xs font-semibold',
-                                            statusColors[c.status],
-                                        )}
-                                    >
-                                        {t(`complaint.status.${c.status}`)}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-3">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onOpen(c);
-                                        }}
-                                    >
-                                        <ChevronRight className="mr-1 h-3.5 w-3.5" />
-                                        {t('admin.queue.detail')}
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+        <div className="space-y-4">
+            <div className="flex flex-wrap gap-3">
+                <select
+                    value={typeFilter}
+                    onChange={(e) => onTypeFilterChange(e.target.value)}
+                    className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
+                >
+                    <option value="">{t('admin.allTypes')}</option>
+                    <option value="complaint">{t('complaint.type.complaint')}</option>
+                    <option value="refund_request">{t('complaint.type.refund_request')}</option>
+                </select>
+                <select
+                    value={statusFilter}
+                    onChange={(e) => onStatusFilterChange(e.target.value)}
+                    className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
+                >
+                    <option value="">{t('admin.allStatuses')}</option>
+                    <option value="pending">{t('complaint.status.pending')}</option>
+                    <option value="in_review">{t('complaint.status.in_review')}</option>
+                    <option value="resolved">{t('complaint.status.resolved')}</option>
+                    <option value="rejected">{t('complaint.status.rejected')}</option>
+                    <option value="refunded">{t('complaint.status.refunded')}</option>
+                </select>
             </div>
-            {items.length === 0 && <EmptyState />}
+
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30">
+                                {[
+                                    'ID',
+                                    t('admin.client'),
+                                    t('admin.type'),
+                                    t('admin.subject'),
+                                    t('admin.date'),
+                                    t('admin.priority'),
+                                    t('admin.status'),
+                                    t('admin.actions'),
+                                ].map((h) => (
+                                    <th
+                                        key={h}
+                                        className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground"
+                                    >
+                                        {h}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(loading ? [] : items).map((c) => (
+                                <tr
+                                    key={c.id}
+                                    className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/20"
+                                    onClick={() => onOpen(c)}
+                                >
+                                    <td className="px-4 py-3 text-sm font-medium">
+                                        {c.id}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                        {c.user?.name ?? 'N/A'}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                                        {c.type === 'refund_request'
+                                            ? t('complaint.type.refund_request')
+                                            : t('complaint.type.complaint')}
+                                    </td>
+                                    <td className="max-w-[220px] truncate px-4 py-3 text-sm">
+                                        {localize(lang, c.subject)}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                                        {new Date(c.created_at).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span
+                                            className={cn(
+                                                'rounded-full px-3 py-1 text-xs font-semibold',
+                                                priorityColors[c.priority],
+                                            )}
+                                        >
+                                            {t(`complaint.priority.${c.priority}`)}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span
+                                            className={cn(
+                                                'rounded-full px-3 py-1 text-xs font-semibold',
+                                                statusColors[c.status],
+                                            )}
+                                        >
+                                            {t(`complaint.status.${c.status}`)}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <select
+                                            value={c.status}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={(e) => {
+                                                e.stopPropagation();
+                                                onStatusChange(c.id, e.target.value);
+                                            }}
+                                            className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                                        >
+                                            <option value="pending">{t('complaint.status.pending')}</option>
+                                            <option value="in_review">{t('complaint.status.in_review')}</option>
+                                            <option value="resolved">{t('complaint.status.resolved')}</option>
+                                            <option value="rejected">{t('complaint.status.rejected')}</option>
+                                            {c.type === 'refund_request' && (
+                                                <option value="refunded">{t('complaint.status.refunded')}</option>
+                                            )}
+                                        </select>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                {!loading && items.length === 0 && <EmptyState />}
+            </div>
         </div>
     );
 }
@@ -815,169 +947,164 @@ function SupportTable({
     );
 }
 
-/** OS-TRAVEL boarding fields can be {Id, Code, Name} objects or plain strings. */
-function boardingLabel(value: unknown): string {
-    if (!value) return '—';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'object' && value !== null) {
-        const obj = value as Record<string, unknown>;
-        if (typeof obj.Name === 'string') return obj.Name;
-        return JSON.stringify(obj);
-    }
-    return String(value);
-}
-
-function BookingDetail({
-    booking,
-    onApprove,
-    onReject,
-    onCancel,
-    pending,
-}: {
-    booking: QueueBooking;
-    onApprove: () => void;
-    onReject: () => void;
-    onCancel: () => void;
-    pending: boolean;
-}) {
+function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
     const { t, lang } = useLanguage();
-    const prebook = booking.provider_prebook;
+    const { data: full, isLoading } = useQuery<BookingDetailRow>({
+        queryKey: ['booking', booking.id],
+        queryFn: () => getBooking(booking.id),
+        staleTime: 60_000,
+    });
+
+    const b = full ?? booking;
+    const prebook = (b as any).provider_prebook;
+
     return (
         <div className="space-y-5">
             <div className="rounded-2xl border border-border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <p className="text-lg font-bold text-foreground">
-                            {booking.client?.name ?? 'Guest'}
+                            {b.client?.name ?? 'Guest'}
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                            {booking.client?.email}
-                        </p>
-                        {booking.client?.phone && (
+                        {(b as any).client?.email && (
                             <p className="text-sm text-muted-foreground">
-                                {booking.client.phone}
+                                {(b as any).client.email}
+                            </p>
+                        )}
+                        {(b as any).client?.phone && (
+                            <p className="text-sm text-muted-foreground">
+                                {(b as any).client.phone}
                             </p>
                         )}
                     </div>
-                    <span
-                        className={cn(
-                            'rounded-full px-3 py-1 text-xs font-semibold',
-                            bookingStatusColors[booking.status],
-                        )}
-                    >
-                        {bookingStatusLabels[booking.status]?.[lang] ??
-                            booking.status}
-                    </span>
-                    {booking.is_request && (
-                        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                            {t('booking.requestBadge') || 'Request'}
+                    <div className="flex flex-col items-end gap-1.5">
+                        <span
+                            className={cn(
+                                'rounded-full px-3 py-1 text-xs font-semibold',
+                                bookingStatusColors[b.status],
+                            )}
+                        >
+                            {bookingStatusLabels[b.status]?.[lang] ?? b.status}
                         </span>
-                    )}
+                        {b.is_request && (
+                            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+                                {t('booking.requestBadge') || 'Request'}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                        <p className="text-muted-foreground">
-                            {t('admin.type')}
-                        </p>
-                        <p className="font-medium capitalize">{booking.type}</p>
+                        <p className="text-muted-foreground">{t('admin.type')}</p>
+                        <p className="font-medium capitalize">{b.type}</p>
                     </div>
                     <div>
-                        <p className="text-muted-foreground">
-                            {t('admin.amount')}
-                        </p>
+                        <p className="text-muted-foreground">{t('admin.amount')}</p>
                         <p className="font-medium">
-                            {booking.total_amount.toLocaleString()} TND
+                            {b.total_amount.toLocaleString()} TND
                         </p>
                     </div>
-                    {booking.start_date && (
+                    {b.start_date && (
                         <div>
-                            <p className="text-muted-foreground">
-                                {t('admin.dateRange')}
-                            </p>
+                            <p className="text-muted-foreground">{t('admin.dateRange')}</p>
                             <p className="font-medium">
-                                {booking.start_date} → {booking.end_date ?? '…'}
+                                {b.start_date} \u2192 {b.end_date ?? '\u2026'}
                             </p>
                         </div>
                     )}
-                    <div>
-                        <p className="text-muted-foreground">
-                            {t('admin.queue.expiresAt')}
-                        </p>
-                        <p className="font-medium">
-                            {booking.expires_at
-                                ? new Date(
-                                      booking.expires_at,
-                                  ).toLocaleDateString()
-                                : '—'}
-                        </p>
-                    </div>
+                    {(b as any).expires_at && (
+                        <div>
+                            <p className="text-muted-foreground">{t('admin.queue.expiresAt')}</p>
+                            <p className="font-medium">
+                                {new Date((b as any).expires_at).toLocaleDateString()}
+                            </p>
+                        </div>
+                    )}
+                    {b.details?.nights && (
+                        <div>
+                            <p className="text-muted-foreground">{t('voucher.nights') || 'Nights'}</p>
+                            <p className="font-medium">{b.details.nights}</p>
+                        </div>
+                    )}
                 </div>
 
-                {booking.is_provider && (
+                {b.details?.room_name && (
+                    <div className="mt-3 rounded-xl border border-border bg-muted/20 p-3 text-sm">
+                        <p className="font-medium">{b.details.room_name}</p>
+                        {b.details.boarding_name && (
+                            <p className="text-muted-foreground">{b.details.boarding_name}</p>
+                        )}
+                    </div>
+                )}
+
+                {b.details?.image && (
+                    <img
+                        src={b.details.image}
+                        alt=""
+                        className="mt-3 h-32 w-full rounded-xl object-cover"
+                    />
+                )}
+
+                {(b as any).is_provider && (
                     <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
                         <CloudIcon />
                         {t('admin.queue.providerBooking')}
-                        {booking.provider_booking_id
-                            ? ` — ${booking.provider_booking_id}`
+                        {(b as any).provider_booking_id
+                            ? ' \u2014 ' + (b as any).provider_booking_id
                             : ''}
                     </p>
                 )}
 
-                {(booking.reject_reason || booking.cancel_reason) && (
+                {((b as any).reject_reason || (b as any).cancel_reason) && (
                     <div className="mt-3 rounded-xl bg-destructive/5 p-3 text-sm text-destructive">
-                        {booking.reject_reason && (
+                        {(b as any).reject_reason && (
                             <p>
                                 <strong>{t('admin.rejectReason')}:</strong>{' '}
-                                {booking.reject_reason}
+                                {(b as any).reject_reason}
                             </p>
                         )}
-                        {booking.cancel_reason && (
+                        {(b as any).cancel_reason && (
                             <p>
                                 <strong>{t('admin.cancelReason')}:</strong>{' '}
-                                {booking.cancel_reason}
+                                {(b as any).cancel_reason}
                             </p>
                         )}
                     </div>
                 )}
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                    <Button size="sm" disabled={pending} onClick={onApprove}>
-                        <CheckCheck className="mr-1 h-3.5 w-3.5" />
-                        {t('admin.queue.approve')}
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={pending}
-                        onClick={onReject}
-                    >
-                        <X className="mr-1 h-3.5 w-3.5" />
-                        {t('admin.queue.reject')}
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={pending}
-                        onClick={onCancel}
-                    >
-                        {t('admin.queue.cancel')}
-                    </Button>
-                </div>
+                {(b as any).guests && (b as any).guests.length > 0 && (
+                    <div className="mt-3 text-sm">
+                        <p className="text-muted-foreground">{t('admin.guests') || 'Guests'}</p>
+                        <p className="font-medium">
+                            {(b as any).guests.map((g: any) => g.name).filter(Boolean).join(', ')}
+                        </p>
+                    </div>
+                )}
+
+                {(b as any).notes && (
+                    <div className="mt-3 text-sm">
+                        <p className="text-muted-foreground">{t('admin.notes') || 'Notes'}</p>
+                        <p className="font-medium">{(b as any).notes}</p>
+                    </div>
+                )}
             </div>
 
-            {/* Prebook / voucher breakdown */}
+            {isLoading && (
+                <div className="h-20 animate-pulse rounded-2xl border border-border bg-card" />
+            )}
+
             {prebook?.breakdown?.rooms?.length ? (
                 <div className="rounded-2xl border border-border bg-card p-4">
                     <h3 className="mb-3 flex items-center gap-2 font-serif text-base font-bold text-foreground">
                         <CloudIcon />
                         {t('admin.queue.prebook')}
                     </h3>
-                    {booking.provider_booking_reference ? (
+                    {(b as any).provider_booking_reference ? (
                         <p className="mb-3 text-xs text-muted-foreground">
                             {t('voucher.providerRef')}:{' '}
                             <span className="font-semibold text-foreground">
-                                {booking.provider_booking_reference}
+                                {(b as any).provider_booking_reference}
                             </span>
                         </p>
                     ) : null}
@@ -1001,30 +1128,31 @@ function BookingDetail({
                             </thead>
                             <tbody>
                                 {prebook.breakdown.rooms.map(
-                                    (room, index) => (
+                                    (room: any, index: number) => (
                                         <tr
-                                            key={
-                                                room.id?.toString() ?? index
-                                            }
+                                            key={room.id?.toString() ?? index}
                                             className="border-b border-border/60 last:border-0"
                                         >
                                             <td className="px-2 py-2 font-medium text-foreground">
-                                                {t('voucher.room') || 'Room'}{' '}
-                                                {index + 1}
+                                                {t('voucher.room') || 'Room'} {index + 1}
                                             </td>
                                             <td className="px-2 py-2 text-muted-foreground">
                                                 {boardingLabel(room.boarding)}
                                             </td>
                                             <td className="px-2 py-2 text-muted-foreground">
-                                                {prebook.breakdown?.nights ??
-                                                    '—'}
+                                                {prebook.breakdown?.nights ?? '\u2014'}
                                             </td>
                                             <td className="px-2 py-2 text-right font-semibold text-foreground">
                                                 {(() => {
                                                     const roomTotal = Number(room.total ?? 0);
-                                                    const displayTotal = roomTotal > 0
-                                                        ? roomTotal
-                                                        : Number(prebook.breakdown?.total ?? prebook.total ?? 0);
+                                                    const displayTotal =
+                                                        roomTotal > 0
+                                                            ? roomTotal
+                                                            : Number(
+                                                                  prebook.breakdown?.total ??
+                                                                      prebook.total ??
+                                                                      0,
+                                                              );
                                                     return (
                                                         <>
                                                             {displayTotal.toLocaleString()}{' '}
@@ -1044,50 +1172,59 @@ function BookingDetail({
                 </div>
             ) : null}
 
-            {/* Audit timeline */}
-            <div className="rounded-2xl border border-border bg-card p-4">
-                <h3 className="mb-3 flex items-center gap-2 font-serif text-base font-bold text-foreground">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    {t('admin.queue.auditTimeline')}
-                </h3>
-                <ol className="relative space-y-4 border-s-2 border-border ps-5">
-                    {[...booking.audits].reverse().map((audit) => (
-                        <li key={audit.id} className="relative">
-                            <span className="absolute -start-[26px] top-1 h-3 w-3 rounded-full border-2 border-border bg-background" />
-                            <div className="flex items-center justify-between gap-2">
-                                <span
-                                    className={cn(
-                                        'rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                                        auditActionColors[audit.action] ??
-                                            'bg-muted',
-                                    )}
-                                >
-                                    {t(`admin.queue.audit.${audit.action}`)}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                    {new Date(
-                                        audit.created_at,
-                                    ).toLocaleString()}
-                                </span>
-                            </div>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                                {audit.actor_name
-                                    ? `${audit.actor_name} (${audit.actor_role ?? 'admin'})`
-                                    : (audit.actor_role ?? 'system')}
-                                {audit.from_status &&
-                                    ` · ${audit.from_status} → ${audit.to_status ?? '…'}`}
-                            </p>
-                            {audit.notes && (
-                                <p className="mt-0.5 text-xs italic text-muted-foreground">
-                                    “{audit.notes}”
+            {(full as any)?.audits && (full as any).audits.length > 0 && (
+                <div className="rounded-2xl border border-border bg-card p-4">
+                    <h3 className="mb-3 flex items-center gap-2 font-serif text-base font-bold text-foreground">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        {t('admin.queue.auditTimeline')}
+                    </h3>
+                    <ol className="relative space-y-4 border-s-2 border-border ps-5">
+                        {[...(full as any).audits].reverse().map((audit: any) => (
+                            <li key={audit.id} className="relative">
+                                <span className="absolute -start-[26px] top-1 h-3 w-3 rounded-full border-2 border-border bg-background" />
+                                <div className="flex items-center justify-between gap-2">
+                                    <span
+                                        className={cn(
+                                            'rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                                            auditActionColors[audit.action] ?? 'bg-muted',
+                                        )}
+                                    >
+                                        {t(`admin.queue.audit.${audit.action}`)}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {new Date(audit.created_at).toLocaleString()}
+                                    </span>
+                                </div>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    {audit.actor_name
+                                        ? `${audit.actor_name} (${audit.actor_role ?? 'admin'})`
+                                        : (audit.actor_role ?? 'system')}
+                                    {audit.from_status &&
+                                        ` \u00b7 ${audit.from_status} \u2192 ${audit.to_status ?? '\u2026'}`}
                                 </p>
-                            )}
-                        </li>
-                    ))}
-                </ol>
-            </div>
+                                {audit.notes && (
+                                    <p className="mt-0.5 text-xs italic text-muted-foreground">
+                                        \u201c{audit.notes}\u201d
+                                    </p>
+                                )}
+                            </li>
+                        ))}
+                    </ol>
+                </div>
+            )}
         </div>
     );
+}
+
+function boardingLabel(value: unknown): string {
+    if (!value) return '\u2014';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value !== null) {
+        const obj = value as Record<string, unknown>;
+        if (typeof obj.Name === 'string') return obj.Name;
+        return JSON.stringify(obj);
+    }
+    return String(value);
 }
 
 function ComplaintDetail({
@@ -1102,7 +1239,7 @@ function ComplaintDetail({
     onMarkRefunded,
     busy,
 }: {
-    complaint: QueueComplaint;
+    complaint: Complaint;
     draft: string;
     onDraftChange: (value: string) => void;
     onReply: () => void;
@@ -1154,7 +1291,7 @@ function ComplaintDetail({
                 {complaint.booking && (
                     <div className="mt-3 rounded-xl border border-border bg-muted/20 p-3 text-sm">
                         <p className="font-medium">
-                            {t('admin.booking')} #{complaint.booking.id} ·{' '}
+                            {t('admin.booking')} #{complaint.booking.booking_ref ?? complaint.booking.id} ·{' '}
                             {complaint.booking.type}
                         </p>
                         <p className="text-muted-foreground">

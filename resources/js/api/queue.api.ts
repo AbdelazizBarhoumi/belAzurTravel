@@ -13,7 +13,8 @@ export interface QueueAudit {
 }
 
 export interface QueueBooking {
-    id: number;
+    id: string;
+    booking_ref: number;
     user_id: number | null;
     type: string;
     items: unknown[];
@@ -70,9 +71,10 @@ export interface QueueComplaint {
     type: 'complaint' | 'refund_request';
     subject: Record<string, string>;
     description: Record<string, string>;
-    booking_id: number | null;
+    booking_id: string | null;
     booking?: {
-        id: number;
+        id: string;
+        booking_ref?: number;
         type: string;
         total_amount: number;
         status: string;

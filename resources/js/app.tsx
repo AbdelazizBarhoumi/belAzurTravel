@@ -29,9 +29,7 @@ import { queryClient } from '@/lib/queryClient';
 import { traceRoute } from '@/lib/routeTrace';
 import AdminDashboard from './pages/admin';
 import AdminBlog from './pages/admin/AdminBlog';
-import AdminBookings from './pages/admin/AdminBookings';
 import AdminCars from './pages/admin/AdminCars';
-import AdminComplaints from './pages/admin/AdminComplaints';
 import AdminDeals from './pages/admin/AdminDeals';
 import AdminDestinations from './pages/admin/AdminDestinations';
 import AdminEvents from './pages/admin/AdminEvents';
@@ -256,16 +254,8 @@ const LayoutWrapper = () => {
                         element={adminGuard(<AdminTravels />)}
                     />
                     <Route
-                        path="/admin/bookings"
-                        element={adminGuard(<AdminBookings />)}
-                    />
-                    <Route
                         path="/admin/queue"
                         element={adminGuard(<AdminQueue />)}
-                    />
-                    <Route
-                        path="/admin/complaints"
-                        element={adminGuard(<AdminComplaints />)}
                     />
                     <Route
                         path="/admin/cars"

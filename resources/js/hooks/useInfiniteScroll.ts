@@ -77,7 +77,7 @@ export function useInfiniteScroll(
             });
             return () => cancelAnimationFrame(raf);
         }
-    }, [options.hasNextPage]);
+    }, [options.hasNextPage, options.isFetchingNextPage, connect]);
 
     // Cleanup on unmount
     useEffect(() => {

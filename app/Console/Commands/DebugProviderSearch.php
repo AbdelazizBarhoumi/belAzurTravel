@@ -15,7 +15,7 @@ class DebugProviderSearch extends Command
     {
         $ids = array_map('intval', explode(',', $this->option('ids')));
 
-        $this->info("Calling OS-TRAVEL HotelSearch for hotel IDs: " . implode(', ', $ids));
+        $this->info('Calling OS-TRAVEL HotelSearch for hotel IDs: '.implode(', ', $ids));
         $this->newLine();
 
         $envelope = $client->hotelSearch([
@@ -32,7 +32,7 @@ class DebugProviderSearch extends Command
 
         $hotels = $envelope['HotelSearch'] ?? [];
 
-        $this->info("Provider returned " . count($hotels) . " entries:");
+        $this->info('Provider returned '.count($hotels).' entries:');
         $this->newLine();
 
         foreach ($hotels as $i => $hotel) {
@@ -49,9 +49,9 @@ class DebugProviderSearch extends Command
         }
 
         $this->newLine();
-        $this->info("Duplicate check (grouped by Hotel ID):");
+        $this->info('Duplicate check (grouped by Hotel ID):');
         foreach ($counts as $id => $count) {
-            $label = $count > 1 ? '<error>DUPLICATE x' . $count . '</error>' : 'OK (unique)';
+            $label = $count > 1 ? '<error>DUPLICATE x'.$count.'</error>' : 'OK (unique)';
             $this->line("  Hotel ID {$id}: {$label}");
         }
 

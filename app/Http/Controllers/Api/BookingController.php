@@ -21,6 +21,7 @@ use App\Notifications\BookingStatusNotification;
 use App\Services\OsTravel\OsTravelBookingService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -37,7 +38,7 @@ class BookingController extends Controller
         return response()->json(Booking::query()->latest()->get()->map(fn (Booking $booking) => $this->payload($booking)));
     }
 
-    public function show(Request $request, int $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
 
@@ -211,6 +212,8 @@ class BookingController extends Controller
 
         $expiryHours = (int) (SiteSetting::first()?->booking_expiry_hours ?? 72);
 
+        $nextRef = (int) (DB::table('bookings')->max('booking_ref') ?? 0) + 1;
+
         $booking = Booking::create([
             'user_id' => $request->user()->id,
             'type' => $data['type'],
@@ -233,6 +236,7 @@ class BookingController extends Controller
             'is_request' => ! empty($data['is_request']),
             'provider_payload' => $providerContext,
             'details' => $data['details'] ?? null,
+            'booking_ref' => $nextRef,
         ]);
 
         BookingAudit::log(
@@ -249,7 +253,7 @@ class BookingController extends Controller
         return response()->json($this->payload($booking->refresh()), 201);
     }
 
-    public function cancel(Request $request, int $id): JsonResponse
+    public function cancel(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
 
@@ -336,7 +340,7 @@ class BookingController extends Controller
      * calling confirm(); a stale token fails gracefully and keeps the booking
      * pending for the client to re-search.
      */
-    public function approve(Request $request, int $id): JsonResponse
+    public function approve(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
         $actor = $request->user();
@@ -422,7 +426,7 @@ class BookingController extends Controller
     /**
      * Reject a pending demand. A reason is required and surfaced to the client.
      */
-    public function reject(Request $request, int $id): JsonResponse
+    public function reject(Request $request, string $id): JsonResponse
     {
         $data = $request->validate([
             'reason' => ['required', 'string', 'max:1000'],
@@ -444,12 +448,12 @@ class BookingController extends Controller
     /**
      * Backwards-compatible alias used by the existing admin UI.
      */
-    public function confirm(Request $request, int $id): JsonResponse
+    public function confirm(Request $request, string $id): JsonResponse
     {
         return $this->approve($request, $id);
     }
 
-    public function adminCancel(Request $request, int $id): JsonResponse
+    public function adminCancel(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
 
@@ -509,6 +513,7 @@ class BookingController extends Controller
     {
         return [
             'id' => $booking->id,
+            'booking_ref' => $booking->booking_ref,
             'user_id' => $booking->user_id,
             'type' => $booking->type,
             'item_slug' => $booking->item_slug,
@@ -536,7 +541,7 @@ class BookingController extends Controller
             'provider_prebook' => $booking->provider_payload['prebook'] ?? null,
             'can_cancel' => in_array($booking->status, ['Pending', 'Approved', 'Confirmed'], true)
                 && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay())),
-            'details' => $booking->details
+            'details' => $booking->details,
         ];
     }
 

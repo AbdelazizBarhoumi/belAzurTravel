@@ -57,14 +57,14 @@ class BookingActivityNotification extends Notification
             default => 'emails.booking-created',
         };
 
-        $subject = $translate("{$group}.subject", ['id' => $this->booking->id, 'client' => $client]);
+        $subject = $translate("{$group}.subject", ['id' => $this->booking->booking_ref, 'client' => $client]);
 
         $data = [
             'booking' => $this->booking,
             'subject' => $subject,
             'headerSubtitle' => $subject,
             'greeting' => $translate("{$group}.greeting"),
-            'introLine' => $translate("{$group}.intro", ['id' => $this->booking->id, 'client' => $client]),
+            'introLine' => $translate("{$group}.intro", ['id' => $this->booking->booking_ref, 'client' => $client]),
             'bookingLabel' => $translate('admin_booking.labels.details'),
             'clientLabel' => $translate('admin_booking.labels.client'),
             'refLabel' => $translate('admin_booking.labels.ref'),

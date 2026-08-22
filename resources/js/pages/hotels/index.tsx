@@ -40,6 +40,7 @@ import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCountryByCode } from '@/hooks/useCountries';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import {
     useHotels,
     useHotelSearchInfinite,
@@ -60,7 +61,6 @@ import {
     toLocalISODate,
 } from '@/lib/utils';
 import type { HotelItem } from '@/types/public/hotel.types';
-import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 // A card is either a stored browse record or a live result (name/location are
 // wider `Record<string, string>` after merging the live spread over browse).
@@ -423,7 +423,7 @@ export default function Hotels() {
             ],
             only_available: false,
         };
-    }, [checkInISO, checkOutISO, occupancy.adults, occupancy.childAges]);
+    }, [hasDates, checkInISO, checkOutISO, occupancy.adults, occupancy.childAges]);
 
     // Rapid filter interactions must not each fire an expensive search; batch
     // them and search once the user settles.

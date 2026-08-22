@@ -8,6 +8,7 @@ use App\Services\OsTravel\HotelPublisher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\InteractsWithOsTravel;
 use Tests\TestCase;
@@ -288,7 +289,7 @@ class OsTravelHotelPublisherTest extends TestCase
         $this->assertNotNull($hotel->hotel_id);
         $this->assertSame(1, Hotel::count());
 
-        \Illuminate\Support\Facades\Schema::table('os_travel_hotels', function ($table) {
+        Schema::table('os_travel_hotels', function ($table) {
             $table->dropUnique(['external_id']);
         });
 

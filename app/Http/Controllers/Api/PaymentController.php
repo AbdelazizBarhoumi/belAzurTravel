@@ -28,7 +28,7 @@ class PaymentController extends Controller
     /**
      * Initiate a ClictoPay payment session for a booking.
      */
-    public function initiate(Request $request, int $id): JsonResponse
+    public function initiate(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
 
@@ -198,7 +198,7 @@ class PaymentController extends Controller
     /**
      * Retry payment for a pending booking.
      */
-    public function retry(Request $request, int $id): JsonResponse
+    public function retry(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
 

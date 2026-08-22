@@ -18,7 +18,7 @@ const PaymentResult = () => {
 
     const { data: booking } = useQuery<ClientBookingRow>({
         queryKey: ['booking', bookingId],
-        queryFn: () => getBooking(Number(bookingId)) as Promise<ClientBookingRow>,
+        queryFn: () => getBooking(bookingId!) as Promise<ClientBookingRow>,
         enabled: !!bookingId,
     });
 
@@ -77,7 +77,7 @@ const PaymentResult = () => {
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">{t('admin.booking')} #</span>
-                                <span className="font-medium">{booking.id}</span>
+                                <span className="font-medium">{booking.booking_ref}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">{t('admin.type')}</span>

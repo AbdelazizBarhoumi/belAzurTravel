@@ -13,7 +13,8 @@ describe('VoucherCard', () => {
     });
 
     const confirmedBooking: ClientBookingRow = {
-        id: 77,
+        id: '550e8400-e29b-41d4-a716-446655440077',
+        booking_ref: 77,
         type: 'hotel',
         item_slug: 'seaside-paradise',
         item_id: 'hotel-9',
@@ -66,7 +67,7 @@ describe('VoucherCard', () => {
             screen.getByText('Your booking is confirmed.'),
         ).toBeInTheDocument();
         expect(screen.getByText('Booking reference')).toBeInTheDocument();
-        expect(screen.getByText('#77')).toBeInTheDocument();
+        expect(screen.getByText('#550e8400-e29b-41d4-a716-446655440077')).toBeInTheDocument();
         expect(screen.getByText('Service')).toBeInTheDocument();
         expect(
             screen.getByText('hotel / seaside-paradise / hotel-9'),
@@ -118,7 +119,7 @@ describe('VoucherCard', () => {
             </QueryClientProvider>,
         );
 
-        expect(screen.getByText('#77')).toBeInTheDocument();
+        expect(screen.getByText('#550e8400-e29b-41d4-a716-446655440077')).toBeInTheDocument();
         expect(
             screen.queryByText('Provider reference'),
         ).not.toBeInTheDocument();

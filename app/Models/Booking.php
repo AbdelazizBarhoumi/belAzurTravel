@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BookingAction;
 use App\Enums\BookingStatus;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Booking extends Model
 {
-    protected $fillable = ['user_id', 'type', 'item_slug', 'item_id', 'items', 'start_date', 'end_date', 'client', 'guests', 'promo_code', 'notes', 'total_amount', 'status', 'confirmed_at', 'cancelled_at', 'rejected_at', 'expires_at', 'reject_reason', 'cancel_reason', 'is_request', 'provider_booking_id', 'provider_booking_reference', 'provider_payload', 'details'];
+    use HasUuids;
+
+    protected $keyType = 'string';
+
+    public $incrementing = false;
+
+    protected $fillable = ['user_id', 'type', 'item_slug', 'item_id', 'items', 'start_date', 'end_date', 'client', 'guests', 'promo_code', 'notes', 'total_amount', 'status', 'confirmed_at', 'cancelled_at', 'rejected_at', 'expires_at', 'reject_reason', 'cancel_reason', 'is_request', 'provider_booking_id', 'provider_booking_reference', 'provider_payload', 'details', 'booking_ref'];
 
     protected $casts = ['items' => 'array', 'client' => 'array', 'guests' => 'array', 'start_date' => 'date', 'end_date' => 'date', 'total_amount' => 'integer', 'confirmed_at' => 'datetime', 'cancelled_at' => 'datetime', 'rejected_at' => 'datetime', 'expires_at' => 'datetime', 'is_request' => 'boolean', 'provider_payload' => 'array', 'details' => 'array'];
 

@@ -32,7 +32,7 @@
                     @if($complaint->booking_id)
                     <tr>
                         <td style="padding: 6px 0; color: #64748b; font-size: 14px;">{{ $bookingRefLabel }}</td>
-                        <td style="padding: 6px 0; color: #0f172a; font-size: 14px;">#{{ $complaint->booking_id }}</td>
+                        <td style="padding: 6px 0; color: #0f172a; font-size: 14px;">#{{ $complaint->booking->booking_ref ?? $complaint->booking_id }}</td>
                     </tr>
                     @endif
                 </table>

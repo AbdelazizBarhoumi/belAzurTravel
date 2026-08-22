@@ -1,7 +1,8 @@
 import { apiFetch } from './http';
 
 export interface AdminBookingRow {
-    id: number;
+    id: string;
+    booking_ref: number;
     user_id: number | null;
     type: string;
     items: unknown[];
@@ -46,7 +47,8 @@ export interface AdminBookingRow {
 }
 
 export interface ClientBookingRow {
-    id: number;
+    id: string;
+    booking_ref: number;
     type: string;
     item_slug?: string | null;
     item_id?: string | null;
@@ -192,7 +194,7 @@ export async function createBooking(payload: Record<string, unknown>) {
     });
 }
 
-export async function getBooking(id: number) {
+export async function getBooking(id: string) {
     return apiFetch<BookingDetailRow>(`/api/bookings/${id}`);
 }
 
@@ -207,8 +209,9 @@ export async function getClientDashboard() {
 export async function getClientPayments() {
     return apiFetch<
         Array<{
-            id: number;
-            booking_id: number;
+            id: string;
+            booking_id: string;
+            booking_ref?: number;
             amount: number;
             currency: string;
             status: string;
@@ -245,26 +248,26 @@ export async function updateClientLanguage(language: string) {
     });
 }
 
-export async function approveBooking(id: number) {
+export async function approveBooking(id: string) {
     return apiFetch(`/api/admin/bookings/${id}/approve`, {
         method: 'POST',
     });
 }
 
-export async function rejectBooking(id: number, reason: string) {
+export async function rejectBooking(id: string, reason: string) {
     return apiFetch(`/api/admin/bookings/${id}/reject`, {
         method: 'POST',
         body: JSON.stringify({ reason }),
     });
 }
 
-export async function cancelBooking(id: number) {
+export async function cancelBooking(id: string) {
     return apiFetch(`/api/bookings/${id}/cancel`, {
         method: 'POST',
     });
 }
 
-export async function adminCancelBooking(id: number) {
+export async function adminCancelBooking(id: string) {
     return apiFetch(`/api/admin/bookings/${id}/cancel`, {
         method: 'POST',
     });

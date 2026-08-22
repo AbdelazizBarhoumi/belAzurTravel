@@ -41,7 +41,7 @@ export function VoucherCard({ booking }: VoucherCardProps) {
     const title =
         [booking.type, booking.item_slug, booking.item_id]
             .filter(Boolean)
-            .join(' / ') || `#${booking.id}`;
+            .join(' / ') || `#${booking.booking_ref}`;
 
     const formatDate = (value?: string | null) => {
         if (!value) return '—';
@@ -80,7 +80,7 @@ export function VoucherCard({ booking }: VoucherCardProps) {
                     <p className="text-xs font-medium uppercase text-muted-foreground">
                         {t('voucher.bookingRef')}
                     </p>
-                    <p className="font-bold text-foreground">#{booking.id}</p>
+                    <p className="font-bold text-foreground">#{booking.booking_ref}</p>
                 </div>
                 <div className="space-y-1">
                     <p className="text-xs font-medium uppercase text-muted-foreground">

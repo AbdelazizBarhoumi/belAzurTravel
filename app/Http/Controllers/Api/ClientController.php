@@ -57,11 +57,13 @@ class ClientController extends Controller
         return response()->json(
             Payment::query()
                 ->where('user_id', $request->user()->id)
+                ->with('booking:uuid,booking_ref')
                 ->latest()
                 ->get()
                 ->map(fn (Payment $payment) => [
                     'id' => $payment->id,
                     'booking_id' => $payment->booking_id,
+                    'booking_ref' => $payment->booking?->booking_ref,
                     'amount' => $payment->amount,
                     'currency' => $payment->currency,
                     'status' => $payment->status,
@@ -158,6 +160,7 @@ class ClientController extends Controller
 
         return [
             'id' => $booking->id,
+            'booking_ref' => $booking->booking_ref,
             'type' => $booking->type,
             'item_slug' => $booking->item_slug,
             'item_id' => $booking->item_id,

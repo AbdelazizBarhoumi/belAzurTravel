@@ -15,7 +15,7 @@ import {
     Star,
     Users,
 } from 'lucide-react';
-import { useMemo, useEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import {
     Navigate,
@@ -45,7 +45,6 @@ import {
     useHotelById,
     useHotelSearch,
     type HotelDetailLookupData,
-    type HotelSearchQuery,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 import {
@@ -55,6 +54,8 @@ import {
     promoPrice,
     toLocalISODate,
 } from '@/lib/utils';
+
+const tomorrowDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
 type RoomView = {
     id: string;
@@ -207,7 +208,7 @@ export default function HotelDetail() {
         adults: Number.isFinite(urlGuests) && urlGuests > 0 ? urlGuests : 2,
         childAges: urlChildren,
     });
-    const [selectedBoardingIds, setSelectedBoardingIds] = useState<number[]>([]);
+    const [selectedBoardingIds] = useState<number[]>([]);
     // Policy notice (e.g. "couples & families only", tourist tax) is
     // collapsed to 2 lines by default but always visible — this used to be
     // buried inside a closed accordion three levels deep.
@@ -233,30 +234,9 @@ export default function HotelDetail() {
     // Phase 1: search with only_available: true — if the hotel has rooms, we're done.
     // Phase 2: if nothing returned, re-fire with only_available: false to get the
     // hotel flagged as unavailable so we can show the "Per request" section.
-    const [submittedQuery, setSubmittedQuery] = useState<
-        HotelSearchQuery | undefined
-    >(undefined);
-    const [unavailableQuery, setUnavailableQuery] = useState<
-        HotelSearchQuery | undefined
-    >(undefined);
-    const unavailableFiredFor = useRef<string | null>(null);
 
-    const handleCheckAvailability = () => {
-        setSubmittedQuery(liveQuery);
-        setUnavailableQuery(undefined);
-        unavailableFiredFor.current = null;
-    };
-
-    // Auto-research when dates, occupancy, or boarding change.
-    useEffect(() => {
-        if (!liveQuery) return;
-        setSubmittedQuery(liveQuery);
-        setUnavailableQuery(undefined);
-        unavailableFiredFor.current = null;
-    }, [liveQuery]);
-
-    // Phase 1: only_available: true
-    const activeQuery = submittedQuery;
+    // Use liveQuery directly as the active search — no intermediate state needed.
+    const activeQuery = liveQuery;
 
     const { data: liveResult, isLoading: liveSearchLoading, isError: liveSearchError, refetch: refetchSearch } =
         useHotelSearch(activeQuery);
@@ -269,12 +249,10 @@ export default function HotelDetail() {
     const firstSearchDone = Boolean(activeQuery) && !liveSearchLoading && liveResult !== undefined;
     const noRoomsFound = firstSearchDone && !liveHotel;
 
-    useEffect(() => {
-        if (!noRoomsFound || !activeQuery) return;
-        const key = JSON.stringify(activeQuery);
-        if (unavailableFiredFor.current === key) return;
-        unavailableFiredFor.current = key;
-        setUnavailableQuery({ ...activeQuery, only_available: false });
+    // Derive phase 2 query directly — React Query deduplicates identical requests.
+    const unavailableQuery = useMemo(() => {
+        if (!noRoomsFound || !activeQuery) return undefined;
+        return { ...activeQuery, only_available: false };
     }, [noRoomsFound, activeQuery]);
 
     // Phase 2 result
@@ -572,7 +550,7 @@ export default function HotelDetail() {
                                 value={dateRange}
                                 onChange={setDateRange}
                                 className="w-full"
-                                fromDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
+                                fromDate={tomorrowDate}
                             />
                             <OccupancyPicker
                                 value={occupancy}
@@ -852,7 +830,7 @@ export default function HotelDetail() {
                                     value={dateRange}
                                     onChange={setDateRange}
                                     className="w-full"
-                                    fromDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
+                                    fromDate={tomorrowDate}
                                 />
                             </div>
                             <div className="flex flex-col gap-1.5">
@@ -867,7 +845,7 @@ export default function HotelDetail() {
                             <Button
                                 type="button"
                                 disabled={!liveQuery}
-                                onClick={handleCheckAvailability}
+                                onClick={scrollToRates}
                                 className="h-11 bg-primary text-primary-foreground"
                             >
                                 {liveSearchLoading
@@ -1024,7 +1002,7 @@ export default function HotelDetail() {
                                     {t('hotelDetail.unavailableNotice') ||
                                         'This hotel has no availability for the selected dates. Try other dates.'}
                                 </div>
-                            ) : submittedQuery && effectiveHotel ? (
+                            ) : activeQuery && effectiveHotel ? (
                                 <motion.div
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}

@@ -10,7 +10,7 @@
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                     <td style="padding: 6px 0; color: #64748b; font-size: 14px; width: 40%;">{{ $refLabel }}</td>
-                    <td style="padding: 6px 0; color: #0f172a; font-size: 14px; font-weight: 600;">#{{ $booking->id }}</td>
+                    <td style="padding: 6px 0; color: #0f172a; font-size: 14px; font-weight: 600;">#{{ $booking->booking_ref }}</td>
                 </tr>
                 @if(! empty($clientLabel))
                 <tr>

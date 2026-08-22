@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import {
     AlertCircle,
     ArrowLeft,
-    BedDouble,
     Clock,
     Hotel,
     Info,
@@ -68,7 +67,7 @@ function bookingTitle(booking: BookingDetailRow): string {
         const parts = [booking.item_slug ?? booking.item_id];
         if (booking.details.room_name) parts.push(booking.details.room_name);
         if (booking.details.boarding_name) parts.push(booking.details.boarding_name);
-        return parts.filter(Boolean).join(' / ') || `#${booking.id}`;
+        return parts.filter(Boolean).join(' / ') || `#${booking.booking_ref}`;
     }
     return (
         [
@@ -81,25 +80,25 @@ function bookingTitle(booking: BookingDetailRow): string {
                 .join(', '),
         ]
             .filter(Boolean)
-            .join(' / ') || `#${booking.id}`
+            .join(' / ') || `#${booking.booking_ref}`
     );
 }
 
 export default function BookingDetail() {
     const { id } = useParams<{ id: string }>();
-    const bookingId = Number(id);
+    const bookingId = id;
     const { lang, t } = useLanguage();
     const { data: user } = useAuthUser();
     const queryClient = useQueryClient();
 
     const { data: booking, isLoading, isError } = useQuery({
         queryKey: ['booking', bookingId],
-        queryFn: () => getBooking(bookingId),
-        enabled: Number.isInteger(bookingId) && bookingId > 0,
+        queryFn: () => getBooking(bookingId!),
+        enabled: !!bookingId,
     });
 
     const cancelMutation = useMutation({
-        mutationFn: () => cancelBooking(bookingId),
+        mutationFn: () => cancelBooking(bookingId!),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['client'] });
             queryClient.invalidateQueries({ queryKey: ['booking', bookingId] });
@@ -236,7 +235,7 @@ export default function BookingDetail() {
                         <h1 className="font-serif text-2xl font-bold text-foreground">
                             {t('bookingDetail.title') || 'Booking details'}{' '}
                             <span className="text-muted-foreground">
-                                #{booking.id}
+                                #{booking.booking_ref}
                             </span>
                         </h1>
                         <p className="text-sm text-muted-foreground">
