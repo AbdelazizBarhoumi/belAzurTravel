@@ -38,7 +38,9 @@ export function CategoryTypeFilter({
                     <div key={catType.key} className="space-y-2">
                         <div className="flex items-center justify-between">
                             <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                {catType.label[lang] || catType.label.en || catType.key}
+                                {catType.label[lang] ||
+                                    catType.label.en ||
+                                    catType.key}
                             </h4>
                             {selected.length > 0 && (
                                 <Button
@@ -58,15 +60,21 @@ export function CategoryTypeFilter({
                                 return (
                                     <Badge
                                         key={val.key}
-                                        variant={isSelected ? 'default' : 'outline'}
+                                        variant={
+                                            isSelected ? 'default' : 'outline'
+                                        }
                                         className={`cursor-pointer select-none text-xs transition-colors ${
                                             isSelected
                                                 ? 'bg-primary text-primary-foreground hover:bg-primary/80'
                                                 : 'hover:bg-muted'
                                         }`}
-                                        onClick={() => toggleValue(catType.key, val.key)}
+                                        onClick={() =>
+                                            toggleValue(catType.key, val.key)
+                                        }
                                     >
-                                        {val.name[lang] || val.name.en || val.key}
+                                        {val.name[lang] ||
+                                            val.name.en ||
+                                            val.key}
                                     </Badge>
                                 );
                             })}

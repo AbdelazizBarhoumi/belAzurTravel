@@ -12,9 +12,10 @@ export interface Complaint {
     type: 'complaint' | 'refund_request';
     subject: Record<string, string>;
     description: Record<string, string>;
-    booking_id: number | null;
+    booking_id: string | null;
     booking?: {
-        id: number;
+        id: string;
+        booking_ref?: number;
         type: string;
         total_amount: number;
         status: string;
@@ -47,7 +48,7 @@ export async function createComplaint(payload: {
     type: 'complaint' | 'refund_request';
     subject: string;
     description: string;
-    booking_id?: number;
+    booking_id?: string;
 }) {
     return apiFetch<Complaint>('/api/client/complaints', {
         method: 'POST',

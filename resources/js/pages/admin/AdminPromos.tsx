@@ -291,6 +291,7 @@ export default function AdminPromos() {
                     key: 'dateFrom',
                     label: t('admin.promos.expires'),
                     type: 'daterange',
+                    dateFromKey: 'expires',
                 },
             ],
             render: ({ values, setField, activeLang, errors }) => (

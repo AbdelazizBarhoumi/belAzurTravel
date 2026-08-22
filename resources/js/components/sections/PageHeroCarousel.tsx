@@ -11,7 +11,11 @@ interface PageHeroCarouselProps {
     height?: string;
 }
 
-export function PageHeroCarousel({ pageKey, className, height = '300px' }: PageHeroCarouselProps) {
+export function PageHeroCarousel({
+    pageKey,
+    className,
+    height = '300px',
+}: PageHeroCarouselProps) {
     const { settings } = useSiteSettings();
     const { lang, dir } = useLanguage();
     const heroConfig = settings.content?.page_heroes?.[pageKey];

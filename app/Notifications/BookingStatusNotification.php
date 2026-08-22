@@ -3,32 +3,17 @@
 namespace App\Notifications;
 
 use App\Models\Booking;
+use App\Notifications\Concerns\NotifiesByMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class BookingStatusNotification extends Notification
 {
+    use NotifiesByMail;
     use Queueable;
 
     public function __construct(private readonly Booking $booking) {}
-
-    public function via(object $notifiable): array
-    {
-        $channels = ['database'];
-        if ($this->isMailConfigured()) {
-            $channels[] = 'mail';
-        }
-
-        return $channels;
-    }
-
-    private function isMailConfigured(): bool
-    {
-        return config('mail.default') !== 'log'
-            && ! empty(config('mail.mailers.smtp.host'))
-            && config('mail.mailers.smtp.host') !== '127.0.0.1';
-    }
 
     public function toDatabase(object $notifiable): array
     {
@@ -47,61 +32,80 @@ class BookingStatusNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $status = $this->booking->status;
+        $locale = $notifiable->preferred_language ?? app()->getLocale();
 
-        $subject = match ($status) {
-            'Confirmed' => "Booking #{$this->booking->id} Confirmed",
-            'Cancelled' => "Booking #{$this->booking->id} Cancelled",
-            default => "Booking #{$this->booking->id} Status Update",
+        $translate = fn (string $path, array $replace = []) => __("emails.{$path}", $replace, $locale);
+
+        $group = match ($status) {
+            'Approved' => 'booking.approved_pending',
+            'Rejected' => 'booking.rejected',
+            'Expired' => 'booking.expired',
+            'Cancelled' => 'booking.cancelled',
+            default => 'booking.approved',
         };
+
+        $view = match ($status) {
+            'Rejected' => 'emails.booking-rejected',
+            'Expired' => 'emails.booking-expired',
+            'Cancelled' => 'emails.booking-cancelled',
+            default => 'emails.booking-approved',
+        };
+
+        $subject = $translate("{$group}.subject", ['id' => $this->booking->booking_ref]);
+
+        $data = [
+            'booking' => $this->booking,
+            'subject' => $subject,
+            'headerSubtitle' => $subject,
+            'greeting' => $translate("{$group}.greeting"),
+            'introLine' => $translate("{$group}.intro", ['id' => $this->booking->booking_ref]),
+            'nextStepsLine' => $translate("{$group}.next_steps"),
+            'bookingLabel' => $translate('booking.labels.details'),
+            'refLabel' => $translate('booking.labels.ref'),
+            'typeLabel' => $translate('booking.labels.type'),
+            'itemLabel' => $translate('booking.labels.item'),
+            'datesLabel' => $translate('booking.labels.dates'),
+            'amountLabel' => $translate('booking.labels.amount'),
+            'statusLabel' => $translate('booking.labels.status'),
+            'providerRefLabel' => $translate('booking.labels.provider_ref'),
+            'actionText' => $translate('action.view_booking'),
+            'actionUrl' => config('app.url').'/client/dashboard',
+            'closingLine' => $translate('footer_automatic'),
+        ];
+
+        if ($status === 'Rejected') {
+            $data['reasonLabel'] = $translate('booking.labels.reason');
+        }
+
+        if ($status === 'Cancelled') {
+            $data['penaltyLine'] = $translate('booking.cancelled.penalty');
+        }
 
         return (new MailMessage)
             ->subject($subject)
-            ->view('emails.payment-success', [
-                'booking' => $this->booking,
-                'payment' => $this->booking->payment,
-                'greeting' => match ($status) {
-                    'Confirmed' => 'Your Booking is Confirmed!',
-                    'Cancelled' => 'Your Booking Has Been Cancelled',
-                    default => 'Booking Status Update',
-                },
-                'headerSubtitle' => $subject,
-                'introLine' => match ($status) {
-                    'Confirmed' => "Great news! Your booking #{$this->booking->id} has been confirmed and payment received.",
-                    'Cancelled' => "Your booking #{$this->booking->id} has been cancelled. If you believe this is an error, please contact support.",
-                    default => "The status of your booking #{$this->booking->id} has been updated.",
-                },
-                'paymentDetailsLabel' => 'Payment Details',
-                'bookingRefLabel' => 'Booking Reference',
-                'transactionRefLabel' => 'Transaction Reference',
-                'amountLabel' => 'Amount',
-                'statusLabel' => 'Status',
-                'paidLabel' => match ($status) {
-                    'Confirmed' => 'Paid',
-                    'Cancelled' => 'Refund Pending',
-                    default => ucfirst($status),
-                },
-                'nextStepsLine' => match ($status) {
-                    'Confirmed' => "You will receive your travel documents shortly. If you have any questions, don't hesitate to contact us.",
-                    'Cancelled' => 'If you paid for this booking, a refund will be processed within 5-10 business days.',
-                    default => 'If you have any questions about your booking, please contact our support team.',
-                },
-                'actionText' => 'View Booking',
-                'actionUrl' => config('app.url').'/client/dashboard',
-                'closingLine' => 'Thank you for choosing BelAzur Travel.',
-            ]);
+            ->view($view, $data);
     }
 
     private function message(string $status, string $lang): string
     {
         $statusKey = match ($status) {
             'Confirmed' => 'messages.status_confirmed',
+            'Approved' => 'messages.status_approved',
+            'Rejected' => 'messages.status_rejected',
+            'Expired' => 'messages.status_expired',
             'Cancelled' => 'messages.status_cancelled',
             default => 'messages.status_pending',
         };
 
-        return __('messages.booking_status_changed', [
-            'id' => $this->booking->id,
+        $text = __('messages.booking_status_changed', [
+            'id' => $this->booking->booking_ref,
             'status' => __($statusKey, [], $lang),
         ], $lang);
+
+        if ($status === 'Rejected' && $this->booking->reject_reason) {
+            $text .= ' — '.__('messages.reject_reason', [], $lang).': '.$this->booking->reject_reason;
+        }
+
+        return $text;
     }
 }

@@ -365,8 +365,7 @@ export default function DestinationDetail() {
                                         {localize(hotel.name, lang)}
                                     </h3>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {t('destinationDetail.startingFrom')}{' '}
-                                        {hotel.price} TND/night
+                                        {t('hotelDetail.checkAvailability')}
                                     </p>
                                 </div>
                             </Link>

@@ -7,6 +7,8 @@ import AdminCategoryController from './AdminCategoryController'
 import GalleryController from './GalleryController'
 import DestinationController from './DestinationController'
 import HotelController from './HotelController'
+import HotelImageController from './HotelImageController'
+import HotelSearchController from './HotelSearchController'
 import TourController from './TourController'
 import TravelController from './TravelController'
 import CarController from './CarController'
@@ -24,6 +26,7 @@ import ClientController from './ClientController'
 import ComplaintController from './ComplaintController'
 import AdminDestinationController from './AdminDestinationController'
 import AdminHotelController from './AdminHotelController'
+import AdminOsTravelController from './AdminOsTravelController'
 import AdminTourController from './AdminTourController'
 import AdminTravelController from './AdminTravelController'
 import AdminCarController from './AdminCarController'
@@ -34,6 +37,8 @@ import AdminPromoController from './AdminPromoController'
 import AdminBlogPostController from './AdminBlogPostController'
 import AdminUserController from './AdminUserController'
 import AdminComplaintController from './AdminComplaintController'
+import AdminQueueController from './AdminQueueController'
+import AdminSupportInquiryController from './AdminSupportInquiryController'
 import AdminCategoryTypeController from './AdminCategoryTypeController'
 import AdminTeamController from './AdminTeamController'
 import AdminVisaController from './AdminVisaController'
@@ -48,6 +53,8 @@ AdminCategoryController: Object.assign(AdminCategoryController, AdminCategoryCon
 GalleryController: Object.assign(GalleryController, GalleryController),
 DestinationController: Object.assign(DestinationController, DestinationController),
 HotelController: Object.assign(HotelController, HotelController),
+HotelImageController: Object.assign(HotelImageController, HotelImageController),
+HotelSearchController: Object.assign(HotelSearchController, HotelSearchController),
 TourController: Object.assign(TourController, TourController),
 TravelController: Object.assign(TravelController, TravelController),
 CarController: Object.assign(CarController, CarController),
@@ -65,6 +72,7 @@ ClientController: Object.assign(ClientController, ClientController),
 ComplaintController: Object.assign(ComplaintController, ComplaintController),
 AdminDestinationController: Object.assign(AdminDestinationController, AdminDestinationController),
 AdminHotelController: Object.assign(AdminHotelController, AdminHotelController),
+AdminOsTravelController: Object.assign(AdminOsTravelController, AdminOsTravelController),
 AdminTourController: Object.assign(AdminTourController, AdminTourController),
 AdminTravelController: Object.assign(AdminTravelController, AdminTravelController),
 AdminCarController: Object.assign(AdminCarController, AdminCarController),
@@ -75,6 +83,8 @@ AdminPromoController: Object.assign(AdminPromoController, AdminPromoController),
 AdminBlogPostController: Object.assign(AdminBlogPostController, AdminBlogPostController),
 AdminUserController: Object.assign(AdminUserController, AdminUserController),
 AdminComplaintController: Object.assign(AdminComplaintController, AdminComplaintController),
+AdminQueueController: Object.assign(AdminQueueController, AdminQueueController),
+AdminSupportInquiryController: Object.assign(AdminSupportInquiryController, AdminSupportInquiryController),
 AdminCategoryTypeController: Object.assign(AdminCategoryTypeController, AdminCategoryTypeController),
 AdminTeamController: Object.assign(AdminTeamController, AdminTeamController),
 AdminVisaController: Object.assign(AdminVisaController, AdminVisaController),

@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save } from 'lucide-react';
+import {
+    Edit,
+    Plus,
+    Trash2,
+    Settings,
+    Image as ImageIcon,
+    Save,
+} from 'lucide-react';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
 import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
@@ -39,7 +46,11 @@ import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { FUEL_TYPES, TRANSMISSION_TYPES, getLocalizedLabel } from '@/data/adminSelectOptions';
+import {
+    FUEL_TYPES,
+    TRANSMISSION_TYPES,
+    getLocalizedLabel,
+} from '@/data/adminSelectOptions';
 
 function LangBadge({ lang }: { lang: Lang }) {
     return (
@@ -259,7 +270,10 @@ export default function AdminCars() {
             if (!value) return '';
             if (options.some((o) => o.value === value)) return value;
             const match = options.find(
-                (o) => o.label.en === value || o.label.fr === value || o.label.ar === value,
+                (o) =>
+                    o.label.en === value ||
+                    o.label.fr === value ||
+                    o.label.ar === value,
             );
             return match?.value || value;
         };
@@ -275,11 +289,19 @@ export default function AdminCars() {
 
         return {
             ...editing,
-            category_key: asText((editing as Record<string, unknown>).category_key),
+            category_key: asText(
+                (editing as Record<string, unknown>).category_key,
+            ),
             category: asText((editing as Record<string, unknown>).category),
-            category_en: asText((editing as Record<string, unknown>).category_en),
-            category_fr: asText((editing as Record<string, unknown>).category_fr),
-            category_ar: asText((editing as Record<string, unknown>).category_ar),
+            category_en: asText(
+                (editing as Record<string, unknown>).category_en,
+            ),
+            category_fr: asText(
+                (editing as Record<string, unknown>).category_fr,
+            ),
+            category_ar: asText(
+                (editing as Record<string, unknown>).category_ar,
+            ),
             ...Object.fromEntries(
                 categoryTypes.map((ct) => [
                     `category_${ct.key}`,
@@ -433,20 +455,25 @@ export default function AdminCars() {
                     {categoryTypes.map((catType) => (
                         <div key={catType.key} className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <label
-                                    className="text-xs font-semibold text-muted-foreground"
-                                >
-                                    {catType.label[activeLang] || catType.label.en}
+                                <label className="text-xs font-semibold text-muted-foreground">
+                                    {catType.label[activeLang] ||
+                                        catType.label.en}
                                 </label>
                             </div>
                             <Select
-                                value={String(values[`category_${catType.key}`] || '')}
-                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                value={String(
+                                    values[`category_${catType.key}`] || '',
+                                )}
+                                onValueChange={(val) =>
+                                    setField(`category_${catType.key}`, val)
+                                }
                             >
                                 <SelectTrigger
                                     className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20`}
                                 >
-                                    <SelectValue placeholder={t('actions.select')} />
+                                    <SelectValue
+                                        placeholder={t('actions.select')}
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {catType.values.map((v) => (
@@ -471,9 +498,16 @@ export default function AdminCars() {
                             </label>
                             <input
                                 id={`name_${activeLang}`}
-                                value={String(values[`name_${activeLang}`] ?? '')}
+                                value={String(
+                                    values[`name_${activeLang}`] ?? '',
+                                )}
                                 placeholder={t('admin.carForm.namePlaceholder')}
-                                onChange={(event) => setField(`name_${activeLang}`, event.target.value)}
+                                onChange={(event) =>
+                                    setField(
+                                        `name_${activeLang}`,
+                                        event.target.value,
+                                    )
+                                }
                                 className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${errors[`name_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}`}
                             />
                             <p className="text-[10px] text-muted-foreground">
@@ -492,7 +526,9 @@ export default function AdminCars() {
                                 {t('admin.carForm.fuel')}
                             </label>
                             <RadioGroup
-                                value={String(values[`fuel_${activeLang}`] ?? '')}
+                                value={String(
+                                    values[`fuel_${activeLang}`] ?? '',
+                                )}
                                 onValueChange={(val) => {
                                     setField('fuel_en', val);
                                     setField('fuel_fr', val);
@@ -501,7 +537,10 @@ export default function AdminCars() {
                                 className="flex flex-wrap gap-3"
                             >
                                 {FUEL_TYPES.map((fuel) => (
-                                    <div key={fuel.value} className="flex items-center space-x-2">
+                                    <div
+                                        key={fuel.value}
+                                        className="flex items-center space-x-2"
+                                    >
                                         <RadioGroupItem
                                             value={fuel.value}
                                             id={`fuel-${fuel.value}`}
@@ -510,7 +549,10 @@ export default function AdminCars() {
                                             htmlFor={`fuel-${fuel.value}`}
                                             className="cursor-pointer text-sm font-normal"
                                         >
-                                            {getLocalizedLabel(fuel, activeLang)}
+                                            {getLocalizedLabel(
+                                                fuel,
+                                                activeLang,
+                                            )}
                                         </Label>
                                     </div>
                                 ))}
@@ -526,7 +568,9 @@ export default function AdminCars() {
                                 {t('admin.carForm.transmission')}
                             </label>
                             <RadioGroup
-                                value={String(values[`transmission_${activeLang}`] ?? '')}
+                                value={String(
+                                    values[`transmission_${activeLang}`] ?? '',
+                                )}
                                 onValueChange={(val) => {
                                     setField('transmission_en', val);
                                     setField('transmission_fr', val);
@@ -535,7 +579,10 @@ export default function AdminCars() {
                                 className="flex flex-wrap gap-3"
                             >
                                 {TRANSMISSION_TYPES.map((trans) => (
-                                    <div key={trans.value} className="flex items-center space-x-2">
+                                    <div
+                                        key={trans.value}
+                                        className="flex items-center space-x-2"
+                                    >
                                         <RadioGroupItem
                                             value={trans.value}
                                             id={`transmission-${trans.value}`}
@@ -544,7 +591,10 @@ export default function AdminCars() {
                                             htmlFor={`transmission-${trans.value}`}
                                             className="cursor-pointer text-sm font-normal"
                                         >
-                                            {getLocalizedLabel(trans, activeLang)}
+                                            {getLocalizedLabel(
+                                                trans,
+                                                activeLang,
+                                            )}
                                         </Label>
                                     </div>
                                 ))}
@@ -568,8 +618,14 @@ export default function AdminCars() {
                                 step={1}
                                 placeholder="0"
                                 value={String(values.price ?? '')}
-                                onChange={(e) => setField('price', e.target.value)}
-                                className={errors.price ? 'border-destructive ring-1 ring-destructive' : ''}
+                                onChange={(e) =>
+                                    setField('price', e.target.value)
+                                }
+                                className={
+                                    errors.price
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             {errors.price && (
                                 <p className="text-xs text-destructive">

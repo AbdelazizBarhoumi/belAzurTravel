@@ -38,7 +38,8 @@ const Login = () => {
 
     useEffect(() => {
         if (currentUser) {
-            const destination = redirectTo || redirectAfterLogin(currentUser.role);
+            const destination =
+                redirectTo || redirectAfterLogin(currentUser.role);
             navigate(destination, { replace: true });
         }
     }, [currentUser, navigate, redirectTo]);
@@ -267,9 +268,7 @@ const Login = () => {
                     className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-primary/10" />
-                <div className="absolute bottom-12 left-12 right-12">
-
-                </div>
+                <div className="absolute bottom-12 left-12 right-12"></div>
             </div>
         </div>
     );

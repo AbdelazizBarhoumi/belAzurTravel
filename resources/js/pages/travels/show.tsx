@@ -125,7 +125,9 @@ function DayByDayAndIncludes({
                     </h2>
                     <ol
                         className={`relative max-w-3xl space-y-6 border-border ${
-                            lang === 'ar' ? 'mr-3 border-r-2' : 'ml-3 border-l-2'
+                            lang === 'ar'
+                                ? 'mr-3 border-r-2'
+                                : 'ml-3 border-l-2'
                         }`}
                     >
                         {' '}
@@ -188,12 +190,20 @@ function DayByDayAndIncludes({
                                         <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                                         {typeof i === 'string'
                                             ? i
-                                            : typeof i === 'object' && 'name' in i
+                                            : typeof i === 'object' &&
+                                                'name' in i
                                               ? localize(
-                                                    (i as { name: LocalizedText }).name,
+                                                    (
+                                                        i as {
+                                                            name: LocalizedText;
+                                                        }
+                                                    ).name,
                                                     lang,
                                                 )
-                                              : localize(i as LocalizedText, lang)}
+                                              : localize(
+                                                    i as LocalizedText,
+                                                    lang,
+                                                )}
                                     </li>
                                 ))}
                             </ul>
@@ -217,12 +227,20 @@ function DayByDayAndIncludes({
                                         <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                                         {typeof i === 'string'
                                             ? i
-                                            : typeof i === 'object' && 'name' in i
+                                            : typeof i === 'object' &&
+                                                'name' in i
                                               ? localize(
-                                                    (i as { name: LocalizedText }).name,
+                                                    (
+                                                        i as {
+                                                            name: LocalizedText;
+                                                        }
+                                                    ).name,
                                                     lang,
                                                 )
-                                              : localize(i as LocalizedText, lang)}
+                                              : localize(
+                                                    i as LocalizedText,
+                                                    lang,
+                                                )}
                                     </li>
                                 ))}
                             </ul>

@@ -18,7 +18,11 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useEvents, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import {
+    useEvents,
+    useCategories,
+    useCategoryTypesPublic,
+} from '@/hooks/usePublicData';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
@@ -51,8 +55,9 @@ function EventsContent() {
         }
         return filters;
     }, [params]);
-    const [categoryTypeFilters, setCategoryTypeFilters] =
-        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<
+        Record<string, string[]>
+    >(initialCategoryTypeFilters);
 
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedLocation, setSelectedLocation] = useState(ALL);
@@ -97,14 +102,31 @@ function EventsContent() {
                     selectedCategory === ALL ||
                     event.category_key === selectedCategory;
                 const eventAssignments = event.category_assignments;
-                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
-                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
-                    activeTypeFilters.some(([typeKey, values]) =>
-                        eventAssignments && values.includes(eventAssignments[typeKey]),
+                const activeTypeFilters = Object.entries(
+                    categoryTypeFilters,
+                ).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes =
+                    activeTypeFilters.length === 0 ||
+                    activeTypeFilters.some(
+                        ([typeKey, values]) =>
+                            eventAssignments &&
+                            values.includes(eventAssignments[typeKey]),
                     );
-                return matchesSearch && matchesLocation && matchesCategory && matchesCategoryTypes;
+                return (
+                    matchesSearch &&
+                    matchesLocation &&
+                    matchesCategory &&
+                    matchesCategoryTypes
+                );
             }),
-        [events, lang, searchQuery, selectedLocation, selectedCategory, categoryTypeFilters],
+        [
+            events,
+            lang,
+            searchQuery,
+            selectedLocation,
+            selectedCategory,
+            categoryTypeFilters,
+        ],
     );
 
     const hasActiveFilters =
@@ -128,7 +150,7 @@ function EventsContent() {
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 border-b border-border pb-6"
+                        className="mb-8 border-b border-border pb-4"
                     >
                         <Breadcrumb
                             items={[
@@ -160,7 +182,9 @@ function EventsContent() {
                         className="mb-8"
                     />
 
-                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                        className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
                         <FilterSidebar
                             title={t('hotels.filters')}
                             hasActiveFilters={hasActiveFilters}
@@ -172,14 +196,24 @@ function EventsContent() {
                                 <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                                     {t('events.filterByLocation')}
                                 </label>
-                                <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                                <Select
+                                    value={selectedLocation}
+                                    onValueChange={setSelectedLocation}
+                                >
                                     <SelectTrigger className="w-full rounded-lg border-border bg-background">
-                                        <SelectValue placeholder={t('common.all')} />
+                                        <SelectValue
+                                            placeholder={t('common.all')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value={ALL}>{t('common.all')}</SelectItem>
+                                        <SelectItem value={ALL}>
+                                            {t('common.all')}
+                                        </SelectItem>
                                         {locationOptions.map((option) => (
-                                            <SelectItem key={option} value={option}>
+                                            <SelectItem
+                                                key={option}
+                                                value={option}
+                                            >
                                                 {option}
                                             </SelectItem>
                                         ))}
@@ -196,7 +230,9 @@ function EventsContent() {
                                         <button
                                             key={cat.value}
                                             type="button"
-                                            onClick={() => setSelectedCategory(cat.value)}
+                                            onClick={() =>
+                                                setSelectedCategory(cat.value)
+                                            }
                                             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                                                 selectedCategory === cat.value
                                                     ? 'bg-primary text-primary-foreground'
@@ -210,17 +246,23 @@ function EventsContent() {
                             </div>
 
                             {categoryTypes.length > 0 && (
-                                <div className="border-t border-border pt-6 space-y-4">
+                                <div className="space-y-4 border-t border-border pt-6">
                                     {categoryTypes.map((catType) => (
                                         <FilterRenderer
                                             key={catType.key}
                                             categoryType={catType as never}
-                                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                            selectedValues={
+                                                categoryTypeFilters[
+                                                    catType.key
+                                                ] ?? []
+                                            }
                                             onChange={(values) =>
-                                                setCategoryTypeFilters((prev) => ({
-                                                    ...prev,
-                                                    [catType.key]: values,
-                                                }))
+                                                setCategoryTypeFilters(
+                                                    (prev) => ({
+                                                        ...prev,
+                                                        [catType.key]: values,
+                                                    }),
+                                                )
                                             }
                                             lang={lang}
                                         />
@@ -232,7 +274,11 @@ function EventsContent() {
                         <div className="min-w-0 flex-1">
                             {filteredEvents.length === 0 ? (
                                 <RequestThingEmptyState
-                                    variant={events.length === 0 ? 'empty' : 'no-results'}
+                                    variant={
+                                        events.length === 0
+                                            ? 'empty'
+                                            : 'no-results'
+                                    }
                                 />
                             ) : (
                                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -247,7 +293,10 @@ function EventsContent() {
                                             <div className="h-56 overflow-hidden">
                                                 <img
                                                     src={e.image}
-                                                    alt={localizeText(e.title, lang)}
+                                                    alt={localizeText(
+                                                        e.title,
+                                                        lang,
+                                                    )}
                                                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                     loading="lazy"
                                                 />
@@ -256,26 +305,48 @@ function EventsContent() {
                                                 <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                                     <span className="flex items-center gap-1">
                                                         <Calendar className="h-3 w-3" />{' '}
-                                                        {localizeText(e.date, lang)}
+                                                        {localizeText(
+                                                            e.date,
+                                                            lang,
+                                                        )}
                                                     </span>
                                                     <span className="flex items-center gap-1">
                                                         <MapPin className="h-3 w-3" />{' '}
-                                                        {localizeText(e.location, lang)}
+                                                        {localizeText(
+                                                            e.location,
+                                                            lang,
+                                                        )}
                                                     </span>
                                                     <span className="flex items-center gap-1">
                                                         <Users className="h-3 w-3" />{' '}
-                                                        {localizeText(e.attendees, lang)}
+                                                        {localizeText(
+                                                            e.attendees,
+                                                            lang,
+                                                        )}
                                                     </span>
                                                 </div>
                                                 <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
-                                                    {localizeText(e.title, lang)}
+                                                    {localizeText(
+                                                        e.title,
+                                                        lang,
+                                                    )}
                                                 </h3>
                                                 <p className="mb-5 text-sm text-muted-foreground">
-                                                    {localizeText(e.description, lang)}
+                                                    {localizeText(
+                                                        e.description,
+                                                        lang,
+                                                    )}
                                                 </p>
-                                                <Button asChild className="bg-primary text-primary-foreground">
-                                                    <Link to={`/events/${e.slug}`}>
-                                                        {t('common.viewDetails')}
+                                                <Button
+                                                    asChild
+                                                    className="bg-primary text-primary-foreground"
+                                                >
+                                                    <Link
+                                                        to={`/events/${e.slug}`}
+                                                    >
+                                                        {t(
+                                                            'common.viewDetails',
+                                                        )}
                                                     </Link>
                                                 </Button>
                                             </div>

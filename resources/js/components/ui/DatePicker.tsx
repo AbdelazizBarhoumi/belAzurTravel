@@ -17,9 +17,11 @@ interface DatePickerProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  /** Earliest selectable date (react-day-picker `fromDate`). */
+  fromDate?: Date;
 }
 
-export function DatePicker({ date, onDateChange, placeholder = "Pick a date", className, disabled }: DatePickerProps) {
+export function DatePicker({ date, onDateChange, placeholder = "Pick a date", className, disabled, fromDate }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -42,6 +44,7 @@ export function DatePicker({ date, onDateChange, placeholder = "Pick a date", cl
           selected={date}
           onSelect={onDateChange}
           initialFocus
+          fromDate={fromDate}
         />
       </PopoverContent>
     </Popover>

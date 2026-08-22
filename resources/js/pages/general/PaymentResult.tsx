@@ -1,9 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, AlertTriangle, ArrowLeft, CreditCard } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getBooking, type ClientBookingRow } from '@/api/booking.api';
-import { retryPayment } from '@/api/payment.api';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -19,19 +18,9 @@ const PaymentResult = () => {
 
     const { data: booking } = useQuery<ClientBookingRow>({
         queryKey: ['booking', bookingId],
-        queryFn: () => getBooking(Number(bookingId)) as Promise<ClientBookingRow>,
+        queryFn: () => getBooking(bookingId!) as Promise<ClientBookingRow>,
         enabled: !!bookingId,
     });
-
-    const handleRetry = async () => {
-        if (!bookingId) return;
-        try {
-            const result = await retryPayment(Number(bookingId));
-            window.location.href = result.formUrl;
-        } catch {
-            // Error handled by toast
-        }
-    };
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -87,30 +76,39 @@ const PaymentResult = () => {
                     <div className="mb-6 rounded-xl border border-border bg-muted/30 p-4 text-left">
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('admin.booking')} #</span>
-                                <span className="font-medium">{booking.id}</span>
+                                <span className="text-muted-foreground">
+                                    {t('admin.booking')} #
+                                </span>
+                                <span className="font-medium">
+                                    {booking.booking_ref}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('admin.type')}</span>
-                                <span className="font-medium">{booking.type}</span>
+                                <span className="text-muted-foreground">
+                                    {t('admin.type')}
+                                </span>
+                                <span className="font-medium">
+                                    {booking.type}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('admin.amount')}</span>
-                                <span className="font-bold text-primary">{booking.total_amount.toLocaleString()} TND</span>
+                                <span className="text-muted-foreground">
+                                    {t('admin.amount')}
+                                </span>
+                                <span className="font-bold text-primary">
+                                    {booking.total_amount.toLocaleString()} TND
+                                </span>
                             </div>
                         </div>
                     </div>
                 )}
 
                 <div className="flex flex-col gap-3">
-                    {(isFailed || isError) && bookingId && (
-                        <Button onClick={handleRetry} className="w-full gap-2">
-                            <CreditCard className="h-4 w-4" />
-                            {t('payment.retryNow') || 'Retry Payment'}
-                        </Button>
-                    )}
                     <Link to="/client/dashboard">
-                        <Button variant={isSuccess ? 'default' : 'outline'} className="w-full gap-2">
+                        <Button
+                            variant={isSuccess ? 'default' : 'outline'}
+                            className="w-full gap-2"
+                        >
                             <ArrowLeft className="h-4 w-4" />
                             {t('client.myBookings')}
                         </Button>

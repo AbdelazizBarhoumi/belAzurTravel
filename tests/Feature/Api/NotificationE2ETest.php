@@ -24,7 +24,8 @@ class NotificationE2ETest extends TestCase
     {
         $client = User::factory()->create(['role' => 'client']);
 
-        // Create the hotel being booked
+        // Create the hotel being booked (request mode so it stays Pending and
+        // exercises the booking.created notification flow).
         Hotel::forceCreate([
             'name' => ['en' => 'Luxury Resort'],
             'slug' => 'luxury-resort',
@@ -33,6 +34,7 @@ class NotificationE2ETest extends TestCase
             'price' => 200,
             'rating' => 5,
             'image' => 'hotel.jpg',
+            'booking_mode' => 'request',
         ]);
 
         $this->actingAs($client)->postJson('/api/bookings', [
@@ -50,7 +52,7 @@ class NotificationE2ETest extends TestCase
         // Check if admin got a notification
         $admin = User::where('role', 'admin')->first();
         $this->assertEquals(1, $admin->unreadNotifications()->count());
-        $this->assertEquals('booking.created', $admin->unreadNotifications()->first()->data['type']);
+        $this->assertEquals('booking.submitted', $admin->unreadNotifications()->first()->data['type']);
 
     }
 

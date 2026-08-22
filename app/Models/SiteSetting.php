@@ -27,6 +27,9 @@ class SiteSetting extends Model
         'footer_links',
         'hours',
         'content',
+        'booking_expiry_hours',
+        'trip_reminder_days',
+        'digest_time',
     ];
 
     protected $casts = [
@@ -35,5 +38,7 @@ class SiteSetting extends Model
         'footer_links' => 'array',
         'hours' => 'array',
         'content' => 'array',
+        'booking_expiry_hours' => 'integer',
+        'trip_reminder_days' => 'integer',
     ];
 }

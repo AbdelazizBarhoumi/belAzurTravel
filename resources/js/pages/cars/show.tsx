@@ -97,7 +97,9 @@ export default function CarDetail() {
                                     >
                                         <Check className="h-4 w-4 shrink-0 text-primary" />
                                         <span className="text-sm text-foreground">
-                                            {String(localizeText(feature, lang))}
+                                            {String(
+                                                localizeText(feature, lang),
+                                            )}
                                         </span>
                                     </div>
                                 ))}
@@ -111,17 +113,21 @@ export default function CarDetail() {
                                 {t('carsDetail.policy')}
                             </h2>
                             <ul className="space-y-3">
-                                {(car.policy ?? []).map((rule: LocalizedText) => (
-                                    <li
-                                        key={String(rule.en)}
-                                        className="flex items-start gap-2 text-sm text-muted-foreground"
-                                    >
-                                        <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
-                                        <span>
-                                            {String(localizeText(rule, lang))}
-                                        </span>
-                                    </li>
-                                ))}
+                                {(car.policy ?? []).map(
+                                    (rule: LocalizedText) => (
+                                        <li
+                                            key={String(rule.en)}
+                                            className="flex items-start gap-2 text-sm text-muted-foreground"
+                                        >
+                                            <span className="mt-1 h-2 w-2 rounded-full bg-primary" />
+                                            <span>
+                                                {String(
+                                                    localizeText(rule, lang),
+                                                )}
+                                            </span>
+                                        </li>
+                                    ),
+                                )}
                             </ul>
                         </section>
                     )}

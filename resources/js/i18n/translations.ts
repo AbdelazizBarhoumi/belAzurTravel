@@ -500,6 +500,11 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'تصنيف العقار',
         en: 'Property class',
     },
+    'search.fields.stars': {
+        fr: 'Étoiles',
+        ar: 'النجوم',
+        en: 'Stars',
+    },
     'search.fields.tourStyle': {
         fr: 'Style du circuit',
         ar: 'نوع الجولة',
@@ -1159,6 +1164,16 @@ export const translations: Record<string, TranslationEntry> = {
     'common.call': { fr: 'Appeler', ar: 'اتصال', en: 'Call' },
     'common.travelers': { fr: 'voyageurs', ar: 'مسافرون', en: 'travelers' },
     'common.search': { fr: 'Rechercher...', ar: 'بحث...', en: 'Search...' },
+    'common.loading': {
+        fr: 'Chargement...',
+        ar: 'جاري التحميل...',
+        en: 'Loading...',
+    },
+    'common.loadMore': {
+        fr: 'Charger plus',
+        ar: 'تحميل المزيد',
+        en: 'Load more',
+    },
     'common.results': { fr: 'résultats', ar: 'نتائج', en: 'results' },
     'common.noResults': {
         fr: 'Aucun résultat trouvé.',
@@ -1416,6 +1431,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Handpicked accommodations offering the perfect blend of comfort, luxury, and unforgettable experiences.',
     },
     'hotels.perNight': { fr: '/nuit', ar: '/ليلة', en: '/night' },
+    'hotels.from': { fr: 'Dès', ar: 'يبدأ من', en: 'From' },
     'hotels.reviews': { fr: 'avis', ar: 'تقييمات', en: 'reviews' },
     'hotels.book': BOOK,
     'hotels.filterByTags': {
@@ -1452,6 +1468,16 @@ export const translations: Record<string, TranslationEntry> = {
     'hotels.showing': { fr: 'Affichage', ar: 'عرض', en: 'Showing' },
     'hotels.results': { fr: 'résultats', ar: 'نتائج', en: 'results' },
     'hotels.priceFrom': { fr: 'À partir de', ar: 'ابتداءً من', en: 'From' },
+    'hotels.lastKnown': {
+        fr: 'dernier prix connu',
+        ar: 'آخر سعر معروف',
+        en: 'last known price',
+    },
+    'hotels.livePrices': {
+        fr: 'Prix en direct pour vos dates',
+        ar: 'أسعار مباشرة لتواريخك',
+        en: 'Live prices for your dates',
+    },
     'hotels.noResults': {
         fr: 'Aucun hôtel ne correspond à vos critères de filtre.',
         ar: 'لا توجد فنادق تطابق معايير الفلتر الخاصة بك.',
@@ -1461,6 +1487,149 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Filtres',
         ar: 'الفلاتر',
         en: 'Filters',
+    },
+    'hotels.filtersButton': {
+        fr: 'Filtres',
+        ar: 'الفلاتر',
+        en: 'Filters',
+    },
+    'hotels.done': {
+        fr: 'Terminé',
+        ar: 'تم',
+        en: 'Done',
+    },
+    'hotels.checkingAvailability': {
+        fr: 'Vérification des disponibilités et des tarifs…',
+        ar: 'جارٍ التحقق من التوفر والأسعار…',
+        en: 'Checking availability & rates…',
+    },
+    'hotels.priceUnitBrowse': {
+        fr: 'prix/nuit enregistrés',
+        ar: 'السعر لكل ليلة (مسجّل)',
+        en: 'stored per-night prices',
+    },
+    'hotels.priceUnitLive': {
+        fr: 'total du séjour',
+        ar: 'إجمالي الإقامة',
+        en: 'total stay',
+    },
+    'hotels.occupancy': {
+        fr: 'Voyageurs',
+        ar: 'المسافرون',
+        en: 'Travelers',
+    },
+    'hotels.guestsLabel': {
+        fr: 'voyageur(s)',
+        ar: 'مسافر(ون)',
+        en: 'guest(s)',
+    },
+    'hotels.childrenLabel': {
+        fr: 'enfant(s)',
+        ar: 'enfant(s)',
+        en: 'child(ren)',
+    },
+    'hotels.adultsLabel': { fr: 'Adultes', ar: 'بالغون', en: 'Adults' },
+    'hotels.adultsHelp': {
+        fr: '12 ans et plus',
+        ar: '12 سنة فأكثر',
+        en: 'Ages 12 and up',
+    },
+    'hotels.childrenHelp': {
+        fr: 'Moins de 12 ans',
+        ar: 'أقل من 12 سنة',
+        en: 'Under 12 years',
+    },
+    'hotels.addChild': {
+        fr: 'Ajouter un enfant',
+        ar: 'إضافة طفل',
+        en: 'Add child',
+    },
+    'hotels.removeChild': {
+        fr: 'Retirer l’enfant',
+        ar: 'إزالة الطفل',
+        en: 'Remove child',
+    },
+    'hotels.decreaseAdults': {
+        fr: 'Diminuer les adultes',
+        ar: 'تقليل البالغين',
+        en: 'Decrease adults',
+    },
+    'hotels.increaseAdults': {
+        fr: 'Augmenter les adultes',
+        ar: 'زيادة البالغين',
+        en: 'Increase adults',
+    },
+    'hotels.childAge': {
+        fr: 'Âge de l’enfant',
+        ar: 'عمر الطفل',
+        en: "Child's age",
+    },
+    'hotels.years': { fr: 'an(s)', ar: 'سنة', en: 'year(s)' },
+    'hotels.providerBadge': {
+        fr: 'Disponibilité en direct',
+        ar: 'توفر مباشر',
+        en: 'Live availability',
+    },
+    'hotels.manualBadge': {
+        fr: 'Sur demande',
+        ar: 'عند الطلب',
+        en: 'On request',
+    },
+    'hotels.sortBy': { fr: 'Trier par', ar: 'ترتيب حسب', en: 'Sort by' },
+    'hotels.sortDefault': {
+        fr: 'Recommandés',
+        ar: 'موصى به',
+        en: 'Recommended',
+    },
+    'hotels.sortPriceAsc': {
+        fr: 'Prix croissant',
+        ar: 'السعر تصاعدياً',
+        en: 'Price (low to high)',
+    },
+    'hotels.sortPriceDesc': {
+        fr: 'Prix décroissant',
+        ar: 'السعر تنازلياً',
+        en: 'Price (high to low)',
+    },
+    'hotels.sortStarsDesc': {
+        fr: 'Étoiles décroissantes',
+        ar: 'النجوم تنازلياً',
+        en: 'Stars (high to low)',
+    },
+    'hotels.stayTotal': {
+        fr: 'Total du séjour',
+        ar: 'إجمالي الإقامة',
+        en: 'Stay total',
+    },
+    'hotels.totalFor': {
+        fr: 'Total pour {nights} nuits',
+        ar: 'الإجمالي لـ {nights} ليالٍ',
+        en: 'Total for {nights} nights',
+    },
+    'hotels.unavailable': {
+        fr: 'Indisponible pour ces dates',
+        ar: 'غير متوفر لهذه التواريخ',
+        en: 'Unavailable for these dates',
+    },
+    'hotels.showUnavailable': {
+        fr: 'Afficher les indisponibles',
+        ar: 'إظهار غير المتاح',
+        en: 'Show unavailable',
+    },
+    'hotels.hideUnavailable': {
+        fr: 'Masquer les indisponibles',
+        ar: 'إخفاء غير المتاح',
+        en: 'Hide unavailable',
+    },
+    'hotels.perRequest': {
+        fr: 'Sur demande',
+        ar: 'طلب',
+        en: 'Per request',
+    },
+    'hotels.noAvailabilityResults': {
+        fr: 'Aucun hôtel disponible pour vos dates. Essayez d’autres dates.',
+        ar: 'لا توجد فنادق متاحة لتواريخك. جرب تواريخ أخرى.',
+        en: 'No hotels are available for your dates. Try different dates.',
     },
 
     // Hotel Detail Page
@@ -1502,6 +1671,463 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Select room',
     },
     'hotelDetail.pernight': { fr: '/nuit', ar: '/ليلة', en: '/night' },
+    'hotelDetail.noPrice': {
+        fr: 'Prix non disponible',
+        ar: 'السعر غير متوفر',
+        en: 'Price unavailable',
+    },
+    'hotelDetail.totalForStay': {
+        fr: 'Total pour le séjour',
+        ar: 'الإجمالي للإقامة',
+        en: 'Total for stay',
+    },
+    'hotelDetail.nightsLabel': {
+        fr: 'nuits',
+        ar: 'ليالي',
+        en: 'nights',
+    },
+    'hotelDetail.livePriceTitle': {
+        fr: 'Vérifiez le prix pour vos dates',
+        ar: 'تحقق من السعر لتواريخك',
+        en: 'Check the price for your dates',
+    },
+    'hotelDetail.livePriceHint': {
+        fr: 'Sélectionnez vos dates et le nombre de voyageurs pour obtenir les prix et la disponibilité en temps réel.',
+        ar: 'اختر تواريخك وعدد المسافرين للحصول على الأسعار والتوفر في الوقت الفعلي.',
+        en: 'Pick your dates and number of travelers to get real-time prices and availability.',
+    },
+    'hotelDetail.livePrices': {
+        fr: 'Prix en direct',
+        ar: 'سعر مباشر',
+        en: 'Live price',
+    },
+    'hotelDetail.availableFrom': {
+        fr: 'Disponible à partir du',
+        ar: 'متاح من',
+        en: 'Available from',
+    },
+    'hotelDetail.minimumNights': {
+        fr: 'Séjour minimum',
+        ar: 'الحد الأدنى للإقامة',
+        en: 'Minimum stay',
+    },
+    'hotelDetail.night': {
+        fr: 'nuit',
+        ar: 'ليلة',
+        en: 'night',
+    },
+    'hotelDetail.unavailableNotice': {
+        fr: "Cet hôtel n'a aucune disponibilité pour les dates sélectionnées. Essayez d'autres dates.",
+        ar: 'لا يتوفر هذا الفندق للتواريخ المحددة. جرب تواريخ أخرى.',
+        en: 'This hotel has no availability for the selected dates. Try other dates.',
+    },
+    'hotelDetail.requestTitle': {
+        fr: 'Sur demande',
+        ar: 'طلب',
+        en: 'Per request',
+    },
+    'hotelDetail.requestNotice': {
+        fr: "Cet hôtel n'a aucune disponibilité pour vos dates, mais vous pouvez soumettre une demande.",
+        ar: 'لا يتوفر هذا الفندق لتواريخك، لكن يمكنك تقديم طلب.',
+        en: 'This hotel has no availability for your selected dates, but you can submit a request.',
+    },
+    'hotelDetail.requestBooking': {
+        fr: 'Demander une réservation',
+        ar: 'طلب حجز',
+        en: 'Request Booking',
+    },
+    'hotelDetail.onRequest': {
+        fr: 'Sur demande',
+        ar: 'عند الطلب',
+        en: 'On request',
+    },
+    'hotelDetail.stopSale': {
+        fr: 'Vente suspendue',
+        ar: 'إيقاف البيع',
+        en: 'Sale stopped',
+    },
+    'hotelDetail.mandatorySupplements': {
+        fr: 'Suppléments obligatoires',
+        ar: 'الرسوم الإضافية الإجبارية',
+        en: 'Mandatory supplements',
+    },
+    'hotelDetail.roomIncluded': {
+        fr: 'Inclus',
+        ar: 'مشمول',
+        en: 'Included',
+    },
+    'hotelDetail.practicalInfo': {
+        fr: 'Informations pratiques',
+        ar: 'معلومات عملية',
+        en: 'Practical information',
+    },
+    'hotelDetail.checkInOut': {
+        fr: "Heures d'arrivée / départ",
+        ar: 'أوقات الوصول والمغادرة',
+        en: 'Check-in / check-out',
+    },
+    'hotelDetail.checkIn': {
+        fr: 'Arrivée',
+        ar: 'الوصول',
+        en: 'Check-in',
+    },
+    'hotelDetail.checkOut': {
+        fr: 'Départ',
+        ar: 'المغادرة',
+        en: 'Check-out',
+    },
+    'hotelDetail.contact': {
+        fr: 'Contact',
+        ar: 'اتصال',
+        en: 'Contact',
+    },
+    'hotelDetail.phone': {
+        fr: 'Téléphone',
+        ar: 'هاتف',
+        en: 'Phone',
+    },
+    'hotelDetail.email': {
+        fr: 'Email',
+        ar: 'بريد إلكتروني',
+        en: 'Email',
+    },
+    'hotelDetail.boardings': {
+        fr: 'Formules de repas',
+        ar: 'أنظمة الطعام',
+        en: 'Meal plans',
+    },
+    'hotelDetail.options': {
+        fr: 'Options disponibles',
+        ar: 'خيارات متاحة',
+        en: 'Available options',
+    },
+    'hotelDetail.facilities': {
+        fr: 'Équipements',
+        ar: 'المرافق',
+        en: 'Facilities',
+    },
+    'hotelDetail.tags': {
+        fr: 'Services et tags',
+        ar: 'الخدمات والوسوم',
+        en: 'Services & tags',
+    },
+    'hotelDetail.standardBoarding': {
+        fr: 'Standard',
+        ar: 'قياسي',
+        en: 'Standard',
+    },
+    'hotelDetail.promo': { fr: 'Promo', ar: 'عرض', en: 'Promo' },
+    'hotelDetail.freeChild': {
+        fr: 'Enfant gratuit',
+        ar: 'طفل مجاني',
+        en: 'Free child',
+    },
+    'hotelDetail.recommended': {
+        fr: 'Recommandé',
+        ar: 'موصى به',
+        en: 'Recommended',
+    },
+    'hotelDetail.nonRefundable': {
+        fr: 'Non remboursable',
+        ar: 'غير قابلة للاسترداد',
+        en: 'Non-refundable',
+    },
+    'hotelDetail.freeCancellationUntil': {
+        fr: 'Annulation gratuite jusqu’au',
+        ar: 'إلغاء مجاني حتى',
+        en: 'Free cancellation until',
+    },
+    'hotelDetail.cancellationPolicy': {
+        fr: 'Conditions d’annulation',
+        ar: 'شروط الإلغاء',
+        en: 'Cancellation policy',
+    },
+    'hotelDetail.unavailableSticky': {
+        fr: 'Indisponible pour ces dates',
+        ar: 'غير متوفر لهذه التواريخ',
+        en: 'No availability for these dates',
+    },
+    'hotelDetail.pickDatesHint': {
+        fr: 'Sélectionnez vos dates pour voir la disponibilité en direct.',
+        ar: 'حدد تواريخك لعرض التوفر المباشر.',
+        en: 'Select your dates to see live availability.',
+    },
+    'hotelDetail.checkAvailability': {
+        fr: 'Vérifier la disponibilité',
+        ar: 'تحقق من التوفر',
+        en: 'Check availability',
+    },
+    'hotelDetail.checkingAvailability': {
+        fr: 'Vérification…',
+        ar: 'جارٍ التحقق…',
+        en: 'Checking…',
+    },
+    'hotelDetail.search': { fr: 'Rechercher', ar: 'بحث', en: 'Search' },
+    'hotelDetail.destination': {
+        fr: 'Destination',
+        ar: 'الوجهة',
+        en: 'Destination',
+    },
+    'hotelDetail.advancedSearch': {
+        fr: 'Recherche avancée',
+        ar: 'بحث متقدم',
+        en: 'Advanced search',
+    },
+    'hotelDetail.viewOnMap': {
+        fr: 'Voir sur carte',
+        ar: 'عرض على الخريطة',
+        en: 'View on map',
+    },
+    'hotelDetail.mapOf': {
+        fr: 'Carte de',
+        ar: 'خريطة',
+        en: 'Map of',
+    },
+    'hotelDetail.bestRateGuaranteed': {
+        fr: 'Meilleur tarif garanti',
+        ar: 'أفضل سعر مضمون',
+        en: 'Best rate guaranteed',
+    },
+    'hotelDetail.bestRateHint': {
+        fr: "Confirmez aujourd'hui : les prix peuvent augmenter à l'approche des dates.",
+        ar: 'أكّد اليوم: قد ترتفع الأسعار مع اقتراب المواعيد.',
+        en: 'Confirm today: prices can increase as your dates approach.',
+    },
+    'hotelDetail.servicesAndEquipments': {
+        fr: 'Services & équipements',
+        ar: 'الخدمات والمرافق',
+        en: 'Services & amenities',
+    },
+    'hotelDetail.bestPriceNote': {
+        fr: "Garantissez-vous un super tarif pour votre prochain séjour. Confirmez votre réservation aujourd'hui car les prix peuvent augmenter.",
+        ar: 'تأكّد من الحصول على سعر ممتاز لإقامتك القادمة. أكّد حجزك اليوم لأن الأسعار قد ترتفع.',
+        en: 'Lock in a great rate for your stay. Confirm your booking today as prices may rise.',
+    },
+    'hotelDetail.freeCancellationNote': {
+        fr: "Sur notre site, l'annulation est gratuite pour la plupart des hébergements et vous recevez une confirmation instantanée.",
+        ar: 'على موقعنا، الإلغاء مجاني لمعظم أماكن الإقامة وستتلقى تأكيداً فورياً.',
+        en: 'Free cancellation on most stays and instant confirmation when you book on our site.',
+    },
+    'hotelDetail.datesAndRates': {
+        fr: 'Dates & Tarifs',
+        ar: 'التواريخ والأسعار',
+        en: 'Dates & Rates',
+    },
+    'hotelDetail.accommodation': {
+        fr: 'Hébergement',
+        ar: 'الإقامة',
+        en: 'Accommodation',
+    },
+    'hotelDetail.discover': {
+        fr: 'Découvrez',
+        ar: 'اكتشف',
+        en: 'Discover',
+    },
+    'hotelDetail.accommodationLocationCopy': {
+        fr: "L'établissement est idéalement situé, à proximité des principaux sites d'intérêt et des accès pratiques.",
+        ar: 'يقع مكان الإقامة في موقع مثالي، بالقرب من أبرز المعالم ووسائل الوصول المريحة.',
+        en: 'The property is ideally located, close to the main points of interest and convenient transport links.',
+    },
+    'hotelDetail.accommodationDiningCopy': {
+        fr: 'Restaurant principal et options de restauration sur place pour tous les goûts.',
+        ar: 'مطعم رئيسي وخيارات تناول الطعام في الموقع لجميع الأذواق.',
+        en: 'Main restaurant and on-site dining options for every taste.',
+    },
+    'hotelDetail.accommodationActivitiesCopy': {
+        fr: 'Activités et loisirs pour toute la famille, sur place et à proximité.',
+        ar: 'أنشطة وترفيه لجميع أفراد العائلة في الموقع والقريب منه.',
+        en: 'Activities and leisure for the whole family, on site and nearby.',
+    },
+    'hotelDetail.locationTitle': {
+        fr: 'Emplacement',
+        ar: 'الموقع',
+        en: 'Location',
+    },
+    'hotelDetail.diningAndBar': {
+        fr: 'Restauration & bar',
+        ar: 'المطاعم والبار',
+        en: 'Dining & bar',
+    },
+    'hotelDetail.activitiesAndLeisure': {
+        fr: 'Activités & loisirs',
+        ar: 'الأنشطة والترفيه',
+        en: 'Activities & leisure',
+    },
+    'hotelDetail.roomsTitle': { fr: 'Chambres', ar: 'الغرف', en: 'Rooms' },
+    'hotelDetail.reviewsTitle': { fr: 'Avis', ar: 'التقييمات', en: 'Reviews' },
+    'hotelDetail.verifiedReviews': {
+        fr: 'avis vérifiés',
+        ar: 'تقييم موثّق',
+        en: 'verified reviews',
+    },
+    'hotelDetail.photosLabel': { fr: 'photos', ar: 'صورة', en: 'photos' },
+    'hotelDetail.roomsAndRates': {
+        fr: 'Chambres & tarifs',
+        ar: 'الغرف والأسعار',
+        en: 'Rooms & rates',
+    },
+    'hotelDetail.perNightFrom': {
+        fr: 'par nuit, à partir de',
+        ar: 'لليلة، ابتداءً من',
+        en: 'per night, from',
+    },
+    'hotelDetail.roomType': {
+        fr: 'Type de chambre',
+        ar: 'نوع الغرفة',
+        en: 'Room type',
+    },
+    'hotelDetail.occupancy': {
+        fr: 'Occupation',
+        ar: 'الإشغال',
+        en: 'Occupancy',
+    },
+    'hotelDetail.boarding': {
+        fr: 'Type de pension',
+        ar: 'نوع الإقامة',
+        en: 'Boarding type',
+    },
+    'hotelDetail.reserve': { fr: 'Réserver', ar: 'احجز', en: 'Reserve' },
+    'hotelDetail.available': {
+        fr: 'Disponible',
+        ar: 'متوفر',
+        en: 'Available',
+    },
+    'hotelDetail.stayTotalLabel': {
+        fr: 'Montant total du séjour',
+        ar: 'المبلغ الإجمالي للإقامة',
+        en: 'Total stay amount',
+    },
+    'hotelDetail.freeCancellationBefore': {
+        fr: 'Annulation gratuite avant le',
+        ar: 'إلغاء مجاني قبل',
+        en: 'Free cancellation before',
+    },
+    'hotelDetail.rooms': { fr: 'Chambres', ar: 'الغرف', en: 'Rooms' },
+    'hotelDetail.roomsShort': { fr: 'ch.', ar: 'غرفة', en: 'rm' },
+    'hotelDetail.adults': { fr: 'Adultes', ar: 'بالغون', en: 'Adults' },
+    'hotelDetail.children': { fr: 'Enfants', ar: 'أطفال', en: 'Children' },
+    'hotelDetail.scoreExcellent': {
+        fr: 'Exceptionnel',
+        ar: 'استثنائي',
+        en: 'Exceptional',
+    },
+    'hotelDetail.scoreAdorable': {
+        fr: 'Adorable',
+        ar: 'رائع',
+        en: 'Adorable',
+    },
+    'hotelDetail.scoreVeryGood': {
+        fr: 'Très bien',
+        ar: 'جيد جداً',
+        en: 'Very good',
+    },
+    'hotelDetail.scoreGood': { fr: 'Bien', ar: 'جيد', en: 'Good' },
+    'hotelInfo.tabAbout': {
+        fr: 'Présentation',
+        ar: 'نظرة عامة',
+        en: 'About',
+    },
+    'hotelInfo.tabEquipment': {
+        fr: 'Équipements',
+        ar: 'المرافق',
+        en: 'Amenities',
+    },
+    'hotelInfo.tabDining': {
+        fr: 'Restauration & options',
+        ar: 'الإقامة والخيارات',
+        en: 'Dining & options',
+    },
+    'hotelInfo.tabPractical': {
+        fr: 'Infos pratiques',
+        ar: 'معلومات عملية',
+        en: 'Practical info',
+    },
+    'hotelInfo.about': {
+        fr: 'À propos de l’hôtel',
+        ar: 'عن الفندق',
+        en: 'About the hotel',
+    },
+    'hotelInfo.more': {
+        fr: 'Lire plus',
+        ar: 'اقرأ المزيد',
+        en: 'Read more',
+    },
+    'hotelInfo.less': {
+        fr: 'Réduire',
+        ar: 'إخفاء',
+        en: 'Show less',
+    },
+    'hotelInfo.highlights': {
+        fr: 'Points forts',
+        ar: 'أبرز المزايا',
+        en: 'Highlights',
+    },
+    'hotelInfo.amenities': {
+        fr: 'Services & équipements',
+        ar: 'الخدمات والمرافق',
+        en: 'Services & amenities',
+    },
+    'hotelInfo.facilities': {
+        fr: 'Installations',
+        ar: 'التجهيزات',
+        en: 'Facilities',
+    },
+    'hotelInfo.general': {
+        fr: 'Général',
+        ar: 'عام',
+        en: 'General',
+    },
+    'hotelInfo.boardings': {
+        fr: 'Formules de pension',
+        ar: 'أنظمة الإقامة',
+        en: 'Meal plans',
+    },
+    'hotelInfo.options': {
+        fr: 'Options à la demande',
+        ar: 'خيارات حسب الطلب',
+        en: 'On-request options',
+    },
+    'hotelInfo.onRequest': {
+        fr: 'Sous réserve de disponibilité',
+        ar: 'حسب التوفر',
+        en: 'Subject to availability',
+    },
+    'hotelInfo.practical': {
+        fr: 'Informations pratiques',
+        ar: 'معلومات عملية',
+        en: 'Practical information',
+    },
+    'hotelInfo.checkIn': {
+        fr: 'Arrivée',
+        ar: 'تسجيل الدخول',
+        en: 'Check-in',
+    },
+    'hotelInfo.checkOut': {
+        fr: 'Départ',
+        ar: 'تسجيل الخروج',
+        en: 'Check-out',
+    },
+    'hotelInfo.address': {
+        fr: 'Adresse',
+        ar: 'العنوان',
+        en: 'Address',
+    },
+    'hotelInfo.phone': {
+        fr: 'Téléphone',
+        ar: 'الهاتف',
+        en: 'Phone',
+    },
+    'hotelInfo.email': {
+        fr: 'E-mail',
+        ar: 'البريد الإلكتروني',
+        en: 'Email',
+    },
+    'hotelInfo.copy': { fr: 'Copier', ar: 'نسخ', en: 'Copy' },
+    'hotelInfo.importantNote': {
+        fr: 'À savoir avant de réserver',
+        ar: 'ملاحظات مهمة',
+        en: 'Things to know',
+    },
     'tourDetail.included': { fr: 'Inclus', ar: 'متضمن', en: 'Included' },
     'tourDetail.notIncluded': {
         fr: 'Non inclus',
@@ -4072,10 +4698,155 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'أي طلبات خاصة؟',
         en: 'Any special requests?',
     },
+    'booking.preferences': {
+        fr: 'Préférences',
+        ar: 'التفضيلات',
+        en: 'Preferences',
+    },
+    'booking.travelers': {
+        fr: 'Voyageurs',
+        ar: 'المسافرون',
+        en: 'Travelers',
+    },
+    'booking.travelersPlaceholder': {
+        fr: 'Un voyageur par ligne : Prénom Nom',
+        ar: 'مسافر واحد في كل سطر: الاسم الكامل',
+        en: 'One traveler per line: First Last',
+    },
     'booking.submit': {
         fr: 'Demander la réservation',
         ar: 'طلب الحجز',
         en: 'Request Booking',
+    },
+    'booking.requestNotice': {
+        fr: "Ceci est une demande de réservation. Nous contacterons l'hôtel pour vérifier la disponibilité.",
+        ar: 'هذا طلب حجز. سنتواصل مع الفندق للتحقق من التوفر.',
+        en: "This is a request booking. We'll contact the hotel to check availability.",
+    },
+    'booking.requestBanner': {
+        fr: "Votre demande est en cours de traitement. Nous contacterons l'hôtel pour vérifier la disponibilité.",
+        ar: 'طلبك قيد المعالجة. سنتواصل مع الفندق للتحقق من التوفر.',
+        en: "Your request is being processed. We'll contact the hotel to check availability.",
+    },
+    'booking.requestBadge': {
+        fr: 'Demande',
+        ar: 'طلب',
+        en: 'Request',
+    },
+    'booking.datesLocked': {
+        fr: "Dates verrouillées à l'offre recherchée",
+        ar: 'التواريخ مثبتة على العرض الذي تم البحث عنه',
+        en: 'Dates locked to the searched offer',
+    },
+    'booking.guests': {
+        fr: 'Invités',
+        ar: 'الضيوف',
+        en: 'Guests',
+    },
+    'booking.guestsHint': {
+        fr: 'Ajoutez chaque invité. Le premier adulte est le titulaire de la réservation.',
+        ar: 'أضف كل ضيف. البالغ الأول هو صاحب الحجز.',
+        en: 'Add each guest. The first adult is the booking holder.',
+    },
+    'booking.guestNumber': {
+        fr: 'Invité',
+        ar: 'الضيف',
+        en: 'Guest',
+    },
+    'booking.civility': { fr: 'Civilité', ar: 'اللقب', en: 'Civility' },
+    'booking.civilityMr': { fr: 'M.', ar: 'السيد', en: 'Mr' },
+    'booking.civilityMrs': { fr: 'Mme', ar: 'السيدة', en: 'Mrs' },
+    'booking.civilityMs': { fr: 'Mlle', ar: 'الآنسة', en: 'Ms' },
+    'booking.age': { fr: 'Âge', ar: 'العمر', en: 'Age' },
+    'booking.firstName': {
+        fr: 'Prénom',
+        ar: 'الاسم الأول',
+        en: 'First name',
+    },
+    'booking.lastName': {
+        fr: 'Nom',
+        ar: 'اسم العائلة',
+        en: 'Last name',
+    },
+    'booking.passportNumber': {
+        fr: 'N° de passeport',
+        ar: 'رقم جواز السفر',
+        en: 'Passport number',
+    },
+    'booking.passportExpiry': {
+        fr: 'Expiration du passeport',
+        ar: 'انتهاء صلاحية جواز السفر',
+        en: 'Passport expiry',
+    },
+    'booking.confirmTitle': {
+        fr: 'Confirmez votre réservation',
+        ar: 'أكد حجزك',
+        en: 'Confirm your booking',
+    },
+    'booking.confirmDescription': {
+        fr: 'Disponibilité et prix confirmés par le fournisseur. Procédez au paiement pour finaliser.',
+        ar: 'تم تأكيد التوفر والسعر من قبل المورد. تابع الدفع لإتمام الحجز.',
+        en: 'Availability and price confirmed by the provider. Proceed to payment to finalize.',
+    },
+    'booking.confirmedTotal': {
+        fr: 'Total confirmé',
+        ar: 'الإجمالي المؤكد',
+        en: 'Confirmed total',
+    },
+    'booking.submittedTitle': {
+        fr: 'Demande envoyée',
+        ar: 'تم إرسال الطلب',
+        en: 'Request submitted',
+    },
+    'booking.submittedDescription': {
+        fr: 'Nous avons bien reçu votre demande. Vous serez notifié(e) dès qu’elle sera confirmée.',
+        ar: 'لقد استلمنا طلبك. سيتم إشعارك بمجرد تأكيده.',
+        en: "We've received your request. You'll be notified once it's confirmed.",
+    },
+    'booking.submittedTotal': {
+        fr: 'Montant estimé',
+        ar: 'المبلغ التقديري',
+        en: 'Estimated total',
+    },
+    'booking.submittedDone': {
+        fr: 'Terminé',
+        ar: 'تم',
+        en: 'Done',
+    },
+    'booking.referenceLabel': {
+        fr: 'Référence',
+        ar: 'المرجع',
+        en: 'Reference',
+    },
+    'booking.whatsNext': {
+        fr: 'Et ensuite ?',
+        ar: 'ماذا بعد؟',
+        en: "What's next",
+    },
+    'booking.nextStepEmail': {
+        fr: 'Vous recevrez un e-mail de confirmation sous peu.',
+        ar: 'ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريباً.',
+        en: "You'll receive a confirmation email shortly.",
+    },
+    'booking.nextStepReview': {
+        fr: 'Notre équipe vérifie la disponibilité, généralement dans les 24 heures.',
+        ar: 'يفريقنا التحقق من التوفر عادةً خلال 24 ساعة.',
+        en: 'Our team reviews availability, usually within 24 hours.',
+    },
+    'booking.nextStepPayment': {
+        fr: "Aucun paiement ne sera prélevé tant que votre réservation n'est pas confirmée.",
+        ar: 'لن يتم تحصيل أي مبلغ حتى يتم تأكيد حجزك.',
+        en: 'No payment is taken until your booking is confirmed.',
+    },
+    'booking.nextStepContact': {
+        fr: 'Pour toute question, contactez-nous à',
+        ar: 'لأي استفسار، تواصل معنا على',
+        en: 'For any questions, contact us at',
+    },
+    'booking.supplements': {
+        fr: 'Suppléments',
+        ar: 'إضافات',
+        en: 'Supplements',
     },
     'common.processing': {
         fr: 'Traitement...',
@@ -4086,21 +4857,6 @@ export const translations: Record<string, TranslationEntry> = {
 };
 
 // Payment translations
-translations['payment.payNow'] = {
-    fr: 'Réserver et Payer',
-    ar: 'احجز وادفع',
-    en: 'Book & Pay',
-};
-translations['payment.processing'] = {
-    fr: 'Traitement du paiement...',
-    ar: 'جاري معالجة الدفع...',
-    en: 'Processing payment...',
-};
-translations['payment.redirecting'] = {
-    fr: 'Redirection vers la page de paiement...',
-    ar: 'جاري التحويل إلى صفحة الدفع...',
-    en: 'Redirecting to payment page...',
-};
 translations['payment.successTitle'] = {
     fr: 'Paiement Réussi!',
     ar: 'تم الدفع بنجاح!',
@@ -4130,16 +4886,6 @@ translations['payment.errorMessage'] = {
     fr: 'Une erreur est survenue lors du traitement du paiement.',
     ar: 'حدث خطأ أثناء معالجة الدفع.',
     en: 'An error occurred while processing the payment.',
-};
-translations['payment.initError'] = {
-    fr: "Échec de l'initialisation du paiement. Veuillez payer depuis votre tableau de bord.",
-    ar: 'فشل تهيئة الدفع. يرجى الدفع من لوحة التحكم.',
-    en: 'Payment initiation failed. Please pay from your dashboard.',
-};
-translations['payment.retryNow'] = {
-    fr: 'Réessayer le paiement',
-    ar: 'إعادة محاولة الدفع',
-    en: 'Retry Payment',
 };
 translations['client.conversation'] = {
     fr: 'Conversation',
@@ -4197,6 +4943,11 @@ translations['actions.cancel'] = {
     fr: 'Annuler',
     ar: 'إلغاء',
     en: 'Cancel',
+};
+translations['actions.close'] = {
+    fr: 'Fermer',
+    ar: 'إغلاق',
+    en: 'Close',
 };
 translations['actions.save'] = {
     fr: 'Enregistrer',
@@ -5206,6 +5957,91 @@ translations['admin.hotelForm.starsHelp'] = {
     ar: 'تصنيف الفندق بالنجوم.',
     en: 'Hotel star rating.',
 };
+translations['admin.basePrice'] = {
+    fr: 'Prix de base',
+    ar: 'السعر الأساسي',
+    en: 'Base price',
+};
+translations['admin.minPrice'] = {
+    fr: 'Prix minimum',
+    ar: 'الحد الأدنى للسعر',
+    en: 'Min price',
+};
+translations['admin.finalPrice'] = {
+    fr: 'Prix final',
+    ar: 'السعر النهائي',
+    en: 'Final price',
+};
+translations['admin.hotelForm.basePricePlaceholder'] = {
+    fr: 'Ex. : 250',
+    ar: 'مثال: 250',
+    en: 'e.g. 250',
+};
+translations['admin.hotelForm.basePriceHelp'] = {
+    fr: 'Prix brut fournisseur. Le prix public est calculé avec la marge.',
+    ar: 'السعر الخام للمورد. يُحتسب السعر النهائي بإضافة هامش الربح.',
+    en: 'Supplier base price. The public price is computed with the markup.',
+};
+translations['admin.markupPercentage'] = {
+    fr: 'Marge (%)',
+    ar: 'هامش الربح (%)',
+    en: 'Markup (%)',
+};
+translations['admin.hotelForm.markupHelp'] = {
+    fr: 'Pourcentage ajouté au prix de base (défaut 20).',
+    ar: 'النسبة المضافة على السعر الأساسي (الافتراضي 20).',
+    en: 'Percentage added on top of the base price (default 20).',
+};
+translations['admin.currency'] = {
+    fr: 'Devise',
+    ar: 'العملة',
+    en: 'Currency',
+};
+translations['admin.hotelForm.currencyHelp'] = {
+    fr: 'Code ISO de la devise (ex. TND).',
+    ar: 'رمز العملة الدولي (مثال: TND).',
+    en: 'ISO currency code (e.g. TND).',
+};
+translations['admin.hotelForm.source'] = {
+    fr: 'Source',
+    ar: 'المصدر',
+    en: 'Source',
+};
+translations['admin.hotelForm.sourceHelp'] = {
+    fr: 'Fournisseur connecté (OS-TRAVEL) ou hôtel manuel.',
+    ar: 'مزود متصل (OS-TRAVEL) أو فندق يدوي.',
+    en: 'Connected provider (OS-TRAVEL) or manual hotel.',
+};
+translations['admin.hotelForm.bookingMode'] = {
+    fr: 'Mode de réservation',
+    ar: 'وضع الحجز',
+    en: 'Booking mode',
+};
+translations['admin.hotelForm.bookingModeHelp'] = {
+    fr: 'Instantané : réservation confirmée immédiatement. Sur demande : confirmation manuelle par l’admin.',
+    ar: 'فوري: يتم تأكيد الحجز فورًا. عند الطلب: تأكيد يدوي من الإدارة.',
+    en: 'Instant: booking confirmed immediately. On request: manual confirmation by admin.',
+};
+translations['admin.hotelForm.bookingModeInstant'] = {
+    fr: 'Instantané',
+    ar: 'فوري',
+    en: 'Instant',
+};
+translations['admin.hotelForm.bookingModeRequest'] = {
+    fr: 'Sur demande',
+    ar: 'عند الطلب',
+    en: 'On request',
+};
+translations['admin.hotelForm.sourceManual'] = {
+    fr: 'Manuel',
+    ar: 'يدوي',
+    en: 'Manual',
+};
+translations['admin.hotelForm.sourceOsttravel'] = {
+    fr: 'OS-TRAVEL',
+    ar: 'OS-TRAVEL',
+    en: 'OS-TRAVEL',
+};
 translations['admin.hotelForm.reviewsPlaceholder'] = {
     fr: 'Ex. : 150',
     ar: 'مثال: 150',
@@ -5808,6 +6644,26 @@ translations['admin.type'] = {
     ar: 'النوع',
     en: 'Type',
 };
+translations['admin.client'] = {
+    fr: 'Client',
+    ar: 'العميل',
+    en: 'Client',
+};
+translations['admin.date'] = {
+    fr: 'Date',
+    ar: 'التاريخ',
+    en: 'Date',
+};
+translations['admin.amount'] = {
+    fr: 'Montant',
+    ar: 'المبلغ',
+    en: 'Amount',
+};
+translations['admin.status'] = {
+    fr: 'Statut',
+    ar: 'الحالة',
+    en: 'Status',
+};
 translations['admin.subject'] = {
     fr: 'Sujet',
     ar: 'الموضوع',
@@ -6373,4 +7229,833 @@ translations['visa.toastErrorDescription'] = {
     fr: "Une erreur est survenue lors de l'envoi. Veuillez réessayer.",
     ar: 'حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.',
     en: 'An error occurred while sending. Please try again.',
+};
+translations['admin.osTravel'] = {
+    fr: 'Catalogue OS-TRAVEL',
+    ar: 'كتالوج OS-TRAVEL',
+    en: 'OS-TRAVEL Catalog',
+};
+translations['admin.osTravelSubtitle'] = {
+    fr: 'Révisez et approuvez les hôtels synchronisés depuis OS-TRAVEL',
+    ar: 'راجع واعتمد الفنادق المزامنة من OS-TRAVEL',
+    en: 'Review and approve hotels synced from OS-TRAVEL',
+};
+translations['osTravel.lastSync'] = {
+    fr: 'Dernière synchronisation',
+    ar: 'آخر مزامنة',
+    en: 'Last sync',
+};
+translations['osTravel.noSync'] = {
+    fr: 'Aucune synchronisation pour le moment.',
+    ar: 'لا توجد مزامنة بعد.',
+    en: 'No sync has run yet.',
+};
+translations['osTravel.syncRunning'] = {
+    fr: 'Synchronisation en cours…',
+    ar: 'المزامنة جارية…',
+    en: 'Sync in progress…',
+};
+translations['osTravel.reactivated'] = {
+    fr: '{count} hôtel(s) réactivé(s)',
+    ar: 'تمت إعادة تفعيل {count} فندق',
+    en: '{count} hotel(s) reactivated',
+};
+translations['osTravel.orphanedBadge'] = {
+    fr: '{count} hôtel(s) orphelin(s)',
+    ar: '{count} فندق يتيم',
+    en: '{count} orphaned hotel(s)',
+};
+translations['osTravel.status.pending'] = {
+    fr: 'En attente',
+    ar: 'قيد الانتظار',
+    en: 'Pending',
+};
+translations['osTravel.status.all'] = {
+    fr: 'Tous',
+    ar: 'الكل',
+    en: 'All',
+};
+translations['osTravel.status.approved'] = {
+    fr: 'Approuvés',
+    ar: 'معتمد',
+    en: 'Approved',
+};
+translations['osTravel.live'] = {
+    fr: 'En ligne',
+    ar: 'مباشر',
+    en: 'Live',
+};
+translations['osTravel.status.rejected'] = {
+    fr: 'Rejetés',
+    ar: 'مرفوض',
+    en: 'Rejected',
+};
+translations['osTravel.status.orphaned'] = {
+    fr: 'Orphelins',
+    ar: 'يتيم',
+    en: 'Orphaned',
+};
+translations['osTravel.filterCity'] = {
+    fr: 'Filtrer par ville…',
+    ar: 'تصفية حسب المدينة…',
+    en: 'Filter by city…',
+};
+translations['osTravel.allStars'] = {
+    fr: 'Toutes les étoiles',
+    ar: 'كل النجوم',
+    en: 'All stars',
+};
+translations['osTravel.filterStars'] = {
+    fr: 'Filtrer par étoiles',
+    ar: 'تصفية حسب النجوم',
+    en: 'Filter by stars',
+};
+translations['osTravel.approveAll'] = {
+    fr: 'Tout approuver',
+    ar: 'اعتماد الكل',
+    en: 'Approve All',
+};
+translations['osTravel.approveAllTitle'] = {
+    fr: 'Tout approuver',
+    ar: 'اعتماد الكل',
+    en: 'Approve All',
+};
+translations['osTravel.approveAllDescription'] = {
+    fr: 'Approuver tous les hôtels en attente correspondant aux filtres actuels. Les hôtels sans photo sont ignorés sauf si la case est cochée. Chaque hôtel est publié individuellement ; le contenu de la fiche est chargé à la première visite.',
+    ar: 'اعتماد جميع الفنادق قيد الانتظار المطابقة للمرشحات الحالية. يتم تجاهل الفنادق بدون صورة ما لم يتم تحديد الخيار. سيتم نشر كل فندق بشكل فردي؛ يتم تحميل تفاصيل الصفحة عند أول زيارة.',
+    en: 'Approve all pending hotels matching the current filters. Hotels without a picture are skipped unless the option is checked. Each hotel is published individually; page details load on first visit.',
+};
+translations['osTravel.preflightSkip'] = {
+    fr: '{count} hôtel(s) seront ignorés (prix manquant).',
+    ar: 'سيتم تخطي {count} فندق (سعر مفقود).',
+    en: '{count} hotel(s) will be skipped for missing price.',
+};
+translations['osTravel.preflightIncludePrice'] = {
+    fr: 'Approuver aussi {count} hôtel(s) sans prix.',
+    ar: 'اعتماد {count} فندق بدون سعر أيضًا.',
+    en: 'Also approve {count} hotel(s) without a price.',
+};
+translations['osTravel.preflightIncludeImage'] = {
+    fr: 'Approuver aussi {count} hôtel(s) sans photo.',
+    ar: 'اعتماد {count} فندق بدون صورة أيضًا.',
+    en: 'Also approve {count} hotel(s) without pictures.',
+};
+translations['osTravel.approvedCount'] = {
+    fr: '{count} approuvés',
+    ar: 'تم اعتماد {count}',
+    en: '{count} approved',
+};
+translations['osTravel.skippedNoPrice'] = {
+    fr: '{count} ignorés (prix manquant)',
+    ar: 'تم تخطي {count} (سعر مفقود)',
+    en: '{count} skipped (missing price)',
+};
+translations['osTravel.skippedNoImage'] = {
+    fr: '{count} ignorés (photo manquante)',
+    ar: 'تم تخطي {count} (صورة مفقودة)',
+    en: '{count} skipped (missing image)',
+};
+translations['osTravel.failedCount'] = {
+    fr: '{count} échoués',
+    ar: 'فشل {count}',
+    en: '{count} failed',
+};
+translations['osTravel.approveAllFailed'] = {
+    fr: "Échec de l'approbation groupée.",
+    ar: 'فشل الاعتماد الجماعي.',
+    en: 'Bulk approval failed.',
+};
+translations['osTravel.approved'] = {
+    fr: 'Hôtel approuvé et mis en ligne.',
+    ar: 'تم اعتماد الفندق ونشره.',
+    en: 'Hotel approved and live.',
+};
+translations['osTravel.approveFailed'] = {
+    fr: "Échec de l'approbation de l'hôtel.",
+    ar: 'فشل اعتماد الفندق.',
+    en: 'Failed to approve hotel.',
+};
+translations['osTravel.priceSaved'] = {
+    fr: 'Prix enregistré sans publication.',
+    ar: 'تم حفظ السعر دون نشر.',
+    en: 'Price saved without publishing.',
+};
+translations['osTravel.savePriceFailed'] = {
+    fr: "Échec de l'enregistrement du prix.",
+    ar: 'فشل حفظ السعر.',
+    en: 'Failed to save price.',
+};
+translations['osTravel.rejected'] = {
+    fr: 'Hôtel rejeté.',
+    ar: 'تم رفض الفندق.',
+    en: 'Hotel rejected.',
+};
+translations['osTravel.rejectFailed'] = {
+    fr: "Échec du rejet de l'hôtel.",
+    ar: 'فشل رفض الفندق.',
+    en: 'Failed to reject hotel.',
+};
+translations['osTravel.reject'] = {
+    fr: 'Rejeter',
+    ar: 'رفض',
+    en: 'Reject',
+};
+translations['osTravel.rejectTitle'] = {
+    fr: 'Rejeter cet hôtel ?',
+    ar: 'رفض هذا الفندق؟',
+    en: 'Reject this hotel?',
+};
+translations['osTravel.rejectDescription'] = {
+    fr: "L'hôtel ne sera pas mis en ligne et restera dans le catalogue comme rejeté.",
+    ar: 'لن يتم نشر الفندق وسيبقى في الكتالوج كمرفوض.',
+    en: 'The hotel will not go live and will stay in the catalog as rejected.',
+};
+translations['osTravel.reopened'] = {
+    fr: 'Hôtel remis en file d’attente.',
+    ar: 'تمت إعادة الفندق إلى قائمة الانتظار.',
+    en: 'Hotel returned to pending.',
+};
+translations['osTravel.reopenFailed'] = {
+    fr: 'Échec de la remise en file d’attente.',
+    ar: 'فشل إعادة الفندق إلى قائمة الانتظار.',
+    en: 'Failed to return hotel to pending.',
+};
+translations['osTravel.reopen'] = {
+    fr: 'Remettre en file d’attente',
+    ar: 'إعادة إلى قائمة الانتظار',
+    en: 'Return to pending',
+};
+translations['osTravel.reopenTitle'] = {
+    fr: 'Remettre cet hôtel en file d’attente ?',
+    ar: 'إعادة هذا الفندق إلى قائمة الانتظار؟',
+    en: 'Return this hotel to pending?',
+};
+translations['osTravel.reopenDescription'] = {
+    fr: "L'hôtel reviendra à la file d'attente en attente.",
+    ar: 'سيعود الفندق إلى قائمة الانتظار.',
+    en: 'The hotel will move back to the pending review queue.',
+};
+translations['osTravel.unapproved'] = {
+    fr: 'Hôtel désapprouvé.',
+    ar: 'تم إلغاء اعتماد الفندق.',
+    en: 'Hotel unapproved.',
+};
+translations['osTravel.unapproveFailed'] = {
+    fr: "Échec de la désapprobation de l'hôtel.",
+    ar: 'فشل إلغاء اعتماد الفندق.',
+    en: 'Failed to unapprove hotel.',
+};
+translations['osTravel.unapprove'] = {
+    fr: 'Désapprouver',
+    ar: 'إلغاء الاعتماد',
+    en: 'Unapprove',
+};
+translations['osTravel.unapproveTitle'] = {
+    fr: 'Désapprouver cet hôtel ?',
+    ar: 'إلغاء اعتماد هذا الفندق؟',
+    en: 'Unapprove this hotel?',
+};
+translations['osTravel.unapproveDescription'] = {
+    fr: "L'hôtel reviendra à la file d'attente en attente.",
+    ar: 'سيعود الفندق إلى قائمة الانتظار.',
+    en: 'The hotel will move back to the pending review queue.',
+};
+translations['osTravel.preview'] = {
+    fr: 'Aperçu',
+    ar: 'معاينة',
+    en: 'Preview',
+};
+translations['osTravel.approve'] = {
+    fr: 'Approuver',
+    ar: 'اعتماد',
+    en: 'Approve',
+};
+translations['osTravel.missingPrice'] = {
+    fr: 'Prix manquant',
+    ar: 'السعر مفقود',
+    en: 'Missing price',
+};
+translations['osTravel.emptyState'] = {
+    fr: 'Aucun hôtel à afficher.',
+    ar: 'لا توجد فنادق للعرض.',
+    en: 'No hotels to display.',
+};
+translations['osTravel.priceSection'] = {
+    fr: 'Tarification',
+    ar: 'التسعير',
+    en: 'Pricing',
+};
+translations['osTravel.computedPrice'] = {
+    fr: 'Prix final',
+    ar: 'السعر النهائي',
+    en: 'Final price',
+};
+translations['osTravel.savePrice'] = {
+    fr: 'Enregistrer le prix',
+    ar: 'حفظ السعر',
+    en: 'Save price',
+};
+translations['osTravel.boarding'] = {
+    fr: 'Régimes',
+    ar: 'أنظمة الإقامة',
+    en: 'Boarding',
+};
+translations['osTravel.promotion'] = {
+    fr: 'Promotion',
+    ar: 'عرض',
+    en: 'Promotion',
+};
+translations['osTravel.freeChild'] = {
+    fr: 'Enfant gratuit',
+    ar: 'طفل مجاني',
+    en: 'Free child',
+};
+translations['osTravel.recommended'] = {
+    fr: 'Recommandé',
+    ar: 'موصى به',
+    en: 'Recommended',
+};
+translations['osTravel.roomsCatalog'] = {
+    fr: 'Chambres',
+    ar: 'الغرف',
+    en: 'Rooms',
+};
+translations['osTravel.minStay'] = {
+    fr: 'Séjour min.',
+    ar: 'إقامة دنيا',
+    en: 'Min. stay',
+};
+translations['osTravel.refreshPrices'] = {
+    fr: 'Actualiser les prix',
+    ar: 'تحديث الأسعار',
+    en: 'Refresh prices',
+};
+translations['osTravel.refreshPrice'] = {
+    fr: 'Actualiser le prix',
+    ar: 'تحديث السعر',
+    en: 'Refresh price',
+};
+translations['osTravel.fetchPrice'] = {
+    fr: 'Récupérer le prix',
+    ar: 'جلب السعر',
+    en: 'Fetch price',
+};
+translations['osTravel.refreshing'] = {
+    fr: 'Actualisation…',
+    ar: 'جارٍ التحديث…',
+    en: 'Refreshing…',
+};
+translations['osTravel.refreshFailed'] = {
+    fr: "Échec de l'actualisation des prix.",
+    ar: 'فشل تحديث الأسعار.',
+    en: 'Failed to refresh prices.',
+};
+translations['osTravel.refreshAllDone'] = {
+    fr: '{updated} prix actualisés · {omitted} indisponibles',
+    ar: 'تم تحديث {updated} سعر · {omitted} غير متوفر',
+    en: '{updated} prices refreshed · {omitted} unavailable',
+};
+translations['osTravel.priceRefreshed'] = {
+    fr: 'Prix mis à jour : {price} {currency}',
+    ar: 'تم تحديث السعر: {price} {currency}',
+    en: 'Price updated: {price} {currency}',
+};
+translations['osTravel.noAvailability'] = {
+    fr: 'Aucune disponibilité',
+    ar: 'لا توجد معلومات متوفرة',
+    en: 'No availability',
+};
+translations['osTravel.availableFrom'] = {
+    fr: 'Disponible à partir du',
+    ar: 'متاح من',
+    en: 'Available from',
+};
+translations['osTravel.minNights'] = {
+    fr: 'Séjour min.',
+    ar: 'حد أدنى',
+    en: 'Min. stay',
+};
+translations['osTravel.nightsShort'] = {
+    fr: 'nuits',
+    ar: 'ليالي',
+    en: 'nights',
+};
+translations['osTravel.filterCountry'] = {
+    fr: 'Pays…',
+    ar: 'البلد…',
+    en: 'Country…',
+};
+translations['osTravel.filterCitySelect'] = {
+    fr: 'Ville…',
+    ar: 'المدينة…',
+    en: 'City…',
+};
+translations['osTravel.filterDates'] = {
+    fr: 'Choisir les dates',
+    ar: 'اختر التواريخ',
+    en: 'Pick dates',
+};
+translations['osTravel.filterFrom'] = {
+    fr: 'Arrivée',
+    ar: 'الوصول',
+    en: 'Check-in',
+};
+translations['osTravel.filterTo'] = {
+    fr: 'Départ',
+    ar: 'المغادرة',
+    en: 'Check-out',
+};
+translations['osTravel.liveCheckActive'] = {
+    fr: 'Vérification live des dates',
+    ar: 'فحص مباشر للتواريخ',
+    en: 'Live check for dates',
+};
+translations['osTravel.fetching'] = {
+    fr: 'Chargement des prix en direct…',
+    ar: 'جارٍ تحميل الأسعار المباشرة…',
+    en: 'Fetching live prices…',
+};
+translations['osTravel.priceReason.neverRefreshed'] = {
+    fr: 'Prix jamais actualisé',
+    ar: 'لم يتم تحديث السعر بعد',
+    en: 'Never refreshed',
+};
+translations['osTravel.priceReason.noAvailability'] = {
+    fr: 'Aucune disponibilité à l’actualisation',
+    ar: 'لا توجد توفر عند التحديث',
+    en: 'No availability at refresh',
+};
+translations['osTravel.priceReason.providerError'] = {
+    fr: 'Erreur fournisseur à l’actualisation',
+    ar: 'خطأ مزود عند التحديث',
+    en: 'Provider error at refresh',
+};
+translations['osTravel.priceReason.hasPrice'] = {
+    fr: 'Prix disponible',
+    ar: 'السعر متوفر',
+    en: 'Price available',
+};
+translations['osTravel.liveStatus.available'] = {
+    fr: 'Disponible',
+    ar: 'متوفر',
+    en: 'Available',
+};
+translations['osTravel.liveStatus.noAvailability'] = {
+    fr: 'Aucune dispo sur ces dates',
+    ar: 'لا توجد توفر لهذه التواريخ',
+    en: 'No availability on these dates',
+};
+translations['osTravel.liveStatus.providerError'] = {
+    fr: 'Erreur fournisseur',
+    ar: 'خطأ مزود',
+    en: 'Provider error',
+};
+translations['osTravel.liveStatus.live'] = {
+    fr: 'live',
+    ar: 'مباشر',
+    en: 'live',
+};
+translations['osTravel.liveStatus.stopReservation'] = {
+    fr: 'Réservation arrêtée',
+    ar: 'إيقاف الحجز',
+    en: 'Reservation stopped',
+};
+translations['osTravel.liveStatus.stopSale'] = {
+    fr: 'Vente suspendue',
+    ar: 'إيقاف البيع',
+    en: 'Sale stopped',
+};
+translations['osTravel.liveStatus.noBookableRoom'] = {
+    fr: 'Aucune chambre réservable',
+    ar: 'لا توجد غرفة قابلة للحجز',
+    en: 'No bookable room',
+};
+translations['osTravel.liveStatus.minStay'] = {
+    fr: 'Séjour minimum requis :',
+    ar: 'الحد الأدنى للإقامة :',
+    en: 'Needs at least',
+};
+translations['osTravel.liveStatus.minStayPicked'] = {
+    fr: '{picked} nuit(s) choisie(s) — séjour minimum de {min} nuit(s) pour ces dates',
+    ar: 'اخترت {picked} ليلة — الحد الأدنى للإقامة لهذه التواريخ هو {min}',
+    en: 'Picked {picked} night(s) — minimum stay for these dates is {min}',
+};
+translations['osTravel.liveStatus.availableFrom'] = {
+    fr: 'De retour le',
+    ar: 'يعود التوفر في',
+    en: 'Back on',
+};
+translations['osTravel.availability.available'] = {
+    fr: 'Disponible',
+    ar: 'متوفر',
+    en: 'Available',
+};
+translations['osTravel.availability.stopReservation'] = {
+    fr: 'Réservation arrêtée',
+    ar: 'إيقاف الحجز',
+    en: 'Reservation stopped',
+};
+translations['osTravel.availability.stopSale'] = {
+    fr: 'Vente suspendue',
+    ar: 'إيقاف البيع',
+    en: 'Sale stopped',
+};
+translations['osTravel.availability.noBookableRoom'] = {
+    fr: 'Aucune chambre réservable',
+    ar: 'لا توجد غرفة قابلة للحجز',
+    en: 'No bookable room',
+};
+translations['osTravel.availability.minStay'] = {
+    fr: 'Séjour minimum',
+    ar: 'الحد الأدنى للإقامة',
+    en: 'Minimum stay',
+};
+translations['osTravel.availability.notReturned'] = {
+    fr: 'Non retourné par le fournisseur',
+    ar: 'لم يتم إرجاعه من قبل المزود',
+    en: 'Not returned by the provider',
+};
+translations['osTravel.refreshResultTitle'] = {
+    fr: 'Résultat de l’actualisation',
+    ar: 'نتيجة التحديث',
+    en: 'Refresh result',
+};
+translations['osTravel.refreshResultSummary'] = {
+    fr: '{updated} hôtels actualisés.',
+    ar: 'تم تحديث {updated} فندق.',
+    en: '{updated} hotels refreshed.',
+};
+translations['osTravel.refreshOmitted'] = {
+    fr: '{count} hôtels sans prix (aucune disponibilité) :',
+    ar: '{count} فندق بدون سعر (لا توفر):',
+    en: '{count} hotels without a price (no availability):',
+};
+translations['osTravel.refreshFailedList'] = {
+    fr: '{count} hôtels en erreur fournisseur :',
+    ar: '{count} فندق بخطأ مزود:',
+    en: '{count} hotels with a provider error:',
+};
+translations['osTravel.refreshNoIssues'] = {
+    fr: 'Tous les hôtels ont été actualisés avec succès.',
+    ar: 'تم تحديث جميع الفنادق بنجاح.',
+    en: 'All hotels refreshed successfully.',
+};
+translations['admin.queue'] = {
+    fr: "File d'attente",
+    ar: 'قائمة الانتظار',
+    en: 'Queue',
+};
+translations['admin.queueSubtitle'] = {
+    fr: 'Tout ce qui nécessite votre action',
+    ar: 'كل ما يتطلب إجراءك',
+    en: 'Everything that needs your action',
+};
+translations['admin.queue.tab.bookings'] = {
+    fr: 'Réservations',
+    ar: 'الحجوزات',
+    en: 'Bookings',
+};
+translations['admin.queue.tab.complaints'] = {
+    fr: 'Réclamations',
+    ar: 'الشكاوى',
+    en: 'Complaints',
+};
+translations['admin.queue.tab.refunds'] = {
+    fr: 'Remboursements',
+    ar: 'الاستردادات',
+    en: 'Refunds',
+};
+translations['admin.queue.tab.support'] = {
+    fr: 'Support',
+    ar: 'الدعم',
+    en: 'Support',
+};
+translations['admin.queue.empty'] = {
+    fr: 'Rien à traiter ici.',
+    ar: 'لا يوجد شيء للمعالجة هنا.',
+    en: 'Nothing to handle here.',
+};
+translations['admin.queue.refresh'] = {
+    fr: 'Actualiser',
+    ar: 'تحديث',
+    en: 'Refresh',
+};
+translations['admin.queue.detail'] = {
+    fr: 'Détails',
+    ar: 'التفاصيل',
+    en: 'Details',
+};
+translations['admin.queue.auditTimeline'] = {
+    fr: 'Chronologie',
+    ar: 'الخط الزمني',
+    en: 'Audit timeline',
+};
+translations['admin.queue.expiresAt'] = {
+    fr: 'Expire le',
+    ar: 'ينتهي في',
+    en: 'Expires',
+};
+translations['admin.queue.providerBooking'] = {
+    fr: 'Réservation fournisseur',
+    ar: 'حجز المزود',
+    en: 'Provider booking',
+};
+translations['admin.queue.replies'] = {
+    fr: 'Conversation',
+    ar: 'المحادثة',
+    en: 'Conversation',
+};
+translations['admin.queue.noReplies'] = {
+    fr: 'Aucune réponse pour le moment.',
+    ar: 'لا توجد ردود بعد.',
+    en: 'No replies yet.',
+};
+translations['admin.queue.sendReply'] = {
+    fr: 'Envoyer la réponse',
+    ar: 'إرسال الرد',
+    en: 'Send reply',
+};
+translations['admin.queue.approve'] = {
+    fr: 'Approuver',
+    ar: 'موافقة',
+    en: 'Approve',
+};
+translations['admin.queue.reject'] = {
+    fr: 'Refuser',
+    ar: 'رفض',
+    en: 'Reject',
+};
+translations['admin.queue.cancel'] = {
+    fr: 'Annuler',
+    ar: 'إلغاء',
+    en: 'Cancel',
+};
+translations['admin.rejectReason'] = {
+    fr: 'Motif du refus',
+    ar: 'سبب الرفض',
+    en: 'Rejection reason',
+};
+translations['admin.cancelReason'] = {
+    fr: "Motif de l'annulation",
+    ar: 'سبب الإلغاء',
+    en: 'Cancellation reason',
+};
+translations['admin.rejectReasonPrompt'] = {
+    fr: 'Motif du refus :',
+    ar: 'سبب الرفض:',
+    en: 'Reason for rejection:',
+};
+translations['admin.queue.audit.created'] = {
+    fr: 'Créé',
+    ar: 'تم الإنشاء',
+    en: 'Created',
+};
+translations['admin.queue.audit.submitted'] = {
+    fr: 'Soumis',
+    ar: 'تم الإرسال',
+    en: 'Submitted',
+};
+translations['admin.queue.audit.approved'] = {
+    fr: 'Approuvé',
+    ar: 'تمت الموافقة',
+    en: 'Approved',
+};
+translations['admin.queue.audit.rejected'] = {
+    fr: 'Refusé',
+    ar: 'مرفوض',
+    en: 'Rejected',
+};
+translations['admin.queue.audit.confirmed'] = {
+    fr: 'Confirmé',
+    ar: 'مؤكد',
+    en: 'Confirmed',
+};
+translations['admin.queue.audit.cancelled'] = {
+    fr: 'Annulé',
+    ar: 'ملغي',
+    en: 'Cancelled',
+};
+translations['admin.queue.audit.expired'] = {
+    fr: 'Expiré',
+    ar: 'منتهي',
+    en: 'Expired',
+};
+translations['admin.queue.audit.completed'] = {
+    fr: 'Terminé',
+    ar: 'مكتمل',
+    en: 'Completed',
+};
+translations['admin.queue.audit.updated'] = {
+    fr: 'Mis à jour',
+    ar: 'تم التحديث',
+    en: 'Updated',
+};
+
+// Phase 3 — Client experience: voucher + booking status detail
+translations['voucher.title'] = {
+    fr: 'Bon de réservation',
+    ar: 'قسيمة الحجز',
+    en: 'Voucher',
+};
+translations['voucher.subtitle'] = {
+    fr: 'Votre réservation est confirmée.',
+    ar: 'تم تأكيد حجزك.',
+    en: 'Your booking is confirmed.',
+};
+translations['voucher.print'] = {
+    fr: 'Imprimer',
+    ar: 'طباعة',
+    en: 'Print',
+};
+translations['voucher.bookingRef'] = {
+    fr: 'Référence de réservation',
+    ar: 'مرجع الحجز',
+    en: 'Booking reference',
+};
+translations['voucher.item'] = {
+    fr: 'Prestation',
+    ar: 'الخدمة',
+    en: 'Service',
+};
+translations['voucher.dates'] = {
+    fr: 'Dates',
+    ar: 'التواريخ',
+    en: 'Dates',
+};
+translations['voucher.total'] = {
+    fr: 'Total',
+    ar: 'الإجمالي',
+    en: 'Total',
+};
+translations['voucher.providerRef'] = {
+    fr: 'Référence fournisseur',
+    ar: 'مرجع المورد',
+    en: 'Provider reference',
+};
+translations['voucher.summary'] = {
+    fr: 'Détail de la prestation',
+    ar: 'تفاصيل الخدمة',
+    en: 'Service summary',
+};
+translations['voucher.room'] = {
+    fr: 'Chambre',
+    ar: 'غرفة',
+    en: 'Room',
+};
+translations['voucher.boarding'] = {
+    fr: 'Régime',
+    ar: 'نظام الإقامة',
+    en: 'Boarding',
+};
+translations['voucher.nights'] = {
+    fr: 'Nuits',
+    ar: 'ليالٍ',
+    en: 'Nights',
+};
+translations['client.bookingDecisionWindow'] = {
+    fr: 'Décision attendue avant le',
+    ar: 'القرار متوقع قبل',
+    en: 'Decision expected by',
+};
+translations['client.bookingDecisionUnknown'] = {
+    fr: 'à déterminer',
+    ar: 'غير محدد',
+    en: 'to be determined',
+};
+translations['client.bookingRejectedReason'] = {
+    fr: 'Motif du refus',
+    ar: 'سبب الرفض',
+    en: 'Rejection reason',
+};
+translations['client.bookingCancelledReason'] = {
+    fr: "Motif de l'annulation",
+    ar: 'سبب الإلغاء',
+    en: 'Cancellation reason',
+};
+
+// Booking detail page (Phase 2)
+translations['bookingDetail.title'] = {
+    fr: 'Détails de la réservation',
+    ar: 'تفاصيل الحجز',
+    en: 'Booking details',
+};
+translations['bookingDetail.back'] = {
+    fr: 'Retour à mes réservations',
+    ar: 'العودة إلى حجوزاتي',
+    en: 'Back to my bookings',
+};
+translations['bookingDetail.notFound'] = {
+    fr: 'Réservation introuvable.',
+    ar: 'الحجز غير موجود.',
+    en: 'Booking not found.',
+};
+translations['bookingDetail.bookedOn'] = {
+    fr: 'Réservé le',
+    ar: 'تم الحجز في',
+    en: 'Booked on',
+};
+translations['bookingDetail.decisionBy'] = {
+    fr: 'Décision avant le',
+    ar: 'القرار قبل',
+    en: 'Decision by',
+};
+translations['bookingDetail.approvedNote'] = {
+    fr: 'Votre réservation est approuvée. En attente de confirmation de l’hôtel.',
+    ar: 'تمت الموافقة على حجزك. في انتظار تأكيد الفندق.',
+    en: 'Your booking is approved. Waiting for the hotel to confirm.',
+};
+translations['bookingDetail.expiredNote'] = {
+    fr: 'Cette demande de réservation a expiré avant qu’une décision ne soit prise.',
+    ar: 'انتهت صلاحية طلب الحجز هذا قبل اتخاذ قرار.',
+    en: 'This booking request expired before a decision was made.',
+};
+translations['bookingDetail.client'] = {
+    fr: 'Client',
+    ar: 'العميل',
+    en: 'Client',
+};
+translations['bookingDetail.guests'] = {
+    fr: 'Invités',
+    ar: 'الضيوف',
+    en: 'Guests',
+};
+translations['bookingDetail.priceBreakdown'] = {
+    fr: 'Détail du prix',
+    ar: 'تفاصيل السعر',
+    en: 'Price breakdown',
+};
+translations['bookingDetail.cancellationPolicy'] = {
+    fr: 'Politique d’annulation',
+    ar: 'سياسة الإلغاء',
+    en: 'Cancellation policy',
+};
+translations['bookingDetail.perNight'] = {
+    fr: 'par nuit',
+    ar: 'لليلة',
+    en: 'per night',
+};
+translations['bookingDetail.supplements'] = {
+    fr: 'Suppléments',
+    ar: 'إضافات',
+    en: 'Supplements',
+};
+translations['admin.queue.prebook'] = {
+    fr: 'Détail du prix (prebook)',
+    ar: 'تفاصيل السعر (الحجز الأولي)',
+    en: 'Price breakdown (prebook)',
+};
+translations['search.error.title'] = {
+    fr: 'Échec de la recherche',
+    ar: 'فشلت البحث',
+    en: 'Search failed',
+};
+translations['search.error.description'] = {
+    fr: 'Une erreur est survenue lors de la vérification des disponibilités.',
+    ar: 'حدث خطأ أثناء التحقق من التوفر.',
+    en: 'Something went wrong while checking availability.',
+};
+translations['search.error.retry'] = {
+    fr: 'Réessayer',
+    ar: 'إعادة المحاولة',
+    en: 'Retry',
 };

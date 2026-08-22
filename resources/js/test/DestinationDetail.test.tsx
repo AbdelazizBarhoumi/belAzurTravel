@@ -65,7 +65,9 @@ function makeHotel(overrides: Partial<HotelItem> = {}): HotelItem {
         reviews: 123,
         image: '/images/hotel.jpg',
         tags: ['beach'],
-        amenities: [{ name: { en: 'WiFi', fr: 'Wi-Fi', ar: 'واي فاي' }, icon: 'wifi' }],
+        amenities: [
+            { name: { en: 'WiFi', fr: 'Wi-Fi', ar: 'واي فاي' }, icon: 'wifi' },
+        ],
         ...overrides,
     };
 }

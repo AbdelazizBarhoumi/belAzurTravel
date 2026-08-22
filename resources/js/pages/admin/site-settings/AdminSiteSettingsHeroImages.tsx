@@ -53,7 +53,10 @@ export default function AdminSiteSettingsHeroImages() {
 
     if (loading) {
         return (
-            <AdminLayout title={t('admin.settings.landingHeroTitle')} subtitle={t('nav.settings')}>
+            <AdminLayout
+                title={t('admin.settings.landingHeroTitle')}
+                subtitle={t('nav.settings')}
+            >
                 <Card className="p-4">
                     <div className="h-48 animate-pulse rounded bg-muted/70" />
                 </Card>
@@ -67,7 +70,12 @@ export default function AdminSiteSettingsHeroImages() {
             subtitle={t('admin.settings.landingHeroSubtitle')}
             actions={
                 <Button size="sm" onClick={saveHeroImages} disabled={isSaving}>
-                    {isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}
+                    {isSaving ? (
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Save className="mr-1 h-4 w-4" />
+                    )}{' '}
+                    {t('admin.settings.save')}
                 </Button>
             }
         >

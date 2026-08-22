@@ -73,7 +73,7 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="h-[300px] w-full object-cover md:h-[360px]"
+                            className="h-[300px] w-full object-cover md:h-[500px]"
                             loading="eager"
                         />
                     </AnimatePresence>

@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Image as ImageIcon, Save, Settings } from 'lucide-react';
+import {
+    Edit,
+    Plus,
+    Trash2,
+    Image as ImageIcon,
+    Save,
+    Settings,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
@@ -12,7 +19,7 @@ import {
     listAdminEntities,
     saveAdminEntity,
     type AdminRow,
-    } from '@/api/admin.api';
+} from '@/api/admin.api';
 import { apiFetch } from '@/api/http';
 import type { PageHeroSlide } from '@/api/siteSettings.api';
 import {
@@ -436,27 +443,46 @@ export default function AdminBlog() {
                             <div className="space-y-4">
                                 {/* Category Types - dynamic dropdowns */}
                                 {categoryTypes.map((catType) => (
-                                    <div key={catType.key} className="space-y-2">
+                                    <div
+                                        key={catType.key}
+                                        className="space-y-2"
+                                    >
                                         <div className="flex items-center gap-2">
-                                            <label
-                                                className="text-xs font-semibold text-muted-foreground"
-                                            >
-                                                {catType.label[activeLang] || catType.label.en}
+                                            <label className="text-xs font-semibold text-muted-foreground">
+                                                {catType.label[activeLang] ||
+                                                    catType.label.en}
                                             </label>
                                         </div>
                                         <Select
-                                            value={String(values[`category_${catType.key}`] || '')}
-                                            onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                            value={String(
+                                                values[
+                                                    `category_${catType.key}`
+                                                ] || '',
+                                            )}
+                                            onValueChange={(val) =>
+                                                setField(
+                                                    `category_${catType.key}`,
+                                                    val,
+                                                )
+                                            }
                                         >
                                             <SelectTrigger
                                                 className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm`}
                                             >
-                                                <SelectValue placeholder={t('actions.select')} />
+                                                <SelectValue
+                                                    placeholder={t(
+                                                        'actions.select',
+                                                    )}
+                                                />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {catType.values.map((v) => (
-                                                    <SelectItem key={v.key} value={v.key}>
-                                                        {v.name[activeLang] || v.name.en}
+                                                    <SelectItem
+                                                        key={v.key}
+                                                        value={v.key}
+                                                    >
+                                                        {v.name[activeLang] ||
+                                                            v.name.en}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -475,10 +501,18 @@ export default function AdminBlog() {
                                         </label>
                                         <input
                                             id="blog-title"
-                                            placeholder={t('admin.blogForm.titlePlaceholder')}
-                                            value={String(values[`title_${activeLang}`] ?? '')}
+                                            placeholder={t(
+                                                'admin.blogForm.titlePlaceholder',
+                                            )}
+                                            value={String(
+                                                values[`title_${activeLang}`] ??
+                                                    '',
+                                            )}
                                             onChange={(event) =>
-                                                setField(`title_${activeLang}`, event.target.value)
+                                                setField(
+                                                    `title_${activeLang}`,
+                                                    event.target.value,
+                                                )
                                             }
                                             className={`w-full rounded-lg border ${errors[`title_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : 'border-border'} bg-background px-3 py-2 text-sm`}
                                         />

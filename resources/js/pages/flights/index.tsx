@@ -190,262 +190,286 @@ function FlightsContent() {
 
     return (
         <>
-        <PageHeroCarousel pageKey="flights" />
-        <PageShell
-            titleKey="flights.title"
-            subtitleKey="flights.subtitle"
-            breadcrumbs={[
-                { label: t('common.home'), href: '/' },
-                { label: t('nav.flights'), active: true },
-            ]}
-        >
-            <ListFilterBar
-                searchValue={searchQuery}
-                onSearchChange={setSearchQuery}
-                resultCount={filteredFlights.length}
-                hasActiveFilters={hasActiveFilters}
-                onClearFilters={clearFilters}
-                searchPlaceholder={t('common.search')}
+            <PageHeroCarousel pageKey="flights" />
+            <PageShell
+                titleKey="flights.title"
+                subtitleKey="flights.subtitle"
+                breadcrumbs={[
+                    { label: t('common.home'), href: '/' },
+                    { label: t('nav.flights'), active: true },
+                ]}
             >
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('search.fields.dates')}
-                        </span>
-                        <div className="grid grid-cols-2 gap-2">
-                            <DatePicker
-                                date={fromDate ? new Date(fromDate) : undefined}
-                                onDateChange={(date) =>
-                                    setFromDate(
-                                        date
-                                            ? date.toISOString().split('T')[0]
-                                            : '',
-                                    )
-                                }
-                                placeholder={t('search.placeholders.checkIn')}
-                            />
-                            <DatePicker
-                                date={toDate ? new Date(toDate) : undefined}
-                                onDateChange={(date) =>
-                                    setToDate(
-                                        date
-                                            ? date.toISOString().split('T')[0]
-                                            : '',
-                                    )
-                                }
-                                placeholder={t('search.placeholders.checkOut')}
-                            />
-                        </div>
-                    </label>
-
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('search.fields.passengers')}
-                        </span>
-                        <input
-                            type="number"
-                            min={1}
-                            value={passengers}
-                            onChange={(event) =>
-                                setPassengers(
-                                    Math.max(
-                                        1,
-                                        Number(event.target.value) || 1,
-                                    ),
-                                )
-                            }
-                            className="h-12 rounded-2xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm"
-                            aria-label={t('search.fields.passengers')}
-                        />
-                    </label>
-
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('flights.filterByAirline')}
-                        </span>
-                        <Select
-                            value={selectedAirline}
-                            onValueChange={setSelectedAirline}
-                        >
-                            <SelectTrigger
-                                aria-label={t('flights.filterByAirline')}
-                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
-                            >
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={ALL}>
-                                    {t('common.all')}
-                                </SelectItem>
-                                {airlineOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                        {option}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </label>
-
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('flights.filterByStops')}
-                        </span>
-                        <Select
-                            value={selectedStops}
-                            onValueChange={setSelectedStops}
-                        >
-                            <SelectTrigger
-                                aria-label={t('flights.filterByStops')}
-                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
-                            >
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={ALL}>
-                                    {t('common.all')}
-                                </SelectItem>
-                                {stopsOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                        {option}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </label>
-
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('search.fields.tripType')}
-                        </span>
-                        <Select
-                            value={selectedTripType}
-                            onValueChange={setSelectedTripType}
-                        >
-                            <SelectTrigger
-                                aria-label={t('search.fields.tripType')}
-                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
-                            >
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {tripTypeOptions.map((option) => (
-                                    <SelectItem
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </label>
-
-                    <label className="grid gap-2 text-sm">
-                        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                            {t('flights.filterByCabin')}
-                        </span>
-                        <Select
-                            value={selectedCabin}
-                            onValueChange={setSelectedCabin}
-                        >
-                            <SelectTrigger
-                                aria-label={t('flights.filterByCabin')}
-                                className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
-                            >
-                                <SelectValue placeholder={t('common.all')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={ALL}>
-                                    {t('common.all')}
-                                </SelectItem>
-                                {cabinOptions.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                        {option}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </label>
-                </div>
-            </ListFilterBar>
-
-            <div className="space-y-4">
-                {filteredFlights.length === 0 ? (
-                    <RequestThingEmptyState
-                        variant={flights.length === 0 ? 'empty' : 'no-results'}
-                    />
-                ) : (
-                    filteredFlights.map((f, i) => (
-                        <motion.div
-                            key={f.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="card-elevated flex flex-col items-center gap-6 rounded-2xl bg-card p-5 md:flex-row"
-                        >
-                            <div className="flex items-center gap-3 md:w-40">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                                    <Plane className="h-5 w-5 text-primary" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-foreground">
-                                        {localizeText(f.airline, lang)}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {localizeText(f.stops, lang)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-1 items-center justify-center gap-6">
-                                <div className="text-center">
-                                    <p className="font-bold text-foreground">
-                                        {f.departure}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {f.from}
-                                    </p>
-                                </div>
-                                <div className="flex flex-col items-center text-muted-foreground">
-                                    <Clock className="mb-1 h-3 w-3" />
-                                    <span className="text-xs">
-                                        {localizeText(f.duration, lang)}
-                                    </span>
-                                    {dir === 'rtl' ? (
-                                        <ArrowLeft className="mt-1 h-3 w-3" />
-                                    ) : (
-                                        <ArrowRight className="mt-1 h-3 w-3" />
+                <ListFilterBar
+                    searchValue={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    resultCount={filteredFlights.length}
+                    hasActiveFilters={hasActiveFilters}
+                    onClearFilters={clearFilters}
+                    searchPlaceholder={t('common.search')}
+                >
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        <label className="grid gap-2 text-sm">
+                            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                {t('search.fields.dates')}
+                            </span>
+                            <div className="grid grid-cols-2 gap-2">
+                                <DatePicker
+                                    date={
+                                        fromDate
+                                            ? new Date(fromDate)
+                                            : undefined
+                                    }
+                                    onDateChange={(date) =>
+                                        setFromDate(
+                                            date
+                                                ? date
+                                                      .toISOString()
+                                                      .split('T')[0]
+                                                : '',
+                                        )
+                                    }
+                                    placeholder={t(
+                                        'search.placeholders.checkIn',
                                     )}
-                                </div>
-                                <div className="text-center">
-                                    <p className="font-bold text-foreground">
-                                        {f.arrival}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {localizeText(f.to, lang)}
-                                    </p>
-                                </div>
+                                />
+                                <DatePicker
+                                    date={toDate ? new Date(toDate) : undefined}
+                                    onDateChange={(date) =>
+                                        setToDate(
+                                            date
+                                                ? date
+                                                      .toISOString()
+                                                      .split('T')[0]
+                                                : '',
+                                        )
+                                    }
+                                    placeholder={t(
+                                        'search.placeholders.checkOut',
+                                    )}
+                                />
                             </div>
+                        </label>
 
-                            <div
-                                className={`text-center md:${dir === 'rtl' ? 'text-left' : 'text-right'}`}
+                        <label className="grid gap-2 text-sm">
+                            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                {t('search.fields.passengers')}
+                            </span>
+                            <input
+                                type="number"
+                                min={1}
+                                value={passengers}
+                                onChange={(event) =>
+                                    setPassengers(
+                                        Math.max(
+                                            1,
+                                            Number(event.target.value) || 1,
+                                        ),
+                                    )
+                                }
+                                className="h-12 rounded-2xl border border-border/70 bg-background/90 px-3 text-sm shadow-sm"
+                                aria-label={t('search.fields.passengers')}
+                            />
+                        </label>
+
+                        <label className="grid gap-2 text-sm">
+                            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                {t('flights.filterByAirline')}
+                            </span>
+                            <Select
+                                value={selectedAirline}
+                                onValueChange={setSelectedAirline}
                             >
-                                <p className="text-2xl font-bold text-primary">
-                                    {f.price} TND
-                                </p>
-                                <Button
-                                    size="sm"
-                                    className="mt-2 bg-primary text-primary-foreground"
-                                    onClick={() => navigate(`/flights/${f.id}`)}
+                                <SelectTrigger
+                                    aria-label={t('flights.filterByAirline')}
+                                    className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
                                 >
-                                    {t('flights.select')}
-                                </Button>
-                            </div>
-                        </motion.div>
-                    ))
-                )}
-            </div>
-        </PageShell>
+                                    <SelectValue
+                                        placeholder={t('common.all')}
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={ALL}>
+                                        {t('common.all')}
+                                    </SelectItem>
+                                    {airlineOptions.map((option) => (
+                                        <SelectItem key={option} value={option}>
+                                            {option}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </label>
+
+                        <label className="grid gap-2 text-sm">
+                            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                {t('flights.filterByStops')}
+                            </span>
+                            <Select
+                                value={selectedStops}
+                                onValueChange={setSelectedStops}
+                            >
+                                <SelectTrigger
+                                    aria-label={t('flights.filterByStops')}
+                                    className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
+                                >
+                                    <SelectValue
+                                        placeholder={t('common.all')}
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={ALL}>
+                                        {t('common.all')}
+                                    </SelectItem>
+                                    {stopsOptions.map((option) => (
+                                        <SelectItem key={option} value={option}>
+                                            {option}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </label>
+
+                        <label className="grid gap-2 text-sm">
+                            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                {t('search.fields.tripType')}
+                            </span>
+                            <Select
+                                value={selectedTripType}
+                                onValueChange={setSelectedTripType}
+                            >
+                                <SelectTrigger
+                                    aria-label={t('search.fields.tripType')}
+                                    className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
+                                >
+                                    <SelectValue
+                                        placeholder={t('common.all')}
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tripTypeOptions.map((option) => (
+                                        <SelectItem
+                                            key={option.value}
+                                            value={option.value}
+                                        >
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </label>
+
+                        <label className="grid gap-2 text-sm">
+                            <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                                {t('flights.filterByCabin')}
+                            </span>
+                            <Select
+                                value={selectedCabin}
+                                onValueChange={setSelectedCabin}
+                            >
+                                <SelectTrigger
+                                    aria-label={t('flights.filterByCabin')}
+                                    className="h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm"
+                                >
+                                    <SelectValue
+                                        placeholder={t('common.all')}
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={ALL}>
+                                        {t('common.all')}
+                                    </SelectItem>
+                                    {cabinOptions.map((option) => (
+                                        <SelectItem key={option} value={option}>
+                                            {option}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </label>
+                    </div>
+                </ListFilterBar>
+
+                <div className="space-y-4">
+                    {filteredFlights.length === 0 ? (
+                        <RequestThingEmptyState
+                            variant={
+                                flights.length === 0 ? 'empty' : 'no-results'
+                            }
+                        />
+                    ) : (
+                        filteredFlights.map((f, i) => (
+                            <motion.div
+                                key={f.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.05 }}
+                                className="card-elevated flex flex-col items-center gap-6 rounded-2xl bg-card p-5 md:flex-row"
+                            >
+                                <div className="flex items-center gap-3 md:w-40">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                                        <Plane className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-foreground">
+                                            {localizeText(f.airline, lang)}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {localizeText(f.stops, lang)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-1 items-center justify-center gap-6">
+                                    <div className="text-center">
+                                        <p className="font-bold text-foreground">
+                                            {f.departure}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {f.from}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col items-center text-muted-foreground">
+                                        <Clock className="mb-1 h-3 w-3" />
+                                        <span className="text-xs">
+                                            {localizeText(f.duration, lang)}
+                                        </span>
+                                        {dir === 'rtl' ? (
+                                            <ArrowLeft className="mt-1 h-3 w-3" />
+                                        ) : (
+                                            <ArrowRight className="mt-1 h-3 w-3" />
+                                        )}
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-bold text-foreground">
+                                            {f.arrival}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {localizeText(f.to, lang)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div
+                                    className={`text-center md:${dir === 'rtl' ? 'text-left' : 'text-right'}`}
+                                >
+                                    <p className="text-2xl font-bold text-primary">
+                                        {f.price} TND
+                                    </p>
+                                    <Button
+                                        size="sm"
+                                        className="mt-2 bg-primary text-primary-foreground"
+                                        onClick={() =>
+                                            navigate(`/flights/${f.id}`)
+                                        }
+                                    >
+                                        {t('flights.select')}
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        ))
+                    )}
+                </div>
+            </PageShell>
         </>
     );
 }

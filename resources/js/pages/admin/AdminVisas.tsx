@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Image as ImageIcon, Save, Loader2 } from 'lucide-react';
+import {
+    Edit,
+    Plus,
+    Trash2,
+    Image as ImageIcon,
+    Save,
+    Loader2,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
@@ -13,18 +20,20 @@ import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AdminLayout } from '@/components/layout/AdminLayout';
-import { EntityFormDialog, type SectionDef } from '@/components/forms/EntityFormDialog';
+import {
+    EntityFormDialog,
+    type SectionDef,
+} from '@/components/forms/EntityFormDialog';
 import LangBadge from '@/components/forms/LangBadge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Switch } from '@/components/ui/switch';
-import { Country } from 'country-state-city';
-import countries from 'i18n-iso-countries';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { cn } from '@/lib/utils';
 import { LocationSelect } from '@/components/ui/LocationSelect';
+import { findCountryByCodeOrEnglishName } from '@/data/locations';
 import { countryCodeToFlag } from '@/lib/flagEmoji';
 
 type VisaLang = 'en' | 'fr' | 'ar';
@@ -162,12 +171,14 @@ const AdminVisas = () => {
         const langs: VisaLang[] = ['en', 'fr', 'ar'];
 
         langs.forEach((l) => {
-            if (!values[`name_${l}`]) errs[`name_${l}`] = t('admin.errors.required');
+            if (!values[`name_${l}`])
+                errs[`name_${l}`] = t('admin.errors.required');
         });
 
         if (!values.code) errs.code = t('admin.errors.required');
         if (!values.flag) errs.flag = t('admin.errors.required');
-        if (!values.price || Number(values.price) < 0) errs.price = t('admin.errors.required');
+        if (!values.price || Number(values.price) < 0)
+            errs.price = t('admin.errors.required');
 
         return errs;
     };
@@ -201,7 +212,9 @@ const AdminVisas = () => {
 
         saveMutation.mutate(payload, {
             onSuccess: () => {
-                toast.success(editing ? t('admin.visaUpdated') : t('admin.visaAdded'));
+                toast.success(
+                    editing ? t('admin.visaUpdated') : t('admin.visaAdded'),
+                );
                 setOpen(false);
                 setEditing(null);
                 setErrors({});
@@ -214,12 +227,21 @@ const AdminVisas = () => {
             title: t('admin.visaForm.details'),
             description: t('admin.visaForm.detailsHint'),
             columns: 2,
-            render: ({ values, setField, activeLang, errors: dialogErrors }) => (
+            render: ({
+                values,
+                setField,
+                activeLang,
+                errors: dialogErrors,
+            }) => (
                 <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <Label
-                                className={dialogErrors?.code ? 'text-destructive' : 'text-muted-foreground'}
+                                className={
+                                    dialogErrors?.code
+                                        ? 'text-destructive'
+                                        : 'text-muted-foreground'
+                                }
                             >
                                 {t('admin.visaForm.country')}
                             </Label>
@@ -229,10 +251,12 @@ const AdminVisas = () => {
                                     setField('code', val);
                                     // LocationSelect passes the English country name;
                                     // look up its ISO code to generate the flag emoji
-                                    const match = Country.getAllCountries().find(
-                                        (c) => countries.getName(c.isoCode, 'en') === val,
+                                    const match =
+                                        findCountryByCodeOrEnglishName(val);
+                                    setField(
+                                        'flag',
+                                        countryCodeToFlag(match?.code ?? val),
                                     );
-                                    setField('flag', countryCodeToFlag(match?.isoCode ?? val));
                                     setField('name_en', val);
                                     setField('name_fr', val);
                                     setField('name_ar', val);
@@ -242,62 +266,111 @@ const AdminVisas = () => {
                                 countryOnly
                             />
                             {dialogErrors?.code && (
-                                <p className="text-[10px] text-destructive">{dialogErrors.code}</p>
+                                <p className="text-[10px] text-destructive">
+                                    {dialogErrors.code}
+                                </p>
                             )}
                         </div>
 
                         <div className="space-y-2">
                             <Label
                                 htmlFor="visa-flag"
-                                className={dialogErrors?.flag ? 'text-destructive' : 'text-muted-foreground'}
+                                className={
+                                    dialogErrors?.flag
+                                        ? 'text-destructive'
+                                        : 'text-muted-foreground'
+                                }
                             >
                                 {t('admin.visaForm.flag')}
                             </Label>
                             <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                                <span className="text-2xl">{String(values.flag ?? '')}</span>
-                                <span className="text-muted-foreground text-xs">
-                                    {values.code ? `${values.code}` : t('admin.visaForm.flagAuto')}
+                                <span className="text-2xl">
+                                    {String(values.flag ?? '')}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                    {values.code
+                                        ? `${values.code}`
+                                        : t('admin.visaForm.flagAuto')}
                                 </span>
                             </div>
                             {dialogErrors?.flag && (
-                                <p className="text-[10px] text-destructive">{dialogErrors.flag}</p>
+                                <p className="text-[10px] text-destructive">
+                                    {dialogErrors.flag}
+                                </p>
                             )}
                         </div>
 
                         <div className="space-y-2">
                             <Label
-                                htmlFor={localizedKey('name', activeLang as VisaLang)}
-                                className={dialogErrors?.[`name_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}
+                                htmlFor={localizedKey(
+                                    'name',
+                                    activeLang as VisaLang,
+                                )}
+                                className={
+                                    dialogErrors?.[`name_${activeLang}`]
+                                        ? 'text-destructive'
+                                        : 'text-muted-foreground'
+                                }
                             >
                                 {t('admin.visaForm.name')}
                                 <LangBadge lang={activeLang} />
                             </Label>
                             <Input
-                                id={localizedKey('name', activeLang as VisaLang)}
+                                id={localizedKey(
+                                    'name',
+                                    activeLang as VisaLang,
+                                )}
                                 value={asText(values[`name_${activeLang}`])}
-                                onChange={(e) => setField(`name_${activeLang}`, e.target.value)}
-                                placeholder={t('admin.visaForm.namePlaceholder')}
-                                className={dialogErrors?.[`name_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
+                                onChange={(e) =>
+                                    setField(
+                                        `name_${activeLang}`,
+                                        e.target.value,
+                                    )
+                                }
+                                placeholder={t(
+                                    'admin.visaForm.namePlaceholder',
+                                )}
+                                className={
+                                    dialogErrors?.[`name_${activeLang}`]
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             {dialogErrors?.[`name_${activeLang}`] && (
-                                <p className="text-[10px] text-destructive">{dialogErrors[`name_${activeLang}`]}</p>
+                                <p className="text-[10px] text-destructive">
+                                    {dialogErrors[`name_${activeLang}`]}
+                                </p>
                             )}
                         </div>
 
                         <div className="space-y-2 md:col-span-2">
                             <Label
-                                className={dialogErrors?.processing ? 'text-destructive' : 'text-muted-foreground'}
+                                className={
+                                    dialogErrors?.processing
+                                        ? 'text-destructive'
+                                        : 'text-muted-foreground'
+                                }
                             >
                                 {t('admin.visaForm.processing')}
                             </Label>
                             <Input
                                 value={String(values.processing ?? '')}
-                                onChange={(e) => setField('processing', e.target.value)}
-                                placeholder={t('admin.visaForm.processingPlaceholder')}
-                                className={dialogErrors?.processing ? 'border-destructive ring-1 ring-destructive' : ''}
+                                onChange={(e) =>
+                                    setField('processing', e.target.value)
+                                }
+                                placeholder={t(
+                                    'admin.visaForm.processingPlaceholder',
+                                )}
+                                className={
+                                    dialogErrors?.processing
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             {dialogErrors?.processing && (
-                                <p className="text-[10px] text-destructive">{dialogErrors.processing}</p>
+                                <p className="text-[10px] text-destructive">
+                                    {dialogErrors.processing}
+                                </p>
                             )}
                         </div>
                     </div>
@@ -324,7 +397,11 @@ const AdminVisas = () => {
                         <div className="space-y-2">
                             <Label
                                 htmlFor="visa-price"
-                                className={dialogErrors?.price ? 'text-destructive' : 'text-muted-foreground'}
+                                className={
+                                    dialogErrors?.price
+                                        ? 'text-destructive'
+                                        : 'text-muted-foreground'
+                                }
                             >
                                 {t('admin.visaForm.price')}
                             </Label>
@@ -332,25 +409,41 @@ const AdminVisas = () => {
                                 id="visa-price"
                                 type="number"
                                 value={String(values.price ?? '')}
-                                onChange={(e) => setField('price', Number(e.target.value))}
+                                onChange={(e) =>
+                                    setField('price', Number(e.target.value))
+                                }
                                 min={0}
                                 placeholder="280"
-                                className={dialogErrors?.price ? 'border-destructive ring-1 ring-destructive' : ''}
+                                className={
+                                    dialogErrors?.price
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             {dialogErrors?.price && (
-                                <p className="text-[10px] text-destructive">{dialogErrors.price}</p>
+                                <p className="text-[10px] text-destructive">
+                                    {dialogErrors.price}
+                                </p>
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="visa-sort" className="text-muted-foreground">
+                            <Label
+                                htmlFor="visa-sort"
+                                className="text-muted-foreground"
+                            >
                                 {t('admin.visaForm.sortOrder')}
                             </Label>
                             <Input
                                 id="visa-sort"
                                 type="number"
                                 value={String(values.sort_order ?? 0)}
-                                onChange={(e) => setField('sort_order', Number(e.target.value))}
+                                onChange={(e) =>
+                                    setField(
+                                        'sort_order',
+                                        Number(e.target.value),
+                                    )
+                                }
                                 min={0}
                             />
                         </div>
@@ -401,7 +494,11 @@ const AdminVisas = () => {
                         disabled={isHeroSaving}
                         className="bg-primary text-primary-foreground"
                     >
-                        {isHeroSaving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}{' '}
+                        {isHeroSaving ? (
+                            <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <Save className="mr-1 h-3.5 w-3.5" />
+                        )}{' '}
                         {t('admin.settings.save')}
                     </Button>
                 </div>
@@ -449,30 +546,45 @@ const AdminVisas = () => {
                                     key={v.id}
                                     className="border-b border-border last:border-0 hover:bg-muted/20"
                                 >
-                                    <td className="px-4 py-3 text-center text-2xl">{v.flag}</td>
-                                    <td className={cn(
-                                        'px-4 py-3 text-sm font-semibold',
-                                        dir === 'rtl' ? 'text-right' : 'text-left',
-                                    )}>
+                                    <td className="px-4 py-3 text-center text-2xl">
+                                        {v.flag}
+                                    </td>
+                                    <td
+                                        className={cn(
+                                            'px-4 py-3 text-sm font-semibold',
+                                            dir === 'rtl'
+                                                ? 'text-right'
+                                                : 'text-left',
+                                        )}
+                                    >
                                         <div>
-                                            <span>{v[`${lang}_en`] || v.name}</span>
-                                            <span className="ml-2 text-xs text-muted-foreground">({v.code})</span>
+                                            <span>
+                                                {v[`${lang}_en`] || v.name}
+                                            </span>
+                                            <span className="ml-2 text-xs text-muted-foreground">
+                                                ({v.code})
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {v[`${lang}_processing`] || v.processing}
+                                        {v[`${lang}_processing`] ||
+                                            v.processing}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-bold text-secondary">
                                         {v.price} DT
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={cn(
-                                            'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                                            v.is_active
-                                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                : 'bg-muted text-muted-foreground',
-                                        )}>
-                                            {v.is_active ? t('admin.visaForm.active') : t('admin.visaForm.inactive')}
+                                        <span
+                                            className={cn(
+                                                'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                                v.is_active
+                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                    : 'bg-muted text-muted-foreground',
+                                            )}
+                                        >
+                                            {v.is_active
+                                                ? t('admin.visaForm.active')
+                                                : t('admin.visaForm.inactive')}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
@@ -487,7 +599,9 @@ const AdminVisas = () => {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(v)}
+                                                onClick={() =>
+                                                    setPendingDelete(v)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />

@@ -11,7 +11,11 @@ import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useDeals, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import {
+    useDeals,
+    useCategories,
+    useCategoryTypesPublic,
+} from '@/hooks/usePublicData';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
@@ -38,10 +42,13 @@ export default function Deals() {
         }
         return filters;
     }, [params]);
-    const [categoryTypeFilters, setCategoryTypeFilters] =
-        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<
+        Record<string, string[]>
+    >(initialCategoryTypeFilters);
 
-    const [activeCategory, setActiveCategory] = useState<'all' | string>(initialCategory);
+    const [activeCategory, setActiveCategory] = useState<'all' | string>(
+        initialCategory,
+    );
     const [searchQuery, setSearchQuery] = useState(initialSearch);
 
     // Adjust state during render when URL params change (e.g. navbar subcategory links)
@@ -53,7 +60,9 @@ export default function Deals() {
         const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val
+                    .split(',')
+                    .filter(Boolean);
             }
         }
         setCategoryTypeFilters(nextFilters);
@@ -84,10 +93,15 @@ export default function Deals() {
                     activeCategory === ALL ||
                     deal.category_key === activeCategory;
                 const dealAssignments = deal.category_assignments;
-                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
-                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
-                    activeTypeFilters.some(([typeKey, values]) =>
-                        dealAssignments && values.includes(dealAssignments[typeKey]),
+                const activeTypeFilters = Object.entries(
+                    categoryTypeFilters,
+                ).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes =
+                    activeTypeFilters.length === 0 ||
+                    activeTypeFilters.some(
+                        ([typeKey, values]) =>
+                            dealAssignments &&
+                            values.includes(dealAssignments[typeKey]),
                     );
                 return matchesSearch && matchesCategory && matchesCategoryTypes;
             }),
@@ -113,7 +127,7 @@ export default function Deals() {
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 border-b border-border pb-6"
+                        className="mb-8 border-b border-border pb-4"
                     >
                         <Breadcrumb
                             items={[
@@ -145,7 +159,9 @@ export default function Deals() {
                         className="mb-8"
                     />
 
-                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                        className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
                         <FilterSidebar
                             title={t('hotels.filters')}
                             hasActiveFilters={hasActiveFilters}
@@ -162,9 +178,14 @@ export default function Deals() {
                                         <button
                                             key={category.value}
                                             type="button"
-                                            onClick={() => setActiveCategory(category.value)}
+                                            onClick={() =>
+                                                setActiveCategory(
+                                                    category.value,
+                                                )
+                                            }
                                             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                                                activeCategory === category.value
+                                                activeCategory ===
+                                                category.value
                                                     ? 'bg-primary text-primary-foreground'
                                                     : 'border border-border bg-card text-muted-foreground hover:text-foreground'
                                             }`}
@@ -176,17 +197,23 @@ export default function Deals() {
                             </div>
 
                             {categoryTypes.length > 0 && (
-                                <div className="border-t border-border pt-6 space-y-4">
+                                <div className="space-y-4 border-t border-border pt-6">
                                     {categoryTypes.map((catType) => (
                                         <FilterRenderer
                                             key={catType.key}
                                             categoryType={catType as never}
-                                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                            selectedValues={
+                                                categoryTypeFilters[
+                                                    catType.key
+                                                ] ?? []
+                                            }
                                             onChange={(values) =>
-                                                setCategoryTypeFilters((prev) => ({
-                                                    ...prev,
-                                                    [catType.key]: values,
-                                                }))
+                                                setCategoryTypeFilters(
+                                                    (prev) => ({
+                                                        ...prev,
+                                                        [catType.key]: values,
+                                                    }),
+                                                )
                                             }
                                             lang={lang}
                                         />
@@ -198,7 +225,11 @@ export default function Deals() {
                         <div className="min-w-0 flex-1">
                             {filteredDeals.length === 0 ? (
                                 <RequestThingEmptyState
-                                    variant={deals.length === 0 ? 'empty' : 'no-results'}
+                                    variant={
+                                        deals.length === 0
+                                            ? 'empty'
+                                            : 'no-results'
+                                    }
                                 />
                             ) : (
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -213,26 +244,44 @@ export default function Deals() {
                                             <div className="mb-4 flex items-center justify-between">
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                                                     <Tag className="h-3 w-3" />{' '}
-                                                    {localizeText(deal.discount, lang)}
+                                                    {localizeText(
+                                                        deal.discount,
+                                                        lang,
+                                                    )}
                                                 </span>
                                                 <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                                                     <CalendarClock className="h-3.5 w-3.5" />{' '}
-                                                    {localizeText(deal.expires, lang)}
+                                                    {localizeText(
+                                                        deal.expires,
+                                                        lang,
+                                                    )}
                                                 </span>
                                             </div>
                                             <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
                                                 {localizeText(deal.title, lang)}
                                             </h3>
                                             <p className="mb-6 text-sm text-muted-foreground">
-                                                {localizeText(deal.description, lang)}
+                                                {localizeText(
+                                                    deal.description,
+                                                    lang,
+                                                )}
                                             </p>
                                             <div className="flex gap-2">
-                                                <Link to={`/deals/${deal.slug}`} className="flex-1">
-                                                    <Button variant="outline" className="w-full">
+                                                <Link
+                                                    to={`/deals/${deal.slug}`}
+                                                    className="flex-1"
+                                                >
+                                                    <Button
+                                                        variant="outline"
+                                                        className="w-full"
+                                                    >
                                                         {t('deals.viewDeal')}
                                                     </Button>
                                                 </Link>
-                                                <Link to={`/deals/${deal.slug}`} className="flex-1">
+                                                <Link
+                                                    to={`/deals/${deal.slug}`}
+                                                    className="flex-1"
+                                                >
                                                     <Button className="w-full">
                                                         {t('common.bookNow')}
                                                     </Button>

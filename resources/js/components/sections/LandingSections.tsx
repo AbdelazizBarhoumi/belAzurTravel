@@ -13,7 +13,10 @@ import { OrganizedSection } from './landing/OrganizedSection';
 import { ToursSection } from './landing/ToursSection';
 import { VisaSection } from './landing/VisaSection';
 
-const SECTION_COMPONENTS: Record<string, React.ComponentType<{ config: LandingSectionConfig }>> = {
+const SECTION_COMPONENTS: Record<
+    string,
+    React.ComponentType<{ config: LandingSectionConfig }>
+> = {
     destinations: DestinationsSection,
     hotels: HotelsSection,
     organized: OrganizedSection,

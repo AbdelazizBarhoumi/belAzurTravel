@@ -1,4 +1,10 @@
 import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
+
+afterEach(() => {
+    cleanup();
+});
 
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
@@ -114,7 +120,6 @@ Object.defineProperty(globalThis, 'ResizeObserver', {
 // tests which can cause queries to find multiple matching nodes.
 try {
     /* eslint-disable @typescript-eslint/no-require-imports */
-    const { vi } = require('vitest');
     vi.mock('framer-motion', () => {
         // Use simple passthroughs for common motion primitives
         const React = require('react');
@@ -136,16 +141,17 @@ try {
             'article',
             'aside',
             'header',
+            'section',
+            'main',
+            'nav',
+            'footer',
             'p',
         ];
 
         return {
             motion: {
-                ...Object.fromEntries(
-                    tags.map((tag) => [tag, make(tag)]),
-                ),
-                create: (Component: React.ComponentType<unknown>) =>
-                    Component,
+                ...Object.fromEntries(tags.map((tag) => [tag, make(tag)])),
+                create: (Component: React.ComponentType<unknown>) => Component,
             },
             AnimatePresence: ({ children }: { children?: React.ReactNode }) =>
                 children,

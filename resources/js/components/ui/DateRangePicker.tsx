@@ -8,7 +8,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
 function getLocale(lang: string) {
-    if (lang === 'ar') return 'ar-EG';
+    // '-u-nu-latn' forces Latin digits even for Arabic, so dates stay
+    // visually consistent with prices/phone numbers elsewhere in the UI.
+    if (lang === 'ar') return 'ar-EG-u-nu-latn';
     if (lang === 'en') return 'en-US';
     return 'fr-FR';
 }
@@ -27,6 +29,10 @@ interface DateRangePickerProps {
     placeholderTo?: string;
     placeholderSingle?: string;
     placeholderEmpty?: string;
+    /** Earliest selectable date (react-day-picker `fromDate`). */
+    fromDate?: Date;
+    /** Date ranges that must not be selectable (stop-sale / unavailable days). */
+    disabledRanges?: Array<{ from: Date; to: Date }>;
 }
 
 export function DateRangePicker({
@@ -37,6 +43,8 @@ export function DateRangePicker({
     placeholderTo,
     placeholderSingle,
     placeholderEmpty,
+    fromDate,
+    disabledRanges,
 }: DateRangePickerProps) {
     const { lang, t, dir } = useLanguage();
     const isRtl = dir === 'rtl';
@@ -66,9 +74,20 @@ export function DateRangePicker({
                 >
                     <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-primary" />
                     <span className="min-w-0 truncate text-xs sm:text-sm text-foreground">
-                        {value?.from
-                            ? `${startLabel} — ${value?.to ? endLabel : (placeholderSingle ?? t('search.placeholders.flexibleDates'))}`
-                            : emptyLabel}
+                        {value?.from ? (
+                            // Kept as its own LTR unit (like phone numbers/prices) so the
+                            // browser's bidi algorithm can't reorder "start — end" when
+                            // this sits inside an RTL-direction ancestor.
+                            <span className="inline-flex items-center gap-1" dir="ltr">
+                                <span>{startLabel}</span>
+                                <span className="text-muted-foreground">–</span>
+                                <span>
+                                    {value?.to ? endLabel : (placeholderSingle ?? t('search.placeholders.flexibleDates'))}
+                                </span>
+                            </span>
+                        ) : (
+                            emptyLabel
+                        )}
                     </span>
                 </Button>
             </PopoverTrigger>
@@ -84,6 +103,8 @@ export function DateRangePicker({
                     initialFocus
                     locale={getDatePickerLocale(lang)}
                     dir={dir}
+                    fromDate={fromDate}
+                    disabled={disabledRanges}
                 />
             </PopoverContent>
         </Popover>

@@ -58,8 +58,16 @@ const hotelCategoryTypes = [
         sort_order: 0,
         filter_style: 'checkbox',
         values: [
-            { id: 1, key: 'beach', name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' } },
-            { id: 2, key: 'luxury', name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' } },
+            {
+                id: 1,
+                key: 'beach',
+                name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
+            },
+            {
+                id: 2,
+                key: 'luxury',
+                name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+            },
         ],
     },
 ];
@@ -138,9 +146,9 @@ describe('AdminHotels', () => {
                 ),
             ) || dialogs[0];
         expect(dialog).not.toBeNull();
-        expect(
-            within(dialog).getAllByRole('combobox').length,
-        ).toBeGreaterThan(0);
+        expect(within(dialog).getAllByRole('combobox').length).toBeGreaterThan(
+            0,
+        );
 
         fireEvent.click(screen.getByRole('button', { name: /^fr$/i }));
 
@@ -148,8 +156,7 @@ describe('AdminHotels', () => {
         expect(screen.getByText('Room Name')).toBeInTheDocument();
         expect(screen.getByText('Capacity')).toBeInTheDocument();
         expect(screen.getByText('Size (sqm)')).toBeInTheDocument();
-        expect(screen.getByLabelText('Destination slug')).toBeInTheDocument();
-        expect(screen.getByLabelText('Stars')).toBeInTheDocument();
+        expect(screen.getAllByText('Stars').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Image').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Gallery').length).toBeGreaterThan(0);
     });
@@ -283,7 +290,6 @@ describe('AdminHotels', () => {
     });
 
     it('drops blank room drafts before saving a hotel', async () => {
-        vi.mocked(fetchCategoryTypes).mockResolvedValue([] as never);
         renderPage();
 
         fireEvent.click(screen.getAllByRole('button', { name: /^add$/i })[0]);
@@ -297,7 +303,8 @@ describe('AdminHotels', () => {
             ) || dialogs[0];
 
         const fill = (id: string, value: string) => {
-            const input = (dialog.querySelector(`[id="${id}"]`) || document.getElementById(id)) as HTMLInputElement;
+            const input = (dialog.querySelector(`[id="${id}"]`) ||
+                document.getElementById(id)) as HTMLInputElement;
             fireEvent.change(input, {
                 target: { value },
             });
@@ -322,37 +329,49 @@ describe('AdminHotels', () => {
             });
 
             Object.entries(values).forEach(([field, value]) => {
-                if (field === 'category') return;
                 fill(`${field}_${lang}`, value);
             });
         };
 
-        await fillLanguage('en', {
+        await fillLanguage('ar', {
             name: 'Harbor Hotel',
-            location: 'Port City',
-            city: 'Lisbon',
-            country: 'Portugal',
             description: 'Demo hotel',
-            category: 'Beach',
         });
         await fillLanguage('fr', {
             name: 'Harbor Hotel',
-            location: 'Port City',
-            city: 'Lisbonne',
-            country: 'Portugal',
             description: 'Demo hotel',
-            category: 'Plage',
         });
-        await fillLanguage('ar', {
+        await fillLanguage('en', {
             name: 'Harbor Hotel',
-            location: 'Port City',
-            city: 'لشبونة',
-            country: 'البرتغال',
             description: 'Demo hotel',
-            category: 'شاطئ',
         });
         fill('price', '200');
-        fill('destinationSlug', 'lisbon');
+
+        // Location is a combobox backed by Radix Popover + Command.
+        const locationTrigger = within(dialog)
+            .getAllByRole('combobox')
+            .find((el) => el.getAttribute('aria-haspopup') === 'dialog');
+        expect(locationTrigger).toBeDefined();
+        fireEvent.click(locationTrigger as HTMLElement);
+        const countryOption = await screen.findByRole('option', {
+            name: 'Portugal',
+        });
+        fireEvent.click(countryOption);
+        const cityOption = await screen.findByRole('option', {
+            name: 'Lisbon, Portugal',
+        });
+        fireEvent.click(cityOption);
+
+        // Category is a Radix Select; pick "Beach" to satisfy validation.
+        const categoryTrigger = within(dialog)
+            .getAllByRole('combobox')
+            .find((el) => (el.textContent ?? '').includes('Select'));
+        expect(categoryTrigger).toBeDefined();
+        fireEvent.click(categoryTrigger as HTMLElement);
+        const beachOption = await screen.findByRole('option', {
+            name: 'Beach',
+        });
+        fireEvent.click(beachOption);
 
         fireEvent.click(screen.getByRole('button', { name: /add room/i }));
         fireEvent.click(screen.getByRole('button', { name: /save/i }));

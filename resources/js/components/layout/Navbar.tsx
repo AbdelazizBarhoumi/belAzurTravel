@@ -1,5 +1,15 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, User, Heart, ChevronDown, ChevronRight, FileCheck, Phone, Star } from 'lucide-react';
+import {
+    Menu,
+    X,
+    User,
+    Heart,
+    ChevronDown,
+    ChevronRight,
+    FileCheck,
+    Phone,
+    Star,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { redirectAfterLogin } from '@/auth';
@@ -18,7 +28,10 @@ import {
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
-import { useCategoryTypesPublic, type PublicCategoryType } from '@/hooks/usePublicData';
+import {
+    useCategoryTypesPublic,
+    type PublicCategoryType,
+} from '@/hooks/usePublicData';
 import { useCategories } from '@/hooks/usePublicData';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { getLocalizedCategoryLabelByKey } from '@/lib/categoryLabels';
@@ -33,8 +46,12 @@ import {
     type LocalizedText,
     getPagesInGroups,
 } from '@/lib/nav-config';
+import { getStaticFiltersForPage } from '@/lib/nav-static-filters';
 
-const SOCIAL_ICONS: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+const SOCIAL_ICONS: Record<
+    string,
+    React.ComponentType<React.SVGProps<SVGSVGElement>>
+> = {
     facebook: FacebookWhiteIcon,
     instagram: InstagramWhiteIcon,
     twitter: TwitterWhiteIcon,
@@ -52,12 +69,122 @@ function useHoverDelay(delay = 250) {
             timerRef.current = null;
         }
     }, []);
-    const schedule = useCallback((fn: () => void) => {
-        clear();
-        timerRef.current = setTimeout(fn, delay);
-    }, [clear, delay]);
+    const schedule = useCallback(
+        (fn: () => void) => {
+            clear();
+            timerRef.current = setTimeout(fn, delay);
+        },
+        [clear, delay],
+    );
     useEffect(() => () => clear(), [clear]);
     return { schedule, clear };
+}
+
+/** Render a dropdown item's content based on its displayMode */
+function DropdownItemContent({
+    item,
+    label,
+}: {
+    item: DropdownItemConfig;
+    label: string;
+}) {
+    const mode = item.displayMode ?? 'label';
+    if (mode === 'svg' && item.svg) {
+        return (
+            <span
+                className="inline-flex h-4 w-4 shrink-0 items-center [&>svg]:h-4 [&>svg]:w-4"
+                dangerouslySetInnerHTML={{ __html: item.svg }}
+            />
+        );
+    }
+    if (mode === 'both' && item.svg) {
+        return (
+            <span className="flex items-center gap-1.5">
+                <span
+                    className="inline-flex h-4 w-4 shrink-0 items-center [&>svg]:h-4 [&>svg]:w-4"
+                    dangerouslySetInnerHTML={{ __html: item.svg }}
+                />
+                {label}
+            </span>
+        );
+    }
+    return <>{label}</>;
+}
+
+/** Resolve categories dropdown items based on the selected value.
+ *  value="static:stars" -> only stars options, value="colors" -> only that API category, value="" -> all */
+function resolveCategoriesDropdownItems(
+    pageKey: string,
+    value: string,
+    categoryTypes: PublicCategoryType[],
+): DropdownItemConfig[] {
+    const items: DropdownItemConfig[] = [];
+
+    // Static filter group selected
+    if (value.startsWith('static:')) {
+        const groupKey = value.replace('static:', '');
+        const group = getStaticFiltersForPage(pageKey).find(
+            (g) => g.key === groupKey,
+        );
+        if (group) {
+            for (const opt of group.options) {
+                items.push({
+                    label: opt.label,
+                    mode: 'filter' as const,
+                    value: `static:${group.key}:${opt.key}`,
+                    pageKey,
+                    svg: opt.svg,
+                    displayMode: group.displayMode ?? 'label',
+                });
+            }
+        }
+        return items;
+    }
+
+    // Dynamic API category type selected
+    if (value) {
+        const selectedType = categoryTypes.find((ct) => ct.key === value);
+        if (selectedType?.values) {
+            for (const val of selectedType.values) {
+                items.push({
+                    label: val.name as unknown as LocalizedText,
+                    mode: 'filter' as const,
+                    value: `${selectedType.key}:${val.key}`,
+                    pageKey,
+                });
+            }
+        }
+        return items;
+    }
+
+    // No specific value selected — show all static groups + all dynamic categories
+    const staticGroups = getStaticFiltersForPage(pageKey);
+    for (const group of staticGroups) {
+        for (const opt of group.options) {
+            items.push({
+                label: opt.label,
+                mode: 'filter' as const,
+                value: `static:${group.key}:${opt.key}`,
+                pageKey,
+                svg: opt.svg,
+                displayMode: group.displayMode ?? 'label',
+            });
+        }
+    }
+    for (const ct of categoryTypes) {
+        if (ct.values) {
+            for (const val of ct.values) {
+                items.push({
+                    label: val.name as unknown as LocalizedText,
+                    mode: 'filter' as const,
+                    value: `${ct.key}:${val.key}`,
+                    pageKey,
+                });
+            }
+        }
+    }
+
+    return items;
 }
 
 function DesktopFlyoutItems({
@@ -72,7 +199,10 @@ function DesktopFlyoutItems({
     items: DropdownItemConfig[];
     entry: HeaderEntry;
     lang: string;
-    resolveDropdownItemLabel: (entry: HeaderEntry, item: DropdownItemConfig) => string;
+    resolveDropdownItemLabel: (
+        entry: HeaderEntry,
+        item: DropdownItemConfig,
+    ) => string;
     hoveredPath: string | null;
     setHoveredPath: (path: string | null) => void;
     hover: { schedule: (fn: () => void) => void; clear: () => void };
@@ -101,11 +231,20 @@ function DesktopFlyoutItems({
                         }}
                     >
                         <Link
-                            to={buildItemHref(entry.pageKey, item, lang as 'en' | 'fr' | 'ar')}
+                            to={buildItemHref(
+                                entry.pageKey,
+                                item,
+                                lang as 'en' | 'fr' | 'ar',
+                            )}
                             className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
-                            <span>{resolveDropdownItemLabel(entry, item)}</span>
-                            {hasChildren && <ChevronRight className="h-4 w-4 opacity-50" />}
+                            <DropdownItemContent
+                                item={item}
+                                label={resolveDropdownItemLabel(entry, item)}
+                            />
+                            {hasChildren && (
+                                <ChevronRight className="h-4 w-4 opacity-50" />
+                            )}
                         </Link>
                         {hasChildren && isActive && (
                             <div
@@ -122,7 +261,9 @@ function DesktopFlyoutItems({
                                     items={item.children!}
                                     entry={entry}
                                     lang={lang}
-                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                    resolveDropdownItemLabel={
+                                        resolveDropdownItemLabel
+                                    }
                                     hoveredPath={hoveredPath}
                                     setHoveredPath={setHoveredPath}
                                     hover={hover}
@@ -147,7 +288,10 @@ function MobileNestedItems({
     items: DropdownItemConfig[];
     entry: HeaderEntry;
     onClose: () => void;
-    resolveDropdownItemLabel: (entry: HeaderEntry, item: DropdownItemConfig) => string;
+    resolveDropdownItemLabel: (
+        entry: HeaderEntry,
+        item: DropdownItemConfig,
+    ) => string;
     lang: string;
     depth?: number;
 }) {
@@ -160,7 +304,13 @@ function MobileNestedItems({
                     return (
                         <details key={idx} className="group/nested">
                             <summary className="flex cursor-pointer items-center justify-between py-1 text-sm text-muted-foreground">
-                                {resolveDropdownItemLabel(entry, item)}
+                                <DropdownItemContent
+                                    item={item}
+                                    label={resolveDropdownItemLabel(
+                                        entry,
+                                        item,
+                                    )}
+                                />
                                 <ChevronDown className="h-4 w-4 transition-transform group-open/nested:rotate-180" />
                             </summary>
                             <div className="flex flex-col gap-1 pb-1 pl-3">
@@ -168,7 +318,9 @@ function MobileNestedItems({
                                     items={item.children!}
                                     entry={entry}
                                     onClose={onClose}
-                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                    resolveDropdownItemLabel={
+                                        resolveDropdownItemLabel
+                                    }
                                     lang={lang}
                                     depth={depth + 1}
                                 />
@@ -180,11 +332,18 @@ function MobileNestedItems({
                 return (
                     <Link
                         key={idx}
-                        to={buildItemHref(entry.pageKey, item, lang as 'en' | 'fr' | 'ar')}
+                        to={buildItemHref(
+                            entry.pageKey,
+                            item,
+                            lang as 'en' | 'fr' | 'ar',
+                        )}
                         onClick={onClose}
                         className="py-1 text-sm text-muted-foreground"
                     >
-                        {resolveDropdownItemLabel(entry, item)}
+                        <DropdownItemContent
+                            item={item}
+                            label={resolveDropdownItemLabel(entry, item)}
+                        />
                     </Link>
                 );
             })}
@@ -207,28 +366,32 @@ function DesktopGroupDropdown({
     lang: string;
     t: (key: string) => string;
     resolveLabel: (label: string | LocalizedText | null | undefined) => string;
-    resolveDropdownItemLabel: (entry: HeaderEntry, item: DropdownItemConfig) => string;
+    resolveDropdownItemLabel: (
+        entry: HeaderEntry,
+        item: DropdownItemConfig,
+    ) => string;
     hoveredPath: string | null;
     setHoveredPath: (path: string | null) => void;
     hover: { schedule: (fn: () => void) => void; clear: () => void };
     categoryTypesByPage: Record<string, PublicCategoryType[]>;
 }) {
     const triggerPath = `group:${group.key}`;
-    const isHovered = hoveredPath === triggerPath || hoveredPath?.startsWith(triggerPath + ':');
+    const isHovered =
+        hoveredPath === triggerPath ||
+        hoveredPath?.startsWith(triggerPath + ':');
 
-    const resolveDropdownItems = (items: DropdownItemConfig[], pageKey: string): DropdownItemConfig[] =>
+    const resolveDropdownItems = (
+        items: DropdownItemConfig[],
+        pageKey: string,
+    ): DropdownItemConfig[] =>
         items.flatMap((item): DropdownItemConfig[] => {
             if (item.mode === 'categories' && item.value) {
                 const categoryTypes = categoryTypesByPage[pageKey] ?? [];
-                const selectedType = categoryTypes.find((ct: PublicCategoryType) => ct.key === item.value);
-                if (selectedType && selectedType.values) {
-                    return selectedType.values.map((val) => ({
-                        label: val.name as unknown as LocalizedText,
-                        mode: 'filter' as const,
-                        value: `${selectedType.key}:${val.key}`,
-                        pageKey,
-                    }));
-                }
+                return resolveCategoriesDropdownItems(
+                    pageKey,
+                    item.value,
+                    categoryTypes,
+                );
             }
             const resolvedChildren = item.children
                 ? resolveDropdownItems(item.children, pageKey)
@@ -241,15 +404,11 @@ function DesktopGroupDropdown({
             const pageKey = link.pageKey ?? '';
             if (link.mode === 'categories' && link.value) {
                 const categoryTypes = categoryTypesByPage[pageKey] ?? [];
-                const selectedType = categoryTypes.find((ct: PublicCategoryType) => ct.key === link.value);
-                if (selectedType && selectedType.values) {
-                    return selectedType.values.map((val) => ({
-                        label: val.name as unknown as LocalizedText,
-                        mode: 'filter' as const,
-                        value: `${selectedType.key}:${val.key}`,
-                        pageKey,
-                    }));
-                }
+                return resolveCategoriesDropdownItems(
+                    pageKey,
+                    link.value,
+                    categoryTypes,
+                );
             }
             const resolvedChildren = link.children
                 ? resolveLinks(link.children)
@@ -270,7 +429,9 @@ function DesktopGroupDropdown({
         >
             <button className="inline-flex h-10 items-center gap-1 px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                 {resolveLabel(group.label) || group.key}
-                <ChevronDown className={`h-4 w-4 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-50'}`} />
+                <ChevronDown
+                    className={`h-4 w-4 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-50'}`}
+                />
             </button>
             {isHovered && (
                 <div className="absolute left-0 top-full -mt-1 pt-1">
@@ -279,10 +440,20 @@ function DesktopGroupDropdown({
                             const page = getPage(groupPage.pageKey);
                             if (!page) return null;
                             const itemPath = `${triggerPath}:${groupPage.pageKey}`;
-                            const isPageHovered = hoveredPath === itemPath || hoveredPath?.startsWith(itemPath + ':');
-                            const dropdownItems = groupPage.isDropdown ? resolveDropdownItems(groupPage.items, groupPage.pageKey) : [];
+                            const isPageHovered =
+                                hoveredPath === itemPath ||
+                                hoveredPath?.startsWith(itemPath + ':');
+                            const dropdownItems = groupPage.isDropdown
+                                ? resolveDropdownItems(
+                                      groupPage.items,
+                                      groupPage.pageKey,
+                                  )
+                                : [];
 
-                            if (groupPage.isDropdown && dropdownItems.length > 0) {
+                            if (
+                                groupPage.isDropdown &&
+                                dropdownItems.length > 0
+                            ) {
                                 return (
                                     <li
                                         key={groupPage.pageKey}
@@ -292,7 +463,9 @@ function DesktopGroupDropdown({
                                             setHoveredPath(itemPath);
                                         }}
                                         onMouseLeave={() => {
-                                            hover.schedule(() => setHoveredPath(null));
+                                            hover.schedule(() =>
+                                                setHoveredPath(null),
+                                            );
                                         }}
                                     >
                                         {groupPage.linkSelf ? (
@@ -300,24 +473,45 @@ function DesktopGroupDropdown({
                                                 to={page.href}
                                                 className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                             >
-                                                <span>{groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}</span>
-                                                <ChevronDown className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`} />
+                                                <span>
+                                                    {groupPage.label?.[lang] ||
+                                                        groupPage.label?.en ||
+                                                        t('nav.' + page.key)}
+                                                </span>
+                                                <ChevronDown
+                                                    className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`}
+                                                />
                                             </Link>
                                         ) : (
                                             <button className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                                <span>{groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}</span>
-                                                <ChevronDown className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`} />
+                                                <span>
+                                                    {groupPage.label?.[lang] ||
+                                                        groupPage.label?.en ||
+                                                        t('nav.' + page.key)}
+                                                </span>
+                                                <ChevronDown
+                                                    className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`}
+                                                />
                                             </button>
                                         )}
                                         {isPageHovered && (
                                             <div className="absolute left-[calc(100%+8px)] top-0">
                                                 <DesktopFlyoutItems
                                                     items={dropdownItems}
-                                                    entry={{ pageKey: itemPath, label: groupPage.label } as HeaderEntry}
+                                                    entry={
+                                                        {
+                                                            pageKey: itemPath,
+                                                            label: groupPage.label,
+                                                        } as HeaderEntry
+                                                    }
                                                     lang={lang}
-                                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                    resolveDropdownItemLabel={
+                                                        resolveDropdownItemLabel
+                                                    }
                                                     hoveredPath={hoveredPath}
-                                                    setHoveredPath={setHoveredPath}
+                                                    setHoveredPath={
+                                                        setHoveredPath
+                                                    }
                                                     hover={hover}
                                                 />
                                             </div>
@@ -338,7 +532,9 @@ function DesktopGroupDropdown({
                                         to={page.href}
                                         className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                     >
-                                        {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                        {groupPage.label?.[lang] ||
+                                            groupPage.label?.en ||
+                                            t('nav.' + page.key)}
                                     </Link>
                                 </li>
                             );
@@ -350,11 +546,14 @@ function DesktopGroupDropdown({
                             const resolvedLinks = resolveLinks([link]);
 
                             return resolvedLinks.map((resolved, subIdx) => {
-                                const resolvedPageKey = resolved.pageKey ?? linkPageKey;
+                                const resolvedPageKey =
+                                    resolved.pageKey ?? linkPageKey;
                                 const resolvedPage = getPage(resolvedPageKey);
                                 if (!resolvedPage) return null;
                                 const linkPath = `${triggerPath}:link:${linkIdx}:${subIdx}`;
-                                const isLinkHovered = hoveredPath === linkPath || hoveredPath?.startsWith(linkPath + ':');
+                                const isLinkHovered =
+                                    hoveredPath === linkPath ||
+                                    hoveredPath?.startsWith(linkPath + ':');
                                 const children = resolved.children ?? [];
 
                                 return (
@@ -366,148 +565,293 @@ function DesktopGroupDropdown({
                                             setHoveredPath(linkPath);
                                         }}
                                         onMouseLeave={() => {
-                                            if (children.length > 0) hover.schedule(() => setHoveredPath(null));
+                                            if (children.length > 0)
+                                                hover.schedule(() =>
+                                                    setHoveredPath(null),
+                                                );
                                         }}
                                     >
                                         <Link
-                                            to={buildItemHref(resolvedPageKey, resolved, lang as 'en' | 'fr' | 'ar')}
+                                            to={buildItemHref(
+                                                resolvedPageKey,
+                                                resolved,
+                                                lang as 'en' | 'fr' | 'ar',
+                                            )}
                                             className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                         >
-                                            <span>{resolveDropdownItemLabel({ pageKey: resolvedPageKey } as HeaderEntry, resolved)}</span>
-                                            {children.length > 0 && <ChevronRight className="h-4 w-4 opacity-50" />}
+                                            <DropdownItemContent
+                                                item={resolved}
+                                                label={resolveDropdownItemLabel(
+                                                    {
+                                                        pageKey:
+                                                            resolvedPageKey,
+                                                    } as HeaderEntry,
+                                                    resolved,
+                                                )}
+                                            />
+                                            {children.length > 0 && (
+                                                <ChevronRight className="h-4 w-4 opacity-50" />
+                                            )}
                                         </Link>
-                                        {children.length > 0 && isLinkHovered && (
-                                            <div
-                                                className="absolute left-[calc(100%+8px)] top-0"
-                                                onMouseEnter={() => {
-                                                    hover.clear();
-                                                    setHoveredPath(linkPath);
-                                                }}
-                                                onMouseLeave={() => {
-                                                    hover.schedule(() => setHoveredPath(null));
-                                                }}
-                                            >
-                                                <DesktopFlyoutItems
-                                                    items={children}
-                                                    entry={{ pageKey: linkPath, label: resolved.label } as HeaderEntry}
-                                                    lang={lang}
-                                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
-                                                    hoveredPath={hoveredPath}
-                                                    setHoveredPath={setHoveredPath}
-                                                    hover={hover}
-                                                />
-                                            </div>
-                                        )}
+                                        {children.length > 0 &&
+                                            isLinkHovered && (
+                                                <div
+                                                    className="absolute left-[calc(100%+8px)] top-0"
+                                                    onMouseEnter={() => {
+                                                        hover.clear();
+                                                        setHoveredPath(
+                                                            linkPath,
+                                                        );
+                                                    }}
+                                                    onMouseLeave={() => {
+                                                        hover.schedule(() =>
+                                                            setHoveredPath(
+                                                                null,
+                                                            ),
+                                                        );
+                                                    }}
+                                                >
+                                                    <DesktopFlyoutItems
+                                                        items={children}
+                                                        entry={
+                                                            {
+                                                                pageKey:
+                                                                    linkPath,
+                                                                label: resolved.label,
+                                                            } as HeaderEntry
+                                                        }
+                                                        lang={lang}
+                                                        resolveDropdownItemLabel={
+                                                            resolveDropdownItemLabel
+                                                        }
+                                                        hoveredPath={
+                                                            hoveredPath
+                                                        }
+                                                        setHoveredPath={
+                                                            setHoveredPath
+                                                        }
+                                                        hover={hover}
+                                                    />
+                                                </div>
+                                            )}
                                     </li>
                                 );
                             });
                         })}
-                        {group.groups?.filter((sg) => sg.enabled).map((subGroup) => {
-                            const subGroupPath = `${triggerPath}:sub:${subGroup.key}`;
-                            const isSubGroupHovered = hoveredPath === subGroupPath || hoveredPath?.startsWith(subGroupPath + ':');
+                        {group.groups
+                            ?.filter((sg) => sg.enabled)
+                            .map((subGroup) => {
+                                const subGroupPath = `${triggerPath}:sub:${subGroup.key}`;
+                                const isSubGroupHovered =
+                                    hoveredPath === subGroupPath ||
+                                    hoveredPath?.startsWith(subGroupPath + ':');
 
-                            return (
-                                <li
-                                    key={subGroup.key}
-                                    className="relative"
-                                    onMouseEnter={() => {
-                                        hover.clear();
-                                        setHoveredPath(subGroupPath);
-                                    }}
-                                    onMouseLeave={() => {
-                                        hover.schedule(() => setHoveredPath(null));
-                                    }}
-                                >
-                                    <div className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer">
-                                        <span>{resolveLabel(subGroup.label) || subGroup.key}</span>
-                                        <ChevronRight className="h-4 w-4 opacity-50" />
-                                    </div>
-                                    {isSubGroupHovered && (
-                                        <div
-                                            className="absolute left-[calc(100%+8px)] top-0"
-                                            onMouseEnter={() => {
-                                                hover.clear();
-                                                setHoveredPath(subGroupPath);
-                                            }}
-                                            onMouseLeave={() => {
-                                                hover.schedule(() => setHoveredPath(null));
-                                            }}
-                                        >
-                                            <ul className="min-w-48 space-y-1 rounded-lg border border-border bg-card p-2 shadow-lg">
-                                                {subGroup.pages.map((groupPage) => {
-                                                    const page = getPage(groupPage.pageKey);
-                                                    if (!page) return null;
-                                                    const pagePath = `${subGroupPath}:${groupPage.pageKey}`;
-                                                    const isPageHovered = hoveredPath === pagePath || hoveredPath?.startsWith(pagePath + ':');
-                                                    const dropdownItems = groupPage.isDropdown ? resolveDropdownItems(groupPage.items, groupPage.pageKey) : [];
-
-                                                    if (groupPage.isDropdown && dropdownItems.length > 0) {
-                                                        return (
-                                                            <li
-                                                                key={groupPage.pageKey}
-                                                                className="relative"
-                                                                onMouseEnter={() => {
-                                                                    hover.clear();
-                                                                    setHoveredPath(pagePath);
-                                                                }}
-                                                                onMouseLeave={() => {
-                                                                    hover.schedule(() => setHoveredPath(null));
-                                                                }}
-                                                            >
-                                                                {groupPage.linkSelf ? (
-                                                                    <Link
-                                                                        to={page.href}
-                                                                        className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                                                    >
-                                                                        <span>{groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}</span>
-                                                                        <ChevronDown className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`} />
-                                                                    </Link>
-                                                                ) : (
-                                                                    <button className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                                                                        <span>{groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}</span>
-                                                                        <ChevronDown className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`} />
-                                                                    </button>
-                                                                )}
-                                                                {isPageHovered && (
-                                                                    <div className="absolute left-[calc(100%+8px)] top-0">
-                                                                        <DesktopFlyoutItems
-                                                                            items={dropdownItems}
-                                                                            entry={{ pageKey: pagePath, label: groupPage.label } as HeaderEntry}
-                                                                            lang={lang}
-                                                                            resolveDropdownItemLabel={resolveDropdownItemLabel}
-                                                                            hoveredPath={hoveredPath}
-                                                                            setHoveredPath={setHoveredPath}
-                                                                            hover={hover}
-                                                                        />
-                                                                    </div>
-                                                                )}
-                                                            </li>
-                                                        );
-                                                    }
-
-                                                    return (
-                                                        <li
-                                                            key={groupPage.pageKey}
-                                                            onMouseEnter={() => {
-                                                                hover.clear();
-                                                                setHoveredPath(subGroupPath);
-                                                            }}
-                                                        >
-                                                            <Link
-                                                                to={page.href}
-                                                                className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                                            >
-                                                                {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
-                                                            </Link>
-                                                        </li>
-                                                    );
-                                                })}
-                                            </ul>
+                                return (
+                                    <li
+                                        key={subGroup.key}
+                                        className="relative"
+                                        onMouseEnter={() => {
+                                            hover.clear();
+                                            setHoveredPath(subGroupPath);
+                                        }}
+                                        onMouseLeave={() => {
+                                            hover.schedule(() =>
+                                                setHoveredPath(null),
+                                            );
+                                        }}
+                                    >
+                                        <div className="flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                            <span>
+                                                {resolveLabel(subGroup.label) ||
+                                                    subGroup.key}
+                                            </span>
+                                            <ChevronRight className="h-4 w-4 opacity-50" />
                                         </div>
-                                    )}
-                                </li>
-                            );
-                        })}
+                                        {isSubGroupHovered && (
+                                            <div
+                                                className="absolute left-[calc(100%+8px)] top-0"
+                                                onMouseEnter={() => {
+                                                    hover.clear();
+                                                    setHoveredPath(
+                                                        subGroupPath,
+                                                    );
+                                                }}
+                                                onMouseLeave={() => {
+                                                    hover.schedule(() =>
+                                                        setHoveredPath(null),
+                                                    );
+                                                }}
+                                            >
+                                                <ul className="min-w-48 space-y-1 rounded-lg border border-border bg-card p-2 shadow-lg">
+                                                    {subGroup.pages.map(
+                                                        (groupPage) => {
+                                                            const page =
+                                                                getPage(
+                                                                    groupPage.pageKey,
+                                                                );
+                                                            if (!page)
+                                                                return null;
+                                                            const pagePath = `${subGroupPath}:${groupPage.pageKey}`;
+                                                            const isPageHovered =
+                                                                hoveredPath ===
+                                                                    pagePath ||
+                                                                hoveredPath?.startsWith(
+                                                                    pagePath +
+                                                                        ':',
+                                                                );
+                                                            const dropdownItems =
+                                                                groupPage.isDropdown
+                                                                    ? resolveDropdownItems(
+                                                                          groupPage.items,
+                                                                          groupPage.pageKey,
+                                                                      )
+                                                                    : [];
+
+                                                            if (
+                                                                groupPage.isDropdown &&
+                                                                dropdownItems.length >
+                                                                    0
+                                                            ) {
+                                                                return (
+                                                                    <li
+                                                                        key={
+                                                                            groupPage.pageKey
+                                                                        }
+                                                                        className="relative"
+                                                                        onMouseEnter={() => {
+                                                                            hover.clear();
+                                                                            setHoveredPath(
+                                                                                pagePath,
+                                                                            );
+                                                                        }}
+                                                                        onMouseLeave={() => {
+                                                                            hover.schedule(
+                                                                                () =>
+                                                                                    setHoveredPath(
+                                                                                        null,
+                                                                                    ),
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        {groupPage.linkSelf ? (
+                                                                            <Link
+                                                                                to={
+                                                                                    page.href
+                                                                                }
+                                                                                className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                            >
+                                                                                <span>
+                                                                                    {groupPage
+                                                                                        .label?.[
+                                                                                        lang
+                                                                                    ] ||
+                                                                                        groupPage
+                                                                                            .label
+                                                                                            ?.en ||
+                                                                                        t(
+                                                                                            'nav.' +
+                                                                                                page.key,
+                                                                                        )}
+                                                                                </span>
+                                                                                <ChevronDown
+                                                                                    className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`}
+                                                                                />
+                                                                            </Link>
+                                                                        ) : (
+                                                                            <button className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                                                                                <span>
+                                                                                    {groupPage
+                                                                                        .label?.[
+                                                                                        lang
+                                                                                    ] ||
+                                                                                        groupPage
+                                                                                            .label
+                                                                                            ?.en ||
+                                                                                        t(
+                                                                                            'nav.' +
+                                                                                                page.key,
+                                                                                        )}
+                                                                                </span>
+                                                                                <ChevronDown
+                                                                                    className={`h-4 w-4 transition-opacity ${isPageHovered ? 'opacity-100' : 'opacity-50'}`}
+                                                                                />
+                                                                            </button>
+                                                                        )}
+                                                                        {isPageHovered && (
+                                                                            <div className="absolute left-[calc(100%+8px)] top-0">
+                                                                                <DesktopFlyoutItems
+                                                                                    items={
+                                                                                        dropdownItems
+                                                                                    }
+                                                                                    entry={
+                                                                                        {
+                                                                                            pageKey:
+                                                                                                pagePath,
+                                                                                            label: groupPage.label,
+                                                                                        } as HeaderEntry
+                                                                                    }
+                                                                                    lang={
+                                                                                        lang
+                                                                                    }
+                                                                                    resolveDropdownItemLabel={
+                                                                                        resolveDropdownItemLabel
+                                                                                    }
+                                                                                    hoveredPath={
+                                                                                        hoveredPath
+                                                                                    }
+                                                                                    setHoveredPath={
+                                                                                        setHoveredPath
+                                                                                    }
+                                                                                    hover={
+                                                                                        hover
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                        )}
+                                                                    </li>
+                                                                );
+                                                            }
+
+                                                            return (
+                                                                <li
+                                                                    key={
+                                                                        groupPage.pageKey
+                                                                    }
+                                                                    onMouseEnter={() => {
+                                                                        hover.clear();
+                                                                        setHoveredPath(
+                                                                            subGroupPath,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <Link
+                                                                        to={
+                                                                            page.href
+                                                                        }
+                                                                        className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                    >
+                                                                        {groupPage
+                                                                            .label?.[
+                                                                            lang
+                                                                        ] ||
+                                                                            groupPage
+                                                                                .label
+                                                                                ?.en ||
+                                                                            t(
+                                                                                'nav.' +
+                                                                                    page.key,
+                                                                            )}
+                                                                    </Link>
+                                                                </li>
+                                                            );
+                                                        },
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </li>
+                                );
+                            })}
                     </ul>
                 </div>
             )}
@@ -528,23 +872,25 @@ function MobileGroupSection({
     lang: string;
     t: (key: string) => string;
     resolveLabel: (label: string | LocalizedText | null | undefined) => string;
-    resolveDropdownItemLabel: (entry: HeaderEntry, item: DropdownItemConfig) => string;
+    resolveDropdownItemLabel: (
+        entry: HeaderEntry,
+        item: DropdownItemConfig,
+    ) => string;
     onClose: () => void;
     categoryTypesByPage: Record<string, PublicCategoryType[]>;
 }) {
-    const resolveDropdownItems = (items: DropdownItemConfig[], pageKey: string): DropdownItemConfig[] =>
+    const resolveDropdownItems = (
+        items: DropdownItemConfig[],
+        pageKey: string,
+    ): DropdownItemConfig[] =>
         items.flatMap((item): DropdownItemConfig[] => {
             if (item.mode === 'categories' && item.value) {
                 const categoryTypes = categoryTypesByPage[pageKey] ?? [];
-                const selectedType = categoryTypes.find((ct: PublicCategoryType) => ct.key === item.value);
-                if (selectedType && selectedType.values) {
-                    return selectedType.values.map((val) => ({
-                        label: val.name as unknown as LocalizedText,
-                        mode: 'filter' as const,
-                        value: `${selectedType.key}:${val.key}`,
-                        pageKey,
-                    }));
-                }
+                return resolveCategoriesDropdownItems(
+                    pageKey,
+                    item.value,
+                    categoryTypes,
+                );
             }
             const resolvedChildren = item.children
                 ? resolveDropdownItems(item.children, pageKey)
@@ -557,15 +903,11 @@ function MobileGroupSection({
             const pageKey = link.pageKey ?? '';
             if (link.mode === 'categories' && link.value) {
                 const categoryTypes = categoryTypesByPage[pageKey] ?? [];
-                const selectedType = categoryTypes.find((ct: PublicCategoryType) => ct.key === link.value);
-                if (selectedType && selectedType.values) {
-                    return selectedType.values.map((val) => ({
-                        label: val.name as unknown as LocalizedText,
-                        mode: 'filter' as const,
-                        value: `${selectedType.key}:${val.key}`,
-                        pageKey,
-                    }));
-                }
+                return resolveCategoriesDropdownItems(
+                    pageKey,
+                    link.value,
+                    categoryTypes,
+                );
             }
             const resolvedChildren = link.children
                 ? resolveLinks(link.children)
@@ -583,13 +925,23 @@ function MobileGroupSection({
                 {group.pages.map((groupPage) => {
                     const page = getPage(groupPage.pageKey);
                     if (!page) return null;
-                    const dropdownItems = groupPage.isDropdown ? resolveDropdownItems(groupPage.items, groupPage.pageKey) : [];
+                    const dropdownItems = groupPage.isDropdown
+                        ? resolveDropdownItems(
+                              groupPage.items,
+                              groupPage.pageKey,
+                          )
+                        : [];
 
                     if (groupPage.isDropdown && dropdownItems.length > 0) {
                         return (
-                            <details key={groupPage.pageKey} className="group/page">
+                            <details
+                                key={groupPage.pageKey}
+                                className="group/page"
+                            >
                                 <summary className="flex cursor-pointer items-center justify-between py-1 text-sm text-muted-foreground">
-                                    {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                                    {groupPage.label?.[lang] ||
+                                        groupPage.label?.en ||
+                                        t('nav.' + page.key)}
                                     <ChevronDown className="h-3 w-3 transition-transform group-open/page:rotate-180" />
                                 </summary>
                                 <div className="flex flex-col gap-0.5 pb-1 pl-3">
@@ -604,9 +956,16 @@ function MobileGroupSection({
                                     )}
                                     <MobileNestedItems
                                         items={dropdownItems}
-                                        entry={{ pageKey: groupPage.pageKey, label: groupPage.label } as HeaderEntry}
+                                        entry={
+                                            {
+                                                pageKey: groupPage.pageKey,
+                                                label: groupPage.label,
+                                            } as HeaderEntry
+                                        }
                                         onClose={onClose}
-                                        resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                        resolveDropdownItemLabel={
+                                            resolveDropdownItemLabel
+                                        }
                                         lang={lang}
                                     />
                                 </div>
@@ -621,7 +980,9 @@ function MobileGroupSection({
                             onClick={onClose}
                             className="py-1 text-sm text-muted-foreground"
                         >
-                            {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
+                            {groupPage.label?.[lang] ||
+                                groupPage.label?.en ||
+                                t('nav.' + page.key)}
                         </Link>
                     );
                 })}
@@ -639,17 +1000,32 @@ function MobileGroupSection({
 
                         if (children.length > 0) {
                             return (
-                                <details key={`${linkIdx}-${subIdx}`} className="group/link">
+                                <details
+                                    key={`${linkIdx}-${subIdx}`}
+                                    className="group/link"
+                                >
                                     <summary className="flex cursor-pointer items-center justify-between py-1 text-sm text-muted-foreground">
-                                        {resolveDropdownItemLabel({ pageKey: resolvedPageKey } as HeaderEntry, resolved)}
+                                        {resolveDropdownItemLabel(
+                                            {
+                                                pageKey: resolvedPageKey,
+                                            } as HeaderEntry,
+                                            resolved,
+                                        )}
                                         <ChevronDown className="h-3 w-3 transition-transform group-open/link:rotate-180" />
                                     </summary>
                                     <div className="flex flex-col gap-0.5 pb-1 pl-3">
                                         <MobileNestedItems
                                             items={children}
-                                            entry={{ pageKey: resolvedPageKey, label: resolved.label } as HeaderEntry}
+                                            entry={
+                                                {
+                                                    pageKey: resolvedPageKey,
+                                                    label: resolved.label,
+                                                } as HeaderEntry
+                                            }
                                             onClose={onClose}
-                                            resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                            resolveDropdownItemLabel={
+                                                resolveDropdownItemLabel
+                                            }
                                             lang={lang}
                                         />
                                     </div>
@@ -660,39 +1036,50 @@ function MobileGroupSection({
                         return (
                             <Link
                                 key={`${linkIdx}-${subIdx}`}
-                                to={buildItemHref(resolvedPageKey, resolved, lang as 'en' | 'fr' | 'ar')}
+                                to={buildItemHref(
+                                    resolvedPageKey,
+                                    resolved,
+                                    lang as 'en' | 'fr' | 'ar',
+                                )}
                                 onClick={onClose}
                                 className="py-1 text-sm text-muted-foreground"
                             >
-                                {resolveDropdownItemLabel({ pageKey: resolvedPageKey } as HeaderEntry, resolved)}
+                                {resolveDropdownItemLabel(
+                                    { pageKey: resolvedPageKey } as HeaderEntry,
+                                    resolved,
+                                )}
                             </Link>
                         );
                     });
                 })}
-                {group.groups?.filter((sg) => sg.enabled).map((subGroup) => (
-                    <details key={subGroup.key} className="group/nested">
-                        <summary className="flex cursor-pointer items-center justify-between py-1 text-xs font-semibold text-muted-foreground uppercase">
-                            {resolveLabel(subGroup.label) || subGroup.key}
-                            <ChevronDown className="h-3 w-3 transition-transform group-open/nested:rotate-180" />
-                        </summary>
-                        <div className="flex flex-col gap-0.5 pb-1 pl-3">
-                            {subGroup.pages.map((groupPage) => {
-                                const page = getPage(groupPage.pageKey);
-                                if (!page) return null;
-                                return (
-                                    <Link
-                                        key={groupPage.pageKey}
-                                        to={page.href}
-                                        onClick={onClose}
-                                        className="py-1 text-sm text-muted-foreground"
-                                    >
-                                        {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    </details>
-                ))}
+                {group.groups
+                    ?.filter((sg) => sg.enabled)
+                    .map((subGroup) => (
+                        <details key={subGroup.key} className="group/nested">
+                            <summary className="flex cursor-pointer items-center justify-between py-1 text-xs font-semibold uppercase text-muted-foreground">
+                                {resolveLabel(subGroup.label) || subGroup.key}
+                                <ChevronDown className="h-3 w-3 transition-transform group-open/nested:rotate-180" />
+                            </summary>
+                            <div className="flex flex-col gap-0.5 pb-1 pl-3">
+                                {subGroup.pages.map((groupPage) => {
+                                    const page = getPage(groupPage.pageKey);
+                                    if (!page) return null;
+                                    return (
+                                        <Link
+                                            key={groupPage.pageKey}
+                                            to={page.href}
+                                            onClick={onClose}
+                                            className="py-1 text-sm text-muted-foreground"
+                                        >
+                                            {groupPage.label?.[lang] ||
+                                                groupPage.label?.en ||
+                                                t('nav.' + page.key)}
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        </details>
+                    ))}
             </div>
         </details>
     );
@@ -714,8 +1101,10 @@ export function Navbar() {
         if (typeof label === 'string') return label;
         return label[lang] ?? label.en ?? Object.values(label)[0] ?? '';
     };
-    const resolvePageName = (entry: HeaderEntry, page: { key: string; label: string }): string =>
-        resolveLabel(entry.label) || t('nav.' + page.key);
+    const resolvePageName = (
+        entry: HeaderEntry,
+        page: { key: string; label: string },
+    ): string => resolveLabel(entry.label) || t('nav.' + page.key);
     const { settings, loading } = useSiteSettings();
     const { favorites } = useFavorites();
 
@@ -740,7 +1129,8 @@ export function Navbar() {
     const { data: eventCategories = [] } = useCategories('events');
     const { data: dealCategories = [] } = useCategories('deals');
 
-    const { data: destinationCategoryTypes = [] } = useCategoryTypesPublic('destinations');
+    const { data: destinationCategoryTypes = [] } =
+        useCategoryTypesPublic('destinations');
     const { data: hotelCategoryTypes = [] } = useCategoryTypesPublic('hotels');
     const { data: tourCategoryTypes = [] } = useCategoryTypesPublic('tours');
     const { data: carCategoryTypes = [] } = useCategoryTypesPublic('cars');
@@ -755,7 +1145,9 @@ export function Navbar() {
         navSettings = settings.content.nav.settings;
     }
 
-    const headerEntries = Array.isArray(navSettings.header) ? navSettings.header : [];
+    const headerEntries = Array.isArray(navSettings.header)
+        ? navSettings.header
+        : [];
     const enabled = headerEntries.filter(
         (h) => h.enabled && getPage(h.pageKey),
     );
@@ -764,8 +1156,12 @@ export function Navbar() {
     const moreEntries = enabled.filter((e) => e.placement === 'more');
 
     const pagesInGroups = getPagesInGroups(navSettings.groups ?? []);
-    const topEntriesFiltered = topEntries.filter((e) => !pagesInGroups.has(e.pageKey));
-    const moreEntriesFiltered = moreEntries.filter((e) => !pagesInGroups.has(e.pageKey));
+    const topEntriesFiltered = topEntries.filter(
+        (e) => !pagesInGroups.has(e.pageKey),
+    );
+    const moreEntriesFiltered = moreEntries.filter(
+        (e) => !pagesInGroups.has(e.pageKey),
+    );
 
     const enabledGroups = (navSettings.groups ?? []).filter((g) => g.enabled);
     const topGroups = enabledGroups.filter((g) => g.placement === 'top');
@@ -817,11 +1213,31 @@ export function Navbar() {
     ): string => {
         const effectivePageKey = item.pageKey ?? entry.pageKey;
         if (item.mode === 'filter') {
-            // Handle new format: "typeKey:valueKey"
+            // Handle static filter format: "static:groupKey:optionKey"
+            if (item.value.startsWith('static:')) {
+                const parts = item.value.split(':');
+                if (parts.length === 3) {
+                    const [, groupKey, optionKey] = parts;
+                    const group = getStaticFiltersForPage(
+                        effectivePageKey,
+                    ).find((g) => g.key === groupKey);
+                    const opt = group?.options.find((o) => o.key === optionKey);
+                    if (opt) {
+                        return (
+                            opt.label[lang as 'en' | 'fr' | 'ar'] ??
+                            opt.label.en ??
+                            optionKey
+                        );
+                    }
+                }
+            }
+            // Handle dynamic format: "typeKey:valueKey"
             if (item.value.includes(':')) {
                 const [typeKey, valueKey] = item.value.split(':');
                 const categoryTypes =
-                    categoryTypesByPage[effectivePageKey as keyof typeof categoryTypesByPage] ?? [];
+                    categoryTypesByPage[
+                        effectivePageKey as keyof typeof categoryTypesByPage
+                    ] ?? [];
                 const selectedType = categoryTypes.find(
                     (ct: PublicCategoryType) => ct.key === typeKey,
                 );
@@ -855,20 +1271,15 @@ export function Navbar() {
     const resolveDropdownItems = (entry: HeaderEntry): DropdownItemConfig[] =>
         entry.items.flatMap((item): DropdownItemConfig[] => {
             if (item.mode === 'categories' && item.value) {
-                // item.value stores the category type key
                 const categoryTypes =
-                    categoryTypesByPage[entry.pageKey as keyof typeof categoryTypesByPage] ?? [];
-                const selectedType = categoryTypes.find(
-                    (ct: PublicCategoryType) => ct.key === item.value,
+                    categoryTypesByPage[
+                        entry.pageKey as keyof typeof categoryTypesByPage
+                    ] ?? [];
+                return resolveCategoriesDropdownItems(
+                    entry.pageKey,
+                    item.value,
+                    categoryTypes,
                 );
-
-                if (selectedType && selectedType.values) {
-                    return selectedType.values.map((val) => ({
-                        label: val.name as unknown as LocalizedText,
-                        mode: 'filter' as const,
-                        value: `${selectedType.key}:${val.key}`,
-                    }));
-                }
             }
 
             const resolvedChildren = item.children
@@ -879,9 +1290,7 @@ export function Navbar() {
 
     if (loading) {
         return (
-            <header
-                className="fixed left-0 right-0 top-0 z-50 bg-foreground text-primary-foreground shadow-sm"
-            >
+            <header className="fixed left-0 right-0 top-0 z-50 bg-foreground text-primary-foreground shadow-sm">
                 <div className="container mx-auto flex h-16 items-center justify-between px-4">
                     <div className="h-7 w-40 animate-pulse rounded" />
                     <div className="hidden items-center gap-2 lg:flex">
@@ -910,19 +1319,20 @@ export function Navbar() {
     const accountLink = user ? redirectAfterLogin(user.role) : '/login';
 
     return (
-        <header
-            className={`fixed left-0 right-0 top-0 z-50 bg-card shadow-sm`}
-        >
+        <header className={`fixed left-0 right-0 top-0 z-50 bg-card shadow-sm`}>
             {/* Top Bar - Social, Phone, Blog, Sign In - hidden on mobile, hides on scroll */}
             <div
-                className={`hidden lg:block bg-foreground text-primary-foreground border-b border-primary-foreground/10 transition-all duration-300 ease-in-out overflow-hidden ${
-                    topBarVisible ? 'max-h-10 opacity-100' : 'max-h-0 opacity-0 border-b-0'
+                className={`hidden overflow-hidden border-b border-primary-foreground/10 bg-foreground text-primary-foreground transition-all duration-300 ease-in-out lg:block ${
+                    topBarVisible
+                        ? 'max-h-10 opacity-100'
+                        : 'max-h-0 border-b-0 opacity-0'
                 }`}
             >
                 <div className="container mx-auto flex h-8 items-center justify-between px-4">
                     <div className="flex items-center gap-3">
                         {settings.socialLinks?.map((link, i) => {
-                            const Icon = SOCIAL_ICONS[link.label.toLowerCase()] || null;
+                            const Icon =
+                                SOCIAL_ICONS[link.label.toLowerCase()] || null;
                             if (!Icon) return null;
                             return (
                                 <a
@@ -942,7 +1352,7 @@ export function Navbar() {
                         {settings.phone && (
                             <a
                                 href={`tel:${settings.phone.replace(/\D/g, '')}`}
-                                className="flex items-center gap-1.5 hover:text-secondary transition-colors"
+                                className="flex items-center gap-1.5 transition-colors hover:text-secondary"
                             >
                                 <Phone className="h-3 w-3" />
                                 {settings.phone}
@@ -951,7 +1361,7 @@ export function Navbar() {
                         {settings.phone2 && (
                             <a
                                 href={`tel:${settings.phone2.replace(/\D/g, '')}`}
-                                className="flex items-center gap-1.5 hover:text-secondary transition-colors"
+                                className="flex items-center gap-1.5 transition-colors hover:text-secondary"
                             >
                                 <Phone className="h-3 w-3" />
                                 {settings.phone2}
@@ -960,19 +1370,26 @@ export function Navbar() {
                         {topbarEntries.map((entry) => {
                             const page = getPage(entry.pageKey);
                             if (!page) return null;
-                            const displayName = entry.label?.[lang] ?? entry.label?.en ?? t('nav.' + page.key);
+                            const displayName =
+                                entry.label?.[lang] ??
+                                entry.label?.en ??
+                                t('nav.' + page.key);
                             return (
                                 <Link
                                     key={entry.pageKey}
                                     to={page.href}
-                                    className="font-medium hover:text-secondary transition-colors"
+                                    className="font-medium transition-colors hover:text-secondary"
                                 >
                                     {displayName}
                                 </Link>
                             );
                         })}
                         <Link to={accountLink}>
-                            <Button variant="ghost" size="sm" className="h-6 gap-1 px-2 text-xs text-primary-foreground hover:text-primary-foreground hover:bg-primary-foreground/10">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 gap-1 px-2 text-xs text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                            >
                                 <User className="h-3 w-3" /> {accountLabel}
                             </Button>
                         </Link>
@@ -995,7 +1412,9 @@ export function Navbar() {
 
                         if (entry.isDropdown) {
                             const triggerPath = entry.pageKey;
-                            const isDropdownHovered = hoveredPath === triggerPath || hoveredPath?.startsWith(triggerPath + ':');
+                            const isDropdownHovered =
+                                hoveredPath === triggerPath ||
+                                hoveredPath?.startsWith(triggerPath + ':');
 
                             return (
                                 <div
@@ -1006,7 +1425,9 @@ export function Navbar() {
                                         setHoveredPath(triggerPath);
                                     }}
                                     onMouseLeave={() => {
-                                        hover.schedule(() => setHoveredPath(null));
+                                        hover.schedule(() =>
+                                            setHoveredPath(null),
+                                        );
                                     }}
                                 >
                                     {entry.linkSelf ? (
@@ -1015,12 +1436,16 @@ export function Navbar() {
                                             className="inline-flex h-10 items-center gap-1 px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
                                         >
                                             {resolvePageName(entry, page)}
-                                            <ChevronDown className={`h-4 w-4 transition-opacity ${isDropdownHovered ? 'opacity-100' : 'opacity-50'}`} />
+                                            <ChevronDown
+                                                className={`h-4 w-4 transition-opacity ${isDropdownHovered ? 'opacity-100' : 'opacity-50'}`}
+                                            />
                                         </Link>
                                     ) : (
                                         <button className="inline-flex h-10 items-center gap-1 px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                                             {resolvePageName(entry, page)}
-                                            <ChevronDown className={`h-4 w-4 transition-opacity ${isDropdownHovered ? 'opacity-100' : 'opacity-50'}`} />
+                                            <ChevronDown
+                                                className={`h-4 w-4 transition-opacity ${isDropdownHovered ? 'opacity-100' : 'opacity-50'}`}
+                                            />
                                         </button>
                                     )}
                                     {isDropdownHovered && (
@@ -1029,7 +1454,9 @@ export function Navbar() {
                                                 items={dropdownItems}
                                                 entry={entry}
                                                 lang={lang}
-                                                resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                resolveDropdownItemLabel={
+                                                    resolveDropdownItemLabel
+                                                }
                                                 hoveredPath={hoveredPath}
                                                 setHoveredPath={setHoveredPath}
                                                 hover={hover}
@@ -1043,8 +1470,13 @@ export function Navbar() {
                         if (entry.pageKey === 'visa') {
                             return (
                                 <Link key={entry.pageKey} to={page.href}>
-                                    <Button size="sm" variant="outline" className="gap-1.5 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
-                                        <FileCheck className="h-4 w-4" /> {resolvePageName(entry, page)}
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="gap-1.5 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
+                                    >
+                                        <FileCheck className="h-4 w-4" />{' '}
+                                        {resolvePageName(entry, page)}
                                     </Button>
                                 </Link>
                             );
@@ -1076,7 +1508,8 @@ export function Navbar() {
                         />
                     ))}
 
-                    {(moreEntriesFiltered.length > 0 || moreGroups.length > 0) && (
+                    {(moreEntriesFiltered.length > 0 ||
+                        moreGroups.length > 0) && (
                         <div
                             className="relative"
                             onMouseEnter={() => {
@@ -1089,7 +1522,9 @@ export function Navbar() {
                         >
                             <button className="inline-flex h-10 items-center gap-1 px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                                 {t('nav.more') || 'More'}
-                                <ChevronDown className={`h-4 w-4 transition-opacity ${hoveredPath === '__more__' ? 'opacity-100' : 'opacity-50'}`} />
+                                <ChevronDown
+                                    className={`h-4 w-4 transition-opacity ${hoveredPath === '__more__' ? 'opacity-100' : 'opacity-50'}`}
+                                />
                             </button>
                             {hoveredPath === '__more__' && (
                                 <div className="absolute left-0 top-full -mt-1 pt-1">
@@ -1097,51 +1532,97 @@ export function Navbar() {
                                         {moreEntriesFiltered.map((entry) => {
                                             const page = getPage(entry.pageKey);
                                             if (!page) return null;
-                                            const dropdownItems = resolveDropdownItems(entry);
-                                            const isExpanded = openMoreSection === entry.pageKey;
+                                            const dropdownItems =
+                                                resolveDropdownItems(entry);
+                                            const isExpanded =
+                                                openMoreSection ===
+                                                entry.pageKey;
 
                                             return (
                                                 <li key={entry.pageKey}>
-                                                    {entry.isDropdown && dropdownItems.length > 0 ? (
+                                                    {entry.isDropdown &&
+                                                    dropdownItems.length > 0 ? (
                                                         <div className="rounded-md border border-border/60 bg-background/40 shadow-lg">
                                                             <button
                                                                 type="button"
-                                                                aria-expanded={isExpanded}
-                                                                onClick={() =>
-                                                                    setOpenMoreSection(isExpanded ? null : entry.pageKey)
+                                                                aria-expanded={
+                                                                    isExpanded
                                                                 }
-                                                                 className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                onClick={() =>
+                                                                    setOpenMoreSection(
+                                                                        isExpanded
+                                                                            ? null
+                                                                            : entry.pageKey,
+                                                                    )
+                                                                }
+                                                                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                             >
-                                                                <span>{resolvePageName(entry, page)}</span>
-                                                                <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : 'opacity-60'}`} />
+                                                                <span>
+                                                                    {resolvePageName(
+                                                                        entry,
+                                                                        page,
+                                                                    )}
+                                                                </span>
+                                                                <ChevronDown
+                                                                    className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : 'opacity-60'}`}
+                                                                />
                                                             </button>
                                                             {isExpanded && (
                                                                 <div className="px-2 pb-2">
                                                                     {entry.linkSelf && (
                                                                         <Link
-                                                                            to={page.href}
+                                                                            to={
+                                                                                page.href
+                                                                            }
                                                                             className="mb-1 block rounded-md px-3 py-2 text-sm font-semibold text-primary hover:bg-muted"
                                                                         >
-                                                                            {t('common.all')} →
+                                                                            {t(
+                                                                                'common.all',
+                                                                            )}{' '}
+                                                                            →
                                                                         </Link>
                                                                     )}
                                                                     <MobileNestedItems
-                                                                        items={dropdownItems}
-                                                                        entry={entry}
+                                                                        items={
+                                                                            dropdownItems
+                                                                        }
+                                                                        entry={
+                                                                            entry
+                                                                        }
                                                                         onClose={() => {
-                                                                            setOpenMoreSection(null);
-                                                                            setHoveredPath(null);
+                                                                            setOpenMoreSection(
+                                                                                null,
+                                                                            );
+                                                                            setHoveredPath(
+                                                                                null,
+                                                                            );
                                                                         }}
-                                                                        resolveDropdownItemLabel={resolveDropdownItemLabel}
-                                                                        lang={lang}
+                                                                        resolveDropdownItemLabel={
+                                                                            resolveDropdownItemLabel
+                                                                        }
+                                                                        lang={
+                                                                            lang
+                                                                        }
                                                                     />
                                                                 </div>
                                                             )}
                                                         </div>
-                                                    ) : entry.pageKey === 'visa' ? (
-                                                        <Link to={page.href} className="block rounded-md px-3 py-2">
-                                                            <Button size="sm" variant="outline" className="w-full gap-1.5 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
-                                                                <FileCheck className="h-4 w-4" /> {resolvePageName(entry, page)}
+                                                    ) : entry.pageKey ===
+                                                      'visa' ? (
+                                                        <Link
+                                                            to={page.href}
+                                                            className="block rounded-md px-3 py-2"
+                                                        >
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="w-full gap-1.5 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
+                                                            >
+                                                                <FileCheck className="h-4 w-4" />{' '}
+                                                                {resolvePageName(
+                                                                    entry,
+                                                                    page,
+                                                                )}
                                                             </Button>
                                                         </Link>
                                                     ) : (
@@ -1149,46 +1630,100 @@ export function Navbar() {
                                                             to={page.href}
                                                             className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                         >
-                                                            {resolvePageName(entry, page)}
+                                                            {resolvePageName(
+                                                                entry,
+                                                                page,
+                                                            )}
                                                         </Link>
                                                     )}
                                                 </li>
                                             );
                                         })}
                                         {moreGroups.map((group) => (
-                                            <li key={group.key} className="border-t border-border/60 pt-1 mt-1">
-                                                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase">
-                                                    {resolveLabel(group.label) || group.key}
+                                            <li
+                                                key={group.key}
+                                                className="mt-1 border-t border-border/60 pt-1"
+                                            >
+                                                <div className="px-3 py-1 text-xs font-semibold uppercase text-muted-foreground">
+                                                    {resolveLabel(
+                                                        group.label,
+                                                    ) || group.key}
                                                 </div>
                                                 <ul className="space-y-0.5">
-                                                    {group.pages.map((groupPage) => {
-                                                        const page = getPage(groupPage.pageKey);
-                                                        if (!page) return null;
-                                                        return (
-                                                            <li key={groupPage.pageKey}>
-                                                                <Link
-                                                                    to={page.href}
-                                                                    className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                    {group.pages.map(
+                                                        (groupPage) => {
+                                                            const page =
+                                                                getPage(
+                                                                    groupPage.pageKey,
+                                                                );
+                                                            if (!page)
+                                                                return null;
+                                                            return (
+                                                                <li
+                                                                    key={
+                                                                        groupPage.pageKey
+                                                                    }
                                                                 >
-                                                                    {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
-                                                                </Link>
-                                                            </li>
-                                                        );
-                                                    })}
-                                                    {group.links?.map((link, linkIdx) => {
-                                                        const page = getPage(link.pageKey ?? '');
-                                                        if (!page) return null;
-                                                        return (
-                                                            <li key={`link-${linkIdx}`}>
-                                                                <Link
-                                                                    to={buildItemHref(link.pageKey ?? '', link, lang as 'en' | 'fr' | 'ar')}
-                                                                    className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                    <Link
+                                                                        to={
+                                                                            page.href
+                                                                        }
+                                                                        className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                    >
+                                                                        {groupPage
+                                                                            .label?.[
+                                                                            lang
+                                                                        ] ||
+                                                                            groupPage
+                                                                                .label
+                                                                                ?.en ||
+                                                                            t(
+                                                                                'nav.' +
+                                                                                    page.key,
+                                                                            )}
+                                                                    </Link>
+                                                                </li>
+                                                            );
+                                                        },
+                                                    )}
+                                                    {group.links?.map(
+                                                        (link, linkIdx) => {
+                                                            const page =
+                                                                getPage(
+                                                                    link.pageKey ??
+                                                                        '',
+                                                                );
+                                                            if (!page)
+                                                                return null;
+                                                            return (
+                                                                <li
+                                                                    key={`link-${linkIdx}`}
                                                                 >
-                                                                    {resolveDropdownItemLabel({ pageKey: link.pageKey ?? '' } as HeaderEntry, link)}
-                                                                </Link>
-                                                            </li>
-                                                        );
-                                                    })}
+                                                                    <Link
+                                                                        to={buildItemHref(
+                                                                            link.pageKey ??
+                                                                                '',
+                                                                            link,
+                                                                            lang as
+                                                                                | 'en'
+                                                                                | 'fr'
+                                                                                | 'ar',
+                                                                        )}
+                                                                        className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                    >
+                                                                        {resolveDropdownItemLabel(
+                                                                            {
+                                                                                pageKey:
+                                                                                    link.pageKey ??
+                                                                                    '',
+                                                                            } as HeaderEntry,
+                                                                            link,
+                                                                        )}
+                                                                    </Link>
+                                                                </li>
+                                                            );
+                                                        },
+                                                    )}
                                                 </ul>
                                             </li>
                                         ))}
@@ -1206,7 +1741,9 @@ export function Navbar() {
                             className="relative gap-1.5 bg-secondary text-white shadow-md shadow-secondary/30 transition-all hover:bg-secondary/80 hover:shadow-lg hover:shadow-secondary/40"
                         >
                             <Star className="h-4 w-4 fill-current" />
-                            <span className="hidden xl:inline">{t('admin.promos.special') || 'Special Offers'}</span>
+                            <span className="hidden xl:inline">
+                                {t('admin.promos.special') || 'Special Offers'}
+                            </span>
                         </Button>
                     </Link>
                     <LanguageSwitcher />
@@ -1257,7 +1794,8 @@ export function Navbar() {
                             {topEntriesFiltered.map((entry) => {
                                 const page = getPage(entry.pageKey);
                                 if (!page) return null;
-                                const dropdownItems = resolveDropdownItems(entry);
+                                const dropdownItems =
+                                    resolveDropdownItems(entry);
 
                                 if (entry.isDropdown) {
                                     return (
@@ -1273,7 +1811,9 @@ export function Navbar() {
                                                 {entry.linkSelf && (
                                                     <Link
                                                         to={page.href}
-                                                        onClick={() => setOpen(false)}
+                                                        onClick={() =>
+                                                            setOpen(false)
+                                                        }
                                                         className="py-1 text-sm text-primary"
                                                     >
                                                         {t('common.all')}
@@ -1282,8 +1822,12 @@ export function Navbar() {
                                                 <MobileNestedItems
                                                     items={dropdownItems}
                                                     entry={entry}
-                                                    onClose={() => setOpen(false)}
-                                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                    onClose={() =>
+                                                        setOpen(false)
+                                                    }
+                                                    resolveDropdownItemLabel={
+                                                        resolveDropdownItemLabel
+                                                    }
                                                     lang={lang}
                                                 />
                                             </div>
@@ -1298,8 +1842,13 @@ export function Navbar() {
                                             to={page.href}
                                             onClick={() => setOpen(false)}
                                         >
-                                            <Button size="sm" variant="outline" className="w-full gap-1.5 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
-                                                <FileCheck className="h-4 w-4" /> {resolvePageName(entry, page)}
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="w-full gap-1.5 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
+                                            >
+                                                <FileCheck className="h-4 w-4" />{' '}
+                                                {resolvePageName(entry, page)}
                                             </Button>
                                         </Link>
                                     );
@@ -1325,14 +1874,17 @@ export function Navbar() {
                                     lang={lang}
                                     t={t}
                                     resolveLabel={resolveLabel}
-                                    resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                    resolveDropdownItemLabel={
+                                        resolveDropdownItemLabel
+                                    }
                                     onClose={() => setOpen(false)}
                                     categoryTypesByPage={categoryTypesByPage}
                                 />
                             ))}
 
                             {/* More entries grouped under a single "More" collapsible on mobile */}
-                            {(moreEntriesFiltered.length > 0 || moreGroups.length > 0) && (
+                            {(moreEntriesFiltered.length > 0 ||
+                                moreGroups.length > 0) && (
                                 <details className="group/main">
                                     <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
                                         {t('nav.more')}
@@ -1342,33 +1894,56 @@ export function Navbar() {
                                         {moreEntriesFiltered.map((entry) => {
                                             const page = getPage(entry.pageKey);
                                             if (!page) return null;
-                                            const dropdownItems = resolveDropdownItems(entry);
+                                            const dropdownItems =
+                                                resolveDropdownItems(entry);
 
-                                            if (entry.isDropdown && dropdownItems.length > 0) {
+                                            if (
+                                                entry.isDropdown &&
+                                                dropdownItems.length > 0
+                                            ) {
                                                 return (
                                                     <details
                                                         key={entry.pageKey}
                                                         className="group/sub"
                                                     >
-                                    <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
-                                                            {resolvePageName(entry, page)}
+                                                        <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
+                                                            {resolvePageName(
+                                                                entry,
+                                                                page,
+                                                            )}
                                                             <ChevronDown className="h-4 w-4 transition-transform group-open/sub:rotate-180" />
                                                         </summary>
                                                         <div className="flex flex-col gap-1 pb-2 pl-3">
                                                             {entry.linkSelf && (
                                                                 <Link
-                                                                    to={page.href}
-                                                                    onClick={() => setOpen(false)}
+                                                                    to={
+                                                                        page.href
+                                                                    }
+                                                                    onClick={() =>
+                                                                        setOpen(
+                                                                            false,
+                                                                        )
+                                                                    }
                                                                     className="py-1 text-sm text-primary"
                                                                 >
-                                                                    {t('common.all')}
+                                                                    {t(
+                                                                        'common.all',
+                                                                    )}
                                                                 </Link>
                                                             )}
                                                             <MobileNestedItems
-                                                                items={dropdownItems}
+                                                                items={
+                                                                    dropdownItems
+                                                                }
                                                                 entry={entry}
-                                                                onClose={() => setOpen(false)}
-                                                                resolveDropdownItemLabel={resolveDropdownItemLabel}
+                                                                onClose={() =>
+                                                                    setOpen(
+                                                                        false,
+                                                                    )
+                                                                }
+                                                                resolveDropdownItemLabel={
+                                                                    resolveDropdownItemLabel
+                                                                }
                                                                 lang={lang}
                                                             />
                                                         </div>
@@ -1381,10 +1956,20 @@ export function Navbar() {
                                                     <Link
                                                         key={entry.pageKey}
                                                         to={page.href}
-                                                        onClick={() => setOpen(false)}
+                                                        onClick={() =>
+                                                            setOpen(false)
+                                                        }
                                                     >
-                                                        <Button size="sm" variant="outline" className="w-full gap-1.5 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
-                                                            <FileCheck className="h-4 w-4" /> {resolvePageName(entry, page)}
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="w-full gap-1.5 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground"
+                                                        >
+                                                            <FileCheck className="h-4 w-4" />{' '}
+                                                            {resolvePageName(
+                                                                entry,
+                                                                page,
+                                                            )}
                                                         </Button>
                                                     </Link>
                                                 );
@@ -1394,47 +1979,107 @@ export function Navbar() {
                                                 <Link
                                                     key={entry.pageKey}
                                                     to={page.href}
-                                                    onClick={() => setOpen(false)}
+                                                    onClick={() =>
+                                                        setOpen(false)
+                                                    }
                                                     className="py-1 text-sm text-muted-foreground"
                                                 >
-                                                    {resolvePageName(entry, page)}
+                                                    {resolvePageName(
+                                                        entry,
+                                                        page,
+                                                    )}
                                                 </Link>
                                             );
                                         })}
                                         {moreGroups.map((group) => (
-                                            <div key={group.key} className="border-t border-border/60 pt-2 mt-2">
-                                                <div className="px-1 py-1 text-xs font-semibold text-muted-foreground uppercase">
-                                                    {resolveLabel(group.label) || group.key}
+                                            <div
+                                                key={group.key}
+                                                className="mt-2 border-t border-border/60 pt-2"
+                                            >
+                                                <div className="px-1 py-1 text-xs font-semibold uppercase text-muted-foreground">
+                                                    {resolveLabel(
+                                                        group.label,
+                                                    ) || group.key}
                                                 </div>
                                                 <div className="flex flex-col gap-1">
-                                                    {group.pages.map((groupPage) => {
-                                                        const page = getPage(groupPage.pageKey);
-                                                        if (!page) return null;
-                                                        return (
-                                                            <Link
-                                                                key={groupPage.pageKey}
-                                                                to={page.href}
-                                                                onClick={() => setOpen(false)}
-                                                                className="py-1 text-sm text-muted-foreground"
-                                                            >
-                                                                {groupPage.label?.[lang] || groupPage.label?.en || t('nav.' + page.key)}
-                                                            </Link>
-                                                        );
-                                                    })}
-                                                    {group.links?.map((link, linkIdx) => {
-                                                        const page = getPage(link.pageKey ?? '');
-                                                        if (!page) return null;
-                                                        return (
-                                                            <Link
-                                                                key={`link-${linkIdx}`}
-                                                                to={buildItemHref(link.pageKey ?? '', link, lang as 'en' | 'fr' | 'ar')}
-                                                                onClick={() => setOpen(false)}
-                                                                className="py-1 text-sm text-muted-foreground"
-                                                            >
-                                                                {resolveDropdownItemLabel({ pageKey: link.pageKey ?? '' } as HeaderEntry, link)}
-                                                            </Link>
-                                                        );
-                                                    })}
+                                                    {group.pages.map(
+                                                        (groupPage) => {
+                                                            const page =
+                                                                getPage(
+                                                                    groupPage.pageKey,
+                                                                );
+                                                            if (!page)
+                                                                return null;
+                                                            return (
+                                                                <Link
+                                                                    key={
+                                                                        groupPage.pageKey
+                                                                    }
+                                                                    to={
+                                                                        page.href
+                                                                    }
+                                                                    onClick={() =>
+                                                                        setOpen(
+                                                                            false,
+                                                                        )
+                                                                    }
+                                                                    className="py-1 text-sm text-muted-foreground"
+                                                                >
+                                                                    {groupPage
+                                                                        .label?.[
+                                                                        lang
+                                                                    ] ||
+                                                                        groupPage
+                                                                            .label
+                                                                            ?.en ||
+                                                                        t(
+                                                                            'nav.' +
+                                                                                page.key,
+                                                                        )}
+                                                                </Link>
+                                                            );
+                                                        },
+                                                    )}
+                                                    {group.links?.map(
+                                                        (link, linkIdx) => {
+                                                            const page =
+                                                                getPage(
+                                                                    link.pageKey ??
+                                                                        '',
+                                                                );
+                                                            if (!page)
+                                                                return null;
+                                                            return (
+                                                                <Link
+                                                                    key={`link-${linkIdx}`}
+                                                                    to={buildItemHref(
+                                                                        link.pageKey ??
+                                                                            '',
+                                                                        link,
+                                                                        lang as
+                                                                            | 'en'
+                                                                            | 'fr'
+                                                                            | 'ar',
+                                                                    )}
+                                                                    onClick={() =>
+                                                                        setOpen(
+                                                                            false,
+                                                                        )
+                                                                    }
+                                                                    className="py-1 text-sm text-muted-foreground"
+                                                                >
+                                                                    {resolveDropdownItemLabel(
+                                                                        {
+                                                                            pageKey:
+                                                                                link.pageKey ??
+                                                                                '',
+                                                                        } as HeaderEntry,
+                                                                        link,
+                                                                    )}
+                                                                </Link>
+                                                            );
+                                                        },
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -1443,13 +2088,17 @@ export function Navbar() {
                             )}
 
                             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-                                <Link to="/promos?special=true" onClick={() => setOpen(false)}>
+                                <Link
+                                    to="/promos?special=true"
+                                    onClick={() => setOpen(false)}
+                                >
                                     <Button
                                         size="sm"
                                         className="gap-1.5 bg-secondary text-white shadow-md shadow-secondary/30 transition-all hover:bg-secondary/80 hover:shadow-lg hover:shadow-secondary/40"
                                     >
                                         <Star className="h-4 w-4 fill-current" />
-                                        {t('admin.promos.special') || 'Special Offers'}
+                                        {t('admin.promos.special') ||
+                                            'Special Offers'}
                                     </Button>
                                 </Link>
                                 <LanguageSwitcher />

@@ -1010,6 +1010,9 @@ class TestDataSeeder extends Seeder
                 ['dayKey' => 'footer.sun', 'ranges' => [], 'closed' => true],
             ],
             'content' => $this->buildSiteContent(),
+            'booking_expiry_hours' => 72,
+            'trip_reminder_days' => 3,
+            'digest_time' => '08:00',
         ]);
     }
 
@@ -1202,7 +1205,7 @@ class TestDataSeeder extends Seeder
                 ['user_id' => $user->id, 'item_slug' => $data['item_slug']],
                 array_merge($data, [
                     'client' => ['name' => $user->name, 'email' => $user->email, 'phone' => '+216 '.rand(20, 99).' '.rand(100, 999).' '.rand(1000, 9999)],
-                    'travelers' => [rand(1, 4)],
+                    'guests' => [rand(1, 4)],
                 ])
             );
         }

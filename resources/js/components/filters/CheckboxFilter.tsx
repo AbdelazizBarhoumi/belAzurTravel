@@ -14,7 +14,14 @@ interface CheckboxFilterProps {
     items?: CategorizedItem[];
 }
 
-export function CheckboxFilter({ categoryType, selectedValues, onChange, lang, preview, items = [] }: CheckboxFilterProps) {
+export function CheckboxFilter({
+    categoryType,
+    selectedValues,
+    onChange,
+    lang,
+    preview,
+    items = [],
+}: CheckboxFilterProps) {
     // Calculate counts for each value based on category_assignments
     const valueCounts = useMemo(() => {
         const counts: Record<string, number> = {};
@@ -38,7 +45,7 @@ export function CheckboxFilter({ categoryType, selectedValues, onChange, lang, p
     return (
         <div>
             {/* Group title */}
-            <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 sm:mb-3">
+            <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
                 {categoryType.label[lang] || categoryType.label.en}
             </h3>
 
@@ -50,21 +57,33 @@ export function CheckboxFilter({ categoryType, selectedValues, onChange, lang, p
                     return (
                         <label
                             key={val.key}
-                            className={`flex items-center justify-between gap-1.5 sm:gap-2 cursor-pointer rounded-md sm:rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 transition-colors ${
+                            className={`flex cursor-pointer items-center justify-between gap-1.5 rounded-md px-2 py-1.5 transition-colors sm:gap-2 sm:rounded-lg sm:px-3 sm:py-2 ${
                                 isActive
-                                    ? 'bg-primary/10 border border-primary/30'
-                                    : 'hover:bg-muted/50 border border-transparent'
+                                    ? 'border border-primary/30 bg-primary/10'
+                                    : 'border border-transparent hover:bg-muted/50'
                             }`}
                         >
                             <div className="flex items-center gap-1.5 sm:gap-2">
-                                <div className={`flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded border-2 transition-colors ${
-                                    isActive
-                                        ? 'border-primary bg-primary'
-                                        : 'border-muted-foreground/30 bg-background'
-                                }`}>
+                                <div
+                                    className={`flex h-3.5 w-3.5 items-center justify-center rounded border-2 transition-colors sm:h-4 sm:w-4 ${
+                                        isActive
+                                            ? 'border-primary bg-primary'
+                                            : 'border-muted-foreground/30 bg-background'
+                                    }`}
+                                >
                                     {isActive && (
-                                        <svg className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        <svg
+                                            className="h-2.5 w-2.5 text-primary-foreground sm:h-3 sm:w-3"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            strokeWidth={3}
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M5 13l4 4L19 7"
+                                            />
                                         </svg>
                                     )}
                                 </div>
@@ -74,7 +93,9 @@ export function CheckboxFilter({ categoryType, selectedValues, onChange, lang, p
                                     onChange={() => toggle(val.key)}
                                     className="sr-only"
                                 />
-                                <span className={`text-sm ${isActive ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                                <span
+                                    className={`text-sm ${isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}`}
+                                >
                                     {val.name[lang] || val.name.en}
                                 </span>
                             </div>

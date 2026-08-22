@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\BookingAction;
+use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\BookingAudit;
 use App\Models\Payment;
 use App\Models\User;
 use App\Notifications\BookingActivityNotification;
 use App\Notifications\BookingStatusNotification;
 use App\Services\ClictoPayService;
+use App\Services\OsTravel\OsTravelBookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,12 +22,13 @@ class PaymentController extends Controller
 {
     public function __construct(
         private readonly ClictoPayService $clictoPay,
+        private readonly OsTravelBookingService $osTravelBookingService,
     ) {}
 
     /**
      * Initiate a ClictoPay payment session for a booking.
      */
-    public function initiate(Request $request, int $id): JsonResponse
+    public function initiate(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
 
@@ -130,6 +135,31 @@ class PaymentController extends Controller
                     'cancelled_at' => null,
                 ]);
 
+                BookingAudit::log(
+                    booking: $booking,
+                    action: BookingAction::Confirmed,
+                    from: $booking->statusEnum(),
+                    to: BookingStatus::Confirmed,
+                    notes: 'Payment confirmed via gateway',
+                );
+
+                // OS-TRAVEL hotel: Confirm the reservation with the provider
+                // now that payment succeeded, using the stored Phase 9 context.
+                if ($booking->type === 'hotel' && ! $booking->provider_booking_id) {
+                    $hotelBooking = $this->osTravelBookingService->providerContextFromPayload($booking);
+                    if ($hotelBooking) {
+                        try {
+                            $this->osTravelBookingService->confirm($booking, $hotelBooking);
+                            $booking->refresh();
+                        } catch (\Throwable $e) {
+                            Log::error('OS-TRAVEL confirm failed after payment', [
+                                'booking_id' => $booking->id,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+                }
+
                 // Notify admin
                 User::query()
                     ->where('active', true)
@@ -168,7 +198,7 @@ class PaymentController extends Controller
     /**
      * Retry payment for a pending booking.
      */
-    public function retry(Request $request, int $id): JsonResponse
+    public function retry(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()->findOrFail($id);
 

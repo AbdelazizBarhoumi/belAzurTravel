@@ -36,7 +36,10 @@ export default function AdminSiteSettingsCompany() {
 
     if (loading) {
         return (
-            <AdminLayout title={t('admin.settings.companyContact')} subtitle={t('nav.settings')}>
+            <AdminLayout
+                title={t('admin.settings.companyContact')}
+                subtitle={t('nav.settings')}
+            >
                 <div className="space-y-6">
                     <Card className="p-4">
                         <div className="space-y-3">
@@ -80,19 +83,28 @@ export default function AdminSiteSettingsCompany() {
             subtitle={t('admin.settings.brandIdentity')}
             actions={
                 <Button size="sm" onClick={save} disabled={isSaving}>
-                    {isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} {t('admin.settings.save')}
+                    {isSaving ? (
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Save className="mr-1 h-4 w-4" />
+                    )}{' '}
+                    {t('admin.settings.save')}
                 </Button>
             }
         >
             <div className="grid gap-4 lg:grid-cols-2">
                 <Card className="space-y-3 p-4">
-                    <h3 className="font-medium">{t('admin.settings.companyInfo')}</h3>
+                    <h3 className="font-medium">
+                        {t('admin.settings.companyInfo')}
+                    </h3>
                     <div className="space-y-2">
                         <Label>{t('admin.settings.companyName')}</Label>
                         <Input
                             value={companyName}
                             onChange={(e) => setCompanyName(e.target.value)}
-                            placeholder={t('admin.settings.placeholder.companyName')}
+                            placeholder={t(
+                                'admin.settings.placeholder.companyName',
+                            )}
                         />
                     </div>
                     <div className="space-y-2">
@@ -100,7 +112,9 @@ export default function AdminSiteSettingsCompany() {
                         <Input
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
-                            placeholder={t('admin.settings.placeholder.address')}
+                            placeholder={t(
+                                'admin.settings.placeholder.address',
+                            )}
                         />
                     </div>
                     <div className="space-y-2">
@@ -108,7 +122,9 @@ export default function AdminSiteSettingsCompany() {
                         <Input
                             value={plusCode}
                             onChange={(e) => setPlusCode(e.target.value)}
-                            placeholder={t('admin.settings.placeholder.plusCode')}
+                            placeholder={t(
+                                'admin.settings.placeholder.plusCode',
+                            )}
                         />
                     </div>
                     <div className="space-y-2">
@@ -116,7 +132,9 @@ export default function AdminSiteSettingsCompany() {
                         <Input
                             type="number"
                             value={year}
-                            onChange={(e) => setYear(Number(e.target.value) || year)}
+                            onChange={(e) =>
+                                setYear(Number(e.target.value) || year)
+                            }
                             min={2000}
                             max={2100}
                         />
@@ -124,7 +142,9 @@ export default function AdminSiteSettingsCompany() {
                 </Card>
 
                 <Card className="space-y-3 p-4">
-                    <h3 className="font-medium">{t('admin.settings.contactDetails')}</h3>
+                    <h3 className="font-medium">
+                        {t('admin.settings.contactDetails')}
+                    </h3>
                     <div className="space-y-2">
                         <Label>{t('admin.settings.email')}</Label>
                         <Input
@@ -155,7 +175,9 @@ export default function AdminSiteSettingsCompany() {
                         <Input
                             value={whatsapp}
                             onChange={(e) => setWhatsapp(e.target.value)}
-                            placeholder={t('admin.settings.placeholder.whatsapp')}
+                            placeholder={t(
+                                'admin.settings.placeholder.whatsapp',
+                            )}
                         />
                     </div>
                 </Card>

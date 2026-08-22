@@ -53,8 +53,8 @@ function PromosContent() {
                         selectedType;
                 const matchesSpecial =
                     !specialOnly ||
-                    (promo as PromoItem & { is_special?: boolean }).is_special ===
-                        true;
+                    (promo as PromoItem & { is_special?: boolean })
+                        .is_special === true;
                 return matchesSearch && matchesType && matchesSpecial;
             }),
         [lang, promos, searchQuery, selectedType, specialOnly],
@@ -127,7 +127,9 @@ function PromosContent() {
                                     : 'border-border/70 bg-background/90 text-muted-foreground hover:border-amber-300 hover:text-amber-600'
                             }`}
                         >
-                            {specialOnly ? (t('admin.promos.special') || 'Special') : (t('admin.promos.notSpecial') || 'All')}
+                            {specialOnly
+                                ? t('admin.promos.special') || 'Special'
+                                : t('admin.promos.notSpecial') || 'All'}
                         </button>
                     </label>
                 </div>

@@ -48,7 +48,10 @@ export function Footer() {
     };
 
     const resolveSocialIcon = (label: string) => {
-        const brandIcons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+        const brandIcons: Record<
+            string,
+            React.ComponentType<React.SVGProps<SVGSVGElement>>
+        > = {
             facebook: FacebookIcon,
             instagram: InstagramIcon,
             twitter: TwitterIcon,
@@ -97,111 +100,163 @@ export function Footer() {
     }
 
     return (
-    <footer className="bg-foreground text-primary-foreground">
-        <div className="container mx-auto px-4 py-16">
-            {/* ===== ROW 1: Brand + Contact + Opening Hours ===== */}
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 items-start">
-                <div className="lg:col-span-2">
-                    <BrandLogo
-                        className="mb-4 flex items-center gap-2"
-                        imageClassName="h-12 w-auto"
-                        textClassName="font-serif text-xl font-bold text-primary-foreground"
-                    />
-                    <p className="max-w-sm text-sm leading-relaxed text-primary-foreground/60">
-                        {footerTagline}
-                    </p>
-                </div>
-
-                <div className="lg:col-span-2">
-                    <h4 className="mb-4 font-serif font-bold">{t('footer.contact')}</h4>
-                    <div className="flex flex-col gap-3 text-sm text-primary-foreground/60">
-                        {settings.email && (
-                            <a href={`mailto:${settings.email}`} className="flex items-center gap-3 hover:text-secondary">
-                                <Mail className="h-4 w-4 shrink-0 text-secondary" /> {settings.email}
-                            </a>
-                        )}
-                        {settings.phone && (
-                            <a href={`tel:${settings.phone.replace(/\D/g, '')}`} onClick={() => notifyInteraction('call')} className="flex items-center gap-3 hover:text-secondary">
-                                <Phone className="h-4 w-4 shrink-0 text-secondary" /> {settings.phone}
-                            </a>
-                        )}
-                        {settings.phone2 && (
-                            <a href={`tel:${settings.phone2.replace(/\D/g, '')}`} onClick={() => notifyInteraction('call')} className="flex items-center gap-3 hover:text-secondary">
-                                <Phone className="h-4 w-4 shrink-0 text-secondary" /> {settings.phone2}
-                            </a>
-                        )}
-                        {settings.address && (
-                            <a href={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}`} target="_blank" rel="noreferrer" className="flex items-start gap-3 hover:text-secondary">
-                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
-                                <span>{settings.address}</span>
-                            </a>
-                        )}
+        <footer className="bg-foreground text-primary-foreground">
+            <div className="container mx-auto px-4 py-16">
+                {/* ===== ROW 1: Brand + Contact + Opening Hours ===== */}
+                <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-5">
+                    <div className="lg:col-span-2">
+                        <BrandLogo
+                            className="mb-4 flex items-center gap-2"
+                            imageClassName="h-12 w-auto"
+                            textClassName="font-serif text-xl font-bold text-primary-foreground"
+                        />
+                        <p className="max-w-sm text-sm leading-relaxed text-primary-foreground/60">
+                            {footerTagline}
+                        </p>
                     </div>
-                </div>
 
-                <div className="lg:col-span-1">
-                    <h4 className="mb-3 flex items-center gap-2 font-serif font-bold">
-                        <Clock className="h-4 w-4 text-secondary" /> {t('footer.hours')}
-                    </h4>
-                    <div className="space-y-1.5 text-sm text-primary-foreground/60">
-                        {groupedHours.length > 0 ? (
-                            groupedHours.map((group, i) => (
-                                <div key={`${group.dayKeys.join('-')}-${i}`} className="flex justify-between gap-3">
-                                    <span>{formatHourGroupLabel(group, getDayLabel)}</span>
-                                    <span className="text-primary-foreground/80">
-                                        {formatHourRanges({ dayKey: group.dayKeys[0], ranges: group.ranges, closed: group.closed }, t('footer.closed'))}
-                                    </span>
-                                </div>
-                            ))
-                        ) : (
-                            <p>—</p>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* ===== ROW 2: Nav Columns (justify-between) ===== */}
-            <div className="mt-12 border-t border-primary-foreground/10 pt-10">
-                <div className="flex flex-col sm:flex-row justify-between gap-10">
-                    {navSettings.footer.map((col, idx) => (
-                        <div key={idx} className="flex-1 ">
-                            <h4 className="mb-4 font-serif font-bold">{resolveColTitle(col.title)}</h4>
-                            <div className="flex flex-col gap-2">
-                                {col.pageKeys.map((k) => {
-                                    const p = getFooterPage(k);
-                                    if (!p) return null;
-                                    return (
-                                        <Link key={k} to={p.href} className="text-sm text-primary-foreground/60 transition-colors hover:text-secondary">
-                                            {idx < 2 ? t(`nav.${p.key}`) : p.label}
-                                        </Link>
-                                    );
-                                })}
-                            </div>
+                    <div className="lg:col-span-2">
+                        <h4 className="mb-4 font-serif font-bold">
+                            {t('footer.contact')}
+                        </h4>
+                        <div className="flex flex-col gap-3 text-sm text-primary-foreground/60">
+                            {settings.email && (
+                                <a
+                                    href={`mailto:${settings.email}`}
+                                    className="flex items-center gap-3 hover:text-secondary"
+                                >
+                                    <Mail className="h-4 w-4 shrink-0 text-secondary" />{' '}
+                                    {settings.email}
+                                </a>
+                            )}
+                            {settings.phone && (
+                                <a
+                                    href={`tel:${settings.phone.replace(/\D/g, '')}`}
+                                    onClick={() => notifyInteraction('call')}
+                                    className="flex items-center gap-3 hover:text-secondary"
+                                >
+                                    <Phone className="h-4 w-4 shrink-0 text-secondary" />{' '}
+                                    {settings.phone}
+                                </a>
+                            )}
+                            {settings.phone2 && (
+                                <a
+                                    href={`tel:${settings.phone2.replace(/\D/g, '')}`}
+                                    onClick={() => notifyInteraction('call')}
+                                    className="flex items-center gap-3 hover:text-secondary"
+                                >
+                                    <Phone className="h-4 w-4 shrink-0 text-secondary" />{' '}
+                                    {settings.phone2}
+                                </a>
+                            )}
+                            {settings.address && (
+                                <a
+                                    href={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-start gap-3 hover:text-secondary"
+                                >
+                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
+                                    <span>{settings.address}</span>
+                                </a>
+                            )}
                         </div>
-                    ))}
-                </div>
-            </div>
+                    </div>
 
-            {/* ===== ROW 4: Social + Secure Payment +  Copyright ===== */}
-            <div className="mt-12 border-t border-primary-foreground/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-center sm:text-left text-sm text-primary-foreground/40">
-                    © {settings.year ?? new Date().getFullYear()} {settings.companyName}. {t('footer.rights')}
+                    <div className="lg:col-span-1">
+                        <h4 className="mb-3 flex items-center gap-2 font-serif font-bold">
+                            <Clock className="h-4 w-4 text-secondary" />{' '}
+                            {t('footer.hours')}
+                        </h4>
+                        <div className="space-y-1.5 text-sm text-primary-foreground/60">
+                            {groupedHours.length > 0 ? (
+                                groupedHours.map((group, i) => (
+                                    <div
+                                        key={`${group.dayKeys.join('-')}-${i}`}
+                                        className="flex justify-between gap-3"
+                                    >
+                                        <span>
+                                            {formatHourGroupLabel(
+                                                group,
+                                                getDayLabel,
+                                            )}
+                                        </span>
+                                        <span className="text-primary-foreground/80">
+                                            {formatHourRanges(
+                                                {
+                                                    dayKey: group.dayKeys[0],
+                                                    ranges: group.ranges,
+                                                    closed: group.closed,
+                                                },
+                                                t('footer.closed'),
+                                            )}
+                                        </span>
+                                    </div>
+                                ))
+                            ) : (
+                                <p>—</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
-                <div className="flex flex-col items-center gap-4">
-                    <PaymentLogos />
+
+                {/* ===== ROW 2: Nav Columns (justify-between) ===== */}
+                <div className="mt-12 border-t border-primary-foreground/10 pt-10">
+                    <div className="flex flex-col justify-between gap-10 sm:flex-row">
+                        {navSettings.footer.map((col, idx) => (
+                            <div key={idx} className="flex-1">
+                                <h4 className="mb-4 font-serif font-bold">
+                                    {resolveColTitle(col.title)}
+                                </h4>
+                                <div className="flex flex-col gap-2">
+                                    {col.pageKeys.map((k) => {
+                                        const p = getFooterPage(k);
+                                        if (!p) return null;
+                                        return (
+                                            <Link
+                                                key={k}
+                                                to={p.href}
+                                                className="text-sm text-primary-foreground/60 transition-colors hover:text-secondary"
+                                            >
+                                                {idx < 2
+                                                    ? t(`nav.${p.key}`)
+                                                    : p.label}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="flex gap-3">
-                    {settings.socialLinks.map((link, i) => {
-                        const Icon = resolveSocialIcon(link.label);
-                        return (
-                            <a key={i} href={link.href} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-white transition-transform hover:scale-110">
-                                <Icon className="h-4 w-4" />
-                            </a>
-                        );
-                    })}
+
+                {/* ===== ROW 4: Social + Secure Payment +  Copyright ===== */}
+                <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-primary-foreground/10 pt-8 sm:flex-row">
+                    <div className="text-center text-sm text-primary-foreground/40 sm:text-left">
+                        © {settings.year ?? new Date().getFullYear()}{' '}
+                        {settings.companyName}. {t('footer.rights')}
+                    </div>
+                    <div className="flex flex-col items-center gap-4">
+                        <PaymentLogos />
+                    </div>
+                    <div className="flex gap-3">
+                        {settings.socialLinks.map((link, i) => {
+                            const Icon = resolveSocialIcon(link.label);
+                            return (
+                                <a
+                                    key={i}
+                                    href={link.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white transition-transform hover:scale-110"
+                                >
+                                    <Icon className="h-4 w-4" />
+                                </a>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
-        </div>
-    </footer>
-);
+        </footer>
+    );
 }

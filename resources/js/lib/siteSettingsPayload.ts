@@ -28,14 +28,19 @@ export function normalizeLocalizedText(value: unknown): LocalizedText {
     };
 }
 
-function normalizeDropdownItem(item: Record<string, unknown>): Record<string, unknown> {
+function normalizeDropdownItem(
+    item: Record<string, unknown>,
+): Record<string, unknown> {
     const { activeLang: _activeLang, ...rest } = item;
 
     if (Object.prototype.hasOwnProperty.call(rest, 'label')) {
         rest.label = normalizeLocalizedText(rest.label);
     }
 
-    if (Object.prototype.hasOwnProperty.call(rest, 'pageKey') && !rest.pageKey) {
+    if (
+        Object.prototype.hasOwnProperty.call(rest, 'pageKey') &&
+        !rest.pageKey
+    ) {
         delete rest.pageKey;
     }
 
@@ -50,7 +55,9 @@ function normalizeDropdownItem(item: Record<string, unknown>): Record<string, un
     return rest;
 }
 
-function normalizeNavGroupForSave(group: Record<string, unknown>): Record<string, unknown> {
+function normalizeNavGroupForSave(
+    group: Record<string, unknown>,
+): Record<string, unknown> {
     const result: Record<string, unknown> = {
         ...group,
         label: normalizeLocalizedText(group.label),
@@ -79,8 +86,15 @@ function normalizeNavGroupForSave(group: Record<string, unknown>): Record<string
             }
             if (Array.isArray(p.items)) {
                 normalized.items = p.items.map((item: unknown) => {
-                    if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
-                    return normalizeDropdownItem(item as Record<string, unknown>);
+                    if (
+                        !item ||
+                        typeof item !== 'object' ||
+                        Array.isArray(item)
+                    )
+                        return item;
+                    return normalizeDropdownItem(
+                        item as Record<string, unknown>,
+                    );
                 });
             } else {
                 normalized.items = [];
@@ -92,7 +106,8 @@ function normalizeNavGroupForSave(group: Record<string, unknown>): Record<string
     }
     if (Array.isArray(result.links)) {
         result.links = result.links.map((link: unknown) => {
-            if (!link || typeof link !== 'object' || Array.isArray(link)) return link;
+            if (!link || typeof link !== 'object' || Array.isArray(link))
+                return link;
             return normalizeDropdownItem(link as Record<string, unknown>);
         });
     }
@@ -108,16 +123,26 @@ function normalizeNavGroupForSave(group: Record<string, unknown>): Record<string
 
 function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
     const groups = Array.isArray(nav.groups)
-        ? nav.groups.map((g) =>
-            normalizeNavGroupForSave(g as unknown as Record<string, unknown>) as unknown as NavGroup,
-        )
+        ? nav.groups.map(
+              (g) =>
+                  normalizeNavGroupForSave(
+                      g as unknown as Record<string, unknown>,
+                  ) as unknown as NavGroup,
+          )
         : [];
 
     return {
         header: nav.header.map((entry) => ({
             ...entry,
-            ...(entry.label ? { label: normalizeLocalizedText(entry.label) } : {}),
-            items: entry.items.map((item) => normalizeDropdownItem(item as unknown as Record<string, unknown>) as unknown as (typeof entry.items)[number]),
+            ...(entry.label
+                ? { label: normalizeLocalizedText(entry.label) }
+                : {}),
+            items: entry.items.map(
+                (item) =>
+                    normalizeDropdownItem(
+                        item as unknown as Record<string, unknown>,
+                    ) as unknown as (typeof entry.items)[number],
+            ),
         })),
         footer: nav.footer.map((column) => ({ ...column })),
         groups,
@@ -218,7 +243,9 @@ export function normalizeSiteSettingsContentForSave(
                             return item;
                         }
 
-                        return normalizeDropdownItem(item as Record<string, unknown>);
+                        return normalizeDropdownItem(
+                            item as Record<string, unknown>,
+                        );
                     });
                 }
 

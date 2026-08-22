@@ -3,35 +3,20 @@
 namespace App\Notifications;
 
 use App\Models\Booking;
+use App\Notifications\Concerns\NotifiesByMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class BookingActivityNotification extends Notification
 {
+    use NotifiesByMail;
     use Queueable;
 
     public function __construct(
         private readonly Booking $booking,
         private readonly string $activityType,
     ) {}
-
-    public function via(object $notifiable): array
-    {
-        $channels = ['database'];
-        if ($this->isMailConfigured()) {
-            $channels[] = 'mail';
-        }
-
-        return $channels;
-    }
-
-    private function isMailConfigured(): bool
-    {
-        return config('mail.default') !== 'log'
-            && ! empty(config('mail.mailers.smtp.host'))
-            && config('mail.mailers.smtp.host') !== '127.0.0.1';
-    }
 
     public function toDatabase(object $notifiable): array
     {
@@ -52,40 +37,54 @@ class BookingActivityNotification extends Notification
         $client = $this->booking->client['name'] ?? $this->booking->client['email'] ?? 'Client';
         $locale = $notifiable->preferred_language ?? app()->getLocale();
 
-        $subject = match ($this->activityType) {
-            'booking.paid' => "New Payment - Booking #{$this->booking->id}",
-            'booking.cancelled' => "Booking Cancelled - #{$this->booking->id}",
-            'booking.confirmed' => "Booking Confirmed - #{$this->booking->id}",
-            default => "New Booking #{$this->booking->id} from {$client}",
+        $translate = fn (string $path, array $replace = []) => __("emails.{$path}", $replace, $locale);
+
+        $group = match ($this->activityType) {
+            'booking.paid' => 'admin_booking.paid',
+            'booking.cancelled' => 'admin_booking.cancelled',
+            'booking.confirmed' => 'admin_booking.confirmed',
+            'booking.approved' => 'admin_booking.approved',
+            'booking.rejected' => 'admin_booking.rejected',
+            'booking.expired' => 'admin_booking.expired',
+            default => 'admin_booking.created',
         };
+
+        $view = match ($this->activityType) {
+            'booking.cancelled' => 'emails.booking-cancelled',
+            'booking.rejected' => 'emails.booking-rejected',
+            'booking.expired' => 'emails.booking-expired',
+            'booking.confirmed', 'booking.approved', 'booking.paid' => 'emails.booking-approved',
+            default => 'emails.booking-created',
+        };
+
+        $subject = $translate("{$group}.subject", ['id' => $this->booking->booking_ref, 'client' => $client]);
+
+        $data = [
+            'booking' => $this->booking,
+            'subject' => $subject,
+            'headerSubtitle' => $subject,
+            'greeting' => $translate("{$group}.greeting"),
+            'introLine' => $translate("{$group}.intro", ['id' => $this->booking->booking_ref, 'client' => $client]),
+            'bookingLabel' => $translate('admin_booking.labels.details'),
+            'clientLabel' => $translate('admin_booking.labels.client'),
+            'refLabel' => $translate('admin_booking.labels.ref'),
+            'typeLabel' => $translate('admin_booking.labels.type'),
+            'datesLabel' => $translate('admin_booking.labels.dates'),
+            'amountLabel' => $translate('admin_booking.labels.amount'),
+            'statusLabel' => $translate('admin_booking.labels.status'),
+            'providerRefLabel' => $translate('booking.labels.provider_ref'),
+            'actionText' => $translate('action.view_booking'),
+            'actionUrl' => config('app.url').'/admin/bookings',
+            'closingLine' => $translate('footer_automatic'),
+        ];
+
+        if ($this->activityType === 'booking.rejected') {
+            $data['reasonLabel'] = $translate('admin_booking.labels.reason');
+        }
 
         return (new MailMessage)
             ->subject($subject)
-            ->view('emails.booking-created', [
-                'booking' => $this->booking,
-                'greeting' => match ($this->activityType) {
-                    'booking.paid' => 'Payment Received!',
-                    'booking.cancelled' => 'Booking Cancelled',
-                    'booking.confirmed' => 'Booking Confirmed',
-                    default => 'New Booking Received',
-                },
-                'headerSubtitle' => $subject,
-                'introLine' => match ($this->activityType) {
-                    'booking.paid' => "A payment has been received for booking #{$this->booking->id}.",
-                    'booking.cancelled' => "Booking #{$this->booking->id} has been cancelled.",
-                    'booking.confirmed' => "Booking #{$this->booking->id} has been confirmed.",
-                    default => "A new booking has been submitted by {$client}.",
-                },
-                'bookingLabel' => 'Booking Details',
-                'refLabel' => 'Reference',
-                'typeLabel' => 'Type',
-                'datesLabel' => 'Dates',
-                'amountLabel' => 'Amount',
-                'statusLabel' => 'Status',
-                'actionText' => 'View Booking',
-                'actionUrl' => config('app.url').'/admin/bookings',
-                'closingLine' => 'This is an automated notification from BelAzur Travel.',
-            ]);
+            ->view($view, $data);
     }
 
     private function message(string $client, string $lang): string
@@ -93,6 +92,9 @@ class BookingActivityNotification extends Notification
         return match ($this->activityType) {
             'booking.cancelled' => __('messages.booking_cancelled_by', ['client' => $client], $lang),
             'booking.confirmed' => __('messages.booking_confirmed_for', ['client' => $client], $lang),
+            'booking.approved' => __('messages.booking_approved_for', ['client' => $client], $lang),
+            'booking.rejected' => __('messages.booking_rejected_for', ['client' => $client], $lang),
+            'booking.expired' => __('messages.booking_expired_for', ['client' => $client], $lang),
             default => __('messages.booking_created', ['client' => $client], $lang),
         };
     }

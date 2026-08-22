@@ -18,7 +18,6 @@ import { useTravels, useCategoryTypesPublic } from '@/hooks/usePublicData';
 
 import { matchesSearchText } from '@/lib/listFilters';
 
-
 const Travels = () => {
     const { t, lang, dir } = useLanguage();
     const [params] = useSearchParams();
@@ -50,12 +49,15 @@ const Travels = () => {
         to: initialToDate ? new Date(initialToDate) : undefined,
     });
 
-    const maxPrice = tours.length > 0 ? Math.max(...tours.map((t) => t.price)) : 1000;
-    const minPrice = tours.length > 0 ? Math.min(...tours.map((t) => t.price)) : 0;
+    const maxPrice =
+        tours.length > 0 ? Math.max(...tours.map((t) => t.price)) : 1000;
+    const minPrice =
+        tours.length > 0 ? Math.min(...tours.map((t) => t.price)) : 0;
 
     // Category type filters
-    const [categoryTypeFilters, setCategoryTypeFilters] =
-        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<
+        Record<string, string[]>
+    >(initialCategoryTypeFilters);
 
     // Adjust state during render when URL params change (e.g. navbar subcategory links)
     const [prevParamsKey, setPrevParamsKey] = useState(() => params.toString());
@@ -65,15 +67,21 @@ const Travels = () => {
         const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val
+                    .split(',')
+                    .filter(Boolean);
             }
         }
         setCategoryTypeFilters(nextFilters);
     }
-    const [travelPriceRange, setTravelPriceRange] = useState<[number, number]>([0, 1000]);
+    const [travelPriceRange, setTravelPriceRange] = useState<[number, number]>([
+        0, 1000,
+    ]);
 
     // Adjust state during render when data loads (price range derived from tours)
-    const [priceRangeSynced, setPriceRangeSynced] = useState<readonly [number, number] | null>(null);
+    const [priceRangeSynced, setPriceRangeSynced] = useState<
+        readonly [number, number] | null
+    >(null);
     if (
         tours.length > 0 &&
         (priceRangeSynced === null ||
@@ -99,16 +107,24 @@ const Travels = () => {
                 const matchesTravelers = tour.maxGroup >= travelers;
                 // Check category type filters (OR logic)
                 const assignments = tour.category_assignments;
-                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
-                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
+                const activeTypeFilters = Object.entries(
+                    categoryTypeFilters,
+                ).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes =
+                    activeTypeFilters.length === 0 ||
                     activeTypeFilters.some(([typeKey, values]) => {
                         // Handle dynamic country filter
                         if (typeKey.startsWith('dynamic_country_')) {
-                            const tourLocation = localizeText(tour.location, lang);
+                            const tourLocation = localizeText(
+                                tour.location,
+                                lang,
+                            );
                             return values.includes(tourLocation);
                         }
                         // Handle regular category type filters
-                        return assignments && values.includes(assignments[typeKey]);
+                        return (
+                            assignments && values.includes(assignments[typeKey])
+                        );
                     });
 
                 return (
@@ -128,10 +144,11 @@ const Travels = () => {
         ],
     );
 
-    const hasActiveCategoryTypeFilters = Object.values(categoryTypeFilters).some((v) => v.length > 0);
+    const hasActiveCategoryTypeFilters = Object.values(
+        categoryTypeFilters,
+    ).some((v) => v.length > 0);
     const hasActiveFilters =
-        searchQuery.trim().length > 0 ||
-        hasActiveCategoryTypeFilters;
+        searchQuery.trim().length > 0 || hasActiveCategoryTypeFilters;
 
     const clearFilters = () => {
         setSearchQuery('');
@@ -148,7 +165,7 @@ const Travels = () => {
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 border-b border-border pb-6"
+                        className="mb-8 border-b border-border pb-4"
                     >
                         <Breadcrumb
                             items={[
@@ -186,7 +203,9 @@ const Travels = () => {
                         />
                     </ListFilterBar>
 
-                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                        className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
                         <FilterSidebar
                             title={t('hotels.filters')}
                             hasActiveFilters={hasActiveFilters}
@@ -200,7 +219,10 @@ const Travels = () => {
                                 categoryTypes={categoryTypes}
                                 categoryTypeFilters={categoryTypeFilters}
                                 onCategoryTypeChange={(typeKey, values) =>
-                                    setCategoryTypeFilters((prev) => ({ ...prev, [typeKey]: values }))
+                                    setCategoryTypeFilters((prev) => ({
+                                        ...prev,
+                                        [typeKey]: values,
+                                    }))
                                 }
                                 priceRange={travelPriceRange}
                                 onPriceChange={setTravelPriceRange}
@@ -214,7 +236,11 @@ const Travels = () => {
                         <div className="min-w-0 flex-1">
                             {filteredTours.length === 0 ? (
                                 <RequestThingEmptyState
-                                    variant={tours.length === 0 ? 'empty' : 'no-results'}
+                                    variant={
+                                        tours.length === 0
+                                            ? 'empty'
+                                            : 'no-results'
+                                    }
                                 />
                             ) : (
                                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -234,7 +260,10 @@ const Travels = () => {
                                                     <div className="relative h-64 shrink-0 overflow-hidden lg:h-full lg:w-1/3">
                                                         <img
                                                             src={tour.image}
-                                                            alt={localizeText(tour.name, lang)}
+                                                            alt={localizeText(
+                                                                tour.name,
+                                                                lang,
+                                                            )}
                                                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                             loading="lazy"
                                                         />
@@ -243,10 +272,17 @@ const Travels = () => {
                                                             item={{
                                                                 id: `tour-${localizeText(tour.name, lang)}`,
                                                                 type: 'tour',
-                                                                name: localizeText(tour.name, lang),
+                                                                name: localizeText(
+                                                                    tour.name,
+                                                                    lang,
+                                                                ),
                                                                 image: tour.image,
                                                                 price: tour.price,
-                                                                location: localizeText(tour.location, lang),
+                                                                location:
+                                                                    localizeText(
+                                                                        tour.location,
+                                                                        lang,
+                                                                    ),
                                                             }}
                                                         />
                                                     </div>
@@ -255,39 +291,65 @@ const Travels = () => {
                                                             <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                                                 <span className="flex items-center gap-1">
                                                                     <MapPin className="h-3 w-3" />{' '}
-                                                                    {localizeText(tour.location, lang)}
+                                                                    {localizeText(
+                                                                        tour.location,
+                                                                        lang,
+                                                                    )}
                                                                 </span>
                                                                 <span className="flex items-center gap-1">
                                                                     <Clock className="h-3 w-3" />{' '}
-                                                                    {localizeText(tour.duration, lang)}
+                                                                    {localizeText(
+                                                                        tour.duration,
+                                                                        lang,
+                                                                    )}
                                                                 </span>
                                                                 <span className="flex items-center gap-1">
                                                                     <Users className="h-3 w-3" />{' '}
-                                                                    {t('tours.max')} {tour.maxGroup}
+                                                                    {t(
+                                                                        'tours.max',
+                                                                    )}{' '}
+                                                                    {
+                                                                        tour.maxGroup
+                                                                    }
                                                                 </span>
                                                             </div>
                                                             <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
-                                                                {localizeText(tour.name, lang)}
+                                                                {localizeText(
+                                                                    tour.name,
+                                                                    lang,
+                                                                )}
                                                             </h3>
                                                             <p className="mb-4 text-sm text-muted-foreground">
-                                                                {localizeText(tour.description, lang)}
+                                                                {localizeText(
+                                                                    tour.description,
+                                                                    lang,
+                                                                )}
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center justify-between">
                                                             <div>
                                                                 <div className="mb-1 flex items-center gap-1 text-secondary">
                                                                     <Star className="h-3.5 w-3.5 fill-current" />{' '}
-                                                                    <span className="text-xs font-bold">{tour.rating}</span>
+                                                                    <span className="text-xs font-bold">
+                                                                        {
+                                                                            tour.rating
+                                                                        }
+                                                                    </span>
                                                                 </div>
                                                                 <span className="text-lg font-bold text-primary">
-                                                                    {tour.price.toLocaleString()} TND
+                                                                    {tour.price.toLocaleString()}{' '}
+                                                                    TND
                                                                 </span>
                                                                 <span className="ml-1 text-xs text-muted-foreground">
-                                                                    {t('tours.person')}
+                                                                    {t(
+                                                                        'tours.person',
+                                                                    )}
                                                                 </span>
                                                             </div>
                                                             <Button className="text-primary-foreground">
-                                                                {t('tours.bookTour')}
+                                                                {t(
+                                                                    'tours.bookTour',
+                                                                )}
                                                             </Button>
                                                         </div>
                                                     </div>

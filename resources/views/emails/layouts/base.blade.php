@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $subject ?? 'BelAzur Travel' }}</title>
+    <title>{{ $subject ?? ($headerSubtitle ?? __('emails.brand')) }}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Helvetica Neue', Arial, sans-serif;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 40px 0;">
@@ -13,7 +13,7 @@
                     <!-- Header -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); padding: 32px 40px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">BelAzur Travel</h1>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">{{ __('emails.brand') }}</h1>
                             <p style="margin: 8px 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">{{ $headerSubtitle ?? '' }}</p>
                         </td>
                     </tr>
@@ -27,10 +27,10 @@
                     <tr>
                         <td style="background-color: #f1f5f9; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
                             <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                                © {{ date('Y') }} BelAzur Travel. All rights reserved.
+                                © {{ date('Y') }} {{ __('emails.brand') }}. {{ __('emails.rights') }}
                             </p>
                             <p style="margin: 8px 0 0; color: #94a3b8; font-size: 12px;">
-                                If you have questions, contact us at support@belazurtravel.tn
+                                {{ __('emails.footer_questions', ['email' => __('emails.support_email')]) }}
                             </p>
                         </td>
                     </tr>

@@ -38,6 +38,31 @@ import {
     getLocalizedLabel,
 } from '@/data/adminSelectOptions';
 
+const FLIGHT_LOCALIZED_KEYS = [
+    'airline',
+    'to',
+    'duration',
+    'stops',
+    'cabin',
+    'aircraft',
+    'baggage',
+    'refund',
+];
+
+function stripLocalizedObjects(values: Record<string, unknown>) {
+    for (const key of FLIGHT_LOCALIZED_KEYS) {
+        const value = values[key];
+        if (
+            typeof value === 'object' &&
+            value !== null &&
+            !Array.isArray(value)
+        ) {
+            delete values[key];
+        }
+    }
+    return values;
+}
+
 export default function AdminFlights() {
     useAdminGuard();
     const { t, lang } = useLanguage();
@@ -148,7 +173,12 @@ export default function AdminFlights() {
             toast.error(t('admin.pleaseFixErrors'));
             return;
         }
-        saveMutation.mutate({ ...values, id: editing?.id ?? '' } as AdminRow);
+        saveMutation.mutate(
+            stripLocalizedObjects({
+                ...values,
+                id: editing?.id ?? '',
+            }) as AdminRow,
+        );
     }
 
     const flightSections: SectionDef[] = [
@@ -599,6 +629,7 @@ export default function AdminFlights() {
                 initial={editing ? { ...editing } : null}
                 onSubmit={(values) => handleSave(values as AdminRow)}
                 errors={errors}
+                preserveArrayKeys={['gallery']}
                 isSubmitting={saveMutation.isPending}
             />
         </AdminLayout>

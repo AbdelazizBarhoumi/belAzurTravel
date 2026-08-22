@@ -1,0 +1,164 @@
+{
+  "HotelSearch": [
+    {
+      "Hotel": {
+        "Id": 178,
+        "Name": "Cap Bon Kelibia Beach Hotel & Spa",
+        "Category": { "Title": "4 étoiles", "Star": 4 },
+        "City": { "Id": 12, "Name": "Kelibia" },
+        "Adress": "Zone Touristique Kelibia",
+        "Image": "https://admin.mygo.co/file_manager/source/photos/test.jpg",
+        "ShortDescription": "Rénovation totale 2025. <br/> Plage privée à 100 m."
+      },
+      "Token": "eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=",
+      "Price": {
+        "Boarding": [
+          {
+            "Id": 4,
+            "Code": "LPD",
+            "Name": "Logement Petit D\u00e9jeuner",
+            "Pax": [
+              {
+                "Adult": 2,
+                "Child": [],
+                "Rooms": [
+                  {
+                    "Id": 501,
+                    "Name": "Chambre Double Standard",
+                    "Price": "927.520",
+                    "BasePrice": "927.520",
+                    "PriceWithAffiliateMarkup": "927.520",
+                    "StopReservation": false,
+                    "MinStay": 1,
+                    "OnRequest": false,
+                    "Quantity": 3,
+                    "View": [1, 3],
+                    "Supplement": [
+                      { "Name": "Insurance", "Price": 40, "PerNight": true }
+                    ],
+                    "CancellationPolicy": [
+                      {
+                        "Fees": 185.50,
+                        "Type": "PERCENT",
+                        "Nature": "BEFORE_ARRIVAL",
+                        "Description": "Free cancellation until 48h before check-in. 20% fee after.",
+                        "FromDate": "2026-09-01 00:00"
+                      }
+                    ],
+                    "Photo": "https://admin.mygo.co/file_manager/source/photos/room-501.jpg",
+                    "Description": "Chambre Double Standard avec balcon et vue mer partielle.",
+                    "Icones": [null, "Wifi", { "Title": "Climatisation" }],
+                    "NotRefundable": false,
+                    "CancellationDeadline": "16-08-2026 00:00",
+                    "Retrocession": "29/08/2026"
+                  },
+                  {
+                    "Id": 502,
+                    "Name": "Suite Junior",
+                    "Price": "1200.000",
+                    "BasePrice": "1200.000",
+                    "PriceWithAffiliateMarkup": "1200.000",
+                    "StopReservation": false,
+                    "MinStay": 1,
+                    "OnRequest": false,
+                    "Quantity": 1,
+                    "View": [2],
+                    "Supplement": [],
+                    "CancellationPolicy": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "Id": 5,
+            "Code": "DP",
+            "Name": "Demi Pension",
+            "Pax": [
+              {
+                "Adult": 2,
+                "Child": [],
+                "Rooms": [
+                  {
+                    "Id": 503,
+                    "Name": "Chambre Double Standard",
+                    "Price": "1080.000",
+                    "BasePrice": "1080.000",
+                    "PriceWithAffiliateMarkup": "1080.000",
+                    "StopReservation": false,
+                    "MinStay": 1,
+                    "OnRequest": false,
+                    "Quantity": 2,
+                    "CancellationPolicy": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "BasePrice": "66.150"
+      },
+      "FreeChild": [ { "Order": 1, "Age": 5 } ],
+      "Source": "OS-TRAVEL-DIRECT",
+      "Currency": "TND",
+      "Recommended": 1,
+      "Promotion": {
+        "Title": "Early booking",
+        "Description": "-29% on select stays",
+        "Rate": "29.00"
+      }
+    },
+    {
+      "Hotel": {
+        "Id": 999,
+        "Name": "Stop Sales Hotel",
+        "Category": { "Title": "3 \u00e9toiles", "Star": 3 },
+        "City": { "Id": 12, "Name": "Kelibia" },
+        "Adress": "Somewhere",
+        "Image": "https://admin.mygo.co/file_manager/source/photos/test.jpg"
+      },
+      "Token": "eyJ0b2tlbiI6InN0b3Atc2FsZXMifQ==",
+      "Price": {
+        "Boarding": [
+          {
+            "Id": 3,
+            "Code": "LS",
+            "Name": "Logement Simple",
+            "Pax": [
+              {
+                "Adult": 2,
+                "Child": [],
+                "Rooms": [
+                  {
+                    "Id": 600,
+                    "Name": "Chambre Standard",
+                    "Price": "500.000",
+                    "BasePrice": "500.000",
+                    "PriceWithAffiliateMarkup": "500.000",
+                    "StopReservation": true,
+                    "MinStay": 1,
+                    "OnRequest": false,
+                    "Quantity": 0,
+                    "CancellationPolicy": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "BasePrice": "0.000"
+      },
+      "FreeChild": [],
+      "Source": "OS-TRAVEL-DIRECT",
+      "Currency": "TND",
+      "Recommended": 0
+    }
+  ],
+  "CountResults": 2,
+  "ErrorMessage": [],
+  "SearchId": "test-search-id",
+  "Timing": {
+    "Duration": "350 ms"
+  },
+  "Ip": "127.0.0.1"
+}

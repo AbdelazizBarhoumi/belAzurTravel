@@ -235,7 +235,7 @@ payments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     payments.form = paymentsForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:74
+ * @see app/Http/Controllers/Api/ClientController.php:76
  * @route '/api/client/support'
  */
 export const support = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -250,7 +250,7 @@ support.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:74
+ * @see app/Http/Controllers/Api/ClientController.php:76
  * @route '/api/client/support'
  */
 support.url = (options?: RouteQueryOptions) => {
@@ -259,7 +259,7 @@ support.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:74
+ * @see app/Http/Controllers/Api/ClientController.php:76
  * @route '/api/client/support'
  */
 support.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -268,7 +268,7 @@ support.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:74
+ * @see app/Http/Controllers/Api/ClientController.php:76
  * @route '/api/client/support'
  */
 support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -278,7 +278,7 @@ support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:74
+ * @see app/Http/Controllers/Api/ClientController.php:76
  * @route '/api/client/support'
  */
     const supportForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -288,7 +288,7 @@ support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:74
+ * @see app/Http/Controllers/Api/ClientController.php:76
  * @route '/api/client/support'
  */
         supportForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -297,7 +297,7 @@ support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:74
+ * @see app/Http/Controllers/Api/ClientController.php:76
  * @route '/api/client/support'
  */
         supportForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -313,7 +313,7 @@ support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     support.form = supportForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:93
+ * @see app/Http/Controllers/Api/ClientController.php:95
  * @route '/api/client/support'
  */
 export const createSupport = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -328,7 +328,7 @@ createSupport.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:93
+ * @see app/Http/Controllers/Api/ClientController.php:95
  * @route '/api/client/support'
  */
 createSupport.url = (options?: RouteQueryOptions) => {
@@ -337,7 +337,7 @@ createSupport.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:93
+ * @see app/Http/Controllers/Api/ClientController.php:95
  * @route '/api/client/support'
  */
 createSupport.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -347,7 +347,7 @@ createSupport.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:93
+ * @see app/Http/Controllers/Api/ClientController.php:95
  * @route '/api/client/support'
  */
     const createSupportForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -357,7 +357,7 @@ createSupport.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:93
+ * @see app/Http/Controllers/Api/ClientController.php:95
  * @route '/api/client/support'
  */
         createSupportForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -368,7 +368,7 @@ createSupport.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
     createSupport.form = createSupportForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:138
+ * @see app/Http/Controllers/Api/ClientController.php:140
  * @route '/api/client/profile'
  */
 export const updateProfile = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -383,7 +383,7 @@ updateProfile.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:138
+ * @see app/Http/Controllers/Api/ClientController.php:140
  * @route '/api/client/profile'
  */
 updateProfile.url = (options?: RouteQueryOptions) => {
@@ -392,7 +392,7 @@ updateProfile.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:138
+ * @see app/Http/Controllers/Api/ClientController.php:140
  * @route '/api/client/profile'
  */
 updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -402,7 +402,7 @@ updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:138
+ * @see app/Http/Controllers/Api/ClientController.php:140
  * @route '/api/client/profile'
  */
     const updateProfileForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -417,7 +417,7 @@ updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:138
+ * @see app/Http/Controllers/Api/ClientController.php:140
  * @route '/api/client/profile'
  */
         updateProfileForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -433,7 +433,7 @@ updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     updateProfile.form = updateProfileForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:127
+ * @see app/Http/Controllers/Api/ClientController.php:129
  * @route '/api/user/language'
  */
 export const updateLanguage = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -448,7 +448,7 @@ updateLanguage.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:127
+ * @see app/Http/Controllers/Api/ClientController.php:129
  * @route '/api/user/language'
  */
 updateLanguage.url = (options?: RouteQueryOptions) => {
@@ -457,7 +457,7 @@ updateLanguage.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:127
+ * @see app/Http/Controllers/Api/ClientController.php:129
  * @route '/api/user/language'
  */
 updateLanguage.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -467,7 +467,7 @@ updateLanguage.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:127
+ * @see app/Http/Controllers/Api/ClientController.php:129
  * @route '/api/user/language'
  */
     const updateLanguageForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -482,7 +482,7 @@ updateLanguage.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:127
+ * @see app/Http/Controllers/Api/ClientController.php:129
  * @route '/api/user/language'
  */
         updateLanguageForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

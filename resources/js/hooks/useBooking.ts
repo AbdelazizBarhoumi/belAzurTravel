@@ -12,10 +12,10 @@ export function useAdminBookings() {
     });
 }
 
-export function useBooking(id?: number) {
+export function useBooking(id?: string) {
     return useQuery({
         queryKey: ['booking', id],
-        queryFn: () => api.getBooking(id as number),
+        queryFn: () => api.getBooking(id!),
         enabled: !!id,
     });
 }

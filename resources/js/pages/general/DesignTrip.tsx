@@ -139,6 +139,7 @@ const DesignTrip = () => {
         transportSingle: '' as string,
         startDate: '',
         endDate: '',
+        guests: 2,
         travelers: 2,
         budget: '',
     });
@@ -198,6 +199,7 @@ const DesignTrip = () => {
             transportSingle: '',
             startDate: '',
             endDate: '',
+            guests: 2,
             travelers: 2,
             budget: '',
         });

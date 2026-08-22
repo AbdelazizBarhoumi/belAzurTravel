@@ -17,6 +17,17 @@ import { AdminLayout } from '@/components/layout/AdminLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { bookingStatusLabels } from '@/lib/adminI18n';
+import { cn } from '@/lib/utils';
+
+const bookingStatusColors: Record<string, string> = {
+    Pending: 'bg-secondary/10 text-secondary',
+    Approved: 'bg-blue-100 text-blue-700',
+    Confirmed: 'bg-primary/10 text-primary',
+    Rejected: 'bg-destructive/10 text-destructive',
+    Cancelled: 'bg-destructive/10 text-destructive',
+    Expired: 'bg-muted text-muted-foreground',
+    Completed: 'bg-green-100 text-green-700',
+};
 
 const AdminDashboard = () => {
     useAdminGuard();
@@ -254,17 +265,18 @@ const AdminDashboard = () => {
                                             ).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm font-semibold">
-                                            {b.total_amount.toLocaleString()} TND
+                                            {b.total_amount.toLocaleString()}{' '}
+                                            TND
                                         </td>
                                         <td className="px-6 py-4">
                                             <span
-                                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                                    b.status === 'Confirmed'
-                                                        ? 'bg-primary/10 text-primary'
-                                                        : b.status === 'Pending'
-                                                          ? 'bg-secondary/10 text-secondary'
-                                                          : 'bg-destructive/10 text-destructive'
-                                                }`}
+                                                className={cn(
+                                                    'rounded-full px-3 py-1 text-xs font-semibold',
+                                                    bookingStatusColors[
+                                                        b.status
+                                                    ] ??
+                                                        'bg-muted text-muted-foreground',
+                                                )}
                                             >
                                                 {bookingStatusLabels[
                                                     b.status

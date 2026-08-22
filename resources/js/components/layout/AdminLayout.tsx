@@ -1,10 +1,10 @@
+import { useQuery } from '@tanstack/react-query';
 import {
     LayoutDashboard,
     Layout,
     MapPin,
     Hotel,
     Users,
-    Calendar,
     BarChart3,
     LogOut,
     Compass,
@@ -24,14 +24,20 @@ import {
     FileText,
     Shield,
     ShoppingCart,
-    AlertCircle,
     FileCheck,
+    CloudDownload,
+    ListChecks,
 } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { getAdminQueueCounts } from '@/api/queue.api';
 import { logout } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import {
@@ -77,6 +83,7 @@ interface NavLink {
     labelKey: string;
     exact?: boolean;
     roles?: string[];
+    badge?: boolean;
 }
 
 type LinkItem = GroupLink | NavLink;
@@ -86,14 +93,47 @@ function isGroupLink(link: LinkItem): link is GroupLink {
 }
 
 const SITE_SETTINGS_SUB_LINKS: SubLink[] = [
-    { to: '/admin/site-settings', icon: Globe, labelKey: 'admin.settings.companyContact', exact: true },
-    { to: '/admin/site-settings/social-hours', icon: Link2, labelKey: 'admin.settings.socialMedia' },
-    { to: '/admin/site-settings/navigation', icon: Navigation, labelKey: 'admin.settings.headerLinks' },
-    { to: '/admin/site-settings/footer', icon: FileText, labelKey: 'admin.settings.footerColumns' },
-    { to: '/admin/site-settings/legal', icon: Shield, labelKey: 'admin.settings.legalSectionsTitle' },
-    { to: '/admin/site-settings/privacy-policy', icon: Shield, labelKey: 'nav.privacy-policy' },
-    { to: '/admin/site-settings/purchase-policy', icon: ShoppingCart, labelKey: 'nav.purchase-policy' },
-    { to: '/admin/site-settings/landing-sections', icon: Layout, labelKey: 'admin.settings.landingSections' },
+    {
+        to: '/admin/site-settings',
+        icon: Globe,
+        labelKey: 'admin.settings.companyContact',
+        exact: true,
+    },
+    {
+        to: '/admin/site-settings/social-hours',
+        icon: Link2,
+        labelKey: 'admin.settings.socialMedia',
+    },
+    {
+        to: '/admin/site-settings/navigation',
+        icon: Navigation,
+        labelKey: 'admin.settings.headerLinks',
+    },
+    {
+        to: '/admin/site-settings/footer',
+        icon: FileText,
+        labelKey: 'admin.settings.footerColumns',
+    },
+    {
+        to: '/admin/site-settings/legal',
+        icon: Shield,
+        labelKey: 'admin.settings.legalSectionsTitle',
+    },
+    {
+        to: '/admin/site-settings/privacy-policy',
+        icon: Shield,
+        labelKey: 'nav.privacy-policy',
+    },
+    {
+        to: '/admin/site-settings/purchase-policy',
+        icon: ShoppingCart,
+        labelKey: 'nav.purchase-policy',
+    },
+    {
+        to: '/admin/site-settings/landing-sections',
+        icon: Layout,
+        labelKey: 'admin.settings.landingSections',
+    },
 ];
 
 const links: LinkItem[] = [
@@ -105,6 +145,7 @@ const links: LinkItem[] = [
     },
     { to: '/admin/destinations', icon: MapPin, labelKey: 'admin.destinations' },
     { to: '/admin/hotels', icon: Hotel, labelKey: 'admin.hotels' },
+    { to: '/admin/os-travel', icon: CloudDownload, labelKey: 'admin.osTravel' },
     { to: '/admin/tours', icon: Compass, labelKey: 'admin.tours' },
     { to: '/admin/travels', icon: Globe, labelKey: 'admin.travels' },
     { to: '/admin/cars', icon: Car, labelKey: 'admin.cars' },
@@ -116,8 +157,12 @@ const links: LinkItem[] = [
     { to: '/admin/team', icon: Users, labelKey: 'admin.team' },
     { to: '/admin/partners', icon: Handshake, labelKey: 'admin.partners' },
     { to: '/admin/blog', icon: Newspaper, labelKey: 'admin.blog' },
-    { to: '/admin/bookings', icon: Calendar, labelKey: 'admin.bookings' },
-    { to: '/admin/complaints', icon: AlertCircle, labelKey: 'admin.complaints' },
+    {
+        to: '/admin/queue',
+        icon: ListChecks,
+        labelKey: 'admin.queue',
+        badge: true,
+    },
     { to: '/admin/notifications', icon: Bell, labelKey: 'notifications.title' },
     { to: '/admin/users', icon: Users, labelKey: 'admin.users' },
     { to: '/admin/reports', icon: BarChart3, labelKey: 'admin.reports' },
@@ -147,6 +192,13 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
     const [settingsOpen, setSettingsOpen] = useState(() =>
         pathname.startsWith('/admin/site-settings'),
     );
+
+    const { data: queueCounts } = useQuery({
+        queryKey: ['admin-queue-counts'],
+        queryFn: getAdminQueueCounts,
+        staleTime: 15_000,
+        refetchInterval: 30_000,
+    });
 
     const handleLogout = async () => {
         await logout();
@@ -205,7 +257,8 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                         <SidebarMenu>
                             {filteredLinks.map((link) => {
                                 if (isGroupLink(link)) {
-                                    const isSettingsActive = pathname.startsWith(link.to);
+                                    const isSettingsActive =
+                                        pathname.startsWith(link.to);
                                     return (
                                         <Collapsible
                                             key={link.to}
@@ -215,35 +268,62 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                             <SidebarMenuItem>
                                                 <CollapsibleTrigger asChild>
                                                     <SidebarMenuButton
-                                                        isActive={isSettingsActive}
-                                                        tooltip={t(link.labelKey)}
+                                                        isActive={
+                                                            isSettingsActive
+                                                        }
+                                                        tooltip={t(
+                                                            link.labelKey,
+                                                        )}
                                                     >
                                                         <link.icon className="h-4 w-4" />
-                                                        <span>{t(link.labelKey)}</span>
+                                                        <span>
+                                                            {t(link.labelKey)}
+                                                        </span>
                                                         <ChevronRight
                                                             className={cn(
                                                                 'ml-auto h-4 w-4 transition-transform duration-200',
-                                                                settingsOpen && 'rotate-90',
+                                                                settingsOpen &&
+                                                                    'rotate-90',
                                                             )}
                                                         />
                                                     </SidebarMenuButton>
                                                 </CollapsibleTrigger>
                                                 <CollapsibleContent>
                                                     <SidebarMenuSub>
-                                                        {(link as GroupLink).subLinks.map(
+                                                        {(
+                                                            link as GroupLink
+                                                        ).subLinks.map(
                                                             (sub) => {
-                                                                const subActive = sub.exact
-                                                                    ? pathname === sub.to
-                                                                    : pathname.startsWith(sub.to);
+                                                                const subActive =
+                                                                    sub.exact
+                                                                        ? pathname ===
+                                                                          sub.to
+                                                                        : pathname.startsWith(
+                                                                              sub.to,
+                                                                          );
                                                                 return (
-                                                                    <SidebarMenuSubItem key={sub.to}>
+                                                                    <SidebarMenuSubItem
+                                                                        key={
+                                                                            sub.to
+                                                                        }
+                                                                    >
                                                                         <SidebarMenuSubButton
                                                                             asChild
-                                                                            isActive={subActive}
+                                                                            isActive={
+                                                                                subActive
+                                                                            }
                                                                         >
-                                                                            <Link to={sub.to}>
+                                                                            <Link
+                                                                                to={
+                                                                                    sub.to
+                                                                                }
+                                                                            >
                                                                                 <sub.icon className="h-3.5 w-3.5" />
-                                                                                <span>{t(sub.labelKey)}</span>
+                                                                                <span>
+                                                                                    {t(
+                                                                                        sub.labelKey,
+                                                                                    )}
+                                                                                </span>
                                                                             </Link>
                                                                         </SidebarMenuSubButton>
                                                                     </SidebarMenuSubItem>
@@ -277,6 +357,13 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                             >
                                                 <link.icon className="h-4 w-4" />
                                                 <span>{label}</span>
+                                                {link.badge &&
+                                                    (queueCounts?.total ?? 0) >
+                                                        0 && (
+                                                        <span className="ms-auto rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+                                                            {queueCounts?.total}
+                                                        </span>
+                                                    )}
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
@@ -325,7 +412,10 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <NotificationBell feedPath="/admin/notifications" />
+                        <NotificationBell
+                            feedPath="/admin/notifications"
+                            queueFeedPath="/admin/queue"
+                        />
                         <LanguageSwitcher />
                         {actions}
                     </div>
@@ -335,7 +425,9 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                 <div className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 lg:hidden">
                     {filteredLinks.map((link) => {
                         if (isGroupLink(link)) {
-                            const isSettingsActive = pathname.startsWith(link.to);
+                            const isSettingsActive = pathname.startsWith(
+                                link.to,
+                            );
                             return (
                                 <Link
                                     key={link.to}
@@ -376,6 +468,12 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                                 <span className="xs:inline hidden">
                                     {label}
                                 </span>
+                                {link.badge &&
+                                    (queueCounts?.total ?? 0) > 0 && (
+                                        <span className="ms-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+                                            {queueCounts?.total}
+                                        </span>
+                                    )}
                             </Link>
                         );
                     })}

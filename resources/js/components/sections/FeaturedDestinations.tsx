@@ -87,7 +87,8 @@ export function FeaturedDestinations() {
                                             </div>
                                             {dest.price > 0 && (
                                                 <span className="text-sm font-bold text-secondary">
-                                                    {t('common.from')} {dest.price}
+                                                    {t('common.from')}{' '}
+                                                    {dest.price}
                                                 </span>
                                             )}
                                         </div>

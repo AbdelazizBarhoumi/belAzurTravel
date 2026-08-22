@@ -8,14 +8,12 @@ import TourDetail from '@/pages/tours/show';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
- 
 const mockUseTourDetailsBySlug: any = vi.fn(() => ({
     data: undefined,
     isLoading: true,
 }));
 
 vi.mock('@/hooks/usePublicData', () => ({
-     
     useTourDetailsBySlug: (...args: unknown[]) =>
         mockUseTourDetailsBySlug(...(args as any[])),
 }));

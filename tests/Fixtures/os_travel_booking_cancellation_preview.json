@@ -1,0 +1,28 @@
+{
+  "BookingCancellation": {
+    "Id": 98765,
+    "State": "Validated",
+    "Hotel": 100,
+    "City": 10,
+    "CheckIn": "2026-09-01",
+    "CheckOut": "2026-09-05",
+    "CancellationPolicy": [
+      {
+        "Fees": 185.50,
+        "Type": "PERCENT",
+        "Nature": "BEFORE_ARRIVAL",
+        "Description": "Free cancellation until 48h before check-in. 20% fee after.",
+        "FromDate": "2026-08-30 00:00"
+      }
+    ],
+    "TotalPrice": "927.520",
+    "Currency": "TND"
+  },
+  "ErrorMessage": {},
+  "Timing": {
+    "Begin": { "date": "2026-08-12 11:00:00.000000", "timezone_type": 3, "timezone": "Africa/Tunis" },
+    "End": { "date": "2026-08-12 11:00:00.000000", "timezone_type": 3, "timezone": "Africa/Tunis" },
+    "Duration": "210 ms"
+  },
+  "Ip": "102.211.211.160"
+}

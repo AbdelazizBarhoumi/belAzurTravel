@@ -31,13 +31,13 @@ export function PageShell({
 
     return (
         <div className="min-h-screen bg-background">
-            <main id="main-content" className="pb-16 pt-24">
+            <main id="main-content" className="pb-16 pt-[122px]">
                 <div className="container mx-auto px-4">
                     {breadcrumbs && (
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="mb-8 border-b border-border pb-6"
+                            className="mb-8 border-b border-border pb-4"
                         >
                             <Breadcrumb items={breadcrumbs} />
                         </motion.div>
@@ -45,7 +45,7 @@ export function PageShell({
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-12 text-center"
+                        className="mb-6 text-center"
                     >
                         <h1 className="mb-4 font-serif text-4xl font-bold text-foreground md:text-5xl">
                             {title ?? (titleKey ? t(titleKey) : '')}

@@ -40,7 +40,7 @@ class ComplaintController extends Controller
             'type' => ['required', 'in:complaint,refund_request'],
             'subject' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:5000'],
-            'booking_id' => ['nullable', 'integer', 'exists:bookings,id'],
+            'booking_id' => ['nullable', 'string', 'exists:bookings,id'],
         ]);
 
         if ($data['type'] === 'refund_request' && empty($data['booking_id'])) {
@@ -119,6 +119,7 @@ class ComplaintController extends Controller
             'booking_id' => $complaint->booking_id,
             'booking' => $complaint->booking ? [
                 'id' => $complaint->booking->id,
+                'booking_ref' => $complaint->booking->booking_ref,
                 'type' => $complaint->booking->type,
                 'total_amount' => $complaint->booking->total_amount,
                 'status' => $complaint->booking->status,

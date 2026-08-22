@@ -13,7 +13,11 @@ export interface HotelItem {
     country?: LocalizedText;
     category_key?: string;
     category?: LocalizedText;
-    price: number;
+    price: number | null;
+    markup_percentage?: string | number;
+    currency?: string;
+    source?: 'ostravel' | 'manual';
+    provider?: 'ostravel' | 'manual';
     rating: number;
     stars: number;
     reviews: number;
@@ -21,6 +25,10 @@ export interface HotelItem {
     tags: string[];
     amenities: Array<{ name: Record<string, string>; icon: string }>;
     category_assignments?: Record<string, string>;
+    // Card teaser: provider short description in live results, otherwise the
+    // stored detail description.
+    description?: LocalizedText;
+    short_description?: string | null;
     // Filter fields
     htel_recommande?: boolean;
     tarifs_promo?: boolean;

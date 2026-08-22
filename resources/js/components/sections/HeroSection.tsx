@@ -1,12 +1,10 @@
 import { motion } from 'framer-motion';
 import { SearchWidget } from '@/components/ui/SearchWidget';
 export function HeroSection() {
-
     return (
         <section className="relative -mt-[160px] flex items-center justify-center overflow-hidden pb-8">
             {/* Content */}
-            <div className="container relative z-10 mx-auto px-4 -pt-4 text-center">
-
+            <div className="-pt-4 container relative z-10 mx-auto px-4 text-center">
                 {/* Kicker 
             
                 <motion.p

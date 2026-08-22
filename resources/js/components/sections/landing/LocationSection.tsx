@@ -3,9 +3,16 @@ import { MapPin } from 'lucide-react';
 import type { LandingSectionConfig } from '@/api/siteSettings.api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { getMapDisplayText, getMapEmbedSrc, getMapLink, getMapQuery } from '@/lib/site-map';
+import {
+    getMapDisplayText,
+    getMapEmbedSrc,
+    getMapLink,
+    getMapQuery,
+} from '@/lib/site-map';
 
-interface Props { config: LandingSectionConfig; }
+interface Props {
+    config: LandingSectionConfig;
+}
 
 export function LocationSection({ config }: Props) {
     const { lang, t } = useLanguage();
@@ -14,8 +21,12 @@ export function LocationSection({ config }: Props) {
     const mapQuery = getMapQuery(settings);
     if (!mapQuery) return null;
 
-    const title = config.title?.[lang] ?? config.title?.en ?? t('contact.locationTitle');
-    const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? t('contact.locationSubtitle');
+    const title =
+        config.title?.[lang] ?? config.title?.en ?? t('contact.locationTitle');
+    const subtitle =
+        config.subtitle?.[lang] ??
+        config.subtitle?.en ??
+        t('contact.locationSubtitle');
 
     return (
         <section className="py-16">
@@ -53,9 +64,7 @@ export function LocationSection({ config }: Props) {
                         </div>
 
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                            <span>
-                                {getMapDisplayText(settings)}
-                            </span>
+                            <span>{getMapDisplayText(settings)}</span>
                             <a
                                 href={getMapLink(settings)}
                                 target="_blank"

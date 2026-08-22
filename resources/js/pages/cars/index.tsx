@@ -18,7 +18,11 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { useCars, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import {
+    useCars,
+    useCategories,
+    useCategoryTypesPublic,
+} from '@/hooks/usePublicData';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
@@ -51,8 +55,9 @@ function CarsContent() {
         }
         return filters;
     }, [params]);
-    const [categoryTypeFilters, setCategoryTypeFilters] =
-        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<
+        Record<string, string[]>
+    >(initialCategoryTypeFilters);
 
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
@@ -129,10 +134,15 @@ function CarsContent() {
                     selectedSeats === ALL ||
                     String(car.seats) === selectedSeats;
                 const carAssignments = car.category_assignments;
-                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
-                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
-                    activeTypeFilters.some(([typeKey, values]) =>
-                        carAssignments && values.includes(carAssignments[typeKey]),
+                const activeTypeFilters = Object.entries(
+                    categoryTypeFilters,
+                ).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes =
+                    activeTypeFilters.length === 0 ||
+                    activeTypeFilters.some(
+                        ([typeKey, values]) =>
+                            carAssignments &&
+                            values.includes(carAssignments[typeKey]),
                     );
 
                 return (
@@ -181,7 +191,7 @@ function CarsContent() {
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 border-b border-border pb-6"
+                        className="mb-8 border-b border-border pb-4"
                     >
                         <Breadcrumb
                             items={[
@@ -213,7 +223,9 @@ function CarsContent() {
                         className="mb-8"
                     />
 
-                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                        className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
                         <FilterSidebar
                             title={t('hotels.filters')}
                             hasActiveFilters={hasActiveFilters}
@@ -225,13 +237,21 @@ function CarsContent() {
                                 <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                                     {t('cars.filterByCategory')}
                                 </label>
-                                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                                <Select
+                                    value={selectedCategory}
+                                    onValueChange={setSelectedCategory}
+                                >
                                     <SelectTrigger className="w-full rounded-lg border-border bg-background">
-                                        <SelectValue placeholder={t('common.all')} />
+                                        <SelectValue
+                                            placeholder={t('common.all')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categoryOptions.map((option) => (
-                                            <SelectItem key={option.value} value={option.value}>
+                                            <SelectItem
+                                                key={option.value}
+                                                value={option.value}
+                                            >
                                                 {option.label}
                                             </SelectItem>
                                         ))}
@@ -243,14 +263,24 @@ function CarsContent() {
                                 <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                                     {t('cars.filterByFuel')}
                                 </label>
-                                <Select value={selectedFuel} onValueChange={setSelectedFuel}>
+                                <Select
+                                    value={selectedFuel}
+                                    onValueChange={setSelectedFuel}
+                                >
                                     <SelectTrigger className="w-full rounded-lg border-border bg-background">
-                                        <SelectValue placeholder={t('common.all')} />
+                                        <SelectValue
+                                            placeholder={t('common.all')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value={ALL}>{t('common.all')}</SelectItem>
+                                        <SelectItem value={ALL}>
+                                            {t('common.all')}
+                                        </SelectItem>
                                         {fuelOptions.map((option) => (
-                                            <SelectItem key={option} value={option}>
+                                            <SelectItem
+                                                key={option}
+                                                value={option}
+                                            >
                                                 {option}
                                             </SelectItem>
                                         ))}
@@ -262,14 +292,24 @@ function CarsContent() {
                                 <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                                     {t('cars.filterByTransmission')}
                                 </label>
-                                <Select value={selectedTransmission} onValueChange={setSelectedTransmission}>
+                                <Select
+                                    value={selectedTransmission}
+                                    onValueChange={setSelectedTransmission}
+                                >
                                     <SelectTrigger className="w-full rounded-lg border-border bg-background">
-                                        <SelectValue placeholder={t('common.all')} />
+                                        <SelectValue
+                                            placeholder={t('common.all')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value={ALL}>{t('common.all')}</SelectItem>
+                                        <SelectItem value={ALL}>
+                                            {t('common.all')}
+                                        </SelectItem>
                                         {transmissionOptions.map((option) => (
-                                            <SelectItem key={option} value={option}>
+                                            <SelectItem
+                                                key={option}
+                                                value={option}
+                                            >
                                                 {option}
                                             </SelectItem>
                                         ))}
@@ -281,14 +321,24 @@ function CarsContent() {
                                 <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                                     {t('cars.filterBySeats')}
                                 </label>
-                                <Select value={selectedSeats} onValueChange={setSelectedSeats}>
+                                <Select
+                                    value={selectedSeats}
+                                    onValueChange={setSelectedSeats}
+                                >
                                     <SelectTrigger className="w-full rounded-lg border-border bg-background">
-                                        <SelectValue placeholder={t('common.all')} />
+                                        <SelectValue
+                                            placeholder={t('common.all')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value={ALL}>{t('common.all')}</SelectItem>
+                                        <SelectItem value={ALL}>
+                                            {t('common.all')}
+                                        </SelectItem>
                                         {seatOptions.map((option) => (
-                                            <SelectItem key={option} value={option}>
+                                            <SelectItem
+                                                key={option}
+                                                value={option}
+                                            >
                                                 {option}
                                             </SelectItem>
                                         ))}
@@ -297,17 +347,23 @@ function CarsContent() {
                             </div>
 
                             {categoryTypes.length > 0 && (
-                                <div className="border-t border-border pt-6 space-y-4">
+                                <div className="space-y-4 border-t border-border pt-6">
                                     {categoryTypes.map((catType) => (
                                         <FilterRenderer
                                             key={catType.key}
                                             categoryType={catType as never}
-                                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                            selectedValues={
+                                                categoryTypeFilters[
+                                                    catType.key
+                                                ] ?? []
+                                            }
                                             onChange={(values) =>
-                                                setCategoryTypeFilters((prev) => ({
-                                                    ...prev,
-                                                    [catType.key]: values,
-                                                }))
+                                                setCategoryTypeFilters(
+                                                    (prev) => ({
+                                                        ...prev,
+                                                        [catType.key]: values,
+                                                    }),
+                                                )
                                             }
                                             lang={lang}
                                         />
@@ -319,7 +375,11 @@ function CarsContent() {
                         <div className="min-w-0 flex-1">
                             {filteredCars.length === 0 ? (
                                 <RequestThingEmptyState
-                                    variant={cars.length === 0 ? 'empty' : 'no-results'}
+                                    variant={
+                                        cars.length === 0
+                                            ? 'empty'
+                                            : 'no-results'
+                                    }
                                 />
                             ) : (
                                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -338,36 +398,54 @@ function CarsContent() {
                                                 <div className="h-44 overflow-hidden">
                                                     <img
                                                         src={c.image}
-                                                        alt={localizeText(c.name, lang)}
+                                                        alt={localizeText(
+                                                            c.name,
+                                                            lang,
+                                                        )}
                                                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                         loading="lazy"
                                                     />
                                                 </div>
                                                 <div className="p-5">
                                                     <span className="text-xs font-semibold uppercase tracking-wider text-secondary">
-                                                        {localizeText(c.category, lang)}
+                                                        {localizeText(
+                                                            c.category,
+                                                            lang,
+                                                        )}
                                                     </span>
                                                     <h3 className="mb-3 mt-1 font-serif text-lg font-bold text-foreground">
-                                                        {localizeText(c.name, lang)}
+                                                        {localizeText(
+                                                            c.name,
+                                                            lang,
+                                                        )}
                                                     </h3>
                                                     <div className="mb-4 grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                                                         <div className="flex items-center gap-1">
-                                                            <Users className="h-3 w-3" /> {c.seats}
+                                                            <Users className="h-3 w-3" />{' '}
+                                                            {c.seats}
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <Fuel className="h-3 w-3" />{' '}
-                                                            {localizeText(c.fuel, lang)}
+                                                            {localizeText(
+                                                                c.fuel,
+                                                                lang,
+                                                            )}
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <Settings2 className="h-3 w-3" />{' '}
-                                                            {localizeText(c.transmission, lang)}
+                                                            {localizeText(
+                                                                c.transmission,
+                                                                lang,
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="font-bold text-primary">
                                                             {c.price} TND
                                                             <span className="text-xs font-normal text-muted-foreground">
-                                                                {t('cars.perDay')}
+                                                                {t(
+                                                                    'cars.perDay',
+                                                                )}
                                                             </span>
                                                         </span>
                                                         <Button

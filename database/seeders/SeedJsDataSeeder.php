@@ -228,6 +228,9 @@ class SeedJsDataSeeder extends Seeder
                     ],
                 ],
             ],
+            'booking_expiry_hours' => 72,
+            'trip_reminder_days' => 3,
+            'digest_time' => '08:00',
         ];
 
         SiteSetting::query()->updateOrCreate(['id' => 1], $siteSettings);

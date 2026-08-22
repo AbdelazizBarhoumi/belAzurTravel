@@ -11,8 +11,11 @@ use App\Http\Controllers\Api\AdminDestinationController;
 use App\Http\Controllers\Api\AdminEventController;
 use App\Http\Controllers\Api\AdminFlightController;
 use App\Http\Controllers\Api\AdminHotelController;
+use App\Http\Controllers\Api\AdminOsTravelController;
 use App\Http\Controllers\Api\AdminPartnerController;
 use App\Http\Controllers\Api\AdminPromoController;
+use App\Http\Controllers\Api\AdminQueueController;
+use App\Http\Controllers\Api\AdminSupportInquiryController;
 use App\Http\Controllers\Api\AdminTeamController;
 use App\Http\Controllers\Api\AdminTourController;
 use App\Http\Controllers\Api\AdminTravelController;
@@ -30,6 +33,8 @@ use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\FlightController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\HotelController;
+use App\Http\Controllers\Api\HotelImageController;
+use App\Http\Controllers\Api\HotelSearchController;
 use App\Http\Controllers\Api\InteractionController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PartnerController;
@@ -61,7 +66,9 @@ Route::get('destinations', [DestinationController::class, 'index'])->middleware(
 Route::get('destinations/{slug}', [DestinationController::class, 'show'])->middleware(['check-nav-page:destinations']);
 
 Route::get('hotels', [HotelController::class, 'index'])->middleware(['check-nav-page:hotels']);
+Route::get('hotels/images/{token}', [HotelImageController::class, 'show'])->middleware(['check-nav-page:hotels']);
 Route::get('hotels/{slug}', [HotelController::class, 'show'])->middleware(['check-nav-page:hotels']);
+Route::post('hotels/search', [HotelSearchController::class, 'store'])->middleware(['check-nav-page:hotels', 'extend-timeout']);
 
 Route::get('tours', [TourController::class, 'index'])->middleware(['check-nav-page:tours']);
 Route::get('tours/{slug}', [TourController::class, 'show'])->middleware(['check-nav-page:tours']);
@@ -144,6 +151,17 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/hotels/{id}', [AdminHotelController::class, 'update']);
         Route::delete('/admin/hotels/{id}', [AdminHotelController::class, 'destroy']);
 
+        Route::get('/admin/os-travel', [AdminOsTravelController::class, 'dashboard']);
+        Route::get('/admin/os-travel/hotels', [AdminOsTravelController::class, 'index'])->middleware('extend-timeout');
+        Route::get('/admin/os-travel/references', [AdminOsTravelController::class, 'references']);
+        Route::post('/admin/os-travel/hotels/approve-all', [AdminOsTravelController::class, 'approveAll'])->middleware('extend-timeout');
+        Route::get('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'show']);
+        Route::put('/admin/os-travel/hotels/{id}', [AdminOsTravelController::class, 'update']);
+        Route::post('/admin/os-travel/hotels/{id}/approve', [AdminOsTravelController::class, 'approve'])->middleware('extend-timeout');
+        Route::post('/admin/os-travel/hotels/{id}/reject', [AdminOsTravelController::class, 'reject']);
+        Route::post('/admin/os-travel/hotels/{id}/reopen', [AdminOsTravelController::class, 'reopen']);
+        Route::post('/admin/os-travel/hotels/{id}/unapprove', [AdminOsTravelController::class, 'unapprove']);
+
         Route::get('/admin/tours', [AdminTourController::class, 'index']);
         Route::post('/admin/tours', [AdminTourController::class, 'store']);
         Route::get('/admin/tours/{id}', [AdminTourController::class, 'show']);
@@ -196,7 +214,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/users/{user}/toggle-active', [AdminUserController::class, 'toggleActive']);
         Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy']);
         Route::get('/admin/bookings', [BookingController::class, 'index']);
-        Route::post('/admin/bookings/{id}/confirm', [BookingController::class, 'confirm']);
+        Route::post('/admin/bookings/{id}/confirm', [BookingController::class, 'approve']);
+        Route::post('/admin/bookings/{id}/approve', [BookingController::class, 'approve']);
+        Route::post('/admin/bookings/{id}/reject', [BookingController::class, 'reject']);
         Route::post('/admin/bookings/{id}/cancel', [BookingController::class, 'adminCancel']);
 
         // Complaints & Refunds
@@ -205,6 +225,15 @@ Route::middleware('auth')->group(function () {
         Route::put('/admin/complaints/{id}', [AdminComplaintController::class, 'update']);
         Route::post('/admin/complaints/{id}/reply', [AdminComplaintController::class, 'reply']);
         Route::post('/admin/complaints/{id}/resolve', [AdminComplaintController::class, 'resolve']);
+
+        // Unified "Needs action" queue
+        Route::get('/admin/queue', [AdminQueueController::class, 'index']);
+        Route::get('/admin/queue/counts', [AdminQueueController::class, 'counts']);
+
+        // Support inquiries
+        Route::get('/admin/support-inquiries', [AdminSupportInquiryController::class, 'index']);
+        Route::put('/admin/support-inquiries/{inquiry}', [AdminSupportInquiryController::class, 'update']);
+        Route::post('/admin/support-inquiries/{inquiry}/reply', [AdminSupportInquiryController::class, 'reply']);
 
         Route::get('/admin/categories', [AdminCategoryController::class, 'index']);
         Route::post('/admin/categories', [AdminCategoryController::class, 'store']);

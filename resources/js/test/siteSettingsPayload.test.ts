@@ -120,7 +120,11 @@ describe('site settings payload helpers', () => {
                     groups: [
                         {
                             key: 'group-1',
-                            label: { en: 'Explore', fr: 'Explorer', ar: 'استكشف' },
+                            label: {
+                                en: 'Explore',
+                                fr: 'Explorer',
+                                ar: 'استكشف',
+                            },
                             enabled: true,
                             placement: 'top',
                             pages: [],
@@ -134,12 +138,20 @@ describe('site settings payload helpers', () => {
                                 },
                                 {
                                     pageKey: 'hotels',
-                                    label: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+                                    label: {
+                                        en: 'Luxury',
+                                        fr: 'Luxe',
+                                        ar: 'فاخر',
+                                    },
                                     mode: 'filter',
                                     value: 'hotels:luxury',
                                     children: [
                                         {
-                                            label: { en: 'Family', fr: 'Famille', ar: 'عائلة' },
+                                            label: {
+                                                en: 'Family',
+                                                fr: 'Famille',
+                                                ar: 'عائلة',
+                                            },
                                             mode: 'filter',
                                             value: 'hotels:family',
                                         },
@@ -152,9 +164,12 @@ describe('site settings payload helpers', () => {
             },
         });
 
-        const groups = (
-            content.nav as { settings?: { groups?: Array<Record<string, unknown>> } }
-        ).settings?.groups ?? [];
+        const groups =
+            (
+                content.nav as {
+                    settings?: { groups?: Array<Record<string, unknown>> };
+                }
+            ).settings?.groups ?? [];
         const links = groups[0].links as Array<Record<string, unknown>>;
 
         expect(links[0]).toMatchObject({
