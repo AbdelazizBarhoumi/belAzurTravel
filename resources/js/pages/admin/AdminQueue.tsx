@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
     CheckCheck,
@@ -134,7 +135,17 @@ const AdminQueue = () => {
     const queryClient = useQueryClient();
     const isRtl = dir === 'rtl';
 
-    const [activeTab, setActiveTab] = useState<QueueSection>('bookings');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const validTabs: QueueSection[] = ['bookings', 'complaints', 'refund_requests', 'support'];
+    const initialTab = validTabs.includes(searchParams.get('tab') as QueueSection)
+        ? (searchParams.get('tab') as QueueSection)
+        : 'bookings';
+    const [activeTab, setActiveTab] = useState<QueueSection>(initialTab);
+
+    const setActiveTabWithParam = (tab: QueueSection) => {
+        setActiveTab(tab);
+        setSearchParams({ tab }, { replace: true });
+    };
     const [detail, setDetail] = useState<Detail | null>(null);
     const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({});
     const [refundAmounts, setRefundAmounts] = useState<Record<number, string>>(
@@ -286,7 +297,7 @@ const AdminQueue = () => {
                     <button
                         key={section.key}
                         type="button"
-                        onClick={() => setActiveTab(section.key)}
+                        onClick={() => setActiveTabWithParam(section.key)}
                         className={cn(
                             'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all',
                             activeTab === section.key
@@ -804,6 +815,18 @@ function SupportTable({
     );
 }
 
+/** OS-TRAVEL boarding fields can be {Id, Code, Name} objects or plain strings. */
+function boardingLabel(value: unknown): string {
+    if (!value) return '—';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value !== null) {
+        const obj = value as Record<string, unknown>;
+        if (typeof obj.Name === 'string') return obj.Name;
+        return JSON.stringify(obj);
+    }
+    return String(value);
+}
+
 function BookingDetail({
     booking,
     onApprove,
@@ -990,19 +1013,27 @@ function BookingDetail({
                                                 {index + 1}
                                             </td>
                                             <td className="px-2 py-2 text-muted-foreground">
-                                                {room.boarding || '—'}
+                                                {boardingLabel(room.boarding)}
                                             </td>
                                             <td className="px-2 py-2 text-muted-foreground">
                                                 {prebook.breakdown?.nights ??
                                                     '—'}
                                             </td>
                                             <td className="px-2 py-2 text-right font-semibold text-foreground">
-                                                {Number(
-                                                    room.total ?? 0,
-                                                ).toLocaleString()}{' '}
-                                                {room.currency ??
-                                                    prebook?.currency ??
-                                                    'TND'}
+                                                {(() => {
+                                                    const roomTotal = Number(room.total ?? 0);
+                                                    const displayTotal = roomTotal > 0
+                                                        ? roomTotal
+                                                        : Number(prebook.breakdown?.total ?? prebook.total ?? 0);
+                                                    return (
+                                                        <>
+                                                            {displayTotal.toLocaleString()}{' '}
+                                                            {room.currency ??
+                                                                prebook?.currency ??
+                                                                'TND'}
+                                                        </>
+                                                    );
+                                                })()}
                                             </td>
                                         </tr>
                                     ),

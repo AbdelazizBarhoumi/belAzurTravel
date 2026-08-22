@@ -60,6 +60,10 @@ interface BookingDialogProps {
     minDate?: Date;
     /** When true, this is a request booking for an unavailable hotel — no provider context. */
     isRequest?: boolean;
+    /** Price before any promo discount — the "was" price. */
+    basePrice?: number;
+    /** Promo rate string (e.g. "10%") applied to this offer. */
+    promoRate?: string | null;
     // OS-TRAVEL live-search context captured on the hotel detail page.
     provider?: {
         token?: string | null;
@@ -91,6 +95,20 @@ interface BookingDialogProps {
     notRefundable?: boolean;
     /** ISO date string — renders a "free cancellation until …" trust badge. */
     freeCancellationUntil?: string;
+    // -- Room details passed through to the booking `details` payload --
+    roomName?: string;
+    boardingName?: string;
+    roomSize?: number;
+    roomCapacity?: number;
+    roomFeatures?: string[];
+    cancellationPolicy?: Array<{
+        fees: number;
+        type: string | null;
+        nature: string | null;
+        description: string | null;
+        from_date: string | null;
+    }>;
+    supplements?: Array<{ name: string; price: number; perNight?: boolean }>;
 }
 
 function emptyGuest(age: number | null): GuestRow {
@@ -134,6 +152,15 @@ export function BookingDialog({
     subLabel,
     notRefundable,
     freeCancellationUntil,
+    roomName,
+    boardingName,
+    roomSize,
+    roomCapacity,
+    roomFeatures,
+    cancellationPolicy,
+    supplements,
+    basePrice,
+    promoRate,
 }: BookingDialogProps) {
     const { t, lang } = useLanguage();
     const { data: user } = useAuthUser();
@@ -327,6 +354,28 @@ export function BookingDialog({
                 .map((row) => `${row.firstName} ${row.lastName}`.trim())
                 .filter(Boolean)
                 .map((line) => ({ name: line })),
+            details: roomName || boardingName || cancellationPolicy?.length
+                ? {
+                    room_name: roomName ?? null,
+                    boarding_name: boardingName ?? null,
+                    image: image ?? null,
+                    price_per_night: pricePerNight ?? null,
+                    nights: nights ?? null,
+                    currency,
+                    base_price: basePrice ?? null,
+                    final_price: amount,
+                    promo_rate: promoRate ?? null,
+                    not_refundable: notRefundable ?? false,
+                    free_cancellation_until: freeCancellationUntil ?? null,
+                    cancellation_policy: cancellationPolicy?.length
+                        ? cancellationPolicy
+                        : null,
+                    supplements: supplements?.length ? supplements : null,
+                    room_size: roomSize ?? null,
+                    room_capacity: roomCapacity ?? null,
+                    room_features: roomFeatures?.length ? roomFeatures : null,
+                }
+                : undefined,
         };
 
         if (provider?.token && provider.rooms?.length) {
@@ -433,6 +482,18 @@ export function BookingDialog({
                                     <span>
                                         {t('booking.nextStepPayment') ||
                                             'No payment is taken until your booking is confirmed.'}
+                                    </span>
+                                </div>
+                                <div className="flex items-start gap-2.5 text-sm text-foreground">
+                                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    <span>
+                                        {t('booking.nextStepContact') || 'For any questions, contact us at'}{' '}
+                                        <a
+                                            href="mailto:contact@belazurtravel.com"
+                                            className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
+                                        >
+                                            contact@belazurtravel.com
+                                        </a>
                                     </span>
                                 </div>
                             </div>

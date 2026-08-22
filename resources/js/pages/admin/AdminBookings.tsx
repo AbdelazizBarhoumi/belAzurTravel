@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Inbox } from 'lucide-react';
+import { BedDouble, Inbox } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/components/layout/AdminLayout';
@@ -9,22 +9,20 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { api, useAdminBookings } from '@/hooks/useBooking';
 import { bookingStatusLabels } from '@/lib/adminI18n';
-
-interface BookingItem {
-    id: number;
-    user_id: number | null;
-    type: string;
-    items: unknown[];
-    created_at: string;
-    total_amount: number;
-    status: string;
-}
+import type { AdminBookingRow } from '@/api/booking.api';
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
     Pending: ['Approved', 'Rejected', 'Cancelled'],
     Approved: ['Confirmed', 'Rejected', 'Cancelled'],
     Confirmed: ['Cancelled'],
 };
+
+function formatDate(value?: string | null): string {
+    if (!value) return '—';
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString();
+}
 
 const AdminBookings = () => {
     useAdminGuard();
@@ -63,8 +61,23 @@ const AdminBookings = () => {
     const { lang } = useLanguage();
     const { t } = useLanguage();
 
-    const updateStatus = (_b: BookingItem, status: string) => {
+    const updateStatus = (_b: AdminBookingRow, status: string) => {
         statusMutation.mutate({ id: _b.id, status });
+    };
+
+    const bookingLabel = (b: AdminBookingRow) => {
+        if (b.details?.room_name) {
+            const parts = [b.details.room_name];
+            if (b.details.boarding_name) parts.push(b.details.boarding_name);
+            return parts.join(' · ');
+        }
+        return b.items
+            .map((item: unknown) => {
+                const obj = item as Record<string, unknown>;
+                return (obj.slug ?? obj.id ?? '') as string;
+            })
+            .filter(Boolean)
+            .join(', ') || `#${b.id}`;
     };
 
     return (
@@ -88,7 +101,6 @@ const AdminBookings = () => {
                                 {[
                                     'ID',
                                     t('admin.table.client'),
-                                    t('admin.type'),
                                     t('admin.table.item'),
                                     t('admin.date'),
                                     t('admin.amount'),
@@ -105,7 +117,7 @@ const AdminBookings = () => {
                         </thead>
                         <tbody>
                             {(isLoading ? [] : (data ?? [])).map(
-                                (b: BookingItem) => (
+                                (b: AdminBookingRow) => (
                                     <tr
                                         key={b.id}
                                         className="border-b border-border last:border-0 hover:bg-muted/20"
@@ -114,24 +126,40 @@ const AdminBookings = () => {
                                             {b.id}
                                         </td>
                                         <td className="px-4 py-3 text-sm">
-                                            {b.user_id || t('admin.table.guest')}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-muted-foreground">
-                                            {b.type}
+                                            {b.client?.name || b.user_id || t('admin.table.guest')}
                                         </td>
                                         <td className="px-4 py-3 text-sm">
-                                            {JSON.stringify(b.items).substring(
-                                                0,
-                                                50,
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                {b.details?.image ? (
+                                                    <img
+                                                        src={b.details.image}
+                                                        alt=""
+                                                        className="h-10 w-12 shrink-0 rounded-lg object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-10 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
+                                                        <BedDouble className="h-4 w-4 text-muted-foreground/50" />
+                                                    </div>
+                                                )}
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-sm font-medium text-foreground">
+                                                        {bookingLabel(b)}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {formatDate(b.start_date)}
+                                                        {b.end_date ? ` — ${formatDate(b.end_date)}` : ''}
+                                                        {b.details?.nights ? ` · ${b.details.nights} nights` : ''}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-muted-foreground">
-                                            {new Date(
-                                                b.created_at,
-                                            ).toLocaleDateString()}
+                                            <div>
+                                                {formatDate(b.created_at)}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3 text-sm font-semibold">
-                                            {b.total_amount} TND
+                                            {b.total_amount.toLocaleString()} {b.details?.currency ?? 'TND'}
                                         </td>
                                         <td className="px-4 py-3">
                                             <StatusSelect

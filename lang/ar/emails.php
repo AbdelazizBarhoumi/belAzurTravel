@@ -2,7 +2,7 @@
 
 return [
     'brand' => 'بيل أزور ترافل',
-    'support_email' => 'support@belazurtravel.tn',
+    'support_email' => 'contact@belazurtravel.com',
     'rights' => 'جميع الحقوق محفوظة.',
     'footer_questions' => 'إذا كانت لديك أسئلة، اتصل بنا على :email',
     'footer_automatic' => 'هذا إشعار تلقائي من بيل أزور ترافل.',

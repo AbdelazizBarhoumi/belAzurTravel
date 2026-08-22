@@ -1201,6 +1201,7 @@ export default function HotelDetail() {
                     open={!!bookingRoom}
                     onOpenChange={(open) => !open && setSelectedRoom(null)}
                     type="hotel"
+                    itemSlug={id}
                     itemId={detail.id}
                     itemName={`${title} - ${bookingRoom.name}`}
                     amount={
@@ -1217,6 +1218,17 @@ export default function HotelDetail() {
                         })()
                     }
                     minDate={new Date()}
+                    image={bookingRoom.images[0] ?? detail.image ?? undefined}
+                    currency={currency}
+                    pricePerNight={bookingRoom.pricePerNight}
+                    subLabel={bookingRoom.boardingName ?? undefined}
+                    notRefundable={bookingRoom.notRefundable}
+                    freeCancellationUntil={bookingRoom.cancellationDeadline}
+                    basePrice={
+                        (bookingRoom.priceTotal ?? bookingRoom.pricePerNight) *
+                        occupancy.rooms
+                    }
+                    promoRate={effectiveHotel?.promotion?.rate ?? null}
                     provider={
                         effectiveHotel
                             ? {
@@ -1246,6 +1258,13 @@ export default function HotelDetail() {
                             }
                             : undefined
                     }
+                    roomName={bookingRoom.name}
+                    boardingName={bookingRoom.boardingName}
+                    roomSize={bookingRoom.size}
+                    roomCapacity={bookingRoom.capacity}
+                    roomFeatures={bookingRoom.features}
+                    cancellationPolicy={bookingRoom.cancellationPolicy}
+                    supplements={bookingRoom.supplements}
                 />
             )}
 
@@ -1264,6 +1283,8 @@ export default function HotelDetail() {
                     amount={detail.price ?? 0}
                     minDate={new Date()}
                     isRequest
+                    image={detail.image ?? undefined}
+                    currency={currency}
                 />
             )}
         </PageShell>

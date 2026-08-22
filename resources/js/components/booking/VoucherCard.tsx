@@ -8,6 +8,18 @@ interface VoucherCardProps {
     booking: ClientBookingRow;
 }
 
+/** OS-TRAVEL boarding fields can be {Id, Code, Name} objects or plain strings. */
+function boardingLabel(value: unknown): string {
+    if (!value) return '—';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value !== null) {
+        const obj = value as Record<string, unknown>;
+        if (typeof obj.Name === 'string') return obj.Name;
+        return JSON.stringify(obj);
+    }
+    return String(value);
+}
+
 /**
  * Printable voucher for a confirmed booking. Renders the booking + provider
  * reference and a payload summary (dates, nights, rooms/boarding, totals).
@@ -149,7 +161,7 @@ export function VoucherCard({ booking }: VoucherCardProps) {
                                             {t('voucher.room')} {index + 1}
                                         </td>
                                         <td className="px-2 py-2 text-muted-foreground">
-                                            {room.boarding || '—'}
+                                            {boardingLabel(room.boarding)}
                                         </td>
                                         {breakdown.nights !== undefined && (
                                             <td className="px-2 py-2 text-muted-foreground">

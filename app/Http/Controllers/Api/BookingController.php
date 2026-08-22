@@ -66,6 +66,23 @@ class BookingController extends Controller
             'notes' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
             'is_request' => ['nullable', 'boolean'],
+            'details' => ['nullable', 'array'],
+            'details.room_name' => ['nullable', 'string', 'max:255'],
+            'details.boarding_name' => ['nullable', 'string', 'max:255'],
+            'details.image' => ['nullable', 'string', 'max:2048'],
+            'details.price_per_night' => ['nullable', 'numeric'],
+            'details.nights' => ['nullable', 'integer'],
+            'details.currency' => ['nullable', 'string', 'max:10'],
+            'details.base_price' => ['nullable', 'numeric'],
+            'details.final_price' => ['nullable', 'numeric'],
+            'details.promo_rate' => ['nullable', 'string', 'max:64'],
+            'details.not_refundable' => ['nullable', 'boolean'],
+            'details.free_cancellation_until' => ['nullable', 'string', 'max:64'],
+            'details.cancellation_policy' => ['nullable', 'array'],
+            'details.supplements' => ['nullable', 'array'],
+            'details.room_size' => ['nullable', 'numeric'],
+            'details.room_capacity' => ['nullable', 'integer'],
+            'details.room_features' => ['nullable', 'array'],
             // OS-TRAVEL live-search context captured during Phase 9.
             'provider.token' => ['nullable', 'string', 'max:2048'],
             'provider.source' => ['nullable', 'string', 'max:255'],
@@ -215,6 +232,7 @@ class BookingController extends Controller
             'expires_at' => now()->addHours($expiryHours),
             'is_request' => ! empty($data['is_request']),
             'provider_payload' => $providerContext,
+            'details' => $data['details'] ?? null,
         ]);
 
         BookingAudit::log(
@@ -518,6 +536,7 @@ class BookingController extends Controller
             'provider_prebook' => $booking->provider_payload['prebook'] ?? null,
             'can_cancel' => in_array($booking->status, ['Pending', 'Approved', 'Confirmed'], true)
                 && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay())),
+            'details' => $booking->details
         ];
     }
 

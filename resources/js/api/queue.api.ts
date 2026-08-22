@@ -39,12 +39,14 @@ export interface QueueBooking {
             check_in?: string | null;
             check_out?: string | null;
             nights?: number;
+            total?: number;
+            currency?: string;
             voucher?: {
                 Num?: string | null;
             } | null;
             rooms?: Array<{
                 id?: number | null;
-                boarding?: string | null;
+                boarding?: unknown;
                 total?: number;
                 currency?: string;
                 price_per_night?: number;

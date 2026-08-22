@@ -1,26 +1,9 @@
-import { arSA, enUS, fr } from 'date-fns/locale';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    Calendar as CalendarIcon,
-    ChevronDown,
-    Globe,
-    MapPin,
-    Minus,
-    Plus,
-    Search,
-    Users,
-} from 'lucide-react';
+import { Globe, MapPin, Search } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
 import {
     Select,
     SelectContent,
@@ -29,8 +12,16 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CitySelect } from '@/components/ui/CitySelect';
+import { CountrySelect } from '@/components/ui/CountrySelect';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import {
+    OccupancyPicker,
+    type Occupancy,
+    DEFAULT_OCCUPANCY,
+} from '@/components/ui/OccupancyPicker';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useCountries } from '@/hooks/useCountries';
+import type { LocalizedName } from '@/data/locations';
 import { cn, toLocalISODate } from '@/lib/utils';
 
 type SearchTab = 'hotels' | 'tours' | 'flights';
@@ -40,10 +31,10 @@ interface SearchWidgetProps {
 }
 
 interface SearchFormValues {
-    destination: string;
     country: string;
+    city: LocalizedName | null;
     dateRange: DateRange | undefined;
-    guests: number;
+    occupancy: Occupancy;
     extras: Record<string, string>;
 }
 
@@ -72,18 +63,8 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
         guestLabelKey: 'search.fields.guests',
         extraFields: [
             {
-                key: 'roomType',
-                labelKey: 'search.fields.roomType',
-                options: [
-                    { value: 'any', labelKey: 'search.options.any' },
-                    { value: 'standard', labelKey: 'search.options.standard' },
-                    { value: 'deluxe', labelKey: 'search.options.deluxe' },
-                    { value: 'suite', labelKey: 'search.options.suite' },
-                ],
-            },
-            {
                 key: 'propertyClass',
-                labelKey: 'search.fields.propertyClass',
+                labelKey: 'search.fields.stars',
                 options: [
                     { value: 'any', labelKey: 'search.options.any' },
                     { value: '3-star', labelKey: 'search.options.threeStar' },
@@ -113,7 +94,10 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
                 options: [
                     { value: 'half-day', labelKey: 'search.options.halfDay' },
                     { value: 'full-day', labelKey: 'search.options.fullDay' },
-                    { value: 'multi-day', labelKey: 'search.options.multiDay' },
+                    {
+                        value: 'multi-day',
+                        labelKey: 'search.options.multiDay',
+                    },
                 ],
             },
         ],
@@ -127,9 +111,15 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
                 key: 'tripType',
                 labelKey: 'search.fields.tripType',
                 options: [
-                    { value: 'round-trip', labelKey: 'search.options.roundTrip' },
+                    {
+                        value: 'round-trip',
+                        labelKey: 'search.options.roundTrip',
+                    },
                     { value: 'one-way', labelKey: 'search.options.oneWay' },
-                    { value: 'multi-city', labelKey: 'search.options.multiCity' },
+                    {
+                        value: 'multi-city',
+                        labelKey: 'search.options.multiCity',
+                    },
                 ],
             },
             {
@@ -151,30 +141,29 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
 
 const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
     hotels: {
-        destination: '',
         country: '',
+        city: null,
         dateRange: undefined,
-        guests: 2,
+        occupancy: { adults: 2, childAges: [] },
         extras: {
-            roomType: 'any',
             propertyClass: 'any',
         },
     },
     tours: {
-        destination: '',
         country: '',
+        city: null,
         dateRange: undefined,
-        guests: 2,
+        occupancy: { adults: 2, childAges: [] },
         extras: {
             tourStyle: 'guided',
             duration: 'half-day',
         },
     },
     flights: {
-        destination: '',
         country: '',
+        city: null,
         dateRange: undefined,
-        guests: 1,
+        occupancy: { adults: 1, childAges: [] },
         extras: {
             tripType: 'round-trip',
             cabinClass: 'economy',
@@ -193,10 +182,10 @@ const SEARCH_TARGETS: Record<SearchTab, string> = {
 interface ActiveSearchFormProps {
     tab: SearchTab;
     values: SearchFormValues;
-    onDestinationChange: (value: string) => void;
-    onCountryChange: (value: string) => void;
+    onCountryChange: (code: string, names: LocalizedName) => void;
+    onCityChange: (names: LocalizedName) => void;
     onDateRangeChange: (value: DateRange | undefined) => void;
-    onGuestChange: (value: number) => void;
+    onOccupancyChange: (value: Occupancy) => void;
     onExtraChange: (key: string, value: string) => void;
 }
 
@@ -205,270 +194,6 @@ function SearchFieldLabel({ children }: { children: string }) {
         <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
             {children}
         </span>
-    );
-}
-
-function DestinationInput({
-    label,
-    value,
-    onChange,
-}: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-}) {
-    const { t, dir } = useLanguage();
-    const isRtl = dir === 'rtl';
-
-    return (
-        <label className="flex min-w-0 flex-col gap-2">
-            <SearchFieldLabel>{label}</SearchFieldLabel>
-            <div
-                className={cn(
-                    'flex h-12 items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm',
-                    isRtl && 'flex-row-reverse',
-                )}
-            >
-                <MapPin className="h-5 w-5 shrink-0 text-primary" />
-                <Input
-                    aria-label={label}
-                    value={value}
-                    onChange={(event) => onChange(event.target.value)}
-                    placeholder={t('search.placeholders.destination')}
-                    className={cn(
-                        'border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0',
-                        isRtl && 'text-right',
-                    )}
-                />
-            </div>
-        </label>
-    );
-}
-
-function CountryFilter({
-    label,
-    value,
-    onChange,
-}: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-}) {
-    const { t, lang, dir } = useLanguage();
-    const isRtl = dir === 'rtl';
-    const countries = useCountries();
-
-    const selectedCountry = countries.find((c) => c.code === value);
-
-    return (
-        <label className="flex min-w-0 flex-col gap-2">
-            <SearchFieldLabel>{label}</SearchFieldLabel>
-            <div
-                className={cn(
-                    'flex h-12 items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm',
-                    isRtl && 'flex-row-reverse',
-                )}
-            >
-                <Globe className="h-5 w-5 shrink-0 text-primary" />
-                <Select value={value} onValueChange={onChange}>
-                    <SelectTrigger
-                        className={cn(
-                            'border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0',
-                            isRtl && 'text-right',
-                        )}
-                    >
-                        <SelectValue placeholder={t('search.placeholders.country')}>
-                            {selectedCountry
-                                ? selectedCountry.name[lang] || selectedCountry.name.en
-                                : null}
-                        </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                        {countries.map((country) => (
-                            <SelectItem key={country.code} value={country.code}>
-                                {country.name[lang] || country.name.en}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-        </label>
-    );
-}
-
-function getLocale(lang: string): string {
-    if (lang === 'ar') return 'ar-EG';
-    if (lang === 'en') return 'en-US';
-    return 'fr-FR';
-}
-
-function getDatePickerLocale(lang: string) {
-    if (lang === 'ar') return arSA;
-    if (lang === 'en') return enUS;
-    return fr;
-}
-
-function DateRangePicker({
-    label,
-    value,
-    onChange,
-}: {
-    label: string;
-    value: DateRange | undefined;
-    onChange: (value: DateRange | undefined) => void;
-}) {
-    const { lang, t, dir } = useLanguage();
-    const isRtl = dir === 'rtl';
-    const locale = getLocale(lang);
-    const startLabel = value?.from
-        ? value.from.toLocaleDateString(locale, {
-              day: 'numeric',
-              month: 'short',
-          })
-        : t('search.placeholders.checkIn');
-    const endLabel = value?.to
-        ? value.to.toLocaleDateString(locale, {
-              day: 'numeric',
-              month: 'short',
-          })
-        : t('search.placeholders.checkOut');
-
-    return (
-        <label className="flex min-w-0 flex-col gap-2">
-            <SearchFieldLabel>{label}</SearchFieldLabel>
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        aria-label={label}
-                        className={cn(
-                            'h-12 justify-start gap-3 rounded-2xl border-border/70 bg-background/80 px-4 font-normal shadow-sm backdrop-blur-sm hover:bg-background',
-                            isRtl ? 'flex-row-reverse text-right' : 'text-left',
-                        )}
-                    >
-                        <CalendarIcon className="h-5 w-5 shrink-0 text-primary" />
-                        <span className="min-w-0 truncate text-sm text-foreground">
-                            {value?.from
-                                ? `${startLabel} — ${value?.to ? endLabel : t('search.placeholders.flexibleDates')}`
-                                : t('search.placeholders.dates')}
-                        </span>
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                    className={cn('w-auto p-0', isRtl && 'text-right')}
-                    align={isRtl ? 'end' : 'start'}
-                >
-                    <Calendar
-                        mode="range"
-                        selected={value}
-                        onSelect={onChange}
-                        numberOfMonths={2}
-                        initialFocus
-                        locale={getDatePickerLocale(lang)}
-                        dir={dir}
-                    />
-                </PopoverContent>
-            </Popover>
-        </label>
-    );
-}
-
-function GuestSelector({
-    label,
-    value,
-    onChange,
-}: {
-    label: string;
-    value: number;
-    onChange: (value: number) => void;
-}) {
-    const { t, dir } = useLanguage();
-    const isRtl = dir === 'rtl';
-
-    return (
-        <label className="flex min-w-0 flex-col gap-2">
-            <SearchFieldLabel>{label}</SearchFieldLabel>
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        aria-label={label}
-                        className={cn(
-                            'h-12 rounded-2xl border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm hover:bg-background',
-                            isRtl
-                                ? 'flex-row-reverse justify-between text-right'
-                                : 'justify-between text-left',
-                        )}
-                    >
-                        <span
-                            className={cn(
-                                'flex items-center gap-3',
-                                isRtl && 'flex-row-reverse',
-                            )}
-                        >
-                            <Users className="h-5 w-5 shrink-0 text-primary" />
-                            <span className="text-sm text-foreground">
-                                {value}{' '}
-                                {value === 1
-                                    ? t('search.placeholders.guest')
-                                    : t('search.placeholders.guests')}
-                            </span>
-                        </span>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                    className={cn('w-72', isRtl && 'text-right')}
-                    align={isRtl ? 'end' : 'start'}
-                >
-                    <div
-                        className={cn(
-                            'flex items-center justify-between gap-4',
-                            isRtl && 'flex-row-reverse',
-                        )}
-                    >
-                        <div className={cn(isRtl && 'text-right')}>
-                            <p className="text-sm font-medium text-foreground">
-                                {label}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                {t('search.placeholders.guestsHelp')}
-                            </p>
-                        </div>
-                        <div
-                            className={cn(
-                                'flex items-center gap-2',
-                                isRtl && 'flex-row-reverse',
-                            )}
-                        >
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => onChange(Math.max(1, value - 1))}
-                                aria-label={t('search.actions.decreaseGuests')}
-                            >
-                                <Minus className="h-4 w-4" />
-                            </Button>
-                            <span className="min-w-8 text-center text-base font-semibold">
-                                {value}
-                            </span>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => onChange(value + 1)}
-                                aria-label={t('search.actions.increaseGuests')}
-                            >
-                                <Plus className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                </PopoverContent>
-            </Popover>
-        </label>
     );
 }
 
@@ -491,7 +216,10 @@ function ExtraFieldsByType({
     return (
         <>
             {fields.map((field) => (
-                <label key={field.key} className="flex min-w-0 flex-col gap-2">
+                <label
+                    key={field.key}
+                    className="flex min-w-0 flex-col gap-2"
+                >
                     <SearchFieldLabel>{t(field.labelKey)}</SearchFieldLabel>
                     <Select
                         value={values.extras[field.key]}
@@ -539,10 +267,10 @@ function SearchButton({ label }: { label: string }) {
 function ActiveSearchForm({
     tab,
     values,
-    onDestinationChange,
     onCountryChange,
+    onCityChange,
     onDateRangeChange,
-    onGuestChange,
+    onOccupancyChange,
     onExtraChange,
 }: ActiveSearchFormProps) {
     const { t, dir } = useLanguage();
@@ -550,29 +278,61 @@ function ActiveSearchForm({
     const config = SEARCH_TABS[tab];
 
     const topFields = [
-        <CountryFilter
+        <label
             key="country"
-            label={t('search.fields.country')}
-            value={values.country}
-            onChange={onCountryChange}
-        />,
-        <DestinationInput
-            key="destination"
-            label={t('search.fields.destination')}
-            value={values.destination}
-            onChange={onDestinationChange}
-        />,
+            className="flex min-w-0 flex-col gap-2"
+        >
+            <SearchFieldLabel>{t('search.fields.country')}</SearchFieldLabel>
+            <div
+                className={cn(
+                    'flex h-12 items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm',
+                    isRtl && 'flex-row-reverse',
+                )}
+            >
+                <Globe className="h-5 w-5 shrink-0 text-primary" />
+                <CountrySelect
+                    value={values.country}
+                    onChange={onCountryChange}
+                    placeholder={t('search.placeholders.country')}
+                    className="border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0"
+                />
+            </div>
+        </label>,
+        <label
+            key="city"
+            className="flex min-w-0 flex-col gap-2"
+        >
+            <SearchFieldLabel>{t('search.fields.destination')}</SearchFieldLabel>
+            <div
+                className={cn(
+                    'flex h-12 items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm',
+                    isRtl && 'flex-row-reverse',
+                )}
+            >
+                <MapPin className="h-5 w-5 shrink-0 text-primary" />
+                <CitySelect
+                    countryCode={values.country || null}
+                    value={values.city?.en || ''}
+                    onChange={onCityChange}
+                    placeholder={
+                        !values.country
+                            ? t('search.placeholders.country')
+                            : t('search.placeholders.destination')
+                    }
+                    className="border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0"
+                />
+            </div>
+        </label>,
         <DateRangePicker
             key="dates"
-            label={t('search.fields.dates')}
             value={values.dateRange}
             onChange={onDateRangeChange}
+            fromDate={new Date(Date.now() + 24 * 60 * 60 * 1000)}
         />,
-        <GuestSelector
+        <OccupancyPicker
             key="guests"
-            label={t(config.guestLabelKey)}
-            value={values.guests}
-            onChange={onGuestChange}
+            value={values.occupancy}
+            onChange={onOccupancyChange}
         />,
     ];
 
@@ -642,14 +402,37 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         setActiveTab(value as SearchTab);
     };
 
+    const handleCountryChange = (
+        tab: SearchTab,
+        code: string,
+        _names: LocalizedName,
+    ) => {
+        updateForm(tab, 'country', code);
+        updateForm(tab, 'city', null);
+    };
+
+    const handleCityChange = (
+        tab: SearchTab,
+        names: LocalizedName,
+    ) => {
+        updateForm(tab, 'city', names);
+    };
+
+    const handleOccupancyChange = (
+        tab: SearchTab,
+        value: Occupancy,
+    ) => {
+        updateForm(tab, 'occupancy', value);
+    };
+
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         const values = formState[activeTab];
         const params = new URLSearchParams();
 
-        if (values.destination.trim()) {
-            params.set('q', values.destination.trim());
+        if (values.city?.en) {
+            params.set('q', values.city.en);
         }
 
         if (values.country) {
@@ -667,15 +450,14 @@ export function SearchWidget({ className }: SearchWidgetProps) {
             params.set('to', toLocalISODate(values.dateRange.to) ?? '');
         }
 
-        params.set('guests', String(values.guests));
+        params.set('guests', String(values.occupancy.adults));
+
+        if (values.occupancy.childAges.length > 0) {
+            params.set('children', values.occupancy.childAges.join(','));
+        }
 
         if (activeTab === 'hotels') {
-            const roomType = values.extras.roomType;
             const propertyClass = values.extras.propertyClass;
-
-            if (roomType && roomType !== 'any') {
-                params.set('cat', roomType);
-            }
 
             if (propertyClass && propertyClass !== 'any') {
                 const stars = propertyClass.replace(/[^0-9]/g, '');
@@ -714,7 +496,7 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         Object.entries(values.extras).forEach(([key, value]) => {
             if (
                 activeTab === 'hotels' &&
-                (key === 'roomType' || key === 'propertyClass')
+                key === 'propertyClass'
             ) {
                 return;
             }
@@ -726,9 +508,7 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                 return;
             }
 
-            if (
-                activeTab === 'flights' && key === 'cabinClass'
-            ) {
+            if (activeTab === 'flights' && key === 'cabinClass') {
                 return;
             }
 
@@ -811,30 +591,18 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                                 <ActiveSearchForm
                                     tab={activeTab}
                                     values={formState[activeTab]}
-                                    onDestinationChange={(value) =>
-                                        updateForm(
-                                            activeTab,
-                                            'destination',
-                                            value,
-                                        )
+                                    onCountryChange={(code, names) =>
+                                        handleCountryChange(activeTab, code, names)
                                     }
-                                    onCountryChange={(value) =>
-                                        updateForm(
-                                            activeTab,
-                                            'country',
-                                            value,
-                                        )
+                                    onCityChange={(names) =>
+                                        handleCityChange(activeTab, names)
                                     }
-                                        onDateRangeChange={(value) =>
-                                            updateForm(
-                                                activeTab,
-                                                'dateRange',
-                                                value,
-                                            )
-                                        }
-                                        onGuestChange={(value) =>
-                                            updateForm(activeTab, 'guests', value)
-                                        }
+                                    onDateRangeChange={(value) =>
+                                        updateForm(activeTab, 'dateRange', value)
+                                    }
+                                    onOccupancyChange={(value) =>
+                                        handleOccupancyChange(activeTab, value)
+                                    }
                                     onExtraChange={(key, value) =>
                                         updateExtraField(activeTab, key, value)
                                     }

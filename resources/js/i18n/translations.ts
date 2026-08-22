@@ -500,6 +500,11 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'تصنيف العقار',
         en: 'Property class',
     },
+    'search.fields.stars': {
+        fr: 'Étoiles',
+        ar: 'النجوم',
+        en: 'Stars',
+    },
     'search.fields.tourStyle': {
         fr: 'Style du circuit',
         ar: 'نوع الجولة',
@@ -4800,6 +4805,41 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'تم',
         en: 'Done',
     },
+    'booking.referenceLabel': {
+        fr: 'Référence',
+        ar: 'المرجع',
+        en: 'Reference',
+    },
+    'booking.whatsNext': {
+        fr: 'Et ensuite ?',
+        ar: 'ماذا بعد؟',
+        en: "What's next",
+    },
+    'booking.nextStepEmail': {
+        fr: 'Vous recevrez un e-mail de confirmation sous peu.',
+        ar: 'ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريباً.',
+        en: "You'll receive a confirmation email shortly.",
+    },
+    'booking.nextStepReview': {
+        fr: 'Notre équipe vérifie la disponibilité, généralement dans les 24 heures.',
+        ar: 'يفريقنا التحقق من التوفر عادةً خلال 24 ساعة.',
+        en: 'Our team reviews availability, usually within 24 hours.',
+    },
+    'booking.nextStepPayment': {
+        fr: 'Aucun paiement ne sera prélevé tant que votre réservation n\'est pas confirmée.',
+        ar: 'لن يتم تحصيل أي مبلغ حتى يتم تأكيد حجزك.',
+        en: 'No payment is taken until your booking is confirmed.',
+    },
+    'booking.nextStepContact': {
+        fr: 'Pour toute question, contactez-nous à',
+        ar: 'لأي استفسار، تواصل معنا على',
+        en: 'For any questions, contact us at',
+    },
+    'booking.supplements': {
+        fr: 'Suppléments',
+        ar: 'إضافات',
+        en: 'Supplements',
+    },
     'common.processing': {
         fr: 'Traitement...',
         ar: 'جاري المعالجة...',
@@ -7985,6 +8025,11 @@ translations['bookingDetail.perNight'] = {
     fr: 'par nuit',
     ar: 'لليلة',
     en: 'per night',
+};
+translations['bookingDetail.supplements'] = {
+    fr: 'Suppléments',
+    ar: 'إضافات',
+    en: 'Supplements',
 };
 translations['admin.queue.prebook'] = {
     fr: 'Détail du prix (prebook)',

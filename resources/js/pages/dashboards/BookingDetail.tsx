@@ -3,10 +3,14 @@ import { motion } from 'framer-motion';
 import {
     AlertCircle,
     ArrowLeft,
+    BedDouble,
     Clock,
     Hotel,
     Info,
+    Ruler,
+    ShieldCheck,
     User,
+    Users,
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -47,7 +51,25 @@ function formatDateTime(value?: string | null): string {
     return date.toLocaleString();
 }
 
+/** OS-TRAVEL boarding fields can be {Id, Code, Name} objects or plain strings. */
+function boardingLabel(value: unknown): string {
+    if (!value) return '—';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value !== null) {
+        const obj = value as Record<string, unknown>;
+        if (typeof obj.Name === 'string') return obj.Name;
+        return JSON.stringify(obj);
+    }
+    return String(value);
+}
+
 function bookingTitle(booking: BookingDetailRow): string {
+    if (booking.details?.room_name) {
+        const parts = [booking.item_slug ?? booking.item_id];
+        if (booking.details.room_name) parts.push(booking.details.room_name);
+        if (booking.details.boarding_name) parts.push(booking.details.boarding_name);
+        return parts.filter(Boolean).join(' / ') || `#${booking.id}`;
+    }
     return (
         [
             booking.type,
@@ -125,10 +147,11 @@ export default function BookingDetail() {
     const status = booking.status;
     const statusLabel =
         bookingStatusLabels[status]?.[lang] ?? status;
-    const currency = booking.currency ?? 'TND';
+    const currency = booking.details?.currency ?? booking.currency ?? 'TND';
     const total = Number(booking.total_amount ?? booking.amount ?? 0);
     const breakdown = booking.provider_prebook?.breakdown ?? null;
     const notes = booking.notes;
+    const details = booking.details;
 
     const renderStatusBanner = () => {
         if (status === 'Pending') {
@@ -240,13 +263,27 @@ export default function BookingDetail() {
                 className="rounded-2xl border border-border bg-card p-5"
             >
                 <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                        <Hotel className="h-5 w-5 text-primary" />
-                    </div>
+                    {details?.image ? (
+                        <img
+                            src={details.image}
+                            alt=""
+                            className="h-14 w-16 shrink-0 rounded-xl object-cover"
+                        />
+                    ) : (
+                        <div className="flex h-14 w-16 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                            <Hotel className="h-5 w-5 text-primary" />
+                        </div>
+                    )}
                     <div className="min-w-0 flex-1">
                         <h2 className="truncate font-semibold text-foreground">
                             {bookingTitle(booking)}
                         </h2>
+                        {details?.room_name && (
+                            <p className="text-sm text-muted-foreground">
+                                {details.room_name}
+                                {details.boarding_name ? ` · ${details.boarding_name}` : ''}
+                            </p>
+                        )}
                         <p className="text-sm text-muted-foreground">
                             {[
                                 booking.start_date,
@@ -256,18 +293,72 @@ export default function BookingDetail() {
                                 .map(formatDate)
                                 .join(' — ') ||
                                 formatDate(booking.created_at)}
+                            {details?.nights ? ` · ${details.nights} nights` : ''}
                         </p>
                     </div>
                     <div className="text-right">
+                        {details?.base_price && details?.promo_rate ? (
+                            <p className="text-xs font-medium text-muted-foreground line-through">
+                                {details.base_price.toLocaleString()} {currency}
+                            </p>
+                        ) : null}
                         <p className="font-serif text-2xl font-bold text-primary">
                             {total.toLocaleString()} {currency}
                         </p>
+                        {details?.promo_rate ? (
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                                {details.promo_rate}
+                            </span>
+                        ) : null}
+                        {details?.price_per_night && details?.nights ? (
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                {details.price_per_night.toLocaleString()} {currency} / night
+                            </p>
+                        ) : null}
                         <p className="text-xs text-muted-foreground">
                             {t('bookingDetail.bookedOn') || 'Booked on'}{' '}
                             {formatDateTime(booking.created_at)}
                         </p>
                     </div>
                 </div>
+
+                {/* Room details row */}
+                {(details?.room_size || details?.room_capacity || details?.room_features?.length || details?.not_refundable || details?.free_cancellation_until) && (
+                    <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                        {details?.room_size ? (
+                            <span className="inline-flex items-center gap-1">
+                                <Ruler className="h-3 w-3" />
+                                {details.room_size} m²
+                            </span>
+                        ) : null}
+                        {details?.room_capacity ? (
+                            <span className="inline-flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                {details.room_capacity} {t('hotelDetail.guests') || 'guests'}
+                            </span>
+                        ) : null}
+                        {details?.room_features?.slice(0, 3).map((feature) => (
+                            <span
+                                key={feature}
+                                className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium"
+                            >
+                                {feature}
+                            </span>
+                        ))}
+                        {details?.not_refundable && (
+                            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                                {t('hotelDetail.nonRefundable') || 'Non-refundable'}
+                            </span>
+                        )}
+                        {details?.free_cancellation_until && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                <ShieldCheck className="h-3 w-3" />
+                                {t('hotelDetail.freeCancellationUntil') || 'Free cancellation until'}{' '}
+                                {details.free_cancellation_until}
+                            </span>
+                        )}
+                    </div>
+                )}
 
                 <div className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4 sm:grid-cols-2">
                     <div className="space-y-1">
@@ -333,6 +424,28 @@ export default function BookingDetail() {
                 </div>
             ) : null}
 
+            {/* Supplements */}
+            {details?.supplements && details.supplements.length > 0 ? (
+                <div className="rounded-2xl border border-border bg-card p-5">
+                    <h3 className="mb-3 font-serif text-lg font-bold text-foreground">
+                        {t('bookingDetail.supplements') || 'Supplements'}
+                    </h3>
+                    <ul className="space-y-1.5 text-sm text-muted-foreground">
+                        {details.supplements.map((supplement, index) => (
+                            <li key={index} className="flex items-center justify-between">
+                                <span>
+                                    {supplement.name}
+                                    {supplement.perNight ? ` (${t('hotelDetail.pernight') || 'per night'})` : ''}
+                                </span>
+                                <span className="font-semibold text-foreground">
+                                    +{supplement.price.toLocaleString()} {currency}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ) : null}
+
             {/* Notes */}
             {notes ? (
                 <div className="rounded-2xl border border-border bg-card p-5">
@@ -384,16 +497,24 @@ export default function BookingDetail() {
                                                 {index + 1}
                                             </td>
                                             <td className="px-2 py-2 text-muted-foreground">
-                                                {room.boarding || '—'}
+                                                {boardingLabel(room.boarding)}
                                             </td>
                                             <td className="px-2 py-2 text-muted-foreground">
                                                 {breakdown.nights ?? '—'}
                                             </td>
                                             <td className="px-2 py-2 text-right font-semibold text-foreground">
-                                                {Number(
-                                                    room.total ?? 0,
-                                                ).toLocaleString()}{' '}
-                                                {room.currency ?? currency}
+                                                {(() => {
+                                                    const roomTotal = Number(room.total ?? 0);
+                                                    const displayTotal = roomTotal > 0
+                                                        ? roomTotal
+                                                        : Number(breakdown.total ?? total);
+                                                    return (
+                                                        <>
+                                                            {displayTotal.toLocaleString()}{' '}
+                                                            {room.currency ?? currency}
+                                                        </>
+                                                    );
+                                                })()}
                                                 {room.price_per_night ? (
                                                     <span className="block text-xs font-normal text-muted-foreground">
                                                         ~
@@ -443,15 +564,22 @@ export default function BookingDetail() {
             )}
 
             {/* Cancellation policy */}
-            {breakdown?.cancellation_policy &&
-            breakdown.cancellation_policy.length > 0 ? (
+            {(breakdown?.cancellation_policy?.length
+                ? breakdown.cancellation_policy
+                : details?.cancellation_policy?.length
+                    ? details.cancellation_policy
+                    : null
+            ) ? (
                 <div className="rounded-2xl border border-border bg-card p-5">
                     <h3 className="mb-3 font-serif text-lg font-bold text-foreground">
                         {t('bookingDetail.cancellationPolicy') ||
                             'Cancellation policy'}
                     </h3>
                     <ul className="space-y-1.5 text-sm text-muted-foreground">
-                        {breakdown.cancellation_policy.map((entry, index) => (
+                        {(breakdown?.cancellation_policy?.length
+                            ? breakdown.cancellation_policy
+                            : details!.cancellation_policy!
+                        ).map((entry, index) => (
                             <li
                                 key={index}
                                 className="flex items-start gap-2"

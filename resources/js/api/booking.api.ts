@@ -6,6 +6,8 @@ export interface AdminBookingRow {
     type: string;
     items: unknown[];
     client?: { name?: string };
+    start_date?: string | null;
+    end_date?: string | null;
     created_at: string;
     total_amount: number;
     is_request?: boolean;
@@ -17,6 +19,30 @@ export interface AdminBookingRow {
         | 'Cancelled'
         | 'Expired'
         | 'Completed';
+    details?: {
+        room_name?: string | null;
+        boarding_name?: string | null;
+        image?: string | null;
+        price_per_night?: number | null;
+        nights?: number | null;
+        currency?: string | null;
+        base_price?: number | null;
+        final_price?: number | null;
+        promo_rate?: string | null;
+        not_refundable?: boolean;
+        free_cancellation_until?: string | null;
+        cancellation_policy?: Array<{
+            fees?: number | string;
+            type?: string | null;
+            nature?: string | null;
+            description?: string | null;
+            from_date?: string | null;
+        }> | null;
+        supplements?: Array<{ name: string; price: number; perNight?: boolean }> | null;
+        room_size?: number | null;
+        room_capacity?: number | null;
+        room_features?: string[] | null;
+    } | null;
 }
 
 export interface ClientBookingRow {
@@ -56,6 +82,8 @@ export interface ClientBookingRow {
             check_in?: string | null;
             check_out?: string | null;
             nights?: number;
+            total?: number;
+            currency?: string;
             voucher?: {
                 Num?: string | null;
             } | null;
@@ -75,6 +103,30 @@ export interface ClientBookingRow {
             }>;
         } | null;
     } | null;
+    details?: {
+        room_name?: string | null;
+        boarding_name?: string | null;
+        image?: string | null;
+        price_per_night?: number | null;
+        nights?: number | null;
+        currency?: string | null;
+        base_price?: number | null;
+        final_price?: number | null;
+        promo_rate?: string | null;
+        not_refundable?: boolean;
+        free_cancellation_until?: string | null;
+        cancellation_policy?: Array<{
+            fees?: number | string;
+            type?: string | null;
+            nature?: string | null;
+            description?: string | null;
+            from_date?: string | null;
+        }> | null;
+        supplements?: Array<{ name: string; price: number; perNight?: boolean }> | null;
+        room_size?: number | null;
+        room_capacity?: number | null;
+        room_features?: string[] | null;
+    } | null;
 }
 
 /**
@@ -91,6 +143,30 @@ export interface BookingDetailRow extends ClientBookingRow {
     notes?: string | null;
     promo_code?: string | null;
     amount?: number;
+    details?: {
+        room_name?: string | null;
+        boarding_name?: string | null;
+        image?: string | null;
+        price_per_night?: number | null;
+        nights?: number | null;
+        currency?: string | null;
+        base_price?: number | null;
+        final_price?: number | null;
+        promo_rate?: string | null;
+        not_refundable?: boolean;
+        free_cancellation_until?: string | null;
+        cancellation_policy?: Array<{
+            fees?: number | string;
+            type?: string | null;
+            nature?: string | null;
+            description?: string | null;
+            from_date?: string | null;
+        }> | null;
+        supplements?: Array<{ name: string; price: number; perNight?: boolean }> | null;
+        room_size?: number | null;
+        room_capacity?: number | null;
+        room_features?: string[] | null;
+    } | null;
 }
 
 export interface ClientDashboardPayload {

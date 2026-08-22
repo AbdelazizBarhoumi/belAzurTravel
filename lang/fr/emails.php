@@ -2,7 +2,7 @@
 
 return [
     'brand' => 'BelAzur Travel',
-    'support_email' => 'support@belazurtravel.tn',
+    'support_email' => 'contact@belazurtravel.com',
     'rights' => 'Tous droits réservés.',
     'footer_questions' => 'Si vous avez des questions, contactez-nous à :email',
     'footer_automatic' => 'Ceci est une notification automatique de BelAzur Travel.',

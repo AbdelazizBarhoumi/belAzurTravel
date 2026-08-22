@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, CheckCheck, ListChecks } from 'lucide-react';
+import {
+    Bell,
+    CheckCheck,
+    CreditCard,
+    Headphones,
+    ListChecks,
+    RotateCcw,
+    AlertCircle,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '@/api/http';
 import { getAdminQueueCounts } from '@/api/queue.api';
@@ -83,39 +91,89 @@ export function NotificationBell({
 
     const unreadCount = summaryData?.count ?? 0;
 
-    return (
-        <div className={cn('group relative', className)}>
-            {queueFeedPath && (queueCounts?.total ?? 0) > 0 && (
-                <Link
-                    to={queueFeedPath}
-                    className="relative inline-flex items-center rounded-lg p-2 transition-colors hover:bg-muted"
-                    aria-label={t('admin.queue')}
-                >
-                    <ListChecks className="h-5 w-5 text-muted-foreground" />
-                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
-                        {queueCounts?.total}
-                    </span>
-                </Link>
-            )}
-            <button
-                type="button"
-                className="relative rounded-lg p-2 transition-colors hover:bg-muted"
-                aria-label={t('notifications.title')}
-            >
-                <Bell className="h-5 w-5 text-muted-foreground" />
-                {unreadCount > 0 && (
-                    <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
-                        {unreadCount}
-                    </span>
-                )}
-            </button>
+    const queueSections: Array<{
+        key: string;
+        icon: typeof CreditCard;
+        count: number;
+    }> = [
+        { key: 'bookings', icon: CreditCard, count: queueCounts?.bookings ?? 0 },
+        { key: 'complaints', icon: AlertCircle, count: queueCounts?.complaints ?? 0 },
+        { key: 'refund_requests', icon: RotateCcw, count: queueCounts?.refund_requests ?? 0 },
+        { key: 'support', icon: Headphones, count: queueCounts?.support ?? 0 },
+    ];
 
-            <div
-                className={cn(
-                    'invisible absolute top-11 z-50 w-80 rounded-lg border border-border bg-popover p-3 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100',
-                    isRtl ? 'left-0 text-right' : 'right-0 text-left',
-                )}
-            >
+    return (
+        <div className={cn('flex items-center gap-1', className)}>
+            {queueFeedPath && (queueCounts?.total ?? 0) > 0 && (
+                <div className="group/queue relative">
+                    <Link
+                        to={queueFeedPath}
+                        className="relative inline-flex items-center rounded-lg p-2 transition-colors hover:bg-muted"
+                        aria-label={t('admin.queue')}
+                    >
+                        <ListChecks className="h-5 w-5 text-muted-foreground" />
+                        <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+                            {queueCounts?.total}
+                        </span>
+                    </Link>
+
+                    <div
+                        className={cn(
+                            'invisible absolute top-11 z-50 w-64 rounded-lg border border-border bg-popover p-3 opacity-0 shadow-xl transition-all group-hover/queue:visible group-hover/queue:opacity-100',
+                            isRtl ? 'left-0 text-right' : 'right-0 text-left',
+                        )}
+                    >
+                        <h3 className="mb-2 text-sm font-semibold text-foreground">
+                            {t('admin.queue')}
+                        </h3>
+                        <div className="space-y-1">
+                            {queueSections.map((section) => (
+                                <Link
+                                    key={section.key}
+                                    to={`${queueFeedPath}?tab=${section.key}`}
+                                    className="flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
+                                >
+                                    <span className="flex items-center gap-2 text-foreground">
+                                        <section.icon className="h-4 w-4 text-muted-foreground" />
+                                        {t(`admin.queue.tab.${section.key === 'refund_requests' ? 'refunds' : section.key}`)}
+                                    </span>
+                                    {section.count > 0 && (
+                                        <span className="min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-destructive-foreground">
+                                            {section.count}
+                                        </span>
+                                    )}
+                                </Link>
+                            ))}
+                        </div>
+                        <Link
+                            to={queueFeedPath}
+                            className="mt-2 block rounded-md px-3 py-2 text-center text-sm font-medium text-primary hover:bg-muted"
+                        >
+                            {t('notifications.viewAll')}
+                        </Link>
+                    </div>
+                </div>
+            )}
+            <div className="group relative">
+                <button
+                    type="button"
+                    className="relative rounded-lg p-2 transition-colors hover:bg-muted"
+                    aria-label={t('notifications.title')}
+                >
+                    <Bell className="h-5 w-5 text-muted-foreground" />
+                    {unreadCount > 0 && (
+                        <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold leading-none text-destructive-foreground">
+                            {unreadCount}
+                        </span>
+                    )}
+                </button>
+
+                <div
+                    className={cn(
+                        'invisible absolute top-11 z-50 w-80 rounded-lg border border-border bg-popover p-3 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100',
+                        isRtl ? 'left-0 text-right' : 'right-0 text-left',
+                    )}
+                >
                 <div className="mb-2 flex items-center justify-between gap-2">
                     <h3 className="text-sm font-semibold text-foreground">
                         {t('notifications.title')}
@@ -177,6 +235,7 @@ export function NotificationBell({
                 >
                     {t('notifications.viewAll')}
                 </Link>
+                </div>
             </div>
         </div>
     );
