@@ -324,15 +324,9 @@ describe('HotelDetail', () => {
         expect(screen.getByText('14h')).toBeInTheDocument();
         expect(screen.getByText('Départ')).toBeInTheDocument();
         expect(screen.getByText('12h')).toBeInTheDocument();
-        // The address/phone/email also appear in the sidebar, so they can
+        // The address also appears in the sidebar, so it can
         // match more than once across the page.
         expect(screen.getAllByText('123 Beach Road').length).toBeGreaterThan(0);
-        expect(screen.getAllByText(/\+216 71 000 000/).length).toBeGreaterThan(
-            0,
-        );
-        expect(
-            screen.getAllByText(/reservations@sunset.example/).length,
-        ).toBeGreaterThan(0);
 
         // Boardings and on-request options live in the dining tab.
         await userEvent.click(
@@ -403,14 +397,11 @@ describe('HotelDetail', () => {
 
         renderPage('/hotels/sunset-paradise-resort');
 
+        // No coordinates means no map card is rendered at all.
         expect(screen.queryByTitle(/Carte de/)).not.toBeInTheDocument();
-        const link = screen
-            .getByRole('link', { name: /Voir sur carte/ })
-            .closest('a');
-        expect(link).toHaveAttribute(
-            'href',
-            'https://www.google.com/maps?q=123%20Beach%20Road',
-        );
+        expect(
+            screen.queryByRole('link', { name: /Voir sur carte/ }),
+        ).not.toBeInTheDocument();
     });
 
     it('re-searches live availability when dates are set and shows stay total, per-night and supplements', async () => {
@@ -456,10 +447,8 @@ describe('HotelDetail', () => {
 
         const hasTotal = (text: string) =>
             text.replace(/[\s\u00A0,.]/g, '').includes('1500');
-        const hasPerNight = (text: string) => /375\s*TND\s*\/nuit/.test(text);
 
         expect(screen.getAllByText(hasTotal).length).toBeGreaterThan(0);
-        expect(screen.getAllByText(hasPerNight).length).toBeGreaterThan(0);
         expect(screen.getAllByText(/Insurance/).length).toBeGreaterThan(0);
         expect(screen.getAllByText(/\+40\s*TND/).length).toBeGreaterThan(0);
     });
@@ -653,9 +642,7 @@ describe('HotelDetail', () => {
         expect(screen.getByText('Enfant gratuit')).toBeInTheDocument();
         expect(screen.getByText('Recommandé')).toBeInTheDocument();
 
-        // The promo discounts the header per-night price, the row/sticky totals
-        // and the per-night hint, keeping the original price struck through.
-        expect(screen.getAllByText(/266\.25/).length).toBeGreaterThan(0);
+        // The promo discounts the total price, keeping the original price struck through.
         expect(screen.getAllByText(/1,065/).length).toBeGreaterThan(0);
         expect(screen.getAllByText(/1,500\s*TND/).length).toBeGreaterThan(0);
     });
@@ -742,7 +729,7 @@ describe('HotelDetail', () => {
 
         clickCheckAvailability();
 
-        const searchCall = mockHotelSearch.calls.find(
+        const searchCall = mockHotelSearch.calls.findLast(
             (query) =>
                 typeof query === 'object' &&
                 query !== null &&

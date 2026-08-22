@@ -48,7 +48,7 @@ return [
 
         // How long a sync run's single-flight lock is held before it can be
         // overtaken (also used as the schedule's withoutOverlapping expiry).
-        'lock_ttl_minutes' => (int) env('OS_TRAVEL_SYNC_LOCK_TTL_MINUTES', 180),
+        'lock_ttl_minutes' => (int) env('OS_TRAVEL_SYNC_LOCK_TTL_MINUTES', 10),
 
         // Scheduled cadence for `os-travel:sync-catalog`.
         'schedule' => [

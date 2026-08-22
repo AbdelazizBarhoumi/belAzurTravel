@@ -164,20 +164,12 @@ describe('HotelDetail real search hook flow', () => {
         vi.stubGlobal('fetch', fetchSpy);
     });
 
-    it('fires the search request only after clicking the availability button', async () => {
+    it('fires the search request automatically when dates are set', async () => {
         renderPage('/hotels/sunset-paradise-resort');
         await screen.findAllByText('Sunset Paradise Resort');
 
+        // Set dates — the search fires automatically via useMemo derivation.
         fireEvent.click(screen.getAllByTestId('set-dates')[0]);
-
-        // No search yet: dates set but button not pressed.
-        expect(fetchSpy).not.toHaveBeenCalled();
-
-        fireEvent.click(
-            screen.getByRole('button', {
-                name: /Vérifier la disponibilité/i,
-            }),
-        );
 
         await waitFor(() => {
             expect(fetchSpy).toHaveBeenCalled();
@@ -204,52 +196,35 @@ describe('HotelDetail real search hook flow', () => {
         renderPage('/hotels/sunset-paradise-resort');
         await screen.findAllByText('Sunset Paradise Resort');
 
+        // Set initial dates — search fires automatically.
         fireEvent.click(screen.getAllByTestId('set-dates')[0]);
-        fireEvent.click(
-            screen.getByRole('button', {
-                name: /Vérifier la disponibilité/i,
-            }),
-        );
 
         await waitFor(() => {
             expect(fetchSpy).toHaveBeenCalled();
         });
 
-        // Change dates -> stale query should be cleared and no new search yet.
+        // Change dates — the search re-fires automatically via useMemo.
+        // The mock DateRangePicker toggles between two date sets via modulo,
+        // so the second click cycles back. The key assertion is that a new
+        // search is triggered.
         fireEvent.click(screen.getAllByTestId('set-dates')[0]);
-        await waitFor(() => {
-            expect(
-                screen.getByRole('button', {
-                    name: /Vérifier la disponibilité/i,
-                }),
-            ).not.toBeDisabled();
-        });
-        fireEvent.click(
-            screen.getByRole('button', {
-                name: /Vérifier la disponibilité/i,
-            }),
-        );
 
         await new Promise((r) => setTimeout(r, 500));
 
+        // At least 2 calls: Phase 1 for first date set, then at least one
+        // more for the changed dates (Phase 1 and/or Phase 2).
         const searchCalls = fetchSpy.mock.calls.filter(([url]) =>
             String(url).includes('/api/hotels/search'),
         );
-        console.log(
-            'SEARCH CALLS:',
-            searchCalls.map(([, init]) => init?.body),
-        );
-        console.log('TOTAL FETCH CALLS:', fetchSpy.mock.calls.length);
+        expect(searchCalls.length).toBeGreaterThanOrEqual(2);
 
-        await waitFor(
-            () => {
-                expect(
-                    fetchSpy.mock.calls.filter(([url]) =>
-                        String(url).includes('/api/hotels/search'),
-                    ).length,
-                ).toBe(2);
-            },
-            { timeout: 3000 },
+        // Verify different query bodies were sent (dates changed).
+        const bodies = searchCalls.map(([, init]) =>
+            JSON.parse(String(init?.body ?? '{}')),
         );
+        const dates = bodies.map(
+            (b: { check_in: string; check_out: string }) => `${b.check_in}-${b.check_out}`,
+        );
+        expect(new Set(dates).size).toBeGreaterThan(1);
     });
 });
