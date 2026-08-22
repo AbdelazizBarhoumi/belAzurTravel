@@ -4,10 +4,9 @@ import {
     Info,
     User,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Occupancy } from '@/components/hotel/OccupancyPicker';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Popover,
     PopoverContent,
@@ -31,6 +30,7 @@ export interface RateRoom {
     boardingName?: string;
     // Provider bookability metadata powering the row badges.
     onRequest?: boolean;
+    bookable?: boolean;
     stopSales?: { from: string; to: string } | null;
     notRefundable?: boolean;
     cancellationDeadline?: string;
@@ -42,6 +42,7 @@ export interface RateRoom {
         from_date: string | null;
     }>;
     supplements?: Array<{ name: string; price: number; perNight?: boolean }>;
+    boardingId?: number;
 }
 
 interface RoomRatesTableProps {
@@ -51,6 +52,66 @@ interface RoomRatesTableProps {
     promoRate?: string | null;
     bookDisabled?: boolean;
     onReserve: (room: RateRoom) => void;
+    requestMode?: boolean;
+}
+
+// One physical room, with every boarding/rate plan offered for it nested
+// underneath. This replaces the old model where a room's image, name,
+// description and features were repeated once per boarding — the actual
+// complaint being fixed here.
+interface RoomGroup {
+    key: string;
+    name: string;
+    description?: string;
+    size: number;
+    capacity: number;
+    features: string[];
+    images: string[];
+    rates: RateRoom[];
+}
+
+function groupByRoomType(rooms: RateRoom[]): RoomGroup[] {
+    const order: string[] = [];
+    const groups = new Map<string, RoomGroup>();
+
+    for (const room of rooms) {
+        // Rooms are grouped by display name. If your provider can return two
+        // physically different rooms sharing a name, widen this key (e.g.
+        // `${room.name}-${room.capacity}-${room.size}`).
+        const key = room.name;
+        let group = groups.get(key);
+        if (!group) {
+            group = {
+                key,
+                name: room.name,
+                description: room.description,
+                size: room.size,
+                capacity: room.capacity,
+                features: room.features,
+                images: room.images,
+                rates: [],
+            };
+            groups.set(key, group);
+            order.push(key);
+        }
+        if (!group.description && room.description) {
+            group.description = room.description;
+        }
+        if (group.images.length === 0 && room.images.length > 0) {
+            group.images = room.images;
+        }
+        group.rates.push(room);
+    }
+
+    for (const group of groups.values()) {
+        group.rates.sort(
+            (a, b) =>
+                (a.priceTotal ?? a.pricePerNight) -
+                (b.priceTotal ?? b.pricePerNight),
+        );
+    }
+
+    return order.map((key) => groups.get(key)!);
 }
 
 function formatBadgeDate(value: string, lang: string): string {
@@ -68,14 +129,41 @@ export function RoomRatesTable({
     promoRate = null,
     bookDisabled = false,
     onReserve,
+    requestMode = false,
 }: RoomRatesTableProps) {
     const { t, lang } = useLanguage();
-    const [selected, setSelected] = useState(rooms[0]?.id ?? '');
+    const groups = useMemo(() => groupByRoomType(rooms), [rooms]);
 
-    const active = useMemo(
-        () => rooms.find((room) => room.id === selected) ?? rooms[0],
-        [rooms, selected],
-    );
+    // Selection is keyed by "group + position in that group" rather than
+    // rate.id. rate.id comes straight from the booking payload — if two
+    // rate plans on the same room ever resolve to the same id upstream
+    // (e.g. a missing boarding_id defaults more than one rate to the same
+    // key), matching selection by id alone makes BOTH rows read as
+    // selected. A key built locally can never collide.
+    const firstKey = groups[0]?.rates.length ? `${groups[0].key}::0` : '';
+    const [selected, setSelected] = useState(firstKey);
+
+    useEffect(() => {
+        setSelected(groups[0]?.rates.length ? `${groups[0].key}::0` : '');
+        // Reset to the first rate whenever a new search result comes in —
+        // the previously selected key may no longer exist.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rooms]);
+
+    const activeEntry = useMemo(() => {
+        for (const group of groups) {
+            const idx = group.rates.findIndex(
+                (_, i) => `${group.key}::${i}` === selected,
+            );
+            if (idx !== -1) return { group, rate: group.rates[idx] };
+        }
+        return groups[0]
+            ? { group: groups[0], rate: groups[0].rates[0] }
+            : undefined;
+    }, [groups, selected]);
+
+    const active = activeEntry?.rate;
+    const activeGroup = activeEntry?.group;
 
     const activeTotal = active
         ? (active.priceTotal ?? active.pricePerNight) * occupancy.rooms
@@ -84,118 +172,148 @@ export function RoomRatesTable({
 
     return (
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
-            <div className="hidden grid-cols-[2.2fr_0.8fr_1.2fr_1fr] gap-4 bg-muted/60 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:grid">
-                <span>{t('hotelDetail.roomType')}</span>
-                <span>{t('hotelDetail.occupancy')}</span>
-                <span>{t('hotelDetail.boarding')}</span>
-                <span className="text-right">
-                    {t('hotelDetail.totalForStay')}
+            {/* Occupancy is identical for every room/rate below (it's the
+                same search), so it's stated once here instead of being
+                repeated as icons on every single row. */}
+            <div className="flex items-center gap-2 bg-muted/60 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <span>{t('hotelDetail.roomsAndRates')}</span>
+                <span className="ml-auto flex items-center gap-1 normal-case text-muted-foreground/80">
+                    {Array.from({ length: occupancy.adults }).map((_, i) => (
+                        <User key={i} className="h-3.5 w-3.5" />
+                    ))}
+                    {occupancy.childAges.map((_, i) => (
+                        <Baby key={i} className="h-3.5 w-3.5" />
+                    ))}
+                    {occupancy.rooms > 1 && <span className="ml-1">× {occupancy.rooms}</span>}
                 </span>
             </div>
 
             <div className="divide-y divide-border">
-                {rooms.map((room) => {
-                    const isSelected = selected === room.id;
-                    const total = (room.priceTotal ?? room.pricePerNight) * occupancy.rooms;
-                    const totalPromo = promoPrice(total, promoRate);
-                    return (
-                        <div
-                            key={room.id}
-                            className={cn(
-                                'grid items-center gap-4 px-5 py-4 transition-colors md:grid-cols-[2.2fr_0.8fr_1.2fr_1fr]',
-                                isSelected
-                                    ? 'bg-primary/5'
-                                    : 'hover:bg-muted/40',
-                            )}
-                        >
-                            <div className="flex items-start gap-3">
-                                <Checkbox
-                                    checked={isSelected}
-                                    onCheckedChange={() => setSelected(room.id)}
-                                    aria-label={`Select ${room.name}`}
-                                    className="mt-1"
+                {groups.map((group) => (
+                    <div key={group.key} className="p-5">
+                        {/* Room identity — shown ONCE per room, not once per boarding */}
+                        <div className="flex gap-4">
+                            {group.images[0] ? (
+                                <img
+                                    src={group.images[0]}
+                                    alt={group.name}
+                                    loading="lazy"
+                                    className="hidden h-20 w-24 shrink-0 rounded-xl object-cover sm:block"
                                 />
-                                <div className="flex gap-3">
-                                    {room.images[0] ? (
-                                        <img
-                                            src={room.images[0]}
-                                            alt={room.name}
-                                            loading="lazy"
-                                            className="hidden h-16 w-20 shrink-0 rounded-lg object-cover sm:block"
-                                        />
-                                    ) : (
-                                        <div className="hidden h-16 w-20 shrink-0 items-center justify-center rounded-lg bg-muted sm:flex">
-                                            <BedDouble className="h-6 w-6 text-muted-foreground/60" />
-                                        </div>
-                                    )}
-                                    <div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelected(room.id)}
-                                            className="text-left"
-                                        >
-                                            <p className="text-sm font-semibold text-foreground">
-                                                {occupancy.rooms > 1
-                                                    ? `${occupancy.rooms} × ${room.name}`
-                                                    : room.name}
-                                                <span className="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 align-middle text-[10px] font-bold text-primary">
-                                                    {t('hotelDetail.available')}
-                                                </span>
-                                            </p>
-                                        </button>
-                                        <p className="mt-0.5 text-xs text-muted-foreground">
-                                            {room.size ? `${room.size} m²` : ''}
-                                            {room.size && room.capacity ? ' · ' : ''}
-                                            {room.capacity
-                                                ? `${room.capacity} ${t('hotelDetail.guests')}`
-                                                : ''}
-                                        </p>
-                                        {room.description ? (
-                                            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                                                {room.description}
-                                            </p>
-                                        ) : null}
-                                        {room.features?.length ? (
-                                            <div className="mt-1.5 flex flex-wrap gap-1">
-                                                {room.features
-                                                    .slice(0, 5)
-                                                    .map((feature) => (
-                                                        <span
-                                                            key={feature}
-                                                            className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
-                                                        >
-                                                            {feature}
-                                                        </span>
-                                                    ))}
-                                            </div>
-                                        ) : null}
+                            ) : (
+                                <div className="hidden h-20 w-24 shrink-0 items-center justify-center rounded-xl bg-muted sm:flex">
+                                    <BedDouble className="h-6 w-6 text-muted-foreground/60" />
+                                </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-foreground">
+                                    {occupancy.rooms > 1
+                                        ? `${occupancy.rooms} × ${group.name}`
+                                        : group.name}
+                                </p>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                    {group.size ? `${group.size} m²` : ''}
+                                    {group.size && group.capacity ? ' · ' : ''}
+                                    {group.capacity
+                                        ? `${group.capacity} ${t('hotelDetail.guests')}`
+                                        : ''}
+                                </p>
+                                {group.description ? (
+                                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                                        {group.description}
+                                    </p>
+                                ) : null}
+                                {group.features?.length ? (
+                                    <div className="mt-1.5 flex flex-wrap gap-1">
+                                        {group.features.slice(0, 5).map((feature) => (
+                                            <span
+                                                key={feature}
+                                                className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                                            >
+                                                {feature}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : null}
+                            </div>
+                        </div>
 
-                                        <div className="mt-1 flex flex-wrap gap-1.5">
-                                            {room.onRequest && (
-                                                <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-                                                    {t('hotelDetail.onRequest')}
-                                                </span>
-                                            )}
-                                            {room.notRefundable && (
-                                                <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                                                    {t('hotelDetail.nonRefundable')}
-                                                </span>
-                                            )}
-                                            {room.cancellationDeadline && (
-                                                <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                                                    {t('hotelDetail.freeCancellationUntil')}{' '}
-                                                    {formatBadgeDate(
-                                                        room.cancellationDeadline,
-                                                        lang,
-                                                    )}
-                                                </span>
-                                            )}
-                                            {room.cancellationPolicy?.length
-                                                ? (
+                        {/* Rate plans for this room — all boardings visible
+                            together, no tabs to switch between. */}
+                        <div className="mt-3 space-y-2 sm:pl-[104px]">
+                            {group.rates.map((rate, idx) => {
+                                const selKey = `${group.key}::${idx}`;
+                                const isSelected = selected === selKey;
+                                const total =
+                                    (rate.priceTotal ?? rate.pricePerNight) * occupancy.rooms;
+                                const totalPromo = promoPrice(total, promoRate);
+
+                                return (
+                                    <label
+                                        key={selKey}
+                                        className={cn(
+                                            'flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border px-4 py-3 transition-colors',
+                                            isSelected
+                                                ? 'border-primary bg-primary/5'
+                                                : 'border-border hover:bg-muted/40',
+                                        )}
+                                    >
+                                        {/* A <label> is used deliberately (rather than a
+                                            click handler on the row) — clicking anywhere in
+                                            the row toggles the radio, but browsers already
+                                            exclude nested interactive elements (like the
+                                            cancellation-policy button below) from that
+                                            forwarding, so it doesn't fight with the popover. */}
+                                        <input
+                                            type="radio"
+                                            name="rate-select"
+                                            checked={isSelected}
+                                            onChange={() => setSelected(selKey)}
+                                            className="h-4 w-4 accent-primary"
+                                            aria-label={`Select ${group.name} — ${rate.boardingName ?? ''}`}
+                                        />
+
+                                        <div className="min-w-[140px] flex-1">
+                                            <p className="text-sm font-semibold text-foreground">
+                                                {rate.boardingName ||
+                                                    t('hotelDetail.standardBoarding')}
+                                            </p>
+
+                                            <div className="mt-1 flex flex-wrap gap-1.5">
+                                                {rate.onRequest ? (
+                                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                        {t('hotelDetail.onRequest')}
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                                        {t('hotelDetail.available')}
+                                                    </span>
+                                                )}
+                                                {rate.notRefundable && (
+                                                    <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                                                        {t('hotelDetail.nonRefundable')}
+                                                    </span>
+                                                )}
+                                                {rate.cancellationDeadline && (
+                                                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                        {t('hotelDetail.freeCancellationUntil')}{' '}
+                                                        {formatBadgeDate(rate.cancellationDeadline, lang)}
+                                                    </span>
+                                                )}
+                                                {rate.cancellationPolicy?.length ? (
                                                     <Popover>
                                                         <PopoverTrigger asChild>
                                                             <button
                                                                 type="button"
+                                                                // stopPropagation, not preventDefault: preventDefault
+                                                                // sets event.defaultPrevented, which Radix's asChild
+                                                                // trigger checks before running its own open-toggle
+                                                                // logic — so it was silently blocking the popover
+                                                                // from ever opening. stopPropagation only stops the
+                                                                // click bubbling further (which we don't even need
+                                                                // here since it's a <label>, but keeps this element
+                                                                // safe if the row markup changes later).
+                                                                onClick={(e) => e.stopPropagation()}
                                                                 className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
                                                             >
                                                                 <Info className="h-3 w-3" />
@@ -207,96 +325,62 @@ export function RoomRatesTable({
                                                                 {t('hotelDetail.cancellationPolicy')}
                                                             </p>
                                                             <ul className="space-y-1.5 text-xs leading-relaxed text-muted-foreground">
-                                                                {room.cancellationPolicy.map(
-                                                                    (entry, i) => (
-                                                                        <li
-                                                                            key={i}
-                                                                            className="flex items-start gap-1.5"
-                                                                        >
-                                                                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
-                                                                            <span>
-                                                                                {entry.description ||
-                                                                                    (entry.type === 'PERCENT'
-                                                                                        ? `${entry.fees}%`
-                                                                                        : `${entry.fees} ${currency}`)}
-                                                                                {entry.from_date
-                                                                                    ? ` — ${formatBadgeDate(
-                                                                                          entry.from_date.slice(
-                                                                                              0,
-                                                                                              10,
-                                                                                          ),
-                                                                                          lang,
-                                                                                      )}`
-                                                                                    : ''}
-                                                                            </span>
-                                                                        </li>
-                                                                    ),
-                                                                )}
+                                                                {rate.cancellationPolicy.map((entry, i) => (
+                                                                    <li key={i} className="flex items-start gap-1.5">
+                                                                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                                                                        <span>
+                                                                            {entry.description ||
+                                                                                (entry.type === 'PERCENT'
+                                                                                    ? `${entry.fees}%`
+                                                                                    : `${entry.fees} ${currency}`)}
+                                                                            {entry.from_date
+                                                                                ? ` — ${formatBadgeDate(entry.from_date.slice(0, 10), lang)}`
+                                                                                : ''}
+                                                                        </span>
+                                                                    </li>
+                                                                ))}
                                                             </ul>
                                                         </PopoverContent>
                                                     </Popover>
-                                                )
-                                                : null}
-                                        </div>
+                                                ) : null}
+                                            </div>
 
-                                        {room.supplements &&
-                                            room.supplements.length > 0 && (
+                                            {rate.supplements && rate.supplements.length > 0 && (
                                                 <div className="mt-1.5 space-y-0.5">
-                                                    {room.supplements.map(
-                                                        (supplement, i) => (
-                                                            <p
-                                                                key={`${room.id}-supplement-${i}`}
-                                                                className="text-[11px] text-muted-foreground"
-                                                            >
-                                                                +{supplement.price.toLocaleString()}{' '}
-                                                                {currency}{' '}
-                                                                {supplement.name}
-                                                                {supplement.perNight
-                                                                    ? ` ${t('hotelDetail.pernight')}`
-                                                                    : ''}
-                                                            </p>
-                                                        ),
-                                                    )}
+                                                    {rate.supplements.map((supplement, i) => (
+                                                        <p
+                                                            key={`${selKey}-supplement-${i}`}
+                                                            className="text-[11px] text-muted-foreground"
+                                                        >
+                                                            +{supplement.price.toLocaleString()} {currency}{' '}
+                                                            {supplement.name}
+                                                            {supplement.perNight
+                                                                ? ` ${t('hotelDetail.pernight')}`
+                                                                : ''}
+                                                        </p>
+                                                    ))}
                                                 </div>
                                             )}
-                                    </div>
-                                </div>
-                            </div>
+                                        </div>
 
-                            <div className="flex items-center gap-1 text-muted-foreground">
-                                {Array.from({ length: occupancy.adults }).map(
-                                    (_, i) => (
-                                        <User key={i} className="h-4 w-4" />
-                                    ),
-                                )}
-                                {occupancy.childAges.map((_, i) => (
-                                    <Baby key={i} className="h-4 w-4" />
-                                ))}
-                            </div>
-
-                            <div className="text-sm font-medium text-foreground">
-                                {room.boardingName ||
-                                    t('hotelDetail.standardBoarding')}
-                            </div>
-
-                            <div className="text-right">
-                                <p className="text-lg font-bold text-foreground">
-                                    {(totalPromo
-                                        ? totalPromo.discounted
-                                        : total
-                                    ).toLocaleString()}{' '}
-                                    {currency}
-                                </p>
-                                {totalPromo && (
-                                    <p className="text-xs font-medium text-muted-foreground line-through">
-                                        {totalPromo.original.toLocaleString()}{' '}
-                                        {currency}
-                                    </p>
-                                )}
-                            </div>
+                                        <div className="text-right">
+                                            <p className="text-base font-bold text-foreground">
+                                                {requestMode
+                                                    ? <>- {currency}</>
+                                                    : <>{(totalPromo ? totalPromo.discounted : total).toLocaleString()}{' '}{currency}</>}
+                                            </p>
+                                            {!requestMode && totalPromo && (
+                                                <p className="text-xs font-medium text-muted-foreground line-through">
+                                                    {totalPromo.original.toLocaleString()} {currency}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </label>
+                                );
+                            })}
                         </div>
-                    );
-                })}
+                    </div>
+                ))}
             </div>
 
             <div className="flex flex-col items-center justify-end gap-4 border-t border-border bg-muted/50 px-5 py-4 sm:flex-row">
@@ -304,18 +388,25 @@ export function RoomRatesTable({
                     <div className="text-right">
                         <p className="text-xs text-muted-foreground">
                             {t('hotelDetail.stayTotalLabel')}
+                            {activeGroup && active ? (
+                                <>
+                                    {' · '}
+                                    {activeGroup.name} ·{' '}
+                                    {active.boardingName || t('hotelDetail.standardBoarding')}
+                                </>
+                            ) : null}
                         </p>
                         <p className="text-2xl font-bold text-primary">
-                            {(activeTotalPromo
-                                ? activeTotalPromo.discounted
-                                : activeTotal
-                            ).toLocaleString()}{' '}
-                            {currency}
+                            {requestMode
+                                ? t('hotelDetail.requestTitle')
+                                : <>{(activeTotalPromo
+                                    ? activeTotalPromo.discounted
+                                    : activeTotal
+                                ).toLocaleString()}{' '}{currency}</>}
                         </p>
-                        {activeTotalPromo && (
+                        {!requestMode && activeTotalPromo && (
                             <p className="text-xs font-medium text-muted-foreground line-through">
-                                {activeTotalPromo.original.toLocaleString()}{' '}
-                                {currency}
+                                {activeTotalPromo.original.toLocaleString()} {currency}
                             </p>
                         )}
                     </div>
@@ -326,7 +417,9 @@ export function RoomRatesTable({
                         disabled={!active || bookDisabled}
                         onClick={() => active && onReserve(active)}
                     >
-                        {t('hotelDetail.reserve')}
+                        {requestMode
+                            ? t('hotelDetail.requestBooking')
+                            : t('hotelDetail.reserve')}
                     </Button>
                 </div>
             </div>

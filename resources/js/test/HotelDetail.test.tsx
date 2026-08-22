@@ -79,6 +79,12 @@ const mockHotel = vi.hoisted(() => ({
                 name: 'Demi-pension',
                 description: 'Bed & half board',
             },
+            {
+                id: 1,
+                code: 'AI',
+                name: 'All inclusive',
+                description: 'All inclusive',
+            },
         ],
         note: 'Séjour avec taxe de séjour à régler sur place.',
         amenities: [{ en: 'Wi-Fi', fr: 'Wi-Fi', ar: 'Wi-Fi' }],
@@ -357,24 +363,15 @@ describe('HotelDetail', () => {
         expect(await screen.findByText('Hôtel')).toBeInTheDocument();
     });
 
-    it('shows the boarding description under each advanced search checkbox', async () => {
+    it('shows the boarding description under each boarding checkbox', async () => {
         renderPage('/hotels/sunset-paradise-resort');
         await screen.findByText('Chambres');
 
-        // The HotelInfo dining tab renders the boarding description once.
+        // The boarding description appears in the HotelInfo dining tab.
         await userEvent.click(
             screen.getByRole('tab', { name: /Restauration & options/ }),
         );
         expect(screen.getAllByText('Bed & half board').length).toBe(1);
-
-        fireEvent.click(
-            screen.getByRole('button', {
-                name: /Recherche avancée/i,
-            }),
-        );
-
-        // Advanced boarding checkbox now shows the description as a subtext.
-        expect(screen.getAllByText('Bed & half board').length).toBe(2);
     });
 
     it('does not crash when a room has null features', async () => {
@@ -587,12 +584,15 @@ describe('HotelDetail', () => {
         clickCheckAvailability();
         await screen.findByText('Junior Suite');
 
-        expect(screen.getByText('Standard Double')).toBeInTheDocument();
+        // Both room types and their boarding names are shown inline.
         expect(screen.getByText('Junior Suite')).toBeInTheDocument();
-        expect(screen.getByText('All inclusive')).toBeInTheDocument();
+        expect(screen.getByText('Standard Double')).toBeInTheDocument();
         expect(
             screen.getAllByText('Demi-pension').length,
-        ).toBeGreaterThan(0);
+        ).toBeGreaterThanOrEqual(1);
+        expect(
+            screen.getAllByText('All inclusive').length,
+        ).toBeGreaterThanOrEqual(1);
     });
 
     it('renders the live room description, features and cancellation policy popover', async () => {

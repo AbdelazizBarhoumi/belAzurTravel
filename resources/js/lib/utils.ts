@@ -5,6 +5,16 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+// `children` is a comma-separated list of child ages (e.g. "5,8") carried in
+// the URL to preserve occupancy across the list <-> detail navigation.
+export const parseChildAges = (raw: string | null | undefined): number[] => {
+    if (!raw) return [];
+    return raw
+        .split(',')
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value >= 0 && value <= 17);
+};
+
 // Serialize a Date as YYYY-MM-DD in local time (toISOString() shifts to UTC).
 export const toLocalISODate = (
     date: Date | null | undefined,

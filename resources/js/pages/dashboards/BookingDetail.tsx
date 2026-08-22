@@ -311,14 +311,14 @@ export default function BookingDetail() {
                 </div>
             </motion.div>
 
-            {/* Passengers */}
-            {booking.travelers && booking.travelers.length > 0 ? (
+            {/* Guests */}
+            {booking.guests && booking.guests.length > 0 ? (
                 <div className="rounded-2xl border border-border bg-card p-5">
                     <h3 className="mb-3 font-serif text-lg font-bold text-foreground">
-                        {t('bookingDetail.passengers') || 'Passengers'}
+                        {t('bookingDetail.guests') || 'Guests'}
                     </h3>
                     <ul className="space-y-2">
-                        {booking.travelers.map((traveler, index) => (
+                        {booking.guests.map((guest, index) => (
                             <li
                                 key={index}
                                 className="flex items-center gap-3 text-sm text-foreground"
@@ -326,7 +326,7 @@ export default function BookingDetail() {
                                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                                     <User className="h-4 w-4 text-muted-foreground" />
                                 </span>
-                                {traveler.name || `#${index + 1}`}
+                                {guest.name || `#${index + 1}`}
                             </li>
                         ))}
                     </ul>

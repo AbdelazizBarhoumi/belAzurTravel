@@ -47,87 +47,93 @@ class OsTravelSearchService
         $searchDetails = $this->searchDetails($options);
         $cacheKey = 'hotels.search.'.sha1(serialize([$hotelSlugs, $options]));
 
-        return Cache::remember($cacheKey, now()->addMinutes(5), function () use ($hotelSlugs, $options, $searchDetails) {
-            $query = OsTravelHotel::query()
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $query = OsTravelHotel::query()
+            ->whereNotNull('hotel_id')
+            ->with('hotel');
+
+        if ($hotelSlugs !== []) {
+            $query->whereHas('hotel', fn ($q) => $q->whereIn('slug', $hotelSlugs));
+        }
+
+        if ($options['city_id'] !== null) {
+            $query->where('city_external_id', $options['city_id']);
+        }
+
+        if ($options['stars'] !== null) {
+            $query->whereHas('hotel', fn ($q) => $q->where('stars', '>=', $options['stars']));
+        }
+
+        $staged = $query->get()->keyBy('external_id');
+
+        // Manual hotels (Stage 2) are always candidates with their stored
+        // price — never sent to the provider. Provider-only filters (city
+        // external id, category, boarding) don't apply to them. Hotels with
+        // a published provider row are excluded regardless of the column so
+        // a single hotel can never be returned twice.
+        $manualHotels = Hotel::query()
+            ->where('source', Hotel::SOURCE_MANUAL)
+            ->whereNotIn('id', OsTravelHotel::query()
                 ->whereNotNull('hotel_id')
-                ->with('hotel');
+                ->pluck('hotel_id'))
+            ->when($hotelSlugs !== [], fn ($q) => $q->whereIn('slug', $hotelSlugs))
+            ->when($options['stars'] !== null, fn ($q) => $q->where('stars', '>=', $options['stars']))
+            ->get();
 
-            if ($hotelSlugs !== []) {
-                $query->whereHas('hotel', fn ($q) => $q->whereIn('slug', $hotelSlugs));
+        if ($staged->isEmpty() && $manualHotels->isEmpty()) {
+            return [];
+        }
+
+        $results = [];
+        $providerSucceeded = false;
+        $seenIds = [];
+        $nights = $this->calculator->nightsBetween(
+            $searchDetails['check_in'],
+            $searchDetails['check_out'],
+        );
+
+        $chunks = array_chunk($staged->keys()->all(), self::MAX_HOTELS_PER_REQUEST);
+        $throttleMs = (int) config('ostravel.search.throttle_ms', 150);
+
+        foreach ($chunks as $index => $chunk) {
+            if ($index > 0 && $throttleMs > 0) {
+                usleep($throttleMs * 1000);
             }
 
-            if ($options['city_id'] !== null) {
-                $query->where('city_external_id', $options['city_id']);
+            try {
+                $envelope = $this->client->hotelSearch([
+                    'BookingDetails' => [
+                        'CheckIn' => $searchDetails['check_in'],
+                        'CheckOut' => $searchDetails['check_out'],
+                        'Hotels' => array_map('intval', $chunk),
+                    ],
+                    'Filters' => [
+                        'OnlyAvailable' => (bool) $options['only_available'],
+                        'Category' => $options['category_ids'],
+                    ],
+                    'Rooms' => $this->providerRooms($options['rooms']),
+                ]);
+                $providerSucceeded = true;
+            } catch (Throwable $e) {
+                Log::warning('OS-TRAVEL HotelSearch chunk failed.', [
+                    'hotels' => $chunk,
+                    'error' => $e->getMessage(),
+                ]);
+
+                continue;
             }
 
-            if ($options['stars'] !== null) {
-                $query->whereHas('hotel', fn ($q) => $q->where('stars', '>=', $options['stars']));
-            }
-
-            $staged = $query->get()->keyBy('external_id');
-
-            // Manual hotels (Stage 2) are always candidates with their stored
-            // price — never sent to the provider. Provider-only filters (city
-            // external id, category, boarding) don't apply to them. Hotels with
-            // a published provider row are excluded regardless of the column so
-            // a single hotel can never be returned twice.
-            $manualHotels = Hotel::query()
-                ->where('source', Hotel::SOURCE_MANUAL)
-                ->whereNotIn('id', OsTravelHotel::query()
-                    ->whereNotNull('hotel_id')
-                    ->pluck('hotel_id'))
-                ->when($hotelSlugs !== [], fn ($q) => $q->whereIn('slug', $hotelSlugs))
-                ->when($options['stars'] !== null, fn ($q) => $q->where('stars', '>=', $options['stars']))
-                ->get();
-
-            if ($staged->isEmpty() && $manualHotels->isEmpty()) {
-                return [];
-            }
-
-            $results = [];
-            $seenIds = [];
-            $nights = $this->calculator->nightsBetween(
-                $searchDetails['check_in'],
-                $searchDetails['check_out'],
-            );
-
-            $chunks = array_chunk($staged->keys()->all(), self::MAX_HOTELS_PER_REQUEST);
-            $throttleMs = (int) config('ostravel.search.throttle_ms', 150);
-
-            foreach ($chunks as $index => $chunk) {
-                if ($index > 0 && $throttleMs > 0) {
-                    usleep($throttleMs * 1000);
-                }
-
-                try {
-                    $envelope = $this->client->hotelSearch([
-                        'BookingDetails' => [
-                            'CheckIn' => $searchDetails['check_in'],
-                            'CheckOut' => $searchDetails['check_out'],
-                            'Hotels' => array_map('intval', $chunk),
-                        ],
-                        'Filters' => [
-                            'OnlyAvailable' => (bool) $options['only_available'],
-                            'Category' => $options['category_ids'],
-                        ],
-                        'Rooms' => $this->providerRooms($options['rooms']),
-                    ]);
-                } catch (Throwable $e) {
-                    Log::warning('OS-TRAVEL HotelSearch chunk failed.', [
-                        'hotels' => $chunk,
-                        'error' => $e->getMessage(),
-                    ]);
-
+            foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
+                $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
+                $item = $staged->get($externalId);
+                if ($item === null || $item->hotel === null || isset($seenIds[$externalId])) {
                     continue;
                 }
-
-                foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
-                    $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
-                    $item = $staged->get($externalId);
-                    if ($item === null || $item->hotel === null) {
-                        continue;
-                    }
-                    $seenIds[$externalId] = true;
+                $seenIds[$externalId] = true;
 
                     $normalized = $this->normalize(
                         $item->hotel,
@@ -135,70 +141,76 @@ class OsTravelSearchService
                         $nights,
                         $searchDetails['check_in'],
                         $searchDetails['check_out'],
+                        $options['only_available'] !== true,
                     );
 
-                    // Boarding is not a provider filter; drop rooms that don't
-                    // match, and the hotel if no matching room remains.
-                    if ($options['boarding_ids'] !== []) {
-                        $normalized['rooms'] = array_values(array_filter(
-                            $normalized['rooms'],
-                            fn (array $room) => in_array($room['boarding_id'], $options['boarding_ids'], true)
-                        ));
+                // Boarding is not a provider filter; drop rooms that don't
+                // match, and the hotel if no matching room remains.
+                if ($options['boarding_ids'] !== []) {
+                    $normalized['rooms'] = array_values(array_filter(
+                        $normalized['rooms'],
+                        fn (array $room) => in_array($room['boarding_id'], $options['boarding_ids'], true)
+                    ));
 
-                        if ($normalized['rooms'] === []) {
-                            continue;
-                        }
-
-                        $aggregate = $this->aggregateRooms($normalized['rooms'], $nights, $normalized['currency']);
-                        $normalized = array_merge($normalized, $aggregate);
-                    }
-
-                    // `OnlyAvailable: true` must only ever surface bookable
-                    // hotels. A hotel the provider returned with no bookable
-                    // room for the searched window is dropped; with
-                    // `OnlyAvailable: false` it is kept and flagged instead.
-                    if ($options['only_available'] && ! $normalized['available']) {
+                    if ($normalized['rooms'] === []) {
                         continue;
                     }
 
-                    $results[] = $normalized;
+                    $aggregate = $this->aggregateRooms($normalized['rooms'], $nights, $normalized['currency']);
+                    $normalized = array_merge($normalized, $aggregate);
                 }
-            }
 
-            // `only_available=false`: keep candidates the provider omitted so the
-            // UI can grey them out instead of silently hiding them.
-            if (! $options['only_available']) {
-                foreach ($staged as $externalId => $item) {
-                    if (isset($seenIds[$externalId]) || $item->hotel === null) {
-                        continue;
-                    }
-
-                    $result = $this->basePayload($item->hotel);
-                    $result['available'] = false;
-                    $result['unavailable_reason'] = 'not_returned';
-                    $result['first_available_at'] = null;
-                    $result['min_nights'] = null;
-                    $result['rooms'] = [];
-                    $result = array_merge($result, [
-                        'price' => null,
-                        'price_total' => null,
-                        'price_per_night' => null,
-                        'base_price' => null,
-                        'currency' => $item->hotel->currency,
-                        'nights' => $nights,
-                    ]);
-
-                    $results[] = $result;
+                // `OnlyAvailable: true` must only ever surface bookable
+                // hotels. A hotel the provider returned with no bookable
+                // room for the searched window is dropped; with
+                // `OnlyAvailable: false` it is kept and flagged instead.
+                if ($options['only_available'] && ! $normalized['available']) {
+                    continue;
                 }
-            }
 
-            // Manual hotels: stored price, always available, no provider call.
-            foreach ($manualHotels as $manualHotel) {
-                $results[] = $this->manualPayload($manualHotel, $nights);
+                $results[] = $normalized;
             }
+        }
 
-            return $this->finalize($results, $options);
-        });
+        // `only_available=false`: keep candidates the provider omitted so the
+        // UI can grey them out instead of silently hiding them.
+        if (! $options['only_available']) {
+            foreach ($staged as $externalId => $item) {
+                if (isset($seenIds[$externalId]) || $item->hotel === null) {
+                    continue;
+                }
+
+                $result = $this->basePayload($item->hotel);
+                $result['available'] = false;
+                $result['unavailable_reason'] = 'not_returned';
+                $result['first_available_at'] = null;
+                $result['min_nights'] = null;
+                $result['rooms'] = [];
+                $result = array_merge($result, [
+                    'price' => null,
+                    'price_total' => null,
+                    'price_per_night' => null,
+                    'base_price' => null,
+                    'currency' => $item->hotel->currency,
+                    'nights' => $nights,
+                ]);
+
+                $results[] = $result;
+            }
+        }
+
+        // Manual hotels: stored price, always available, no provider call.
+        foreach ($manualHotels as $manualHotel) {
+            $results[] = $this->manualPayload($manualHotel, $nights);
+        }
+
+        $results = $this->finalize($results, $options);
+
+        if ($providerSucceeded || $manualHotels->isNotEmpty()) {
+            Cache::put($cacheKey, $results, now()->addMinutes(5));
+        }
+
+        return $results;
     }
 
     /**
@@ -527,7 +539,7 @@ class OsTravelSearchService
      * @param  array<string, mixed>  $providerHotel
      * @return array<string, mixed>
      */
-    private function normalize(Hotel $hotel, array $providerHotel, int $nights, string $checkIn, string $checkOut): array
+    private function normalize(Hotel $hotel, array $providerHotel, int $nights, string $checkIn, string $checkOut, bool $includeAllRooms = false): array
     {
         $markup = (float) $hotel->markup_percentage;
         $currency = $this->calculator->currency($providerHotel['Currency'] ?? $hotel->currency);
@@ -536,15 +548,18 @@ class OsTravelSearchService
         $anyBookable = false;
         foreach ($this->roomOffers($providerHotel) as $offer) {
             $basePrice = $offer['price'];
+            $bookable = $this->roomBookable($offer, $checkIn, $checkOut);
 
-            // Only bookable rooms are offered: a room whose minimum stay
-            // exceeds the searched nights or whose stop-sale covers the dates
-            // cannot be booked and must not surface a price.
-            if (! $this->roomBookable($offer, $checkIn, $checkOut)) {
+            // When $includeAllRooms is true (only_available=false fallback),
+            // include every room so the UI can show them as "On request".
+            // Otherwise only bookable rooms are surfaced.
+            if (! $bookable && ! $includeAllRooms) {
                 continue;
             }
 
-            $anyBookable = true;
+            if ($bookable) {
+                $anyBookable = true;
+            }
 
             $rooms[] = [
                 'id' => $offer['id'],
@@ -577,6 +592,7 @@ class OsTravelSearchService
                 'not_refundable' => $offer['not_refundable'],
                 'cancellation_deadline' => $offer['cancellation_deadline'],
                 'retrocession' => $offer['retrocession'],
+                'bookable' => $bookable,
             ];
         }
 
@@ -592,7 +608,7 @@ class OsTravelSearchService
             $meta = $this->availabilityMeta($this->roomOffers($providerHotel), $checkIn, $checkOut);
 
             $result['available'] = false;
-            $result['rooms'] = [];
+            $result['rooms'] = $includeAllRooms ? $rooms : [];
             $result['unavailable_reason'] = $meta['reason'];
             $result['first_available_at'] = $meta['first_available_at'];
             $result['min_nights'] = $meta['min_nights'];

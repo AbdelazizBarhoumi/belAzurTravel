@@ -806,7 +806,7 @@ const AdminOsTravel = () => {
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className="space-y-4 overflow-y-auto pr-1">
+                        <div className="space-y-4 pr-1">
                             {detailLoading ? (
                                 <>
                                     <Skeleton className="h-44 w-full rounded-xl" />

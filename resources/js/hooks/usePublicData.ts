@@ -459,6 +459,7 @@ export interface HotelSearchResult {
         stop_reservation: boolean;
         min_stay: number;
         on_request: boolean;
+        bookable?: boolean;
         quantity: number | null;
         stop_sales: { from: string; to: string } | null;
         cancellation_policy: Array<{

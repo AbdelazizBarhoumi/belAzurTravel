@@ -1,4 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    BedDouble,
+    CalendarDays,
+    Check,
+    Clock,
+    Mail,
+    ShieldCheck,
+    Users,
+} from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,7 +38,7 @@ import { toLocalISODate } from '@/lib/utils';
 
 type Civility = 'Mr' | 'Mrs' | 'Ms';
 
-interface PassengerRow {
+interface GuestRow {
     civility: Civility;
     firstName: string;
     lastName: string;
@@ -70,9 +79,21 @@ interface BookingDialogProps {
         // Booking preferences (HotelDetail `Option[]`) the guest may select.
         options?: Array<{ id: number; title: string }>;
     };
+    // -- Booking summary card (all optional, all degrade gracefully) --
+    /** Thumbnail shown next to the item name in the summary card. */
+    image?: string;
+    /** Currency code shown next to amounts. Defaults to 'TND' to match the rest of the app. */
+    currency?: string;
+    /** When provided, shows a "N nights · price/night" breakdown line under the total. */
+    pricePerNight?: number;
+    /** e.g. the selected boarding/rate plan name — shown as a subtitle under the item name. */
+    subLabel?: string;
+    notRefundable?: boolean;
+    /** ISO date string — renders a "free cancellation until …" trust badge. */
+    freeCancellationUntil?: string;
 }
 
-function emptyPassenger(age: number | null): PassengerRow {
+function emptyGuest(age: number | null): GuestRow {
     return {
         civility: 'Mr',
         firstName: '',
@@ -81,6 +102,19 @@ function emptyPassenger(age: number | null): PassengerRow {
         passportNumber: '',
         passportExpiry: '',
     };
+}
+
+function formatShortDate(date: Date, lang: string): string {
+    return date.toLocaleDateString(
+        lang === 'fr' ? 'fr-FR' : lang === 'ar' ? 'ar-TN' : 'en-GB',
+        { day: 'numeric', month: 'short' },
+    );
+}
+
+function formatShortDateFromISO(value: string, lang: string): string {
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return formatShortDate(date, lang);
 }
 
 export function BookingDialog({
@@ -94,8 +128,14 @@ export function BookingDialog({
     minDate,
     isRequest,
     provider,
+    image,
+    currency = 'TND',
+    pricePerNight,
+    subLabel,
+    notRefundable,
+    freeCancellationUntil,
 }: BookingDialogProps) {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const { data: user } = useAuthUser();
     const { pathname } = useLocation();
     const queryClient = useQueryClient();
@@ -107,7 +147,7 @@ export function BookingDialog({
     const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [notes, setNotes] = useState('');
     const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
-    const [passengers, setPassengers] = useState<PassengerRow[]>([]);
+    const [guests, setGuests] = useState<GuestRow[]>([]);
     // Step 2: booking created — the request is awaiting admin approval.
     const [submittedBooking, setSubmittedBooking] = useState<{
         id: number;
@@ -146,6 +186,26 @@ export function BookingDialog({
         ? Math.max(0, provider?.children ?? 0)
         : 0;
 
+    // Drives the summary card shown as soon as the dialog opens, and is
+    // reused on the post-submit confirmation screen so the guest sees the
+    // same recap throughout instead of the total appearing out of nowhere.
+    const nights = useMemo(() => {
+        if (!effectiveStartDate || !effectiveEndDate) return null;
+        const ms = effectiveEndDate.getTime() - effectiveStartDate.getTime();
+        const value = Math.round(ms / 86_400_000);
+        return value > 0 ? value : null;
+    }, [effectiveStartDate, effectiveEndDate]);
+
+    const summaryDatesLabel = useMemo(() => {
+        if (!effectiveStartDate || !effectiveEndDate) return null;
+        const nightsWord =
+            nights === 1
+                ? t('hotelDetail.nightLabel') || 'night'
+                : t('hotelDetail.nightsLabel') || 'nights';
+        const nightsPart = nights ? ` · ${nights} ${nightsWord}` : '';
+        return `${formatShortDate(effectiveStartDate, lang)} – ${formatShortDate(effectiveEndDate, lang)}${nightsPart}`;
+    }, [effectiveStartDate, effectiveEndDate, nights, lang, t]);
+
     useEffect(() => {
         setSelectedOptionIds([]);
     }, [open]);
@@ -160,26 +220,26 @@ export function BookingDialog({
         }
     }, [open, user]);
 
-    // Rebuild the per-guest passenger rows whenever the dialog opens with a
+    // Rebuild the per-guest rows whenever the dialog opens with a
     // (possibly changed) offer occupancy.
     useEffect(() => {
         if (!open || !hasProviderOffer) {
             return;
         }
         const childrenAges = provider?.childrenAges ?? [];
-        const rows: PassengerRow[] = [];
+        const rows: GuestRow[] = [];
         for (let i = 0; i < adultCount; i++) {
-            rows.push(emptyPassenger(null));
+            rows.push(emptyGuest(null));
         }
         for (let i = 0; i < childCount; i++) {
-            rows.push(emptyPassenger(childrenAges[i] ?? 8));
+            rows.push(emptyGuest(childrenAges[i] ?? 8));
         }
-        setPassengers(rows);
+        setGuests(rows);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, adultCount, childCount]);
 
-    const updatePassenger = (index: number, patch: Partial<PassengerRow>) => {
-        setPassengers((prev) =>
+    const updateGuest = (index: number, patch: Partial<GuestRow>) => {
+        setGuests((prev) =>
             prev.map((row, i) => (i === index ? { ...row, ...patch } : row)),
         );
     };
@@ -212,7 +272,7 @@ export function BookingDialog({
             setSubmittedBooking({
                 id: data.id,
                 total: data.total_amount ?? amount,
-                currency: data.provider_prebook?.currency ?? 'TND',
+                currency: data.provider_prebook?.currency ?? currency,
             });
         },
         onError: () => {
@@ -222,8 +282,8 @@ export function BookingDialog({
         },
     });
 
-    const passengerPayload = useMemo(() => {
-        const adults = passengers
+    const guestPayload = useMemo(() => {
+        const adults = guests
             .filter((row) => row.age === null)
             .map((row, index) => ({
                 Civility: row.civility || 'Mr',
@@ -231,7 +291,7 @@ export function BookingDialog({
                 Surname: row.lastName.trim() || 'Traveler',
                 Holder: index === 0,
             }));
-        const children = passengers
+        const children = guests
             .filter((row) => row.age !== null)
             .map((row) => ({
                 Name: row.firstName.trim() || 'Child',
@@ -239,7 +299,7 @@ export function BookingDialog({
                 Age: row.age ?? 8,
             }));
         return { adults, children };
-    }, [passengers]);
+    }, [guests]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -263,7 +323,7 @@ export function BookingDialog({
             notes,
             amount,
             is_request: isRequest || undefined,
-            travelers: passengers
+            guests: guests
                 .map((row) => `${row.firstName} ${row.lastName}`.trim())
                 .filter(Boolean)
                 .map((line) => ({ name: line })),
@@ -279,7 +339,7 @@ export function BookingDialog({
                     view_ids: room.viewIds ?? [],
                     supplements: room.supplements ?? [],
                 })),
-                pax: passengerPayload,
+                pax: guestPayload,
                 options: selectedOptionIds,
                 search: {
                     check_in:
@@ -304,30 +364,85 @@ export function BookingDialog({
             <DialogContent className="sm:max-w-[560px]">
                 {submittedBooking ? (
                     <>
-                        <DialogHeader>
-                            <DialogTitle>
-                                {t('booking.submittedTitle') ||
-                                    'Request submitted'}
-                            </DialogTitle>
-                            <DialogDescription>
-                                {t('booking.submittedDescription') ||
-                                    "We've received your request. You'll be notified once it's confirmed."}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="flex items-center justify-between rounded-xl border border-border bg-muted/40 p-4">
-                                <span className="text-sm text-muted-foreground">
-                                    {t('booking.submittedTotal') ||
-                                        'Estimated total'}
-                                </span>
-                                <span className="font-serif text-2xl font-bold text-primary">
-                                    {submittedBooking.total.toLocaleString()}{' '}
-                                    {submittedBooking.currency}
-                                </span>
+                        <div className="flex flex-col items-center gap-3 pb-1 pt-2 text-center">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+                                <Check className="h-7 w-7 text-emerald-600" />
+                            </div>
+                            <div>
+                                <DialogTitle className="font-serif text-xl font-bold">
+                                    {t('booking.submittedTitle') ||
+                                        'Request submitted'}
+                                </DialogTitle>
+                                <DialogDescription className="mt-1">
+                                    {t('booking.submittedDescription') ||
+                                        "We've received your request. You'll be notified once it's confirmed."}
+                                </DialogDescription>
                             </div>
                         </div>
+
+                        <div className="space-y-3 py-3">
+                            <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="truncate text-sm font-semibold text-foreground">
+                                            {itemName}
+                                        </p>
+                                        {summaryDatesLabel && (
+                                            <p className="mt-0.5 text-xs text-muted-foreground">
+                                                {summaryDatesLabel}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="shrink-0 text-right">
+                                        <span className="text-xs text-muted-foreground">
+                                            {t('booking.submittedTotal') ||
+                                                'Estimated total'}
+                                        </span>
+                                        <p className="font-serif text-xl font-bold text-primary">
+                                            {submittedBooking.total.toLocaleString()}{' '}
+                                            {submittedBooking.currency}
+                                        </p>
+                                    </div>
+                                </div>
+                                <p className="mt-2 text-[11px] text-muted-foreground">
+                                    {t('booking.referenceLabel') || 'Reference'}{' '}
+                                    #{submittedBooking.id}
+                                </p>
+                            </div>
+
+                            <div className="space-y-2.5 rounded-2xl border border-border p-4">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                    {t('booking.whatsNext') || "What's next"}
+                                </p>
+                                <div className="flex items-start gap-2.5 text-sm text-foreground">
+                                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    <span>
+                                        {t('booking.nextStepEmail') ||
+                                            "You'll receive a confirmation email shortly."}
+                                    </span>
+                                </div>
+                                <div className="flex items-start gap-2.5 text-sm text-foreground">
+                                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    <span>
+                                        {t('booking.nextStepReview') ||
+                                            'Our team reviews availability, usually within 24 hours.'}
+                                    </span>
+                                </div>
+                                <div className="flex items-start gap-2.5 text-sm text-foreground">
+                                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    <span>
+                                        {t('booking.nextStepPayment') ||
+                                            'No payment is taken until your booking is confirmed.'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         <DialogFooter>
-                            <Button onClick={() => onOpenChange(false)}>
+                            <Button
+                                onClick={() => onOpenChange(false)}
+                                className="w-full sm:w-auto"
+                            >
                                 {t('booking.submittedDone') || 'Done'}
                             </Button>
                         </DialogFooter>
@@ -336,13 +451,102 @@ export function BookingDialog({
                     <>
                         <DialogHeader>
                             <DialogTitle>
-                                {t('booking.title') || 'Book'} {itemName}
+                                {t('booking.titleGeneric') ||
+                                    'Complete your booking'}
                             </DialogTitle>
                             <DialogDescription>
                                 {t('booking.description') ||
                                     'Fill in the details below to request a booking.'}
                             </DialogDescription>
                         </DialogHeader>
+
+                        {/* Booking summary — visible the instant the dialog
+                            opens, so the guest sees exactly what they're
+                            reserving and for how much before typing
+                            anything. This is what used to be missing: the
+                            form appeared with no recap of the room, dates,
+                            or price at all. */}
+                        <div className="flex gap-3 rounded-2xl border border-border bg-muted/30 p-4">
+                            {image ? (
+                                <img
+                                    src={image}
+                                    alt={itemName}
+                                    className="hidden h-16 w-20 shrink-0 rounded-xl object-cover sm:block"
+                                />
+                            ) : (
+                                <div className="hidden h-16 w-20 shrink-0 items-center justify-center rounded-xl bg-muted sm:flex">
+                                    <BedDouble className="h-6 w-6 text-muted-foreground/50" />
+                                </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-foreground">
+                                    {itemName}
+                                </p>
+                                {subLabel && (
+                                    <p className="text-xs text-muted-foreground">
+                                        {subLabel}
+                                    </p>
+                                )}
+                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                    {summaryDatesLabel && (
+                                        <span className="inline-flex items-center gap-1">
+                                            <CalendarDays className="h-3.5 w-3.5" />
+                                            {summaryDatesLabel}
+                                        </span>
+                                    )}
+                                    {hasProviderOffer && (
+                                        <span className="inline-flex items-center gap-1">
+                                            <Users className="h-3.5 w-3.5" />
+                                            {adultCount}{' '}
+                                            {t('hotelDetail.guests') || 'guests'}
+                                            {childCount > 0
+                                                ? ` +${childCount}`
+                                                : ''}
+                                        </span>
+                                    )}
+                                </div>
+                                {(notRefundable || freeCancellationUntil) && (
+                                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                        {freeCancellationUntil && (
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                <ShieldCheck className="h-3 w-3" />
+                                                {t(
+                                                    'hotelDetail.freeCancellationUntil',
+                                                ) || 'Free cancellation until'}{' '}
+                                                {formatShortDateFromISO(
+                                                    freeCancellationUntil,
+                                                    lang,
+                                                )}
+                                            </span>
+                                        )}
+                                        {notRefundable && (
+                                            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                                                {t('hotelDetail.nonRefundable') ||
+                                                    'Non-refundable'}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="shrink-0 text-right">
+                                {nights && pricePerNight ? (
+                                    <p className="text-[11px] text-muted-foreground">
+                                        {nights}{' '}
+                                        {nights === 1
+                                            ? t('hotelDetail.nightLabel') ||
+                                              'night'
+                                            : t('hotelDetail.nightsLabel') ||
+                                              'nights'}{' '}
+                                        · {pricePerNight.toLocaleString()}{' '}
+                                        {currency}
+                                    </p>
+                                ) : null}
+                                <p className="font-serif text-lg font-bold text-primary">
+                                    {amount.toLocaleString()} {currency}
+                                </p>
+                            </div>
+                        </div>
+
                         {isRequest && (
                             <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                                 {t('booking.requestNotice') ||
@@ -388,53 +592,27 @@ export function BookingDialog({
                                     />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>
-                                        {t('label.startDate') || 'Start Date'}
-                                    </Label>
-                                    <DatePicker
-                                        date={effectiveStartDate}
-                                        onDateChange={setStartDate}
-                                        disabled={lockDates}
-                                        fromDate={minDate}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>{t('label.endDate') || 'End Date'}</Label>
-                                    <DatePicker
-                                        date={effectiveEndDate}
-                                        onDateChange={setEndDate}
-                                        disabled={lockDates}
-                                    />
-                                </div>
-                            </div>
-                            {lockDates && (
-                                <p className="text-xs text-muted-foreground">
-                                    {t('booking.datesLocked') ||
-                                        'Dates are fixed to your search; re-search to change them.'}
-                                </p>
-                            )}
 
-                            {hasProviderOffer && passengers.length > 0 && (
+                            {hasProviderOffer && guests.length > 0 && (
                                 <div className="space-y-4">
+                                    <div className="h-px bg-border" />
                                     <div>
                                         <h3 className="mb-1 text-sm font-semibold text-foreground">
-                                            {t('booking.passengers') ||
-                                                'Passengers'}
+                                            {t('booking.guests') ||
+                                                'Guests'}
                                         </h3>
                                         <p className="text-xs text-muted-foreground">
-                                            {t('booking.passengersHint') ||
-                                                'Add each traveler. The first adult is the booking holder.'}
+                                            {t('booking.guestsHint') ||
+                                                'Add each guest. The first adult is the booking holder.'}
                                         </p>
                                     </div>
-                                    {passengers.map((row, index) => (
+                                    {guests.map((row, index) => (
                                         <div
                                             key={index}
                                             className="space-y-3 rounded-xl border border-border p-4"
                                         >
                                             <p className="text-xs font-medium text-muted-foreground">
-                                                {t('booking.passengerNumber')}{' '}
+                                                {t('booking.guestNumber')}{' '}
                                                 {index + 1}{' '}
                                                 {row.age !== null
                                                     ? `· ${t('hotels.childrenLabel')}`
@@ -451,7 +629,7 @@ export function BookingDialog({
                                                     <Select
                                                         value={row.civility}
                                                         onValueChange={(v) =>
-                                                            updatePassenger(
+                                                            updateGuest(
                                                                 index,
                                                                 {
                                                                     civility:
@@ -501,7 +679,7 @@ export function BookingDialog({
                                                             max={17}
                                                             value={row.age}
                                                             onChange={(e) =>
-                                                                updatePassenger(
+                                                                updateGuest(
                                                                     index,
                                                                     {
                                                                         age: Number(
@@ -529,7 +707,7 @@ export function BookingDialog({
                                                         id={`pax-${index}-firstName`}
                                                         value={row.firstName}
                                                         onChange={(e) =>
-                                                            updatePassenger(
+                                                            updateGuest(
                                                                 index,
                                                                 {
                                                                     firstName:
@@ -555,7 +733,7 @@ export function BookingDialog({
                                                         id={`pax-${index}-lastName`}
                                                         value={row.lastName}
                                                         onChange={(e) =>
-                                                            updatePassenger(
+                                                            updateGuest(
                                                                 index,
                                                                 {
                                                                     lastName:
@@ -587,7 +765,7 @@ export function BookingDialog({
                                                                 row.passportNumber
                                                             }
                                                             onChange={(e) =>
-                                                                updatePassenger(
+                                                                updateGuest(
                                                                     index,
                                                                     {
                                                                         passportNumber:
@@ -615,7 +793,7 @@ export function BookingDialog({
                                                                 row.passportExpiry
                                                             }
                                                             onChange={(e) =>
-                                                                updatePassenger(
+                                                                updateGuest(
                                                                     index,
                                                                     {
                                                                         passportExpiry:
@@ -636,6 +814,7 @@ export function BookingDialog({
 
                             {provider?.options?.length ? (
                                 <div className="space-y-2">
+                                    <div className="h-px bg-border" />
                                     <Label>
                                         {t('booking.preferences') ||
                                             'Preferences'}
@@ -701,8 +880,7 @@ export function BookingDialog({
                                     {mutation.isPending
                                         ? t('common.processing') ||
                                           'Processing...'
-                                        : t('booking.submit') ||
-                                          'Request booking'}
+                                        : `${t('booking.submit') || 'Request booking'} · ${amount.toLocaleString()} ${currency}`}
                                 </Button>
                             </DialogFooter>
                         </form>

@@ -4725,20 +4725,20 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'التواريخ مثبتة على العرض الذي تم البحث عنه',
         en: 'Dates locked to the searched offer',
     },
-    'booking.passengers': {
-        fr: 'Passagers',
-        ar: 'المسافرون',
-        en: 'Passengers',
+    'booking.guests': {
+        fr: 'Invités',
+        ar: 'الضيوف',
+        en: 'Guests',
     },
-    'booking.passengersHint': {
-        fr: 'Ajoutez chaque voyageur. Le premier adulte est le titulaire de la réservation.',
-        ar: 'أضف كل مسافر. البالغ الأول هو صاحب الحجز.',
-        en: 'Add each traveler. The first adult is the booking holder.',
+    'booking.guestsHint': {
+        fr: 'Ajoutez chaque invité. Le premier adulte est le titulaire de la réservation.',
+        ar: 'أضف كل ضيف. البالغ الأول هو صاحب الحجز.',
+        en: 'Add each guest. The first adult is the booking holder.',
     },
-    'booking.passengerNumber': {
-        fr: 'Passager',
-        ar: 'المسافر',
-        en: 'Passenger',
+    'booking.guestNumber': {
+        fr: 'Invité',
+        ar: 'الضيف',
+        en: 'Guest',
     },
     'booking.civility': { fr: 'Civilité', ar: 'اللقب', en: 'Civility' },
     'booking.civilityMr': { fr: 'M.', ar: 'السيد', en: 'Mr' },
@@ -7966,10 +7966,10 @@ translations['bookingDetail.client'] = {
     ar: 'العميل',
     en: 'Client',
 };
-translations['bookingDetail.passengers'] = {
-    fr: 'Passagers',
-    ar: 'المسافرون',
-    en: 'Passengers',
+translations['bookingDetail.guests'] = {
+    fr: 'Invités',
+    ar: 'الضيوف',
+    en: 'Guests',
 };
 translations['bookingDetail.priceBreakdown'] = {
     fr: 'Détail du prix',

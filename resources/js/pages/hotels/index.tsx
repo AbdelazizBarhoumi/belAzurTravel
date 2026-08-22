@@ -51,7 +51,14 @@ import type { Lang } from '@/i18n/translations';
 
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
-import { cn, earliestCheckIn, formatPromoRate, promoPrice, toLocalISODate } from '@/lib/utils';
+import {
+    cn,
+    earliestCheckIn,
+    formatPromoRate,
+    parseChildAges,
+    promoPrice,
+    toLocalISODate,
+} from '@/lib/utils';
 import type { HotelItem } from '@/types/public/hotel.types';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
@@ -66,15 +73,6 @@ function datePickerLocale(lang: Lang) {
     if (lang === 'ar') return arSA;
     if (lang === 'en') return enUS;
     return fr;
-}
-
-// `children` is a comma-separated list of child ages (e.g. "5,8") carried in
-// the URL to preserve occupancy across the list <-> detail navigation.
-function parseChildAges(raw: string | null): number[] {
-    return (raw ?? '')
-        .split(',')
-        .map((value) => Number(value))
-        .filter((value) => Number.isInteger(value) && value >= 0 && value <= 17);
 }
 
 function formatDate(date: Date, lang: Lang): string {
@@ -448,7 +446,15 @@ export default function Hotels() {
         }
     }, [livePages]);
     const displayPages = livePages ?? lastGoodPages;
-    const liveResults = useMemo(() => displayPages?.pages.flatMap((p) => p.data) ?? [], [displayPages]);
+    const liveResults = useMemo(() => {
+        const all = displayPages?.pages.flatMap((p) => p.data) ?? [];
+        const seen = new Set<string>();
+        return all.filter((h) => {
+            if (seen.has(h.slug)) return false;
+            seen.add(h.slug);
+            return true;
+        });
+    }, [displayPages]);
 
     const sentinelRef = useRef<HTMLDivElement | null>(null);
     const prevCountRef = useRef(0);
@@ -628,7 +634,7 @@ export default function Hotels() {
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 border-b border-border pb-6"
+                        className="mb-8 border-b border-border pb-4"
                     >
                         <Breadcrumb
                             items={[

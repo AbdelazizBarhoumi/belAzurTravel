@@ -48,7 +48,13 @@ import {
     type HotelSearchQuery,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
-import { cn, formatPromoRate, promoPrice, toLocalISODate } from '@/lib/utils';
+import {
+    cn,
+    formatPromoRate,
+    parseChildAges,
+    promoPrice,
+    toLocalISODate,
+} from '@/lib/utils';
 
 type RoomView = {
     id: string;
@@ -72,6 +78,7 @@ type RoomView = {
     // Provider bookability metadata powering the room badges.
     minStay?: number;
     onRequest?: boolean;
+    bookable?: boolean;
     stopSales?: { from: string; to: string } | null;
     notRefundable?: boolean;
     cancellationDeadline?: string;
@@ -179,10 +186,7 @@ export default function HotelDetail() {
     const urlCheckOut = searchParams.get('to') || '';
     const urlGuests = Number(searchParams.get('guests') || 2);
     const urlRooms = Number(searchParams.get('rooms') || 1);
-    const urlChildren = (searchParams.get('children') || '')
-        .split(',')
-        .map((value) => Number(value))
-        .filter((value) => Number.isInteger(value) && value >= 0 && value <= 17);
+    const urlChildren = parseChildAges(searchParams.get('children'));
 
     // A lone check-in date defaults check-out to +1 night, matching the
     // listing page's behavior when only a start date was chosen.
@@ -203,7 +207,6 @@ export default function HotelDetail() {
         adults: Number.isFinite(urlGuests) && urlGuests > 0 ? urlGuests : 2,
         childAges: urlChildren,
     });
-    const [advancedOpen, setAdvancedOpen] = useState(false);
     const [selectedBoardingIds, setSelectedBoardingIds] = useState<number[]>([]);
     // Policy notice (e.g. "couples & families only", tourist tax) is
     // collapsed to 2 lines by default but always visible — this used to be
@@ -224,10 +227,8 @@ export default function HotelDetail() {
                 children: occupancy.childAges,
             })),
             only_available: true,
-            boarding_ids:
-                selectedBoardingIds.length > 0 ? selectedBoardingIds : undefined,
         };
-    }, [dateRange, occupancy.rooms, occupancy.adults, occupancy.childAges, id, selectedBoardingIds]);
+    }, [dateRange, occupancy.rooms, occupancy.adults, occupancy.childAges, id]);
 
     // Phase 1: search with only_available: true — if the hotel has rooms, we're done.
     // Phase 2: if nothing returned, re-fire with only_available: false to get the
@@ -246,27 +247,16 @@ export default function HotelDetail() {
         unavailableFiredFor.current = null;
     };
 
-    // Arriving with ?from&to&guests&children in the URL (from the hotels
-    // listing) auto-runs the availability search for that exact window once.
-    const autoSearchFired = useRef(false);
+    // Auto-research when dates, occupancy, or boarding change.
     useEffect(() => {
-        if (autoSearchFired.current) {
-            return;
-        }
-        if (!dateRange?.from || !dateRange?.to) {
-            return;
-        }
-        autoSearchFired.current = true;
+        if (!liveQuery) return;
         setSubmittedQuery(liveQuery);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dateRange, id]);
+        setUnavailableQuery(undefined);
+        unavailableFiredFor.current = null;
+    }, [liveQuery]);
 
     // Phase 1: only_available: true
-    const submittedKey = JSON.stringify(submittedQuery);
-    const liveKey = JSON.stringify(liveQuery);
-    const resultsAreStale =
-        Boolean(submittedQuery) && submittedKey !== liveKey;
-    const activeQuery = resultsAreStale ? undefined : submittedQuery;
+    const activeQuery = submittedQuery;
 
     const { data: liveResult, isLoading: liveSearchLoading, isError: liveSearchError, refetch: refetchSearch } =
         useHotelSearch(activeQuery);
@@ -354,8 +344,15 @@ export default function HotelDetail() {
         staticRooms.map((room) => [room.name, room]),
     );
 
+    // When Phase 2 returns a hotel with available=false, show all rooms
+    // as "On request" instead of filtering to only bookable ones.
+    const isRequestMode = Boolean(effectiveHotel && effectiveHotel.available === false);
+
     const liveRooms: RoomView[] = (effectiveHotel?.rooms ?? [])
         .filter((room) => {
+            // In request mode, show all rooms (including non-bookable ones)
+            // so the UI can display each with its availability status.
+            if (isRequestMode) return true;
             // Only offer rooms that are actually bookable for the searched
             // window: not stop-reserved, minimum stay fits, and no stop-sale
             // range covers the dates.
@@ -405,6 +402,7 @@ export default function HotelDetail() {
                 supplements: normalizeSupplements(room.supplements ?? []),
                 minStay: room.min_stay,
                 onRequest: room.on_request,
+                bookable: room.bookable,
                 stopSales: room.stop_sales,
                 notRefundable: room.not_refundable,
                 cancellationDeadline:
@@ -415,8 +413,14 @@ export default function HotelDetail() {
 
     // The rates table renders the bookable live rooms after a search; before
     // any search (or for manual hotels) it falls back to the static catalog.
-    const rateRooms: RateRoom[] =
+    const baseRooms: RateRoom[] =
         liveRooms.length > 0 ? liveRooms : staticRooms;
+    const rateRooms: RateRoom[] =
+        selectedBoardingIds.length > 0
+            ? baseRooms.filter(
+                  (r) => r.boardingId != null && selectedBoardingIds.includes(r.boardingId),
+              )
+            : baseRooms;
 
     const displayMinPrice = staticRooms.length
         ? Math.min(
@@ -574,69 +578,6 @@ export default function HotelDetail() {
                                 value={occupancy}
                                 onChange={setOccupancy}
                             />
-                            {(detail.boardings?.length ?? 0) > 0 && (
-                                <div>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setAdvancedOpen((open) => !open)
-                                        }
-                                        className="text-xs text-primary underline underline-offset-4"
-                                    >
-                                        {t('hotelDetail.advancedSearch')}
-                                    </button>
-                                    {advancedOpen && (
-                                        <div className="mt-2 space-y-1.5">
-                                            {detail.boardings!.map(
-                                                (boarding) => {
-                                                    const checked =
-                                                        selectedBoardingIds.includes(
-                                                            boarding.id,
-                                                        );
-                                                    return (
-                                                        <label
-                                                            key={boarding.id}
-                                                            className="flex cursor-pointer items-start gap-2 text-sm text-foreground"
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={checked}
-                                                                onChange={() =>
-                                                                    setSelectedBoardingIds(
-                                                                        (ids) =>
-                                                                            checked
-                                                                                ? ids.filter(
-                                                                                    (i) =>
-                                                                                        i !==
-                                                                                        boarding.id,
-                                                                                )
-                                                                                : [
-                                                                                    ...ids,
-                                                                                    boarding.id,
-                                                                                ],
-                                                                    )
-                                                                }
-                                                                className="mt-0.5 h-4 w-4 accent-primary"
-                                                            />
-                                                            <span className="min-w-0">
-                                                                <span className="block">
-                                                                    {boarding.name ||
-                                                                        boarding.code}
-                                                                </span>
-                                                                {boarding.description ? (
-                                                                    <span className="block text-xs leading-relaxed text-muted-foreground">
-                                                                        {boarding.description}
-                                                                    </span>
-                                                                ) : null}
-                                                            </span>
-                                                        </label>
-                                                    );
-                                                },
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                             <Button
                                 type="button"
                                 onClick={handleSearchRedirect}
@@ -984,38 +925,100 @@ export default function HotelDetail() {
                                         {t('search.error.retry')}
                                     </Button>
                                 </div>
+                            ) : effectiveLoading ? (
+                                <div className="overflow-hidden rounded-3xl border border-border bg-card">
+                                    <div className="flex items-center gap-2 bg-muted/60 px-5 py-3">
+                                        <Skeleton className="h-4 w-32" />
+                                    </div>
+                                    <div className="divide-y divide-border">
+                                        {Array.from({ length: 2 }).map((_, i) => (
+                                            <div key={i} className="p-5">
+                                                <div className="flex gap-4">
+                                                    <Skeleton className="hidden h-20 w-24 shrink-0 rounded-xl sm:block" />
+                                                    <div className="flex-1 space-y-2">
+                                                        <Skeleton className="h-4 w-40" />
+                                                        <Skeleton className="h-3 w-24" />
+                                                        <Skeleton className="h-3 w-64" />
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 space-y-2 sm:pl-[104px]">
+                                                    <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
+                                                        <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
+                                                        <div className="flex-1 space-y-1.5">
+                                                            <Skeleton className="h-4 w-28" />
+                                                            <Skeleton className="h-3 w-16" />
+                                                        </div>
+                                                        <Skeleton className="h-5 w-20" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex items-center justify-end gap-4 border-t border-border bg-muted/50 px-5 py-4">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-10 w-28 rounded-md" />
+                                    </div>
+                                </div>
                             ) : searchedUnavailable ? (
-                                <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-6">
-                                    <div className="flex items-start gap-3">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
-                                            <span className="text-amber-700 text-lg">?</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-serif text-lg font-bold text-amber-900">
-                                                {t('hotelDetail.requestTitle') || 'Per request'}
-                                            </h3>
-                                            <p className="mt-1 text-sm text-amber-800">
+                                rateRooms.length > 0 ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                    >
+                                        <div className="mb-3 rounded-xl border border-amber-300/50 bg-amber-50 p-4">
+                                            <p className="text-sm text-amber-800">
                                                 {t('hotelDetail.requestNotice') ||
                                                     'This hotel has no availability for your selected dates, but you can submit a request.'}
                                             </p>
                                             {unavailableHotel?.first_available_at && (
-                                                <p className="mt-2 text-xs font-semibold text-amber-700">
+                                                <p className="mt-1 text-xs font-semibold text-amber-700">
                                                     {t('hotelDetail.availableFrom')} {unavailableHotel.first_available_at}
                                                     {unavailableHotel.min_nights && unavailableHotel.min_nights > 1 &&
                                                         ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
                                                 </p>
                                             )}
-                                            <Button
-                                                className="mt-4 bg-amber-600 text-white hover:bg-amber-700"
-                                                onClick={() => {
-                                                    setRequestMode(true);
-                                                }}
-                                            >
-                                                {t('hotelDetail.requestBooking') || 'Request Booking'}
-                                            </Button>
+                                        </div>
+                                        <RoomRatesTable
+                                            rooms={rateRooms}
+                                            occupancy={occupancy}
+                                            currency={currency}
+                                            onReserve={handleReserve}
+                                            requestMode
+                                        />
+                                    </motion.div>
+                                ) : (
+                                    <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-6">
+                                        <div className="flex items-start gap-3">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                                                <span className="text-amber-700 text-lg">?</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-serif text-lg font-bold text-amber-900">
+                                                    {t('hotelDetail.requestTitle') || 'Per request'}
+                                                </h3>
+                                                <p className="mt-1 text-sm text-amber-800">
+                                                    {t('hotelDetail.requestNotice') ||
+                                                        'This hotel has no availability for your selected dates, but you can submit a request.'}
+                                                </p>
+                                                {unavailableHotel?.first_available_at && (
+                                                    <p className="mt-2 text-xs font-semibold text-amber-700">
+                                                        {t('hotelDetail.availableFrom')} {unavailableHotel.first_available_at}
+                                                        {unavailableHotel.min_nights && unavailableHotel.min_nights > 1 &&
+                                                            ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
+                                                    </p>
+                                                )}
+                                                <Button
+                                                    className="mt-4 bg-amber-600 text-white hover:bg-amber-700"
+                                                    onClick={() => {
+                                                        setRequestMode(true);
+                                                    }}
+                                                >
+                                                    {t('hotelDetail.requestBooking') || 'Request Booking'}
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                )
                             ) : hotelNotFound ? (
                                 <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-800">
                                     {t('hotelDetail.unavailableNotice') ||
@@ -1053,6 +1056,8 @@ export default function HotelDetail() {
                         </h2>
 
                         <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_280px]">
+                                                           {cleanDescription(description) &&(
+
                             <div>
                                 <h3 className="mb-1 text-sm font-bold text-foreground">
                                     {t('hotelDetail.discover')} {title}
@@ -1061,6 +1066,7 @@ export default function HotelDetail() {
                                     {cleanDescription(description)}
                                 </p>
                             </div>
+                            )}
 
                             <aside className="h-fit space-y-3 rounded-2xl border border-border bg-card p-4">
                                 <div className="flex items-start gap-2.5">

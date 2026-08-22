@@ -144,7 +144,7 @@ const Tours = () => {
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 border-b border-border pb-6"
+                        className="mb-8 border-b border-border pb-4"
                     >
                         <Breadcrumb
                             items={[
@@ -156,7 +156,7 @@ const Tours = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mb-12 text-center"
+                        className="mb-6 text-center"
                     >
                         <h1 className="mb-4 font-serif text-4xl font-bold text-foreground md:text-5xl">
                             {t('tours.title')}

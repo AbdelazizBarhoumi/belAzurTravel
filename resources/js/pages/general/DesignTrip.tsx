@@ -139,7 +139,7 @@ const DesignTrip = () => {
         transportSingle: '' as string,
         startDate: '',
         endDate: '',
-        travelers: 2,
+        guests: 2,
         budget: '',
     });
     const toggle = (key: keyof typeof data, id: string) => {

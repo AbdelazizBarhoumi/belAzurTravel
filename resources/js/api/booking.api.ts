@@ -87,7 +87,7 @@ export interface BookingDetailRow extends ClientBookingRow {
         email?: string;
         phone?: string;
     };
-    travelers?: Array<{ name?: string }> | null;
+    guests?: Array<{ name?: string }> | null;
     notes?: string | null;
     promo_code?: string | null;
     amount?: number;

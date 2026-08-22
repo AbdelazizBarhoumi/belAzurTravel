@@ -808,6 +808,33 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame([], $result['failed_ids']);
     }
 
+    public function test_search_deduplicates_hotels_echoed_multiple_times_by_provider(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        $envelope = $this->osTravelSingleRoomEnvelope(178, 800);
+        // The provider returns the same hotel Id twice (e.g. once per
+        // promotion group). search() must keep only the first occurrence.
+        $envelope['HotelSearch'][] = $envelope['HotelSearch'][0];
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($envelope),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            [],
+            [
+                'check_in' => '2026-09-01',
+                'check_out' => '2026-09-08',
+                'only_available' => true,
+            ],
+        );
+
+        $this->assertCount(1, $results);
+        $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
+        $this->assertTrue($results[0]['available']);
+    }
+
     public function test_search_keeps_unavailable_hotels_when_only_available_is_false(): void
     {
         $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
