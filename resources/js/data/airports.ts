@@ -53,7 +53,12 @@ export const AIRPORTS: Airport[] = [
     { iata: 'BCN', city: 'Barcelona', country: 'Spain', countryCode: 'ES' },
     { iata: 'AGP', city: 'Málaga', country: 'Spain', countryCode: 'ES' },
     { iata: 'ALC', city: 'Alicante', country: 'Spain', countryCode: 'ES' },
-    { iata: 'PMI', city: 'Palma de Mallorca', country: 'Spain', countryCode: 'ES' },
+    {
+        iata: 'PMI',
+        city: 'Palma de Mallorca',
+        country: 'Spain',
+        countryCode: 'ES',
+    },
     { iata: 'TFS', city: 'Tenerife', country: 'Spain', countryCode: 'ES' },
     { iata: 'SVQ', city: 'Seville', country: 'Spain', countryCode: 'ES' },
     { iata: 'VLC', city: 'Valencia', country: 'Spain', countryCode: 'ES' },
@@ -64,18 +69,68 @@ export const AIRPORTS: Airport[] = [
     { iata: 'FNC', city: 'Funchal', country: 'Portugal', countryCode: 'PT' },
 
     // United Kingdom
-    { iata: 'LHR', city: 'London', country: 'United Kingdom', countryCode: 'GB' },
-    { iata: 'LGW', city: 'London', country: 'United Kingdom', countryCode: 'GB' },
-    { iata: 'STN', city: 'London', country: 'United Kingdom', countryCode: 'GB' },
-    { iata: 'LTN', city: 'London', country: 'United Kingdom', countryCode: 'GB' },
-    { iata: 'MAN', city: 'Manchester', country: 'United Kingdom', countryCode: 'GB' },
-    { iata: 'EDI', city: 'Edinburgh', country: 'United Kingdom', countryCode: 'GB' },
-    { iata: 'BHX', city: 'Birmingham', country: 'United Kingdom', countryCode: 'GB' },
-    { iata: 'GLA', city: 'Glasgow', country: 'United Kingdom', countryCode: 'GB' },
+    {
+        iata: 'LHR',
+        city: 'London',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+    },
+    {
+        iata: 'LGW',
+        city: 'London',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+    },
+    {
+        iata: 'STN',
+        city: 'London',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+    },
+    {
+        iata: 'LTN',
+        city: 'London',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+    },
+    {
+        iata: 'MAN',
+        city: 'Manchester',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+    },
+    {
+        iata: 'EDI',
+        city: 'Edinburgh',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+    },
+    {
+        iata: 'BHX',
+        city: 'Birmingham',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+    },
+    {
+        iata: 'GLA',
+        city: 'Glasgow',
+        country: 'United Kingdom',
+        countryCode: 'GB',
+    },
 
     // Netherlands
-    { iata: 'AMS', city: 'Amsterdam', country: 'Netherlands', countryCode: 'NL' },
-    { iata: 'RTM', city: 'Rotterdam', country: 'Netherlands', countryCode: 'NL' },
+    {
+        iata: 'AMS',
+        city: 'Amsterdam',
+        country: 'Netherlands',
+        countryCode: 'NL',
+    },
+    {
+        iata: 'RTM',
+        city: 'Rotterdam',
+        country: 'Netherlands',
+        countryCode: 'NL',
+    },
 
     // Belgium
     { iata: 'BRU', city: 'Brussels', country: 'Belgium', countryCode: 'BE' },
@@ -87,16 +142,36 @@ export const AIRPORTS: Airport[] = [
     { iata: 'BSL', city: 'Basel', country: 'Switzerland', countryCode: 'CH' },
 
     // United Arab Emirates
-    { iata: 'DXB', city: 'Dubai', country: 'United Arab Emirates', countryCode: 'AE' },
-    { iata: 'AUH', city: 'Abu Dhabi', country: 'United Arab Emirates', countryCode: 'AE' },
-    { iata: 'SHJ', city: 'Sharjah', country: 'United Arab Emirates', countryCode: 'AE' },
+    {
+        iata: 'DXB',
+        city: 'Dubai',
+        country: 'United Arab Emirates',
+        countryCode: 'AE',
+    },
+    {
+        iata: 'AUH',
+        city: 'Abu Dhabi',
+        country: 'United Arab Emirates',
+        countryCode: 'AE',
+    },
+    {
+        iata: 'SHJ',
+        city: 'Sharjah',
+        country: 'United Arab Emirates',
+        countryCode: 'AE',
+    },
 
     // Saudi Arabia
     { iata: 'RUH', city: 'Riyadh', country: 'Saudi Arabia', countryCode: 'SA' },
     { iata: 'JED', city: 'Jeddah', country: 'Saudi Arabia', countryCode: 'SA' },
     { iata: 'DMM', city: 'Dammam', country: 'Saudi Arabia', countryCode: 'SA' },
     { iata: 'MED', city: 'Medina', country: 'Saudi Arabia', countryCode: 'SA' },
-    { iata: 'ABT', city: 'Al Baha', country: 'Saudi Arabia', countryCode: 'SA' },
+    {
+        iata: 'ABT',
+        city: 'Al Baha',
+        country: 'Saudi Arabia',
+        countryCode: 'SA',
+    },
 
     // Qatar
     { iata: 'DOH', city: 'Doha', country: 'Qatar', countryCode: 'QA' },
@@ -122,7 +197,12 @@ export const AIRPORTS: Airport[] = [
     { iata: 'CAI', city: 'Cairo', country: 'Egypt', countryCode: 'EG' },
     { iata: 'HBE', city: 'Alexandria', country: 'Egypt', countryCode: 'EG' },
     { iata: 'HRG', city: 'Hurghada', country: 'Egypt', countryCode: 'EG' },
-    { iata: 'SSH', city: 'Sharm El Sheikh', country: 'Egypt', countryCode: 'EG' },
+    {
+        iata: 'SSH',
+        city: 'Sharm El Sheikh',
+        country: 'Egypt',
+        countryCode: 'EG',
+    },
     { iata: 'LXR', city: 'Luxor', country: 'Egypt', countryCode: 'EG' },
     { iata: 'ASW', city: 'Aswan', country: 'Egypt', countryCode: 'EG' },
 
@@ -164,7 +244,12 @@ export const AIRPORTS: Airport[] = [
     { iata: 'USM', city: 'Koh Samui', country: 'Thailand', countryCode: 'TH' },
 
     // Malaysia
-    { iata: 'KUL', city: 'Kuala Lumpur', country: 'Malaysia', countryCode: 'MY' },
+    {
+        iata: 'KUL',
+        city: 'Kuala Lumpur',
+        country: 'Malaysia',
+        countryCode: 'MY',
+    },
     { iata: 'PEN', city: 'Penang', country: 'Malaysia', countryCode: 'MY' },
 
     // Indonesia
@@ -206,18 +291,73 @@ export const AIRPORTS: Airport[] = [
     { iata: 'PUS', city: 'Busan', country: 'South Korea', countryCode: 'KR' },
 
     // United States
-    { iata: 'JFK', city: 'New York', country: 'United States', countryCode: 'US' },
-    { iata: 'LGA', city: 'New York', country: 'United States', countryCode: 'US' },
-    { iata: 'EWR', city: 'Newark', country: 'United States', countryCode: 'US' },
-    { iata: 'LAX', city: 'Los Angeles', country: 'United States', countryCode: 'US' },
-    { iata: 'ORD', city: 'Chicago', country: 'United States', countryCode: 'US' },
+    {
+        iata: 'JFK',
+        city: 'New York',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'LGA',
+        city: 'New York',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'EWR',
+        city: 'Newark',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'LAX',
+        city: 'Los Angeles',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'ORD',
+        city: 'Chicago',
+        country: 'United States',
+        countryCode: 'US',
+    },
     { iata: 'MIA', city: 'Miami', country: 'United States', countryCode: 'US' },
-    { iata: 'SFO', city: 'San Francisco', country: 'United States', countryCode: 'US' },
-    { iata: 'IAH', city: 'Houston', country: 'United States', countryCode: 'US' },
-    { iata: 'ATL', city: 'Atlanta', country: 'United States', countryCode: 'US' },
-    { iata: 'BOS', city: 'Boston', country: 'United States', countryCode: 'US' },
-    { iata: 'IAD', city: 'Washington', country: 'United States', countryCode: 'US' },
-    { iata: 'SEA', city: 'Seattle', country: 'United States', countryCode: 'US' },
+    {
+        iata: 'SFO',
+        city: 'San Francisco',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'IAH',
+        city: 'Houston',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'ATL',
+        city: 'Atlanta',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'BOS',
+        city: 'Boston',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'IAD',
+        city: 'Washington',
+        country: 'United States',
+        countryCode: 'US',
+    },
+    {
+        iata: 'SEA',
+        city: 'Seattle',
+        country: 'United States',
+        countryCode: 'US',
+    },
 
     // Canada
     { iata: 'YYZ', city: 'Toronto', country: 'Canada', countryCode: 'CA' },
@@ -227,7 +367,12 @@ export const AIRPORTS: Airport[] = [
 
     // Brazil
     { iata: 'GRU', city: 'São Paulo', country: 'Brazil', countryCode: 'BR' },
-    { iata: 'GIG', city: 'Rio de Janeiro', country: 'Brazil', countryCode: 'BR' },
+    {
+        iata: 'GIG',
+        city: 'Rio de Janeiro',
+        country: 'Brazil',
+        countryCode: 'BR',
+    },
     { iata: 'BSB', city: 'Brasília', country: 'Brazil', countryCode: 'BR' },
 
     // Mexico
@@ -238,7 +383,12 @@ export const AIRPORTS: Airport[] = [
     // Russia
     { iata: 'SVO', city: 'Moscow', country: 'Russia', countryCode: 'RU' },
     { iata: 'DME', city: 'Moscow', country: 'Russia', countryCode: 'RU' },
-    { iata: 'LED', city: 'Saint Petersburg', country: 'Russia', countryCode: 'RU' },
+    {
+        iata: 'LED',
+        city: 'Saint Petersburg',
+        country: 'Russia',
+        countryCode: 'RU',
+    },
 
     // Australia
     { iata: 'SYD', city: 'Sydney', country: 'Australia', countryCode: 'AU' },
@@ -248,13 +398,38 @@ export const AIRPORTS: Airport[] = [
     { iata: 'CBR', city: 'Canberra', country: 'Australia', countryCode: 'AU' },
 
     // New Zealand
-    { iata: 'AKL', city: 'Auckland', country: 'New Zealand', countryCode: 'NZ' },
-    { iata: 'WLG', city: 'Wellington', country: 'New Zealand', countryCode: 'NZ' },
-    { iata: 'CHC', city: 'Christchurch', country: 'New Zealand', countryCode: 'NZ' },
+    {
+        iata: 'AKL',
+        city: 'Auckland',
+        country: 'New Zealand',
+        countryCode: 'NZ',
+    },
+    {
+        iata: 'WLG',
+        city: 'Wellington',
+        country: 'New Zealand',
+        countryCode: 'NZ',
+    },
+    {
+        iata: 'CHC',
+        city: 'Christchurch',
+        country: 'New Zealand',
+        countryCode: 'NZ',
+    },
 
     // South Africa
-    { iata: 'JNB', city: 'Johannesburg', country: 'South Africa', countryCode: 'ZA' },
-    { iata: 'CPT', city: 'Cape Town', country: 'South Africa', countryCode: 'ZA' },
+    {
+        iata: 'JNB',
+        city: 'Johannesburg',
+        country: 'South Africa',
+        countryCode: 'ZA',
+    },
+    {
+        iata: 'CPT',
+        city: 'Cape Town',
+        country: 'South Africa',
+        countryCode: 'ZA',
+    },
     { iata: 'DUR', city: 'Durban', country: 'South Africa', countryCode: 'ZA' },
 
     // Kenya
@@ -262,13 +437,23 @@ export const AIRPORTS: Airport[] = [
     { iata: 'MBA', city: 'Mombasa', country: 'Kenya', countryCode: 'KE' },
 
     // Ethiopia
-    { iata: 'ADD', city: 'Addis Ababa', country: 'Ethiopia', countryCode: 'ET' },
+    {
+        iata: 'ADD',
+        city: 'Addis Ababa',
+        country: 'Ethiopia',
+        countryCode: 'ET',
+    },
 
     // Senegal
     { iata: 'DSS', city: 'Dakar', country: 'Senegal', countryCode: 'SN' },
 
     // Côte d'Ivoire
-    { iata: 'ABJ', city: 'Abidjan', country: "Côte d'Ivoire", countryCode: 'CI' },
+    {
+        iata: 'ABJ',
+        city: 'Abidjan',
+        country: "Côte d'Ivoire",
+        countryCode: 'CI',
+    },
 
     // Jordan
     { iata: 'AMM', city: 'Amman', country: 'Jordan', countryCode: 'JO' },

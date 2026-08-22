@@ -137,9 +137,7 @@ describe('AdminGallery', () => {
         renderWithProviders(<AdminGallery />);
 
         // The header action uses the real translation for "Add Image".
-        fireEvent.click(
-            screen.getByRole('button', { name: /add image/i }),
-        );
+        fireEvent.click(screen.getByRole('button', { name: /add image/i }));
 
         await screen.findByRole('dialog');
 

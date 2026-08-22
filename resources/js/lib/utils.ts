@@ -12,7 +12,9 @@ export const parseChildAges = (raw: string | null | undefined): number[] => {
     return raw
         .split(',')
         .map((value) => Number(value))
-        .filter((value) => Number.isInteger(value) && value >= 0 && value <= 17);
+        .filter(
+            (value) => Number.isInteger(value) && value >= 0 && value <= 17,
+        );
 };
 
 // Serialize a Date as YYYY-MM-DD in local time (toISOString() shifts to UTC).
@@ -59,7 +61,9 @@ export const formatPromoRate = (rate?: string | null): string => {
     if (!Number.isFinite(value) || value <= 0) {
         return '';
     }
-    const digits = Number.isInteger(value) ? String(value) : String(Math.round(value * 10) / 10);
+    const digits = Number.isInteger(value)
+        ? String(value)
+        : String(Math.round(value * 10) / 10);
 
     return `-${digits}%`;
 };

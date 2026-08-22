@@ -1,10 +1,6 @@
 import { apiFetch } from './http';
 
-export type OsTravelStatus =
-    | 'pending'
-    | 'approved'
-    | 'rejected'
-    | 'orphaned';
+export type OsTravelStatus = 'pending' | 'approved' | 'rejected' | 'orphaned';
 
 export interface OsTravelSyncInfo {
     id: string;
@@ -180,7 +176,9 @@ export async function listOsTravelHotels(filters?: OsTravelListFilters) {
 }
 
 export async function getOsTravelReferences() {
-    return apiFetch<OsTravelReferencesResponse>('/api/admin/os-travel/references');
+    return apiFetch<OsTravelReferencesResponse>(
+        '/api/admin/os-travel/references',
+    );
 }
 
 export async function getOsTravelHotel(id: string) {

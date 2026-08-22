@@ -41,39 +41,47 @@ export function ListFilterBar({
             {inline ? (
                 <div
                     className={cn(
-                        'flex flex-col gap-2 sm:gap-3 lg:items-center lg:flex-row',
+                        'flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center',
                         isRtl && 'lg:flex-row-reverse',
                     )}
                 >
                     <div className="relative flex-1">
                         <Search
                             className={cn(
-                                'pointer-events-none absolute top-1/2 h-3 w-3 sm:h-4 sm:w-4 -translate-y-1/2 text-muted-foreground',
-                                isRtl ? 'right-3 sm:right-4' : 'left-3 sm:left-4',
+                                'pointer-events-none absolute top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground sm:h-4 sm:w-4',
+                                isRtl
+                                    ? 'right-3 sm:right-4'
+                                    : 'left-3 sm:left-4',
                             )}
                         />
                         <Input
                             value={searchValue}
-                            onChange={(event) => onSearchChange(event.target.value)}
-                            placeholder={searchPlaceholder ?? t('common.search')}
+                            onChange={(event) =>
+                                onSearchChange(event.target.value)
+                            }
+                            placeholder={
+                                searchPlaceholder ?? t('common.search')
+                            }
                             aria-label={searchPlaceholder ?? t('common.search')}
                             type="search"
                             className={cn(
-                                'h-10 sm:h-12 rounded-xl sm:rounded-2xl border-border/70 bg-background/90 shadow-sm text-xs sm:text-sm',
-                                isRtl ? 'pr-9 sm:pr-11 text-right' : 'pl-9 sm:pl-11',
+                                'h-10 rounded-xl border-border/70 bg-background/90 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm',
+                                isRtl
+                                    ? 'pr-9 text-right sm:pr-11'
+                                    : 'pl-9 sm:pl-11',
                             )}
                         />
                     </div>
                     {children}
                     <div className="flex items-center gap-2 sm:gap-3">
-                        <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                        <span className="whitespace-nowrap text-xs text-muted-foreground sm:text-sm">
                             {resultCount} {t('common.results')}
                         </span>
                         {hasActiveFilters && onClearFilters ? (
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="h-10 sm:h-12 rounded-xl sm:rounded-2xl px-3 sm:px-4 text-xs sm:text-sm"
+                                className="h-10 rounded-xl px-3 text-xs sm:h-12 sm:rounded-2xl sm:px-4 sm:text-sm"
                                 onClick={onClearFilters}
                             >
                                 {t('common.clearFilters')}
@@ -98,9 +106,15 @@ export function ListFilterBar({
                             />
                             <Input
                                 value={searchValue}
-                                onChange={(event) => onSearchChange(event.target.value)}
-                                placeholder={searchPlaceholder ?? t('common.search')}
-                                aria-label={searchPlaceholder ?? t('common.search')}
+                                onChange={(event) =>
+                                    onSearchChange(event.target.value)
+                                }
+                                placeholder={
+                                    searchPlaceholder ?? t('common.search')
+                                }
+                                aria-label={
+                                    searchPlaceholder ?? t('common.search')
+                                }
                                 type="search"
                                 className={cn(
                                     'h-12 rounded-2xl border-border/70 bg-background/90 shadow-sm',

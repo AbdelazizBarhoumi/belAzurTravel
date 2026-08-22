@@ -169,8 +169,15 @@ const AdminQueue = () => {
     const isRtl = dir === 'rtl';
 
     const [searchParams, setSearchParams] = useSearchParams();
-    const validTabs: QueueSection[] = ['bookings', 'complaints', 'refund_requests', 'support'];
-    const initialTab = validTabs.includes(searchParams.get('tab') as QueueSection)
+    const validTabs: QueueSection[] = [
+        'bookings',
+        'complaints',
+        'refund_requests',
+        'support',
+    ];
+    const initialTab = validTabs.includes(
+        searchParams.get('tab') as QueueSection,
+    )
         ? (searchParams.get('tab') as QueueSection)
         : 'bookings';
     const [activeTab, setActiveTab] = useState<QueueSection>(initialTab);
@@ -207,7 +214,11 @@ const AdminQueue = () => {
     const { data: allComplaints = [], isLoading: complaintsLoading } = useQuery<
         Complaint[]
     >({
-        queryKey: ['admin-complaints', complaintTypeFilter, complaintStatusFilter],
+        queryKey: [
+            'admin-complaints',
+            complaintTypeFilter,
+            complaintStatusFilter,
+        ],
         queryFn: () =>
             getAdminComplaints({
                 type: complaintTypeFilter || undefined,
@@ -650,7 +661,9 @@ function BookingsTable({
                                     #{b.booking_ref}
                                 </td>
                                 <td className="px-4 py-3 text-sm">
-                                    {b.client?.name || b.user_id || t('admin.table.guest')}
+                                    {b.client?.name ||
+                                        b.user_id ||
+                                        t('admin.table.guest')}
                                 </td>
                                 <td className="px-4 py-3 text-sm">
                                     <div className="flex items-center gap-2">
@@ -671,8 +684,12 @@ function BookingsTable({
                                             </p>
                                             <p className="text-xs text-muted-foreground">
                                                 {formatDate(b.start_date)}
-                                                {b.end_date ? ` \u2014 ${formatDate(b.end_date)}` : ''}
-                                                {b.details?.nights ? ` \u00b7 ${b.details.nights} nights` : ''}
+                                                {b.end_date
+                                                    ? ` \u2014 ${formatDate(b.end_date)}`
+                                                    : ''}
+                                                {b.details?.nights
+                                                    ? ` \u00b7 ${b.details.nights} nights`
+                                                    : ''}
                                             </p>
                                         </div>
                                     </div>
@@ -681,19 +698,29 @@ function BookingsTable({
                                     {formatDate(b.created_at)}
                                 </td>
                                 <td className="px-4 py-3 text-sm font-semibold">
-                                    {b.total_amount.toLocaleString()} {b.details?.currency ?? 'TND'}
+                                    {b.total_amount.toLocaleString()}{' '}
+                                    {b.details?.currency ?? 'TND'}
                                 </td>
                                 <td className="px-4 py-3">
                                     <StatusSelect
                                         value={b.status}
-                                        onValueChange={(val) => onStatusChange(b.id, val)}
-                                        disabled={statusPending || !ALLOWED_TRANSITIONS[b.status]}
+                                        onValueChange={(val) =>
+                                            onStatusChange(b.id, val)
+                                        }
+                                        disabled={
+                                            statusPending ||
+                                            !ALLOWED_TRANSITIONS[b.status]
+                                        }
                                         options={[
                                             b.status,
-                                            ...(ALLOWED_TRANSITIONS[b.status] ?? []),
+                                            ...(ALLOWED_TRANSITIONS[b.status] ??
+                                                []),
                                         ].map((value) => ({
                                             value,
-                                            label: bookingStatusLabels[value]?.[lang] ?? value,
+                                            label:
+                                                bookingStatusLabels[value]?.[
+                                                    lang
+                                                ] ?? value,
                                         }))}
                                     />
                                 </td>
@@ -736,8 +763,12 @@ function ComplaintsTable({
                     className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
                 >
                     <option value="">{t('admin.allTypes')}</option>
-                    <option value="complaint">{t('complaint.type.complaint')}</option>
-                    <option value="refund_request">{t('complaint.type.refund_request')}</option>
+                    <option value="complaint">
+                        {t('complaint.type.complaint')}
+                    </option>
+                    <option value="refund_request">
+                        {t('complaint.type.refund_request')}
+                    </option>
                 </select>
                 <select
                     value={statusFilter}
@@ -745,11 +776,21 @@ function ComplaintsTable({
                     className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
                 >
                     <option value="">{t('admin.allStatuses')}</option>
-                    <option value="pending">{t('complaint.status.pending')}</option>
-                    <option value="in_review">{t('complaint.status.in_review')}</option>
-                    <option value="resolved">{t('complaint.status.resolved')}</option>
-                    <option value="rejected">{t('complaint.status.rejected')}</option>
-                    <option value="refunded">{t('complaint.status.refunded')}</option>
+                    <option value="pending">
+                        {t('complaint.status.pending')}
+                    </option>
+                    <option value="in_review">
+                        {t('complaint.status.in_review')}
+                    </option>
+                    <option value="resolved">
+                        {t('complaint.status.resolved')}
+                    </option>
+                    <option value="rejected">
+                        {t('complaint.status.rejected')}
+                    </option>
+                    <option value="refunded">
+                        {t('complaint.status.refunded')}
+                    </option>
                 </select>
             </div>
 
@@ -799,7 +840,9 @@ function ComplaintsTable({
                                         {localize(lang, c.subject)}
                                     </td>
                                     <td className="px-4 py-3 text-sm text-muted-foreground">
-                                        {new Date(c.created_at).toLocaleDateString()}
+                                        {new Date(
+                                            c.created_at,
+                                        ).toLocaleDateString()}
                                     </td>
                                     <td className="px-4 py-3">
                                         <span
@@ -808,7 +851,9 @@ function ComplaintsTable({
                                                 priorityColors[c.priority],
                                             )}
                                         >
-                                            {t(`complaint.priority.${c.priority}`)}
+                                            {t(
+                                                `complaint.priority.${c.priority}`,
+                                            )}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
@@ -827,16 +872,33 @@ function ComplaintsTable({
                                             onClick={(e) => e.stopPropagation()}
                                             onChange={(e) => {
                                                 e.stopPropagation();
-                                                onStatusChange(c.id, e.target.value);
+                                                onStatusChange(
+                                                    c.id,
+                                                    e.target.value,
+                                                );
                                             }}
                                             className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
                                         >
-                                            <option value="pending">{t('complaint.status.pending')}</option>
-                                            <option value="in_review">{t('complaint.status.in_review')}</option>
-                                            <option value="resolved">{t('complaint.status.resolved')}</option>
-                                            <option value="rejected">{t('complaint.status.rejected')}</option>
+                                            <option value="pending">
+                                                {t('complaint.status.pending')}
+                                            </option>
+                                            <option value="in_review">
+                                                {t(
+                                                    'complaint.status.in_review',
+                                                )}
+                                            </option>
+                                            <option value="resolved">
+                                                {t('complaint.status.resolved')}
+                                            </option>
+                                            <option value="rejected">
+                                                {t('complaint.status.rejected')}
+                                            </option>
                                             {c.type === 'refund_request' && (
-                                                <option value="refunded">{t('complaint.status.refunded')}</option>
+                                                <option value="refunded">
+                                                    {t(
+                                                        'complaint.status.refunded',
+                                                    )}
+                                                </option>
                                             )}
                                         </select>
                                     </td>
@@ -996,18 +1058,24 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
-                        <p className="text-muted-foreground">{t('admin.type')}</p>
+                        <p className="text-muted-foreground">
+                            {t('admin.type')}
+                        </p>
                         <p className="font-medium capitalize">{b.type}</p>
                     </div>
                     <div>
-                        <p className="text-muted-foreground">{t('admin.amount')}</p>
+                        <p className="text-muted-foreground">
+                            {t('admin.amount')}
+                        </p>
                         <p className="font-medium">
                             {b.total_amount.toLocaleString()} TND
                         </p>
                     </div>
                     {b.start_date && (
                         <div>
-                            <p className="text-muted-foreground">{t('admin.dateRange')}</p>
+                            <p className="text-muted-foreground">
+                                {t('admin.dateRange')}
+                            </p>
                             <p className="font-medium">
                                 {b.start_date} \u2192 {b.end_date ?? '\u2026'}
                             </p>
@@ -1015,15 +1083,21 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                     )}
                     {(b as any).expires_at && (
                         <div>
-                            <p className="text-muted-foreground">{t('admin.queue.expiresAt')}</p>
+                            <p className="text-muted-foreground">
+                                {t('admin.queue.expiresAt')}
+                            </p>
                             <p className="font-medium">
-                                {new Date((b as any).expires_at).toLocaleDateString()}
+                                {new Date(
+                                    (b as any).expires_at,
+                                ).toLocaleDateString()}
                             </p>
                         </div>
                     )}
                     {b.details?.nights && (
                         <div>
-                            <p className="text-muted-foreground">{t('voucher.nights') || 'Nights'}</p>
+                            <p className="text-muted-foreground">
+                                {t('voucher.nights') || 'Nights'}
+                            </p>
                             <p className="font-medium">{b.details.nights}</p>
                         </div>
                     )}
@@ -1033,7 +1107,9 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                     <div className="mt-3 rounded-xl border border-border bg-muted/20 p-3 text-sm">
                         <p className="font-medium">{b.details.room_name}</p>
                         {b.details.boarding_name && (
-                            <p className="text-muted-foreground">{b.details.boarding_name}</p>
+                            <p className="text-muted-foreground">
+                                {b.details.boarding_name}
+                            </p>
                         )}
                     </div>
                 )}
@@ -1075,16 +1151,23 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
 
                 {(b as any).guests && (b as any).guests.length > 0 && (
                     <div className="mt-3 text-sm">
-                        <p className="text-muted-foreground">{t('admin.guests') || 'Guests'}</p>
+                        <p className="text-muted-foreground">
+                            {t('admin.guests') || 'Guests'}
+                        </p>
                         <p className="font-medium">
-                            {(b as any).guests.map((g: any) => g.name).filter(Boolean).join(', ')}
+                            {(b as any).guests
+                                .map((g: any) => g.name)
+                                .filter(Boolean)
+                                .join(', ')}
                         </p>
                     </div>
                 )}
 
                 {(b as any).notes && (
                     <div className="mt-3 text-sm">
-                        <p className="text-muted-foreground">{t('admin.notes') || 'Notes'}</p>
+                        <p className="text-muted-foreground">
+                            {t('admin.notes') || 'Notes'}
+                        </p>
                         <p className="font-medium">{(b as any).notes}</p>
                     </div>
                 )}
@@ -1134,22 +1217,28 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                                             className="border-b border-border/60 last:border-0"
                                         >
                                             <td className="px-2 py-2 font-medium text-foreground">
-                                                {t('voucher.room') || 'Room'} {index + 1}
+                                                {t('voucher.room') || 'Room'}{' '}
+                                                {index + 1}
                                             </td>
                                             <td className="px-2 py-2 text-muted-foreground">
                                                 {boardingLabel(room.boarding)}
                                             </td>
                                             <td className="px-2 py-2 text-muted-foreground">
-                                                {prebook.breakdown?.nights ?? '\u2014'}
+                                                {prebook.breakdown?.nights ??
+                                                    '\u2014'}
                                             </td>
                                             <td className="px-2 py-2 text-right font-semibold text-foreground">
                                                 {(() => {
-                                                    const roomTotal = Number(room.total ?? 0);
+                                                    const roomTotal = Number(
+                                                        room.total ?? 0,
+                                                    );
                                                     const displayTotal =
                                                         roomTotal > 0
                                                             ? roomTotal
                                                             : Number(
-                                                                  prebook.breakdown?.total ??
+                                                                  prebook
+                                                                      .breakdown
+                                                                      ?.total ??
                                                                       prebook.total ??
                                                                       0,
                                                               );
@@ -1179,36 +1268,44 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                         {t('admin.queue.auditTimeline')}
                     </h3>
                     <ol className="relative space-y-4 border-s-2 border-border ps-5">
-                        {[...(full as any).audits].reverse().map((audit: any) => (
-                            <li key={audit.id} className="relative">
-                                <span className="absolute -start-[26px] top-1 h-3 w-3 rounded-full border-2 border-border bg-background" />
-                                <div className="flex items-center justify-between gap-2">
-                                    <span
-                                        className={cn(
-                                            'rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                                            auditActionColors[audit.action] ?? 'bg-muted',
-                                        )}
-                                    >
-                                        {t(`admin.queue.audit.${audit.action}`)}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {new Date(audit.created_at).toLocaleString()}
-                                    </span>
-                                </div>
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                    {audit.actor_name
-                                        ? `${audit.actor_name} (${audit.actor_role ?? 'admin'})`
-                                        : (audit.actor_role ?? 'system')}
-                                    {audit.from_status &&
-                                        ` \u00b7 ${audit.from_status} \u2192 ${audit.to_status ?? '\u2026'}`}
-                                </p>
-                                {audit.notes && (
-                                    <p className="mt-0.5 text-xs italic text-muted-foreground">
-                                        \u201c{audit.notes}\u201d
+                        {[...(full as any).audits]
+                            .reverse()
+                            .map((audit: any) => (
+                                <li key={audit.id} className="relative">
+                                    <span className="absolute -start-[26px] top-1 h-3 w-3 rounded-full border-2 border-border bg-background" />
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span
+                                            className={cn(
+                                                'rounded-full px-2.5 py-0.5 text-xs font-semibold',
+                                                auditActionColors[
+                                                    audit.action
+                                                ] ?? 'bg-muted',
+                                            )}
+                                        >
+                                            {t(
+                                                `admin.queue.audit.${audit.action}`,
+                                            )}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {new Date(
+                                                audit.created_at,
+                                            ).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        {audit.actor_name
+                                            ? `${audit.actor_name} (${audit.actor_role ?? 'admin'})`
+                                            : (audit.actor_role ?? 'system')}
+                                        {audit.from_status &&
+                                            ` \u00b7 ${audit.from_status} \u2192 ${audit.to_status ?? '\u2026'}`}
                                     </p>
-                                )}
-                            </li>
-                        ))}
+                                    {audit.notes && (
+                                        <p className="mt-0.5 text-xs italic text-muted-foreground">
+                                            \u201c{audit.notes}\u201d
+                                        </p>
+                                    )}
+                                </li>
+                            ))}
                     </ol>
                 </div>
             )}
@@ -1291,8 +1388,10 @@ function ComplaintDetail({
                 {complaint.booking && (
                     <div className="mt-3 rounded-xl border border-border bg-muted/20 p-3 text-sm">
                         <p className="font-medium">
-                            {t('admin.booking')} #{complaint.booking.booking_ref ?? complaint.booking.id} ·{' '}
-                            {complaint.booking.type}
+                            {t('admin.booking')} #
+                            {complaint.booking.booking_ref ??
+                                complaint.booking.id}{' '}
+                            · {complaint.booking.type}
                         </p>
                         <p className="text-muted-foreground">
                             {complaint.booking.total_amount.toLocaleString()}{' '}

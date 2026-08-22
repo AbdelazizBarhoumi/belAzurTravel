@@ -31,7 +31,11 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCountries } from '@/hooks/useCountries';
-import { useDestinations, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import {
+    useDestinations,
+    useCategories,
+    useCategoryTypesPublic,
+} from '@/hooks/usePublicData';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 
@@ -52,7 +56,9 @@ const Destinations = () => {
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [selectedCountry, setSelectedCountry] = useState(initialCountry);
-    const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured');
+    const [sortBy, setSortBy] = useState<
+        'featured' | 'price-asc' | 'price-desc' | 'rating'
+    >('featured');
     const { t, lang, dir } = useLanguage();
     const { data: allDestinations = [] } = useDestinations();
     const { data: dynamicCategories = [] } = useCategories('destinations');
@@ -69,8 +75,9 @@ const Destinations = () => {
         }
         return filters;
     }, [params]);
-    const [categoryTypeFilters, setCategoryTypeFilters] =
-        useState<Record<string, string[]>>(initialCategoryTypeFilters);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<
+        Record<string, string[]>
+    >(initialCategoryTypeFilters);
 
     // Adjust state during render when URL params change (e.g. navbar subcategory links)
     const [prevParamsKey, setPrevParamsKey] = useState(() => params.toString());
@@ -82,7 +89,9 @@ const Destinations = () => {
         const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val
+                    .split(',')
+                    .filter(Boolean);
             }
         }
         setCategoryTypeFilters(nextFilters);
@@ -109,8 +118,12 @@ const Destinations = () => {
     const filtered = allDestinations
         .filter((d) => {
             const matchesSearch =
-                localizeText(d.name, lang).toLowerCase().includes(searchQuery.toLowerCase()) ||
-                localizeText(d.country, lang).toLowerCase().includes(searchQuery.toLowerCase());
+                localizeText(d.name, lang)
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()) ||
+                localizeText(d.country, lang)
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase());
             const matchesCategory =
                 selectedCategory === 'all' ||
                 (d.categoryKey ?? '').toLowerCase() === selectedCategory;
@@ -118,12 +131,22 @@ const Destinations = () => {
                 selectedCountry === 'all' ||
                 localizeText(d.country, lang) === selectedCountry;
             const destAssignments = d.category_assignments;
-            const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
-            const matchesCategoryTypes = activeTypeFilters.length === 0 ||
-                activeTypeFilters.some(([typeKey, values]) =>
-                    destAssignments && values.includes(destAssignments[typeKey]),
+            const activeTypeFilters = Object.entries(
+                categoryTypeFilters,
+            ).filter(([, v]) => v.length > 0);
+            const matchesCategoryTypes =
+                activeTypeFilters.length === 0 ||
+                activeTypeFilters.some(
+                    ([typeKey, values]) =>
+                        destAssignments &&
+                        values.includes(destAssignments[typeKey]),
                 );
-            return matchesSearch && matchesCategory && matchesCountry && matchesCategoryTypes;
+            return (
+                matchesSearch &&
+                matchesCategory &&
+                matchesCountry &&
+                matchesCategoryTypes
+            );
         })
         .sort((a, b) => {
             if (sortBy === 'price-asc') return a.price - b.price;
@@ -189,7 +212,9 @@ const Destinations = () => {
                         className="mb-8"
                     />
 
-                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                        className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
                         <FilterSidebar
                             title={t('hotels.filters')}
                             hasActiveFilters={hasActiveFilters}
@@ -201,13 +226,21 @@ const Destinations = () => {
                                 <label className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                                     {t('admin.country')}
                                 </label>
-                                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                                <Select
+                                    value={selectedCountry}
+                                    onValueChange={setSelectedCountry}
+                                >
                                     <SelectTrigger className="w-full rounded-lg border-border bg-background">
-                                        <SelectValue placeholder={t('common.all')} />
+                                        <SelectValue
+                                            placeholder={t('common.all')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {countries.map((c) => (
-                                            <SelectItem key={c.value} value={c.value}>
+                                            <SelectItem
+                                                key={c.value}
+                                                value={c.value}
+                                            >
                                                 {c.label}
                                             </SelectItem>
                                         ))}
@@ -223,7 +256,9 @@ const Destinations = () => {
                                     {categories.map((cat) => (
                                         <button
                                             key={cat.value}
-                                            onClick={() => setSelectedCategory(cat.value)}
+                                            onClick={() =>
+                                                setSelectedCategory(cat.value)
+                                            }
                                             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                                                 selectedCategory === cat.value
                                                     ? 'bg-primary text-primary-foreground'
@@ -244,36 +279,67 @@ const Destinations = () => {
                                     <NavigationMenuList className="gap-0">
                                         <NavigationMenuItem>
                                             <NavigationMenuTrigger
-                                                onClick={(e) => e.preventDefault()}
+                                                onClick={(e) =>
+                                                    e.preventDefault()
+                                                }
                                                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground"
                                             >
                                                 <span className="flex items-center gap-2">
-                                                    {t(SORT_OPTIONS.find((opt) => opt.value === sortBy)?.labelKey ?? 'dest.sort.featured')}
+                                                    {t(
+                                                        SORT_OPTIONS.find(
+                                                            (opt) =>
+                                                                opt.value ===
+                                                                sortBy,
+                                                        )?.labelKey ??
+                                                            'dest.sort.featured',
+                                                    )}
                                                 </span>
                                             </NavigationMenuTrigger>
                                             <NavigationMenuContent>
                                                 <ul className="grid w-full gap-1 bg-card p-2 shadow-xl">
-                                                    {SORT_OPTIONS.map((option) => {
-                                                        const isActive = sortBy === option.value;
-                                                        return (
-                                                            <li key={option.value}>
-                                                                <NavigationMenuLink asChild>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setSortBy(option.value)}
-                                                                        className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                                                                            isActive
-                                                                                ? 'bg-primary text-primary-foreground'
-                                                                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                                                        }`}
+                                                    {SORT_OPTIONS.map(
+                                                        (option) => {
+                                                            const isActive =
+                                                                sortBy ===
+                                                                option.value;
+                                                            return (
+                                                                <li
+                                                                    key={
+                                                                        option.value
+                                                                    }
+                                                                >
+                                                                    <NavigationMenuLink
+                                                                        asChild
                                                                     >
-                                                                        <span>{t(option.labelKey)}</span>
-                                                                        {isActive && <span className="text-xs font-semibold">✓</span>}
-                                                                    </button>
-                                                                </NavigationMenuLink>
-                                                            </li>
-                                                        );
-                                                    })}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() =>
+                                                                                setSortBy(
+                                                                                    option.value,
+                                                                                )
+                                                                            }
+                                                                            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                                                                                isActive
+                                                                                    ? 'bg-primary text-primary-foreground'
+                                                                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                                                            }`}
+                                                                        >
+                                                                            <span>
+                                                                                {t(
+                                                                                    option.labelKey,
+                                                                                )}
+                                                                            </span>
+                                                                            {isActive && (
+                                                                                <span className="text-xs font-semibold">
+                                                                                    ✓
+                                                                                </span>
+                                                                            )}
+                                                                        </button>
+                                                                    </NavigationMenuLink>
+                                                                </li>
+                                                            );
+                                                        },
+                                                    )}
                                                 </ul>
                                             </NavigationMenuContent>
                                         </NavigationMenuItem>
@@ -283,17 +349,23 @@ const Destinations = () => {
                             </div>
 
                             {categoryTypes.length > 0 && (
-                                <div className="border-t border-border pt-6 space-y-4">
+                                <div className="space-y-4 border-t border-border pt-6">
                                     {categoryTypes.map((catType) => (
                                         <FilterRenderer
                                             key={catType.key}
                                             categoryType={catType as never}
-                                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                            selectedValues={
+                                                categoryTypeFilters[
+                                                    catType.key
+                                                ] ?? []
+                                            }
                                             onChange={(values) =>
-                                                setCategoryTypeFilters((prev) => ({
-                                                    ...prev,
-                                                    [catType.key]: values,
-                                                }))
+                                                setCategoryTypeFilters(
+                                                    (prev) => ({
+                                                        ...prev,
+                                                        [catType.key]: values,
+                                                    }),
+                                                )
                                             }
                                             lang={lang}
                                         />
@@ -305,7 +377,11 @@ const Destinations = () => {
                         <div className="min-w-0 flex-1">
                             {filtered.length === 0 ? (
                                 <RequestThingEmptyState
-                                    variant={allDestinations.length === 0 ? 'empty' : 'no-results'}
+                                    variant={
+                                        allDestinations.length === 0
+                                            ? 'empty'
+                                            : 'no-results'
+                                    }
                                 />
                             ) : (
                                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -324,7 +400,10 @@ const Destinations = () => {
                                                 <div className="card-elevated overflow-hidden rounded-2xl bg-card">
                                                     <CardMedia
                                                         src={dest.image}
-                                                        alt={localizeText(dest.name, lang)}
+                                                        alt={localizeText(
+                                                            dest.name,
+                                                            lang,
+                                                        )}
                                                         wrapperClass="relative h-56"
                                                         imgClass="transition-transform duration-500 group-hover:scale-105"
                                                     />
@@ -333,17 +412,27 @@ const Destinations = () => {
                                                         item={{
                                                             id: `dest-${localizeText(dest.name, lang)}`,
                                                             type: 'destination',
-                                                            name: localizeText(dest.name, lang),
+                                                            name: localizeText(
+                                                                dest.name,
+                                                                lang,
+                                                            ),
                                                             image: dest.image,
                                                             price: dest.price,
-                                                            location: localizeText(dest.country, lang),
+                                                            location:
+                                                                localizeText(
+                                                                    dest.country,
+                                                                    lang,
+                                                                ),
                                                         }}
                                                     />
                                                     <div className="p-5">
                                                         <div className="mb-2 flex items-center justify-between">
                                                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                                                 <MapPin className="h-3 w-3" />{' '}
-                                                                {localizeText(dest.country, lang)}
+                                                                {localizeText(
+                                                                    dest.country,
+                                                                    lang,
+                                                                )}
                                                             </div>
                                                             <div className="flex items-center gap-1 text-xs font-bold text-secondary">
                                                                 <Star className="h-3 w-3 fill-current" />{' '}
@@ -351,26 +440,40 @@ const Destinations = () => {
                                                             </div>
                                                         </div>
                                                         <h3 className="mb-1 font-serif text-xl font-bold text-foreground">
-                                                            {localizeText(dest.name, lang)}
+                                                            {localizeText(
+                                                                dest.name,
+                                                                lang,
+                                                            )}
                                                         </h3>
                                                         <p className="mb-4 text-sm text-muted-foreground">
-                                                            {localizeText(dest.description, lang)}
+                                                            {localizeText(
+                                                                dest.description,
+                                                                lang,
+                                                            )}
                                                         </p>
                                                         <div className="flex items-center justify-between gap-2">
                                                             {dest.price > 0 && (
-                                                            <span className="font-bold text-primary">
-                                                                From {dest.price.toLocaleString()} TND
-                                                            </span>
-                                                        )}
+                                                                <span className="font-bold text-primary">
+                                                                    From{' '}
+                                                                    {dest.price.toLocaleString()}{' '}
+                                                                    TND
+                                                                </span>
+                                                            )}
                                                             <Button
                                                                 size="sm"
                                                                 className="bg-primary text-xs text-primary-foreground"
-                                                                onClick={(e) => {
+                                                                onClick={(
+                                                                    e,
+                                                                ) => {
                                                                     e.preventDefault();
-                                                                    handleProceed(dest.slug);
+                                                                    handleProceed(
+                                                                        dest.slug,
+                                                                    );
                                                                 }}
                                                             >
-                                                                {t('common.bookNow')}
+                                                                {t(
+                                                                    'common.bookNow',
+                                                                )}
                                                             </Button>
                                                         </div>
                                                     </div>

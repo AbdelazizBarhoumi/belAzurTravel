@@ -160,14 +160,14 @@ export default function BlogPostDetail() {
                 {content.sections.some(
                     (s) =>
                         localize(s.heading, lang).trim() ||
-                        localize(s.body, lang).trim()
+                        localize(s.body, lang).trim(),
                 ) && (
                     <div className="mt-10 space-y-6">
                         {content.sections
                             .filter(
                                 (s) =>
                                     localize(s.heading, lang).trim() ||
-                                    localize(s.body, lang).trim()
+                                    localize(s.body, lang).trim(),
                             )
                             .map((section, index) => (
                                 <section

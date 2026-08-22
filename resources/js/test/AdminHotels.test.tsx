@@ -58,8 +58,16 @@ const hotelCategoryTypes = [
         sort_order: 0,
         filter_style: 'checkbox',
         values: [
-            { id: 1, key: 'beach', name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' } },
-            { id: 2, key: 'luxury', name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' } },
+            {
+                id: 1,
+                key: 'beach',
+                name: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
+            },
+            {
+                id: 2,
+                key: 'luxury',
+                name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+            },
         ],
     },
 ];
@@ -138,9 +146,9 @@ describe('AdminHotels', () => {
                 ),
             ) || dialogs[0];
         expect(dialog).not.toBeNull();
-        expect(
-            within(dialog).getAllByRole('combobox').length,
-        ).toBeGreaterThan(0);
+        expect(within(dialog).getAllByRole('combobox').length).toBeGreaterThan(
+            0,
+        );
 
         fireEvent.click(screen.getByRole('button', { name: /^fr$/i }));
 
@@ -295,10 +303,8 @@ describe('AdminHotels', () => {
             ) || dialogs[0];
 
         const fill = (id: string, value: string) => {
-            const input = (
-                dialog.querySelector(`[id="${id}"]`) ||
-                document.getElementById(id)
-            ) as HTMLInputElement;
+            const input = (dialog.querySelector(`[id="${id}"]`) ||
+                document.getElementById(id)) as HTMLInputElement;
             fireEvent.change(input, {
                 target: { value },
             });

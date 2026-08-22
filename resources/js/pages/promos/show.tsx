@@ -110,15 +110,17 @@ export default function PromoDetail() {
                                 {t('promoDetail.eligibility')}
                             </h3>
                             <ul className="space-y-2 text-sm text-foreground">
-                                {promo.eligibility.map((item: LocalizedText) => (
-                                    <li
-                                        key={item.en}
-                                        className="flex items-center gap-2"
-                                    >
-                                        <CheckCircle2 className="h-4 w-4 text-secondary" />{' '}
-                                        {localizeText(item, lang)}
-                                    </li>
-                                ))}
+                                {promo.eligibility.map(
+                                    (item: LocalizedText) => (
+                                        <li
+                                            key={item.en}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <CheckCircle2 className="h-4 w-4 text-secondary" />{' '}
+                                            {localizeText(item, lang)}
+                                        </li>
+                                    ),
+                                )}
                             </ul>
                         </section>
                     )}

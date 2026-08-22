@@ -1,6 +1,8 @@
 // Definition of pages the admin can choose to surface in header / footer.
 // The admin only checks pages — they cannot type new ones manually.
 
+import { getStaticFilterGroup } from './nav-static-filters';
+
 export interface PageDef {
     key: string;
     label: string;
@@ -9,6 +11,8 @@ export interface PageDef {
     filterParam?: string;
     /** Whether this page can ever have a dropdown (overridden by config/site.php if provided) */
     canHaveDropdown?: boolean;
+    /** Keys of static filter groups from nav-static-filters.ts that apply to this page */
+    staticFilters?: string[];
 }
 
 export const AVAILABLE_PAGES: PageDef[] = [
@@ -18,6 +22,7 @@ export const AVAILABLE_PAGES: PageDef[] = [
         href: '/destinations',
         filterParam: 'cat',
         canHaveDropdown: true,
+        staticFilters: ['sort'],
     },
     {
         key: 'hotels',
@@ -25,6 +30,7 @@ export const AVAILABLE_PAGES: PageDef[] = [
         href: '/hotels',
         filterParam: 'cat',
         canHaveDropdown: true,
+        staticFilters: ['stars', 'type_chambres', 'arrangements', 'service'],
     },
     {
         key: 'tours',
@@ -81,13 +87,24 @@ export const AVAILABLE_PAGES: PageDef[] = [
         href: '/flights',
         filterParam: 'airline',
         canHaveDropdown: true,
+        staticFilters: ['trip_type'],
     },
-    { key: 'promos', label: 'Promos', href: '/promos', filterParam: 'type' },
+    {
+        key: 'promos',
+        label: 'Promos',
+        href: '/promos',
+        filterParam: 'type',
+        staticFilters: ['promo_type'],
+    },
     { key: 'team', label: 'Team', href: '/team' },
     { key: 'partners', label: 'Partners', href: '/partners' },
     { key: 'legal', label: 'Legal', href: '/legal' },
     { key: 'privacy-policy', label: 'Privacy Policy', href: '/privacy-policy' },
-    { key: 'purchase-policy', label: 'Purchase Policy', href: '/purchase-policy' },
+    {
+        key: 'purchase-policy',
+        label: 'Purchase Policy',
+        href: '/purchase-policy',
+    },
     { key: 'visa', label: 'Visa', href: '/visa' },
     { key: 'contact', label: 'Contact', href: '/contact' },
 ];
@@ -111,6 +128,10 @@ export interface DropdownItemConfig {
     children?: DropdownItemConfig[];
     /** Target index page. Used by group sub-page links; children fall back to the parent's pageKey when omitted. */
     pageKey?: string;
+    /** Optional inline SVG string for static filter items */
+    svg?: string;
+    /** How to display: "label" (text only), "svg" (icon only), "both" (icon + text) */
+    displayMode?: 'label' | 'svg' | 'both';
 }
 
 export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
@@ -172,7 +193,18 @@ export const DEFAULT_FOOTER_COLUMNS: {
         defaultKeys: ['destinations', 'hotels', 'tours', 'travels', 'deals'],
     },
     { title: 'Discover', defaultKeys: ['gallery', 'events', 'blog'] },
-    { title: 'Support', defaultKeys: ['team', 'partners', 'legal', 'privacy-policy', 'purchase-policy', 'promos', 'contact'] },
+    {
+        title: 'Support',
+        defaultKeys: [
+            'team',
+            'partners',
+            'legal',
+            'privacy-policy',
+            'purchase-policy',
+            'promos',
+            'contact',
+        ],
+    },
 ];
 
 export const DEFAULT_NAV_SETTINGS: NavSettings = {
@@ -198,23 +230,20 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
         ].includes(p.key),
         isDropdown: ['destinations', 'hotels'].includes(p.key),
         linkSelf: true,
-        placement: [
-            'blog',
-            'contact',
-        ].includes(p.key)
+        placement: ['blog', 'contact'].includes(p.key)
             ? 'topbar'
             : [
-                'cars',
-                'flights',
-                'promos',
-                'team',
-                'partners',
-                'legal',
-                'privacy-policy',
-                'purchase-policy',
-            ].includes(p.key)
-                ? 'more'
-                : 'top',
+                    'cars',
+                    'flights',
+                    'promos',
+                    'team',
+                    'partners',
+                    'legal',
+                    'privacy-policy',
+                    'purchase-policy',
+                ].includes(p.key)
+              ? 'more'
+              : 'top',
         items: [
             'destinations',
             'hotels',
@@ -258,9 +287,30 @@ export function buildItemHref(
         return `${page.href}?q=${encodeURIComponent(query)}`;
     }
     // Filter mode: value format is "typeKey:valueKey"
-    if (item.mode === 'filter' && item.value.includes(':')) {
+    if (
+        item.mode === 'filter' &&
+        item.value.includes(':') &&
+        !item.value.startsWith('static:')
+    ) {
         const [typeKey, valueKey] = item.value.split(':');
         return `${page.href}?category_${typeKey}=${encodeURIComponent(valueKey)}`;
+    }
+    // Static filter: value format is "static:groupKey:optionKey" -> look up href from config
+    if (item.mode === 'filter' && item.value.startsWith('static:')) {
+        const parts = item.value.split(':');
+        if (parts.length === 3) {
+            const [, groupKey, optionKey] = parts;
+            const group = getStaticFilterGroup(effectivePageKey, groupKey);
+            const opt = group?.options.find((o) => o.key === optionKey);
+            if (opt) {
+                return `${page.href}?${opt.href}`;
+            }
+        }
+    }
+    // Static filter: value format is "param=value" (direct query string)
+    if (item.mode === 'filter' && item.value.includes('=')) {
+        const [param, val] = item.value.split('=');
+        return `${page.href}?${param}=${encodeURIComponent(val)}`;
     }
     const param = page.filterParam || 'cat';
     return `${page.href}?${param}=${encodeURIComponent(item.value)}`;

@@ -185,9 +185,7 @@ export default function AdminDeals() {
                 categoryTypes.map((ct) => [
                     `category_${ct.key}`,
                     (editing as any).category_assignments?.[ct.key] ||
-                        (ct.values.some(
-                            (v) => v.key === resolvedDealCategory,
-                        )
+                        (ct.values.some((v) => v.key === resolvedDealCategory)
                             ? resolvedDealCategory
                             : ''),
                 ]),
@@ -263,7 +261,9 @@ export default function AdminDeals() {
                 normalized.category_en,
                 normalized.category_fr,
                 normalized.category_ar,
-            ) || selectedKey || '';
+            ) ||
+            selectedKey ||
+            '';
         normalized.category =
             String(normalized.category_key || '') ||
             String(normalized.category_en ?? '') ||
@@ -430,8 +430,7 @@ export default function AdminDeals() {
                         htmlFor={`description_${activeLang}`}
                         className={`text-xs font-semibold ${errors[`description_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                     >
-                        {t('deals.description')}{' '}
-                        <LangBadge lang={activeLang} />
+                        {t('deals.description')} <LangBadge lang={activeLang} />
                     </label>
                     <Textarea
                         id={`description_${activeLang}`}

@@ -90,7 +90,10 @@ export default function FlightDetail() {
                                 </div>
 
                                 <div className="mt-6 grid gap-4 text-sm sm:grid-cols-3">
-                                    {localizeText(flight.details.cabin, lang) && (
+                                    {localizeText(
+                                        flight.details.cabin,
+                                        lang,
+                                    ) && (
                                         <div className="rounded-xl bg-muted/40 p-4">
                                             <p className="mb-1 text-xs text-muted-foreground">
                                                 {t('label.cabin')}
@@ -103,7 +106,10 @@ export default function FlightDetail() {
                                             </p>
                                         </div>
                                     )}
-                                    {localizeText(flight.details.baggage, lang) && (
+                                    {localizeText(
+                                        flight.details.baggage,
+                                        lang,
+                                    ) && (
                                         <div className="rounded-xl bg-muted/40 p-4">
                                             <p className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
                                                 <Briefcase className="h-3 w-3" />{' '}
@@ -117,7 +123,10 @@ export default function FlightDetail() {
                                             </p>
                                         </div>
                                     )}
-                                    {localizeText(flight.details.aircraft, lang) && (
+                                    {localizeText(
+                                        flight.details.aircraft,
+                                        lang,
+                                    ) && (
                                         <div className="rounded-xl bg-muted/40 p-4">
                                             <p className="mb-1 text-xs text-muted-foreground">
                                                 {t('label.aircraft')}
@@ -140,14 +149,51 @@ export default function FlightDetail() {
                                     title={routeLabel}
                                     description={`${localizeText(flight.airline, lang)} · ${localizeText(flight.stops, lang)}`}
                                     details={[
-                                        ...(localizeText(flight.details.cabin, lang)
-                                            ? [{ label: t('label.cabin'), value: localizeText(flight.details.cabin, lang) }]
+                                        ...(localizeText(
+                                            flight.details.cabin,
+                                            lang,
+                                        )
+                                            ? [
+                                                  {
+                                                      label: t('label.cabin'),
+                                                      value: localizeText(
+                                                          flight.details.cabin,
+                                                          lang,
+                                                      ),
+                                                  },
+                                              ]
                                             : []),
-                                        ...(localizeText(flight.details.baggage, lang)
-                                            ? [{ label: t('label.baggage'), value: localizeText(flight.details.baggage, lang) }]
+                                        ...(localizeText(
+                                            flight.details.baggage,
+                                            lang,
+                                        )
+                                            ? [
+                                                  {
+                                                      label: t('label.baggage'),
+                                                      value: localizeText(
+                                                          flight.details
+                                                              .baggage,
+                                                          lang,
+                                                      ),
+                                                  },
+                                              ]
                                             : []),
-                                        ...(localizeText(flight.details.aircraft, lang)
-                                            ? [{ label: t('label.aircraft'), value: localizeText(flight.details.aircraft, lang) }]
+                                        ...(localizeText(
+                                            flight.details.aircraft,
+                                            lang,
+                                        )
+                                            ? [
+                                                  {
+                                                      label: t(
+                                                          'label.aircraft',
+                                                      ),
+                                                      value: localizeText(
+                                                          flight.details
+                                                              .aircraft,
+                                                          lang,
+                                                      ),
+                                                  },
+                                              ]
                                             : []),
                                     ]}
                                     priceLabel={t(
@@ -175,13 +221,43 @@ export default function FlightDetail() {
                                 itemId={String(flight.id)}
                                 details={[
                                     ...(localizeText(flight.details.cabin, lang)
-                                        ? [{ label: t('label.cabin'), value: localizeText(flight.details.cabin, lang) }]
+                                        ? [
+                                              {
+                                                  label: t('label.cabin'),
+                                                  value: localizeText(
+                                                      flight.details.cabin,
+                                                      lang,
+                                                  ),
+                                              },
+                                          ]
                                         : []),
-                                    ...(localizeText(flight.details.baggage, lang)
-                                        ? [{ label: t('label.baggage'), value: localizeText(flight.details.baggage, lang) }]
+                                    ...(localizeText(
+                                        flight.details.baggage,
+                                        lang,
+                                    )
+                                        ? [
+                                              {
+                                                  label: t('label.baggage'),
+                                                  value: localizeText(
+                                                      flight.details.baggage,
+                                                      lang,
+                                                  ),
+                                              },
+                                          ]
                                         : []),
-                                    ...(localizeText(flight.details.aircraft, lang)
-                                        ? [{ label: t('label.aircraft'), value: localizeText(flight.details.aircraft, lang) }]
+                                    ...(localizeText(
+                                        flight.details.aircraft,
+                                        lang,
+                                    )
+                                        ? [
+                                              {
+                                                  label: t('label.aircraft'),
+                                                  value: localizeText(
+                                                      flight.details.aircraft,
+                                                      lang,
+                                                  ),
+                                              },
+                                          ]
                                         : []),
                                 ]}
                                 priceLabel={t('flightDetail.totalPerPassenger')}

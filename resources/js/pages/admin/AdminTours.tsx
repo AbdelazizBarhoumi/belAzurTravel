@@ -1,5 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Settings, Image as ImageIcon, Save, Star, Loader2 } from 'lucide-react';
+import {
+    Plus,
+    Edit,
+    Trash2,
+    Settings,
+    Image as ImageIcon,
+    Save,
+    Star,
+    Loader2,
+} from 'lucide-react';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
 import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
@@ -253,8 +262,7 @@ const AdminTours = () => {
                 errs[`name_${lang}`] = t('admin.required');
         });
 
-        if (!values.location)
-            errs.location = t('admin.required');
+        if (!values.location) errs.location = t('admin.required');
         if (!values.price || Number(values.price) <= 0)
             errs.price = t('admin.invalidPrice');
         if (!values.max_group || Number(values.max_group) <= 0)
@@ -334,7 +342,15 @@ const AdminTours = () => {
                 setErrors({});
             },
             onError: (error: unknown) => {
-                const errData = (error as { data?: { errors?: Record<string, unknown>; message?: string }; message?: string }).data;
+                const errData = (
+                    error as {
+                        data?: {
+                            errors?: Record<string, unknown>;
+                            message?: string;
+                        };
+                        message?: string;
+                    }
+                ).data;
                 const serverErrors = errData?.errors;
                 if (serverErrors && typeof serverErrors === 'object') {
                     const mapped: Record<string, string> = {};
@@ -349,7 +365,11 @@ const AdminTours = () => {
                     });
                     setErrors(mapped);
                 }
-                toast.error(errData?.message || (error as Error).message || t('admin.saveError'));
+                toast.error(
+                    errData?.message ||
+                        (error as Error).message ||
+                        t('admin.saveError'),
+                );
             },
         });
     };
@@ -361,11 +381,15 @@ const AdminTours = () => {
         const rawDuration = String((editing as any).duration ?? '').trim();
         let durationValue: number | null = null;
         if (rawDuration) {
-            const match = rawDuration.match(/^(\d+)\s*days?\s*\/\s*(\d+)\s*nights?$/i);
+            const match = rawDuration.match(
+                /^(\d+)\s*days?\s*\/\s*(\d+)\s*nights?$/i,
+            );
             if (match) {
                 durationValue = Number(match[1]);
             } else {
-                const singleMatch = rawDuration.match(/^(\d+)\s*(days?|nights?)$/i);
+                const singleMatch = rawDuration.match(
+                    /^(\d+)\s*(days?|nights?)$/i,
+                );
                 if (singleMatch) {
                     durationValue = Number(singleMatch[1]);
                 }
@@ -375,9 +399,7 @@ const AdminTours = () => {
         return {
             ...editing,
             location: asText(
-                (editing as any).location ??
-                    (editing as any).location_en ??
-                    '',
+                (editing as any).location ?? (editing as any).location_en ?? '',
             ),
             imagePath: asText(editing.image),
             imageFile: null,
@@ -393,7 +415,11 @@ const AdminTours = () => {
             includes: Array.isArray(editing.includes) ? editing.includes : [],
             excludes: Array.isArray(editing.excludes) ? editing.excludes : [],
             duration_value: durationValue,
-            duration: rawDuration || (durationValue != null && durationValue > 0 ? `${durationValue} ${t('common.days')} / ${durationValue - 1} ${t('common.nights')}` : ''),
+            duration:
+                rawDuration ||
+                (durationValue != null && durationValue > 0
+                    ? `${durationValue} ${t('common.days')} / ${durationValue - 1} ${t('common.nights')}`
+                    : ''),
             duration_nights: (editing as any).duration_nights ?? undefined,
             rating: (editing as any).rating ?? undefined,
             category_key: (editing as any).category_key ?? '',
@@ -407,9 +433,7 @@ const AdminTours = () => {
                 ]),
             ),
         } as unknown as TourFormValues;
-    },
-        [editing, categoryTypes],
-    );
+    }, [editing, categoryTypes]);
 
     const tourSections: SectionDef[] = [
         {
@@ -429,10 +453,23 @@ const AdminTours = () => {
                             </label>
                             <Input
                                 id={`name_${activeLang}`}
-                                value={String(values[`name_${activeLang}`] ?? '')}
-                                placeholder={t('admin.tourForm.namePlaceholder')}
-                                onChange={(e) => setField(`name_${activeLang}`, e.target.value)}
-                                className={errors[`name_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
+                                value={String(
+                                    values[`name_${activeLang}`] ?? '',
+                                )}
+                                placeholder={t(
+                                    'admin.tourForm.namePlaceholder',
+                                )}
+                                onChange={(e) =>
+                                    setField(
+                                        `name_${activeLang}`,
+                                        e.target.value,
+                                    )
+                                }
+                                className={
+                                    errors[`name_${activeLang}`]
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             {errors[`name_${activeLang}`] && (
                                 <p className="text-xs text-destructive">
@@ -452,9 +489,17 @@ const AdminTours = () => {
                                     value={String(values.duration_value ?? '')}
                                     placeholder="0"
                                     onChange={(e) => {
-                                        const days = e.target.value === '' ? null : Number(e.target.value);
+                                        const days =
+                                            e.target.value === ''
+                                                ? null
+                                                : Number(e.target.value);
                                         setField('duration_value', days);
-                                        setField('duration', days != null && days > 0 ? `${days} ${t('common.days')} / ${days - 1} ${t('common.nights')}` : '');
+                                        setField(
+                                            'duration',
+                                            days != null && days > 0
+                                                ? `${days} ${t('common.days')} / ${days - 1} ${t('common.nights')}`
+                                                : '',
+                                        );
                                     }}
                                     className={`w-24 ${errors.duration ? 'border-destructive ring-1 ring-destructive' : ''}`}
                                 />
@@ -477,7 +522,9 @@ const AdminTours = () => {
                                 value={String(values.location ?? '')}
                                 onChange={(val) => setField('location', val)}
                                 lang={activeLang}
-                                placeholder={t('admin.tourForm.locationPlaceholder')}
+                                placeholder={t(
+                                    'admin.tourForm.locationPlaceholder',
+                                )}
                             />
                             {errors.location && (
                                 <p className="text-xs text-destructive">
@@ -496,11 +543,24 @@ const AdminTours = () => {
                             </label>
                             <Textarea
                                 id={`description_${activeLang}`}
-                                value={String(values[`description_${activeLang}`] ?? '')}
-                                placeholder={t('admin.tourForm.descriptionPlaceholder')}
-                                onChange={(e) => setField(`description_${activeLang}`, e.target.value)}
+                                value={String(
+                                    values[`description_${activeLang}`] ?? '',
+                                )}
+                                placeholder={t(
+                                    'admin.tourForm.descriptionPlaceholder',
+                                )}
+                                onChange={(e) =>
+                                    setField(
+                                        `description_${activeLang}`,
+                                        e.target.value,
+                                    )
+                                }
                                 rows={4}
-                                className={errors[`description_${activeLang}`] ? 'border-destructive ring-1 ring-destructive' : ''}
+                                className={
+                                    errors[`description_${activeLang}`]
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             {errors[`description_${activeLang}`] && (
                                 <p className="text-xs text-destructive">
@@ -510,19 +570,33 @@ const AdminTours = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="tour-price" className="text-xs font-semibold text-muted-foreground">
-                                {t('admin.price')} ({t('admin.tourForm.priceUnit')})
+                            <label
+                                htmlFor="tour-price"
+                                className="text-xs font-semibold text-muted-foreground"
+                            >
+                                {t('admin.price')} (
+                                {t('admin.tourForm.priceUnit')})
                             </label>
                             <Input
                                 id="tour-price"
                                 type="number"
-                                placeholder={t('admin.tourForm.pricePlaceholder')}
+                                placeholder={t(
+                                    'admin.tourForm.pricePlaceholder',
+                                )}
                                 value={String(values.price ?? '')}
-                                onChange={(e) => setField('price', e.target.value)}
-                                className={errors.price ? 'border-destructive ring-1 ring-destructive' : ''}
+                                onChange={(e) =>
+                                    setField('price', e.target.value)
+                                }
+                                className={
+                                    errors.price
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             {errors.price && (
-                                <p className="text-xs text-destructive">{errors.price}</p>
+                                <p className="text-xs text-destructive">
+                                    {errors.price}
+                                </p>
                             )}
                         </div>
 
@@ -534,31 +608,66 @@ const AdminTours = () => {
                                 <div className="flex items-center">
                                     {Array.from({ length: 5 }, (_, i) => {
                                         const starNum = i + 1;
-                                        const currentRating = Number(values.rating ?? 0);
-                                        const fillLevel = currentRating >= starNum ? 1 : currentRating >= starNum - 0.5 ? 0.5 : 0;
+                                        const currentRating = Number(
+                                            values.rating ?? 0,
+                                        );
+                                        const fillLevel =
+                                            currentRating >= starNum
+                                                ? 1
+                                                : currentRating >= starNum - 0.5
+                                                  ? 0.5
+                                                  : 0;
                                         return (
-                                            <div key={starNum} className="relative h-5 w-5">
-                                                <Star className="absolute inset-0 h-5 w-5 text-muted stroke-muted-foreground/30" />
+                                            <div
+                                                key={starNum}
+                                                className="relative h-5 w-5"
+                                            >
+                                                <Star className="absolute inset-0 h-5 w-5 stroke-muted-foreground/30 text-muted" />
                                                 {fillLevel === 1 && (
                                                     <Star className="absolute inset-0 h-5 w-5 fill-amber-400 text-amber-400" />
                                                 )}
                                                 {fillLevel === 0.5 && (
-                                                    <span className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
+                                                    <span
+                                                        className="absolute inset-0 overflow-hidden"
+                                                        style={{ width: '50%' }}
+                                                    >
                                                         <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
                                                     </span>
                                                 )}
                                                 <button
                                                     type="button"
                                                     className="absolute inset-0 z-10 cursor-pointer"
-                                                    style={{ clipPath: 'inset(0 50% 0 0)' }}
-                                                    onClick={() => setField('rating', currentRating === starNum - 0.5 ? starNum - 0.5 : starNum - 0.5)}
+                                                    style={{
+                                                        clipPath:
+                                                            'inset(0 50% 0 0)',
+                                                    }}
+                                                    onClick={() =>
+                                                        setField(
+                                                            'rating',
+                                                            currentRating ===
+                                                                starNum - 0.5
+                                                                ? starNum - 0.5
+                                                                : starNum - 0.5,
+                                                        )
+                                                    }
                                                     aria-label={`${starNum - 0.5} stars`}
                                                 />
                                                 <button
                                                     type="button"
                                                     className="absolute inset-0 z-10 cursor-pointer"
-                                                    style={{ clipPath: 'inset(0 0 0 50%)' }}
-                                                    onClick={() => setField('rating', currentRating === starNum ? starNum : starNum)}
+                                                    style={{
+                                                        clipPath:
+                                                            'inset(0 0 0 50%)',
+                                                    }}
+                                                    onClick={() =>
+                                                        setField(
+                                                            'rating',
+                                                            currentRating ===
+                                                                starNum
+                                                                ? starNum
+                                                                : starNum,
+                                                        )
+                                                    }
                                                     aria-label={`${starNum} stars`}
                                                 />
                                             </div>
@@ -571,12 +680,21 @@ const AdminTours = () => {
                                     max={5}
                                     step={0.5}
                                     value={String(values.rating ?? '')}
-                                    onChange={(e) => setField('rating', e.target.value === '' ? null : Number(e.target.value))}
+                                    onChange={(e) =>
+                                        setField(
+                                            'rating',
+                                            e.target.value === ''
+                                                ? null
+                                                : Number(e.target.value),
+                                        )
+                                    }
                                     className={`w-20 ${errors.rating ? 'border-destructive ring-1 ring-destructive' : ''}`}
                                 />
                             </div>
                             {errors.rating && (
-                                <p className="text-xs text-destructive">{errors.rating}</p>
+                                <p className="text-xs text-destructive">
+                                    {errors.rating}
+                                </p>
                             )}
                         </div>
 
@@ -603,7 +721,11 @@ const AdminTours = () => {
                                             : Number(e.target.value),
                                     )
                                 }
-                                className={errors.max_group ? 'border-destructive ring-1 ring-destructive' : ''}
+                                className={
+                                    errors.max_group
+                                        ? 'border-destructive ring-1 ring-destructive'
+                                        : ''
+                                }
                             />
                             {errors.max_group && (
                                 <p className="text-xs text-destructive">
@@ -617,20 +739,25 @@ const AdminTours = () => {
                     {categoryTypes.map((catType) => (
                         <div key={catType.key} className="space-y-2">
                             <div className="flex items-center gap-2">
-                                <label
-                                    className="text-xs font-semibold text-muted-foreground"
-                                >
-                                    {catType.label[activeLang] || catType.label.en}
+                                <label className="text-xs font-semibold text-muted-foreground">
+                                    {catType.label[activeLang] ||
+                                        catType.label.en}
                                 </label>
                             </div>
                             <Select
-                                value={String(values[`category_${catType.key}`] || '')}
-                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                value={String(
+                                    values[`category_${catType.key}`] || '',
+                                )}
+                                onValueChange={(val) =>
+                                    setField(`category_${catType.key}`, val)
+                                }
                             >
                                 <SelectTrigger
                                     className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20`}
                                 >
-                                    <SelectValue placeholder={t('actions.select')} />
+                                    <SelectValue
+                                        placeholder={t('actions.select')}
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {catType.values.map((v) => (
@@ -792,7 +919,11 @@ const AdminTours = () => {
                         disabled={isHeroSaving}
                         className="bg-primary text-primary-foreground"
                     >
-                        {isHeroSaving ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1 h-3.5 w-3.5" />}{' '}
+                        {isHeroSaving ? (
+                            <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <Save className="mr-1 h-3.5 w-3.5" />
+                        )}{' '}
                         {t('admin.settings.save')}
                     </Button>
                 </div>
@@ -881,15 +1012,26 @@ const AdminTours = () => {
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {typeof d.location === 'object' && d.location !== null
-                                            ? (d.location as any)[lang] || (d.location as any).en || ''
+                                        {typeof d.location === 'object' &&
+                                        d.location !== null
+                                            ? (d.location as any)[lang] ||
+                                              (d.location as any).en ||
+                                              ''
                                             : String(d.location ?? '')}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {(() => {
-                                            const category = (d as any).category;
-                                            if (typeof category === 'object' && category !== null) {
-                                                return category[lang] || category.en || '';
+                                            const category = (d as any)
+                                                .category;
+                                            if (
+                                                typeof category === 'object' &&
+                                                category !== null
+                                            ) {
+                                                return (
+                                                    category[lang] ||
+                                                    category.en ||
+                                                    ''
+                                                );
                                             }
                                             return (d as any).category_en || '';
                                         })()}

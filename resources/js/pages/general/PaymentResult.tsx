@@ -76,16 +76,28 @@ const PaymentResult = () => {
                     <div className="mb-6 rounded-xl border border-border bg-muted/30 p-4 text-left">
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('admin.booking')} #</span>
-                                <span className="font-medium">{booking.booking_ref}</span>
+                                <span className="text-muted-foreground">
+                                    {t('admin.booking')} #
+                                </span>
+                                <span className="font-medium">
+                                    {booking.booking_ref}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('admin.type')}</span>
-                                <span className="font-medium">{booking.type}</span>
+                                <span className="text-muted-foreground">
+                                    {t('admin.type')}
+                                </span>
+                                <span className="font-medium">
+                                    {booking.type}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">{t('admin.amount')}</span>
-                                <span className="font-bold text-primary">{booking.total_amount.toLocaleString()} TND</span>
+                                <span className="text-muted-foreground">
+                                    {t('admin.amount')}
+                                </span>
+                                <span className="font-bold text-primary">
+                                    {booking.total_amount.toLocaleString()} TND
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -93,7 +105,10 @@ const PaymentResult = () => {
 
                 <div className="flex flex-col gap-3">
                     <Link to="/client/dashboard">
-                        <Button variant={isSuccess ? 'default' : 'outline'} className="w-full gap-2">
+                        <Button
+                            variant={isSuccess ? 'default' : 'outline'}
+                            className="w-full gap-2"
+                        >
                             <ArrowLeft className="h-4 w-4" />
                             {t('client.myBookings')}
                         </Button>

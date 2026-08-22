@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
@@ -45,8 +51,13 @@ const defaultBrowseHotels = [
         rating: 4.8,
         reviews: 120,
         tags: ['luxury'],
-        amenities: [{ name: { en: 'WiFi', fr: 'Wi-Fi', ar: 'واي فاي' }, icon: 'wifi' }],
-        category_assignments: { service: 'thalasso_spa', arrangements: 'demi_pension' },
+        amenities: [
+            { name: { en: 'WiFi', fr: 'Wi-Fi', ar: 'واي فاي' }, icon: 'wifi' },
+        ],
+        category_assignments: {
+            service: 'thalasso_spa',
+            arrangements: 'demi_pension',
+        },
         htel_recommande: true,
         tarifs_promo: true,
         enfant_gratuit: true,
@@ -104,15 +115,17 @@ vi.mock('@/hooks/usePublicData', () => ({
         mockHotelSearch.calls.push(query);
         return {
             data: {
-                pages: [{
-                    data: mockHotelSearch.data,
-                    meta: {
-                        current_page: 1,
-                        last_page: 1,
-                        total: mockHotelSearch.data.length,
-                        per_page: 50,
+                pages: [
+                    {
+                        data: mockHotelSearch.data,
+                        meta: {
+                            current_page: 1,
+                            last_page: 1,
+                            total: mockHotelSearch.data.length,
+                            per_page: 50,
+                        },
                     },
-                }],
+                ],
                 pageParams: [1],
             },
             isLoading: false,
@@ -202,7 +215,9 @@ describe('Hotels', () => {
         const cards = await screen.findAllByText('Sunset Bay');
         expect(cards.length).toBe(1);
         expect(screen.getByText(/1,234/)).toBeInTheDocument();
-        expect(screen.getByText(/·\s*7\s*(nuits?|nights)/i)).toBeInTheDocument();
+        expect(
+            screen.getByText(/·\s*7\s*(nuits?|nights)/i),
+        ).toBeInTheDocument();
     });
 
     it('hides hotels with no availability for the selected dates', async () => {
@@ -225,7 +240,9 @@ describe('Hotels', () => {
                 typeof query === 'object' &&
                 query !== null &&
                 (query as { check_in?: string }).check_in === '2026-08-20',
-        ) as { rooms?: Array<{ adults: number; children: number[] }> } | undefined;
+        ) as
+            | { rooms?: Array<{ adults: number; children: number[] }> }
+            | undefined;
 
         expect(searchCall).toBeDefined();
         expect(searchCall?.rooms).toEqual([{ adults: 2, children: [] }]);
@@ -260,7 +277,9 @@ describe('Hotels', () => {
 
         expect(await screen.findByText('Sunset Bay')).toBeInTheDocument();
         expect(screen.getByText(/1,234/)).toBeInTheDocument();
-        expect(screen.getByText(/176\s*TND\s*\/nuit|176\s*TND\s*\/night/i)).toBeInTheDocument();
+        expect(
+            screen.getByText(/176\s*TND\s*\/nuit|176\s*TND\s*\/night/i),
+        ).toBeInTheDocument();
     });
 
     it('greys out unavailable hotels and shows the unavailable badge', async () => {
@@ -331,7 +350,9 @@ describe('Hotels', () => {
         renderPage('/hotels?from=2026-08-20&to=2026-08-27&guests=2');
 
         expect(await screen.findByText('Sunset Bay')).toBeInTheDocument();
-        expect(screen.getByText('Promo Early booking · -29%')).toBeInTheDocument();
+        expect(
+            screen.getByText('Promo Early booking · -29%'),
+        ).toBeInTheDocument();
         expect(screen.getByText('Enfant gratuit')).toBeInTheDocument();
 
         // The promo discounts the displayed prices and strikes through the originals.
@@ -428,9 +449,7 @@ describe('Hotels', () => {
 
         expect(await screen.findByText('Sunset Bay')).toBeInTheDocument();
         expect(
-            screen.getByText(
-                /Disponibilité en direct|Live availability/i,
-            ),
+            screen.getByText(/Disponibilité en direct|Live availability/i),
         ).toBeInTheDocument();
     });
 
@@ -481,11 +500,11 @@ describe('Hotels', () => {
 
         // Open the city combobox and pick "Sousse" from the search results.
         fireEvent.click(
-            screen.getByRole('combobox', { name: /Toutes les villes|All cities|كل المدن/i }),
+            screen.getByRole('combobox', {
+                name: /Toutes les villes|All cities|كل المدن/i,
+            }),
         );
-        fireEvent.click(
-            await screen.findByRole('option', { name: /Sousse/i }),
-        );
+        fireEvent.click(await screen.findByRole('option', { name: /Sousse/i }));
 
         expect(screen.getByText('Sunset Bay')).toBeInTheDocument();
         expect(screen.queryByText('Ocean Club')).not.toBeInTheDocument();
@@ -571,9 +590,12 @@ describe('Hotels', () => {
         // Debounce: nothing new has been searched yet.
         expect(mockHotelSearch.calls.some(hasSlugs)).toBe(false);
 
-        await waitFor(() => {
-            expect(mockHotelSearch.calls.some(hasSlugs)).toBe(true);
-        }, { timeout: 3000 });
+        await waitFor(
+            () => {
+                expect(mockHotelSearch.calls.some(hasSlugs)).toBe(true);
+            },
+            { timeout: 3000 },
+        );
 
         const narrowed = mockHotelSearch.calls.find(hasSlugs) as {
             hotel_slugs?: string[];
@@ -631,7 +653,9 @@ describe('Hotels', () => {
         renderPage('/hotels');
         await screen.findByText('Sunset Bay');
 
-        const trigger = screen.getByRole('button', { name: /Choisir des dates|Choose dates/i });
+        const trigger = screen.getByRole('button', {
+            name: /Choisir des dates|Choose dates/i,
+        });
 
         const definedCalls = () =>
             mockHotelSearch.calls.filter(
@@ -668,9 +692,9 @@ describe('Hotels', () => {
             },
             { timeout: 3000 },
         );
-        expect(
-            definedCalls()[definedCalls().length - 1].check_out,
-        ).not.toBe(first.check_out);
+        expect(definedCalls()[definedCalls().length - 1].check_out).not.toBe(
+            first.check_out,
+        );
     });
 
     it('shows the Budget slider only once live prices are retrieved', async () => {
@@ -748,9 +772,7 @@ describe('Hotels', () => {
         ];
 
         expect(await screen.findByText('Sunset Bay')).toBeInTheDocument();
-        expect(
-            screen.queryByTestId('hotel-skeletons'),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByTestId('hotel-skeletons')).not.toBeInTheDocument();
     });
 
     it('derives the Budget slider bounds from the live per-night prices', async () => {
@@ -818,6 +840,8 @@ describe('Hotels', () => {
         );
 
         expect(await screen.findByRole('dialog')).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: /filtres|filters/i })).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: /filtres|filters/i }),
+        ).toBeInTheDocument();
     });
 });

@@ -26,7 +26,9 @@ vi.mock('@/hooks/useSiteSettings', () => ({
 }));
 
 vi.mock('@/components/layout/AdminLayout', () => ({
-    AdminLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    AdminLayout: ({ children }: { children: ReactNode }) => (
+        <div>{children}</div>
+    ),
 }));
 
 vi.mock('@/components/admin/HeroImagesManager', () => ({

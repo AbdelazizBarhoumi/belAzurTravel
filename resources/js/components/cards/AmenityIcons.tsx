@@ -80,7 +80,9 @@ export function AmenityIcons({ amenities, maxVisible, className }: Props) {
                             title={amenity.name?.en ?? ''}
                             className="inline-flex h-5 w-5 items-center justify-center rounded bg-muted"
                         >
-                            <span className="text-[8px] font-bold text-muted-foreground">?</span>
+                            <span className="text-[8px] font-bold text-muted-foreground">
+                                ?
+                            </span>
                         </span>
                     );
                 }

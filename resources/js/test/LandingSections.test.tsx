@@ -20,7 +20,9 @@ vi.mock('@/components/sections/landing/DealsSection', () => ({
 }));
 
 vi.mock('@/components/sections/landing/DestinationsSection', () => ({
-    DestinationsSection: () => <div data-testid="section-destinations">destinations</div>,
+    DestinationsSection: () => (
+        <div data-testid="section-destinations">destinations</div>
+    ),
 }));
 
 vi.mock('@/components/sections/landing/EventsSection', () => ({
@@ -40,7 +42,9 @@ vi.mock('@/components/sections/landing/LocationSection', () => ({
 }));
 
 vi.mock('@/components/sections/landing/OrganizedSection', () => ({
-    OrganizedSection: () => <div data-testid="section-organized">organized</div>,
+    OrganizedSection: () => (
+        <div data-testid="section-organized">organized</div>
+    ),
 }));
 
 vi.mock('@/components/sections/landing/ToursSection', () => ({

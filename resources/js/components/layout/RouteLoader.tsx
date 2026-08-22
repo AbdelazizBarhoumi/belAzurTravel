@@ -6,7 +6,6 @@ import { useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { traceRoute } from '@/lib/routeTrace';
 
-
 export function RouteLoader() {
     const { t } = useLanguage();
     const location = useLocation();
@@ -94,7 +93,6 @@ export function RouteLoader() {
             maxWaitTimeoutRef.current = null;
         }
 
-         
         setLoading(true);
         // Allow new route to mount + images/data to start fetching before hiding
         const minDelay = firstLoad ? 600 : 450;

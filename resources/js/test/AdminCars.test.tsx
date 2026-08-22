@@ -43,8 +43,16 @@ const carCategoryTypes = [
         sort_order: 0,
         filter_style: 'checkbox',
         values: [
-            { id: 1, key: 'electric', name: { en: 'Electric', fr: 'Électrique', ar: 'كهربائي' } },
-            { id: 2, key: 'luxury', name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخرة' } },
+            {
+                id: 1,
+                key: 'electric',
+                name: { en: 'Electric', fr: 'Électrique', ar: 'كهربائي' },
+            },
+            {
+                id: 2,
+                key: 'luxury',
+                name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخرة' },
+            },
         ],
     },
 ];

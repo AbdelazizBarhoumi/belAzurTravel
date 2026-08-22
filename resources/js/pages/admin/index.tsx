@@ -265,7 +265,8 @@ const AdminDashboard = () => {
                                             ).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm font-semibold">
-                                            {b.total_amount.toLocaleString()} TND
+                                            {b.total_amount.toLocaleString()}{' '}
+                                            TND
                                         </td>
                                         <td className="px-6 py-4">
                                             <span
@@ -273,7 +274,8 @@ const AdminDashboard = () => {
                                                     'rounded-full px-3 py-1 text-xs font-semibold',
                                                     bookingStatusColors[
                                                         b.status
-                                                    ] ?? 'bg-muted text-muted-foreground',
+                                                    ] ??
+                                                        'bg-muted text-muted-foreground',
                                                 )}
                                             >
                                                 {bookingStatusLabels[

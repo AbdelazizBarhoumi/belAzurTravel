@@ -1,5 +1,5 @@
-import { Icon as IconifyIcon } from "@iconify/react";
-import { motion } from "framer-motion";
+import { Icon as IconifyIcon } from '@iconify/react';
+import { motion } from 'framer-motion';
 import {
     CheckCircle2,
     LogIn,
@@ -9,19 +9,19 @@ import {
     Tag,
     UtensilsCrossed,
     type Wifi,
-} from "lucide-react";
-import { useMemo } from "react";
-import type { ReactNode } from "react";
+} from 'lucide-react';
+import { useMemo } from 'react';
+import type { ReactNode } from 'react';
 
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 interface Amenity {
     id: string;
@@ -60,7 +60,7 @@ interface HotelInfoProps {
 const fadeInProps = {
     initial: { opacity: 0, y: 12 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-60px" },
+    viewport: { once: true, margin: '-60px' },
     transition: { duration: 0.35 },
 } as const;
 
@@ -104,8 +104,8 @@ function Tile({
     label: string;
     value: ReactNode;
     href?: string;
-    dir: "ltr" | "rtl";
-    valueDir?: "ltr" | "rtl";
+    dir: 'ltr' | 'rtl';
+    valueDir?: 'ltr' | 'rtl';
 }) {
     const content = (
         <>
@@ -129,7 +129,7 @@ function Tile({
     );
 
     const className =
-        "flex items-start gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-primary/40";
+        'flex items-start gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-primary/40';
 
     return href ? (
         <a href={href} dir={dir} className={className}>
@@ -149,7 +149,7 @@ function Pill({
 }: {
     icon: typeof Wifi;
     children: ReactNode;
-    dir: "ltr" | "rtl";
+    dir: 'ltr' | 'rtl';
 }) {
     return (
         <span
@@ -169,7 +169,7 @@ function SectionTitle({
 }: {
     children: ReactNode;
     hint?: string;
-    dir: "ltr" | "rtl";
+    dir: 'ltr' | 'rtl';
 }) {
     return (
         <div
@@ -205,7 +205,7 @@ export function HotelInfo({
         const acc: Record<string, string[]> = {};
 
         for (const f of facilities ?? []) {
-            const key = f.category?.trim() || t("hotelInfo.general");
+            const key = f.category?.trim() || t('hotelInfo.general');
             (acc[key] ??= []).push(f.title);
         }
 
@@ -218,28 +218,23 @@ export function HotelInfo({
         (amenityTags?.length ?? 0) > 0;
 
     const hasDining =
-        (boardings?.length ?? 0) > 0 ||
-        (options?.length ?? 0) > 0;
+        (boardings?.length ?? 0) > 0 || (options?.length ?? 0) > 0;
 
     const tabs = [
         {
-            value: "equipment",
-            label: t("hotelInfo.tabEquipment"),
+            value: 'equipment',
+            label: t('hotelInfo.tabEquipment'),
             show: hasEquipment,
         },
         {
-            value: "dining",
-            label: t("hotelInfo.tabDining"),
+            value: 'dining',
+            label: t('hotelInfo.tabDining'),
             show: hasDining,
         },
         {
-            value: "practical",
-            label: t("hotelInfo.tabPractical"),
-            show: Boolean(
-                checkIn ||
-                    checkOut ||
-                    address
-            ),
+            value: 'practical',
+            label: t('hotelInfo.tabPractical'),
+            show: Boolean(checkIn || checkOut || address),
         },
     ].filter((tab) => tab.show);
 
@@ -253,24 +248,24 @@ export function HotelInfo({
             dir={dir}
             className="rounded-[28px] border border-border bg-card/50 p-5 md:p-7"
         >
-<Tabs dir={dir}>
-    <TabsList
-        dir={dir}
-        className={cn(
-            "flex h-auto w-full flex-wrap justify-start gap-1 rounded-2xl bg-muted/60 p-1",
-        )}
-    >
-        {tabs.map((tab) => (
-            <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                dir={dir}
-                className="rounded-xl px-4 py-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"
-            >
-                {tab.label}
-            </TabsTrigger>
-        ))}
-    </TabsList>
+            <Tabs dir={dir}>
+                <TabsList
+                    dir={dir}
+                    className={cn(
+                        'flex h-auto w-full flex-wrap justify-start gap-1 rounded-2xl bg-muted/60 p-1',
+                    )}
+                >
+                    {tabs.map((tab) => (
+                        <TabsTrigger
+                            key={tab.value}
+                            value={tab.value}
+                            dir={dir}
+                            className="rounded-xl px-4 py-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"
+                        >
+                            {tab.label}
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
 
                 {/* ─────────────────────────────────────────────
                     EQUIPMENT
@@ -286,7 +281,7 @@ export function HotelInfo({
                                 hint={`${amenityTags.length}`}
                                 dir={dir}
                             >
-                                {t("hotelInfo.highlights")}
+                                {t('hotelInfo.highlights')}
                             </SectionTitle>
 
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -304,7 +299,7 @@ export function HotelInfo({
                                                 className="h-10 w-10 shrink-0 rounded-xl object-cover"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display =
-                                                        "none";
+                                                        'none';
                                                 }}
                                             />
                                         ) : (
@@ -328,7 +323,7 @@ export function HotelInfo({
                                 hint={`${amenities.length}`}
                                 dir={dir}
                             >
-                                {t("hotelInfo.amenities")}
+                                {t('hotelInfo.amenities')}
                             </SectionTitle>
 
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -354,7 +349,7 @@ export function HotelInfo({
                     {facilityGroups.length > 0 && (
                         <div dir={dir}>
                             <SectionTitle dir={dir}>
-                                {t("hotelInfo.facilities")}
+                                {t('hotelInfo.facilities')}
                             </SectionTitle>
 
                             <Accordion
@@ -415,7 +410,7 @@ export function HotelInfo({
                     {boardings && boardings.length > 0 && (
                         <div dir={dir}>
                             <SectionTitle dir={dir}>
-                                {t("hotelInfo.boardings")}
+                                {t('hotelInfo.boardings')}
                             </SectionTitle>
 
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -460,10 +455,10 @@ export function HotelInfo({
                     {options && options.length > 0 && (
                         <div dir={dir}>
                             <SectionTitle
-                                hint={t("hotelInfo.onRequest")}
+                                hint={t('hotelInfo.onRequest')}
                                 dir={dir}
                             >
-                                {t("hotelInfo.options")}
+                                {t('hotelInfo.options')}
                             </SectionTitle>
 
                             <div className="flex flex-wrap gap-2">
@@ -491,14 +486,14 @@ export function HotelInfo({
                 >
                     <div dir={dir}>
                         <SectionTitle dir={dir}>
-                            {t("hotelInfo.practical")}
+                            {t('hotelInfo.practical')}
                         </SectionTitle>
 
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             {checkIn && (
                                 <Tile
                                     icon={LogIn}
-                                    label={t("hotelInfo.checkIn")}
+                                    label={t('hotelInfo.checkIn')}
                                     value={checkIn}
                                     dir={dir}
                                 />
@@ -507,7 +502,7 @@ export function HotelInfo({
                             {checkOut && (
                                 <Tile
                                     icon={LogOut}
-                                    label={t("hotelInfo.checkOut")}
+                                    label={t('hotelInfo.checkOut')}
                                     value={checkOut}
                                     dir={dir}
                                 />
@@ -516,10 +511,10 @@ export function HotelInfo({
                             {address && (
                                 <Tile
                                     icon={MapPin}
-                                    label={t("hotelInfo.address")}
+                                    label={t('hotelInfo.address')}
                                     value={address}
                                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                        address
+                                        address,
                                     )}`}
                                     dir={dir}
                                 />

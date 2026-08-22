@@ -15,12 +15,15 @@ import {
     WhatsAppIcon,
 } from '@/components/ui/SocialIcons';
 import { useLanguage } from '@/contexts/LanguageContext';
-import {
-    contactMethods as contactMethodDefs,
-} from '@/data';
+import { contactMethods as contactMethodDefs } from '@/data';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { formatHourRanges } from '@/lib/site-hours';
-import { getMapDisplayText, getMapEmbedSrc, getMapLink, getMapQuery } from '@/lib/site-map';
+import {
+    getMapDisplayText,
+    getMapEmbedSrc,
+    getMapLink,
+    getMapQuery,
+} from '@/lib/site-map';
 
 export default function Contact() {
     const { lang, t } = useLanguage();
@@ -98,7 +101,10 @@ export default function Contact() {
     ];
 
     const getSocialIcon = (label: string) => {
-        const brandIcons: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+        const brandIcons: Record<
+            string,
+            React.ComponentType<React.SVGProps<SVGSVGElement>>
+        > = {
             facebook: FacebookIcon,
             instagram: InstagramIcon,
             twitter: TwitterIcon,
@@ -224,9 +230,9 @@ export default function Contact() {
                                     </div>
 
                                     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-<span>
-                                                {getMapDisplayText(settings)}
-                                            </span>
+                                        <span>
+                                            {getMapDisplayText(settings)}
+                                        </span>
                                         <a
                                             href={getMapLink(settings)}
                                             target="_blank"
@@ -262,9 +268,7 @@ export default function Contact() {
                                             if (isCall)
                                                 notifyInteraction('call');
                                             if (isWhatsapp)
-                                                notifyInteraction(
-                                                    'whatsapp',
-                                                );
+                                                notifyInteraction('whatsapp');
                                         }}
                                         className="group rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
                                     >

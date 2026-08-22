@@ -87,13 +87,18 @@ export function LandingVideoModal() {
                     <button
                         onClick={() => {
                             if (videoRef.current) {
-                                videoRef.current.muted = !videoRef.current.muted;
+                                videoRef.current.muted =
+                                    !videoRef.current.muted;
                                 setMuted(videoRef.current.muted);
                             }
                         }}
                         className="absolute bottom-3 right-3 z-10 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
                     >
-                        {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                        {muted ? (
+                            <VolumeX className="h-4 w-4" />
+                        ) : (
+                            <Volume2 className="h-4 w-4" />
+                        )}
                     </button>
                 </div>
             </DialogContent>

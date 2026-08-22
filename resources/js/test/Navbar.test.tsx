@@ -94,52 +94,55 @@ vi.mock('@/hooks/usePublicData', async () => {
             isFetched: true,
         }),
         useCategoryTypesPublic: (type?: string) => ({
-            data:
-                (type === 'destinations'
-                    ? [
-                          {
-                              id: 1,
-                              entity_type: 'destinations',
-                              key: 'destination',
-                              label: { en: 'Destination', fr: 'Destination', ar: 'x' },
-                              sort_order: 1,
-                              filter_style: 'checkbox',
-                              values: [
-                                  {
-                                      id: 1,
-                                      category_type_id: 1,
-                                      key: 'beach',
-                                      name: { en: 'Beach', fr: 'Plage', ar: 'x' },
-                                  },
-                                  {
-                                      id: 2,
-                                      category_type_id: 1,
-                                      key: 'city',
-                                      name: { en: 'City', fr: 'Ville', ar: 'x' },
-                                  },
-                              ],
+            data: (type === 'destinations'
+                ? [
+                      {
+                          id: 1,
+                          entity_type: 'destinations',
+                          key: 'destination',
+                          label: {
+                              en: 'Destination',
+                              fr: 'Destination',
+                              ar: 'x',
                           },
-                      ]
-                    : type === 'hotels'
-                      ? [
-                            {
-                                id: 2,
-                                entity_type: 'hotels',
-                                key: 'hotel',
-                                label: { en: 'Hotel', fr: 'Hôtel', ar: 'x' },
-                                sort_order: 1,
-                                filter_style: 'checkbox',
-                                values: [
-                                    {
-                                        id: 3,
-                                        category_type_id: 2,
-                                        key: 'luxury',
-                                        name: { en: 'Luxury', fr: 'Luxe', ar: 'x' },
-                                    },
-                                ],
-                            },
-                        ]
-                      : []) as never,
+                          sort_order: 1,
+                          filter_style: 'checkbox',
+                          values: [
+                              {
+                                  id: 1,
+                                  category_type_id: 1,
+                                  key: 'beach',
+                                  name: { en: 'Beach', fr: 'Plage', ar: 'x' },
+                              },
+                              {
+                                  id: 2,
+                                  category_type_id: 1,
+                                  key: 'city',
+                                  name: { en: 'City', fr: 'Ville', ar: 'x' },
+                              },
+                          ],
+                      },
+                  ]
+                : type === 'hotels'
+                  ? [
+                        {
+                            id: 2,
+                            entity_type: 'hotels',
+                            key: 'hotel',
+                            label: { en: 'Hotel', fr: 'Hôtel', ar: 'x' },
+                            sort_order: 1,
+                            filter_style: 'checkbox',
+                            values: [
+                                {
+                                    id: 3,
+                                    category_type_id: 2,
+                                    key: 'luxury',
+                                    name: { en: 'Luxury', fr: 'Luxe', ar: 'x' },
+                                },
+                            ],
+                        },
+                    ]
+                  : []) as never,
             isLoading: false,
             isFetched: true,
         }),
@@ -188,26 +191,42 @@ describe('Navbar', () => {
                             groups: [
                                 {
                                     key: 'group-1',
-                                    label: { en: 'Explore', fr: 'Explorer', ar: 'استكشف' },
+                                    label: {
+                                        en: 'Explore',
+                                        fr: 'Explorer',
+                                        ar: 'استكشف',
+                                    },
                                     enabled: true,
                                     placement: 'top',
                                     pages: [],
                                     links: [
                                         {
                                             pageKey: 'destinations',
-                                            label: { en: 'Beach', fr: 'Plage', ar: 'شاطئ' },
+                                            label: {
+                                                en: 'Beach',
+                                                fr: 'Plage',
+                                                ar: 'شاطئ',
+                                            },
                                             mode: 'filter',
                                             value: 'beach',
                                         },
                                         {
                                             pageKey: 'hotels',
-                                            label: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+                                            label: {
+                                                en: 'Luxury',
+                                                fr: 'Luxe',
+                                                ar: 'فاخر',
+                                            },
                                             mode: 'filter',
                                             value: 'hotels:luxury',
                                         },
                                         {
                                             pageKey: 'tours',
-                                            label: { en: 'Adventure', fr: 'Aventure', ar: 'مغامرة' },
+                                            label: {
+                                                en: 'Adventure',
+                                                fr: 'Aventure',
+                                                ar: 'مغامرة',
+                                            },
                                             mode: 'filter',
                                             value: 'tours:adventure',
                                         },
@@ -262,20 +281,32 @@ describe('Navbar', () => {
                             groups: [
                                 {
                                     key: 'group-1',
-                                    label: { en: 'Explore', fr: 'Explorer', ar: 'استكشف' },
+                                    label: {
+                                        en: 'Explore',
+                                        fr: 'Explorer',
+                                        ar: 'استكشف',
+                                    },
                                     enabled: true,
                                     placement: 'top',
                                     pages: [],
                                     links: [
                                         {
                                             pageKey: 'tours',
-                                            label: { en: 'Adventure', fr: 'Aventure', ar: 'مغامرة' },
+                                            label: {
+                                                en: 'Adventure',
+                                                fr: 'Aventure',
+                                                ar: 'مغامرة',
+                                            },
                                             mode: 'filter',
                                             value: 'tours:adventure',
                                             children: [
                                                 {
                                                     pageKey: 'deals',
-                                                    label: { en: 'Summer Deals', fr: 'Offres', ar: 'عروض' },
+                                                    label: {
+                                                        en: 'Summer Deals',
+                                                        fr: 'Offres',
+                                                        ar: 'عروض',
+                                                    },
                                                     mode: 'filter',
                                                     value: 'deals:summer',
                                                 },
@@ -316,7 +347,9 @@ describe('Navbar', () => {
 
         await waitFor(() =>
             expect(
-                document.querySelector('a[href="/deals?category_deals=summer"]'),
+                document.querySelector(
+                    'a[href="/deals?category_deals=summer"]',
+                ),
             ).toBeTruthy(),
         );
     });
@@ -331,7 +364,11 @@ describe('Navbar', () => {
                     isDropdown: true,
                     linkSelf: true,
                     items: [
-                        { label: 'Categories', mode: 'categories', value: 'destination' },
+                        {
+                            label: 'Categories',
+                            mode: 'categories',
+                            value: 'destination',
+                        },
                     ],
                 },
                 {
@@ -341,7 +378,11 @@ describe('Navbar', () => {
                     isDropdown: true,
                     linkSelf: true,
                     items: [
-                        { label: 'Categories', mode: 'categories', value: 'hotel' },
+                        {
+                            label: 'Categories',
+                            mode: 'categories',
+                            value: 'hotel',
+                        },
                     ],
                 },
                 {
@@ -366,9 +407,9 @@ describe('Navbar', () => {
         );
 
         const hoverTrigger = (text: string) => {
-            const trigger = Array.from(document.querySelectorAll('a, button')).find(
-                (el) => el.textContent?.trim() === text,
-            );
+            const trigger = Array.from(
+                document.querySelectorAll('a, button'),
+            ).find((el) => el.textContent?.trim() === text);
             if (trigger) fireEvent.mouseEnter(trigger);
         };
 
@@ -376,18 +417,24 @@ describe('Navbar', () => {
 
         await waitFor(() =>
             expect(
-                document.querySelector('a[href="/destinations?category_destination=beach"]'),
+                document.querySelector(
+                    'a[href="/destinations?category_destination=beach"]',
+                ),
             ).toBeTruthy(),
         );
         expect(
-            document.querySelector('a[href="/destinations?category_destination=city"]'),
+            document.querySelector(
+                'a[href="/destinations?category_destination=city"]',
+            ),
         ).toBeTruthy();
 
         hoverTrigger('Hôtels');
 
         await waitFor(() =>
             expect(
-                document.querySelector('a[href="/hotels?category_hotel=luxury"]'),
+                document.querySelector(
+                    'a[href="/hotels?category_hotel=luxury"]',
+                ),
             ).toBeTruthy(),
         );
     });
@@ -429,9 +476,9 @@ describe('Navbar', () => {
         );
 
         await waitFor(() => {
-            const trigger = Array.from(document.querySelectorAll('a, button')).find(
-                (el) => el.textContent?.trim() === 'الجولات',
-            );
+            const trigger = Array.from(
+                document.querySelectorAll('a, button'),
+            ).find((el) => el.textContent?.trim() === 'الجولات');
             if (trigger) fireEvent.mouseEnter(trigger);
         });
 
@@ -481,9 +528,9 @@ describe('Navbar', () => {
         );
 
         await waitFor(() => {
-            const trigger = Array.from(document.querySelectorAll('a, button')).find(
-                (el) => el.textContent?.trim() === 'Destinations',
-            );
+            const trigger = Array.from(
+                document.querySelectorAll('a, button'),
+            ).find((el) => el.textContent?.trim() === 'Destinations');
             if (trigger) fireEvent.mouseEnter(trigger);
         });
 

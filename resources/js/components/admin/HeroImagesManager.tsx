@@ -65,10 +65,10 @@ function SortableSlide({
         formData.append('image', file);
         formData.append('folder', 'heroes');
         try {
-            const data = await apiFetch<{ url: string }>(
-                '/api/admin/upload',
-                { method: 'POST', body: formData },
-            );
+            const data = await apiFetch<{ url: string }>('/api/admin/upload', {
+                method: 'POST',
+                body: formData,
+            });
             onChange({ ...slide, url: data.url });
         } catch {
             toast.error(t('admin.heroUploadFailed'));
@@ -125,7 +125,10 @@ function SortableSlide({
             <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="grid gap-1.5">
                     <Label className="text-[10px] text-muted-foreground">
-                        {t('admin.heroTitle').replace('{lang}', lang.toUpperCase())}
+                        {t('admin.heroTitle').replace(
+                            '{lang}',
+                            lang.toUpperCase(),
+                        )}
                     </Label>
                     <Input
                         value={slide.title?.[lang] ?? ''}
@@ -138,13 +141,19 @@ function SortableSlide({
                                 },
                             })
                         }
-                        placeholder={t('admin.heroTitle').replace('{lang}', lang.toUpperCase())}
+                        placeholder={t('admin.heroTitle').replace(
+                            '{lang}',
+                            lang.toUpperCase(),
+                        )}
                         className="h-8 text-xs"
                     />
                 </div>
                 <div className="grid gap-1.5">
                     <Label className="text-[10px] text-muted-foreground">
-                        {t('admin.heroSubtitle').replace('{lang}', lang.toUpperCase())}
+                        {t('admin.heroSubtitle').replace(
+                            '{lang}',
+                            lang.toUpperCase(),
+                        )}
                     </Label>
                     <Input
                         value={slide.subtitle?.[lang] ?? ''}
@@ -157,7 +166,10 @@ function SortableSlide({
                                 },
                             })
                         }
-                        placeholder={t('admin.heroSubtitle').replace('{lang}', lang.toUpperCase())}
+                        placeholder={t('admin.heroSubtitle').replace(
+                            '{lang}',
+                            lang.toUpperCase(),
+                        )}
                         className="h-8 text-xs"
                     />
                 </div>
@@ -191,9 +203,7 @@ export function HeroImagesManager({
             const { active, over } = event;
             if (!over || active.id === over.id) return;
 
-            const oldIndex = Number(
-                String(active.id).replace('slide-', ''),
-            );
+            const oldIndex = Number(String(active.id).replace('slide-', ''));
             const newIndex = Number(String(over.id).replace('slide-', ''));
 
             onSlidesChange(arrayMove(slides, oldIndex, newIndex));
@@ -227,7 +237,10 @@ export function HeroImagesManager({
             <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
                     {slides.length > 0
-                        ? t('admin.heroImagesCount').replace('{count}', String(slides.length))
+                        ? t('admin.heroImagesCount').replace(
+                              '{count}',
+                              String(slides.length),
+                          )
                         : t('admin.noHeroImages')}
                 </p>
                 {onIntervalChange && (
@@ -241,9 +254,7 @@ export function HeroImagesManager({
                             step={1000}
                             value={interval}
                             onChange={(e) =>
-                                onIntervalChange(
-                                    Number(e.target.value) || 6000,
-                                )
+                                onIntervalChange(Number(e.target.value) || 6000)
                             }
                             className="h-7 w-20 text-xs"
                         />

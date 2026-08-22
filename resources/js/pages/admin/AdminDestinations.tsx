@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save, Star } from 'lucide-react';
+import {
+    Edit,
+    Plus,
+    Trash2,
+    Settings,
+    Image as ImageIcon,
+    Save,
+    Star,
+} from 'lucide-react';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import {
@@ -265,7 +273,10 @@ const AdminDestinations = () => {
             if (!value) return '';
             if (options.some((o) => o.value === value)) return value;
             const match = options.find(
-                (o) => o.label.en === value || o.label.fr === value || o.label.ar === value,
+                (o) =>
+                    o.label.en === value ||
+                    o.label.fr === value ||
+                    o.label.ar === value,
             );
             return match?.value || value;
         };
@@ -303,9 +314,7 @@ const AdminDestinations = () => {
                 categoryTypes.map((ct) => [
                     `category_${ct.key}`,
                     (editing as any).category_assignments?.[ct.key] ||
-                        (ct.values.some(
-                            (v) => v.key === resolvedCategoryKey,
-                        )
+                        (ct.values.some((v) => v.key === resolvedCategoryKey)
                             ? resolvedCategoryKey
                             : ''),
                 ]),
@@ -464,8 +473,14 @@ const AdminDestinations = () => {
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {typeof destination.country === 'object' && destination.country !== null
-                                            ? (destination.country as any)[lang] || (destination.country as any).en || ''
+                                        {typeof destination.country ===
+                                            'object' &&
+                                        destination.country !== null
+                                            ? (destination.country as any)[
+                                                  lang
+                                              ] ||
+                                              (destination.country as any).en ||
+                                              ''
                                             : asText(destination.country)}
                                     </td>
                                     <td className="px-4 py-3 text-center">
@@ -602,7 +617,9 @@ const AdminDestinations = () => {
                                         <Label
                                             htmlFor={`country_${activeLang}`}
                                             className={
-                                                errors?.[`country_${activeLang}`]
+                                                errors?.[
+                                                    `country_${activeLang}`
+                                                ]
                                                     ? 'text-destructive'
                                                     : 'text-muted-foreground'
                                             }
@@ -624,22 +641,37 @@ const AdminDestinations = () => {
                                         />
                                         {errors?.[`country_${activeLang}`] && (
                                             <p className="text-[10px] text-destructive">
-                                                {errors[`country_${activeLang}`]}
+                                                {
+                                                    errors[
+                                                        `country_${activeLang}`
+                                                    ]
+                                                }
                                             </p>
                                         )}
                                     </div>
 
                                     {/* Category Types - dynamic dropdowns */}
                                     {categoryTypes.map((catType) => (
-                                        <div key={catType.key} className="space-y-2">
-                                            <Label
-                                                className="text-muted-foreground"
-                                            >
-                                                {catType.label[activeLang] || catType.label.en}
+                                        <div
+                                            key={catType.key}
+                                            className="space-y-2"
+                                        >
+                                            <Label className="text-muted-foreground">
+                                                {catType.label[activeLang] ||
+                                                    catType.label.en}
                                             </Label>
                                             <Select
-                                                value={String(values[`category_${catType.key}`] || '')}
-                                                onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                                value={String(
+                                                    values[
+                                                        `category_${catType.key}`
+                                                    ] || '',
+                                                )}
+                                                onValueChange={(val) =>
+                                                    setField(
+                                                        `category_${catType.key}`,
+                                                        val,
+                                                    )
+                                                }
                                             >
                                                 <SelectTrigger
                                                     className={
@@ -656,8 +688,13 @@ const AdminDestinations = () => {
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {catType.values.map((v) => (
-                                                        <SelectItem key={v.key} value={v.key}>
-                                                            {v.name[activeLang] || v.name.en}
+                                                        <SelectItem
+                                                            key={v.key}
+                                                            value={v.key}
+                                                        >
+                                                            {v.name[
+                                                                activeLang
+                                                            ] || v.name.en}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -832,8 +869,17 @@ const AdminDestinations = () => {
                                             step={0.01}
                                             value={String(values.price ?? '')}
                                             placeholder="0.00"
-                                            onChange={(e) => setField('price', e.target.value)}
-                                            className={errors?.price ? 'border-destructive ring-1 ring-destructive' : ''}
+                                            onChange={(e) =>
+                                                setField(
+                                                    'price',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className={
+                                                errors?.price
+                                                    ? 'border-destructive ring-1 ring-destructive'
+                                                    : ''
+                                            }
                                         />
                                         {errors?.price && (
                                             <p className="text-xs text-destructive">
@@ -848,58 +894,120 @@ const AdminDestinations = () => {
                                     </div>
 
                                     <div className="space-y-3">
-                                        <Label
-                                            className="text-muted-foreground"
-                                        >
+                                        <Label className="text-muted-foreground">
                                             {t('admin.destinationForm.rating')}
                                         </Label>
                                         <div className="flex items-center gap-3">
                                             <div className="flex items-center">
-                                                {Array.from({ length: 5 }, (_, i) => {
-                                                    const starNum = i + 1;
-                                                    const currentRating = Number(values.rating ?? 0);
-                                                    const fillLevel = currentRating >= starNum ? 1 : currentRating >= starNum - 0.5 ? 0.5 : 0;
-                                                    return (
-                                                        <div key={starNum} className="relative h-5 w-5">
-                                                            <Star className="absolute inset-0 h-5 w-5 text-muted stroke-muted-foreground/30" />
-                                                            {fillLevel === 1 && (
-                                                                <Star className="absolute inset-0 h-5 w-5 fill-amber-400 text-amber-400" />
-                                                            )}
-                                                            {fillLevel === 0.5 && (
-                                                                <span className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
-                                                                    <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-                                                                </span>
-                                                            )}
-                                                            <button
-                                                                type="button"
-                                                                className="absolute inset-0 z-10 cursor-pointer"
-                                                                style={{ clipPath: 'inset(0 50% 0 0)' }}
-                                                                onClick={() => setField('rating', currentRating === starNum - 0.5 ? starNum - 0.5 : starNum - 0.5)}
-                                                                aria-label={`${starNum - 0.5} stars`}
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                className="absolute inset-0 z-10 cursor-pointer"
-                                                                style={{ clipPath: 'inset(0 0 0 50%)' }}
-                                                                onClick={() => setField('rating', currentRating === starNum ? starNum : starNum)}
-                                                                aria-label={`${starNum} stars`}
-                                                            />
-                                                        </div>
-                                                    );
-                                                })}
+                                                {Array.from(
+                                                    { length: 5 },
+                                                    (_, i) => {
+                                                        const starNum = i + 1;
+                                                        const currentRating =
+                                                            Number(
+                                                                values.rating ??
+                                                                    0,
+                                                            );
+                                                        const fillLevel =
+                                                            currentRating >=
+                                                            starNum
+                                                                ? 1
+                                                                : currentRating >=
+                                                                    starNum -
+                                                                        0.5
+                                                                  ? 0.5
+                                                                  : 0;
+                                                        return (
+                                                            <div
+                                                                key={starNum}
+                                                                className="relative h-5 w-5"
+                                                            >
+                                                                <Star className="absolute inset-0 h-5 w-5 stroke-muted-foreground/30 text-muted" />
+                                                                {fillLevel ===
+                                                                    1 && (
+                                                                    <Star className="absolute inset-0 h-5 w-5 fill-amber-400 text-amber-400" />
+                                                                )}
+                                                                {fillLevel ===
+                                                                    0.5 && (
+                                                                    <span
+                                                                        className="absolute inset-0 overflow-hidden"
+                                                                        style={{
+                                                                            width: '50%',
+                                                                        }}
+                                                                    >
+                                                                        <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    className="absolute inset-0 z-10 cursor-pointer"
+                                                                    style={{
+                                                                        clipPath:
+                                                                            'inset(0 50% 0 0)',
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        setField(
+                                                                            'rating',
+                                                                            currentRating ===
+                                                                                starNum -
+                                                                                    0.5
+                                                                                ? starNum -
+                                                                                      0.5
+                                                                                : starNum -
+                                                                                      0.5,
+                                                                        )
+                                                                    }
+                                                                    aria-label={`${starNum - 0.5} stars`}
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    className="absolute inset-0 z-10 cursor-pointer"
+                                                                    style={{
+                                                                        clipPath:
+                                                                            'inset(0 0 0 50%)',
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        setField(
+                                                                            'rating',
+                                                                            currentRating ===
+                                                                                starNum
+                                                                                ? starNum
+                                                                                : starNum,
+                                                                        )
+                                                                    }
+                                                                    aria-label={`${starNum} stars`}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    },
+                                                )}
                                             </div>
                                             <Input
                                                 type="number"
                                                 min={0}
                                                 max={5}
                                                 step={0.5}
-                                                value={String(values.rating ?? '')}
-                                                onChange={(e) => setField('rating', e.target.value === '' ? null : Number(e.target.value))}
+                                                value={String(
+                                                    values.rating ?? '',
+                                                )}
+                                                onChange={(e) =>
+                                                    setField(
+                                                        'rating',
+                                                        e.target.value === ''
+                                                            ? null
+                                                            : Number(
+                                                                  e.target
+                                                                      .value,
+                                                              ),
+                                                    )
+                                                }
                                                 className="w-20"
                                             />
                                         </div>
                                         <p className="text-xs text-muted-foreground">
-                                            {t('admin.destinationForm.ratingHelp')}
+                                            {t(
+                                                'admin.destinationForm.ratingHelp',
+                                            )}
                                         </p>
                                     </div>
                                 </div>
@@ -995,7 +1103,10 @@ const AdminDestinations = () => {
                                         <LangBadge lang={activeLang} />
                                     </Label>
                                     <Select
-                                        value={String(values[`bestTime_${activeLang}`] ?? '')}
+                                        value={String(
+                                            values[`bestTime_${activeLang}`] ??
+                                                '',
+                                        )}
                                         onValueChange={(val) => {
                                             setField('bestTime_en', val);
                                             setField('bestTime_fr', val);
@@ -1003,12 +1114,22 @@ const AdminDestinations = () => {
                                         }}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder={t('admin.destinationForm.bestTimePlaceholder')} />
+                                            <SelectValue
+                                                placeholder={t(
+                                                    'admin.destinationForm.bestTimePlaceholder',
+                                                )}
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {BEST_TIME_OPTIONS.map((opt) => (
-                                                <SelectItem key={opt.value} value={opt.value}>
-                                                    {getLocalizedLabel(opt, activeLang)}
+                                                <SelectItem
+                                                    key={opt.value}
+                                                    value={opt.value}
+                                                >
+                                                    {getLocalizedLabel(
+                                                        opt,
+                                                        activeLang,
+                                                    )}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -1022,7 +1143,10 @@ const AdminDestinations = () => {
                                         <LangBadge lang={activeLang} />
                                     </Label>
                                     <Select
-                                        value={String(values[`language_${activeLang}`] ?? '')}
+                                        value={String(
+                                            values[`language_${activeLang}`] ??
+                                                '',
+                                        )}
                                         onValueChange={(val) => {
                                             setField('language_en', val);
                                             setField('language_fr', val);
@@ -1030,12 +1154,22 @@ const AdminDestinations = () => {
                                         }}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder={t('admin.destinationForm.languagePlaceholder')} />
+                                            <SelectValue
+                                                placeholder={t(
+                                                    'admin.destinationForm.languagePlaceholder',
+                                                )}
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {LANGUAGES.map((lang) => (
-                                                <SelectItem key={lang.value} value={lang.value}>
-                                                    {getLocalizedLabel(lang, activeLang)}
+                                                <SelectItem
+                                                    key={lang.value}
+                                                    value={lang.value}
+                                                >
+                                                    {getLocalizedLabel(
+                                                        lang,
+                                                        activeLang,
+                                                    )}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -1049,7 +1183,10 @@ const AdminDestinations = () => {
                                         <LangBadge lang={activeLang} />
                                     </Label>
                                     <Select
-                                        value={String(values[`currency_${activeLang}`] ?? '')}
+                                        value={String(
+                                            values[`currency_${activeLang}`] ??
+                                                '',
+                                        )}
                                         onValueChange={(val) => {
                                             setField('currency_en', val);
                                             setField('currency_fr', val);
@@ -1057,12 +1194,22 @@ const AdminDestinations = () => {
                                         }}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder={t('admin.destinationForm.currencyPlaceholder')} />
+                                            <SelectValue
+                                                placeholder={t(
+                                                    'admin.destinationForm.currencyPlaceholder',
+                                                )}
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {CURRENCIES.map((curr) => (
-                                                <SelectItem key={curr.value} value={curr.value}>
-                                                    {getLocalizedLabel(curr, activeLang)}
+                                                <SelectItem
+                                                    key={curr.value}
+                                                    value={curr.value}
+                                                >
+                                                    {getLocalizedLabel(
+                                                        curr,
+                                                        activeLang,
+                                                    )}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -1076,7 +1223,10 @@ const AdminDestinations = () => {
                                         <LangBadge lang={activeLang} />
                                     </Label>
                                     <Select
-                                        value={String(values[`weather_${activeLang}`] ?? '')}
+                                        value={String(
+                                            values[`weather_${activeLang}`] ??
+                                                '',
+                                        )}
                                         onValueChange={(val) => {
                                             setField('weather_en', val);
                                             setField('weather_fr', val);
@@ -1084,12 +1234,22 @@ const AdminDestinations = () => {
                                         }}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder={t('admin.destinationForm.weatherPlaceholder')} />
+                                            <SelectValue
+                                                placeholder={t(
+                                                    'admin.destinationForm.weatherPlaceholder',
+                                                )}
+                                            />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {WEATHER_OPTIONS.map((opt) => (
-                                                <SelectItem key={opt.value} value={opt.value}>
-                                                    {getLocalizedLabel(opt, activeLang)}
+                                                <SelectItem
+                                                    key={opt.value}
+                                                    value={opt.value}
+                                                >
+                                                    {getLocalizedLabel(
+                                                        opt,
+                                                        activeLang,
+                                                    )}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -1106,8 +1266,12 @@ const AdminDestinations = () => {
                           ? values.gallery
                           : editing
                             ? parseGallery(
-                                  (editing as unknown as Record<string, unknown>)
-                                      .gallery,
+                                  (
+                                      editing as unknown as Record<
+                                          string,
+                                          unknown
+                                      >
+                                  ).gallery,
                               ).join('\n')
                             : '';
 
@@ -1162,9 +1326,18 @@ const AdminDestinations = () => {
                     const bestTimeKey = String(values.bestTime_en ?? '').trim();
                     const languageKey = String(values.language_en ?? '').trim();
                     const currencyKey = String(values.currency_en ?? '').trim();
-                    const bestTimeLabels = resolveFactLabel(bestTimeKey, BEST_TIME_OPTIONS);
-                    const languageLabels = resolveFactLabel(languageKey, LANGUAGES);
-                    const currencyLabels = resolveFactLabel(currencyKey, CURRENCIES);
+                    const bestTimeLabels = resolveFactLabel(
+                        bestTimeKey,
+                        BEST_TIME_OPTIONS,
+                    );
+                    const languageLabels = resolveFactLabel(
+                        languageKey,
+                        LANGUAGES,
+                    );
+                    const currencyLabels = resolveFactLabel(
+                        currencyKey,
+                        CURRENCIES,
+                    );
 
                     const categoryAssignments: Record<string, string> = {};
                     categoryTypes.forEach((ct) => {
@@ -1201,10 +1374,10 @@ const AdminDestinations = () => {
                         image:
                             values.imageFile instanceof File
                                 ? values.imageFile
-                                : (values.imagePath?.trim() ||
-                                      values.image ||
-                                      asText(editing?.image) ||
-                                      ''),
+                                : values.imagePath?.trim() ||
+                                  values.image ||
+                                  asText(editing?.image) ||
+                                  '',
                         description,
                         description_en: firstNonEmpty(
                             values.description_en,
@@ -1234,13 +1407,18 @@ const AdminDestinations = () => {
                     } as unknown as AdminDestination;
 
                     // Strip form-internal media keys so they never reach the API.
-                    const { imagePath, imageFile, galleryPaths, galleryFiles, ...payload } =
-                        item as AdminDestination & {
-                            imagePath?: string;
-                            imageFile?: File | null;
-                            galleryPaths?: string[];
-                            galleryFiles?: File[];
-                        };
+                    const {
+                        imagePath,
+                        imageFile,
+                        galleryPaths,
+                        galleryFiles,
+                        ...payload
+                    } = item as AdminDestination & {
+                        imagePath?: string;
+                        imageFile?: File | null;
+                        galleryPaths?: string[];
+                        galleryFiles?: File[];
+                    };
                     void imagePath;
                     void imageFile;
                     void galleryPaths;

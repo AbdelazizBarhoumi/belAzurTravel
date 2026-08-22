@@ -67,7 +67,7 @@ const mockHotel = vi.hoisted(() => ({
         address: '123 Beach Road',
         phone: '+216 71 000 000',
         email: 'reservations@sunset.example',
-        coordinates: { latitude: 35.907306, longitude: 10.582870 },
+        coordinates: { latitude: 35.907306, longitude: 10.58287 },
         options: [
             { id: 1, title: 'Baby bed' },
             { id: 2, title: 'Airport transfer' },
@@ -149,9 +149,7 @@ vi.mock('@/components/ui/DateRangePicker', () => ({
                 type="button"
                 data-testid="set-dates"
                 onClick={() =>
-                    (
-                        props.onChange as (value: unknown) => void
-                    )({
+                    (props.onChange as (value: unknown) => void)({
                         from: new Date('2026-09-01T12:00:00'),
                         to: new Date('2026-09-05T12:00:00'),
                     })
@@ -227,9 +225,7 @@ function clickCheckAvailability() {
 
 // The sticky sidebar search hands the selected values to the hotels listing.
 function clickSidebarSearch() {
-    fireEvent.click(
-        screen.getByRole('button', { name: /Rechercher/i }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: /Rechercher/i }));
 }
 
 function setLiveHotel(hotel: unknown) {
@@ -290,7 +286,7 @@ describe('HotelDetail', () => {
         vi.clearAllMocks();
         mockHotel.data = {
             ...mockHotel.data,
-            coordinates: { latitude: 35.907306, longitude: 10.582870 },
+            coordinates: { latitude: 35.907306, longitude: 10.58287 },
         };
         mockHotelSearch.data = [];
         mockHotelSearch.calls = [];
@@ -323,21 +319,17 @@ describe('HotelDetail', () => {
         await userEvent.click(
             screen.getByRole('tab', { name: /Infos pratiques/ }),
         );
-        expect(
-            screen.getByText('Informations pratiques'),
-        ).toBeInTheDocument();
+        expect(screen.getByText('Informations pratiques')).toBeInTheDocument();
         expect(screen.getByText('Arrivée')).toBeInTheDocument();
         expect(screen.getByText('14h')).toBeInTheDocument();
         expect(screen.getByText('Départ')).toBeInTheDocument();
         expect(screen.getByText('12h')).toBeInTheDocument();
         // The address/phone/email also appear in the sidebar, so they can
         // match more than once across the page.
-        expect(
-            screen.getAllByText('123 Beach Road').length,
-        ).toBeGreaterThan(0);
-        expect(
-            screen.getAllByText(/\+216 71 000 000/).length,
-        ).toBeGreaterThan(0);
+        expect(screen.getAllByText('123 Beach Road').length).toBeGreaterThan(0);
+        expect(screen.getAllByText(/\+216 71 000 000/).length).toBeGreaterThan(
+            0,
+        );
         expect(
             screen.getAllByText(/reservations@sunset.example/).length,
         ).toBeGreaterThan(0);
@@ -377,9 +369,9 @@ describe('HotelDetail', () => {
     it('does not crash when a room has null features', async () => {
         renderPage('/hotels/sunset-paradise-resort');
 
-        expect(
-            screen.getAllByText('Deluxe Ocean View').length,
-        ).toBeGreaterThan(0);
+        expect(screen.getAllByText('Deluxe Ocean View').length).toBeGreaterThan(
+            0,
+        );
         expect(screen.queryByText('Wi-Fi')).not.toBeInTheDocument();
     });
 
@@ -411,9 +403,7 @@ describe('HotelDetail', () => {
 
         renderPage('/hotels/sunset-paradise-resort');
 
-        expect(
-            screen.queryByTitle(/Carte de/),
-        ).not.toBeInTheDocument();
+        expect(screen.queryByTitle(/Carte de/)).not.toBeInTheDocument();
         const link = screen
             .getByRole('link', { name: /Voir sur carte/ })
             .closest('a');
@@ -466,12 +456,9 @@ describe('HotelDetail', () => {
 
         const hasTotal = (text: string) =>
             text.replace(/[\s\u00A0,.]/g, '').includes('1500');
-        const hasPerNight = (text: string) =>
-            /375\s*TND\s*\/nuit/.test(text);
+        const hasPerNight = (text: string) => /375\s*TND\s*\/nuit/.test(text);
 
-        expect(
-            screen.getAllByText(hasTotal).length,
-        ).toBeGreaterThan(0);
+        expect(screen.getAllByText(hasTotal).length).toBeGreaterThan(0);
         expect(screen.getAllByText(hasPerNight).length).toBeGreaterThan(0);
         expect(screen.getAllByText(/Insurance/).length).toBeGreaterThan(0);
         expect(screen.getAllByText(/\+40\s*TND/).length).toBeGreaterThan(0);
@@ -668,13 +655,9 @@ describe('HotelDetail', () => {
 
         // The promo discounts the header per-night price, the row/sticky totals
         // and the per-night hint, keeping the original price struck through.
-        expect(
-            screen.getAllByText(/266\.25/).length,
-        ).toBeGreaterThan(0);
+        expect(screen.getAllByText(/266\.25/).length).toBeGreaterThan(0);
         expect(screen.getAllByText(/1,065/).length).toBeGreaterThan(0);
-        expect(
-            screen.getAllByText(/1,500\s*TND/).length,
-        ).toBeGreaterThan(0);
+        expect(screen.getAllByText(/1,500\s*TND/).length).toBeGreaterThan(0);
     });
 
     it('renders non-refundable and free-cancellation badges on live rooms', async () => {
@@ -731,9 +714,7 @@ describe('HotelDetail', () => {
         setLiveHotel({
             ...baseLiveHotel,
             currency: 'EUR',
-            rooms: [
-                { ...baseLiveHotel.rooms[0], currency: 'EUR' },
-            ],
+            rooms: [{ ...baseLiveHotel.rooms[0], currency: 'EUR' }],
         });
 
         renderPage('/hotels/sunset-paradise-resort');
@@ -755,13 +736,9 @@ describe('HotelDetail', () => {
 
         clickSetDates();
         // Open the sidebar occupancy picker and increase rooms to 2.
-        fireEvent.click(
-            screen.getAllByLabelText(/Occupation/)[0],
-        );
+        fireEvent.click(screen.getAllByLabelText(/Occupation/)[0]);
         fireEvent.click(screen.getByLabelText('increase rooms'));
-        fireEvent.click(
-            screen.getAllByLabelText(/Occupation/)[0],
-        );
+        fireEvent.click(screen.getAllByLabelText(/Occupation/)[0]);
 
         clickCheckAvailability();
 

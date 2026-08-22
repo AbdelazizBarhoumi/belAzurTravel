@@ -1,8 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-    fetchCategoryTypes,
-    type CategoryType,
-} from '@/api/categoryTypes.api';
+import { fetchCategoryTypes, type CategoryType } from '@/api/categoryTypes.api';
 
 export type { CategoryType };
 

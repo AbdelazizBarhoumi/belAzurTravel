@@ -233,7 +233,9 @@ export function getTravels(): Promise<TravelItem[]> {
     return apiFetch<TravelItem[]>('/api/travels');
 }
 
-export function findTravelBySlug(slug?: string | null): Promise<TravelItem | null> {
+export function findTravelBySlug(
+    slug?: string | null,
+): Promise<TravelItem | null> {
     if (!slug) return Promise.resolve(null);
     return apiFetch<TravelItem | null>(`/api/travels/${slug}`);
 }

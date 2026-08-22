@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
@@ -81,9 +87,7 @@ vi.mock('@/components/ui/DateRangePicker', () => {
                     onClick={() => {
                         const next = dates[state.index % dates.length];
                         state.index += 1;
-                        (
-                            props.onChange as (value: unknown) => void
-                        )({
+                        (props.onChange as (value: unknown) => void)({
                             from: new Date(next.from),
                             to: new Date(next.to),
                         });
@@ -136,16 +140,26 @@ describe('HotelDetail real search hook flow', () => {
         searchBody.value = null;
         queryClient.clear();
 
-        fetchSpy = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-            searchBody.value = init?.body ?? null;
-            return new Response(
-                JSON.stringify({
-                    data: [],
-                    meta: { current_page: 1, last_page: 1, total: 0, per_page: 50 },
-                }),
-                { status: 200, headers: { 'Content-Type': 'application/json' } },
-            );
-        });
+        fetchSpy = vi.fn(
+            async (_input: RequestInfo | URL, init?: RequestInit) => {
+                searchBody.value = init?.body ?? null;
+                return new Response(
+                    JSON.stringify({
+                        data: [],
+                        meta: {
+                            current_page: 1,
+                            last_page: 1,
+                            total: 0,
+                            per_page: 50,
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: { 'Content-Type': 'application/json' },
+                    },
+                );
+            },
+        );
 
         vi.stubGlobal('fetch', fetchSpy);
     });

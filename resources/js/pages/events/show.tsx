@@ -147,11 +147,17 @@ export default function EventDetail() {
                                             </p>
 
                                             <p className="font-serif text-lg font-semibold text-foreground">
-                                                {localizeText(step.activity, lang)}
+                                                {localizeText(
+                                                    step.activity,
+                                                    lang,
+                                                )}
                                             </p>
 
                                             <p className="text-sm text-muted-foreground">
-                                                {localizeText(step.details, lang)}
+                                                {localizeText(
+                                                    step.details,
+                                                    lang,
+                                                )}
                                             </p>
                                         </li>
                                     ),

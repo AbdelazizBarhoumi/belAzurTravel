@@ -17,10 +17,23 @@ export const TRAVEL_FILTER_GROUPS: TravelFilterGroup[] = [
         label: { en: 'Destination', fr: 'Destination', ar: 'الوجهة' },
         type: 'checkbox',
         options: [
-            { key: 'istanbul', label: { en: 'Istanbul', fr: 'Istanbul', ar: 'اسطنبول' } },
+            {
+                key: 'istanbul',
+                label: { en: 'Istanbul', fr: 'Istanbul', ar: 'اسطنبول' },
+            },
             { key: 'asie', label: { en: 'Asia', fr: 'Asie', ar: 'آسيا' } },
-            { key: 'europe', label: { en: 'Europe', fr: 'Europe', ar: 'أوروبا' } },
-            { key: 'afrique_nord', label: { en: 'North Africa', fr: 'Afrique du Nord', ar: 'شمال أفريقيا' } },
+            {
+                key: 'europe',
+                label: { en: 'Europe', fr: 'Europe', ar: 'أوروبا' },
+            },
+            {
+                key: 'afrique_nord',
+                label: {
+                    en: 'North Africa',
+                    fr: 'Afrique du Nord',
+                    ar: 'شمال أفريقيا',
+                },
+            },
         ],
     },
     {
@@ -39,14 +52,21 @@ export const TRAVEL_FILTER_GROUPS: TravelFilterGroup[] = [
     },
     {
         key: 'niveau_physique',
-        label: { en: 'Physical Level', fr: 'Niveau physique', ar: 'المستوى البدني' },
+        label: {
+            en: 'Physical Level',
+            fr: 'Niveau physique',
+            ar: 'المستوى البدني',
+        },
         type: 'checkbox',
         options: [
-            { key: 'tranquille', label: { en: 'Easy', fr: 'Tranquille', ar: 'هادئ' } },
+            {
+                key: 'tranquille',
+                label: { en: 'Easy', fr: 'Tranquille', ar: 'هادئ' },
+            },
         ],
     },
 ];
 
 export const TRAVEL_FILTER_KEYS = TRAVEL_FILTER_GROUPS.flatMap(
-    (group) => group.options?.map((opt) => opt.key) ?? []
+    (group) => group.options?.map((opt) => opt.key) ?? [],
 );

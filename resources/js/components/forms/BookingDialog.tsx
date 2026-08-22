@@ -181,12 +181,14 @@ export function BookingDialog({
         currency: string;
     } | null>(null);
 
-    const hasProviderOffer = !isRequest && Boolean(
-        provider?.token &&
+    const hasProviderOffer =
+        !isRequest &&
+        Boolean(
+            provider?.token &&
             provider.rooms?.length &&
             provider.checkIn &&
             provider.checkOut,
-    );
+        );
 
     // Hotels booked from a live offer are locked to the searched dates; the
     // token prices that exact window and cannot be re-booked for others.
@@ -213,7 +215,9 @@ export function BookingDialog({
         [lockDates, provider?.checkOut, endDate],
     );
 
-    const adultCount = hasProviderOffer ? Math.max(1, provider?.adults ?? 1) : 0;
+    const adultCount = hasProviderOffer
+        ? Math.max(1, provider?.adults ?? 1)
+        : 0;
     const childCount = hasProviderOffer
         ? Math.max(0, provider?.children ?? 0)
         : 0;
@@ -359,28 +363,32 @@ export function BookingDialog({
                 .map((row) => `${row.firstName} ${row.lastName}`.trim())
                 .filter(Boolean)
                 .map((line) => ({ name: line })),
-            details: roomName || boardingName || cancellationPolicy?.length
-                ? {
-                    room_name: roomName ?? null,
-                    boarding_name: boardingName ?? null,
-                    image: image ?? null,
-                    price_per_night: pricePerNight ?? null,
-                    nights: nights ?? null,
-                    currency,
-                    base_price: basePrice ?? null,
-                    final_price: amount,
-                    promo_rate: promoRate ?? null,
-                    not_refundable: notRefundable ?? false,
-                    free_cancellation_until: freeCancellationUntil ?? null,
-                    cancellation_policy: cancellationPolicy?.length
-                        ? cancellationPolicy
-                        : null,
-                    supplements: supplements?.length ? supplements : null,
-                    room_size: roomSize ?? null,
-                    room_capacity: roomCapacity ?? null,
-                    room_features: roomFeatures?.length ? roomFeatures : null,
-                }
-                : undefined,
+            details:
+                roomName || boardingName || cancellationPolicy?.length
+                    ? {
+                          room_name: roomName ?? null,
+                          boarding_name: boardingName ?? null,
+                          image: image ?? null,
+                          price_per_night: pricePerNight ?? null,
+                          nights: nights ?? null,
+                          currency,
+                          base_price: basePrice ?? null,
+                          final_price: amount,
+                          promo_rate: promoRate ?? null,
+                          not_refundable: notRefundable ?? false,
+                          free_cancellation_until:
+                              freeCancellationUntil ?? null,
+                          cancellation_policy: cancellationPolicy?.length
+                              ? cancellationPolicy
+                              : null,
+                          supplements: supplements?.length ? supplements : null,
+                          room_size: roomSize ?? null,
+                          room_capacity: roomCapacity ?? null,
+                          room_features: roomFeatures?.length
+                              ? roomFeatures
+                              : null,
+                      }
+                    : undefined,
         };
 
         if (provider?.token && provider.rooms?.length) {
@@ -492,7 +500,8 @@ export function BookingDialog({
                                 <div className="flex items-start gap-2.5 text-sm text-foreground">
                                     <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                                     <span>
-                                        {t('booking.nextStepContact') || 'For any questions, contact us at'}{' '}
+                                        {t('booking.nextStepContact') ||
+                                            'For any questions, contact us at'}{' '}
                                         <a
                                             href="mailto:contact@belazurtravel.com"
                                             className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
@@ -564,7 +573,8 @@ export function BookingDialog({
                                         <span className="inline-flex items-center gap-1">
                                             <Users className="h-3.5 w-3.5" />
                                             {adultCount}{' '}
-                                            {t('hotelDetail.guests') || 'guests'}
+                                            {t('hotelDetail.guests') ||
+                                                'guests'}
                                             {childCount > 0
                                                 ? ` +${childCount}`
                                                 : ''}
@@ -578,7 +588,8 @@ export function BookingDialog({
                                                 <ShieldCheck className="h-3 w-3" />
                                                 {t(
                                                     'hotelDetail.freeCancellationUntil',
-                                                ) || 'Free cancellation until'}{' '}
+                                                ) ||
+                                                    'Free cancellation until'}{' '}
                                                 {formatShortDateFromISO(
                                                     freeCancellationUntil,
                                                     lang,
@@ -587,8 +598,9 @@ export function BookingDialog({
                                         )}
                                         {notRefundable && (
                                             <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                                                {t('hotelDetail.nonRefundable') ||
-                                                    'Non-refundable'}
+                                                {t(
+                                                    'hotelDetail.nonRefundable',
+                                                ) || 'Non-refundable'}
                                             </span>
                                         )}
                                     </div>
@@ -616,7 +628,7 @@ export function BookingDialog({
                         {isRequest && (
                             <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                                 {t('booking.requestNotice') ||
-                                    'This is a request booking. We\'ll contact the hotel to check availability.'}
+                                    "This is a request booking. We'll contact the hotel to check availability."}
                             </div>
                         )}
                         <form
@@ -643,7 +655,9 @@ export function BookingDialog({
                                         id="email"
                                         type="email"
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={(e) =>
+                                            setEmail(e.target.value)
+                                        }
                                         required
                                     />
                                 </div>
@@ -654,7 +668,9 @@ export function BookingDialog({
                                     <Input
                                         id="phone"
                                         value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
+                                        onChange={(e) =>
+                                            setPhone(e.target.value)
+                                        }
                                     />
                                 </div>
                             </div>
@@ -664,8 +680,7 @@ export function BookingDialog({
                                     <div className="h-px bg-border" />
                                     <div>
                                         <h3 className="mb-1 text-sm font-semibold text-foreground">
-                                            {t('booking.guests') ||
-                                                'Guests'}
+                                            {t('booking.guests') || 'Guests'}
                                         </h3>
                                         <p className="text-xs text-muted-foreground">
                                             {t('booking.guestsHint') ||
@@ -689,19 +704,17 @@ export function BookingDialog({
                                                     <Label
                                                         htmlFor={`pax-${index}-civility`}
                                                     >
-                                                        {t('booking.civility') ||
-                                                            'Civility'}
+                                                        {t(
+                                                            'booking.civility',
+                                                        ) || 'Civility'}
                                                     </Label>
                                                     <Select
                                                         value={row.civility}
                                                         onValueChange={(v) =>
-                                                            updateGuest(
-                                                                index,
-                                                                {
-                                                                    civility:
-                                                                        v as Civility,
-                                                                },
-                                                            )
+                                                            updateGuest(index, {
+                                                                civility:
+                                                                    v as Civility,
+                                                            })
                                                         }
                                                     >
                                                         <SelectTrigger
@@ -734,9 +747,8 @@ export function BookingDialog({
                                                         <Label
                                                             htmlFor={`pax-${index}-age`}
                                                         >
-                                                            {t(
-                                                                'booking.age',
-                                                            ) || 'Age'}
+                                                            {t('booking.age') ||
+                                                                'Age'}
                                                         </Label>
                                                         <Input
                                                             id={`pax-${index}-age`}
@@ -773,14 +785,11 @@ export function BookingDialog({
                                                         id={`pax-${index}-firstName`}
                                                         value={row.firstName}
                                                         onChange={(e) =>
-                                                            updateGuest(
-                                                                index,
-                                                                {
-                                                                    firstName:
-                                                                        e.target
-                                                                            .value,
-                                                                },
-                                                            )
+                                                            updateGuest(index, {
+                                                                firstName:
+                                                                    e.target
+                                                                        .value,
+                                                            })
                                                         }
                                                         required={
                                                             row.age !== null
@@ -799,14 +808,11 @@ export function BookingDialog({
                                                         id={`pax-${index}-lastName`}
                                                         value={row.lastName}
                                                         onChange={(e) =>
-                                                            updateGuest(
-                                                                index,
-                                                                {
-                                                                    lastName:
-                                                                        e.target
-                                                                            .value,
-                                                                },
-                                                            )
+                                                            updateGuest(index, {
+                                                                lastName:
+                                                                    e.target
+                                                                        .value,
+                                                            })
                                                         }
                                                         required={
                                                             row.age !== null

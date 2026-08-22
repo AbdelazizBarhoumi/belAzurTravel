@@ -17,18 +17,45 @@ export const TOUR_FILTER_GROUPS: TourFilterGroup[] = [
         label: { en: 'Destination', fr: 'Destination', ar: 'الوجهة' },
         type: 'checkbox',
         options: [
-            { key: 'djerba', label: { en: 'Djerba', fr: 'Djerba', ar: 'جربة' } },
-            { key: 'nord_tunisien', label: { en: 'North Tunisia', fr: 'Nord Tunisien', ar: 'شمال تونس' } },
-            { key: 'sud_tunisien', label: { en: 'South Tunisia', fr: 'Sud Tunisien', ar: 'جنوب تونس' } },
-            { key: 'tunisia', label: { en: 'Tunisia', fr: 'Tunisia', ar: 'تونس' } },
+            {
+                key: 'djerba',
+                label: { en: 'Djerba', fr: 'Djerba', ar: 'جربة' },
+            },
+            {
+                key: 'nord_tunisien',
+                label: {
+                    en: 'North Tunisia',
+                    fr: 'Nord Tunisien',
+                    ar: 'شمال تونس',
+                },
+            },
+            {
+                key: 'sud_tunisien',
+                label: {
+                    en: 'South Tunisia',
+                    fr: 'Sud Tunisien',
+                    ar: 'جنوب تونس',
+                },
+            },
+            {
+                key: 'tunisia',
+                label: { en: 'Tunisia', fr: 'Tunisia', ar: 'تونس' },
+            },
         ],
     },
     {
         key: 'niveau_physique',
-        label: { en: 'Physical Level', fr: 'Niveau physique', ar: 'المستوى البدني' },
+        label: {
+            en: 'Physical Level',
+            fr: 'Niveau physique',
+            ar: 'المستوى البدني',
+        },
         type: 'checkbox',
         options: [
-            { key: 'tranquille', label: { en: 'Easy', fr: 'Tranquille', ar: 'هادئ' } },
+            {
+                key: 'tranquille',
+                label: { en: 'Easy', fr: 'Tranquille', ar: 'هادئ' },
+            },
         ],
     },
     {
@@ -36,8 +63,18 @@ export const TOUR_FILTER_GROUPS: TourFilterGroup[] = [
         label: { en: 'Family', fr: 'Famille', ar: 'عائلة' },
         type: 'checkbox',
         options: [
-            { key: 'famille', label: { en: 'Family', fr: 'Famille', ar: 'عائلة' } },
-            { key: 'djerba_by_vol', label: { en: 'DjerbaByVol', fr: 'DjerbaByVol', ar: 'جربة بالطائرة' } },
+            {
+                key: 'famille',
+                label: { en: 'Family', fr: 'Famille', ar: 'عائلة' },
+            },
+            {
+                key: 'djerba_by_vol',
+                label: {
+                    en: 'DjerbaByVol',
+                    fr: 'DjerbaByVol',
+                    ar: 'جربة بالطائرة',
+                },
+            },
         ],
     },
     {
@@ -58,14 +95,21 @@ export const TOUR_FILTER_GROUPS: TourFilterGroup[] = [
     },
     {
         key: 'voyages_groupe',
-        label: { en: 'Group Tours', fr: 'Voyages en groupe', ar: 'رحلات جماعية' },
+        label: {
+            en: 'Group Tours',
+            fr: 'Voyages en groupe',
+            ar: 'رحلات جماعية',
+        },
         type: 'checkbox',
         options: [
-            { key: 'tranquille_groupe', label: { en: 'Easy', fr: 'Tranquille', ar: 'هادئ' } },
+            {
+                key: 'tranquille_groupe',
+                label: { en: 'Easy', fr: 'Tranquille', ar: 'هادئ' },
+            },
         ],
     },
 ];
 
 export const TOUR_FILTER_KEYS = TOUR_FILTER_GROUPS.flatMap(
-    (group) => group.options?.map((opt) => opt.key) ?? []
+    (group) => group.options?.map((opt) => opt.key) ?? [],
 );

@@ -27,7 +27,11 @@ export interface CityItem {
     ostravelId?: number;
 }
 
-const n = (en: string, fr: string, ar: string): LocalizedName => ({ en, fr, ar });
+const n = (en: string, fr: string, ar: string): LocalizedName => ({
+    en,
+    fr,
+    ar,
+});
 
 export const COUNTRIES: CountryItem[] = [
     { code: 'TN', name: n('Tunisia', 'Tunisie', 'تونس'), ostravelId: 219 },
@@ -37,7 +41,14 @@ export const COUNTRIES: CountryItem[] = [
     { code: 'IT', name: n('Italy', 'Italie', 'إيطاليا') },
     { code: 'ES', name: n('Spain', 'Espagne', 'إسبانيا') },
     { code: 'MA', name: n('Morocco', 'Maroc', 'المغرب') },
-    { code: 'AE', name: n('United Arab Emirates', 'Émirats Arabes Unis', 'الإمارات العربية المتحدة') },
+    {
+        code: 'AE',
+        name: n(
+            'United Arab Emirates',
+            'Émirats Arabes Unis',
+            'الإمارات العربية المتحدة',
+        ),
+    },
     { code: 'EG', name: n('Egypt', 'Égypte', 'مصر') },
     { code: 'ID', name: n('Indonesia', 'Indonésie', 'إندونيسيا') },
     { code: 'TH', name: n('Thailand', 'Thaïlande', 'تايلاند') },
@@ -47,7 +58,10 @@ export const COUNTRIES: CountryItem[] = [
     { code: 'CA', name: n('Canada', 'Canada', 'كندا') },
     { code: 'JP', name: n('Japan', 'Japon', 'اليابان') },
     { code: 'CN', name: n('China', 'Chine', 'الصين') },
-    { code: 'SA', name: n('Saudi Arabia', 'Arabie Saoudite', 'المملكة العربية السعودية') },
+    {
+        code: 'SA',
+        name: n('Saudi Arabia', 'Arabie Saoudite', 'المملكة العربية السعودية'),
+    },
     { code: 'MY', name: n('Malaysia', 'Malaisie', 'ماليزيا') },
     { code: 'AU', name: n('Australia', 'Australie', 'أستراليا') },
     { code: 'ZA', name: n('South Africa', 'Afrique du Sud', 'جنوب أفريقيا') },
@@ -75,40 +89,135 @@ export const CITIES: CityItem[] = [
     { name: n('Djerba', 'Djerba', 'جربة'), countryCode: 'TN', ostravelId: 18 },
     { name: n('Tozeur', 'Tozeur', 'توزر'), countryCode: 'TN', ostravelId: 47 },
     { name: n('Gabes', 'Gabès', 'قابس'), countryCode: 'TN', ostravelId: 55 },
-    { name: n('Hammamet', 'Hammamet', 'الحمامات'), countryCode: 'TN', ostravelId: 10 },
-    { name: n('Yasmine Hammamet', 'Yasmine Hammamet', 'ياسمين الحمامات'), countryCode: 'TN' },
-    { name: n('Monastir', 'Monastir', 'المنستير'), countryCode: 'TN', ostravelId: 37 },
-    { name: n('Mahdia', 'Mahdia', 'المهدية'), countryCode: 'TN', ostravelId: 35 },
-    { name: n('Kairouan', 'Kairouan', 'القيروان'), countryCode: 'TN', ostravelId: 17 },
-    { name: n('Bizerte', 'Bizerte', 'بنزرت'), countryCode: 'TN', ostravelId: 48 },
-    { name: n('Ain Drahem', 'Ain Drahem', 'عين دراهم'), countryCode: 'TN', ostravelId: 31 },
+    {
+        name: n('Hammamet', 'Hammamet', 'الحمامات'),
+        countryCode: 'TN',
+        ostravelId: 10,
+    },
+    {
+        name: n('Yasmine Hammamet', 'Yasmine Hammamet', 'ياسمين الحمامات'),
+        countryCode: 'TN',
+    },
+    {
+        name: n('Monastir', 'Monastir', 'المنستير'),
+        countryCode: 'TN',
+        ostravelId: 37,
+    },
+    {
+        name: n('Mahdia', 'Mahdia', 'المهدية'),
+        countryCode: 'TN',
+        ostravelId: 35,
+    },
+    {
+        name: n('Kairouan', 'Kairouan', 'القيروان'),
+        countryCode: 'TN',
+        ostravelId: 17,
+    },
+    {
+        name: n('Bizerte', 'Bizerte', 'بنزرت'),
+        countryCode: 'TN',
+        ostravelId: 48,
+    },
+    {
+        name: n('Ain Drahem', 'Ain Drahem', 'عين دراهم'),
+        countryCode: 'TN',
+        ostravelId: 31,
+    },
     { name: n('Béja', 'Béja', 'باجة'), countryCode: 'TN', ostravelId: 6487 },
     { name: n('Douz', 'Douz', 'دوز'), countryCode: 'TN', ostravelId: 20 },
-    { name: n('El Jem', 'El Jem', 'الجم'), countryCode: 'TN', ostravelId: 6482 },
+    {
+        name: n('El Jem', 'El Jem', 'الجم'),
+        countryCode: 'TN',
+        ostravelId: 6482,
+    },
     { name: n('Gafsa', 'Gafsa', 'قفصة'), countryCode: 'TN', ostravelId: 54 },
-    { name: n('Gammarth', 'Gammarth', 'قمرت'), countryCode: 'TN', ostravelId: 6485 },
+    {
+        name: n('Gammarth', 'Gammarth', 'قمرت'),
+        countryCode: 'TN',
+        ostravelId: 6485,
+    },
     { name: n('Kebili', 'Kébili', 'قبلي'), countryCode: 'TN', ostravelId: 22 },
-    { name: n('Kelibia', 'Kélibia', 'قليبية'), countryCode: 'TN', ostravelId: 12 },
-    { name: n('Kerkennah', 'Kerkennah', 'قرقنة'), countryCode: 'TN', ostravelId: 6483 },
+    {
+        name: n('Kelibia', 'Kélibia', 'قليبية'),
+        countryCode: 'TN',
+        ostravelId: 12,
+    },
+    {
+        name: n('Kerkennah', 'Kerkennah', 'قرقنة'),
+        countryCode: 'TN',
+        ostravelId: 6483,
+    },
     { name: n('Korba', 'Korba', 'قربة'), countryCode: 'TN', ostravelId: 13 },
-    { name: n('Korbous', 'Korbous', 'قربص'), countryCode: 'TN', ostravelId: 14 },
-    { name: n('Ksar Ghilane', 'Ksar Ghilane', 'قصر غيلان'), countryCode: 'TN', ostravelId: 23 },
+    {
+        name: n('Korbous', 'Korbous', 'قربص'),
+        countryCode: 'TN',
+        ostravelId: 14,
+    },
+    {
+        name: n('Ksar Ghilane', 'Ksar Ghilane', 'قصر غيلان'),
+        countryCode: 'TN',
+        ostravelId: 23,
+    },
     { name: n('Le Kef', 'Le Kef', 'الكاف'), countryCode: 'TN', ostravelId: 49 },
-    { name: n('Matmata', 'Matmata', 'مطماطة'), countryCode: 'TN', ostravelId: 73 },
-    { name: n('Mednenine', 'Médenine', 'مدنين'), countryCode: 'TN', ostravelId: 76 },
+    {
+        name: n('Matmata', 'Matmata', 'مطماطة'),
+        countryCode: 'TN',
+        ostravelId: 73,
+    },
+    {
+        name: n('Mednenine', 'Médenine', 'مدنين'),
+        countryCode: 'TN',
+        ostravelId: 76,
+    },
     { name: n('Nabeul', 'Nabeul', 'نابل'), countryCode: 'TN', ostravelId: 11 },
     { name: n('Nefta', 'Nefta', 'نفطة'), countryCode: 'TN', ostravelId: 75 },
     { name: n('Nefza', 'Nefza', 'نفزة'), countryCode: 'TN', ostravelId: 6484 },
-    { name: n('Sbeitla', 'Sbeïtla', 'سبيطلة'), countryCode: 'TN', ostravelId: 72 },
-    { name: n('Sidi Bouzid', 'Sidi Bouzid', 'سيدي بوزيد'), countryCode: 'TN', ostravelId: 74 },
-    { name: n('Tabarka', 'Tabarka', 'طبرقة'), countryCode: 'TN', ostravelId: 33 },
-    { name: n('Tataouine', 'Tataouine', 'تطاوين'), countryCode: 'TN', ostravelId: 70 },
-    { name: n('Téboursouk', 'Téboursouk', 'تبرسق'), countryCode: 'TN', ostravelId: 71 },
-    { name: n('Zaghouan', 'Zaghouan', 'زغوان'), countryCode: 'TN', ostravelId: 59 },
+    {
+        name: n('Sbeitla', 'Sbeïtla', 'سبيطلة'),
+        countryCode: 'TN',
+        ostravelId: 72,
+    },
+    {
+        name: n('Sidi Bouzid', 'Sidi Bouzid', 'سيدي بوزيد'),
+        countryCode: 'TN',
+        ostravelId: 74,
+    },
+    {
+        name: n('Tabarka', 'Tabarka', 'طبرقة'),
+        countryCode: 'TN',
+        ostravelId: 33,
+    },
+    {
+        name: n('Tataouine', 'Tataouine', 'تطاوين'),
+        countryCode: 'TN',
+        ostravelId: 70,
+    },
+    {
+        name: n('Téboursouk', 'Téboursouk', 'تبرسق'),
+        countryCode: 'TN',
+        ostravelId: 71,
+    },
+    {
+        name: n('Zaghouan', 'Zaghouan', 'زغوان'),
+        countryCode: 'TN',
+        ostravelId: 59,
+    },
     { name: n('Zarzis', 'Zarzis', 'جرجيس'), countryCode: 'TN', ostravelId: 19 },
     // Turkey
-    { name: n('Istanbul', 'Istanbul', 'إسطنبول'), countryCode: 'TR', ostravelId: 6488 },
-    { name: n('Esenyurt - Istanbul', 'Esenyurt - Istanbul', 'أسن يورت - إسطنبول'), countryCode: 'TR', ostravelId: 6489 },
+    {
+        name: n('Istanbul', 'Istanbul', 'إسطنبول'),
+        countryCode: 'TR',
+        ostravelId: 6488,
+    },
+    {
+        name: n(
+            'Esenyurt - Istanbul',
+            'Esenyurt - Istanbul',
+            'أسن يورت - إسطنبول',
+        ),
+        countryCode: 'TR',
+        ostravelId: 6489,
+    },
     { name: n('Antalya', 'Antalya', 'أنطاليا'), countryCode: 'TR' },
     { name: n('Cappadocia', 'Cappadoce', 'كابادوكيا'), countryCode: 'TR' },
     // France
@@ -143,7 +252,10 @@ export const CITIES: CityItem[] = [
     { name: n('Mecca', 'La Mecque', 'مكة المكرمة'), countryCode: 'SA' },
     { name: n('Medina', 'Médine', 'المدينة المنورة'), countryCode: 'SA' },
     // Malaysia
-    { name: n('Kuala Lumpur', 'Kuala Lumpur', 'كوالالمبور'), countryCode: 'MY' },
+    {
+        name: n('Kuala Lumpur', 'Kuala Lumpur', 'كوالالمبور'),
+        countryCode: 'MY',
+    },
     // Australia
     { name: n('Sydney', 'Sydney', 'سيدني'), countryCode: 'AU' },
     // India
@@ -151,7 +263,10 @@ export const CITIES: CityItem[] = [
     // South Korea
     { name: n('Seoul', 'Séoul', 'سيول'), countryCode: 'KR' },
     // Brazil
-    { name: n('Rio de Janeiro', 'Rio de Janeiro', 'ريو دي جانيرو'), countryCode: 'BR' },
+    {
+        name: n('Rio de Janeiro', 'Rio de Janeiro', 'ريو دي جانيرو'),
+        countryCode: 'BR',
+    },
     // Tanzania
     { name: n('Zanzibar', 'Zanzibar', 'زنجبار'), countryCode: 'TZ' },
     // Mauritius
@@ -186,7 +301,9 @@ export function getCitiesByCountry(countryCode: string | null): CityItem[] {
     return CITIES.filter((city) => city.countryCode === countryCode);
 }
 
-export function findCountryByCodeOrEnglishName(value: string): CountryItem | undefined {
+export function findCountryByCodeOrEnglishName(
+    value: string,
+): CountryItem | undefined {
     return COUNTRIES.find(
         (country) => country.code === value || country.name.en === value,
     );
@@ -217,7 +334,9 @@ export function getOstravelCountries(): CountryItem[] {
 }
 
 /** OS-TRAVEL provider cities, optionally narrowed to one provider country. */
-export function getOstravelCities(countryOstravelId?: string | number | null): CityItem[] {
+export function getOstravelCities(
+    countryOstravelId?: string | number | null,
+): CityItem[] {
     let cities = CITIES.filter((city) => city.ostravelId != null);
     if (countryOstravelId != null && countryOstravelId !== '') {
         const country = COUNTRIES.find(
@@ -230,10 +349,14 @@ export function getOstravelCities(countryOstravelId?: string | number | null): C
     return cities;
 }
 
-export function findCountryByOstravelId(id: string | number): CountryItem | undefined {
+export function findCountryByOstravelId(
+    id: string | number,
+): CountryItem | undefined {
     return COUNTRIES.find((country) => country.ostravelId === Number(id));
 }
 
-export function findCityByOstravelId(id: string | number): CityItem | undefined {
+export function findCityByOstravelId(
+    id: string | number,
+): CityItem | undefined {
     return CITIES.find((city) => city.ostravelId === Number(id));
 }

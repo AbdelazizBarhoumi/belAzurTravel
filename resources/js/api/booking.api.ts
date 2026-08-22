@@ -39,7 +39,11 @@ export interface AdminBookingRow {
             description?: string | null;
             from_date?: string | null;
         }> | null;
-        supplements?: Array<{ name: string; price: number; perNight?: boolean }> | null;
+        supplements?: Array<{
+            name: string;
+            price: number;
+            perNight?: boolean;
+        }> | null;
         room_size?: number | null;
         room_capacity?: number | null;
         room_features?: string[] | null;
@@ -124,7 +128,11 @@ export interface ClientBookingRow {
             description?: string | null;
             from_date?: string | null;
         }> | null;
-        supplements?: Array<{ name: string; price: number; perNight?: boolean }> | null;
+        supplements?: Array<{
+            name: string;
+            price: number;
+            perNight?: boolean;
+        }> | null;
         room_size?: number | null;
         room_capacity?: number | null;
         room_features?: string[] | null;
@@ -164,7 +172,11 @@ export interface BookingDetailRow extends ClientBookingRow {
             description?: string | null;
             from_date?: string | null;
         }> | null;
-        supplements?: Array<{ name: string; price: number; perNight?: boolean }> | null;
+        supplements?: Array<{
+            name: string;
+            price: number;
+            perNight?: boolean;
+        }> | null;
         room_size?: number | null;
         room_capacity?: number | null;
         room_features?: string[] | null;

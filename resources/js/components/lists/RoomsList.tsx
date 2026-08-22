@@ -84,17 +84,17 @@ export function RoomsList({
                                     {/* Image */}
                                     <div className="lg:col-span-1">
                                         {room.images[0] ? (
-                                        <img
-                                            src={room.images[0]}
-                                            alt={room.name}
-                                            className="h-40 w-full rounded-lg object-cover"
-                                            loading="lazy"
-                                        />
-                                    ) : (
-                                        <div className="flex h-40 w-full items-center justify-center rounded-lg bg-muted">
-                                            <Bed className="h-10 w-10 text-muted-foreground/60" />
-                                        </div>
-                                    )}
+                                            <img
+                                                src={room.images[0]}
+                                                alt={room.name}
+                                                className="h-40 w-full rounded-lg object-cover"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div className="flex h-40 w-full items-center justify-center rounded-lg bg-muted">
+                                                <Bed className="h-10 w-10 text-muted-foreground/60" />
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Details */}
@@ -109,14 +109,15 @@ export function RoomsList({
                                                     {t('hotelDetail.onRequest')}
                                                 </span>
                                             )}
-                                            {room.minStay && room.minStay > 1 && (
-                                                <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                                                    {t(
-                                                        'hotelDetail.minimumNights',
-                                                    )}{' '}
-                                                    {room.minStay}
-                                                </span>
-                                            )}
+                                            {room.minStay &&
+                                                room.minStay > 1 && (
+                                                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                                                        {t(
+                                                            'hotelDetail.minimumNights',
+                                                        )}{' '}
+                                                        {room.minStay}
+                                                    </span>
+                                                )}
                                             {room.stopSales && (
                                                 <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-semibold text-red-700">
                                                     {t('hotelDetail.stopSale')}{' '}
@@ -194,34 +195,61 @@ export function RoomsList({
                                         <div className="text-right">
                                             <div className="text-sm text-muted-foreground">
                                                 {room.priceTotal !== undefined
-                                                    ? t('hotelDetail.totalForStay')
-                                                    : t('hotelDetail.pricePerNight')}
+                                                    ? t(
+                                                          'hotelDetail.totalForStay',
+                                                      )
+                                                    : t(
+                                                          'hotelDetail.pricePerNight',
+                                                      )}
                                             </div>
                                             <div className="mb-4 font-serif text-3xl font-bold text-secondary">
-                                                {room.priceTotal?.toLocaleString() ?? room.pricePerNight.toLocaleString()} {currency}
+                                                {room.priceTotal?.toLocaleString() ??
+                                                    room.pricePerNight.toLocaleString()}{' '}
+                                                {currency}
                                             </div>
-                                            {room.priceTotal !== undefined && room.nights ? (
+                                            {room.priceTotal !== undefined &&
+                                            room.nights ? (
                                                 <div className="mb-4 text-xs text-muted-foreground">
-                                                    ~{room.pricePerNight.toLocaleString()} {currency} {t('hotelDetail.pernight')} · {room.nights} {t('hotelDetail.nightsLabel')}
+                                                    ~
+                                                    {room.pricePerNight.toLocaleString()}{' '}
+                                                    {currency}{' '}
+                                                    {t('hotelDetail.pernight')}{' '}
+                                                    · {room.nights}{' '}
+                                                    {t(
+                                                        'hotelDetail.nightsLabel',
+                                                    )}
                                                 </div>
                                             ) : null}
-                                            {room.supplements && room.supplements.length > 0 ? (
+                                            {room.supplements &&
+                                            room.supplements.length > 0 ? (
                                                 <div className="mb-4 space-y-1 border-t border-border pt-3">
                                                     <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                                        {t('hotelDetail.mandatorySupplements')}
+                                                        {t(
+                                                            'hotelDetail.mandatorySupplements',
+                                                        )}
                                                     </p>
-                                                    {room.supplements.map((supplement, i) => (
-                                                        <div
-                                                            key={`${room.id}-supplement-${i}`}
-                                                            className="flex items-center justify-between gap-2 text-xs text-muted-foreground"
-                                                        >
-                                                            <span>{supplement.name}</span>
-                                                            <span className="font-semibold text-foreground">
-                                                                +{supplement.price.toLocaleString()} {currency}
-                                                                {supplement.perNight ? ` ${t('hotelDetail.pernight')}` : ''}
-                                                            </span>
-                                                        </div>
-                                                    ))}
+                                                    {room.supplements.map(
+                                                        (supplement, i) => (
+                                                            <div
+                                                                key={`${room.id}-supplement-${i}`}
+                                                                className="flex items-center justify-between gap-2 text-xs text-muted-foreground"
+                                                            >
+                                                                <span>
+                                                                    {
+                                                                        supplement.name
+                                                                    }
+                                                                </span>
+                                                                <span className="font-semibold text-foreground">
+                                                                    +
+                                                                    {supplement.price.toLocaleString()}{' '}
+                                                                    {currency}
+                                                                    {supplement.perNight
+                                                                        ? ` ${t('hotelDetail.pernight')}`
+                                                                        : ''}
+                                                                </span>
+                                                            </div>
+                                                        ),
+                                                    )}
                                                 </div>
                                             ) : null}
                                         </div>

@@ -80,7 +80,9 @@ export function VoucherCard({ booking }: VoucherCardProps) {
                     <p className="text-xs font-medium uppercase text-muted-foreground">
                         {t('voucher.bookingRef')}
                     </p>
-                    <p className="font-bold text-foreground">#{booking.booking_ref}</p>
+                    <p className="font-bold text-foreground">
+                        #{booking.booking_ref}
+                    </p>
                 </div>
                 <div className="space-y-1">
                     <p className="text-xs font-medium uppercase text-muted-foreground">

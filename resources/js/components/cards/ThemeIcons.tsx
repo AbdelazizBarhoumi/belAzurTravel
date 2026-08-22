@@ -13,17 +13,31 @@ interface Props {
  * Hotel card icon strip: renders the theme (tag) icons from `hotel.tags`.
  * Falls back to the amenity SVG icons when no tag maps to an icon.
  */
-export function ThemeIcons({ tags = [], amenities = [], maxVisible, className }: Props) {
+export function ThemeIcons({
+    tags = [],
+    amenities = [],
+    maxVisible,
+    className,
+}: Props) {
     const icons = tags
         .map((tag) => ({ tag, Icon: getThemeIcon(tag) }))
-        .filter((item): item is { tag: string; Icon: LucideIcon } => item.Icon !== null);
+        .filter(
+            (item): item is { tag: string; Icon: LucideIcon } =>
+                item.Icon !== null,
+        );
 
     if (icons.length === 0) {
         if (amenities.length === 0) {
             return null;
         }
 
-        return <AmenityIcons amenities={amenities} maxVisible={maxVisible} className={className} />;
+        return (
+            <AmenityIcons
+                amenities={amenities}
+                maxVisible={maxVisible}
+                className={className}
+            />
+        );
     }
 
     const items = maxVisible ? icons.slice(0, maxVisible) : icons;

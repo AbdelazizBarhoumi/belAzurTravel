@@ -84,12 +84,17 @@ export function CategoryTypeManager({
         fr: '',
         ar: '',
     });
-    const [newTypeFilterStyle, setNewTypeFilterStyle] = useState<FilterStyle>('checkbox');
+    const [newTypeFilterStyle, setNewTypeFilterStyle] =
+        useState<FilterStyle>('checkbox');
     const [isCreatingType, setIsCreatingType] = useState(false);
 
     // Value editing state
     const [editingValueId, setEditingValueId] = useState<number | null>(null);
-    const [newValueName, setNewValueName] = useState({ en: '', fr: '', ar: '' });
+    const [newValueName, setNewValueName] = useState({
+        en: '',
+        fr: '',
+        ar: '',
+    });
     const [newValueColor, setNewValueColor] = useState('#000000');
     const [isCreatingValue, setIsCreatingValue] = useState(false);
 
@@ -149,8 +154,12 @@ export function CategoryTypeManager({
                 label: newTypeLabel,
                 filter_style: newTypeFilterStyle,
             });
-            queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
-            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
+            queryClient.invalidateQueries({
+                queryKey: ['admin', 'category-types'],
+            });
+            await queryClient.refetchQueries({
+                queryKey: ['admin', 'category-types'],
+            });
             toast.success(t('admin.categoryTypeManager.successTypeCreated'));
             setNewTypeLabel({ en: '', fr: '', ar: '' });
             setIsCreatingType(false);
@@ -166,9 +175,16 @@ export function CategoryTypeManager({
             return;
         }
         try {
-            await updateCategoryType(id, { label: newTypeLabel, filter_style: newTypeFilterStyle });
-            queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
-            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
+            await updateCategoryType(id, {
+                label: newTypeLabel,
+                filter_style: newTypeFilterStyle,
+            });
+            queryClient.invalidateQueries({
+                queryKey: ['admin', 'category-types'],
+            });
+            await queryClient.refetchQueries({
+                queryKey: ['admin', 'category-types'],
+            });
             toast.success(t('admin.categoryTypeManager.successTypeUpdated'));
             setEditingTypeId(null);
             setNewTypeLabel({ en: '', fr: '', ar: '' });
@@ -181,8 +197,12 @@ export function CategoryTypeManager({
     const handleDeleteType = async (id: number, force = false) => {
         try {
             await deleteCategoryType(id, force);
-            queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
-            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
+            queryClient.invalidateQueries({
+                queryKey: ['admin', 'category-types'],
+            });
+            await queryClient.refetchQueries({
+                queryKey: ['admin', 'category-types'],
+            });
             toast.success(t('admin.categoryTypeManager.successTypeDeleted'));
             loadTypes();
         } catch (err: any) {
@@ -206,7 +226,10 @@ export function CategoryTypeManager({
         const swapIndex = direction === 'up' ? index - 1 : index + 1;
         if (swapIndex < 0 || swapIndex >= newTypes.length) return;
 
-        [newTypes[index], newTypes[swapIndex]] = [newTypes[swapIndex], newTypes[index]];
+        [newTypes[index], newTypes[swapIndex]] = [
+            newTypes[swapIndex],
+            newTypes[index],
+        ];
         setTypes(newTypes);
 
         try {
@@ -214,7 +237,9 @@ export function CategoryTypeManager({
                 newTypes.map((t) => t.id),
                 entityType,
             );
-            queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
+            queryClient.invalidateQueries({
+                queryKey: ['admin', 'category-types'],
+            });
         } catch {
             toast.error(t('admin.categoryTypeManager.errorUpdate'));
             loadTypes();
@@ -231,8 +256,12 @@ export function CategoryTypeManager({
         if (!selectedType) return;
         try {
             await createCategoryValue(selectedType.id, newValueName);
-            queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
-            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
+            queryClient.invalidateQueries({
+                queryKey: ['admin', 'category-types'],
+            });
+            await queryClient.refetchQueries({
+                queryKey: ['admin', 'category-types'],
+            });
             toast.success(t('admin.categoryTypeManager.successValueAdded'));
             setNewValueName({ en: '', fr: '', ar: '' });
             setNewValueColor('#000000');
@@ -251,8 +280,12 @@ export function CategoryTypeManager({
         if (!selectedType) return;
         try {
             await updateCategoryValue(selectedType.id, valueId, newValueName);
-            queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
-            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
+            queryClient.invalidateQueries({
+                queryKey: ['admin', 'category-types'],
+            });
+            await queryClient.refetchQueries({
+                queryKey: ['admin', 'category-types'],
+            });
             toast.success(t('admin.categoryTypeManager.successValueUpdated'));
             setEditingValueId(null);
             setNewValueName({ en: '', fr: '', ar: '' });
@@ -267,8 +300,12 @@ export function CategoryTypeManager({
         if (!selectedType) return;
         try {
             await deleteCategoryValue(selectedType.id, valueId, force);
-            queryClient.invalidateQueries({ queryKey: ['admin', 'category-types'] });
-            await queryClient.refetchQueries({ queryKey: ['admin', 'category-types'] });
+            queryClient.invalidateQueries({
+                queryKey: ['admin', 'category-types'],
+            });
+            await queryClient.refetchQueries({
+                queryKey: ['admin', 'category-types'],
+            });
             toast.success(t('admin.categoryTypeManager.successValueDeleted'));
             loadTypes();
         } catch (err: any) {
@@ -366,19 +403,31 @@ export function CategoryTypeManager({
                                                 {renderLanguageInputs(
                                                     newTypeLabel,
                                                     setNewTypeLabel,
-                                                    { en: 'Category', fr: 'Catégorie', ar: 'فئة' },
+                                                    {
+                                                        en: 'Category',
+                                                        fr: 'Catégorie',
+                                                        ar: 'فئة',
+                                                    },
                                                 )}
                                                 <div className="flex justify-end gap-2">
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
-                                                        onClick={() => setEditingTypeId(null)}
+                                                        onClick={() =>
+                                                            setEditingTypeId(
+                                                                null,
+                                                            )
+                                                        }
                                                     >
                                                         <X className="h-4 w-4" />
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        onClick={() => handleUpdateType(type.id)}
+                                                        onClick={() =>
+                                                            handleUpdateType(
+                                                                type.id,
+                                                            )
+                                                        }
                                                     >
                                                         <Check className="h-4 w-4" />
                                                     </Button>
@@ -394,26 +443,44 @@ export function CategoryTypeManager({
                                                         {type.locked && (
                                                             <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
                                                                 <Lock className="h-3 w-3" />
-                                                                {t('admin.categoryTypeManager.system')}
+                                                                {t(
+                                                                    'admin.categoryTypeManager.system',
+                                                                )}
                                                             </span>
                                                         )}
                                                     </div>
                                                     <span className="text-xs text-muted-foreground">
-                                                        {type.label.fr} | {type.label.ar}
+                                                        {type.label.fr} |{' '}
+                                                        {type.label.ar}
                                                     </span>
                                                     <span className="text-[10px] text-muted-foreground">
-                                                        {type.values.length} {t('admin.categoryTypeManager.valueCount')}
+                                                        {type.values.length}{' '}
+                                                        {t(
+                                                            'admin.categoryTypeManager.valueCount',
+                                                        )}
                                                     </span>
                                                     <span className="inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                                                        {type.filter_style || 'pills'}
+                                                        {type.filter_style ||
+                                                            'pills'}
                                                     </span>
                                                 </div>
                                                 <div className="flex gap-1">
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
-                                                        onClick={() => handleReorder('up', types.indexOf(type))}
-                                                        disabled={types.indexOf(type) === 0}
+                                                        onClick={() =>
+                                                            handleReorder(
+                                                                'up',
+                                                                types.indexOf(
+                                                                    type,
+                                                                ),
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            types.indexOf(
+                                                                type,
+                                                            ) === 0
+                                                        }
                                                         title="Move up"
                                                     >
                                                         <ChevronUp className="h-4 w-4" />
@@ -421,8 +488,20 @@ export function CategoryTypeManager({
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
-                                                        onClick={() => handleReorder('down', types.indexOf(type))}
-                                                        disabled={types.indexOf(type) === types.length - 1}
+                                                        onClick={() =>
+                                                            handleReorder(
+                                                                'down',
+                                                                types.indexOf(
+                                                                    type,
+                                                                ),
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            types.indexOf(
+                                                                type,
+                                                            ) ===
+                                                            types.length - 1
+                                                        }
                                                         title="Move down"
                                                     >
                                                         <ChevronDown className="h-4 w-4" />
@@ -431,10 +510,14 @@ export function CategoryTypeManager({
                                                         size="icon"
                                                         variant="ghost"
                                                         onClick={() => {
-                                                            setSelectedType(type);
+                                                            setSelectedType(
+                                                                type,
+                                                            );
                                                             setView('values');
                                                         }}
-                                                        title={t('admin.categoryTypeManager.manageValues')}
+                                                        title={t(
+                                                            'admin.categoryTypeManager.manageValues',
+                                                        )}
                                                     >
                                                         <Settings className="h-4 w-4" />
                                                     </Button>
@@ -444,10 +527,19 @@ export function CategoryTypeManager({
                                                                 size="icon"
                                                                 variant="ghost"
                                                                 onClick={() => {
-                                                                    setEditingTypeId(type.id);
-                                                                    setNewTypeLabel(type.label);
-                                                                    setNewTypeFilterStyle(type.filter_style || 'pills');
-                                                                    setIsCreatingType(false);
+                                                                    setEditingTypeId(
+                                                                        type.id,
+                                                                    );
+                                                                    setNewTypeLabel(
+                                                                        type.label,
+                                                                    );
+                                                                    setNewTypeFilterStyle(
+                                                                        type.filter_style ||
+                                                                            'pills',
+                                                                    );
+                                                                    setIsCreatingType(
+                                                                        false,
+                                                                    );
                                                                 }}
                                                             >
                                                                 <Edit2 className="h-4 w-4" />
@@ -455,7 +547,11 @@ export function CategoryTypeManager({
                                                             <Button
                                                                 size="icon"
                                                                 variant="ghost"
-                                                                onClick={() => handleDeleteType(type.id)}
+                                                                onClick={() =>
+                                                                    handleDeleteType(
+                                                                        type.id,
+                                                                    )
+                                                                }
                                                             >
                                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                                             </Button>
@@ -472,25 +568,68 @@ export function CategoryTypeManager({
                                         {renderLanguageInputs(
                                             newTypeLabel,
                                             setNewTypeLabel,
-                                            { en: 'Star Rating', fr: 'Classement', ar: 'تصنيف' },
+                                            {
+                                                en: 'Star Rating',
+                                                fr: 'Classement',
+                                                ar: 'تصنيف',
+                                            },
                                         )}
                                         <div className="mt-3 rounded-lg border border-dashed border-border p-3">
-                                            <Label className="text-xs text-muted-foreground">{t('admin.settings.preview')}</Label>
+                                            <Label className="text-xs text-muted-foreground">
+                                                {t('admin.settings.preview')}
+                                            </Label>
                                             <div className="mt-2">
                                                 <FilterRenderer
-                                                    categoryType={{
-                                                        id: 0,
-                                                        entity_type: entityType,
-                                                        key: 'preview',
-                                                        label: newTypeLabel.en ? newTypeLabel : { en: 'Sample', fr: 'Exemple', ar: 'نموذج' },
-                                                        sort_order: 0,
-                                                        filter_style: 'checkbox',
-                                                        values: [
-                                                            { id: 1, category_type_id: 0, key: 'val1', name: { en: 'Value 1', fr: 'Valeur 1', ar: 'قيمة 1' } },
-                                                            { id: 2, category_type_id: 0, key: 'val2', name: { en: 'Value 2', fr: 'Valeur 2', ar: 'قيمة 2' } },
-                                                            { id: 3, category_type_id: 0, key: 'val3', name: { en: 'Value 3', fr: 'Valeur 3', ar: 'قيمة 3' } },
-                                                        ],
-                                                    } as PublicCategoryType}
+                                                    categoryType={
+                                                        {
+                                                            id: 0,
+                                                            entity_type:
+                                                                entityType,
+                                                            key: 'preview',
+                                                            label: newTypeLabel.en
+                                                                ? newTypeLabel
+                                                                : {
+                                                                      en: 'Sample',
+                                                                      fr: 'Exemple',
+                                                                      ar: 'نموذج',
+                                                                  },
+                                                            sort_order: 0,
+                                                            filter_style:
+                                                                'checkbox',
+                                                            values: [
+                                                                {
+                                                                    id: 1,
+                                                                    category_type_id: 0,
+                                                                    key: 'val1',
+                                                                    name: {
+                                                                        en: 'Value 1',
+                                                                        fr: 'Valeur 1',
+                                                                        ar: 'قيمة 1',
+                                                                    },
+                                                                },
+                                                                {
+                                                                    id: 2,
+                                                                    category_type_id: 0,
+                                                                    key: 'val2',
+                                                                    name: {
+                                                                        en: 'Value 2',
+                                                                        fr: 'Valeur 2',
+                                                                        ar: 'قيمة 2',
+                                                                    },
+                                                                },
+                                                                {
+                                                                    id: 3,
+                                                                    category_type_id: 0,
+                                                                    key: 'val3',
+                                                                    name: {
+                                                                        en: 'Value 3',
+                                                                        fr: 'Valeur 3',
+                                                                        ar: 'قيمة 3',
+                                                                    },
+                                                                },
+                                                            ],
+                                                        } as PublicCategoryType
+                                                    }
                                                     selectedValues={[]}
                                                     onChange={() => {}}
                                                     lang="en"
@@ -502,12 +641,19 @@ export function CategoryTypeManager({
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                onClick={() => setIsCreatingType(false)}
+                                                onClick={() =>
+                                                    setIsCreatingType(false)
+                                                }
                                             >
                                                 {t('actions.cancel')}
                                             </Button>
-                                            <Button size="sm" onClick={handleCreateType}>
-                                                {t('admin.categoryTypeManager.createType')}
+                                            <Button
+                                                size="sm"
+                                                onClick={handleCreateType}
+                                            >
+                                                {t(
+                                                    'admin.categoryTypeManager.createType',
+                                                )}
                                             </Button>
                                         </div>
                                     </div>
@@ -517,7 +663,11 @@ export function CategoryTypeManager({
                                         className="w-full border-dashed"
                                         onClick={() => {
                                             setIsCreatingType(true);
-                                            setNewTypeLabel({ en: '', fr: '', ar: '' });
+                                            setNewTypeLabel({
+                                                en: '',
+                                                fr: '',
+                                                ar: '',
+                                            });
                                             setEditingTypeId(null);
                                         }}
                                     >
@@ -551,19 +701,31 @@ export function CategoryTypeManager({
                                                 {renderLanguageInputs(
                                                     newValueName,
                                                     setNewValueName,
-                                                    { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+                                                    {
+                                                        en: 'Luxury',
+                                                        fr: 'Luxe',
+                                                        ar: 'فاخر',
+                                                    },
                                                 )}
                                                 <div className="flex justify-end gap-2">
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"
-                                                        onClick={() => setEditingValueId(null)}
+                                                        onClick={() =>
+                                                            setEditingValueId(
+                                                                null,
+                                                            )
+                                                        }
                                                     >
                                                         <X className="h-4 w-4" />
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        onClick={() => handleUpdateValue(val.id)}
+                                                        onClick={() =>
+                                                            handleUpdateValue(
+                                                                val.id,
+                                                            )
+                                                        }
                                                     >
                                                         <Check className="h-4 w-4" />
                                                     </Button>
@@ -576,7 +738,8 @@ export function CategoryTypeManager({
                                                         {val.name.en}
                                                     </span>
                                                     <span className="text-xs text-muted-foreground">
-                                                        {val.name.fr} | {val.name.ar}
+                                                        {val.name.fr} |{' '}
+                                                        {val.name.ar}
                                                     </span>
                                                 </div>
                                                 <div className="flex gap-1">
@@ -584,10 +747,19 @@ export function CategoryTypeManager({
                                                         size="icon"
                                                         variant="ghost"
                                                         onClick={() => {
-                                                            setEditingValueId(val.id);
-                                                            setNewValueName(val.name);
-                                                            setNewValueColor(val.color || '#000000');
-                                                            setIsCreatingValue(false);
+                                                            setEditingValueId(
+                                                                val.id,
+                                                            );
+                                                            setNewValueName(
+                                                                val.name,
+                                                            );
+                                                            setNewValueColor(
+                                                                val.color ||
+                                                                    '#000000',
+                                                            );
+                                                            setIsCreatingValue(
+                                                                false,
+                                                            );
                                                         }}
                                                     >
                                                         <Edit2 className="h-4 w-4" />
@@ -595,7 +767,11 @@ export function CategoryTypeManager({
                                                     <Button
                                                         size="icon"
                                                         variant="ghost"
-                                                        onClick={() => handleDeleteValue(val.id)}
+                                                        onClick={() =>
+                                                            handleDeleteValue(
+                                                                val.id,
+                                                            )
+                                                        }
                                                     >
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
@@ -610,18 +786,29 @@ export function CategoryTypeManager({
                                         {renderLanguageInputs(
                                             newValueName,
                                             setNewValueName,
-                                            { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+                                            {
+                                                en: 'Luxury',
+                                                fr: 'Luxe',
+                                                ar: 'فاخر',
+                                            },
                                         )}
                                         <div className="flex justify-end gap-2">
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                onClick={() => setIsCreatingValue(false)}
+                                                onClick={() =>
+                                                    setIsCreatingValue(false)
+                                                }
                                             >
                                                 {t('actions.cancel')}
                                             </Button>
-                                            <Button size="sm" onClick={handleCreateValue}>
-                                                {t('admin.categoryTypeManager.addValueBtn')}
+                                            <Button
+                                                size="sm"
+                                                onClick={handleCreateValue}
+                                            >
+                                                {t(
+                                                    'admin.categoryTypeManager.addValueBtn',
+                                                )}
                                             </Button>
                                         </div>
                                     </div>
@@ -631,13 +818,19 @@ export function CategoryTypeManager({
                                         className="w-full border-dashed"
                                         onClick={() => {
                                             setIsCreatingValue(true);
-                                            setNewValueName({ en: '', fr: '', ar: '' });
+                                            setNewValueName({
+                                                en: '',
+                                                fr: '',
+                                                ar: '',
+                                            });
                                             setNewValueColor('#000000');
                                             setEditingValueId(null);
                                         }}
                                     >
                                         <Plus className="mr-2 h-4 w-4" />
-                                        {t('admin.categoryTypeManager.addValue')}
+                                        {t(
+                                            'admin.categoryTypeManager.addValue',
+                                        )}
                                     </Button>
                                 )}
                             </div>
@@ -669,7 +862,9 @@ export function CategoryTypeManager({
                                 {confirmDialog.affectedItems.length > 0 && (
                                     <div className="mt-3 max-h-48 overflow-y-auto rounded border p-2 text-sm">
                                         <p className="mb-1 font-medium">
-                                            {t('admin.categoryTypeManager.affectedItems')}
+                                            {t(
+                                                'admin.categoryTypeManager.affectedItems',
+                                            )}
                                         </p>
                                         <ul className="list-disc space-y-1 pl-4">
                                             {confirmDialog.affectedItems.map(

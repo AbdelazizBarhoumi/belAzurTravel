@@ -1,4 +1,8 @@
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    keepPreviousData,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 import {
     approveAllOsTravelHotels,
     approveOsTravelHotel,
@@ -125,5 +129,13 @@ export function useOsTravelAdmin() {
         return t(fallbackKey);
     };
 
-    return { savePrice, approve, approveAll, reject, unapprove, reopen, toErrorMessage };
+    return {
+        savePrice,
+        approve,
+        approveAll,
+        reject,
+        unapprove,
+        reopen,
+        toErrorMessage,
+    };
 }

@@ -153,7 +153,9 @@ const ClientDashboard = () => {
         mutationFn: (id: string) => cancelBooking(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['client'] });
-            toast.success(t('booking.cancelled') || 'Booking cancelled successfully.');
+            toast.success(
+                t('booking.cancelled') || 'Booking cancelled successfully.',
+            );
         },
     });
     const supportMutation = useMutation({
@@ -195,7 +197,9 @@ const ClientDashboard = () => {
                 type: 'refund_request',
                 subject: refundSubject,
                 description: refundDescription,
-                booking_id: refundBookingId ? String(refundBookingId) : undefined,
+                booking_id: refundBookingId
+                    ? String(refundBookingId)
+                    : undefined,
             }),
         onSuccess: () => {
             setRefundBookingId('');
@@ -504,7 +508,9 @@ const ClientDashboard = () => {
                                                 </span>
                                                 {booking.is_request && (
                                                     <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                                                        {t('booking.requestBadge') || 'Request'}
+                                                        {t(
+                                                            'booking.requestBadge',
+                                                        ) || 'Request'}
                                                     </span>
                                                 )}
                                                 <span className="font-bold text-foreground">
@@ -551,10 +557,26 @@ const ClientDashboard = () => {
                                             <div className="flex items-start gap-2 rounded-xl border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm">
                                                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
                                                 <p className="text-muted-foreground">
-                                                    {booking.is_request
-                                                        ? (t('booking.requestBanner') || 'Your request is being processed. We\'ll contact the hotel to check availability.')
-                                                        : (<>{t('client.bookingDecisionWindow')}{' '}<span className="font-semibold text-foreground">{decisionByLabel(booking) ?? t('client.bookingDecisionUnknown')}</span></>)
-                                                    }
+                                                    {booking.is_request ? (
+                                                        t(
+                                                            'booking.requestBanner',
+                                                        ) ||
+                                                        "Your request is being processed. We'll contact the hotel to check availability."
+                                                    ) : (
+                                                        <>
+                                                            {t(
+                                                                'client.bookingDecisionWindow',
+                                                            )}{' '}
+                                                            <span className="font-semibold text-foreground">
+                                                                {decisionByLabel(
+                                                                    booking,
+                                                                ) ??
+                                                                    t(
+                                                                        'client.bookingDecisionUnknown',
+                                                                    )}
+                                                            </span>
+                                                        </>
+                                                    )}
                                                 </p>
                                             </div>
                                         )}
@@ -635,7 +657,8 @@ const ClientDashboard = () => {
                                         </span>
                                         <span className="text-muted-foreground">
                                             {t('admin.booking')} #
-                                            {payment.booking_ref ?? payment.booking_id}
+                                            {payment.booking_ref ??
+                                                payment.booking_id}
                                         </span>
                                         <span className="font-semibold text-foreground">
                                             {payment.currency}{' '}
@@ -1092,9 +1115,10 @@ const ClientDashboard = () => {
                                                                 #{complaint.id}{' '}
                                                                 &middot; Booking
                                                                 #
-                                                                {
-                                                                    complaint.booking?.booking_ref ?? complaint.booking_id
-                                                                }{' '}
+                                                                {complaint
+                                                                    .booking
+                                                                    ?.booking_ref ??
+                                                                    complaint.booking_id}{' '}
                                                                 &middot;{' '}
                                                                 {new Date(
                                                                     complaint.created_at,

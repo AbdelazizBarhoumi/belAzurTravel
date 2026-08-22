@@ -111,7 +111,7 @@ export default function DealDetail() {
                         </div>
                     </section>
 
-                    { (deal.expires || deal.category) && (
+                    {(deal.expires || deal.category) && (
                         <section className="grid gap-4 md:grid-cols-3">
                             {deal.expires && (
                                 <div className="rounded-2xl border border-border bg-card p-5">
@@ -153,7 +153,10 @@ export default function DealDetail() {
                                     </h3>
                                     <ul className="space-y-2 text-foreground">
                                         {highlights.map((item) => (
-                                            <li key={item.en} className="flex gap-2">
+                                            <li
+                                                key={item.en}
+                                                className="flex gap-2"
+                                            >
                                                 <CheckCircle2 className="mt-0.5 h-4 w-4 text-secondary" />{' '}
                                                 {localizeText(item, lang)}
                                             </li>
@@ -169,7 +172,10 @@ export default function DealDetail() {
                                     </h3>
                                     <ul className="space-y-2 text-sm text-foreground">
                                         {terms.map((item) => (
-                                            <li key={item.en} className="flex gap-2">
+                                            <li
+                                                key={item.en}
+                                                className="flex gap-2"
+                                            >
                                                 <Info className="mt-0.5 h-4 w-4 text-secondary" />{' '}
                                                 {localizeText(item, lang)}
                                             </li>

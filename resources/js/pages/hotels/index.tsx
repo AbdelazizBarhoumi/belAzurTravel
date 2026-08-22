@@ -1,7 +1,13 @@
 import { addDays, format } from 'date-fns';
 import { arSA, enUS, fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
-import { Building2, CalendarDays, Loader2, MapPin, SlidersHorizontal } from 'lucide-react';
+import {
+    Building2,
+    CalendarDays,
+    Loader2,
+    MapPin,
+    SlidersHorizontal,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -123,7 +129,9 @@ function buildCategoryFilters(
         filters[`dynamic_star_${starNum}`] = [String(starNum)];
     }
 
-    const roomKey = params.get('cat') ? ROOM_TYPE_MAP[params.get('cat')!] : undefined;
+    const roomKey = params.get('cat')
+        ? ROOM_TYPE_MAP[params.get('cat')!]
+        : undefined;
     if (roomKey) {
         filters.type_chambres = [roomKey];
     }
@@ -208,10 +216,9 @@ export default function Hotels() {
 
     // Category type filters state (URL params: navbar subcategory links +
     // landing widget stars/room type/country).
-    const [categoryTypeFilters, setCategoryTypeFilters] =
-        useState<Record<string, string[]>>(() =>
-            buildCategoryFilters(params, countryEnglishName),
-        );
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<
+        Record<string, string[]>
+    >(() => buildCategoryFilters(params, countryEnglishName));
 
     // Adjust state during render when URL params change (e.g. navbar
     // subcategory links or a new landing-widget search).
@@ -219,7 +226,9 @@ export default function Hotels() {
     if (params.toString() !== prevParamsKey) {
         setPrevParamsKey(params.toString());
         setSearchQuery(params.get('q') || params.get('destination') || '');
-        setCategoryTypeFilters(buildCategoryFilters(params, countryEnglishName));
+        setCategoryTypeFilters(
+            buildCategoryFilters(params, countryEnglishName),
+        );
         const fromParam = params.get('from') || '';
         const toParam = params.get('to') || '';
         setDateRange({
@@ -236,9 +245,10 @@ export default function Hotels() {
         });
     }
 
-    const [hotelPriceRange, setHotelPriceRange] = useState<
-        [number, number]
-    >([MIN_PRICE, DEFAULT_MAX_PRICE]);
+    const [hotelPriceRange, setHotelPriceRange] = useState<[number, number]>([
+        MIN_PRICE,
+        DEFAULT_MAX_PRICE,
+    ]);
     // Whether the user moved the slider. This drives the "price filter is
     // active" flag instead of a value comparison, so auto-syncing the slider
     // bounds to the data on screen never counts as a user-driven filter.
@@ -254,22 +264,44 @@ export default function Hotels() {
         dateRange?.from !== undefined ||
         dateRange?.to !== undefined;
 
-    const hasActiveCategoryTypeFilters = Object.values(categoryTypeFilters).some((v) => v.length > 0);
+    const hasActiveCategoryTypeFilters = Object.values(
+        categoryTypeFilters,
+    ).some((v) => v.length > 0);
 
     // Sync active filters back to the URL so users can bookmark/share.
     useEffect(() => {
-        const next = new URLSearchParams();
+        // Start with current URL params so filter params (stars, category_*, etc.)
+        // are preserved when syncing state back to the URL.
+        const next = new URLSearchParams(params);
+        // Clear params this effect manages so removals propagate correctly.
+        next.delete('q');
+        next.delete('destination');
+        next.delete('sort');
+        next.delete('from');
+        next.delete('to');
+        next.delete('guests');
+        next.delete('children');
+
         if (searchQuery) next.set('q', searchQuery);
         if (sort !== 'price_asc') next.set('sort', sort);
         const checkIn = toLocalISODate(dateRange?.from);
         const checkOut = toLocalISODate(dateRange?.to);
         if (checkIn) next.set('from', checkIn);
         if (checkOut) next.set('to', checkOut);
-        if (occupancy.adults !== 2) next.set('guests', String(occupancy.adults));
-        if (occupancy.childAges.length > 0) next.set('children', occupancy.childAges.join(','));
+        if (occupancy.adults !== 2)
+            next.set('guests', String(occupancy.adults));
+        if (occupancy.childAges.length > 0)
+            next.set('children', occupancy.childAges.join(','));
         setSearchParams(next, { replace: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchQuery, sort, dateRange?.from?.getTime(), dateRange?.to?.getTime(), occupancy.adults, occupancy.childAges.join(',')]);
+    }, [
+        searchQuery,
+        sort,
+        dateRange?.from?.getTime(),
+        dateRange?.to?.getTime(),
+        occupancy.adults,
+        occupancy.childAges.join(','),
+    ]);
 
     // Phase E: once a full date range (+ occupancy) is chosen, the list is
     // server-driven — the filter bar maps to the server search request
@@ -341,7 +373,10 @@ export default function Hotels() {
             // silently match once the user has actually touched the slider.
             if (priceFilterActive) {
                 if (typeof hotel.price !== 'number') return false;
-                if (hotel.price < hotelPriceRange[0] || hotel.price > hotelPriceRange[1]) {
+                if (
+                    hotel.price < hotelPriceRange[0] ||
+                    hotel.price > hotelPriceRange[1]
+                ) {
                     return false;
                 }
             }
@@ -355,7 +390,10 @@ export default function Hotels() {
 
             // Selected countries form a single OR group.
             const countryKeys = Object.entries(categoryTypeFilters)
-                .filter(([key, values]) => key.startsWith('dynamic_country_') && values.length > 0)
+                .filter(
+                    ([key, values]) =>
+                        key.startsWith('dynamic_country_') && values.length > 0,
+                )
                 .flatMap(([, values]) => values);
             if (countryKeys.length > 0) {
                 const hotelCountry =
@@ -378,8 +416,10 @@ export default function Hotels() {
             // Category-type groups are AND-ed together (values within a group
             // are OR-ed). Stars are handled above; dynamic filters below are
             // the country group only, so the rest are plain category types.
-            const categoryGroups = Object.entries(categoryTypeFilters)
-                .filter(([key, values]) => !key.startsWith('dynamic_') && values.length > 0);
+            const categoryGroups = Object.entries(categoryTypeFilters).filter(
+                ([key, values]) =>
+                    !key.startsWith('dynamic_') && values.length > 0,
+            );
             if (categoryGroups.length > 0) {
                 return categoryGroups.every(([typeKey, values]) => {
                     const assignments = hotel.category_assignments;
@@ -423,7 +463,13 @@ export default function Hotels() {
             ],
             only_available: false,
         };
-    }, [hasDates, checkInISO, checkOutISO, occupancy.adults, occupancy.childAges]);
+    }, [
+        hasDates,
+        checkInISO,
+        checkOutISO,
+        occupancy.adults,
+        occupancy.childAges,
+    ]);
 
     // Rapid filter interactions must not each fire an expensive search; batch
     // them and search once the user settles.
@@ -432,14 +478,23 @@ export default function Hotels() {
         600,
     );
 
-    const { data: livePages, isFetching: liveFetching, isError: liveSearchError, refetch: refetchSearch, fetchNextPage, hasNextPage, isFetchingNextPage } = useHotelSearchInfinite(liveQuery);
+    const {
+        data: livePages,
+        isFetching: liveFetching,
+        isError: liveSearchError,
+        refetch: refetchSearch,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useHotelSearchInfinite(liveQuery);
     // React Query clears `data` back to undefined for a moment whenever the
     // query key changes (any filter edit while dates are set), even though we
     // already have a perfectly good previous result set on screen. Caching
     // the last non-empty pages and falling back to them keeps the grid
     // mounted (with the "checking availability" banner on top) instead of
     // unmounting the whole list into skeletons on every filter tweak.
-    const [lastGoodPages, setLastGoodPages] = useState<typeof livePages>(undefined);
+    const [lastGoodPages, setLastGoodPages] =
+        useState<typeof livePages>(undefined);
     useEffect(() => {
         if (livePages !== undefined) {
             setLastGoodPages(livePages);
@@ -458,7 +513,10 @@ export default function Hotels() {
 
     const sentinelRef = useRef<HTMLDivElement | null>(null);
     const prevCountRef = useRef(0);
-    useInfiniteScroll(sentinelRef, fetchNextPage, { hasNextPage: hasNextPage ?? false, isFetchingNextPage });
+    useInfiniteScroll(sentinelRef, fetchNextPage, {
+        hasNextPage: hasNextPage ?? false,
+        isFetchingNextPage,
+    });
 
     // Automatically fetch all remaining pages so the price slider has the
     // full range and the client-side filter works on every hotel.
@@ -516,9 +574,17 @@ export default function Hotels() {
             // to "no filter". That's why price filtering looked broken and
             // why the slider appeared to jump on its own.
             setHotelPriceRange(([lo, hi]) => {
-                const clampedLo = Math.min(Math.max(lo, priceBounds[0]), priceBounds[1]);
-                const clampedHi = Math.min(Math.max(hi, priceBounds[0]), priceBounds[1]);
-                return clampedLo === lo && clampedHi === hi ? [lo, hi] : [clampedLo, clampedHi];
+                const clampedLo = Math.min(
+                    Math.max(lo, priceBounds[0]),
+                    priceBounds[1],
+                );
+                const clampedHi = Math.min(
+                    Math.max(hi, priceBounds[0]),
+                    priceBounds[1],
+                );
+                return clampedLo === lo && clampedHi === hi
+                    ? [lo, hi]
+                    : [clampedLo, clampedHi];
             });
         } else {
             setHotelPriceRange([priceBounds[0], priceBounds[1]]);
@@ -550,7 +616,8 @@ export default function Hotels() {
         const list = [...displayedHotels];
 
         const priceOf = (hotel: HotelCard) => {
-            if (typeof hotel.price_per_night === 'number') return hotel.price_per_night;
+            if (typeof hotel.price_per_night === 'number')
+                return hotel.price_per_night;
             if (typeof hotel.price === 'number') return hotel.price;
             return null;
         };
@@ -586,8 +653,7 @@ export default function Hotels() {
     // check-in, which the provider cannot book), so users can't pick a
     // window before any hotel can be booked.
     const pickerMinDate = useMemo(
-        () =>
-            earliestCheckIn(displayedHotels.map((h) => h.first_available_at)),
+        () => earliestCheckIn(displayedHotels.map((h) => h.first_available_at)),
         [displayedHotels],
     );
 
@@ -688,7 +754,7 @@ export default function Hotels() {
                                         type="button"
                                         variant="outline"
                                         aria-label={t('hotels.filtersButton')}
-                                        className="h-10 sm:h-12 w-full rounded-xl sm:rounded-2xl border-border/70 bg-background/80 px-4 text-xs sm:text-sm shadow-sm"
+                                        className="h-10 w-full rounded-xl border-border/70 bg-background/80 px-4 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm"
                                     >
                                         <SlidersHorizontal className="h-4 w-4 text-primary" />
                                         {t('hotels.filtersButton')}
@@ -707,7 +773,11 @@ export default function Hotels() {
                                         </SheetDescription>
                                     </SheetHeader>
                                     <HotelFilters
-                                        hotels={liveLoaded ? (displayedHotels as unknown as HotelItem[]) : hotels}
+                                        hotels={
+                                            liveLoaded
+                                                ? (displayedHotels as unknown as HotelItem[])
+                                                : hotels
+                                        }
                                         lang={lang}
                                         priceRange={hotelPriceRange}
                                         onPriceChange={handlePriceChange}
@@ -716,9 +786,17 @@ export default function Hotels() {
                                         liveMode={liveLoaded}
                                         hasPriceData={hasPriceData}
                                         categoryTypes={categoryTypes}
-                                        categoryTypeFilters={categoryTypeFilters}
-                                        onCategoryTypeChange={(typeKey, values) =>
-                                            setCategoryTypeFilters((prev) => ({ ...prev, [typeKey]: values }))
+                                        categoryTypeFilters={
+                                            categoryTypeFilters
+                                        }
+                                        onCategoryTypeChange={(
+                                            typeKey,
+                                            values,
+                                        ) =>
+                                            setCategoryTypeFilters((prev) => ({
+                                                ...prev,
+                                                [typeKey]: values,
+                                            }))
                                         }
                                         occupancy={occupancy}
                                         onOccupancyChange={setOccupancy}
@@ -756,9 +834,11 @@ export default function Hotels() {
                             >
                                 <SelectTrigger
                                     aria-label={t('hotels.sortBy')}
-                                    className="h-10 sm:h-12 w-44 rounded-xl sm:rounded-2xl border-border/70 bg-background/80 px-3 text-xs sm:text-sm shadow-sm sm:h-12"
+                                    className="h-10 w-44 rounded-xl border-border/70 bg-background/80 px-3 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm"
                                 >
-                                    <SelectValue placeholder={t('hotels.sortDefault')} />
+                                    <SelectValue
+                                        placeholder={t('hotels.sortDefault')}
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="price_asc">
@@ -784,9 +864,11 @@ export default function Hotels() {
                             />
                             <label
                                 htmlFor="show-unavailable"
-                                className="text-sm font-medium text-muted-foreground cursor-pointer select-none"
+                                className="cursor-pointer select-none text-sm font-medium text-muted-foreground"
                             >
-                                {showUnavailable ? t('hotels.hideUnavailable') : t('hotels.showUnavailable')}
+                                {showUnavailable
+                                    ? t('hotels.hideUnavailable')
+                                    : t('hotels.showUnavailable')}
                             </label>
                         </div>
                     )}
@@ -804,12 +886,13 @@ export default function Hotels() {
                             transition={{ delay: 0.05 }}
                             className="hidden flex-shrink-0 md:block md:w-72"
                         >
-                            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-3xl border border-border bg-card p-6">
+                            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-3xl border border-border bg-card p-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 <div className="mb-6 flex items-center justify-between gap-4">
                                     <h2 className="font-serif text-lg font-bold text-foreground">
                                         {t('hotels.filters')}
                                     </h2>
-                                    {(hasActiveCategoryTypeFilters || priceFilterActive) && (
+                                    {(hasActiveCategoryTypeFilters ||
+                                        priceFilterActive) && (
                                         <button
                                             type="button"
                                             onClick={handleClearAll}
@@ -821,7 +904,11 @@ export default function Hotels() {
                                 </div>
 
                                 <HotelFilters
-                                    hotels={liveLoaded ? (displayedHotels as unknown as HotelItem[]) : hotels}
+                                    hotels={
+                                        liveLoaded
+                                            ? (displayedHotels as unknown as HotelItem[])
+                                            : hotels
+                                    }
                                     lang={lang}
                                     priceRange={hotelPriceRange}
                                     onPriceChange={handlePriceChange}
@@ -832,7 +919,10 @@ export default function Hotels() {
                                     categoryTypes={categoryTypes}
                                     categoryTypeFilters={categoryTypeFilters}
                                     onCategoryTypeChange={(typeKey, values) =>
-                                        setCategoryTypeFilters((prev) => ({ ...prev, [typeKey]: values }))
+                                        setCategoryTypeFilters((prev) => ({
+                                            ...prev,
+                                            [typeKey]: values,
+                                        }))
                                     }
                                     occupancy={occupancy}
                                     onOccupancyChange={setOccupancy}
@@ -841,7 +931,9 @@ export default function Hotels() {
                         </motion.aside>
                         {/* Main Content */}
                         <div className="min-w-0 flex-1">
-                            {hasDates && liveQuery !== undefined && liveSearchError ? (
+                            {hasDates &&
+                            liveQuery !== undefined &&
+                            liveSearchError ? (
                                 <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm">
                                     <p className="font-semibold text-destructive">
                                         {t('search.error.title')}
@@ -858,7 +950,10 @@ export default function Hotels() {
                                         {t('search.error.retry')}
                                     </Button>
                                 </div>
-                            ) : hasDates && liveQuery !== undefined && (displayPages === undefined || liveFetching) && !isFetchingNextPage ? (
+                            ) : hasDates &&
+                              liveQuery !== undefined &&
+                              (displayPages === undefined || liveFetching) &&
+                              !isFetchingNextPage ? (
                                 <div className="mb-6 flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/80 px-4 py-3 text-sm text-muted-foreground">
                                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                     {t('hotels.checkingAvailability')}
@@ -869,9 +964,11 @@ export default function Hotels() {
                                     data-testid="hotel-skeletons"
                                     className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
                                 >
-                                    {Array.from({ length: 6 }).map((_, index) => (
-                                        <HotelCardSkeleton key={index} />
-                                    ))}
+                                    {Array.from({ length: 6 }).map(
+                                        (_, index) => (
+                                            <HotelCardSkeleton key={index} />
+                                        ),
+                                    )}
                                 </div>
                             ) : displayedHotels.length === 0 ? (
                                 <RequestThingEmptyState
@@ -884,239 +981,361 @@ export default function Hotels() {
                             ) : (
                                 <>
                                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                                    {sortedHotels.map((hotel, index) => {
-                                        const unavailable = hotel.available === false;
-                                        const isNewFromScroll = index >= prevCountRef.current;
-                                        return (
-                                            <motion.article
-                                                key={hotel.slug}
-                                                initial={isNewFromScroll ? { opacity: 0 } : { opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={isNewFromScroll ? { duration: 0.25 } : { delay: index * 0.05 }}
-                                                className={cn(
-                                                    unavailable &&
-                                                        'opacity-60 grayscale',
-                                                )}
-                                            >
-                                                <Link
-                                                    to={`/hotels/${hotel.slug}${
-                                                        detailLinkParams
-                                                            ? `?${detailLinkParams}`
-                                                            : ''
-                                                    }`}
-                                                    className="group block transform-gpu overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                        {sortedHotels.map((hotel, index) => {
+                                            const unavailable =
+                                                hotel.available === false;
+                                            const isNewFromScroll =
+                                                index >= prevCountRef.current;
+                                            return (
+                                                <motion.article
+                                                    key={hotel.slug}
+                                                    initial={
+                                                        isNewFromScroll
+                                                            ? { opacity: 0 }
+                                                            : {
+                                                                  opacity: 0,
+                                                                  y: 20,
+                                                              }
+                                                    }
+                                                    animate={{
+                                                        opacity: 1,
+                                                        y: 0,
+                                                    }}
+                                                    transition={
+                                                        isNewFromScroll
+                                                            ? { duration: 0.25 }
+                                                            : {
+                                                                  delay:
+                                                                      index *
+                                                                      0.05,
+                                                              }
+                                                    }
+                                                    className={cn(
+                                                        unavailable &&
+                                                            'opacity-60 grayscale',
+                                                    )}
                                                 >
-                                                    <div className="relative h-56 overflow-hidden">
-                                                        {hotel.image ? (
-                                                            <img
-                                                                src={hotel.image}
-                                                                alt={localizeText(
-                                                                    hotel.name,
-                                                                    lang,
-                                                                )}
-                                                                className="h-full w-full transform-gpu object-cover transition-transform duration-500 group-hover:scale-105"
-                                                            />
-                                                        ) : (
-                                                            <div className="flex h-full w-full items-center justify-center bg-muted">
-                                                                <Building2 className="h-12 w-12 text-muted-foreground" />
-                                                            </div>
-                                                        )}
+                                                    <Link
+                                                        to={`/hotels/${hotel.slug}${
+                                                            detailLinkParams
+                                                                ? `?${detailLinkParams}`
+                                                                : ''
+                                                        }`}
+                                                        className="group block transform-gpu overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                                    >
+                                                        <div className="relative h-56 overflow-hidden">
+                                                            {hotel.image ? (
+                                                                <img
+                                                                    src={
+                                                                        hotel.image
+                                                                    }
+                                                                    alt={localizeText(
+                                                                        hotel.name,
+                                                                        lang,
+                                                                    )}
+                                                                    className="h-full w-full transform-gpu object-cover transition-transform duration-500 group-hover:scale-105"
+                                                                />
+                                                            ) : (
+                                                                <div className="flex h-full w-full items-center justify-center bg-muted">
+                                                                    <Building2 className="h-12 w-12 text-muted-foreground" />
+                                                                </div>
+                                                            )}
 
-                                                        <FavoriteButton
-                                                            className="absolute left-4 top-4"
-                                                            item={{
-                                                                id: hotel.slug,
-                                                                type: 'hotel',
-                                                                name: localizeText(
-                                                                    hotel.name,
-                                                                    lang,
-                                                                ),
-                                                                image: hotel.image,
-                                                                price: hotel.price,
-                                                                location:
-                                                                    localizeText(
-                                                                        hotel.location,
+                                                            <FavoriteButton
+                                                                className="absolute left-4 top-4"
+                                                                item={{
+                                                                    id: hotel.slug,
+                                                                    type: 'hotel',
+                                                                    name: localizeText(
+                                                                        hotel.name,
                                                                         lang,
                                                                     ),
-                                                            }}
-                                                        />
-
-                                                        <div className="absolute right-4 top-4 rounded-2xl bg-card/95 px-3 py-2 text-xs font-bold text-foreground shadow-md backdrop-blur">
-                                                            {liveLoaded ? (
-                                                                (() => {
-                                                                    const promo = promoPrice(hotel.price_total, hotel.promotion?.rate);
-                                                                    const currency = hotel.currency ?? 'TND';
-                                                                    if (promo) {
-                                                                        return (
-                                                                            <div className="flex items-center gap-3">
-                                                                                <span className="text-base font-extrabold text-primary">
-                                                                                    {promo.discounted?.toLocaleString()} {currency}
-                                                                                </span>
-                                                                                <div className="flex flex-col items-end gap-0 text-right">
-                                                                                    {hotel.nights ? (
-                                                                                        <span className="text-[10px] font-medium text-muted-foreground">
-                                                                                            {hotel.nights} {t('hotelDetail.nightsLabel')}
-                                                                                        </span>
-                                                                                    ) : null}
-                                                                                    <span className="text-[10px] font-medium text-destructive line-through">
-                                                                                        {promo.original.toLocaleString()} {currency}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        );
-                                                                    }
-                                                                    return (
-                                                                        <span>
-                                                                            {hotel.price_total?.toLocaleString()}{' '}
-                                                                            {currency}
-                                                                            {hotel.nights
-                                                                                ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
-                                                                                : ''}
-                                                                        </span>
-                                                                    );
-                                                                })()
-                                                            ) : t('hotelDetail.checkAvailability')}
-                                                        </div>
-
-                                                        {liveLoaded && (
-                                                            <div className="absolute bottom-3 right-4 left-4 flex items-center justify-between gap-2">
-                                                                {unavailable && (
-                                                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                                                                        {t('hotels.perRequest')}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="p-5">
-                                                        <div className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
-                                                            <MapPin className="h-3.5 w-3.5" />
-                                                            {localizeText(
-                                                                hotel.location,
-                                                                lang,
-                                                            )}
-                                                        </div>
-
-                                                        {hotel.first_available_at && (
-                                                            <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-primary">
-                                                                <CalendarDays className="h-3.5 w-3.5" />
-                                                                {t('hotelDetail.availableFrom')}{' '}
-                                                                {formatDate(
-                                                                    new Date(
-                                                                        `${hotel.first_available_at}T00:00:00`,
-                                                                    ),
-                                                                    lang,
-                                                                )}
-                                                                {hotel.min_nights &&
-                                                                    hotel.min_nights > 1 &&
-                                                                    ` · ${t('hotelDetail.minimumNights')} ${hotel.min_nights}`}
-                                                            </div>
-                                                        )}
-
-                                                        <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
-                                                            {localizeText(
-                                                                hotel.name,
-                                                                lang,
-                                                            )}
-                                                        </h3>
-
-                                                        <div className="mb-3 flex items-center gap-3">
-                                                            <StarRating
-                                                                rating={hotel.stars}
-                                                                size="sm"
+                                                                    image: hotel.image,
+                                                                    price: hotel.price,
+                                                                    location:
+                                                                        localizeText(
+                                                                            hotel.location,
+                                                                            lang,
+                                                                        ),
+                                                                }}
                                                             />
-                                                        </div>
 
-                                                        {liveLoaded ? (
-                                                            (hotel.promotion
-                                                                ?.rate ||
-                                                                hotel.free_child
-                                                                    ?.length ||
-                                                                hotel.recommended) && (
-                                                                <div className="mb-3 flex flex-wrap gap-2">
-                                                                    {hotel.promotion?.rate && (
+                                                            <div className="absolute right-4 top-4 rounded-2xl bg-card/95 px-3 py-2 text-xs font-bold text-foreground shadow-md backdrop-blur">
+                                                                {liveLoaded
+                                                                    ? (() => {
+                                                                          const promo =
+                                                                              promoPrice(
+                                                                                  hotel.price_total,
+                                                                                  hotel
+                                                                                      .promotion
+                                                                                      ?.rate,
+                                                                              );
+                                                                          const currency =
+                                                                              hotel.currency ??
+                                                                              'TND';
+                                                                          if (
+                                                                              promo
+                                                                          ) {
+                                                                              return (
+                                                                                  <div className="flex items-center gap-3">
+                                                                                      <span className="text-base font-extrabold text-primary">
+                                                                                          {promo.discounted?.toLocaleString()}{' '}
+                                                                                          {
+                                                                                              currency
+                                                                                          }
+                                                                                      </span>
+                                                                                      <div className="flex flex-col items-end gap-0 text-right">
+                                                                                          {hotel.nights ? (
+                                                                                              <span className="text-[10px] font-medium text-muted-foreground">
+                                                                                                  {
+                                                                                                      hotel.nights
+                                                                                                  }{' '}
+                                                                                                  {t(
+                                                                                                      'hotelDetail.nightsLabel',
+                                                                                                  )}
+                                                                                              </span>
+                                                                                          ) : null}
+                                                                                          <span className="text-[10px] font-medium text-destructive line-through">
+                                                                                              {promo.original.toLocaleString()}{' '}
+                                                                                              {
+                                                                                                  currency
+                                                                                              }
+                                                                                          </span>
+                                                                                      </div>
+                                                                                  </div>
+                                                                              );
+                                                                          }
+                                                                          return (
+                                                                              <span>
+                                                                                  {hotel.price_total?.toLocaleString()}{' '}
+                                                                                  {
+                                                                                      currency
+                                                                                  }
+                                                                                  {hotel.nights
+                                                                                      ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
+                                                                                      : ''}
+                                                                              </span>
+                                                                          );
+                                                                      })()
+                                                                    : t(
+                                                                          'hotelDetail.checkAvailability',
+                                                                      )}
+                                                            </div>
+
+                                                            {liveLoaded && (
+                                                                <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between gap-2">
+                                                                    {unavailable && (
                                                                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                                                                            {t('hotelDetail.promo')}{' '}
-                                                                            {hotel.promotion.title}
-                                                                            {formatPromoRate(hotel.promotion.rate) && (
-                                                                                <>
-                                                                                    {' · '}
-                                                                                    {formatPromoRate(hotel.promotion.rate)}
-                                                                                </>
+                                                                            {t(
+                                                                                'hotels.perRequest',
                                                                             )}
                                                                         </span>
                                                                     )}
-                                                                    {hotel.free_child?.length ? (
-                                                                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                                                                            {t('hotelDetail.freeChild')}
-                                                                        </span>
-                                                                    ) : null}
-                                                                    {hotel.recommended ? (
-                                                                        <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700">
-                                                                            {t('hotelDetail.recommended')}
-                                                                        </span>
-                                                                    ) : null}
                                                                 </div>
-                                                            )
-                                                        ) : (hotel.tarifs_promo ||
-                                                              hotel.enfant_gratuit ||
-                                                              hotel.htel_recommande) ? (
-                                                            <div className="mb-3 flex flex-wrap gap-2">
-                                                                {hotel.tarifs_promo && (
-                                                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                                                                        {t('hotelDetail.promo')}
-                                                                    </span>
-                                                                )}
-                                                                {hotel.enfant_gratuit && (
-                                                                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                                                                        {t('hotelDetail.freeChild')}
-                                                                    </span>
-                                                                )}
-                                                                {hotel.htel_recommande && (
-                                                                    <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700">
-                                                                        {t('hotelDetail.recommended')}
-                                                                    </span>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="p-5">
+                                                            <div className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
+                                                                <MapPin className="h-3.5 w-3.5" />
+                                                                {localizeText(
+                                                                    hotel.location,
+                                                                    lang,
                                                                 )}
                                                             </div>
-                                                        ) : null}
 
-                                                        {(() => {
-                                                            const catLabels = getHotelCategoryLabels(hotel.category_assignments, categoryTypes, lang, 3);
-                                                            if (catLabels.length === 0) return null;
-                                                            return (
-                                                                <div className="mb-4 flex flex-wrap gap-2">
-                                                                    {catLabels.map((label) => (
-                                                                        <span key={label} className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                                                                            {label}
-                                                                        </span>
-                                                                    ))}
+                                                            {hotel.first_available_at && (
+                                                                <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-primary">
+                                                                    <CalendarDays className="h-3.5 w-3.5" />
+                                                                    {t(
+                                                                        'hotelDetail.availableFrom',
+                                                                    )}{' '}
+                                                                    {formatDate(
+                                                                        new Date(
+                                                                            `${hotel.first_available_at}T00:00:00`,
+                                                                        ),
+                                                                        lang,
+                                                                    )}
+                                                                    {hotel.min_nights &&
+                                                                        hotel.min_nights >
+                                                                            1 &&
+                                                                        ` · ${t('hotelDetail.minimumNights')} ${hotel.min_nights}`}
                                                                 </div>
-                                                            );
-                                                        })()}
+                                                            )}
 
-                                                        <div className="flex items-center justify-between gap-4">
-                                                            <ThemeIcons tags={hotel.tags ?? []} amenities={hotel.amenities} maxVisible={8} />
-                                                            <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-                                                                <span className="text-xs font-medium text-primary">
-                                                                    {t('common.viewAll')}
-                                                                </span>
+                                                            <h3 className="mb-2 font-serif text-xl font-bold text-foreground">
+                                                                {localizeText(
+                                                                    hotel.name,
+                                                                    lang,
+                                                                )}
+                                                            </h3>
+
+                                                            <div className="mb-3 flex items-center gap-3">
+                                                                <StarRating
+                                                                    rating={
+                                                                        hotel.stars
+                                                                    }
+                                                                    size="sm"
+                                                                />
+                                                            </div>
+
+                                                            {liveLoaded ? (
+                                                                (hotel.promotion
+                                                                    ?.rate ||
+                                                                    hotel
+                                                                        .free_child
+                                                                        ?.length ||
+                                                                    hotel.recommended) && (
+                                                                    <div className="mb-3 flex flex-wrap gap-2">
+                                                                        {hotel
+                                                                            .promotion
+                                                                            ?.rate && (
+                                                                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                                                {t(
+                                                                                    'hotelDetail.promo',
+                                                                                )}{' '}
+                                                                                {
+                                                                                    hotel
+                                                                                        .promotion
+                                                                                        .title
+                                                                                }
+                                                                                {formatPromoRate(
+                                                                                    hotel
+                                                                                        .promotion
+                                                                                        .rate,
+                                                                                ) && (
+                                                                                    <>
+                                                                                        {
+                                                                                            ' · '
+                                                                                        }
+                                                                                        {formatPromoRate(
+                                                                                            hotel
+                                                                                                .promotion
+                                                                                                .rate,
+                                                                                        )}
+                                                                                    </>
+                                                                                )}
+                                                                            </span>
+                                                                        )}
+                                                                        {hotel
+                                                                            .free_child
+                                                                            ?.length ? (
+                                                                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                                                {t(
+                                                                                    'hotelDetail.freeChild',
+                                                                                )}
+                                                                            </span>
+                                                                        ) : null}
+                                                                        {hotel.recommended ? (
+                                                                            <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+                                                                                {t(
+                                                                                    'hotelDetail.recommended',
+                                                                                )}
+                                                                            </span>
+                                                                        ) : null}
+                                                                    </div>
+                                                                )
+                                                            ) : hotel.tarifs_promo ||
+                                                              hotel.enfant_gratuit ||
+                                                              hotel.htel_recommande ? (
+                                                                <div className="mb-3 flex flex-wrap gap-2">
+                                                                    {hotel.tarifs_promo && (
+                                                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                                            {t(
+                                                                                'hotelDetail.promo',
+                                                                            )}
+                                                                        </span>
+                                                                    )}
+                                                                    {hotel.enfant_gratuit && (
+                                                                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                                            {t(
+                                                                                'hotelDetail.freeChild',
+                                                                            )}
+                                                                        </span>
+                                                                    )}
+                                                                    {hotel.htel_recommande && (
+                                                                        <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+                                                                            {t(
+                                                                                'hotelDetail.recommended',
+                                                                            )}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            ) : null}
+
+                                                            {(() => {
+                                                                const catLabels =
+                                                                    getHotelCategoryLabels(
+                                                                        hotel.category_assignments,
+                                                                        categoryTypes,
+                                                                        lang,
+                                                                        3,
+                                                                    );
+                                                                if (
+                                                                    catLabels.length ===
+                                                                    0
+                                                                )
+                                                                    return null;
+                                                                return (
+                                                                    <div className="mb-4 flex flex-wrap gap-2">
+                                                                        {catLabels.map(
+                                                                            (
+                                                                                label,
+                                                                            ) => (
+                                                                                <span
+                                                                                    key={
+                                                                                        label
+                                                                                    }
+                                                                                    className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                                                                                >
+                                                                                    {
+                                                                                        label
+                                                                                    }
+                                                                                </span>
+                                                                            ),
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })()}
+
+                                                            <div className="flex items-center justify-between gap-4">
+                                                                <ThemeIcons
+                                                                    tags={
+                                                                        hotel.tags ??
+                                                                        []
+                                                                    }
+                                                                    amenities={
+                                                                        hotel.amenities
+                                                                    }
+                                                                    maxVisible={
+                                                                        8
+                                                                    }
+                                                                />
+                                                                <div className="flex shrink-0 flex-col items-end gap-1 text-right">
+                                                                    <span className="text-xs font-medium text-primary">
+                                                                        {t(
+                                                                            'common.viewAll',
+                                                                        )}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                </Link>
-                                            </motion.article>
-                                        );
-                                    })}
-                                </div>
-                                {isFetchingNextPage && (
-                                    <div className="mt-8 flex justify-center">
-                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                                    </Link>
+                                                </motion.article>
+                                            );
+                                        })}
                                     </div>
-                                )}
-                                {hasNextPage && !isFetchingNextPage && (
-                                    <div ref={sentinelRef} className="h-4" />
-                                )}
+                                    {isFetchingNextPage && (
+                                        <div className="mt-8 flex justify-center">
+                                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                        </div>
+                                    )}
+                                    {hasNextPage && !isFetchingNextPage && (
+                                        <div
+                                            ref={sentinelRef}
+                                            className="h-4"
+                                        />
+                                    )}
                                 </>
                             )}
                         </div>{' '}

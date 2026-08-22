@@ -66,7 +66,8 @@ function bookingTitle(booking: BookingDetailRow): string {
     if (booking.details?.room_name) {
         const parts = [booking.item_slug ?? booking.item_id];
         if (booking.details.room_name) parts.push(booking.details.room_name);
-        if (booking.details.boarding_name) parts.push(booking.details.boarding_name);
+        if (booking.details.boarding_name)
+            parts.push(booking.details.boarding_name);
         return parts.filter(Boolean).join(' / ') || `#${booking.booking_ref}`;
     }
     return (
@@ -91,7 +92,11 @@ export default function BookingDetail() {
     const { data: user } = useAuthUser();
     const queryClient = useQueryClient();
 
-    const { data: booking, isLoading, isError } = useQuery({
+    const {
+        data: booking,
+        isLoading,
+        isError,
+    } = useQuery({
         queryKey: ['booking', bookingId],
         queryFn: () => getBooking(bookingId!),
         enabled: !!bookingId,
@@ -107,9 +112,7 @@ export default function BookingDetail() {
             );
         },
         onError: () => {
-            toast.error(
-                t('booking.error') || 'Failed to cancel the booking.',
-            );
+            toast.error(t('booking.error') || 'Failed to cancel the booking.');
         },
     });
 
@@ -128,14 +131,12 @@ export default function BookingDetail() {
             <div className="mx-auto max-w-3xl space-y-6 p-6">
                 <div className="rounded-2xl border border-border bg-card p-10 text-center">
                     <p className="text-muted-foreground">
-                        {t('bookingDetail.notFound') ||
-                            'Booking not found.'}
+                        {t('bookingDetail.notFound') || 'Booking not found.'}
                     </p>
                     <Link to="/client/dashboard" className="mt-4 inline-block">
                         <Button variant="outline" className="gap-2">
                             <ArrowLeft className="h-4 w-4" />
-                            {t('bookingDetail.back') ||
-                                'Back to my bookings'}
+                            {t('bookingDetail.back') || 'Back to my bookings'}
                         </Button>
                     </Link>
                 </div>
@@ -144,8 +145,7 @@ export default function BookingDetail() {
     }
 
     const status = booking.status;
-    const statusLabel =
-        bookingStatusLabels[status]?.[lang] ?? status;
+    const statusLabel = bookingStatusLabels[status]?.[lang] ?? status;
     const currency = booking.details?.currency ?? booking.currency ?? 'TND';
     const total = Number(booking.total_amount ?? booking.amount ?? 0);
     const breakdown = booking.provider_prebook?.breakdown ?? null;
@@ -227,7 +227,11 @@ export default function BookingDetail() {
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <Link to="/client/dashboard">
-                        <Button variant="ghost" size="icon" aria-label={t('bookingDetail.back')}>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={t('bookingDetail.back')}
+                        >
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                     </Link>
@@ -246,7 +250,8 @@ export default function BookingDetail() {
                 <span
                     className={cn(
                         'rounded-full px-3 py-1 text-xs font-semibold',
-                        statusColors[status] ?? 'bg-secondary/10 text-secondary',
+                        statusColors[status] ??
+                            'bg-secondary/10 text-secondary',
                     )}
                 >
                     {statusLabel}
@@ -280,19 +285,19 @@ export default function BookingDetail() {
                         {details?.room_name && (
                             <p className="text-sm text-muted-foreground">
                                 {details.room_name}
-                                {details.boarding_name ? ` · ${details.boarding_name}` : ''}
+                                {details.boarding_name
+                                    ? ` · ${details.boarding_name}`
+                                    : ''}
                             </p>
                         )}
                         <p className="text-sm text-muted-foreground">
-                            {[
-                                booking.start_date,
-                                booking.end_date,
-                            ]
+                            {[booking.start_date, booking.end_date]
                                 .filter(Boolean)
                                 .map(formatDate)
-                                .join(' — ') ||
-                                formatDate(booking.created_at)}
-                            {details?.nights ? ` · ${details.nights} nights` : ''}
+                                .join(' — ') || formatDate(booking.created_at)}
+                            {details?.nights
+                                ? ` · ${details.nights} nights`
+                                : ''}
                         </p>
                     </div>
                     <div className="text-right">
@@ -311,7 +316,8 @@ export default function BookingDetail() {
                         ) : null}
                         {details?.price_per_night && details?.nights ? (
                             <p className="mt-0.5 text-xs text-muted-foreground">
-                                {details.price_per_night.toLocaleString()} {currency} / night
+                                {details.price_per_night.toLocaleString()}{' '}
+                                {currency} / night
                             </p>
                         ) : null}
                         <p className="text-xs text-muted-foreground">
@@ -322,7 +328,11 @@ export default function BookingDetail() {
                 </div>
 
                 {/* Room details row */}
-                {(details?.room_size || details?.room_capacity || details?.room_features?.length || details?.not_refundable || details?.free_cancellation_until) && (
+                {(details?.room_size ||
+                    details?.room_capacity ||
+                    details?.room_features?.length ||
+                    details?.not_refundable ||
+                    details?.free_cancellation_until) && (
                     <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
                         {details?.room_size ? (
                             <span className="inline-flex items-center gap-1">
@@ -333,7 +343,8 @@ export default function BookingDetail() {
                         {details?.room_capacity ? (
                             <span className="inline-flex items-center gap-1">
                                 <Users className="h-3 w-3" />
-                                {details.room_capacity} {t('hotelDetail.guests') || 'guests'}
+                                {details.room_capacity}{' '}
+                                {t('hotelDetail.guests') || 'guests'}
                             </span>
                         ) : null}
                         {details?.room_features?.slice(0, 3).map((feature) => (
@@ -346,13 +357,15 @@ export default function BookingDetail() {
                         ))}
                         {details?.not_refundable && (
                             <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                                {t('hotelDetail.nonRefundable') || 'Non-refundable'}
+                                {t('hotelDetail.nonRefundable') ||
+                                    'Non-refundable'}
                             </span>
                         )}
                         {details?.free_cancellation_until && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
                                 <ShieldCheck className="h-3 w-3" />
-                                {t('hotelDetail.freeCancellationUntil') || 'Free cancellation until'}{' '}
+                                {t('hotelDetail.freeCancellationUntil') ||
+                                    'Free cancellation until'}{' '}
                                 {details.free_cancellation_until}
                             </span>
                         )}
@@ -431,13 +444,19 @@ export default function BookingDetail() {
                     </h3>
                     <ul className="space-y-1.5 text-sm text-muted-foreground">
                         {details.supplements.map((supplement, index) => (
-                            <li key={index} className="flex items-center justify-between">
+                            <li
+                                key={index}
+                                className="flex items-center justify-between"
+                            >
                                 <span>
                                     {supplement.name}
-                                    {supplement.perNight ? ` (${t('hotelDetail.pernight') || 'per night'})` : ''}
+                                    {supplement.perNight
+                                        ? ` (${t('hotelDetail.pernight') || 'per night'})`
+                                        : ''}
                                 </span>
                                 <span className="font-semibold text-foreground">
-                                    +{supplement.price.toLocaleString()} {currency}
+                                    +{supplement.price.toLocaleString()}{' '}
+                                    {currency}
                                 </span>
                             </li>
                         ))}
@@ -461,8 +480,7 @@ export default function BookingDetail() {
             {breakdown ? (
                 <div className="rounded-2xl border border-border bg-card p-5">
                     <h3 className="mb-3 font-serif text-lg font-bold text-foreground">
-                        {t('bookingDetail.priceBreakdown') ||
-                            'Price breakdown'}
+                        {t('bookingDetail.priceBreakdown') || 'Price breakdown'}
                     </h3>
                     {breakdown.rooms && breakdown.rooms.length > 0 ? (
                         <div className="overflow-x-auto">
@@ -473,7 +491,8 @@ export default function BookingDetail() {
                                             {t('voucher.room') || 'Room'}
                                         </th>
                                         <th className="px-2 py-1.5 font-medium">
-                                            {t('voucher.boarding') || 'Boarding'}
+                                            {t('voucher.boarding') ||
+                                                'Boarding'}
                                         </th>
                                         <th className="px-2 py-1.5 font-medium">
                                             {t('voucher.nights') || 'Nights'}
@@ -486,9 +505,7 @@ export default function BookingDetail() {
                                 <tbody>
                                     {breakdown.rooms.map((room, index) => (
                                         <tr
-                                            key={
-                                                room.id?.toString() ?? index
-                                            }
+                                            key={room.id?.toString() ?? index}
                                             className="border-b border-border/60 last:border-0"
                                         >
                                             <td className="px-2 py-2 font-medium text-foreground">
@@ -503,14 +520,21 @@ export default function BookingDetail() {
                                             </td>
                                             <td className="px-2 py-2 text-right font-semibold text-foreground">
                                                 {(() => {
-                                                    const roomTotal = Number(room.total ?? 0);
-                                                    const displayTotal = roomTotal > 0
-                                                        ? roomTotal
-                                                        : Number(breakdown.total ?? total);
+                                                    const roomTotal = Number(
+                                                        room.total ?? 0,
+                                                    );
+                                                    const displayTotal =
+                                                        roomTotal > 0
+                                                            ? roomTotal
+                                                            : Number(
+                                                                  breakdown.total ??
+                                                                      total,
+                                                              );
                                                     return (
                                                         <>
                                                             {displayTotal.toLocaleString()}{' '}
-                                                            {room.currency ?? currency}
+                                                            {room.currency ??
+                                                                currency}
                                                         </>
                                                     );
                                                 })()}
@@ -522,8 +546,7 @@ export default function BookingDetail() {
                                                             currency}{' '}
                                                         {t(
                                                             'bookingDetail.perNight',
-                                                        ) ||
-                                                            'per night'}
+                                                        ) || 'per night'}
                                                     </span>
                                                 ) : null}
                                             </td>
@@ -563,11 +586,12 @@ export default function BookingDetail() {
             )}
 
             {/* Cancellation policy */}
-            {(breakdown?.cancellation_policy?.length
-                ? breakdown.cancellation_policy
-                : details?.cancellation_policy?.length
-                    ? details.cancellation_policy
-                    : null
+            {(
+                breakdown?.cancellation_policy?.length
+                    ? breakdown.cancellation_policy
+                    : details?.cancellation_policy?.length
+                      ? details.cancellation_policy
+                      : null
             ) ? (
                 <div className="rounded-2xl border border-border bg-card p-5">
                     <h3 className="mb-3 font-serif text-lg font-bold text-foreground">
@@ -579,10 +603,7 @@ export default function BookingDetail() {
                             ? breakdown.cancellation_policy
                             : details!.cancellation_policy!
                         ).map((entry, index) => (
-                            <li
-                                key={index}
-                                className="flex items-start gap-2"
-                            >
+                            <li key={index} className="flex items-start gap-2">
                                 <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
                                 <span>
                                     {entry.description ||

@@ -40,7 +40,13 @@ const Partners = () => {
 
     const { data: dbCategories = [] } = useQuery<Category[]>({
         queryKey: ['categories', 'partners'],
-        queryFn: () => apiFetch<{ data: Category[] }>('/api/categories').then((res) => res.data?.filter((c: Category) => c.entity_type === 'partners') ?? []),
+        queryFn: () =>
+            apiFetch<{ data: Category[] }>('/api/categories').then(
+                (res) =>
+                    res.data?.filter(
+                        (c: Category) => c.entity_type === 'partners',
+                    ) ?? [],
+            ),
     });
 
     const { data: categoryTypes = [] } = useCategoryTypesPublic('partners');
@@ -55,7 +61,9 @@ const Partners = () => {
         }
         return filters;
     }, [params]);
-    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>(initialCategoryTypeFilters);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<
+        Record<string, string[]>
+    >(initialCategoryTypeFilters);
 
     // Adjust state during render when URL params change (e.g. navbar subcategory links)
     const [prevParamsKey, setPrevParamsKey] = useState(() => params.toString());
@@ -66,14 +74,18 @@ const Partners = () => {
         const nextFilters: Record<string, string[]> = {};
         for (const [key, val] of params.entries()) {
             if (key.startsWith('category_')) {
-                nextFilters[key.slice('category_'.length)] = val.split(',').filter(Boolean);
+                nextFilters[key.slice('category_'.length)] = val
+                    .split(',')
+                    .filter(Boolean);
             }
         }
         setCategoryTypeFilters(nextFilters);
     }
 
     const categories = useMemo(() => {
-        const keys = new Set(partners.map((p) => p.category).filter(Boolean) as string[]);
+        const keys = new Set(
+            partners.map((p) => p.category).filter(Boolean) as string[],
+        );
         return ['All', ...Array.from(keys)];
     }, [partners]);
 
@@ -86,12 +98,19 @@ const Partners = () => {
     const filtered = useMemo(() => {
         return (Array.isArray(partners) ? partners : []).filter((p) => {
             const matchesCategory = cat === 'All' || p.category === cat;
-            const matchesSearch = !q || getPartnerName(p, lang).toLowerCase().includes(q.toLowerCase());
-            const assignments = (p as unknown as Record<string, unknown>).category_assignments as Record<string, string> | undefined;
-            const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
-            const matchesCategoryTypes = activeTypeFilters.length === 0 ||
-                activeTypeFilters.some(([typeKey, values]) =>
-                    assignments && values.includes(assignments[typeKey]),
+            const matchesSearch =
+                !q ||
+                getPartnerName(p, lang).toLowerCase().includes(q.toLowerCase());
+            const assignments = (p as unknown as Record<string, unknown>)
+                .category_assignments as Record<string, string> | undefined;
+            const activeTypeFilters = Object.entries(
+                categoryTypeFilters,
+            ).filter(([, v]) => v.length > 0);
+            const matchesCategoryTypes =
+                activeTypeFilters.length === 0 ||
+                activeTypeFilters.some(
+                    ([typeKey, values]) =>
+                        assignments && values.includes(assignments[typeKey]),
                 );
             return matchesCategory && matchesSearch && matchesCategoryTypes;
         });
@@ -148,7 +167,9 @@ const Partners = () => {
                         className="mb-8"
                     />
 
-                    <div className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                        className={`flex gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : 'flex-row'}`}
+                    >
                         <FilterSidebar
                             title={t('hotels.filters')}
                             hasActiveFilters={hasActiveFilters}
@@ -178,17 +199,23 @@ const Partners = () => {
                             </div>
 
                             {categoryTypes.length > 0 && (
-                                <div className="border-t border-border pt-6 space-y-4">
+                                <div className="space-y-4 border-t border-border pt-6">
                                     {categoryTypes.map((catType) => (
                                         <FilterRenderer
                                             key={catType.key}
                                             categoryType={catType as never}
-                                            selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                            selectedValues={
+                                                categoryTypeFilters[
+                                                    catType.key
+                                                ] ?? []
+                                            }
                                             onChange={(values) =>
-                                                setCategoryTypeFilters((prev) => ({
-                                                    ...prev,
-                                                    [catType.key]: values,
-                                                }))
+                                                setCategoryTypeFilters(
+                                                    (prev) => ({
+                                                        ...prev,
+                                                        [catType.key]: values,
+                                                    }),
+                                                )
                                             }
                                             lang={lang}
                                         />
@@ -207,23 +234,32 @@ const Partners = () => {
                                     {t('partners.noResults')}
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
                                     {filtered.map((p, i) => (
                                         <motion.a
                                             key={p.id}
                                             href={p.website || '#'}
-                                            target={p.website ? '_blank' : undefined}
-                                            rel={p.website ? 'noreferrer' : undefined}
+                                            target={
+                                                p.website ? '_blank' : undefined
+                                            }
+                                            rel={
+                                                p.website
+                                                    ? 'noreferrer'
+                                                    : undefined
+                                            }
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: i * 0.04 }}
-                                            className="bg-card rounded-2xl p-8 card-elevated flex flex-col items-center justify-center text-center group"
+                                            className="card-elevated group flex flex-col items-center justify-center rounded-2xl bg-card p-8 text-center"
                                         >
-                                            <div className="h-20 w-full flex items-center justify-center mb-4">
+                                            <div className="mb-4 flex h-20 w-full items-center justify-center">
                                                 <img
                                                     src={p.logo}
-                                                    alt={getPartnerName(p, lang)}
-                                                    className="max-h-16 max-w-full object-contain grayscale group-hover:grayscale-0 transition-all"
+                                                    alt={getPartnerName(
+                                                        p,
+                                                        lang,
+                                                    )}
+                                                    className="max-h-16 max-w-full object-contain grayscale transition-all group-hover:grayscale-0"
                                                     loading="lazy"
                                                 />
                                             </div>
@@ -232,7 +268,9 @@ const Partners = () => {
                                             </h3>
                                             {p.category && (
                                                 <p className="text-xs text-muted-foreground">
-                                                    {getCategoryLabel(p.category)}
+                                                    {getCategoryLabel(
+                                                        p.category,
+                                                    )}
                                                 </p>
                                             )}
                                         </motion.a>

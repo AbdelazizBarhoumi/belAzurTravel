@@ -41,7 +41,11 @@ type PartnerFormValues = {
     imagePath?: string;
 };
 
-function normalizeLocalizedText(value: unknown): { en: string; fr: string; ar: string } {
+function normalizeLocalizedText(value: unknown): {
+    en: string;
+    fr: string;
+    ar: string;
+} {
     if (typeof value === 'object' && value !== null) {
         const record = value as Record<string, unknown>;
         return {
@@ -59,7 +63,9 @@ const AdminPartners = () => {
     const { t, dir, lang } = useLanguage();
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminPartner | null>(null);
-    const [pendingDelete, setPendingDelete] = useState<AdminPartner | null>(null);
+    const [pendingDelete, setPendingDelete] = useState<AdminPartner | null>(
+        null,
+    );
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const previewRef = useRef<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -93,7 +99,10 @@ const AdminPartners = () => {
     const filtered = useMemo(() => {
         return partners.filter((p) => {
             const matchCat = filter === 'All' || p.category === filter;
-            const name = localizeText({ en: p.name_en, fr: p.name_fr, ar: p.name_ar }, lang).toLowerCase();
+            const name = localizeText(
+                { en: p.name_en, fr: p.name_fr, ar: p.name_ar },
+                lang,
+            ).toLowerCase();
             const matchQ = !query || name.includes(query.toLowerCase());
             return matchCat && matchQ;
         });
@@ -107,8 +116,16 @@ const AdminPartners = () => {
         () =>
             editing
                 ? {
-                      name: normalizeLocalizedText({ en: editing.name_en, fr: editing.name_fr, ar: editing.name_ar }),
-                      description: normalizeLocalizedText({ en: editing.description_en, fr: editing.description_fr, ar: editing.description_ar }),
+                      name: normalizeLocalizedText({
+                          en: editing.name_en,
+                          fr: editing.name_fr,
+                          ar: editing.name_ar,
+                      }),
+                      description: normalizeLocalizedText({
+                          en: editing.description_en,
+                          fr: editing.description_fr,
+                          ar: editing.description_ar,
+                      }),
                       website: editing.website ?? '',
                       category: editing.category ?? '',
                       imagePath: editing.image,
@@ -157,12 +174,16 @@ const AdminPartners = () => {
         };
 
         saveMutation.mutate(payload as unknown as AdminPartner);
-        toast.success(editing ? t('admin.partnerUpdated') : t('admin.partnerAdded'));
+        toast.success(
+            editing ? t('admin.partnerUpdated') : t('admin.partnerAdded'),
+        );
         setEditing(null);
         setOpen(false);
         setErrors({});
         if (previewRef.current) {
-            try { URL.revokeObjectURL(previewRef.current); } catch {}
+            try {
+                URL.revokeObjectURL(previewRef.current);
+            } catch {}
             previewRef.current = null;
             setPreviewUrl(null);
         }
@@ -201,7 +222,9 @@ const AdminPartners = () => {
                                             [currentLang]: event.target.value,
                                         })
                                     }
-                                    placeholder={t('admin.partnerForm.namePlaceholder')}
+                                    placeholder={t(
+                                        'admin.partnerForm.namePlaceholder',
+                                    )}
                                     className={`w-full rounded-lg border px-3 py-2 text-sm ${currentLang === 'ar' ? 'text-right' : 'text-left'} ${fieldError ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
                                 />
                                 {fieldError ? (
@@ -217,15 +240,23 @@ const AdminPartners = () => {
                                 </label>
                                 <textarea
                                     dir={currentLang === 'ar' ? 'rtl' : 'ltr'}
-                                    value={normalizeLocalizedText(values.description)[currentLang]}
+                                    value={
+                                        normalizeLocalizedText(
+                                            values.description,
+                                        )[currentLang]
+                                    }
                                     onChange={(event) => {
-                                        const desc = normalizeLocalizedText(values.description);
+                                        const desc = normalizeLocalizedText(
+                                            values.description,
+                                        );
                                         setField('description', {
                                             ...desc,
                                             [currentLang]: event.target.value,
                                         });
                                     }}
-                                    placeholder={t('admin.partnerForm.descriptionPlaceholder')}
+                                    placeholder={t(
+                                        'admin.partnerForm.descriptionPlaceholder',
+                                    )}
                                     rows={3}
                                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm transition-all focus:ring-2 focus:ring-primary/20"
                                 />
@@ -236,7 +267,9 @@ const AdminPartners = () => {
                                 </label>
                                 <input
                                     value={String(values.website ?? '')}
-                                    onChange={(e) => setField('website', e.target.value)}
+                                    onChange={(e) =>
+                                        setField('website', e.target.value)
+                                    }
                                     placeholder="https://example.com"
                                     className={`w-full rounded-lg border px-3 py-2 text-sm ${sectionErrors?.website ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
                                 />
@@ -253,11 +286,7 @@ const AdminPartners = () => {
             {
                 title: t('admin.galleryForm.classification'),
                 column: 'side',
-                render: ({
-                    values,
-                    setField,
-                    errors: sectionErrors,
-                }) => (
+                render: ({ values, setField, errors: sectionErrors }) => (
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-muted-foreground">
                             {t('admin.category')}
@@ -270,7 +299,9 @@ const AdminPartners = () => {
                                 className={`w-full rounded-lg border px-3 py-2 text-sm ${sectionErrors?.category ? 'border-destructive ring-1 ring-destructive' : 'border-border'}`}
                             >
                                 <SelectValue
-                                    placeholder={t('admin.blogForm.selectCategory')}
+                                    placeholder={t(
+                                        'admin.blogForm.selectCategory',
+                                    )}
                                 />
                             </SelectTrigger>
                             <SelectContent>
@@ -279,7 +310,9 @@ const AdminPartners = () => {
                                         key={category.key}
                                         value={category.key}
                                     >
-                                        {category.name?.[lang] || category.name?.en || category.key}
+                                        {category.name?.[lang] ||
+                                            category.name?.en ||
+                                            category.key}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -293,7 +326,12 @@ const AdminPartners = () => {
                         <div className="mt-4">
                             <ImagePicker
                                 label={t('admin.partnerForm.logo')}
-                                value={(values.imageFile as File | null) ?? (values.imagePath as string) ?? editing?.image ?? null}
+                                value={
+                                    (values.imageFile as File | null) ??
+                                    (values.imagePath as string) ??
+                                    editing?.image ??
+                                    null
+                                }
                                 onChange={(file) => setField('imageFile', file)}
                                 error={sectionErrors?.imageFile}
                             />
@@ -324,7 +362,9 @@ const AdminPartners = () => {
                             setErrors({});
                             setActiveLang('en');
                             if (previewRef.current) {
-                                try { URL.revokeObjectURL(previewRef.current); } catch {}
+                                try {
+                                    URL.revokeObjectURL(previewRef.current);
+                                } catch {}
                                 previewRef.current = null;
                             }
                             setPreviewUrl(null);
@@ -427,8 +467,11 @@ const AdminPartners = () => {
                                     <td className="px-4 py-3 text-center">
                                         <span className="inline-block rounded-full bg-muted px-2 py-1 text-xs">
                                             {dbCategories.find(
-                                                (c: any) => c.key === d.category,
-                                            )?.name?.[lang] ?? d.category ?? '—'}
+                                                (c: any) =>
+                                                    c.key === d.category,
+                                            )?.name?.[lang] ??
+                                                d.category ??
+                                                '—'}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
@@ -453,8 +496,13 @@ const AdminPartners = () => {
                                                     setErrors({});
                                                     setActiveLang('en');
                                                     if (previewRef.current) {
-                                                        try { URL.revokeObjectURL(previewRef.current); } catch {}
-                                                        previewRef.current = null;
+                                                        try {
+                                                            URL.revokeObjectURL(
+                                                                previewRef.current,
+                                                            );
+                                                        } catch {}
+                                                        previewRef.current =
+                                                            null;
                                                     }
                                                     setPreviewUrl(null);
                                                     setOpen(true);
@@ -464,7 +512,9 @@ const AdminPartners = () => {
                                                 <Edit className="h-4 w-4 text-muted-foreground" />
                                             </button>
                                             <button
-                                                onClick={() => setPendingDelete(d)}
+                                                onClick={() =>
+                                                    setPendingDelete(d)
+                                                }
                                                 className="rounded-lg p-1.5 hover:bg-destructive/10"
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -505,7 +555,9 @@ const AdminPartners = () => {
                     if (!isOpen) {
                         setErrors({});
                         if (previewRef.current) {
-                            try { URL.revokeObjectURL(previewRef.current); } catch {}
+                            try {
+                                URL.revokeObjectURL(previewRef.current);
+                            } catch {}
                             previewRef.current = null;
                         }
                         setPreviewUrl(null);
@@ -513,13 +565,13 @@ const AdminPartners = () => {
                     }
                 }}
                 title={
-                    editing ? t('admin.partnerEditTitle') : t('admin.partnerAddTitle')
+                    editing
+                        ? t('admin.partnerEditTitle')
+                        : t('admin.partnerAddTitle')
                 }
                 sections={partnerSections}
                 initial={dialogInitial}
-                onSubmit={(values) =>
-                    handleSave(values as PartnerFormValues)
-                }
+                onSubmit={(values) => handleSave(values as PartnerFormValues)}
                 errors={errors}
                 languages={PARTNER_LANGUAGES}
                 activeLang={activeLang}

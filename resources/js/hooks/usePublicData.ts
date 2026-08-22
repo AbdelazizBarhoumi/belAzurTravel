@@ -500,7 +500,10 @@ export function useHotelSearch(query?: HotelSearchQuery) {
     });
 }
 
-export type HotelSearchInfiniteQuery = Omit<HotelSearchQuery, 'page' | 'per_page'>;
+export type HotelSearchInfiniteQuery = Omit<
+    HotelSearchQuery,
+    'page' | 'per_page'
+>;
 
 export function useHotelSearchInfinite(baseQuery?: HotelSearchInfiniteQuery) {
     return useInfiniteQuery<{
@@ -526,7 +529,9 @@ export function useHotelSearchInfinite(baseQuery?: HotelSearchInfiniteQuery) {
             lastPage.meta.current_page < lastPage.meta.last_page
                 ? lastPage.meta.current_page + 1
                 : undefined,
-        enabled: Boolean(baseQuery && baseQuery.check_in && baseQuery.check_out),
+        enabled: Boolean(
+            baseQuery && baseQuery.check_in && baseQuery.check_out,
+        ),
         staleTime: 1000 * 60 * 5,
         initialPageParam: 1,
     });

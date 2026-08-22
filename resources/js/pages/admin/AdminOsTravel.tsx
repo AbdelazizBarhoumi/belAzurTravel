@@ -1,11 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import {
-    Eye,
-    Loader2,
-    Star,
-    Trash2,
-    Undo2,
-} from 'lucide-react';
+import { Eye, Loader2, Star, Trash2, Undo2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
@@ -160,8 +154,11 @@ const AdminOsTravel = () => {
         }
         return f;
     }, [status, city, countryId, cityId, starsFilter, dateRange]);
-    const { data: hotels = [], isLoading, isFetching } =
-        useOsTravelHotels(filters);
+    const {
+        data: hotels = [],
+        isLoading,
+        isFetching,
+    } = useOsTravelHotels(filters);
     const { data: detail, isFetching: detailLoading } =
         useOsTravelHotelDetail(detailId);
 
@@ -351,8 +348,8 @@ const AdminOsTravel = () => {
                                 <p className="mt-1 text-xs text-muted-foreground">
                                     {dashboard.last_sync.finished_at
                                         ? new Date(
-                                            dashboard.last_sync.finished_at,
-                                        ).toLocaleString()
+                                              dashboard.last_sync.finished_at,
+                                          ).toLocaleString()
                                         : t('osTravel.syncRunning')}
                                     {dashboard.last_sync.error
                                         ? ` · ${dashboard.last_sync.error}`
@@ -369,7 +366,9 @@ const AdminOsTravel = () => {
                                 <span className="rounded-full bg-destructive/10 px-3 py-1 text-xs font-semibold text-destructive">
                                     {t('osTravel.orphanedBadge').replace(
                                         '{count}',
-                                        String(dashboard.last_sync.orphaned_count),
+                                        String(
+                                            dashboard.last_sync.orphaned_count,
+                                        ),
                                     )}
                                 </span>
                             )}
@@ -392,11 +391,14 @@ const AdminOsTravel = () => {
                                 <button
                                     key={s}
                                     type="button"
-                                    onClick={() => setStatus(s === 'all' ? '' : s)}
-                                    className={`rounded-xl border p-3 text-start transition-colors ${status === (s === 'all' ? '' : s)
+                                    onClick={() =>
+                                        setStatus(s === 'all' ? '' : s)
+                                    }
+                                    className={`rounded-xl border p-3 text-start transition-colors ${
+                                        status === (s === 'all' ? '' : s)
                                             ? 'border-primary bg-primary/5'
                                             : 'border-border bg-background hover:bg-muted/20'
-                                        }`}
+                                    }`}
                                 >
                                     <p className="text-2xl font-bold text-foreground">
                                         {s === 'all'
@@ -424,8 +426,13 @@ const AdminOsTravel = () => {
                         value={countryId}
                         onValueChange={handleCountryChange}
                     >
-                        <SelectTrigger className="w-44" aria-label={t('osTravel.filterCountry')}>
-                            <SelectValue placeholder={t('osTravel.filterCountry')} />
+                        <SelectTrigger
+                            className="w-44"
+                            aria-label={t('osTravel.filterCountry')}
+                        >
+                            <SelectValue
+                                placeholder={t('osTravel.filterCountry')}
+                            />
                         </SelectTrigger>
                         <SelectContent>
                             {countryOptions.map((c) => (
@@ -438,10 +445,17 @@ const AdminOsTravel = () => {
                     <Select
                         value={cityId}
                         onValueChange={setCityId}
-                        disabled={Boolean(countryId) && availableCities.length === 0}
+                        disabled={
+                            Boolean(countryId) && availableCities.length === 0
+                        }
                     >
-                        <SelectTrigger className="w-44" aria-label={t('osTravel.filterCitySelect')}>
-                            <SelectValue placeholder={t('osTravel.filterCitySelect')} />
+                        <SelectTrigger
+                            className="w-44"
+                            aria-label={t('osTravel.filterCitySelect')}
+                        >
+                            <SelectValue
+                                placeholder={t('osTravel.filterCitySelect')}
+                            />
                         </SelectTrigger>
                         <SelectContent>
                             {availableCities.map((c) => (
@@ -528,259 +542,272 @@ const AdminOsTravel = () => {
                             <tbody>
                                 {isLoading
                                     ? Array.from({ length: 6 }).map((_, i) => (
-                                        <tr
-                                            key={`os-travel-skeleton-${i}`}
-                                            className="border-b border-border last:border-0"
-                                        >
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    <Skeleton className="h-10 w-14 rounded-lg" />
-                                                    <div className="space-y-2">
-                                                        <Skeleton className="h-3.5 w-40" />
-                                                        <Skeleton className="h-3 w-24" />
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Skeleton className="h-3.5 w-24" />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Skeleton className="h-3.5 w-24" />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Skeleton className="h-3.5 w-8" />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Skeleton className="h-3.5 w-28" />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Skeleton className="h-5 w-20 rounded-full" />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Skeleton className="h-5 w-20 rounded-full" />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Skeleton className="h-5 w-16 rounded-full" />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Skeleton className="h-8 w-8 rounded-lg" />
-                                                    <Skeleton className="h-8 w-8 rounded-lg" />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                                          <tr
+                                              key={`os-travel-skeleton-${i}`}
+                                              className="border-b border-border last:border-0"
+                                          >
+                                              <td className="px-4 py-3">
+                                                  <div className="flex items-center gap-3">
+                                                      <Skeleton className="h-10 w-14 rounded-lg" />
+                                                      <div className="space-y-2">
+                                                          <Skeleton className="h-3.5 w-40" />
+                                                          <Skeleton className="h-3 w-24" />
+                                                      </div>
+                                                  </div>
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-24" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-24" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-8" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-3.5 w-28" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-5 w-20 rounded-full" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-5 w-20 rounded-full" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <Skeleton className="h-5 w-16 rounded-full" />
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <div className="flex items-center gap-2">
+                                                      <Skeleton className="h-8 w-8 rounded-lg" />
+                                                      <Skeleton className="h-8 w-8 rounded-lg" />
+                                                  </div>
+                                              </td>
+                                          </tr>
+                                      ))
                                     : filteredHotels.map((h) => (
-                                        <tr
-                                            key={h.id}
-                                            className="border-b border-border last:border-0 hover:bg-muted/20"
-                                        >
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-3">
-                                                    {h.image && (
-                                                        <img
-                                                            src={h.image}
-                                                            alt={h.name}
-                                                            className="h-10 w-14 rounded-lg object-cover"
-                                                            onError={(e) => {
-                                                                e.currentTarget.style.display =
-                                                                    'none';
-                                                            }}
-                                                        />
-                                                    )}
-                                                    <div>
-                                                        <p className="text-sm font-medium text-foreground">
-                                                            {h.name}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-sm text-muted-foreground">
-                                                {h.city_name}
-                                            </td>
-                                            <td className="px-4 py-3 text-sm text-muted-foreground">
-                                                {h.country_name}
-                                            </td>
-                                            <td className="px-4 py-3 text-sm">
-                                                <span className="flex items-center gap-1">
-                                                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                                                    {h.stars}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-sm text-muted-foreground">
-                                                {h.category_title}
-                                            </td>
-                                            <td className="px-4 py-3 text-sm">
-                                                {h.base_price !== null ? (
-                                                    <span className="font-medium">
-                                                        {h.base_price}{' '}
-                                                        {h.live_currency ??
-                                                            h.currency ??
-                                                            'TND'}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-muted-foreground">
-                                                        —
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3 text-sm">
-                                                {h.final_price !== null ? (
-                                                    <span className="font-semibold text-emerald-600">
-                                                        {h.final_price}{' '}
-                                                        {h.live_currency ??
-                                                            h.currency ??
-                                                            'TND'}
-                                                    </span>
-                                                ) : h.live_status &&
-                                                    liveStatusMeta[h.live_status] ? (
-                                                    <div
-                                                        className="flex flex-col gap-0.5"
-                                                        title={
-                                                            h.live_reason ??
-                                                            undefined
-                                                        }
-                                                    >
-                                                        <span className="text-muted-foreground">
-                                                            —
-                                                        </span>
-                                                        <span
-                                                            className={`text-[10px] font-semibold ${liveStatusMeta[h.live_status].className}`}
-                                                        >
-                                                            {t(
-                                                                liveStatusMeta[
-                                                                    h.live_status
-                                                                ].labelKey,
-                                                            )}
-                                                        </span>
-                                                        {h.live_status ===
-                                                            'stop_sale' &&
-                                                            h.live_until && (
-                                                                <span className="text-[10px] text-muted-foreground">
-                                                                    {t(
-                                                                        'osTravel.liveStatus.availableFrom',
-                                                                    )}{' '}
-                                                                    {displayDate(
-                                                                        h.live_until,
-                                                                    )}
-                                                                </span>
-                                                            )}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-muted-foreground">
-                                                        —
-                                                    </span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-2">
-                                                    <span
-                                                        className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[h.status] || ''}`}
-                                                    >
-                                                        {t(
-                                                            `osTravel.status.${h.status}`,
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            openPreview(h)
-                                                        }
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                        <span className="sr-only">
-                                                            {t('osTravel.preview')}
-                                                        </span>
-                                                    </Button>
-                                                    {(h.status === 'pending' || h.status === 'rejected') && (
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                openPreview(h)
-                                                            }
-                                                        >
-                                                            {t('osTravel.approve')}
-                                                        </Button>
-                                                    )}
-                                                    {h.status === 'approved' && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() =>
-                                                                setUnapproveId(
-                                                                    h.id,
-                                                                )
-                                                            }
-                                                            aria-label={t(
-                                                                'osTravel.unapprove',
-                                                            )}
-                                                        >
-                                                            <Undo2 className="h-4 w-4" />
-                                                            <span className="sr-only">
-                                                                {t(
-                                                                    'osTravel.unapprove',
-                                                                )}
-                                                            </span>
-                                                        </Button>
-                                                    )}
-                                                    {!h.hotel_id && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant={
-                                                                h.status ===
-                                                                    'rejected'
-                                                                    ? 'outline'
-                                                                    : 'destructive'
-                                                            }
-                                                            onClick={() =>
-                                                                h.status ===
-                                                                    'rejected'
-                                                                    ? setReopenId(
-                                                                        h.id,
-                                                                    )
-                                                                    : setRejectId(
-                                                                        h.id,
-                                                                    )
-                                                            }
-                                                            aria-label={
-                                                                h.status ===
-                                                                    'rejected'
-                                                                    ? t(
-                                                                        'osTravel.reopen',
-                                                                    )
-                                                                    : t(
-                                                                        'osTravel.reject',
-                                                                    )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                            <span className="sr-only">
-                                                                {t(
-                                                                    h.status ===
-                                                                        'rejected'
-                                                                        ? 'osTravel.reopen'
-                                                                        : 'osTravel.reject',
-                                                                )}
-                                                            </span>
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                          <tr
+                                              key={h.id}
+                                              className="border-b border-border last:border-0 hover:bg-muted/20"
+                                          >
+                                              <td className="px-4 py-3">
+                                                  <div className="flex items-center gap-3">
+                                                      {h.image && (
+                                                          <img
+                                                              src={h.image}
+                                                              alt={h.name}
+                                                              className="h-10 w-14 rounded-lg object-cover"
+                                                              onError={(e) => {
+                                                                  e.currentTarget.style.display =
+                                                                      'none';
+                                                              }}
+                                                          />
+                                                      )}
+                                                      <div>
+                                                          <p className="text-sm font-medium text-foreground">
+                                                              {h.name}
+                                                          </p>
+                                                      </div>
+                                                  </div>
+                                              </td>
+                                              <td className="px-4 py-3 text-sm text-muted-foreground">
+                                                  {h.city_name}
+                                              </td>
+                                              <td className="px-4 py-3 text-sm text-muted-foreground">
+                                                  {h.country_name}
+                                              </td>
+                                              <td className="px-4 py-3 text-sm">
+                                                  <span className="flex items-center gap-1">
+                                                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                                      {h.stars}
+                                                  </span>
+                                              </td>
+                                              <td className="px-4 py-3 text-sm text-muted-foreground">
+                                                  {h.category_title}
+                                              </td>
+                                              <td className="px-4 py-3 text-sm">
+                                                  {h.base_price !== null ? (
+                                                      <span className="font-medium">
+                                                          {h.base_price}{' '}
+                                                          {h.live_currency ??
+                                                              h.currency ??
+                                                              'TND'}
+                                                      </span>
+                                                  ) : (
+                                                      <span className="text-muted-foreground">
+                                                          —
+                                                      </span>
+                                                  )}
+                                              </td>
+                                              <td className="px-4 py-3 text-sm">
+                                                  {h.final_price !== null ? (
+                                                      <span className="font-semibold text-emerald-600">
+                                                          {h.final_price}{' '}
+                                                          {h.live_currency ??
+                                                              h.currency ??
+                                                              'TND'}
+                                                      </span>
+                                                  ) : h.live_status &&
+                                                    liveStatusMeta[
+                                                        h.live_status
+                                                    ] ? (
+                                                      <div
+                                                          className="flex flex-col gap-0.5"
+                                                          title={
+                                                              h.live_reason ??
+                                                              undefined
+                                                          }
+                                                      >
+                                                          <span className="text-muted-foreground">
+                                                              —
+                                                          </span>
+                                                          <span
+                                                              className={`text-[10px] font-semibold ${liveStatusMeta[h.live_status].className}`}
+                                                          >
+                                                              {t(
+                                                                  liveStatusMeta[
+                                                                      h
+                                                                          .live_status
+                                                                  ].labelKey,
+                                                              )}
+                                                          </span>
+                                                          {h.live_status ===
+                                                              'stop_sale' &&
+                                                              h.live_until && (
+                                                                  <span className="text-[10px] text-muted-foreground">
+                                                                      {t(
+                                                                          'osTravel.liveStatus.availableFrom',
+                                                                      )}{' '}
+                                                                      {displayDate(
+                                                                          h.live_until,
+                                                                      )}
+                                                                  </span>
+                                                              )}
+                                                      </div>
+                                                  ) : (
+                                                      <span className="text-muted-foreground">
+                                                          —
+                                                      </span>
+                                                  )}
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <div className="flex items-center gap-2">
+                                                      <span
+                                                          className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[h.status] || ''}`}
+                                                      >
+                                                          {t(
+                                                              `osTravel.status.${h.status}`,
+                                                          )}
+                                                      </span>
+                                                  </div>
+                                              </td>
+                                              <td className="px-4 py-3">
+                                                  <div className="flex items-center gap-2">
+                                                      <Button
+                                                          size="sm"
+                                                          variant="outline"
+                                                          onClick={() =>
+                                                              openPreview(h)
+                                                          }
+                                                      >
+                                                          <Eye className="h-4 w-4" />
+                                                          <span className="sr-only">
+                                                              {t(
+                                                                  'osTravel.preview',
+                                                              )}
+                                                          </span>
+                                                      </Button>
+                                                      {(h.status ===
+                                                          'pending' ||
+                                                          h.status ===
+                                                              'rejected') && (
+                                                          <Button
+                                                              size="sm"
+                                                              onClick={() =>
+                                                                  openPreview(h)
+                                                              }
+                                                          >
+                                                              {t(
+                                                                  'osTravel.approve',
+                                                              )}
+                                                          </Button>
+                                                      )}
+                                                      {h.status ===
+                                                          'approved' && (
+                                                          <Button
+                                                              size="sm"
+                                                              variant="outline"
+                                                              onClick={() =>
+                                                                  setUnapproveId(
+                                                                      h.id,
+                                                                  )
+                                                              }
+                                                              aria-label={t(
+                                                                  'osTravel.unapprove',
+                                                              )}
+                                                          >
+                                                              <Undo2 className="h-4 w-4" />
+                                                              <span className="sr-only">
+                                                                  {t(
+                                                                      'osTravel.unapprove',
+                                                                  )}
+                                                              </span>
+                                                          </Button>
+                                                      )}
+                                                      {!h.hotel_id && (
+                                                          <Button
+                                                              size="sm"
+                                                              variant={
+                                                                  h.status ===
+                                                                  'rejected'
+                                                                      ? 'outline'
+                                                                      : 'destructive'
+                                                              }
+                                                              onClick={() =>
+                                                                  h.status ===
+                                                                  'rejected'
+                                                                      ? setReopenId(
+                                                                            h.id,
+                                                                        )
+                                                                      : setRejectId(
+                                                                            h.id,
+                                                                        )
+                                                              }
+                                                              aria-label={
+                                                                  h.status ===
+                                                                  'rejected'
+                                                                      ? t(
+                                                                            'osTravel.reopen',
+                                                                        )
+                                                                      : t(
+                                                                            'osTravel.reject',
+                                                                        )
+                                                              }
+                                                          >
+                                                              <Trash2 className="h-4 w-4" />
+                                                              <span className="sr-only">
+                                                                  {t(
+                                                                      h.status ===
+                                                                          'rejected'
+                                                                          ? 'osTravel.reopen'
+                                                                          : 'osTravel.reject',
+                                                                  )}
+                                                              </span>
+                                                          </Button>
+                                                      )}
+                                                  </div>
+                                              </td>
+                                          </tr>
+                                      ))}
                             </tbody>
                         </table>
                     </div>
-                    {!isLoading && !isFetching && filteredHotels.length === 0 && (
-                        <p className="p-8 text-center text-muted-foreground">
-                            {t('osTravel.emptyState')}
-                        </p>
-                    )}
+                    {!isLoading &&
+                        !isFetching &&
+                        filteredHotels.length === 0 && (
+                            <p className="p-8 text-center text-muted-foreground">
+                                {t('osTravel.emptyState')}
+                            </p>
+                        )}
                 </div>
 
                 {/* Preview dialog */}
@@ -793,12 +820,12 @@ const AdminOsTravel = () => {
                             <DialogDescription>
                                 {preview
                                     ? [
-                                        preview.city,
-                                        preview.country,
-                                        preview.category,
-                                    ]
-                                        .filter(Boolean)
-                                        .join(' · ')
+                                          preview.city,
+                                          preview.country,
+                                          preview.category,
+                                      ]
+                                          .filter(Boolean)
+                                          .join(' · ')
                                     : activeHotel?.city_name}
                                 {activeHotel?.stars
                                     ? ` · ${activeHotel.stars}★`
@@ -851,7 +878,8 @@ const AdminOsTravel = () => {
                                             alt={preview.name}
                                             className="h-44 w-full rounded-xl object-cover"
                                             onError={(e) => {
-                                                e.currentTarget.style.display = 'none';
+                                                e.currentTarget.style.display =
+                                                    'none';
                                             }}
                                         />
                                     )}
@@ -898,7 +926,9 @@ const AdminOsTravel = () => {
                                         <div className="mt-3 grid gap-3 sm:grid-cols-2">
                                             <div className="space-y-1">
                                                 <label className="text-xs font-medium text-muted-foreground">
-                                                    {t('admin.markupPercentage')}
+                                                    {t(
+                                                        'admin.markupPercentage',
+                                                    )}
                                                 </label>
                                                 <Input
                                                     type="number"
@@ -912,7 +942,8 @@ const AdminOsTravel = () => {
                                                     onChange={(e) =>
                                                         setPriceForm((p) => ({
                                                             ...p,
-                                                            markup: e.target.value,
+                                                            markup: e.target
+                                                                .value,
                                                         }))
                                                     }
                                                 />
@@ -963,13 +994,13 @@ const AdminOsTravel = () => {
                                 activeHotel?.status === 'rejected' ||
                                 (activeHotel?.status === 'approved' &&
                                     !activeHotel?.hotel_id)) && (
-                                    <Button
-                                        disabled={approveMutation.isPending}
-                                        onClick={() => approveMutation.mutate()}
-                                    >
-                                        {t('osTravel.approve')}
-                                    </Button>
-                                )}
+                                <Button
+                                    disabled={approveMutation.isPending}
+                                    onClick={() => approveMutation.mutate()}
+                                >
+                                    {t('osTravel.approve')}
+                                </Button>
+                            )}
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -1047,7 +1078,9 @@ const AdminOsTravel = () => {
                                     htmlFor="approve-without-image"
                                     className="cursor-pointer text-sm font-normal leading-relaxed"
                                 >
-                                    {t('osTravel.preflightIncludeImage').replace(
+                                    {t(
+                                        'osTravel.preflightIncludeImage',
+                                    ).replace(
                                         '{count}',
                                         String(pendingWithoutImage),
                                     )}

@@ -127,7 +127,10 @@ const AdminUsers = () => {
     };
 
     return (
-        <AdminLayout title={t('admin.users')} subtitle={t('admin.usersSubtitle')}>
+        <AdminLayout
+            title={t('admin.users')}
+            subtitle={t('admin.usersSubtitle')}
+        >
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex max-w-md flex-1 items-center gap-2">
                     <div className="relative w-full">
@@ -156,13 +159,21 @@ const AdminUsers = () => {
                             <SelectValue placeholder={t('admin.allRoles')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">{t('admin.allRoles')}</SelectItem>
-                            <SelectItem value="client">{t('auth.client')}</SelectItem>
-                            <SelectItem value="admin">{t('auth.admin')}</SelectItem>
+                            <SelectItem value="all">
+                                {t('admin.allRoles')}
+                            </SelectItem>
+                            <SelectItem value="client">
+                                {t('auth.client')}
+                            </SelectItem>
+                            <SelectItem value="admin">
+                                {t('auth.admin')}
+                            </SelectItem>
                             <SelectItem value="superadmin">
                                 {t('auth.superadmin')}
                             </SelectItem>
-                            <SelectItem value="owner">{t('auth.owner')}</SelectItem>
+                            <SelectItem value="owner">
+                                {t('auth.owner')}
+                            </SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -477,8 +488,8 @@ const UserEditDialog = ({
                                 ))}
                                 {!availableRoles.includes(role) && (
                                     <SelectItem value={role} disabled>
-                                            <span className="capitalize">
-                                                {role} {t('admin.restricted')}
+                                        <span className="capitalize">
+                                            {role} {t('admin.restricted')}
                                         </span>
                                     </SelectItem>
                                 )}
@@ -496,7 +507,9 @@ const UserEditDialog = ({
                             {t('actions.cancel')}
                         </Button>
                         <Button type="submit" disabled={isSaving}>
-                            {isSaving && <Loader2 className="mr-1 h-4 w-4 animate-spin" />}
+                            {isSaving && (
+                                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                            )}
                             {t('admin.saveChanges')}
                         </Button>
                     </DialogFooter>

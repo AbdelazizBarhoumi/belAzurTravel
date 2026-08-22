@@ -1164,8 +1164,16 @@ export const translations: Record<string, TranslationEntry> = {
     'common.call': { fr: 'Appeler', ar: 'اتصال', en: 'Call' },
     'common.travelers': { fr: 'voyageurs', ar: 'مسافرون', en: 'travelers' },
     'common.search': { fr: 'Rechercher...', ar: 'بحث...', en: 'Search...' },
-    'common.loading': { fr: 'Chargement...', ar: 'جاري التحميل...', en: 'Loading...' },
-    'common.loadMore': { fr: 'Charger plus', ar: 'تحميل المزيد', en: 'Load more' },
+    'common.loading': {
+        fr: 'Chargement...',
+        ar: 'جاري التحميل...',
+        en: 'Loading...',
+    },
+    'common.loadMore': {
+        fr: 'Charger plus',
+        ar: 'تحميل المزيد',
+        en: 'Load more',
+    },
     'common.results': { fr: 'résultats', ar: 'نتائج', en: 'results' },
     'common.noResults': {
         fr: 'Aucun résultat trouvé.',
@@ -4826,7 +4834,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Our team reviews availability, usually within 24 hours.',
     },
     'booking.nextStepPayment': {
-        fr: 'Aucun paiement ne sera prélevé tant que votre réservation n\'est pas confirmée.',
+        fr: "Aucun paiement ne sera prélevé tant que votre réservation n'est pas confirmée.",
         ar: 'لن يتم تحصيل أي مبلغ حتى يتم تأكيد حجزك.',
         en: 'No payment is taken until your booking is confirmed.',
     },

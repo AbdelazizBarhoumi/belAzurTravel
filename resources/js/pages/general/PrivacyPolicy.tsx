@@ -14,13 +14,19 @@ interface StoredLegal {
 const PrivacyPolicy = () => {
     const { lang, t } = useLanguage();
     const { settings } = useSiteSettings();
-    const content = settings.content as Record<string, unknown> & { privacy_policy?: StoredLegal };
+    const content = settings.content as Record<string, unknown> & {
+        privacy_policy?: StoredLegal;
+    };
     const stored = content?.privacy_policy;
 
     const title = stored?.title?.[lang] || t('nav.privacy-policy');
     const body = stored ? normalizeLegalBody(stored.body) : null;
     const bodyContent = body
-        ? body.content[lang] || body.content.en || body.content.fr || body.content.ar || ''
+        ? body.content[lang] ||
+          body.content.en ||
+          body.content.fr ||
+          body.content.ar ||
+          ''
         : '';
 
     return (
@@ -39,9 +45,15 @@ const PrivacyPolicy = () => {
                             {title}
                         </h2>
                         {body?.format === 'richtext' ? (
-                            <RichTextRenderer html={bodyContent} className="text-muted-foreground" />
+                            <RichTextRenderer
+                                html={bodyContent}
+                                className="text-muted-foreground"
+                            />
                         ) : (
-                            <MarkdownRenderer content={bodyContent} className="text-muted-foreground" />
+                            <MarkdownRenderer
+                                content={bodyContent}
+                                className="text-muted-foreground"
+                            />
                         )}
                     </div>
                 ) : (

@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BookingDialog } from '@/components/forms/BookingDialog';
@@ -60,7 +66,9 @@ const providerOffer = {
     ],
 };
 
-function renderDialog(overrides: Partial<React.ComponentProps<typeof BookingDialog>> = {}) {
+function renderDialog(
+    overrides: Partial<React.ComponentProps<typeof BookingDialog>> = {},
+) {
     return render(
         <QueryClientProvider client={queryClient}>
             <LanguageProvider>
@@ -115,7 +123,9 @@ describe('BookingDialog passenger form', () => {
         await screen.findAllByLabelText(/Prénom|First name/);
         const setField = (index: number, field: string, value: string) =>
             fireEvent.change(
-                document.getElementById(`pax-${index}-${field}`) as HTMLInputElement,
+                document.getElementById(
+                    `pax-${index}-${field}`,
+                ) as HTMLInputElement,
                 { target: { value } },
             );
 
@@ -139,10 +149,18 @@ describe('BookingDialog passenger form', () => {
                         Surname: string;
                         Holder: boolean;
                     }>;
-                    children: Array<{ Name: string; Surname: string; Age: number }>;
+                    children: Array<{
+                        Name: string;
+                        Surname: string;
+                        Age: number;
+                    }>;
                 };
                 search: { check_in: string; check_out: string };
-                rooms: Array<{ id: number; boarding_id: number; view_ids: number[] }>;
+                rooms: Array<{
+                    id: number;
+                    boarding_id: number;
+                    view_ids: number[];
+                }>;
                 options: number[];
             };
             start_date: string;

@@ -282,7 +282,9 @@ describe('AdminOsTravel page', () => {
         expect(
             await screen.findByText('A lovely resort by the sea.'),
         ).toBeInTheDocument();
-        expect(screen.getByText('Half Board, All Inclusive')).toBeInTheDocument();
+        expect(
+            screen.getByText('Half Board, All Inclusive'),
+        ).toBeInTheDocument();
     });
 
     it('opens the preview dialog and saves markup + currency without approving', async () => {
@@ -360,9 +362,7 @@ describe('AdminOsTravel page', () => {
 
         await screen.findByText('Hotel Test');
 
-        fireEvent.click(
-            screen.getByRole('button', { name: /Pending/i }),
-        );
+        fireEvent.click(screen.getByRole('button', { name: /Pending/i }));
 
         const approveAll = screen.getByRole('button', {
             name: 'Approve All',
@@ -378,14 +378,10 @@ describe('AdminOsTravel page', () => {
         fireEvent.click(warningCheckbox);
         expect(warningCheckbox).toBeChecked();
 
-        fireEvent.click(
-            screen.getByRole('button', { name: 'Approve All' }),
-        );
+        fireEvent.click(screen.getByRole('button', { name: 'Approve All' }));
 
         await waitFor(() => {
-            expect(
-                osTravelApi.approveAllOsTravelHotels,
-            ).toHaveBeenCalledWith({
+            expect(osTravelApi.approveAllOsTravelHotels).toHaveBeenCalledWith({
                 include_without_image: true,
                 status: 'pending',
             });
@@ -422,9 +418,9 @@ describe('AdminOsTravel page', () => {
         expect(
             screen.getAllByRole('button', { name: 'Approve' }).length,
         ).toBeGreaterThan(0);
-        expect(
-            screen.queryAllByRole('button', { name: 'Reject' }).length,
-        ).toBe(0);
+        expect(screen.queryAllByRole('button', { name: 'Reject' }).length).toBe(
+            0,
+        );
     });
 
     it('returns a rejected hotel to pending through the trash button', async () => {
@@ -541,9 +537,7 @@ describe('AdminOsTravel page', () => {
             });
         });
 
-        expect(
-            await screen.findByText('Needs at least'),
-        ).toBeInTheDocument();
+        expect(await screen.findByText('Needs at least')).toBeInTheDocument();
     });
 
     it('sends country and city filters to the hotels endpoint', async () => {
@@ -555,9 +549,7 @@ describe('AdminOsTravel page', () => {
             name: /country/i,
         });
         fireEvent.click(countrySelect);
-        fireEvent.click(
-            await screen.findByRole('option', { name: 'Tunisia' }),
-        );
+        fireEvent.click(await screen.findByRole('option', { name: 'Tunisia' }));
 
         await waitFor(() => {
             expect(osTravelApi.listOsTravelHotels).toHaveBeenCalledWith(

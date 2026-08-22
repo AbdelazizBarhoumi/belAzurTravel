@@ -1,9 +1,4 @@
-import {
-    Baby,
-    BedDouble,
-    Info,
-    User,
-} from 'lucide-react';
+import { Baby, BedDouble, Info, User } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { Occupancy } from '@/components/hotel/OccupancyPicker';
 import { Button } from '@/components/ui/button';
@@ -184,7 +179,9 @@ export function RoomRatesTable({
                     {occupancy.childAges.map((_, i) => (
                         <Baby key={i} className="h-3.5 w-3.5" />
                     ))}
-                    {occupancy.rooms > 1 && <span className="ml-1">× {occupancy.rooms}</span>}
+                    {occupancy.rooms > 1 && (
+                        <span className="ml-1">× {occupancy.rooms}</span>
+                    )}
                 </span>
             </div>
 
@@ -225,14 +222,16 @@ export function RoomRatesTable({
                                 ) : null}
                                 {group.features?.length ? (
                                     <div className="mt-1.5 flex flex-wrap gap-1">
-                                        {group.features.slice(0, 5).map((feature) => (
-                                            <span
-                                                key={feature}
-                                                className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
-                                            >
-                                                {feature}
-                                            </span>
-                                        ))}
+                                        {group.features
+                                            .slice(0, 5)
+                                            .map((feature) => (
+                                                <span
+                                                    key={feature}
+                                                    className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                                                >
+                                                    {feature}
+                                                </span>
+                                            ))}
                                     </div>
                                 ) : null}
                             </div>
@@ -245,7 +244,8 @@ export function RoomRatesTable({
                                 const selKey = `${group.key}::${idx}`;
                                 const isSelected = selected === selKey;
                                 const total =
-                                    (rate.priceTotal ?? rate.pricePerNight) * occupancy.rooms;
+                                    (rate.priceTotal ?? rate.pricePerNight) *
+                                    occupancy.rooms;
                                 const totalPromo = promoPrice(total, promoRate);
 
                                 return (
@@ -276,31 +276,45 @@ export function RoomRatesTable({
                                         <div className="min-w-[140px] flex-1">
                                             <p className="text-sm font-semibold text-foreground">
                                                 {rate.boardingName ||
-                                                    t('hotelDetail.standardBoarding')}
+                                                    t(
+                                                        'hotelDetail.standardBoarding',
+                                                    )}
                                             </p>
 
                                             <div className="mt-1 flex flex-wrap gap-1.5">
                                                 {rate.onRequest ? (
                                                     <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
-                                                        {t('hotelDetail.onRequest')}
+                                                        {t(
+                                                            'hotelDetail.onRequest',
+                                                        )}
                                                     </span>
                                                 ) : (
                                                     <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                                                        {t('hotelDetail.available')}
+                                                        {t(
+                                                            'hotelDetail.available',
+                                                        )}
                                                     </span>
                                                 )}
                                                 {rate.notRefundable && (
                                                     <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                                                        {t('hotelDetail.nonRefundable')}
+                                                        {t(
+                                                            'hotelDetail.nonRefundable',
+                                                        )}
                                                     </span>
                                                 )}
                                                 {rate.cancellationDeadline && (
                                                     <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                                                        {t('hotelDetail.freeCancellationUntil')}{' '}
-                                                        {formatBadgeDate(rate.cancellationDeadline, lang)}
+                                                        {t(
+                                                            'hotelDetail.freeCancellationUntil',
+                                                        )}{' '}
+                                                        {formatBadgeDate(
+                                                            rate.cancellationDeadline,
+                                                            lang,
+                                                        )}
                                                     </span>
                                                 )}
-                                                {rate.cancellationPolicy?.length ? (
+                                                {rate.cancellationPolicy
+                                                    ?.length ? (
                                                     <Popover>
                                                         <PopoverTrigger asChild>
                                                             <button
@@ -313,65 +327,98 @@ export function RoomRatesTable({
                                                                 // click bubbling further (which we don't even need
                                                                 // here since it's a <label>, but keeps this element
                                                                 // safe if the row markup changes later).
-                                                                onClick={(e) => e.stopPropagation()}
+                                                                onClick={(e) =>
+                                                                    e.stopPropagation()
+                                                                }
                                                                 className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground"
                                                             >
                                                                 <Info className="h-3 w-3" />
-                                                                {t('hotelDetail.cancellationPolicy')}
+                                                                {t(
+                                                                    'hotelDetail.cancellationPolicy',
+                                                                )}
                                                             </button>
                                                         </PopoverTrigger>
                                                         <PopoverContent className="w-80">
                                                             <p className="mb-2 text-xs font-semibold text-foreground">
-                                                                {t('hotelDetail.cancellationPolicy')}
+                                                                {t(
+                                                                    'hotelDetail.cancellationPolicy',
+                                                                )}
                                                             </p>
                                                             <ul className="space-y-1.5 text-xs leading-relaxed text-muted-foreground">
-                                                                {rate.cancellationPolicy.map((entry, i) => (
-                                                                    <li key={i} className="flex items-start gap-1.5">
-                                                                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
-                                                                        <span>
-                                                                            {entry.description ||
-                                                                                (entry.type === 'PERCENT'
-                                                                                    ? `${entry.fees}%`
-                                                                                    : `${entry.fees} ${currency}`)}
-                                                                            {entry.from_date
-                                                                                ? ` — ${formatBadgeDate(entry.from_date.slice(0, 10), lang)}`
-                                                                                : ''}
-                                                                        </span>
-                                                                    </li>
-                                                                ))}
+                                                                {rate.cancellationPolicy.map(
+                                                                    (
+                                                                        entry,
+                                                                        i,
+                                                                    ) => (
+                                                                        <li
+                                                                            key={
+                                                                                i
+                                                                            }
+                                                                            className="flex items-start gap-1.5"
+                                                                        >
+                                                                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                                                                            <span>
+                                                                                {entry.description ||
+                                                                                    (entry.type ===
+                                                                                    'PERCENT'
+                                                                                        ? `${entry.fees}%`
+                                                                                        : `${entry.fees} ${currency}`)}
+                                                                                {entry.from_date
+                                                                                    ? ` — ${formatBadgeDate(entry.from_date.slice(0, 10), lang)}`
+                                                                                    : ''}
+                                                                            </span>
+                                                                        </li>
+                                                                    ),
+                                                                )}
                                                             </ul>
                                                         </PopoverContent>
                                                     </Popover>
                                                 ) : null}
                                             </div>
 
-                                            {rate.supplements && rate.supplements.length > 0 && (
-                                                <div className="mt-1.5 space-y-0.5">
-                                                    {rate.supplements.map((supplement, i) => (
-                                                        <p
-                                                            key={`${selKey}-supplement-${i}`}
-                                                            className="text-[11px] text-muted-foreground"
-                                                        >
-                                                            +{supplement.price.toLocaleString()} {currency}{' '}
-                                                            {supplement.name}
-                                                            {supplement.perNight
-                                                                ? ` ${t('hotelDetail.pernight')}`
-                                                                : ''}
-                                                        </p>
-                                                    ))}
-                                                </div>
-                                            )}
+                                            {rate.supplements &&
+                                                rate.supplements.length > 0 && (
+                                                    <div className="mt-1.5 space-y-0.5">
+                                                        {rate.supplements.map(
+                                                            (supplement, i) => (
+                                                                <p
+                                                                    key={`${selKey}-supplement-${i}`}
+                                                                    className="text-[11px] text-muted-foreground"
+                                                                >
+                                                                    +
+                                                                    {supplement.price.toLocaleString()}{' '}
+                                                                    {currency}{' '}
+                                                                    {
+                                                                        supplement.name
+                                                                    }
+                                                                    {supplement.perNight
+                                                                        ? ` ${t('hotelDetail.pernight')}`
+                                                                        : ''}
+                                                                </p>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                )}
                                         </div>
 
                                         <div className="text-right">
                                             <p className="text-base font-bold text-foreground">
-                                                {requestMode
-                                                    ? <>- {currency}</>
-                                                    : <>{(totalPromo ? totalPromo.discounted : total).toLocaleString()}{' '}{currency}</>}
+                                                {requestMode ? (
+                                                    <>- {currency}</>
+                                                ) : (
+                                                    <>
+                                                        {(totalPromo
+                                                            ? totalPromo.discounted
+                                                            : total
+                                                        ).toLocaleString()}{' '}
+                                                        {currency}
+                                                    </>
+                                                )}
                                             </p>
                                             {!requestMode && totalPromo && (
                                                 <p className="text-xs font-medium text-muted-foreground line-through">
-                                                    {totalPromo.original.toLocaleString()} {currency}
+                                                    {totalPromo.original.toLocaleString()}{' '}
+                                                    {currency}
                                                 </p>
                                             )}
                                         </div>
@@ -392,21 +439,28 @@ export function RoomRatesTable({
                                 <>
                                     {' · '}
                                     {activeGroup.name} ·{' '}
-                                    {active.boardingName || t('hotelDetail.standardBoarding')}
+                                    {active.boardingName ||
+                                        t('hotelDetail.standardBoarding')}
                                 </>
                             ) : null}
                         </p>
                         <p className="text-2xl font-bold text-primary">
-                            {requestMode
-                                ? t('hotelDetail.requestTitle')
-                                : <>{(activeTotalPromo
-                                    ? activeTotalPromo.discounted
-                                    : activeTotal
-                                ).toLocaleString()}{' '}{currency}</>}
+                            {requestMode ? (
+                                t('hotelDetail.requestTitle')
+                            ) : (
+                                <>
+                                    {(activeTotalPromo
+                                        ? activeTotalPromo.discounted
+                                        : activeTotal
+                                    ).toLocaleString()}{' '}
+                                    {currency}
+                                </>
+                            )}
                         </p>
                         {!requestMode && activeTotalPromo && (
                             <p className="text-xs font-medium text-muted-foreground line-through">
-                                {activeTotalPromo.original.toLocaleString()} {currency}
+                                {activeTotalPromo.original.toLocaleString()}{' '}
+                                {currency}
                             </p>
                         )}
                     </div>

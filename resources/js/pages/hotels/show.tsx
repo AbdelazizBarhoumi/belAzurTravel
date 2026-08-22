@@ -93,20 +93,20 @@ type RoomView = {
 };
 
 const cleanDescription = (raw?: string | null): string => {
-    if (!raw) return "";
+    if (!raw) return '';
 
     return raw
-        .replace(/<br\s*\/?>/gi, " ")
-        .replace(/<\/p>/gi, " ")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/&nbsp;/gi, " ")
-        .replace(/&amp;/gi, "&")
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/<\/p>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
         .replace(/&quot;/gi, '"')
         .replace(/&#39;|&apos;/gi, "'")
-        .replace(/&lt;/gi, "<")
-        .replace(/&gt;/gi, ">")
-        .replace(/\\r\\n|\\r|\\n/g, " ")
-        .replace(/\s+/g, " ")
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/\\r\\n|\\r|\\n/g, ' ')
+        .replace(/\s+/g, ' ')
         .trim();
 };
 
@@ -127,18 +127,18 @@ function normalizeSupplements(
                 typeof s.Name === 'string'
                     ? s.Name
                     : s.name && typeof s.name === 'object'
-                        ? (s.name as Record<string, string>).en ??
+                      ? ((s.name as Record<string, string>).en ??
                         (s.name as Record<string, string>).fr ??
-                        ''
-                        : typeof s.name === 'string'
-                            ? s.name
-                            : '';
+                        '')
+                      : typeof s.name === 'string'
+                        ? s.name
+                        : '';
             const rawPrice =
                 typeof s.Price === 'number' || typeof s.Price === 'string'
                     ? Number(s.Price)
                     : typeof s.price === 'number'
-                        ? s.price
-                        : 0;
+                      ? s.price
+                      : 0;
 
             return {
                 name: rawName || 'Supplement',
@@ -147,8 +147,8 @@ function normalizeSupplements(
                     typeof s.Mandatory === 'boolean'
                         ? Boolean(s.Mandatory)
                         : typeof s.PerNight === 'boolean'
-                            ? Boolean(s.PerNight)
-                            : false,
+                          ? Boolean(s.PerNight)
+                          : false,
             };
         });
 }
@@ -197,8 +197,8 @@ export default function HotelDetail() {
     const initialTo = urlCheckOut
         ? new Date(`${urlCheckOut}T00:00:00`)
         : initialFrom
-            ? new Date(initialFrom.getTime() + 86_400_000)
-            : undefined;
+          ? new Date(initialFrom.getTime() + 86_400_000)
+          : undefined;
 
     const [dateRange, setDateRange] = useState<DateRange | undefined>(
         initialFrom ? { from: initialFrom, to: initialTo } : undefined,
@@ -238,15 +238,20 @@ export default function HotelDetail() {
     // Use liveQuery directly as the active search — no intermediate state needed.
     const activeQuery = liveQuery;
 
-    const { data: liveResult, isLoading: liveSearchLoading, isError: liveSearchError, refetch: refetchSearch } =
-        useHotelSearch(activeQuery);
+    const {
+        data: liveResult,
+        isLoading: liveSearchLoading,
+        isError: liveSearchError,
+        refetch: refetchSearch,
+    } = useHotelSearch(activeQuery);
     const liveResults = liveResult?.data ?? [];
     const liveHotel = liveResults[0] ?? undefined;
 
     // Phase 2: when the first search completes with no result, fire the
     // fallback with only_available: false so the backend returns the hotel
     // flagged as unavailable (available: false, empty rooms).
-    const firstSearchDone = Boolean(activeQuery) && !liveSearchLoading && liveResult !== undefined;
+    const firstSearchDone =
+        Boolean(activeQuery) && !liveSearchLoading && liveResult !== undefined;
     const noRoomsFound = firstSearchDone && !liveHotel;
 
     // Derive phase 2 query directly — React Query deduplicates identical requests.
@@ -262,15 +267,23 @@ export default function HotelDetail() {
 
     // Merge: use phase 1 if it found rooms, otherwise use phase 2
     const effectiveHotel = liveHotel ?? unavailableHotel;
-    const effectiveLoading = liveSearchLoading || (noRoomsFound && unavailableLoading);
+    const effectiveLoading =
+        liveSearchLoading || (noRoomsFound && unavailableLoading);
 
     // A completed two-phase search where the hotel exists but has no rooms
     // for the selected dates.
     const searchedUnavailable =
-        Boolean(activeQuery) && !effectiveLoading && !liveHotel && unavailableHotel !== undefined && unavailableHotel.available === false;
+        Boolean(activeQuery) &&
+        !effectiveLoading &&
+        !liveHotel &&
+        unavailableHotel !== undefined &&
+        unavailableHotel.available === false;
     // A completed search where the hotel truly doesn't exist.
     const hotelNotFound =
-        Boolean(activeQuery) && !effectiveLoading && !liveHotel && !unavailableHotel;
+        Boolean(activeQuery) &&
+        !effectiveLoading &&
+        !liveHotel &&
+        !unavailableHotel;
 
     if (isLoading) {
         return (
@@ -307,13 +320,13 @@ export default function HotelDetail() {
     const otherImages = detail.gallery?.length
         ? detail.gallery
         : detail.images?.length
-            ? detail.images
-            : [];
+          ? detail.images
+          : [];
     const gallery = detail.image
         ? [
-            detail.image,
-            ...otherImages.filter((image) => image !== detail.image),
-        ]
+              detail.image,
+              ...otherImages.filter((image) => image !== detail.image),
+          ]
         : otherImages;
     const staticRooms = (detail.rooms ?? []).map((room) =>
         toRoomView(room, lang),
@@ -324,7 +337,9 @@ export default function HotelDetail() {
 
     // When Phase 2 returns a hotel with available=false, show all rooms
     // as "On request" instead of filtering to only bookable ones.
-    const isRequestMode = Boolean(effectiveHotel && effectiveHotel.available === false);
+    const isRequestMode = Boolean(
+        effectiveHotel && effectiveHotel.available === false,
+    );
 
     const liveRooms: RoomView[] = (effectiveHotel?.rooms ?? [])
         .filter((room) => {
@@ -364,15 +379,14 @@ export default function HotelDetail() {
                 nights: room.nights,
                 capacity: staticRoom?.capacity ?? 2,
                 size: staticRoom?.size ?? 0,
-                features:
-                    room.features?.length
-                        ? room.features
-                        : (staticRoom?.features ?? []),
+                features: room.features?.length
+                    ? room.features
+                    : (staticRoom?.features ?? []),
                 images: staticRoom?.images?.length
                     ? staticRoom.images
                     : room.image
-                        ? [room.image]
-                        : [],
+                      ? [room.image]
+                      : [],
                 providerRoomId: room.id ? Number(room.id) : undefined,
                 boardingId: room.boarding_id ?? undefined,
                 boardingName: room.boarding_name ?? undefined,
@@ -383,8 +397,7 @@ export default function HotelDetail() {
                 bookable: room.bookable,
                 stopSales: room.stop_sales,
                 notRefundable: room.not_refundable,
-                cancellationDeadline:
-                    room.cancellation_deadline ?? undefined,
+                cancellationDeadline: room.cancellation_deadline ?? undefined,
                 cancellationPolicy: room.cancellation_policy ?? [],
             };
         });
@@ -396,16 +409,18 @@ export default function HotelDetail() {
     const rateRooms: RateRoom[] =
         selectedBoardingIds.length > 0
             ? baseRooms.filter(
-                  (r) => r.boardingId != null && selectedBoardingIds.includes(r.boardingId),
+                  (r) =>
+                      r.boardingId != null &&
+                      selectedBoardingIds.includes(r.boardingId),
               )
             : baseRooms;
 
     const displayMinPrice = staticRooms.length
         ? Math.min(
-            ...staticRooms.map(
-                (room) => room.priceTotal ?? room.pricePerNight,
-            ),
-        )
+              ...staticRooms.map(
+                  (room) => room.priceTotal ?? room.pricePerNight,
+              ),
+          )
         : (detail.price ?? 0);
     // Provider-linked hotels show no price until a live search returns one;
     // manual hotels keep their stored price.
@@ -419,8 +434,8 @@ export default function HotelDetail() {
             ? effectiveHotel.price_per_night * occupancy.rooms
             : effectiveHotel.price_total
         : detail.provider === 'manual'
-            ? displayMinPrice
-            : null;
+          ? displayMinPrice
+          : null;
     const title = localizeText(detail.name, lang);
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
@@ -431,10 +446,7 @@ export default function HotelDetail() {
     let latitude = rawLatitude;
     let longitude = rawLongitude;
 
-    if (
-        typeof rawLatitude === 'number' &&
-        typeof rawLongitude === 'number'
-    ) {
+    if (typeof rawLatitude === 'number' && typeof rawLongitude === 'number') {
         // Detect swapped Tunisia coordinates:
         // latitude should be ~30–37.5
         // longitude should be ~7.5–11.6
@@ -465,8 +477,7 @@ export default function HotelDetail() {
     const noteIsLong = noteText.length > 170;
 
     const hasMap =
-        typeof latitude === 'number' &&
-        typeof longitude === 'number';
+        typeof latitude === 'number' && typeof longitude === 'number';
 
     const mapSrc = hasMap
         ? `https://www.google.com/maps?q=${latitude},${longitude}&output=embed`
@@ -512,11 +523,7 @@ export default function HotelDetail() {
         }
 
         const queryString = params.toString();
-        navigate(
-            queryString
-                ? `/hotels?${queryString}`
-                : '/hotels',
-        );
+        navigate(queryString ? `/hotels?${queryString}` : '/hotels');
     };
 
     const bookingRoom = selectedRoom;
@@ -568,29 +575,25 @@ export default function HotelDetail() {
                     </div>
 
                     {/* Map card */}
-                    <div className="relative h-44 overflow-hidden rounded-3xl border border-border">
-                        {mapSrc ? (
+                    {hasMap && (
+                        <div className="relative h-44 overflow-hidden rounded-3xl border border-border">
                             <iframe
                                 title={`${t('hotelDetail.mapOf')} ${title}`}
                                 src={mapSrc}
                                 loading="lazy"
                                 className="h-full w-full border-0 saturate-50"
                             />
-                        ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-muted">
-                                <MapPin className="h-8 w-8 text-muted-foreground/50" />
-                            </div>
-                        )}
-                        <a
-                            href={mapLink}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="absolute inset-x-6 bottom-4 inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-card text-xs font-medium text-foreground shadow-md hover:bg-card/90"
-                        >
-                            <MapIcon className="h-4 w-4" />
-                            {t('hotelDetail.viewOnMap')}
-                        </a>
-                    </div>
+                            <a
+                                href={mapLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="absolute inset-x-6 bottom-4 inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-card text-xs font-medium text-foreground shadow-md hover:bg-card/90"
+                            >
+                                <MapIcon className="h-4 w-4" />
+                                {t('hotelDetail.viewOnMap')}
+                            </a>
+                        </div>
+                    )}
 
                     {/* Best-rate guarantee card */}
                     <div className="space-y-2 rounded-3xl border border-primary/20 bg-primary/5 p-5">
@@ -639,44 +642,50 @@ export default function HotelDetail() {
                             </p>
                         </div>
                         <div className="text-right">
-                            {headerDisplayPrice !== null && headerDisplayPrice > 0 ? (
-                                (() => {
-                                    const promo = promoPrice(
-                                        headerDisplayPrice,
-                                        effectiveHotel?.promotion?.rate,
-                                    );
-                                    const shown = promo
-                                        ? promo.discounted
-                                        : headerDisplayPrice;
-                                    return (
-                                        <>
-                                            <p className="text-3xl font-bold text-foreground">
-                                                {shown.toLocaleString()}
-                                                <span className="align-top text-sm font-semibold">
-                                                    {' '}
-                                                    {currency}
-                                                </span>
-                                            </p>
-                                            {promo && (
-                                                <p className="text-xs font-medium text-muted-foreground line-through">
-                                                    {promo.original.toLocaleString()}{' '}
-                                                    {currency}
-                                                </p>
-                                            )}
-                                            {headerNights === 1 && (
-                                                <p className="mb-3 text-xs text-muted-foreground">
-                                                    {t('hotelDetail.perNightFrom')}
-                                                </p>
-                                            )}
-                                            {headerNights > 1 && (
-                                                <p className="mb-3 text-xs text-muted-foreground">
-                                                    {headerNights} {t('hotelDetail.nightsLabel')}
-                                                </p>
-                                            )}
-                                        </>
-                                    );
-                                })()
-                            ) : null}
+                            {headerDisplayPrice !== null &&
+                            headerDisplayPrice > 0
+                                ? (() => {
+                                      const promo = promoPrice(
+                                          headerDisplayPrice,
+                                          effectiveHotel?.promotion?.rate,
+                                      );
+                                      const shown = promo
+                                          ? promo.discounted
+                                          : headerDisplayPrice;
+                                      return (
+                                          <>
+                                              <p className="text-3xl font-bold text-foreground">
+                                                  {shown.toLocaleString()}
+                                                  <span className="align-top text-sm font-semibold">
+                                                      {' '}
+                                                      {currency}
+                                                  </span>
+                                              </p>
+                                              {promo && (
+                                                  <p className="text-xs font-medium text-muted-foreground line-through">
+                                                      {promo.original.toLocaleString()}{' '}
+                                                      {currency}
+                                                  </p>
+                                              )}
+                                              {headerNights === 1 && (
+                                                  <p className="mb-3 text-xs text-muted-foreground">
+                                                      {t(
+                                                          'hotelDetail.perNightFrom',
+                                                      )}
+                                                  </p>
+                                              )}
+                                              {headerNights > 1 && (
+                                                  <p className="mb-3 text-xs text-muted-foreground">
+                                                      {headerNights}{' '}
+                                                      {t(
+                                                          'hotelDetail.nightsLabel',
+                                                      )}
+                                                  </p>
+                                              )}
+                                          </>
+                                      );
+                                  })()
+                                : null}
                             <Button
                                 type="button"
                                 onClick={scrollToRates}
@@ -780,8 +789,8 @@ export default function HotelDetail() {
                                         className={cn(
                                             'mt-1 text-sm leading-relaxed text-amber-900/90',
                                             !noteExpanded &&
-                                            noteIsLong &&
-                                            'line-clamp-2',
+                                                noteIsLong &&
+                                                'line-clamp-2',
                                         )}
                                     >
                                         {noteText}
@@ -856,19 +865,24 @@ export default function HotelDetail() {
 
                         <div className="mt-5">
                             {effectiveHotel &&
-                                (effectiveHotel.promotion?.rate ||
-                                    effectiveHotel.free_child?.length ||
-                                    effectiveHotel.recommended) ? (
+                            (effectiveHotel.promotion?.rate ||
+                                effectiveHotel.free_child?.length ||
+                                effectiveHotel.recommended) ? (
                                 <div className="mb-4 flex flex-wrap gap-2">
                                     {effectiveHotel.promotion?.rate &&
-                                        effectiveHotel.promotion.title ? (
+                                    effectiveHotel.promotion.title ? (
                                         <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
                                             {t('hotelDetail.promo')}{' '}
                                             {effectiveHotel.promotion.title}
-                                            {formatPromoRate(effectiveHotel.promotion.rate) && (
+                                            {formatPromoRate(
+                                                effectiveHotel.promotion.rate,
+                                            ) && (
                                                 <>
                                                     {' · '}
-                                                    {formatPromoRate(effectiveHotel.promotion.rate)}
+                                                    {formatPromoRate(
+                                                        effectiveHotel.promotion
+                                                            .rate,
+                                                    )}
                                                 </>
                                             )}
                                         </span>
@@ -909,28 +923,30 @@ export default function HotelDetail() {
                                         <Skeleton className="h-4 w-32" />
                                     </div>
                                     <div className="divide-y divide-border">
-                                        {Array.from({ length: 2 }).map((_, i) => (
-                                            <div key={i} className="p-5">
-                                                <div className="flex gap-4">
-                                                    <Skeleton className="hidden h-20 w-24 shrink-0 rounded-xl sm:block" />
-                                                    <div className="flex-1 space-y-2">
-                                                        <Skeleton className="h-4 w-40" />
-                                                        <Skeleton className="h-3 w-24" />
-                                                        <Skeleton className="h-3 w-64" />
-                                                    </div>
-                                                </div>
-                                                <div className="mt-3 space-y-2 sm:pl-[104px]">
-                                                    <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
-                                                        <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
-                                                        <div className="flex-1 space-y-1.5">
-                                                            <Skeleton className="h-4 w-28" />
-                                                            <Skeleton className="h-3 w-16" />
+                                        {Array.from({ length: 2 }).map(
+                                            (_, i) => (
+                                                <div key={i} className="p-5">
+                                                    <div className="flex gap-4">
+                                                        <Skeleton className="hidden h-20 w-24 shrink-0 rounded-xl sm:block" />
+                                                        <div className="flex-1 space-y-2">
+                                                            <Skeleton className="h-4 w-40" />
+                                                            <Skeleton className="h-3 w-24" />
+                                                            <Skeleton className="h-3 w-64" />
                                                         </div>
-                                                        <Skeleton className="h-5 w-20" />
+                                                    </div>
+                                                    <div className="mt-3 space-y-2 sm:pl-[104px]">
+                                                        <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
+                                                            <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
+                                                            <div className="flex-1 space-y-1.5">
+                                                                <Skeleton className="h-4 w-28" />
+                                                                <Skeleton className="h-3 w-16" />
+                                                            </div>
+                                                            <Skeleton className="h-5 w-20" />
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ),
+                                        )}
                                     </div>
                                     <div className="flex items-center justify-end gap-4 border-t border-border bg-muted/50 px-5 py-4">
                                         <Skeleton className="h-4 w-24" />
@@ -945,13 +961,22 @@ export default function HotelDetail() {
                                     >
                                         <div className="mb-3 rounded-xl border border-amber-300/50 bg-amber-50 p-4">
                                             <p className="text-sm text-amber-800">
-                                                {t('hotelDetail.requestNotice') ||
+                                                {t(
+                                                    'hotelDetail.requestNotice',
+                                                ) ||
                                                     'This hotel has no availability for your selected dates, but you can submit a request.'}
                                             </p>
                                             {unavailableHotel?.first_available_at && (
                                                 <p className="mt-1 text-xs font-semibold text-amber-700">
-                                                    {t('hotelDetail.availableFrom')} {unavailableHotel.first_available_at}
-                                                    {unavailableHotel.min_nights && unavailableHotel.min_nights > 1 &&
+                                                    {t(
+                                                        'hotelDetail.availableFrom',
+                                                    )}{' '}
+                                                    {
+                                                        unavailableHotel.first_available_at
+                                                    }
+                                                    {unavailableHotel.min_nights &&
+                                                        unavailableHotel.min_nights >
+                                                            1 &&
                                                         ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
                                                 </p>
                                             )}
@@ -968,20 +993,33 @@ export default function HotelDetail() {
                                     <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-6">
                                         <div className="flex items-start gap-3">
                                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
-                                                <span className="text-amber-700 text-lg">?</span>
+                                                <span className="text-lg text-amber-700">
+                                                    ?
+                                                </span>
                                             </div>
                                             <div className="flex-1">
                                                 <h3 className="font-serif text-lg font-bold text-amber-900">
-                                                    {t('hotelDetail.requestTitle') || 'Per request'}
+                                                    {t(
+                                                        'hotelDetail.requestTitle',
+                                                    ) || 'Per request'}
                                                 </h3>
                                                 <p className="mt-1 text-sm text-amber-800">
-                                                    {t('hotelDetail.requestNotice') ||
+                                                    {t(
+                                                        'hotelDetail.requestNotice',
+                                                    ) ||
                                                         'This hotel has no availability for your selected dates, but you can submit a request.'}
                                                 </p>
                                                 {unavailableHotel?.first_available_at && (
                                                     <p className="mt-2 text-xs font-semibold text-amber-700">
-                                                        {t('hotelDetail.availableFrom')} {unavailableHotel.first_available_at}
-                                                        {unavailableHotel.min_nights && unavailableHotel.min_nights > 1 &&
+                                                        {t(
+                                                            'hotelDetail.availableFrom',
+                                                        )}{' '}
+                                                        {
+                                                            unavailableHotel.first_available_at
+                                                        }
+                                                        {unavailableHotel.min_nights &&
+                                                            unavailableHotel.min_nights >
+                                                                1 &&
                                                             ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
                                                     </p>
                                                 )}
@@ -991,7 +1029,9 @@ export default function HotelDetail() {
                                                         setRequestMode(true);
                                                     }}
                                                 >
-                                                    {t('hotelDetail.requestBooking') || 'Request Booking'}
+                                                    {t(
+                                                        'hotelDetail.requestBooking',
+                                                    ) || 'Request Booking'}
                                                 </Button>
                                             </div>
                                         </div>
@@ -1034,16 +1074,15 @@ export default function HotelDetail() {
                         </h2>
 
                         <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_280px]">
-                                                           {cleanDescription(description) &&(
-
-                            <div>
-                                <h3 className="mb-1 text-sm font-bold text-foreground">
-                                    {t('hotelDetail.discover')} {title}
-                                </h3>
-                                <p className="text-sm leading-relaxed text-muted-foreground">
-                                    {cleanDescription(description)}
-                                </p>
-                            </div>
+                            {cleanDescription(description) && (
+                                <div>
+                                    <h3 className="mb-1 text-sm font-bold text-foreground">
+                                        {t('hotelDetail.discover')} {title}
+                                    </h3>
+                                    <p className="text-sm leading-relaxed text-muted-foreground">
+                                        {cleanDescription(description)}
+                                    </p>
+                                </div>
                             )}
 
                             <aside className="h-fit space-y-3 rounded-2xl border border-border bg-card p-4">
@@ -1116,9 +1155,7 @@ export default function HotelDetail() {
                                                 <span className="inline-flex items-center gap-1">
                                                     <Users className="h-3 w-3" />{' '}
                                                     {room.capacity}{' '}
-                                                    {t(
-                                                        'hotelDetail.guests',
-                                                    )}
+                                                    {t('hotelDetail.guests')}
                                                 </span>
                                             </p>
                                         </div>
@@ -1182,19 +1219,16 @@ export default function HotelDetail() {
                     itemSlug={id}
                     itemId={detail.id}
                     itemName={`${title} - ${bookingRoom.name}`}
-                    amount={
-                        (() => {
-                            const raw =
-                                (bookingRoom.priceTotal ??
-                                    bookingRoom.pricePerNight) *
-                                occupancy.rooms;
-                            const promo = promoPrice(
-                                raw,
-                                effectiveHotel?.promotion?.rate,
-                            );
-                            return promo ? promo.discounted : raw;
-                        })()
-                    }
+                    amount={(() => {
+                        const raw =
+                            (bookingRoom.priceTotal ??
+                                bookingRoom.pricePerNight) * occupancy.rooms;
+                        const promo = promoPrice(
+                            raw,
+                            effectiveHotel?.promotion?.rate,
+                        );
+                        return promo ? promo.discounted : raw;
+                    })()}
                     minDate={new Date()}
                     image={bookingRoom.images[0] ?? detail.image ?? undefined}
                     currency={currency}
@@ -1210,30 +1244,28 @@ export default function HotelDetail() {
                     provider={
                         effectiveHotel
                             ? {
-                                token: effectiveHotel.rooms[0]?.token,
-                                source: effectiveHotel.rooms[0]?.source,
-                                rooms: Array.from(
-                                    { length: occupancy.rooms },
-                                    () => ({
-                                        id: bookingRoom.providerRoomId
-                                            ? String(
-                                                bookingRoom.providerRoomId,
-                                            )
-                                            : undefined,
-                                        boardingId:
-                                            bookingRoom.boardingId,
-                                        viewIds: bookingRoom.viewIds,
-                                        supplements:
-                                            bookingRoom.supplements,
-                                    }),
-                                ),
-                                adults: occupancy.adults,
-                                children: occupancy.childAges.length,
-                                childrenAges: occupancy.childAges,
-                                checkIn: toLocalISODate(dateRange?.from),
-                                checkOut: toLocalISODate(dateRange?.to),
-                                options: detail.options ?? [],
-                            }
+                                  token: effectiveHotel.rooms[0]?.token,
+                                  source: effectiveHotel.rooms[0]?.source,
+                                  rooms: Array.from(
+                                      { length: occupancy.rooms },
+                                      () => ({
+                                          id: bookingRoom.providerRoomId
+                                              ? String(
+                                                    bookingRoom.providerRoomId,
+                                                )
+                                              : undefined,
+                                          boardingId: bookingRoom.boardingId,
+                                          viewIds: bookingRoom.viewIds,
+                                          supplements: bookingRoom.supplements,
+                                      }),
+                                  ),
+                                  adults: occupancy.adults,
+                                  children: occupancy.childAges.length,
+                                  childrenAges: occupancy.childAges,
+                                  checkIn: toLocalISODate(dateRange?.from),
+                                  checkOut: toLocalISODate(dateRange?.to),
+                                  options: detail.options ?? [],
+                              }
                             : undefined
                     }
                     roomName={bookingRoom.name}

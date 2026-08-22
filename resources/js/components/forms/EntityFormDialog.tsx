@@ -220,7 +220,9 @@ function DateRangeField({
                 placeholderFrom={t('admin.dateFrom')}
                 placeholderTo={t('admin.dateTo')}
                 className={
-                    error ? 'border-destructive ring-1 ring-destructive' : undefined
+                    error
+                        ? 'border-destructive ring-1 ring-destructive'
+                        : undefined
                 }
             />
             {error ? (
@@ -437,9 +439,7 @@ function SectionCard({
                                 key={field.key}
                                 field={field}
                                 value={values[field.key]}
-                                onChange={(next) =>
-                                    setField(field.key, next)
-                                }
+                                onChange={(next) => setField(field.key, next)}
                                 error={errors?.[field.key]}
                             />
                         ),

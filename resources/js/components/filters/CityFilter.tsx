@@ -46,7 +46,11 @@ export function CityFilter({
         .map((c) => c.label[lang] || c.label.en);
 
     const placeholder =
-        lang === 'fr' ? 'Toutes les villes' : lang === 'ar' ? 'كل المدن' : 'All cities';
+        lang === 'fr'
+            ? 'Toutes les villes'
+            : lang === 'ar'
+              ? 'كل المدن'
+              : 'All cities';
     const searchPlaceholder =
         lang === 'fr'
             ? 'Rechercher une ville...'
@@ -60,7 +64,11 @@ export function CityFilter({
               ? 'لم يتم العثور على مدينة.'
               : 'No cities found.';
     const clearText =
-        lang === 'fr' ? 'Effacer la sélection' : lang === 'ar' ? 'مسح التحديد' : 'Clear selection';
+        lang === 'fr'
+            ? 'Effacer la sélection'
+            : lang === 'ar'
+              ? 'مسح التحديد'
+              : 'Clear selection';
 
     useEffect(() => {
         if (triggerRef.current) {
@@ -144,7 +152,9 @@ export function CityFilter({
                                 return (
                                     <CommandItem
                                         key={city.key}
-                                        value={city.label[lang] || city.label.en}
+                                        value={
+                                            city.label[lang] || city.label.en
+                                        }
                                         onSelect={() => toggle(city.key)}
                                     >
                                         <Check

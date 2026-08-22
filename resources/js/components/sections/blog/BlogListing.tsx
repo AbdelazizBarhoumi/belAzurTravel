@@ -16,7 +16,11 @@ import {
     PaginationPrevious,
 } from '@/components/ui/pagination';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useBlogPosts, useCategories, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import {
+    useBlogPosts,
+    useCategories,
+    useCategoryTypesPublic,
+} from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 import { matchesSearchText } from '@/lib/listFilters';
 
@@ -68,7 +72,9 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
         }
         return filters;
     }, [params]);
-    const [categoryTypeFilters, setCategoryTypeFilters] = useState<Record<string, string[]>>(initialCategoryTypeFilters);
+    const [categoryTypeFilters, setCategoryTypeFilters] = useState<
+        Record<string, string[]>
+    >(initialCategoryTypeFilters);
 
     const categories = useMemo(
         () => [
@@ -94,11 +100,17 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
                     post.category_key === selectedCategory;
 
                 // Category type filters
-                const assignments = (post as unknown as Record<string, unknown>).category_assignments as Record<string, string> | undefined;
-                const activeTypeFilters = Object.entries(categoryTypeFilters).filter(([, v]) => v.length > 0);
-                const matchesCategoryTypes = activeTypeFilters.length === 0 ||
-                    activeTypeFilters.some(([typeKey, values]) =>
-                        assignments && values.includes(assignments[typeKey]),
+                const assignments = (post as unknown as Record<string, unknown>)
+                    .category_assignments as Record<string, string> | undefined;
+                const activeTypeFilters = Object.entries(
+                    categoryTypeFilters,
+                ).filter(([, v]) => v.length > 0);
+                const matchesCategoryTypes =
+                    activeTypeFilters.length === 0 ||
+                    activeTypeFilters.some(
+                        ([typeKey, values]) =>
+                            assignments &&
+                            values.includes(assignments[typeKey]),
                     );
 
                 return matchesSearch && matchesCategory && matchesCategoryTypes;
@@ -117,7 +129,9 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
     };
 
     const hasActiveFilters =
-        searchQuery.trim().length > 0 || selectedCategory !== 'all' || Object.values(categoryTypeFilters).some((v) => v.length > 0);
+        searchQuery.trim().length > 0 ||
+        selectedCategory !== 'all' ||
+        Object.values(categoryTypeFilters).some((v) => v.length > 0);
     const pageCount = Math.max(1, Math.ceil(filteredPosts.length / pageSize));
     const paginatedPosts = filteredPosts.slice(
         (currentPage - 1) * pageSize,
@@ -162,7 +176,9 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
                                 <FilterRenderer
                                     key={catType.key}
                                     categoryType={catType as never}
-                                    selectedValues={categoryTypeFilters[catType.key] ?? []}
+                                    selectedValues={
+                                        categoryTypeFilters[catType.key] ?? []
+                                    }
                                     onChange={(values) =>
                                         setCategoryTypeFilters((prev) => ({
                                             ...prev,

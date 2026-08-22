@@ -21,7 +21,11 @@ export interface Occupancy {
     childAges: number[];
 }
 
-export const DEFAULT_OCCUPANCY: Occupancy = { rooms: 1, adults: 2, childAges: [] };
+export const DEFAULT_OCCUPANCY: Occupancy = {
+    rooms: 1,
+    adults: 2,
+    childAges: [],
+};
 
 const MAX_ROOMS = 8;
 const MAX_ADULTS = 10;
@@ -35,7 +39,9 @@ export function occupancyLabel(o: Occupancy): string {
         `${o.adults} ${o.adults > 1 ? 'adultes' : 'adulte'}`,
     ];
     if (o.childAges.length) {
-        parts.push(`${o.childAges.length} enfant${o.childAges.length > 1 ? 's' : ''}`);
+        parts.push(
+            `${o.childAges.length} enfant${o.childAges.length > 1 ? 's' : ''}`,
+        );
     }
     return parts.join(', ');
 }
@@ -61,7 +67,10 @@ export function OccupancyPicker({
     };
 
     const setAdults = (adults: number) => {
-        onChange({ ...value, adults: Math.max(1, Math.min(MAX_ADULTS, adults)) });
+        onChange({
+            ...value,
+            adults: Math.max(1, Math.min(MAX_ADULTS, adults)),
+        });
     };
 
     const addChild = () => {
@@ -106,7 +115,8 @@ export function OccupancyPicker({
                     >
                         <BedDouble className="h-4 w-4 shrink-0 text-primary" />
                         <span className="truncate text-xs text-muted-foreground">
-                            {value.rooms} {t('hotelDetail.roomsTitle').toLowerCase()} ·{' '}
+                            {value.rooms}{' '}
+                            {t('hotelDetail.roomsTitle').toLowerCase()} ·{' '}
                             {totalGuests} {t('hotels.guestsLabel')}
                         </span>
                     </span>

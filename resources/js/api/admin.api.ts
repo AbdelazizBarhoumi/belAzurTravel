@@ -7,7 +7,11 @@ import type {
 } from '@/hooks/useAdminStore';
 import { apiFetch } from './http';
 
-export type AdminEntity = AdminDestination | AdminHotel | AdminTour | AdminTravel;
+export type AdminEntity =
+    | AdminDestination
+    | AdminHotel
+    | AdminTour
+    | AdminTravel;
 export type AdminRow = Record<string, string | number | boolean | null>;
 export type AdminEntityType =
     | 'destinations'
@@ -33,7 +37,7 @@ export function listAdminEntities<T = AdminRow>(type: AdminEntityType) {
                 return payload.data as T[];
             }
         }
-        return Array.isArray(res) ? res as T[] : [];
+        return Array.isArray(res) ? (res as T[]) : [];
     });
 }
 

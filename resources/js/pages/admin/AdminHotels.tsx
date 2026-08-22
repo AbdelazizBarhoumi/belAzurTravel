@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, Plus, Trash2, Settings, Image as ImageIcon, Save, Star } from 'lucide-react';
+import {
+    Edit,
+    Plus,
+    Trash2,
+    Settings,
+    Image as ImageIcon,
+    Save,
+    Star,
+} from 'lucide-react';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import type { Lang } from '@/i18n/translations';
 
@@ -41,11 +49,7 @@ import { LocationSelect } from '@/components/ui/LocationSelect';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
-import {
-    categoryLabels,
-    hotelLabels,
-    localizeKnown,
-} from '@/lib/adminI18n';
+import { categoryLabels, hotelLabels, localizeKnown } from '@/lib/adminI18n';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 type HotelFormValues = AdminRow & {
@@ -306,8 +310,7 @@ const AdminHotels = () => {
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
 
     // Hero images state
-    const existingHeroConfig =
-        siteSettings?.content?.page_heroes?.hotels;
+    const existingHeroConfig = siteSettings?.content?.page_heroes?.hotels;
     const [heroSlides, setHeroSlides] = useState<PageHeroSlide[]>([]);
     const [heroInterval, setHeroInterval] = useState(6000);
 
@@ -414,8 +417,7 @@ const AdminHotels = () => {
                       : String(20),
               currency: asText((editing as any).currency) || 'TND',
               source: asText((editing as any).source) || 'manual',
-              bookingMode:
-                  asText((editing as any).booking_mode) || 'instant',
+              bookingMode: asText((editing as any).booking_mode) || 'instant',
           } as unknown as HotelFormValues)
         : null;
 
@@ -436,22 +438,25 @@ const AdminHotels = () => {
                 return (
                     <div className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">
-                        {[
-                            {
-                                key: 'name',
-                                label: t('admin.name'),
-                                placeholder: t(
-                                    'admin.hotelForm.namePlaceholder',
-                                ),
-                                helpText: t('admin.hotelForm.nameHelp'),
-                            },
-                        ].map((field) => {
+                            {[
+                                {
+                                    key: 'name',
+                                    label: t('admin.name'),
+                                    placeholder: t(
+                                        'admin.hotelForm.namePlaceholder',
+                                    ),
+                                    helpText: t('admin.hotelForm.nameHelp'),
+                                },
+                            ].map((field) => {
                                 const localizedKey = `${field.key}_${activeLang}`;
                                 const value = asText(values[localizedKey]);
                                 const error = errors?.[localizedKey];
 
                                 return (
-                                    <div key={localizedKey} className="space-y-2">
+                                    <div
+                                        key={localizedKey}
+                                        className="space-y-2"
+                                    >
                                         <label
                                             htmlFor={localizedKey}
                                             className={`flex items-center gap-2 text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
@@ -499,9 +504,13 @@ const AdminHotels = () => {
                                 </label>
                                 <LocationSelect
                                     value={String(values.location ?? '')}
-                                    onChange={(val) => setField('location', val)}
+                                    onChange={(val) =>
+                                        setField('location', val)
+                                    }
                                     lang={activeLang}
-                                    placeholder={t('admin.hotelForm.locationPlaceholder')}
+                                    placeholder={t(
+                                        'admin.hotelForm.locationPlaceholder',
+                                    )}
                                 />
                             </div>
 
@@ -527,7 +536,9 @@ const AdminHotels = () => {
                                     rows={5}
                                     className={baseFieldClass(
                                         Boolean(
-                                            errors?.[`description_${activeLang}`],
+                                            errors?.[
+                                                `description_${activeLang}`
+                                            ],
                                         ),
                                     )}
                                     aria-invalid={Boolean(
@@ -549,16 +560,20 @@ const AdminHotels = () => {
                         {categoryTypes.map((catType) => (
                             <div key={catType.key} className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <label
-                                        className="text-xs font-semibold text-muted-foreground"
-                                    >
-                                        {catType.label[activeLang] || catType.label.en}
+                                    <label className="text-xs font-semibold text-muted-foreground">
+                                        {catType.label[activeLang] ||
+                                            catType.label.en}
                                     </label>
                                 </div>
                                 <Select
-                                    value={String(values[`category_${catType.key}`] || '')}
+                                    value={String(
+                                        values[`category_${catType.key}`] || '',
+                                    )}
                                     onValueChange={(val) => {
-                                        setField(`category_${catType.key}`, val);
+                                        setField(
+                                            `category_${catType.key}`,
+                                            val,
+                                        );
                                         const selected = catType.values.find(
                                             (v) => v.key === val,
                                         );
@@ -572,12 +587,18 @@ const AdminHotels = () => {
                                     <SelectTrigger
                                         className={baseFieldClass(false)}
                                     >
-                                        <SelectValue placeholder={t('actions.select')} />
+                                        <SelectValue
+                                            placeholder={t('actions.select')}
+                                        />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {catType.values.map((v) => (
-                                            <SelectItem key={v.key} value={v.key}>
-                                                {v.name[activeLang] || v.name.en}
+                                            <SelectItem
+                                                key={v.key}
+                                                value={v.key}
+                                            >
+                                                {v.name[activeLang] ||
+                                                    v.name.en}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -606,7 +627,11 @@ const AdminHotels = () => {
                             value={String(values.price ?? '')}
                             placeholder={t('admin.hotelForm.pricePlaceholder')}
                             onChange={(e) => setField('price', e.target.value)}
-                            className={errors?.price ? 'border-destructive ring-1 ring-destructive' : ''}
+                            className={
+                                errors?.price
+                                    ? 'border-destructive ring-1 ring-destructive'
+                                    : ''
+                            }
                         />
                         <p className="text-[10px] text-muted-foreground">
                             {t('admin.hotelForm.priceHelp')}
@@ -622,8 +647,12 @@ const AdminHotels = () => {
                             min={0}
                             step={0.01}
                             value={String(values.basePrice ?? '')}
-                            placeholder={t('admin.hotelForm.basePricePlaceholder')}
-                            onChange={(e) => setField('basePrice', e.target.value)}
+                            placeholder={t(
+                                'admin.hotelForm.basePricePlaceholder',
+                            )}
+                            onChange={(e) =>
+                                setField('basePrice', e.target.value)
+                            }
                         />
                         <p className="text-[10px] text-muted-foreground">
                             {t('admin.hotelForm.basePriceHelp')}
@@ -640,7 +669,9 @@ const AdminHotels = () => {
                             step={0.01}
                             value={String(values.markupPercentage ?? 20)}
                             placeholder="20"
-                            onChange={(e) => setField('markupPercentage', e.target.value)}
+                            onChange={(e) =>
+                                setField('markupPercentage', e.target.value)
+                            }
                         />
                         <p className="text-[10px] text-muted-foreground">
                             {t('admin.hotelForm.markupHelp')}
@@ -676,18 +707,31 @@ const AdminHotels = () => {
                             <div className="flex items-center">
                                 {Array.from({ length: 5 }, (_, i) => {
                                     const starNum = i + 1;
-                                    const currentStars = Number(values.stars ?? 0);
-                                    const fillLevel = currentStars >= starNum ? 1 : 0;
+                                    const currentStars = Number(
+                                        values.stars ?? 0,
+                                    );
+                                    const fillLevel =
+                                        currentStars >= starNum ? 1 : 0;
                                     return (
-                                        <div key={starNum} className="relative h-5 w-5">
-                                            <Star className="absolute inset-0 h-5 w-5 text-muted stroke-muted-foreground/30" />
+                                        <div
+                                            key={starNum}
+                                            className="relative h-5 w-5"
+                                        >
+                                            <Star className="absolute inset-0 h-5 w-5 stroke-muted-foreground/30 text-muted" />
                                             {fillLevel === 1 && (
                                                 <Star className="absolute inset-0 h-5 w-5 fill-amber-400 text-amber-400" />
                                             )}
                                             <button
                                                 type="button"
                                                 className="absolute inset-0 z-10 cursor-pointer"
-                                                onClick={() => setField('stars', currentStars === starNum ? starNum - 1 : starNum)}
+                                                onClick={() =>
+                                                    setField(
+                                                        'stars',
+                                                        currentStars === starNum
+                                                            ? starNum - 1
+                                                            : starNum,
+                                                    )
+                                                }
                                                 aria-label={`${starNum} stars`}
                                             />
                                         </div>
@@ -700,7 +744,14 @@ const AdminHotels = () => {
                                 max={5}
                                 step={1}
                                 value={String(values.stars ?? '')}
-                                onChange={(e) => setField('stars', e.target.value === '' ? null : Number(e.target.value))}
+                                onChange={(e) =>
+                                    setField(
+                                        'stars',
+                                        e.target.value === ''
+                                            ? null
+                                            : Number(e.target.value),
+                                    )
+                                }
                                 className="w-20"
                             />
                         </div>
@@ -747,7 +798,9 @@ const AdminHotels = () => {
                         </label>
                         <Select
                             value={String(values.bookingMode ?? 'instant')}
-                            onValueChange={(val) => setField('bookingMode', val)}
+                            onValueChange={(val) =>
+                                setField('bookingMode', val)
+                            }
                         >
                             <SelectTrigger className={baseFieldClass(false)}>
                                 <SelectValue />
@@ -1135,14 +1188,14 @@ const AdminHotels = () => {
                                         <div className="flex flex-col items-center gap-1">
                                             <span
                                                 className={`inline-block rounded-full px-2 py-1 text-xs font-medium ${
-                                                    (d as any).source === 'ostravel'
+                                                    (d as any).source ===
+                                                    'ostravel'
                                                         ? 'bg-primary/10 text-primary'
                                                         : 'bg-muted text-muted-foreground'
                                                 }`}
                                             >
-                                                {(
-                                                    (d as any).source ?? 'manual'
-                                                ) === 'ostravel'
+                                                {((d as any).source ??
+                                                    'manual') === 'ostravel'
                                                     ? t(
                                                           'admin.hotelForm.sourceOsttravel',
                                                       )
@@ -1151,10 +1204,8 @@ const AdminHotels = () => {
                                                       )}
                                             </span>
                                             <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                                                {(
-                                                    (d as any).booking_mode ??
-                                                    'instant'
-                                                ) === 'request'
+                                                {((d as any).booking_mode ??
+                                                    'instant') === 'request'
                                                     ? t(
                                                           'admin.hotelForm.bookingModeRequest',
                                                       )

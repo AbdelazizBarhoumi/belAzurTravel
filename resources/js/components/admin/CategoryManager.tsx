@@ -143,278 +143,284 @@ export function CategoryManager({
 
     return (
         <>
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle className="capitalize">
-                        Manage {type} Categories
-                    </DialogTitle>
-                </DialogHeader>
+            <Dialog open={isOpen} onOpenChange={onClose}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="capitalize">
+                            Manage {type} Categories
+                        </DialogTitle>
+                    </DialogHeader>
 
-                <div className="space-y-4 py-4">
-                    {loading ? (
-                        <div className="flex h-32 items-center justify-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                    ) : (
-                        <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-2">
-                            {categories.map((cat) => (
-                                <div
-                                    key={cat.id}
-                                    className="flex flex-col gap-2 rounded-lg border p-3"
-                                >
-                                    {editingId === cat.id ? (
-                                        <div className="space-y-3">
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <div>
-                                                    <Label className="text-xs">
-                                                        English
-                                                    </Label>
-                                                    <Input
-                                                        value={newName.en}
-                                                        onChange={(e) =>
-                                                            setNewName({
-                                                                ...newName,
-                                                                en: e.target
-                                                                    .value,
-                                                            })
-                                                        }
-                                                        size={1}
-                                                    />
+                    <div className="space-y-4 py-4">
+                        {loading ? (
+                            <div className="flex h-32 items-center justify-center">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : (
+                            <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-2">
+                                {categories.map((cat) => (
+                                    <div
+                                        key={cat.id}
+                                        className="flex flex-col gap-2 rounded-lg border p-3"
+                                    >
+                                        {editingId === cat.id ? (
+                                            <div className="space-y-3">
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <div>
+                                                        <Label className="text-xs">
+                                                            English
+                                                        </Label>
+                                                        <Input
+                                                            value={newName.en}
+                                                            onChange={(e) =>
+                                                                setNewName({
+                                                                    ...newName,
+                                                                    en: e.target
+                                                                        .value,
+                                                                })
+                                                            }
+                                                            size={1}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label className="text-xs">
+                                                            French
+                                                        </Label>
+                                                        <Input
+                                                            value={newName.fr}
+                                                            onChange={(e) =>
+                                                                setNewName({
+                                                                    ...newName,
+                                                                    fr: e.target
+                                                                        .value,
+                                                                })
+                                                            }
+                                                            size={1}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label className="text-xs">
+                                                            Arabic
+                                                        </Label>
+                                                        <Input
+                                                            value={newName.ar}
+                                                            onChange={(e) =>
+                                                                setNewName({
+                                                                    ...newName,
+                                                                    ar: e.target
+                                                                        .value,
+                                                                })
+                                                            }
+                                                            dir="rtl"
+                                                            size={1}
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <Label className="text-xs">
-                                                        French
-                                                    </Label>
-                                                    <Input
-                                                        value={newName.fr}
-                                                        onChange={(e) =>
-                                                            setNewName({
-                                                                ...newName,
-                                                                fr: e.target
-                                                                    .value,
-                                                            })
+                                                <div className="flex justify-end gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            setEditingId(null)
                                                         }
-                                                        size={1}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label className="text-xs">
-                                                        Arabic
-                                                    </Label>
-                                                    <Input
-                                                        value={newName.ar}
-                                                        onChange={(e) =>
-                                                            setNewName({
-                                                                ...newName,
-                                                                ar: e.target
-                                                                    .value,
-                                                            })
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            handleUpdate(cat.id)
                                                         }
-                                                        dir="rtl"
-                                                        size={1}
-                                                    />
+                                                    >
+                                                        <Check className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
                                             </div>
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={() =>
-                                                        setEditingId(null)
-                                                    }
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        handleUpdate(cat.id)
-                                                    }
-                                                >
-                                                    <Check className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex flex-col">
-                                                <span className="font-medium">
-                                                    {cat.name.en}
-                                                </span>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {cat.name.fr} |{' '}
-                                                    {cat.name.ar}
-                                                </span>
-                                                <code className="mt-1 text-[10px] text-muted-foreground">
-                                                    Key: {cat.key}
-                                                </code>
-                                            </div>
-                                            <div className="flex gap-1">
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() =>
-                                                        startEditing(cat)
-                                                    }
-                                                >
-                                                    <Edit2 className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() =>
-                                                        handleDelete(cat.id)
-                                                    }
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-
-                            {isCreating ? (
-                                <div className="space-y-3 rounded-lg border-2 border-dashed border-primary/50 p-3">
-                                    <div className="grid grid-cols-3 gap-2">
-                                        <div>
-                                            <Label className="text-xs">
-                                                English
-                                            </Label>
-                                            <Input
-                                                value={newName.en}
-                                                onChange={(e) =>
-                                                    setNewName({
-                                                        ...newName,
-                                                        en: e.target.value,
-                                                    })
-                                                }
-                                                placeholder="Beach"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="text-xs">
-                                                French
-                                            </Label>
-                                            <Input
-                                                value={newName.fr}
-                                                onChange={(e) =>
-                                                    setNewName({
-                                                        ...newName,
-                                                        fr: e.target.value,
-                                                    })
-                                                }
-                                                placeholder="Plage"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="text-xs">
-                                                Arabic
-                                            </Label>
-                                            <Input
-                                                value={newName.ar}
-                                                onChange={(e) =>
-                                                    setNewName({
-                                                        ...newName,
-                                                        ar: e.target.value,
-                                                    })
-                                                }
-                                                dir="rtl"
-                                                placeholder="شاطئ"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end gap-2">
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => setIsCreating(false)}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            onClick={handleCreate}
-                                        >
-                                            Create Category
-                                        </Button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <Button
-                                    variant="outline"
-                                    className="w-full border-dashed"
-                                    onClick={() => {
-                                        setIsCreating(true);
-                                        setNewName({ en: '', fr: '', ar: '' });
-                                        setEditingId(null);
-                                    }}
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add New Category
-                                </Button>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <DialogFooter>
-                    <Button onClick={onClose}>Done</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <AlertDialog
-            open={confirmDialog.open}
-            onOpenChange={(open) =>
-                setConfirmDialog((prev) => ({ ...prev, open }))
-            }
-        >
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Category?</AlertDialogTitle>
-                    <AlertDialogDescription asChild>
-                        <div>
-                            <p>{confirmDialog.message}</p>
-                            {confirmDialog.affectedItems.length > 0 && (
-                                <div className="mt-3 max-h-48 overflow-y-auto rounded border p-2 text-sm">
-                                    <p className="mb-1 font-medium">
-                                        Affected items:
-                                    </p>
-                                    <ul className="space-y-1 pl-4 list-disc">
-                                        {confirmDialog.affectedItems.map(
-                                            (item) => (
-                                                <li key={item.slug}>
-                                                    {item.name}{' '}
-                                                    <span className="text-muted-foreground">
-                                                        ({item.slug})
+                                        ) : (
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium">
+                                                        {cat.name.en}
                                                     </span>
-                                                </li>
-                                            ),
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {cat.name.fr} |{' '}
+                                                        {cat.name.ar}
+                                                    </span>
+                                                    <code className="mt-1 text-[10px] text-muted-foreground">
+                                                        Key: {cat.key}
+                                                    </code>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            startEditing(cat)
+                                                        }
+                                                    >
+                                                        <Edit2 className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            handleDelete(cat.id)
+                                                        }
+                                                    >
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </div>
+                                            </div>
                                         )}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                        onClick={() => {
-                            confirmDialog.onDelete();
-                            setConfirmDialog((prev) => ({
-                                ...prev,
-                                open: false,
-                            }));
-                        }}
-                    >
-                        Delete Anyway
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                                    </div>
+                                ))}
+
+                                {isCreating ? (
+                                    <div className="space-y-3 rounded-lg border-2 border-dashed border-primary/50 p-3">
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div>
+                                                <Label className="text-xs">
+                                                    English
+                                                </Label>
+                                                <Input
+                                                    value={newName.en}
+                                                    onChange={(e) =>
+                                                        setNewName({
+                                                            ...newName,
+                                                            en: e.target.value,
+                                                        })
+                                                    }
+                                                    placeholder="Beach"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs">
+                                                    French
+                                                </Label>
+                                                <Input
+                                                    value={newName.fr}
+                                                    onChange={(e) =>
+                                                        setNewName({
+                                                            ...newName,
+                                                            fr: e.target.value,
+                                                        })
+                                                    }
+                                                    placeholder="Plage"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs">
+                                                    Arabic
+                                                </Label>
+                                                <Input
+                                                    value={newName.ar}
+                                                    onChange={(e) =>
+                                                        setNewName({
+                                                            ...newName,
+                                                            ar: e.target.value,
+                                                        })
+                                                    }
+                                                    dir="rtl"
+                                                    placeholder="شاطئ"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() =>
+                                                    setIsCreating(false)
+                                                }
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                onClick={handleCreate}
+                                            >
+                                                Create Category
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full border-dashed"
+                                        onClick={() => {
+                                            setIsCreating(true);
+                                            setNewName({
+                                                en: '',
+                                                fr: '',
+                                                ar: '',
+                                            });
+                                            setEditingId(null);
+                                        }}
+                                    >
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Add New Category
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter>
+                        <Button onClick={onClose}>Done</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <AlertDialog
+                open={confirmDialog.open}
+                onOpenChange={(open) =>
+                    setConfirmDialog((prev) => ({ ...prev, open }))
+                }
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                            <div>
+                                <p>{confirmDialog.message}</p>
+                                {confirmDialog.affectedItems.length > 0 && (
+                                    <div className="mt-3 max-h-48 overflow-y-auto rounded border p-2 text-sm">
+                                        <p className="mb-1 font-medium">
+                                            Affected items:
+                                        </p>
+                                        <ul className="list-disc space-y-1 pl-4">
+                                            {confirmDialog.affectedItems.map(
+                                                (item) => (
+                                                    <li key={item.slug}>
+                                                        {item.name}{' '}
+                                                        <span className="text-muted-foreground">
+                                                            ({item.slug})
+                                                        </span>
+                                                    </li>
+                                                ),
+                                            )}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                confirmDialog.onDelete();
+                                setConfirmDialog((prev) => ({
+                                    ...prev,
+                                    open: false,
+                                }));
+                            }}
+                        >
+                            Delete Anyway
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

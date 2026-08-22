@@ -165,8 +165,8 @@ function mapApiToSiteSettings(json: Record<string, unknown>): SiteSettings {
             (json.gallery as SiteSettings['gallery']) ??
             defaultSiteSettings.gallery,
         landingVideo:
-            ((json.content as SiteSettingsContent)?.landing_video as SiteSettings['landingVideo']) ??
-            null,
+            ((json.content as SiteSettingsContent)
+                ?.landing_video as SiteSettings['landingVideo']) ?? null,
         config:
             (json.config as SiteSettings['config']) ??
             defaultSiteSettings.config,
