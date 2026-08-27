@@ -50,6 +50,7 @@ import {
     localizeKnown,
 } from '@/lib/adminI18n';
 import { LocationSelect } from '@/components/ui/LocationSelect';
+import { formatPrice } from '@/lib/utils';
 import {
     BEST_TIME_OPTIONS,
     LANGUAGES,
@@ -503,7 +504,7 @@ const AdminDestinations = () => {
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        {destination.price.toLocaleString()} TND
+                                        {formatPrice(destination.price, 'TND')}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {destination.rating}

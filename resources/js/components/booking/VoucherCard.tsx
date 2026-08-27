@@ -2,7 +2,7 @@ import { Printer } from 'lucide-react';
 import type { ClientBookingRow } from '@/api/booking.api';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 
 interface VoucherCardProps {
     booking: ClientBookingRow;
@@ -106,8 +106,7 @@ export function VoucherCard({ booking }: VoucherCardProps) {
                         {t('voucher.total')}
                     </p>
                     <p className="font-serif text-xl font-bold text-primary">
-                        {Number(booking.total_amount).toLocaleString()}{' '}
-                        {currency}
+                        {formatPrice(booking.total_amount, currency)}
                     </p>
                 </div>
 
@@ -171,10 +170,7 @@ export function VoucherCard({ booking }: VoucherCardProps) {
                                             </td>
                                         )}
                                         <td className="px-2 py-2 font-semibold text-foreground">
-                                            {Number(
-                                                room.total ?? 0,
-                                            ).toLocaleString()}{' '}
-                                            {room.currency ?? currency}
+                                            {formatPrice(room.total ?? 0, room.currency ?? currency)}
                                         </td>
                                     </tr>
                                 ))}

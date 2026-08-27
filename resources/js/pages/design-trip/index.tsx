@@ -28,6 +28,7 @@ import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { formatPrice } from '@/lib/utils';
 type Option = { id: string; label: string; icon: LucideIcon; desc?: string };
 const destinations: Option[] = [
     { id: 'santorini', label: 'Santorini', icon: Waves, desc: 'Greece' },
@@ -279,7 +280,7 @@ const DesignTrip = () => {
                                 </Button>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                                Estimate: {estimate.toLocaleString()} TND
+                                Estimate: {formatPrice(estimate, 'TND')}
                             </div>
                         </div>
                     </div>

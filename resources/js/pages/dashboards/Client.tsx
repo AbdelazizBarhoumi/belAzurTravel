@@ -53,7 +53,7 @@ import { useAuthUser } from '@/hooks/useAuthUser';
 import { useDestinations } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 import { bookingStatusLabels } from '@/lib/adminI18n';
-import { cn } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 
 type LocalizedText = Record<Lang, string>;
 
@@ -300,9 +300,7 @@ const ClientDashboard = () => {
     };
 
     const formattedAmount = (booking: ClientBookingRow) =>
-        `${Number(booking.total_amount).toLocaleString()} ${
-            booking.currency ?? 'TND'
-        }`;
+        formatPrice(booking.total_amount, booking.currency ?? 'TND');
 
     return (
         <div
@@ -662,9 +660,7 @@ const ClientDashboard = () => {
                                         </span>
                                         <span className="font-semibold text-foreground">
                                             {payment.currency}{' '}
-                                            {Number(
-                                                payment.amount,
-                                            ).toLocaleString()}
+                                            {formatPrice(payment.amount)}
                                         </span>
                                         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                                             {payment.status}

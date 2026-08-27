@@ -13,6 +13,7 @@ import {
     useTours,
 } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
+import { formatPrice } from '@/lib/utils';
 
 type LocalizedText = Record<Lang, string>;
 
@@ -400,7 +401,7 @@ export default function DestinationDetail() {
                                     <p className="mt-1 text-xs text-muted-foreground">
                                         {localize(tour.duration, lang)} ·{' '}
                                         {t('destinationDetail.startingFrom')}{' '}
-                                        {tour.price.toLocaleString()} TND
+                                        {formatPrice(tour.price, 'TND')}
                                     </p>
                                 </div>
                             </Link>

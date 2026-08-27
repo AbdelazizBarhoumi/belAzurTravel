@@ -17,6 +17,7 @@ import { localizeText } from '@/data';
 import { useTours, useCategoryTypesPublic } from '@/hooks/usePublicData';
 
 import { matchesSearchText } from '@/lib/listFilters';
+import { formatPrice } from '@/lib/utils';
 
 const Tours = () => {
     const { t, lang, dir } = useLanguage();
@@ -329,8 +330,7 @@ const Tours = () => {
                                                                     </span>
                                                                 </div>
                                                                 <span className="text-lg font-bold text-primary">
-                                                                    {tour.price.toLocaleString()}{' '}
-                                                                    TND
+                                                                    {formatPrice(tour.price, 'TND')}
                                                                 </span>
                                                                 <span className="ml-1 text-xs text-muted-foreground">
                                                                     {t(

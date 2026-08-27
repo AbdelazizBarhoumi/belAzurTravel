@@ -5,6 +5,7 @@ import { notifyInteraction } from '@/api/interactions.api';
 import { BookingDialog } from '@/components/forms/BookingDialog';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPrice } from '@/lib/utils';
 
 type DetailItem = {
     label: string;
@@ -265,7 +266,7 @@ export function StickyBookingCard({
 
                     <div className="flex items-baseline gap-1">
                         <span className="font-serif text-4xl font-bold leading-none text-secondary">
-                            {displayPrice.toLocaleString()} {currency}
+                            {formatPrice(displayPrice, currency)}
                         </span>
                         {priceSuffix && (
                             <span className="text-sm text-muted-foreground">

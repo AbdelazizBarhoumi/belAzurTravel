@@ -42,6 +42,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPrice } from '@/lib/utils';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
 import { Label } from '@/components/ui/label';
@@ -870,7 +871,7 @@ export default function AdminCars() {
                                             asText(row.category_key)}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
-                                        {Number(row.price).toLocaleString()} TND
+                                        {formatPrice(row.price, 'TND')}
                                     </td>
                                     <td className="px-4 py-3 text-sm">
                                         {asText(row.seats)}

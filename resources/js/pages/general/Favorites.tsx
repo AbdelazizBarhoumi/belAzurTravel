@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPrice } from '@/lib/utils';
 
 const Favorites = () => {
     const { favorites } = useFavorites();
@@ -68,7 +69,7 @@ const Favorites = () => {
                                         </span>
                                     ) : f.price ? (
                                         <span className="font-bold text-primary">
-                                            ${f.price.toLocaleString()}
+                                            {formatPrice(f.price, 'TND')}
                                         </span>
                                     ) : (
                                         <span />

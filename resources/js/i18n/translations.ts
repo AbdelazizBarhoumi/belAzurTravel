@@ -1696,11 +1696,6 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'اختر تواريخك وعدد المسافرين للحصول على الأسعار والتوفر في الوقت الفعلي.',
         en: 'Pick your dates and number of travelers to get real-time prices and availability.',
     },
-    'hotelDetail.livePrices': {
-        fr: 'Prix en direct',
-        ar: 'سعر مباشر',
-        en: 'Live price',
-    },
     'hotelDetail.availableFrom': {
         fr: 'Disponible à partir du',
         ar: 'متاح من',

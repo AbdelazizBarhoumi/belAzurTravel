@@ -49,6 +49,7 @@ import {
 import type { Lang } from '@/i18n/translations';
 import {
     cn,
+    formatPrice,
     formatPromoRate,
     parseChildAges,
     promoPrice,
@@ -655,7 +656,7 @@ export default function HotelDetail() {
                                       return (
                                           <>
                                               <p className="text-3xl font-bold text-foreground">
-                                                  {shown.toLocaleString()}
+                                                  {formatPrice(shown)}
                                                   <span className="align-top text-sm font-semibold">
                                                       {' '}
                                                       {currency}
@@ -663,9 +664,8 @@ export default function HotelDetail() {
                                               </p>
                                               {promo && (
                                                   <p className="text-xs font-medium text-muted-foreground line-through">
-                                                      {promo.original.toLocaleString()}{' '}
-                                                      {currency}
-                                                  </p>
+                                                       {formatPrice(promo.original, currency)}
+                                                   </p>
                                               )}
                                               {headerNights === 1 && (
                                                   <p className="mb-3 text-xs text-muted-foreground">
@@ -1047,10 +1047,6 @@ export default function HotelDetail() {
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
                                 >
-                                    <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                        <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                                        {t('hotelDetail.livePrices')}
-                                    </div>
                                     <RoomRatesTable
                                         rooms={rateRooms}
                                         occupancy={occupancy}
@@ -1163,8 +1159,7 @@ export default function HotelDetail() {
                                             {detail.provider === 'manual' ? (
                                                 <>
                                                     <p className="text-xl font-bold text-primary">
-                                                        {room.pricePerNight.toLocaleString()}{' '}
-                                                        {currency}
+                                                        {formatPrice(room.pricePerNight, currency)}
                                                     </p>
                                                     <p className="text-xs text-muted-foreground">
                                                         {t(

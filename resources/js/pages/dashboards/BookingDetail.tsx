@@ -24,7 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { bookingStatusLabels } from '@/lib/adminI18n';
-import { cn } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
     Pending: 'bg-secondary/10 text-secondary',
@@ -303,11 +303,11 @@ export default function BookingDetail() {
                     <div className="text-right">
                         {details?.base_price && details?.promo_rate ? (
                             <p className="text-xs font-medium text-muted-foreground line-through">
-                                {details.base_price.toLocaleString()} {currency}
+                                {formatPrice(details.base_price, currency)}
                             </p>
                         ) : null}
                         <p className="font-serif text-2xl font-bold text-primary">
-                            {total.toLocaleString()} {currency}
+                            {formatPrice(total, currency)}
                         </p>
                         {details?.promo_rate ? (
                             <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
@@ -316,8 +316,7 @@ export default function BookingDetail() {
                         ) : null}
                         {details?.price_per_night && details?.nights ? (
                             <p className="mt-0.5 text-xs text-muted-foreground">
-                                {details.price_per_night.toLocaleString()}{' '}
-                                {currency} / night
+                                {formatPrice(details.price_per_night, currency)} / night
                             </p>
                         ) : null}
                         <p className="text-xs text-muted-foreground">
@@ -532,18 +531,13 @@ export default function BookingDetail() {
                                                               );
                                                     return (
                                                         <>
-                                                            {displayTotal.toLocaleString()}{' '}
-                                                            {room.currency ??
-                                                                currency}
+                                                            {formatPrice(displayTotal, room.currency ?? currency)}
                                                         </>
                                                     );
                                                 })()}
                                                 {room.price_per_night ? (
                                                     <span className="block text-xs font-normal text-muted-foreground">
-                                                        ~
-                                                        {room.price_per_night.toLocaleString()}{' '}
-                                                        {room.currency ??
-                                                            currency}{' '}
+                                                        ~{formatPrice(room.price_per_night, room.currency ?? currency)}{' '}
                                                         {t(
                                                             'bookingDetail.perNight',
                                                         ) || 'per night'}
@@ -562,7 +556,7 @@ export default function BookingDetail() {
                                             {t('voucher.total') || 'Total'}
                                         </td>
                                         <td className="px-2 py-2 text-right font-serif text-lg font-bold text-primary">
-                                            {total.toLocaleString()} {currency}
+                                            {formatPrice(total, currency)}
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -570,7 +564,7 @@ export default function BookingDetail() {
                         </div>
                     ) : (
                         <p className="text-sm font-semibold text-foreground">
-                            {total.toLocaleString()} {currency}
+                            {formatPrice(total, currency)}
                         </p>
                     )}
                 </div>
@@ -580,7 +574,7 @@ export default function BookingDetail() {
                         {t('voucher.total') || 'Total'}
                     </span>
                     <span className="font-serif text-2xl font-bold text-primary">
-                        {total.toLocaleString()} {currency}
+                        {formatPrice(total, currency)}
                     </span>
                 </div>
             )}

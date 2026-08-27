@@ -42,6 +42,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPrice } from '@/lib/utils';
 import type { Lang } from '@/i18n/translations';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
@@ -619,7 +620,7 @@ export default function AdminEvents() {
                                         {row.date}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        {Number(row.price).toLocaleString()} TND
+                                        {formatPrice(row.price, 'TND')}
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center justify-center gap-2">

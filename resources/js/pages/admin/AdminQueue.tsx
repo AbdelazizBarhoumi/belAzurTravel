@@ -45,7 +45,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { api } from '@/hooks/useBooking';
 import { bookingStatusLabels } from '@/lib/adminI18n';
-import { cn } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
     pending: 'bg-secondary/10 text-secondary',
@@ -698,8 +698,7 @@ function BookingsTable({
                                     {formatDate(b.created_at)}
                                 </td>
                                 <td className="px-4 py-3 text-sm font-semibold">
-                                    {b.total_amount.toLocaleString()}{' '}
-                                    {b.details?.currency ?? 'TND'}
+                                    {formatPrice(b.total_amount, b.details?.currency ?? 'TND')}
                                 </td>
                                 <td className="px-4 py-3">
                                     <StatusSelect
@@ -1068,7 +1067,7 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                             {t('admin.amount')}
                         </p>
                         <p className="font-medium">
-                            {b.total_amount.toLocaleString()} TND
+                            {formatPrice(b.total_amount, 'TND')}
                         </p>
                     </div>
                     {b.start_date && (
@@ -1244,10 +1243,7 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                                                               );
                                                     return (
                                                         <>
-                                                            {displayTotal.toLocaleString()}{' '}
-                                                            {room.currency ??
-                                                                prebook?.currency ??
-                                                                'TND'}
+                                                            {formatPrice(displayTotal, room.currency ?? prebook?.currency ?? 'TND')}
                                                         </>
                                                     );
                                                 })()}
@@ -1394,8 +1390,7 @@ function ComplaintDetail({
                             · {complaint.booking.type}
                         </p>
                         <p className="text-muted-foreground">
-                            {complaint.booking.total_amount.toLocaleString()}{' '}
-                            TND · {complaint.booking.status}
+                            {formatPrice(complaint.booking.total_amount, 'TND')} · {complaint.booking.status}
                         </p>
                     </div>
                 )}

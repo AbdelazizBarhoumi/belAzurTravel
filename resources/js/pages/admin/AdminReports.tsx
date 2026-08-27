@@ -19,6 +19,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useAdminBookings } from '@/hooks/useBooking';
 import { bookingStatusLabels } from '@/lib/adminI18n';
+import { formatPrice } from '@/lib/utils';
 
 const COLORS = [
     'hsl(var(--primary))',
@@ -91,7 +92,7 @@ const AdminReports = () => {
     const stats = [
         {
             label: t('admin.totalRevenue'),
-            value: `${totalRevenue.toLocaleString()} TND`,
+            value: formatPrice(totalRevenue, 'TND'),
             icon: Wallet,
         },
         {
@@ -190,7 +191,7 @@ const AdminReports = () => {
                                         </div>
                                     </div>
                                     <span className="text-sm font-semibold">
-                                        {amt.toLocaleString()} TND
+                                        {formatPrice(amt, 'TND')}
                                     </span>
                                 </div>
                             ))}

@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPrice } from '@/lib/utils';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import {
     Select,
@@ -575,7 +576,7 @@ export default function AdminFlights() {
                                         {String(row.to ?? '')}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        {Number(row.price).toLocaleString()} TND
+                                        {formatPrice(row.price, 'TND')}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <div className="flex items-center justify-center gap-2">

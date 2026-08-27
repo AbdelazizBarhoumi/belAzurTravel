@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Bed, Users, Wifi, Wind, Bath, Tv } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPrice } from '@/lib/utils';
 
 interface RoomSupplement {
     name: string;
@@ -203,16 +204,16 @@ export function RoomsList({
                                                       )}
                                             </div>
                                             <div className="mb-4 font-serif text-3xl font-bold text-secondary">
-                                                {room.priceTotal?.toLocaleString() ??
-                                                    room.pricePerNight.toLocaleString()}{' '}
-                                                {currency}
+                                                {formatPrice(
+                                                    room.priceTotal ?? room.pricePerNight,
+                                                    currency,
+                                                )}
                                             </div>
                                             {room.priceTotal !== undefined &&
                                             room.nights ? (
                                                 <div className="mb-4 text-xs text-muted-foreground">
                                                     ~
-                                                    {room.pricePerNight.toLocaleString()}{' '}
-                                                    {currency}{' '}
+                                                    {formatPrice(room.pricePerNight, currency)}{' '}
                                                     {t('hotelDetail.pernight')}{' '}
                                                     · {room.nights}{' '}
                                                     {t(
@@ -240,9 +241,7 @@ export function RoomsList({
                                                                     }
                                                                 </span>
                                                                 <span className="font-semibold text-foreground">
-                                                                    +
-                                                                    {supplement.price.toLocaleString()}{' '}
-                                                                    {currency}
+                                                                    +{formatPrice(supplement.price, currency)}
                                                                     {supplement.perNight
                                                                         ? ` ${t('hotelDetail.pernight')}`
                                                                         : ''}

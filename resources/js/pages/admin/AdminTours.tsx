@@ -46,6 +46,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { LocationSelect } from '@/components/ui/LocationSelect';
 import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPrice } from '@/lib/utils';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { AdminTour } from '@/hooks/useAdminStore';
 import type { Lang } from '@/i18n/translations';
@@ -1040,7 +1041,7 @@ const AdminTours = () => {
                                         {d.duration}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-semibold">
-                                        {d.price.toLocaleString()} TND
+                                        {formatPrice(d.price, 'TND')}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm">
                                         {d.rating}

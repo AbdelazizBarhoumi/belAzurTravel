@@ -17,7 +17,7 @@ import { AdminLayout } from '@/components/layout/AdminLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { bookingStatusLabels } from '@/lib/adminI18n';
-import { cn } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 
 const bookingStatusColors: Record<string, string> = {
     Pending: 'bg-secondary/10 text-secondary',
@@ -113,7 +113,7 @@ const AdminDashboard = () => {
     const stats = [
         {
             labelKey: 'admin.totalRevenue',
-            value: `${totalRevenue.toLocaleString()} TND`,
+            value: formatPrice(totalRevenue, 'TND'),
             change: '+12.5%',
             icon: Wallet,
             color: 'text-primary',
@@ -265,8 +265,7 @@ const AdminDashboard = () => {
                                             ).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-sm font-semibold">
-                                            {b.total_amount.toLocaleString()}{' '}
-                                            TND
+                                            {formatPrice(b.total_amount, 'TND')}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span

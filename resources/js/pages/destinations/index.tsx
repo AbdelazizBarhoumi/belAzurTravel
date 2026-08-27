@@ -38,6 +38,7 @@ import {
 } from '@/hooks/usePublicData';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
+import { formatPrice } from '@/lib/utils';
 
 const SORT_OPTIONS = [
     { value: 'featured', labelKey: 'dest.sort.featured' },
@@ -455,8 +456,7 @@ const Destinations = () => {
                                                             {dest.price > 0 && (
                                                                 <span className="font-bold text-primary">
                                                                     From{' '}
-                                                                    {dest.price.toLocaleString()}{' '}
-                                                                    TND
+                                                                    {formatPrice(dest.price, 'TND')}
                                                                 </span>
                                                             )}
                                                             <Button

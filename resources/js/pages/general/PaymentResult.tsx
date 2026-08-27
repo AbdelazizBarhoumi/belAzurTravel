@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getBooking, type ClientBookingRow } from '@/api/booking.api';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatPrice } from '@/lib/utils';
 
 const PaymentResult = () => {
     const [searchParams] = useSearchParams();
@@ -96,7 +97,7 @@ const PaymentResult = () => {
                                     {t('admin.amount')}
                                 </span>
                                 <span className="font-bold text-primary">
-                                    {booking.total_amount.toLocaleString()} TND
+                                    {formatPrice(booking.total_amount, 'TND')}
                                 </span>
                             </div>
                         </div>

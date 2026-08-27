@@ -61,6 +61,7 @@ import { matchesSearchText } from '@/lib/listFilters';
 import {
     cn,
     earliestCheckIn,
+    formatPrice,
     formatPromoRate,
     parseChildAges,
     promoPrice,
@@ -1076,14 +1077,11 @@ export default function Hotels() {
                                                                           if (
                                                                               promo
                                                                           ) {
-                                                                              return (
-                                                                                  <div className="flex items-center gap-3">
-                                                                                      <span className="text-base font-extrabold text-primary">
-                                                                                          {promo.discounted?.toLocaleString()}{' '}
-                                                                                          {
-                                                                                              currency
-                                                                                          }
-                                                                                      </span>
+                                                                               return (
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <span className="text-base font-extrabold text-primary">
+                                                                                        {formatPrice(promo.discounted, currency)}
+                                                                                    </span>
                                                                                       <div className="flex flex-col items-end gap-0 text-right">
                                                                                           {hotel.nights ? (
                                                                                               <span className="text-[10px] font-medium text-muted-foreground">
@@ -1095,22 +1093,16 @@ export default function Hotels() {
                                                                                                   )}
                                                                                               </span>
                                                                                           ) : null}
-                                                                                          <span className="text-[10px] font-medium text-destructive line-through">
-                                                                                              {promo.original.toLocaleString()}{' '}
-                                                                                              {
-                                                                                                  currency
-                                                                                              }
-                                                                                          </span>
+                                                                                       <span className="text-[10px] font-medium text-destructive line-through">
+                                                                                           {formatPrice(promo.original, currency)}
+                                                                                       </span>
                                                                                       </div>
                                                                                   </div>
                                                                               );
                                                                           }
-                                                                          return (
-                                                                              <span>
-                                                                                  {hotel.price_total?.toLocaleString()}{' '}
-                                                                                  {
-                                                                                      currency
-                                                                                  }
+                                                                           return (
+                                                                               <span>
+                                                                                   {formatPrice(hotel.price_total, currency)}
                                                                                   {hotel.nights
                                                                                       ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
                                                                                       : ''}

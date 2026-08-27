@@ -6,6 +6,7 @@ import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useTours } from '@/hooks/usePublicData';
+import { formatPrice } from '@/lib/utils';
 
 interface Props {
     config: LandingSectionConfig;
@@ -25,7 +26,7 @@ export function ToursSection({ config }: Props) {
     const items = tours.map((tour) => ({
         id: tour.slug,
         title: tour.name[lang] || tour.name.en,
-        price: `${tour.price.toLocaleString()} DT`,
+        price: formatPrice(tour.price, 'DT'),
         meta: tour.duration[lang] || tour.duration.en,
         image: tour.image,
         href: `/tours/${tour.slug}`,

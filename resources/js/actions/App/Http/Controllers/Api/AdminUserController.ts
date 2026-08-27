@@ -82,7 +82,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
  * @see app/Http/Controllers/Api/AdminUserController.php:41
  * @route '/api/admin/users/{user}'
  */
-export const update = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -97,7 +97,7 @@ update.definition = {
  * @see app/Http/Controllers/Api/AdminUserController.php:41
  * @route '/api/admin/users/{user}'
  */
-update.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+update.url = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { user: args }
     }
@@ -130,7 +130,7 @@ update.url = (args: { user: number | { id: number } } | [user: number | { id: nu
  * @see app/Http/Controllers/Api/AdminUserController.php:41
  * @route '/api/admin/users/{user}'
  */
-update.put = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -140,7 +140,7 @@ update.put = (args: { user: number | { id: number } } | [user: number | { id: nu
  * @see app/Http/Controllers/Api/AdminUserController.php:41
  * @route '/api/admin/users/{user}'
  */
-    const updateForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -155,7 +155,7 @@ update.put = (args: { user: number | { id: number } } | [user: number | { id: nu
  * @see app/Http/Controllers/Api/AdminUserController.php:41
  * @route '/api/admin/users/{user}'
  */
-        updateForm.put = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.put = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -171,7 +171,7 @@ update.put = (args: { user: number | { id: number } } | [user: number | { id: nu
  * @see app/Http/Controllers/Api/AdminUserController.php:97
  * @route '/api/admin/users/{user}/toggle-active'
  */
-export const toggleActive = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const toggleActive = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: toggleActive.url(args, options),
     method: 'post',
 })
@@ -186,7 +186,7 @@ toggleActive.definition = {
  * @see app/Http/Controllers/Api/AdminUserController.php:97
  * @route '/api/admin/users/{user}/toggle-active'
  */
-toggleActive.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+toggleActive.url = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { user: args }
     }
@@ -219,7 +219,7 @@ toggleActive.url = (args: { user: number | { id: number } } | [user: number | { 
  * @see app/Http/Controllers/Api/AdminUserController.php:97
  * @route '/api/admin/users/{user}/toggle-active'
  */
-toggleActive.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+toggleActive.post = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: toggleActive.url(args, options),
     method: 'post',
 })
@@ -229,7 +229,7 @@ toggleActive.post = (args: { user: number | { id: number } } | [user: number | {
  * @see app/Http/Controllers/Api/AdminUserController.php:97
  * @route '/api/admin/users/{user}/toggle-active'
  */
-    const toggleActiveForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const toggleActiveForm = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: toggleActive.url(args, options),
         method: 'post',
     })
@@ -239,7 +239,7 @@ toggleActive.post = (args: { user: number | { id: number } } | [user: number | {
  * @see app/Http/Controllers/Api/AdminUserController.php:97
  * @route '/api/admin/users/{user}/toggle-active'
  */
-        toggleActiveForm.post = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        toggleActiveForm.post = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: toggleActive.url(args, options),
             method: 'post',
         })
@@ -250,7 +250,7 @@ toggleActive.post = (args: { user: number | { id: number } } | [user: number | {
  * @see app/Http/Controllers/Api/AdminUserController.php:122
  * @route '/api/admin/users/{user}'
  */
-export const destroy = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -265,7 +265,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Api/AdminUserController.php:122
  * @route '/api/admin/users/{user}'
  */
-destroy.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { user: args }
     }
@@ -298,7 +298,7 @@ destroy.url = (args: { user: number | { id: number } } | [user: number | { id: n
  * @see app/Http/Controllers/Api/AdminUserController.php:122
  * @route '/api/admin/users/{user}'
  */
-destroy.delete = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -308,7 +308,7 @@ destroy.delete = (args: { user: number | { id: number } } | [user: number | { id
  * @see app/Http/Controllers/Api/AdminUserController.php:122
  * @route '/api/admin/users/{user}'
  */
-    const destroyForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -323,7 +323,7 @@ destroy.delete = (args: { user: number | { id: number } } | [user: number | { id
  * @see app/Http/Controllers/Api/AdminUserController.php:122
  * @route '/api/admin/users/{user}'
  */
-        destroyForm.delete = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { user: string | number | { id: string | number } } | [user: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',

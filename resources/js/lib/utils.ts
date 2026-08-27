@@ -56,6 +56,16 @@ export const earliestCheckIn = (
 // Render the provider's promotion discount rate (a percentage string such as
 // "29.00") as "-29%", or an empty string when it is missing or not a positive
 // number. The rate carries no sign and no unit; the minus and percent are ours.
+export const formatPrice = (
+    value: number | null | undefined,
+    currency?: string,
+): string => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '0';
+    const formatted = Math.round(num).toLocaleString('en-US');
+    return currency ? `${formatted} ${currency}` : formatted;
+};
+
 export const formatPromoRate = (rate?: string | null): string => {
     const value = rate ? Number.parseFloat(rate) : Number.NaN;
     if (!Number.isFinite(value) || value <= 0) {
@@ -91,7 +101,7 @@ export const promoPrice = (
     }
 
     return {
-        original: price,
-        discounted: Math.round(price * (1 - value / 100) * 100) / 100,
+        original: Math.round(price),
+        discounted: Math.round(price * (1 - value / 100)),
     };
 };

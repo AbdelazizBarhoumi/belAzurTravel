@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { api } from '@/hooks/useBooking';
-import { toLocalISODate } from '@/lib/utils';
+import { formatPrice, toLocalISODate } from '@/lib/utils';
 
 type Civility = 'Mr' | 'Mrs' | 'Ms';
 
@@ -461,8 +461,7 @@ export function BookingDialog({
                                                 'Estimated total'}
                                         </span>
                                         <p className="font-serif text-xl font-bold text-primary">
-                                            {submittedBooking.total.toLocaleString()}{' '}
-                                            {submittedBooking.currency}
+                                            {formatPrice(submittedBooking.total, submittedBooking.currency)}
                                         </p>
                                     </div>
                                 </div>
@@ -615,12 +614,11 @@ export function BookingDialog({
                                               'night'
                                             : t('hotelDetail.nightsLabel') ||
                                               'nights'}{' '}
-                                        · {pricePerNight.toLocaleString()}{' '}
-                                        {currency}
+                                        · {formatPrice(pricePerNight, currency)}
                                     </p>
                                 ) : null}
                                 <p className="font-serif text-lg font-bold text-primary">
-                                    {amount.toLocaleString()} {currency}
+                                    {formatPrice(amount, currency)}
                                 </p>
                             </div>
                         </div>
@@ -952,7 +950,7 @@ export function BookingDialog({
                                     {mutation.isPending
                                         ? t('common.processing') ||
                                           'Processing...'
-                                        : `${t('booking.submit') || 'Request booking'} · ${amount.toLocaleString()} ${currency}`}
+                                        : `${t('booking.submit') || 'Request booking'} · ${formatPrice(amount, currency)}`}
                                 </Button>
                             </DialogFooter>
                         </form>

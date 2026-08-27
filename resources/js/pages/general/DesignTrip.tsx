@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { Label } from '@/components/ui/label';
+import { formatPrice } from '@/lib/utils';
 type Option = { id: string; label: string; icon: LucideIcon; desc?: string };
 const destinations: Option[] = [
     { id: 'santorini', label: 'Santorini', icon: Waves, desc: 'Greece' },
@@ -510,7 +511,7 @@ const DesignTrip = () => {
                                                 Estimated Total
                                             </p>
                                             <p className="font-serif text-4xl font-bold">
-                                                ${estimate.toLocaleString()}
+                                                {formatPrice(estimate, 'TND')}
                                             </p>
                                             <p className="mt-2 text-xs opacity-70">
                                                 Final price confirmed by your

@@ -8,7 +8,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn, promoPrice } from '@/lib/utils';
+import { cn, formatPrice, promoPrice } from '@/lib/utils';
 
 export interface RateRoom {
     id: string;
@@ -386,8 +386,7 @@ export function RoomRatesTable({
                                                                     className="text-[11px] text-muted-foreground"
                                                                 >
                                                                     +
-                                                                    {supplement.price.toLocaleString()}{' '}
-                                                                    {currency}{' '}
+                                                                    {formatPrice(supplement.price, currency)}{' '}
                                                                     {
                                                                         supplement.name
                                                                     }
@@ -407,18 +406,18 @@ export function RoomRatesTable({
                                                     <>- {currency}</>
                                                 ) : (
                                                     <>
-                                                        {(totalPromo
-                                                            ? totalPromo.discounted
-                                                            : total
-                                                        ).toLocaleString()}{' '}
-                                                        {currency}
+                                                        {formatPrice(
+                                                            totalPromo
+                                                                ? totalPromo.discounted
+                                                                : total,
+                                                            currency,
+                                                        )}
                                                     </>
                                                 )}
                                             </p>
                                             {!requestMode && totalPromo && (
                                                 <p className="text-xs font-medium text-muted-foreground line-through">
-                                                    {totalPromo.original.toLocaleString()}{' '}
-                                                    {currency}
+                                                    {formatPrice(totalPromo.original, currency)}
                                                 </p>
                                             )}
                                         </div>
@@ -449,18 +448,18 @@ export function RoomRatesTable({
                                 t('hotelDetail.requestTitle')
                             ) : (
                                 <>
-                                    {(activeTotalPromo
-                                        ? activeTotalPromo.discounted
-                                        : activeTotal
-                                    ).toLocaleString()}{' '}
-                                    {currency}
+                                    {formatPrice(
+                                        activeTotalPromo
+                                            ? activeTotalPromo.discounted
+                                            : activeTotal,
+                                        currency,
+                                    )}
                                 </>
                             )}
                         </p>
                         {!requestMode && activeTotalPromo && (
                             <p className="text-xs font-medium text-muted-foreground line-through">
-                                {activeTotalPromo.original.toLocaleString()}{' '}
-                                {currency}
+                                {formatPrice(activeTotalPromo.original, currency)}
                             </p>
                         )}
                     </div>
