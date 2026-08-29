@@ -24,7 +24,7 @@ export function getLocalizedCategoryLabelByKey(
 }
 
 export function getHotelCategoryLabels(
-    assignments: Record<string, string> | undefined,
+    assignments: Record<string, string | string[]> | undefined,
     categoryTypes: PublicCategoryType[],
     lang: Lang,
     maxCount = 3,
@@ -33,11 +33,16 @@ export function getHotelCategoryLabels(
     const labels: string[] = [];
     for (const catType of categoryTypes) {
         if (labels.length >= maxCount) break;
-        const valueKey = assignments[catType.key];
-        if (!valueKey) continue;
-        const value = catType.values.find((v) => v.key === valueKey);
-        if (value) {
-            labels.push(value.name[lang] || value.name.en || valueKey);
+        const assigned = assignments[catType.key];
+        if (!assigned) continue;
+        // Handle array values (e.g. pricing_type from multiple boarding codes).
+        const valueKeys = Array.isArray(assigned) ? assigned : [assigned];
+        for (const valueKey of valueKeys) {
+            if (labels.length >= maxCount) break;
+            const value = catType.values.find((v) => v.key === valueKey);
+            if (value) {
+                labels.push(value.name[lang] || value.name.en || valueKey);
+            }
         }
     }
     return labels;

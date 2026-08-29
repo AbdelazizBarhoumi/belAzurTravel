@@ -8,7 +8,7 @@ class CategoryValue extends Model
 {
     protected $table = 'category_type_values';
 
-    protected $fillable = ['category_type_id', 'key', 'name', 'color'];
+    protected $fillable = ['category_type_id', 'key', 'name', 'color', 'provider_id'];
 
     protected $casts = [
         'name' => 'array',

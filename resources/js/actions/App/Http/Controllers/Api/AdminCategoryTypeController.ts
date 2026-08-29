@@ -192,7 +192,7 @@ reorder.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:73
  * @route '/api/admin/category-types/{categoryType}'
  */
-export const update = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -207,7 +207,7 @@ update.definition = {
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:73
  * @route '/api/admin/category-types/{categoryType}'
  */
-update.url = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { categoryType: args }
     }
@@ -240,7 +240,7 @@ update.url = (args: { categoryType: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:73
  * @route '/api/admin/category-types/{categoryType}'
  */
-update.put = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -250,7 +250,7 @@ update.put = (args: { categoryType: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:73
  * @route '/api/admin/category-types/{categoryType}'
  */
-    const updateForm = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -265,7 +265,7 @@ update.put = (args: { categoryType: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:73
  * @route '/api/admin/category-types/{categoryType}'
  */
-        updateForm.put = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.put = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -281,7 +281,7 @@ update.put = (args: { categoryType: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:101
  * @route '/api/admin/category-types/{categoryType}'
  */
-export const destroy = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -296,7 +296,7 @@ destroy.definition = {
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:101
  * @route '/api/admin/category-types/{categoryType}'
  */
-destroy.url = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { categoryType: args }
     }
@@ -329,7 +329,7 @@ destroy.url = (args: { categoryType: string | number | { id: string | number } }
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:101
  * @route '/api/admin/category-types/{categoryType}'
  */
-destroy.delete = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -339,7 +339,7 @@ destroy.delete = (args: { categoryType: string | number | { id: string | number 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:101
  * @route '/api/admin/category-types/{categoryType}'
  */
-    const destroyForm = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -354,7 +354,7 @@ destroy.delete = (args: { categoryType: string | number | { id: string | number 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:101
  * @route '/api/admin/category-types/{categoryType}'
  */
-        destroyForm.delete = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',
@@ -370,7 +370,7 @@ destroy.delete = (args: { categoryType: string | number | { id: string | number 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:132
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-export const values = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const values = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: values.url(args, options),
     method: 'get',
 })
@@ -385,7 +385,7 @@ values.definition = {
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:132
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-values.url = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+values.url = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { categoryType: args }
     }
@@ -418,7 +418,7 @@ values.url = (args: { categoryType: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:132
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-values.get = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+values.get = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: values.url(args, options),
     method: 'get',
 })
@@ -427,7 +427,7 @@ values.get = (args: { categoryType: string | number | { id: string | number } } 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:132
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-values.head = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+values.head = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: values.url(args, options),
     method: 'head',
 })
@@ -437,7 +437,7 @@ values.head = (args: { categoryType: string | number | { id: string | number } }
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:132
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-    const valuesForm = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const valuesForm = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: values.url(args, options),
         method: 'get',
     })
@@ -447,7 +447,7 @@ values.head = (args: { categoryType: string | number | { id: string | number } }
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:132
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-        valuesForm.get = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        valuesForm.get = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: values.url(args, options),
             method: 'get',
         })
@@ -456,7 +456,7 @@ values.head = (args: { categoryType: string | number | { id: string | number } }
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:132
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-        valuesForm.head = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        valuesForm.head = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: values.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -472,7 +472,7 @@ values.head = (args: { categoryType: string | number | { id: string | number } }
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:139
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-export const storeValue = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const storeValue = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: storeValue.url(args, options),
     method: 'post',
 })
@@ -487,7 +487,7 @@ storeValue.definition = {
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:139
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-storeValue.url = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+storeValue.url = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { categoryType: args }
     }
@@ -520,7 +520,7 @@ storeValue.url = (args: { categoryType: string | number | { id: string | number 
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:139
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-storeValue.post = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+storeValue.post = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: storeValue.url(args, options),
     method: 'post',
 })
@@ -530,7 +530,7 @@ storeValue.post = (args: { categoryType: string | number | { id: string | number
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:139
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-    const storeValueForm = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const storeValueForm = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: storeValue.url(args, options),
         method: 'post',
     })
@@ -540,7 +540,7 @@ storeValue.post = (args: { categoryType: string | number | { id: string | number
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:139
  * @route '/api/admin/category-types/{categoryType}/values'
  */
-        storeValueForm.post = (args: { categoryType: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        storeValueForm.post = (args: { categoryType: number | { id: number } } | [categoryType: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: storeValue.url(args, options),
             method: 'post',
         })
@@ -551,7 +551,7 @@ storeValue.post = (args: { categoryType: string | number | { id: string | number
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:169
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-export const updateValue = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const updateValue = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: updateValue.url(args, options),
     method: 'put',
 })
@@ -566,7 +566,7 @@ updateValue.definition = {
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:169
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-updateValue.url = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+updateValue.url = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     categoryType: args[0],
@@ -596,7 +596,7 @@ updateValue.url = (args: { categoryType: string | number | { id: string | number
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:169
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-updateValue.put = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+updateValue.put = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: updateValue.url(args, options),
     method: 'put',
 })
@@ -606,7 +606,7 @@ updateValue.put = (args: { categoryType: string | number | { id: string | number
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:169
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-    const updateValueForm = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateValueForm = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: updateValue.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -621,7 +621,7 @@ updateValue.put = (args: { categoryType: string | number | { id: string | number
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:169
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-        updateValueForm.put = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateValueForm.put = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: updateValue.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -637,7 +637,7 @@ updateValue.put = (args: { categoryType: string | number | { id: string | number
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:194
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-export const destroyValue = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroyValue = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroyValue.url(args, options),
     method: 'delete',
 })
@@ -652,7 +652,7 @@ destroyValue.definition = {
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:194
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-destroyValue.url = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions) => {
+destroyValue.url = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     categoryType: args[0],
@@ -682,7 +682,7 @@ destroyValue.url = (args: { categoryType: string | number | { id: string | numbe
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:194
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-destroyValue.delete = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroyValue.delete = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroyValue.url(args, options),
     method: 'delete',
 })
@@ -692,7 +692,7 @@ destroyValue.delete = (args: { categoryType: string | number | { id: string | nu
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:194
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-    const destroyValueForm = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyValueForm = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroyValue.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -707,7 +707,7 @@ destroyValue.delete = (args: { categoryType: string | number | { id: string | nu
  * @see app/Http/Controllers/Api/AdminCategoryTypeController.php:194
  * @route '/api/admin/category-types/{categoryType}/values/{value}'
  */
-        destroyValueForm.delete = (args: { categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } } | [categoryType: string | number | { id: string | number }, value: string | number | { id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyValueForm.delete = (args: { categoryType: number | { id: number }, value: number | { id: number } } | [categoryType: number | { id: number }, value: number | { id: number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroyValue.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',

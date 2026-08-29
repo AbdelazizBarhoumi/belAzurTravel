@@ -186,27 +186,26 @@ export default function HotelDetail() {
     const [searchParams] = useSearchParams();
     const urlCheckIn = searchParams.get('from') || '';
     const urlCheckOut = searchParams.get('to') || '';
-    const urlGuests = Number(searchParams.get('guests') || 2);
+    const urlGuests = Number(searchParams.get('guests') || 1);
     const urlRooms = Number(searchParams.get('rooms') || 1);
     const urlChildren = parseChildAges(searchParams.get('children'));
 
     // A lone check-in date defaults check-out to +1 night, matching the
     // listing page's behavior when only a start date was chosen.
+    // When no URL params, default to tomorrow so prices are shown immediately.
     const initialFrom = urlCheckIn
         ? new Date(`${urlCheckIn}T00:00:00`)
-        : undefined;
+        : tomorrowDate;
     const initialTo = urlCheckOut
         ? new Date(`${urlCheckOut}T00:00:00`)
-        : initialFrom
-          ? new Date(initialFrom.getTime() + 86_400_000)
-          : undefined;
+        : new Date(initialFrom.getTime() + 86_400_000);
 
     const [dateRange, setDateRange] = useState<DateRange | undefined>(
-        initialFrom ? { from: initialFrom, to: initialTo } : undefined,
+        { from: initialFrom, to: initialTo },
     );
     const [occupancy, setOccupancy] = useState<Occupancy>({
         rooms: Number.isFinite(urlRooms) && urlRooms > 0 ? urlRooms : 1,
-        adults: Number.isFinite(urlGuests) && urlGuests > 0 ? urlGuests : 2,
+        adults: Number.isFinite(urlGuests) && urlGuests > 0 ? urlGuests : 1,
         childAges: urlChildren,
     });
     const [selectedBoardingIds] = useState<number[]>([]);

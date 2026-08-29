@@ -24,7 +24,7 @@ export interface HotelItem {
     image: string;
     tags: string[];
     amenities: Array<{ name: Record<string, string>; icon: string }>;
-    category_assignments?: Record<string, string>;
+    category_assignments?: Record<string, string | string[]>;
     // Card teaser: provider short description in live results, otherwise the
     // stored detail description.
     description?: LocalizedText;

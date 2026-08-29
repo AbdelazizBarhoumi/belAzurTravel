@@ -358,6 +358,7 @@ export type PublicCategoryType = {
         key: string;
         name: Record<string, string>;
         color?: string;
+        provider_id?: number;
     }[];
 };
 

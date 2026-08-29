@@ -2,6 +2,8 @@
 
 namespace App\Services\OsTravel;
 
+use App\Models\CategoryType;
+use App\Models\EntityCategoryAssignment;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Models\User;
@@ -110,6 +112,9 @@ class HotelPublisher
             'details' => $mapped['details'],
             'meta' => $meta,
         ], $mapped['filter_booleans']));
+
+        // Assign pricing_type category based on the hotel's boarding codes.
+        $this->assignPricingType($hotel, $detail['Boarding'] ?? []);
 
         // `hotel_id` is unique on `os_travel_hotels`, so a published `hotels`
         // row can be wired to exactly one staging row. When the database holds
@@ -586,6 +591,63 @@ class HotelPublisher
             'sport_loisir' => false,
             'detente' => false,
         ], $boardings, $themeFlags);
+    }
+
+    /**
+     * Create EntityCategoryAssignment records for pricing_type based on the
+     * hotel's boarding codes from the provider.
+     *
+     * @param  list<array{Code?: string}>  $boardings
+     */
+    protected function assignPricingType(Hotel $hotel, array $boardings): void
+    {
+        $type = CategoryType::where('entity_type', 'hotels')
+            ->where('key', 'pricing_type')
+            ->first();
+
+        if (! $type) {
+            return;
+        }
+
+        $boardingCodes = array_map(
+            fn ($b) => strtoupper((string) ($b['Code'] ?? '')),
+            $boardings,
+        );
+
+        // Map provider boarding codes to pricing_type value keys.
+        $codeToPricingKey = [
+            'AI' => 'all-inclusive',
+            'HB' => 'half-board',
+            'BB' => 'bed-breakfast',
+            'LPD' => 'bed-breakfast',
+            'RO' => 'room-only',
+            'LS' => 'room-only',
+            'DP' => 'half-board',
+            'PC' => 'all-inclusive',
+        ];
+
+        $pricingKeys = array_unique(array_filter(array_map(
+            fn ($code) => $codeToPricingKey[$code] ?? null,
+            $boardingCodes,
+        )));
+
+        foreach ($pricingKeys as $key) {
+            $value = $type->values()->where('key', $key)->first();
+            if (! $value) {
+                continue;
+            }
+
+            EntityCategoryAssignment::updateOrCreate(
+                [
+                    'entity_type' => 'hotels',
+                    'entity_id' => $hotel->id,
+                    'category_type_id' => $type->id,
+                ],
+                ['category_value_id' => $value->id],
+            );
+        }
+
+        Cache::forget('hotels.index');
     }
 
     protected function localized(string $value): array

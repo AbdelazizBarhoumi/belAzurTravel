@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 
 export interface CategorizedItem {
-    category_assignments?: Record<string, string>;
+    category_assignments?: Record<string, string | string[]>;
 }
 
 interface CheckboxFilterProps {
@@ -28,7 +28,14 @@ export function CheckboxFilter({
         for (const val of categoryType.values) {
             counts[val.key] = items.filter((item) => {
                 const assignments = item.category_assignments;
-                return assignments && assignments[categoryType.key] === val.key;
+                if (!assignments) return false;
+                const assigned = assignments[categoryType.key];
+                // assigned may be a string or an array of strings
+                // (e.g. pricing_type from multiple boarding codes).
+                if (Array.isArray(assigned)) {
+                    return assigned.includes(val.key);
+                }
+                return assigned === val.key;
             }).length;
         }
         return counts;

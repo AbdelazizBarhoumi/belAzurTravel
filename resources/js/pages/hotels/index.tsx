@@ -107,6 +107,18 @@ const ROOM_TYPE_MAP: Record<string, string> = {
     suite: 'suite',
 };
 
+// Map provider boarding codes to pricing_type category value keys.
+const BOARDING_TO_PRICING: Record<string, string> = {
+    AI: 'all-inclusive',
+    HB: 'half-board',
+    BB: 'bed-breakfast',
+    LPD: 'bed-breakfast',
+    RO: 'room-only',
+    LS: 'room-only',
+    DP: 'half-board',
+    PC: 'all-inclusive',
+};
+
 // Merges every category source into the sidebar filter state:
 // - `category_*` query params (navbar subcategory links / shared filters)
 // - `stars` param from the landing widget (property class)
@@ -165,9 +177,11 @@ export default function Hotels() {
     const [params, setSearchParams] = useSearchParams();
     // Accept landing widget params as fallback (destination -> q)
     const initialSearch = params.get('q') || params.get('destination') || '';
-    const initialGuests = Number(params.get('guests') || 2);
+    const initialGuests = Number(params.get('guests') || 1);
     const initialFromDate = params.get('from') || '';
     const initialToDate = params.get('to') || '';
+    const tomorrowISO = toLocalISODate(new Date(Date.now() + 86400000)) ?? '';
+    const tomorrowPlusOne = toLocalISODate(new Date(Date.now() + 2 * 86400000)) ?? '';
     const [showMobileFilter, setShowMobileFilter] = useState(false);
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [occupancy, setOccupancy] = useState<Occupancy>({
@@ -180,8 +194,8 @@ export default function Hotels() {
     const [sort, setSort] = useState<SortValue>('price_asc');
     const [showUnavailable, setShowUnavailable] = useState(false);
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
-        from: initialFromDate ? new Date(initialFromDate) : undefined,
-        to: initialToDate ? new Date(initialToDate) : undefined,
+        from: initialFromDate ? new Date(initialFromDate) : new Date(`${tomorrowISO}T00:00:00`),
+        to: initialToDate ? new Date(initialToDate) : new Date(`${tomorrowPlusOne}T00:00:00`),
     });
     const { data: hotels = [] } = useHotels();
     const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
@@ -236,7 +250,7 @@ export default function Hotels() {
             from: fromParam ? new Date(fromParam) : undefined,
             to: toParam ? new Date(toParam) : undefined,
         });
-        const guestsParam = Number(params.get('guests') || 2);
+        const guestsParam = Number(params.get('guests') || 1);
         setOccupancy({
             adults:
                 Number.isFinite(guestsParam) && guestsParam > 0
@@ -260,7 +274,7 @@ export default function Hotels() {
     >(null);
 
     const hasLandingDateOrGuestFilters =
-        occupancy.adults !== 2 ||
+        occupancy.adults !== 1 ||
         occupancy.childAges.length > 0 ||
         dateRange?.from !== undefined ||
         dateRange?.to !== undefined;
@@ -289,7 +303,7 @@ export default function Hotels() {
         const checkOut = toLocalISODate(dateRange?.to);
         if (checkIn) next.set('from', checkIn);
         if (checkOut) next.set('to', checkOut);
-        if (occupancy.adults !== 2)
+        if (occupancy.adults !== 1)
             next.set('guests', String(occupancy.adults));
         if (occupancy.childAges.length > 0)
             next.set('children', occupancy.childAges.join(','));
@@ -425,7 +439,13 @@ export default function Hotels() {
                 return categoryGroups.every(([typeKey, values]) => {
                     const assignments = hotel.category_assignments;
                     if (assignments == null) return false;
-                    return values.includes(assignments[typeKey]);
+                    const assigned = assignments[typeKey];
+                    // assigned may be a string or an array of strings
+                    // (e.g. pricing_type from multiple boarding codes).
+                    if (Array.isArray(assigned)) {
+                        return assigned.some((v) => values.includes(v));
+                    }
+                    return values.includes(assigned);
                 });
             }
 
@@ -447,12 +467,25 @@ export default function Hotels() {
             return undefined;
         }
 
-        // Only the date range and occupancy define this request. Fetching
-        // the complete result set (available + unavailable, every star
-        // rating, every price) for the chosen dates means the price slider's
-        // bounds can be read straight off it (see `priceBounds` below), and
-        // every other control below can filter/sort what's already loaded
-        // instead of re-hitting the provider.
+        // Map selected pricing_type values to provider boarding IDs.
+        const boardingIds: number[] = [];
+        const pricingTypeValues = categoryTypeFilters['pricing_type'] ?? [];
+        if (pricingTypeValues.length > 0) {
+            const pricingType = categoryTypes.find(
+                (ct) => ct.key === 'pricing_type',
+            );
+            if (pricingType) {
+                for (const val of pricingType.values) {
+                    if (
+                        pricingTypeValues.includes(val.key) &&
+                        typeof val.provider_id === 'number'
+                    ) {
+                        boardingIds.push(val.provider_id);
+                    }
+                }
+            }
+        }
+
         return {
             check_in: checkInISO,
             check_out: checkOutISO,
@@ -463,6 +496,7 @@ export default function Hotels() {
                 },
             ],
             only_available: false,
+            ...(boardingIds.length > 0 ? { boarding_ids: boardingIds } : {}),
         };
     }, [
         hasDates,
@@ -470,6 +504,8 @@ export default function Hotels() {
         checkOutISO,
         occupancy.adults,
         occupancy.childAges,
+        categoryTypeFilters,
+        categoryTypes,
     ]);
 
     // Rapid filter interactions must not each fire an expensive search; batch
@@ -550,11 +586,15 @@ export default function Hotels() {
     const liveStayPrices = liveResults
         .map((h) => h.price)
         .filter((p): p is number => typeof p === 'number');
+    const browseStayPrices = hotels
+        .map((h) => h.price)
+        .filter((p): p is number => typeof p === 'number');
+    const allStayPrices = liveLoaded ? liveStayPrices : browseStayPrices;
     const priceBounds: readonly [number, number] =
-        liveLoaded && liveStayPrices.length > 0
+        allStayPrices.length > 0
             ? [
-                  Math.floor(Math.min(...liveStayPrices)),
-                  Math.ceil(Math.max(...liveStayPrices)),
+                  Math.floor(Math.min(...allStayPrices)),
+                  Math.ceil(Math.max(...allStayPrices)),
               ]
             : [dataMinPrice, dataMaxPrice];
     const priceBoundsChanged =
@@ -596,9 +636,37 @@ export default function Hotels() {
     const baseList: HotelCard[] = liveLoaded
         ? liveResults.map((live) => {
               const browse = browseBySlug.get(live.slug);
-              return browse
+              const merged = browse
                   ? ({ ...browse, ...live } as unknown as HotelCard)
                   : (live as unknown as HotelCard);
+
+              // Derive pricing_type from room boarding codes when not already
+              // set by the browse record. This gives the sidebar filter
+              // accurate counts for provider hotels.
+              if (
+                  merged.category_assignments?.pricing_type == null &&
+                  live.rooms?.length > 0
+              ) {
+                  const pricingTypes = [
+                      ...new Set(
+                          live.rooms
+                              .map((r) => {
+                                  const code = (r.boarding ?? '')
+                                      .toUpperCase();
+                                  return BOARDING_TO_PRICING[code] ?? null;
+                              })
+                              .filter(Boolean) as string[],
+                      ),
+                  ];
+                  if (pricingTypes.length > 0) {
+                      merged.category_assignments = {
+                          ...(merged.category_assignments ?? {}),
+                          pricing_type: pricingTypes,
+                      };
+                  }
+              }
+
+              return merged;
           })
         : (hotels as HotelCard[]);
 
@@ -688,7 +756,7 @@ export default function Hotels() {
         setHotelPriceRange([priceBounds[0], priceBounds[1]]);
         setPriceRangeTouched(false);
         setDateRange(undefined);
-        setOccupancy({ adults: 2, childAges: [] });
+        setOccupancy({ adults: 1, childAges: [] });
     };
 
     const isRtl = dir === 'rtl';

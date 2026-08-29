@@ -82,7 +82,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:28
  * @route '/api/admin/support-inquiries/{inquiry}'
  */
-export const update = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -97,7 +97,7 @@ update.definition = {
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:28
  * @route '/api/admin/support-inquiries/{inquiry}'
  */
-update.url = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { inquiry: args }
     }
@@ -130,7 +130,7 @@ update.url = (args: { inquiry: string | number | { id: string | number } } | [in
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:28
  * @route '/api/admin/support-inquiries/{inquiry}'
  */
-update.put = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -140,7 +140,7 @@ update.put = (args: { inquiry: string | number | { id: string | number } } | [in
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:28
  * @route '/api/admin/support-inquiries/{inquiry}'
  */
-    const updateForm = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -155,7 +155,7 @@ update.put = (args: { inquiry: string | number | { id: string | number } } | [in
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:28
  * @route '/api/admin/support-inquiries/{inquiry}'
  */
-        updateForm.put = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.put = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -171,7 +171,7 @@ update.put = (args: { inquiry: string | number | { id: string | number } } | [in
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:44
  * @route '/api/admin/support-inquiries/{inquiry}/reply'
  */
-export const reply = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const reply = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: reply.url(args, options),
     method: 'post',
 })
@@ -186,7 +186,7 @@ reply.definition = {
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:44
  * @route '/api/admin/support-inquiries/{inquiry}/reply'
  */
-reply.url = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+reply.url = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { inquiry: args }
     }
@@ -219,7 +219,7 @@ reply.url = (args: { inquiry: string | number | { id: string | number } } | [inq
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:44
  * @route '/api/admin/support-inquiries/{inquiry}/reply'
  */
-reply.post = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+reply.post = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: reply.url(args, options),
     method: 'post',
 })
@@ -229,7 +229,7 @@ reply.post = (args: { inquiry: string | number | { id: string | number } } | [in
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:44
  * @route '/api/admin/support-inquiries/{inquiry}/reply'
  */
-    const replyForm = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const replyForm = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: reply.url(args, options),
         method: 'post',
     })
@@ -239,7 +239,7 @@ reply.post = (args: { inquiry: string | number | { id: string | number } } | [in
  * @see app/Http/Controllers/Api/AdminSupportInquiryController.php:44
  * @route '/api/admin/support-inquiries/{inquiry}/reply'
  */
-        replyForm.post = (args: { inquiry: string | number | { id: string | number } } | [inquiry: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        replyForm.post = (args: { inquiry: number | { id: number } } | [inquiry: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: reply.url(args, options),
             method: 'post',
         })

@@ -2,6 +2,8 @@
 
 namespace App\Services\OsTravel;
 
+use App\Models\CategoryType;
+use App\Models\CategoryValue;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Models\OsTravelReference;
@@ -125,6 +127,7 @@ class OsTravelCatalogSync
             $boardings = $this->client->listBoardings()['ListBoarding'] ?? [];
             $this->note('ListBoarding returned '.count($boardings).' items');
             $this->syncReferences(OsTravelReference::TYPE_BOARDING, $boardings);
+            $this->updateBoardingProviderIds($boardings);
 
             $categories = $this->client->listCategories()['ListCategorie'] ?? [];
             $this->note('ListCategorie returned '.count($categories).' items');
@@ -217,6 +220,49 @@ class OsTravelCatalogSync
                 'sync_id' => $this->sync->id,
             ]
         );
+    }
+
+    /**
+     * Update provider_id on pricing_type CategoryValues by cross-referencing
+     * boarding codes from the provider with the pricing_type value keys.
+     *
+     * @param  list<array{Id?: int, Code?: string}>  $boardings
+     */
+    protected function updateBoardingProviderIds(array $boardings): void
+    {
+        $type = CategoryType::where('entity_type', 'hotels')
+            ->where('key', 'pricing_type')
+            ->first();
+
+        if (! $type) {
+            return;
+        }
+
+        // Map provider boarding codes to pricing_type value keys.
+        $codeToPricingKey = [
+            'AI' => 'all-inclusive',
+            'HB' => 'half-board',
+            'BB' => 'bed-breakfast',
+            'LPD' => 'bed-breakfast',
+            'RO' => 'room-only',
+            'LS' => 'room-only',
+            'DP' => 'half-board',
+            'PC' => 'all-inclusive',
+        ];
+
+        foreach ($boardings as $boarding) {
+            $code = strtoupper((string) ($boarding['Code'] ?? ''));
+            $externalId = (string) ($boarding['Id'] ?? '');
+            $pricingKey = $codeToPricingKey[$code] ?? null;
+
+            if ($pricingKey === null || $externalId === '') {
+                continue;
+            }
+
+            CategoryValue::where('category_type_id', $type->id)
+                ->where('key', $pricingKey)
+                ->update(['provider_id' => (int) $externalId]);
+        }
     }
 
     protected function syncHotels(): void

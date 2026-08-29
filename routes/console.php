@@ -16,6 +16,11 @@ Schedule::command('os-travel:sync-catalog')
     ->withoutOverlapping(config('ostravel.sync.lock_ttl_minutes'))
     ->onOneServer();
 
+Schedule::command('hotels:fetch-tomorrow-prices')
+    ->dailyAt('03:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+
 Schedule::command('bookings:expire')
     ->everyFiveMinutes()
     ->withoutOverlapping()

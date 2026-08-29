@@ -97,6 +97,11 @@ class Hotel extends Model
             ->where('entity_type', 'hotels');
     }
 
+    public function dailyPrices(): HasMany
+    {
+        return $this->hasMany(HotelDailyPrice::class);
+    }
+
     /**
      * Whether this hotel is wired to an approved OS-TRAVEL staging row with a
      * public `hotels` row linked. This is the authoritative signal that a hotel

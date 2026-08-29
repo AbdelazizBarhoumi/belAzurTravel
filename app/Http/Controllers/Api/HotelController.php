@@ -9,6 +9,7 @@ use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Services\OsTravel\HotelPublisher;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class HotelController extends Controller
@@ -25,7 +26,9 @@ class HotelController extends Controller
             'hotels.index',
             now()->addMinutes(10),
             function () {
-                return Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->oldest('id')->get()->map(
+                $tomorrow = Carbon::tomorrow()->toDateString();
+
+                return Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue', 'dailyPrices' => fn ($q) => $q->where('date', $tomorrow)])->oldest('id')->get()->map(
                     fn (Hotel $item) => $this->payload($item)
                 );
             }
@@ -36,7 +39,8 @@ class HotelController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue'])->where('slug', $slug)->firstOrFail();
+        $tomorrow = Carbon::tomorrow()->toDateString();
+        $item = Hotel::query()->with(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue', 'dailyPrices' => fn ($q) => $q->where('date', $tomorrow)])->where('slug', $slug)->firstOrFail();
 
         // Lazily refresh provider HotelDetail at most once per day: the first
         // visitor each day triggers a single-flight fetch; later visitors hit
@@ -55,7 +59,13 @@ class HotelController extends Controller
         return response()->json(Cache::remember(
             "hotels.{$slug}",
             now()->addMinutes(10),
-            fn () => $this->payload($item->fresh(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue']))
+            function () use ($item) {
+                $fresh = $item->fresh(['rooms.featureItems', 'rooms.imageItems', 'amenities', 'categoryAssignments.categoryType', 'categoryAssignments.categoryValue']);
+                $tomorrow = Carbon::tomorrow()->toDateString();
+                $fresh->load(['dailyPrices' => fn ($q) => $q->where('date', $tomorrow)]);
+
+                return $this->payload($fresh);
+            }
         ));
     }
 
@@ -69,11 +79,11 @@ class HotelController extends Controller
         }
 
         if ($item->isProviderLinked()) {
-            // Provider-linked hotels carry no stored price: it is always
-            // computed live from `HotelSearch` for the user's exact dates and
-            // occupancy, never persisted.
-            $price = null;
-            $basePrice = null;
+            // Provider-linked hotels: use tomorrow's stored price if available,
+            // otherwise fall back to null (live search will provide it).
+            $dailyPrice = $item->dailyPrices->first();
+            $price = $dailyPrice?->price ?? null;
+            $basePrice = $dailyPrice?->base_price ?? null;
         } else {
             $price = $item->price;
             $basePrice = $item->base_price;

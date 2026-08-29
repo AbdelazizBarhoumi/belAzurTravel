@@ -268,6 +268,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('La Badira Adult Only', 'La Badira Adult Only', 'لا باديرا للبالغين فقط'),
                 'location' => $this->loc('Hammamet Nord', 'Hammamet Nord', 'الحمامات الشمالية'),
                 'category_key' => 'luxury', 'category' => $this->loc('Luxury', 'Luxe', 'فاخر'),
+                'pricing_key' => 'bed-breakfast',
                 'price' => 280, 'rating' => 5.0, 'stars' => 5, 'reviews' => 286,
                 'image' => $base.'/badira1.webp', 'tags' => ['luxury', 'spa', 'beach'],
                 'details' => ['gallery' => [$base.'/badira1.webp', $base.'/badira2.webp', $base.'/badira3.webp', $base.'/badira5.webp'], 'city' => $this->loc('Hammamet', 'Hammamet', 'الحمامات'), 'country' => $this->loc('Tunisia', 'Tunisie', 'تونس')],
@@ -283,6 +284,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Iberostar Waves Averroes', 'Iberostar Waves Averroes', 'إيبيروستار ويڤز أفيروز'),
                 'location' => $this->loc('Yasmine Hammamet', 'Yasmine Hammamet', 'ياسمين الحمامات'),
                 'category_key' => 'resort', 'category' => $this->loc('Resort', 'Resort', 'منتجع'),
+                'pricing_key' => 'all-inclusive',
                 'price' => 195, 'rating' => 5.0, 'stars' => 5, 'reviews' => 412,
                 'image' => $base.'/iberostar1.webp', 'tags' => ['family', 'spa', 'all-inclusive'],
                 'details' => ['gallery' => [$base.'/iberostar1.webp', $base.'/iberostar2.webp', $base.'/iberostar3.webp'], 'city' => $this->loc('Yasmine Hammamet', 'Yasmine Hammamet', 'ياسمين الحمامات'), 'country' => $this->loc('Tunisia', 'Tunisie', 'تونس')],
@@ -298,6 +300,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Barcelo Concorde Green Park', 'Barcelo Concorde Green Park', 'بارسيلو كونكورد غرين بارك'),
                 'location' => $this->loc('Port El Kantaoui', 'Port El Kantaoui', 'ميناء القنطاوي'),
                 'category_key' => 'beach', 'category' => $this->loc('Beach Resort', 'Hôtel de plage', 'منتجع شاطئي'),
+                'pricing_key' => 'half-board',
                 'price' => 220, 'rating' => 5.0, 'stars' => 5, 'reviews' => 351,
                 'image' => $base.'/concorde1.webp', 'tags' => ['beach', 'family', 'pool'],
                 'details' => ['gallery' => [$base.'/concorde1.webp', $base.'/concorde2.webp', $base.'/concorde3.webp'], 'city' => $this->loc('Sousse', 'Sousse', 'سوسة'), 'country' => $this->loc('Tunisia', 'Tunisie', 'تونس')],
@@ -313,6 +316,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Occidental Sousse Marhaba', 'Occidental Sousse Marhaba', 'أوكسيدنتال سوسة مرحبا'),
                 'location' => $this->loc('Zone Touristique, Sousse', 'Zone Touristique, Sousse', 'المنطقة السياحية، سوسة'),
                 'category_key' => 'family', 'category' => $this->loc('Family Resort', 'Hôtel familial', 'منتجع عائلي'),
+                'pricing_key' => 'room-only',
                 'price' => 140, 'rating' => 4.0, 'stars' => 4, 'reviews' => 248,
                 'image' => $base.'/occidental1.webp', 'tags' => ['family', 'wellness', 'waterpark'],
                 'details' => ['gallery' => [$base.'/occidental1.webp', $base.'/occidental2.webp', $base.'/occidental3.webp', $base.'/occidental4.webp'], 'city' => $this->loc('Sousse', 'Sousse', 'سوسة'), 'country' => $this->loc('Tunisia', 'Tunisie', 'تونس')],
@@ -360,6 +364,7 @@ class TestDataSeeder extends Seeder
 
             // Category assignment
             $this->assignCategory('hotels', $hotel->id, $data['category_key'] ?? null);
+            $this->assignCategory('hotels', $hotel->id, $data['pricing_key'] ?? null, 'pricing_type');
         }
     }
 
@@ -371,6 +376,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Tunis Palace Hotel', 'Hôtel Tunis Palace', 'فندق قصر تونس'),
                 'location' => $this->loc('La Marsa, Tunis', 'La Marsa, Tunis', ' المرسى، تونس'),
                 'category_key' => 'luxury', 'category' => $this->loc('Luxury', 'Luxe', 'فاخر'),
+                'pricing_key' => 'bed-breakfast',
                 'price' => 250, 'rating' => 4.5, 'stars' => 5, 'reviews' => 189,
                 'image' => $this->img('photo-1566073771259-6a8506099945', 800, 500),
                 'tags' => ['luxury', 'sea-view', 'spa'],
@@ -386,6 +392,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Djerba Mediterranean Resort', 'Resort Méditerranée Djerba', 'منتجع جربة المتوسطي'),
                 'location' => $this->loc('Midoun, Djerba', 'Midoun, Djerba', 'ميدون، جربة'),
                 'category_key' => 'resort', 'category' => $this->loc('Resort', 'Resort', 'منتجع'),
+                'pricing_key' => 'half-board',
                 'price' => 180, 'rating' => 4.4, 'stars' => 4, 'reviews' => 320,
                 'image' => $this->img('photo-1520250497591-112f2f40a3f4', 800, 500),
                 'tags' => ['beach', 'family', 'pool'],
@@ -400,6 +407,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Istanbul Grand Bazaar Hotel', 'Hôtel Grand Bazar Istanbul', 'فندق البازار الكبير إسطنبول'),
                 'location' => $this->loc('Fatih, Istanbul', 'Fatih, Istanbul', 'فاتح، إسطنبول'),
                 'category_key' => 'luxury', 'category' => $this->loc('Luxury', 'Luxe', 'فاخر'),
+                'pricing_key' => 'bed-breakfast',
                 'price' => 320, 'rating' => 4.7, 'stars' => 5, 'reviews' => 567,
                 'image' => $this->img('photo-1542314831-068cd1dbfeeb', 800, 500),
                 'tags' => ['luxury', 'historic', 'spa'],
@@ -414,6 +422,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Dubai Marina Resort & Spa', 'Resort & Spa Dubaï Marina', 'منتجع وسبا دبي مارينا'),
                 'location' => $this->loc('Dubai Marina, Dubai', 'Dubai Marina, Dubaï', 'دبي مارينا، دبي'),
                 'category_key' => 'luxury', 'category' => $this->loc('Luxury', 'Luxe', 'فاخر'),
+                'pricing_key' => 'all-inclusive',
                 'price' => 450, 'rating' => 4.9, 'stars' => 5, 'reviews' => 892,
                 'image' => $this->img('photo-1582719478250-c89cae4dc85b', 800, 500),
                 'tags' => ['luxury', 'spa', 'pool'],
@@ -428,6 +437,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Riad Marrakech Medina', 'Riad Médina Marrakech', 'رياض المدينة مراكش'),
                 'location' => $this->loc('Medina, Marrakech', 'Médina, Marrakech', 'المدينة القديمة، مراكش'),
                 'category_key' => 'luxury', 'category' => $this->loc('Luxury', 'Luxe', 'فاخر'),
+                'pricing_key' => 'bed-breakfast',
                 'price' => 210, 'rating' => 4.6, 'stars' => 4, 'reviews' => 445,
                 'image' => $this->img('photo-1571896349842-33c89424de2d', 800, 500),
                 'tags' => ['boutique', 'historic', 'spa'],
@@ -442,6 +452,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Paris Eiffel Tower Hotel', 'Hôtel Tour Eiffel Paris', 'فندق برج إيفل باريس'),
                 'location' => $this->loc('Champ de Mars, Paris', 'Champ de Mars, Paris', 'شامب دو مارس، باريس'),
                 'category_key' => 'luxury', 'category' => $this->loc('Luxury', 'Luxe', 'فاخر'),
+                'pricing_key' => 'room-only',
                 'price' => 380, 'rating' => 4.8, 'stars' => 5, 'reviews' => 723,
                 'image' => $this->img('photo-1551882547-ff40c63fe5fa', 800, 500),
                 'tags' => ['luxury', 'eiffel-view', 'spa'],
@@ -456,6 +467,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Bali Ubud Resort', 'Resort Ubud Bali', 'منتجع أوبود بالي'),
                 'location' => $this->loc('Ubud, Bali', 'Ubud, Bali', 'أوبود، بالي'),
                 'category_key' => 'resort', 'category' => $this->loc('Resort', 'Resort', 'منتجع'),
+                'pricing_key' => 'all-inclusive',
                 'price' => 290, 'rating' => 4.8, 'stars' => 5, 'reviews' => 634,
                 'image' => $this->img('photo-1571003123894-1f0594d2b5d9', 800, 500),
                 'tags' => ['nature', 'spa', 'pool'],
@@ -470,6 +482,7 @@ class TestDataSeeder extends Seeder
                 'name' => $this->loc('Cairo Pyramids View Hotel', 'Hôtel Vue Pyramides Le Caire', 'فندق إطلالة الأهرامات القاهرة'),
                 'location' => $this->loc('Giza, Cairo', 'Giza, Le Caire', 'الجيزة، القاهرة'),
                 'category_key' => 'resort', 'category' => $this->loc('Resort', 'Resort', 'منتجع'),
+                'pricing_key' => 'half-board',
                 'price' => 175, 'rating' => 4.3, 'stars' => 4, 'reviews' => 389,
                 'image' => $this->img('photo-1572252009286-268acec5ca0a', 800, 500),
                 'tags' => ['pyramids-view', 'pool', 'historic'],
