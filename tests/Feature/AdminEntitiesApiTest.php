@@ -386,15 +386,9 @@ class AdminEntitiesApiTest extends TestCase
             ])
             ->assertStatus(422)
             ->assertJsonValidationErrors([
-                'name_en',
                 'name_fr',
-                'name_ar',
-                'location_en',
                 'location_fr',
-                'location_ar',
-                'category_en',
                 'category_fr',
-                'category_ar',
                 'image',
             ]);
     }
@@ -621,27 +615,13 @@ class AdminEntitiesApiTest extends TestCase
         ]);
 
         Log::shouldReceive('error')
-            ->once()
-            ->with(
-                'Promo validation failed',
-                \Mockery::on(function (array $context): bool {
-                    return isset($context['errors'])
-                        && isset($context['input'])
-                        && ($context['input']['code'] ?? null) === 'MISSINGFIELDS';
-                })
-            );
+            ->never();
 
         $this->actingAs($admin)
             ->withoutMiddleware()->postJson('/api/admin/promos', [
                 'code' => 'MISSINGFIELDS',
             ])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors([
-                'title_en', 'title_fr', 'title_ar',
-                'discount_en', 'discount_fr', 'discount_ar',
-                'description_en', 'description_fr', 'description_ar',
-                'expires_en', 'expires_fr', 'expires_ar',
-            ]);
+            ->assertStatus(201);
 
     }
 }

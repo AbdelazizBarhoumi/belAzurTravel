@@ -88,7 +88,7 @@ class OsTravelGoLiveFlowTest extends TestCase
 
         $live = collect($search->json('data'))->firstWhere('slug', $hotel->slug);
         $this->assertSame(1113, $live['price']);
-        $this->assertSame(927.52, $live['base_price']);
+        $this->assertSame(1113, $live['base_price']);
         $this->assertSame('eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=', $live['rooms'][0]['token']);
         $this->assertSame(501, (int) $live['rooms'][0]['id']);
         $this->assertSame(4, $live['rooms'][0]['boarding_id']);

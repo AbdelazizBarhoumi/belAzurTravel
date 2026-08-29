@@ -22,6 +22,17 @@ class Booking extends Model
 
     protected $casts = ['items' => 'array', 'client' => 'array', 'guests' => 'array', 'start_date' => 'date', 'end_date' => 'date', 'total_amount' => 'integer', 'confirmed_at' => 'datetime', 'cancelled_at' => 'datetime', 'rejected_at' => 'datetime', 'expires_at' => 'datetime', 'is_request' => 'boolean', 'provider_payload' => 'array', 'details' => 'array'];
 
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (Booking $booking) {
+            if (empty($booking->booking_ref)) {
+                $booking->booking_ref = 'BK-'.strtoupper(substr(sha1($booking->id ?? uniqid()), 0, 8));
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

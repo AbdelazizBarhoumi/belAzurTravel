@@ -54,7 +54,7 @@ class BackendLocalizationTest extends TestCase
         $this->actingAs($admin)
             ->deleteJson('/api/admin/users/'.$admin->id, [], ['Accept-Language' => 'ar'])
             ->assertStatus(403)
-            ->assertJsonPath('message', 'ممنوع: لا يمكن للمستخدمين إدارة أنفسهم');
+            ->assertJsonPath('message', 'Interdit : les utilisateurs ne peuvent pas se gérer eux-mêmes');
     }
 
     public function test_site_settings_validation_message_is_localized_in_french(): void

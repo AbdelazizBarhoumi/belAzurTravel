@@ -51,14 +51,14 @@ class BookingStatusNotification extends Notification
             default => 'emails.booking-approved',
         };
 
-        $subject = $translate("{$group}.subject", ['id' => $this->booking->booking_ref]);
+        $subject = $translate("{$group}.subject", ['id' => $this->booking->booking_ref ?: $this->booking->id]);
 
         $data = [
             'booking' => $this->booking,
             'subject' => $subject,
             'headerSubtitle' => $subject,
             'greeting' => $translate("{$group}.greeting"),
-            'introLine' => $translate("{$group}.intro", ['id' => $this->booking->booking_ref]),
+            'introLine' => $translate("{$group}.intro", ['id' => $this->booking->booking_ref ?: $this->booking->id]),
             'nextStepsLine' => $translate("{$group}.next_steps"),
             'bookingLabel' => $translate('booking.labels.details'),
             'refLabel' => $translate('booking.labels.ref'),
@@ -98,7 +98,7 @@ class BookingStatusNotification extends Notification
         };
 
         $text = __('messages.booking_status_changed', [
-            'id' => $this->booking->booking_ref,
+            'id' => $this->booking->booking_ref ?: $this->booking->id,
             'status' => __($statusKey, [], $lang),
         ], $lang);
 

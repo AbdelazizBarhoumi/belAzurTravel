@@ -368,7 +368,7 @@ class AdminFlightsE2ETest extends TestCase
         $this->actingAs($this->admin)
             ->deleteJson("/api/admin/flights/{$flight->id}")
             ->assertOk()
-            ->assertJson(['message' => 'deleted']);
+            ->assertJson(['message' => __('messages.deleted')]);
 
         // Step 2: Verify DB deletion
         $this->assertNull(Flight::find($flight->id));

@@ -53,7 +53,7 @@ class ComplaintNotification extends Notification
         return (new MailMessage)
             ->subject("New {$type} #{$this->complaint->id}")
             ->view('emails.complaint-created', [
-                'complaint' => $this->complaint->load('booking:uuid,booking_ref'),
+                'complaint' => $this->complaint->load('booking:id,booking_ref'),
                 'greeting' => "New {$type} Received",
                 'headerSubtitle' => "{$type} #{$this->complaint->id}",
                 'introLine' => 'A new '.strtolower($type).' has been submitted and requires your attention.',

@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { arSA, enUS, fr } from 'date-fns/locale';
+import { motion } from 'framer-motion';
 import {
     BadgePercent,
     Bed,

@@ -83,7 +83,7 @@ class EmailRenderingTest extends TestCase
 
             $html = $this->render(new BookingStatusNotification($booking), $user);
 
-            $this->assertStringContainsString("#{$booking->id}", $html);
+            $this->assertStringContainsString("#{$booking->booking_ref}", $html);
             $this->assertStringContainsString('TND', $html);
             $this->assertStringContainsString('VOUCH-98765', $html);
 
@@ -115,7 +115,7 @@ class EmailRenderingTest extends TestCase
 
             $html = $this->render(new BookingActivityNotification($booking, $activity), $user);
 
-            $this->assertStringContainsString("#{$booking->id}", $html);
+            $this->assertStringContainsString("#{$booking->booking_ref}", $html);
             $this->assertStringContainsString('John Doe', $html);
         }
     }
@@ -165,7 +165,7 @@ class EmailRenderingTest extends TestCase
 
         $html = $this->render(new TripReminderNotification($booking, 3), $user);
 
-        $this->assertStringContainsString("#{$booking->id}", $html);
+        $this->assertStringContainsString("#{$booking->booking_ref}", $html);
         $this->assertStringContainsString('TND', $html);
     }
 

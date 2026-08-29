@@ -340,7 +340,7 @@ class AdminTourTest extends TestCase
             ->deleteJson("/api/admin/tours/{$tour->id}");
 
         $response->assertOk()
-            ->assertJson(['message' => 'deleted']);
+            ->assertJson(['message' => __('messages.deleted')]);
 
         // Verify tour was deleted
         $this->assertNull(Tour::find($tour->id));

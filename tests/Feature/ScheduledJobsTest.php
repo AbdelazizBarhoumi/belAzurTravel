@@ -136,8 +136,8 @@ class ScheduledJobsTest extends TestCase
             function ($n) use ($admin, $booking, $audit) {
                 $html = html_entity_decode($n->toMail($admin)->render());
 
-                $this->assertStringContainsString('Booking #'.$booking->id, $html);
-                $this->assertStringContainsString('Booking #'.$audit->booking_id, $html);
+                $this->assertStringContainsString('Booking #'.$booking->booking_ref, $html);
+                $this->assertStringContainsString('Booking #'.$audit->booking->booking_ref, $html);
                 $this->assertStringContainsString(__('emails.digest.labels.new_bookings', [], 'fr'), $html);
                 $this->assertStringContainsString(__('emails.digest.labels.approvals', [], 'fr'), $html);
                 $this->assertStringContainsString(__('emails.digest.labels.refunds', [], 'fr'), $html);

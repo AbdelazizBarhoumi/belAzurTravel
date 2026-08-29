@@ -24,7 +24,7 @@ class SendAdminDigest extends Command
         $bookings = Booking::query()->where('created_at', '>=', $since)->get();
         $complaints = Complaint::query()->where('created_at', '>=', $since)->get();
         $messages = SupportInquiry::query()->where('created_at', '>=', $since)->get();
-        $audits = BookingAudit::query()->with('booking:uuid,booking_ref')->where('created_at', '>=', $since)->get()->groupBy('action');
+        $audits = BookingAudit::query()->with('booking:id,booking_ref')->where('created_at', '>=', $since)->get()->groupBy('action');
 
         $recipients = User::query()->where('active', true)->whereIn('role', ['admin'])->get();
 
@@ -69,7 +69,7 @@ class SendAdminDigest extends Command
     private function bookingItem(Booking $booking): array
     {
         return [
-            'title' => 'Booking #'.$booking->booking_ref.' — '.($booking->client['name'] ?? $booking->client['email'] ?? 'Client').' ('.$booking->status.')',
+            'title' => 'Booking #'.($booking->booking_ref ?: $booking->id).' — '.($booking->client['name'] ?? $booking->client['email'] ?? 'Client').' ('.$booking->status.')',
             'url' => config('app.url').'/admin/bookings/'.$booking->id,
         ];
     }
@@ -81,7 +81,7 @@ class SendAdminDigest extends Command
             ->flatMap(fn (Collection $group) => $group)
             ->filter(fn (BookingAudit $audit) => in_array($audit->action, $actions, true))
             ->map(fn (BookingAudit $audit) => [
-                'title' => 'Booking #'.$audit->booking->booking_ref.' — '.$audit->action,
+                'title' => 'Booking #'.($audit->booking->booking_ref ?: $audit->booking_id).' — '.$audit->action,
                 'url' => config('app.url').'/admin/bookings/'.$audit->booking_id,
             ])
             ->values()

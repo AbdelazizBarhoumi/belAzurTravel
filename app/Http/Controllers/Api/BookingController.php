@@ -21,7 +21,7 @@ use App\Notifications\BookingStatusNotification;
 use App\Services\OsTravel\OsTravelBookingService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Support\Facades\DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;

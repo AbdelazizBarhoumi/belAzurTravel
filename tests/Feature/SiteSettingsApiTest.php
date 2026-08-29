@@ -90,7 +90,7 @@ class SiteSettingsApiTest extends TestCase
         $this->actingAs($admin)
             ->putJson('/api/site-settings', $payload)
             ->assertOk()
-            ->assertJson(['message' => 'ok']);
+            ->assertJson(['message' => 'OK']);
 
         $this->actingAs($admin)
             ->getJson('/api/site-settings')

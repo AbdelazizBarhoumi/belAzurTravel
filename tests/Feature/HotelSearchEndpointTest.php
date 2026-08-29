@@ -124,6 +124,8 @@ class HotelSearchEndpointTest extends TestCase
             'last_page' => 2,
             'total' => 2,
             'per_page' => 1,
+            'min_price' => 600,
+            'max_price' => 1113,
         ], $response->json('meta'));
         $this->assertTrue($response->json('data.0.available'));
         $this->assertSame('ostravel', $response->json('data.0.provider'));
