@@ -136,6 +136,16 @@ export interface DropdownItemConfig {
 
 export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
 
+/** Config for a standalone filtered link in the header (links to a page with a specific filter/search). */
+export interface FilterLinkConfig {
+    /** Which page to link to (defaults to the entry's pageKey). */
+    targetPageKey?: string;
+    /** How the value is interpreted. */
+    mode: DropdownItemMode;
+    /** filter -> "typeKey:valueKey" or "static:groupKey:optionKey" or "param=value"; search -> keyword */
+    value: string;
+}
+
 export interface HeaderEntry {
     pageKey: string;
     enabled: boolean;
@@ -147,6 +157,8 @@ export interface HeaderEntry {
     items: DropdownItemConfig[];
     /** Admin-customizable display name (en/fr/ar). Falls back to translation key if unset. */
     label?: LocalizedText;
+    /** When set, the entry links to a filtered URL instead of the page root. Forces a simple link (no dropdown). */
+    filterLink?: FilterLinkConfig;
 }
 
 export interface FooterColumn {
@@ -314,6 +326,30 @@ export function buildItemHref(
     }
     const param = page.filterParam || 'cat';
     return `${page.href}?${param}=${encodeURIComponent(item.value)}`;
+}
+
+/** Build a href for a standalone filtered link. Wraps buildItemHref with the FilterLinkConfig shape. */
+export function buildFilterLinkHref(
+    entry: HeaderEntry,
+    lang: 'en' | 'fr' | 'ar' = 'en',
+): string {
+    if (!entry.filterLink) return getPage(entry.pageKey)?.href ?? '#';
+    const fl = entry.filterLink;
+    const targetKey = fl.targetPageKey ?? entry.pageKey;
+    const dummyItem: DropdownItemConfig = {
+        label: entry.label ?? { en: '', fr: '', ar: '' },
+        mode: fl.mode,
+        value: fl.value,
+        pageKey: targetKey,
+    };
+    return buildItemHref(targetKey, dummyItem, lang);
+}
+
+export function createFilterLink(): FilterLinkConfig {
+    return {
+        mode: 'filter',
+        value: '',
+    };
 }
 
 export function createGroupLink(pageKey = ''): NavGroupLink {

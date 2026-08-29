@@ -80,9 +80,9 @@ class AdminDealController extends Controller
 
         // Strict localized contract: admin must provide title for all locales
         $rules = [
-            'title_en' => ['required', 'string', 'max:255'],
+            'title_en' => ['nullable', 'string', 'max:255'],
             'title_fr' => ['required', 'string', 'max:255'],
-            'title_ar' => ['required', 'string', 'max:255'],
+            'title_ar' => ['nullable', 'string', 'max:255'],
 
             // descriptions are optional per-locale
             'description_en' => ['sometimes', 'nullable', 'string'],

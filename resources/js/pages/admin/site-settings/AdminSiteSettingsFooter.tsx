@@ -302,43 +302,15 @@ export default function AdminSiteSettingsFooter() {
                                 value={
                                     typeof (col as any).title === 'string'
                                         ? (col as any).title
-                                        : ((col as any).title?.en ?? '')
+                                        : ((col as any).title?.fr ?? '')
                                 }
                                 onChange={(e) =>
                                     updateFooterTitle(colIdx, {
-                                        en: e.target.value,
+                                        fr: e.target.value,
                                     })
                                 }
-                                placeholder="Title (EN)"
+                                placeholder="Titre"
                             />
-                            <div className="grid grid-cols-2 gap-2">
-                                <Input
-                                    value={
-                                        typeof (col as any).title === 'string'
-                                            ? (col as any).title
-                                            : ((col as any).title?.fr ?? '')
-                                    }
-                                    onChange={(e) =>
-                                        updateFooterTitle(colIdx, {
-                                            fr: e.target.value,
-                                        })
-                                    }
-                                    placeholder="Title (FR)"
-                                />
-                                <Input
-                                    value={
-                                        typeof (col as any).title === 'string'
-                                            ? (col as any).title
-                                            : ((col as any).title?.ar ?? '')
-                                    }
-                                    onChange={(e) =>
-                                        updateFooterTitle(colIdx, {
-                                            ar: e.target.value,
-                                        })
-                                    }
-                                    placeholder="Title (AR)"
-                                />
-                            </div>
                         </div>
                         <div className="space-y-2">
                             <DndContext

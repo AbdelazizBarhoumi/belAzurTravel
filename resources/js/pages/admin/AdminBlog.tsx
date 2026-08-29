@@ -31,7 +31,6 @@ import {
 } from '@/components/ui/select';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
-import LangBadge from '@/components/forms/LangBadge';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -197,7 +196,7 @@ export default function AdminBlog() {
         const errs: Record<string, string> = {};
         const requiredMessage = t('admin.required');
 
-        if (!values.title_en) errs.title_en = requiredMessage;
+        if (!values.title_fr) errs.title_fr = requiredMessage;
         if (!values.category_key) errs.category_key = requiredMessage;
         if (!values.date) errs.date = requiredMessage;
         if (!values.imageFile && !values.imagePath)
@@ -497,7 +496,6 @@ export default function AdminBlog() {
                                             className="text-xs font-semibold text-muted-foreground"
                                         >
                                             {t('admin.title')}
-                                            <LangBadge lang={activeLang} />
                                         </label>
                                         <input
                                             id="blog-title"
@@ -597,7 +595,6 @@ export default function AdminBlog() {
                                             className={`text-xs font-semibold ${errors[`excerpt_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                                         >
                                             {t('admin.blogForm.excerpt')}
-                                            <LangBadge lang={activeLang} />
                                         </label>
                                         <textarea
                                             id={`excerpt_${activeLang}`}
@@ -637,7 +634,6 @@ export default function AdminBlog() {
                                             className="text-xs font-semibold text-muted-foreground"
                                         >
                                             {t('admin.blogForm.body')}
-                                            <LangBadge lang={activeLang} />
                                         </label>
                                         <textarea
                                             id={`content_body_${activeLang}`}
@@ -815,11 +811,6 @@ export default function AdminBlog() {
                                                                 {t(
                                                                     'admin.blogForm.sectionHeading',
                                                                 )}
-                                                                <LangBadge
-                                                                    lang={
-                                                                        activeLang
-                                                                    }
-                                                                />
                                                             </label>
                                                             <input
                                                                 value={String(
@@ -848,11 +839,6 @@ export default function AdminBlog() {
                                                                 {t(
                                                                     'admin.blogForm.sectionBody',
                                                                 )}
-                                                                <LangBadge
-                                                                    lang={
-                                                                        activeLang
-                                                                    }
-                                                                />
                                                             </label>
                                                             <textarea
                                                                 value={String(
@@ -904,7 +890,7 @@ export default function AdminBlog() {
 
                     handleSave(payload);
                 }}
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
             />
 
             <CategoryTypeManager

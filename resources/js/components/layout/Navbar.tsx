@@ -15,7 +15,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { redirectAfterLogin } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { Button } from '@/components/ui/button';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import {
     FacebookWhiteIcon,
     InstagramWhiteIcon,
@@ -41,6 +40,7 @@ import {
     type NavGroup,
     getPage,
     buildItemHref,
+    buildFilterLinkHref,
     DEFAULT_NAV_SETTINGS,
     type NavSettings,
     type LocalizedText,
@@ -1374,10 +1374,13 @@ export function Navbar() {
                                 entry.label?.[lang] ??
                                 entry.label?.en ??
                                 t('nav.' + page.key);
+                            const href = entry.filterLink
+                                ? buildFilterLinkHref(entry, lang)
+                                : page.href;
                             return (
                                 <Link
                                     key={entry.pageKey}
-                                    to={page.href}
+                                    to={href}
                                     className="font-medium transition-colors hover:text-secondary"
                                 >
                                     {displayName}
@@ -1408,6 +1411,21 @@ export function Navbar() {
                     {topEntriesFiltered.map((entry) => {
                         const page = getPage(entry.pageKey);
                         if (!page) return null;
+
+                        // Standalone filtered link — always renders as a simple link
+                        if (entry.filterLink) {
+                            const href = buildFilterLinkHref(entry, lang);
+                            return (
+                                <Link
+                                    key={entry.pageKey}
+                                    to={href}
+                                    className={`inline-flex h-10 items-center px-3 text-sm font-medium transition-colors ${isActiveSection(page.href) ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                                >
+                                    {resolvePageName(entry, page)}
+                                </Link>
+                            );
+                        }
+
                         const dropdownItems = resolveDropdownItems(entry);
 
                         if (entry.isDropdown) {
@@ -1537,6 +1555,21 @@ export function Navbar() {
                                             const isExpanded =
                                                 openMoreSection ===
                                                 entry.pageKey;
+
+                                            // Standalone filtered link in More menu
+                                            if (entry.filterLink) {
+                                                const href = buildFilterLinkHref(entry, lang);
+                                                return (
+                                                    <li key={entry.pageKey}>
+                                                        <Link
+                                                            to={href}
+                                                            className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                        >
+                                                            {resolvePageName(entry, page)}
+                                                        </Link>
+                                                    </li>
+                                                );
+                                            }
 
                                             return (
                                                 <li key={entry.pageKey}>
@@ -1746,7 +1779,6 @@ export function Navbar() {
                             </span>
                         </Button>
                     </Link>
-                    <LanguageSwitcher />
                     <Link to="/favorites">
                         <Button
                             variant="ghost"
@@ -1794,6 +1826,22 @@ export function Navbar() {
                             {topEntriesFiltered.map((entry) => {
                                 const page = getPage(entry.pageKey);
                                 if (!page) return null;
+
+                                // Standalone filtered link in mobile
+                                if (entry.filterLink) {
+                                    const href = buildFilterLinkHref(entry, lang);
+                                    return (
+                                        <Link
+                                            key={entry.pageKey}
+                                            to={href}
+                                            onClick={() => setOpen(false)}
+                                            className="py-2 text-sm font-medium text-foreground"
+                                        >
+                                            {resolvePageName(entry, page)}
+                                        </Link>
+                                    );
+                                }
+
                                 const dropdownItems =
                                     resolveDropdownItems(entry);
 
@@ -1894,6 +1942,22 @@ export function Navbar() {
                                         {moreEntriesFiltered.map((entry) => {
                                             const page = getPage(entry.pageKey);
                                             if (!page) return null;
+
+                                            // Standalone filtered link in mobile More
+                                            if (entry.filterLink) {
+                                                const href = buildFilterLinkHref(entry, lang);
+                                                return (
+                                                    <Link
+                                                        key={entry.pageKey}
+                                                        to={href}
+                                                        onClick={() => setOpen(false)}
+                                                        className="py-2 text-sm font-medium text-foreground"
+                                                    >
+                                                        {resolvePageName(entry, page)}
+                                                    </Link>
+                                                );
+                                            }
+
                                             const dropdownItems =
                                                 resolveDropdownItems(entry);
 
@@ -2101,7 +2165,6 @@ export function Navbar() {
                                             'Special Offers'}
                                     </Button>
                                 </Link>
-                                <LanguageSwitcher />
                                 <Link
                                     to="/favorites"
                                     onClick={() => setOpen(false)}

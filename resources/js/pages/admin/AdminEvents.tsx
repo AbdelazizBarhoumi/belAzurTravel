@@ -29,7 +29,6 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { LocationSelect } from '@/components/ui/LocationSelect';
 import { Input } from '@/components/ui/input';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
-import LangBadge from '@/components/forms/LangBadge';
 import {
     JsonListEditor,
     type JsonFieldDef,
@@ -105,7 +104,7 @@ export default function AdminEvents() {
 
     const validate = (values: AdminRow) => {
         const errs: Record<string, string> = {};
-        ['en', 'fr', 'ar'].forEach((lang) => {
+        ['fr'].forEach((lang) => {
             if (!values[`title_${lang}`])
                 errs[`title_${lang}`] = t('admin.error.required');
         });
@@ -309,8 +308,7 @@ export default function AdminEvents() {
                                             htmlFor={fieldKey}
                                             className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
                                         >
-                                            {field.label}
-                                            <LangBadge lang={activeLang} />
+                                             {field.label}
                                         </label>
                                         <input
                                             id={fieldKey}
@@ -387,8 +385,7 @@ export default function AdminEvents() {
                             htmlFor={`description_${activeLang}`}
                             className="text-xs font-semibold text-muted-foreground"
                         >
-                            {t('admin.description')}
-                            <LangBadge lang={activeLang} />
+                             {t('admin.description')}
                         </label>
                         <textarea
                             id={`description_${activeLang}`}
@@ -413,8 +410,7 @@ export default function AdminEvents() {
                                 htmlFor={`about_${activeLang}`}
                                 className="text-xs font-semibold text-muted-foreground"
                             >
-                                {t('admin.eventForm.about')}
-                                <LangBadge lang={activeLang} />
+                                 {t('admin.eventForm.about')}
                             </label>
                             <textarea
                                 id={`about_${activeLang}`}
@@ -438,8 +434,7 @@ export default function AdminEvents() {
                                 htmlFor={`attendees_${activeLang}`}
                                 className="text-xs font-semibold text-muted-foreground"
                             >
-                                {t('admin.eventForm.attendees')}
-                                <LangBadge lang={activeLang} />
+                                 {t('admin.eventForm.attendees')}
                             </label>
                             <input
                                 id={`attendees_${activeLang}`}
@@ -682,7 +677,7 @@ export default function AdminEvents() {
                 initial={dialogInitial}
                 onSubmit={(values) => handleSave(values as unknown as AdminRow)}
                 errors={errors}
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 activeLang={modalLang}
                 onActiveLangChange={setModalLang}
                 isSubmitting={saveMutation.isPending}

@@ -82,33 +82,20 @@ function I18nInput({
             : { fr: value || '', ar: '' };
     const Input = multiline ? 'textarea' : 'input';
     return (
-        <div className="grid grid-cols-2 gap-2">
-            {(['fr', 'ar'] as const).map((l) => {
-                const error = errors?.[l];
-                return (
-                    <div
-                        key={l}
-                        className="space-y-1"
-                        dir={l === 'ar' ? 'rtl' : 'ltr'}
-                    >
-                        <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            {l}
-                        </span>
+        <div className="grid grid-cols-1 gap-2">
+            <div className="space-y-1">
                         <Input
                             type="text"
-                            dir={l === 'ar' ? 'rtl' : 'ltr'}
-                            value={obj[l] ?? ''}
+                            value={obj.fr ?? ''}
                             onChange={(e: any) =>
-                                onChange({ ...obj, [l]: e.target.value })
+                                onChange({ ...obj, fr: e.target.value })
                             }
-                            className={`w-full rounded-lg border px-3 py-2 text-sm ${error ? 'border-destructive ring-1 ring-destructive' : 'border-border'} ${multiline ? 'min-h-20' : ''}`}
+                            className={`w-full rounded-lg border px-3 py-2 text-sm ${errors?.fr ? 'border-destructive ring-1 ring-destructive' : 'border-border'} ${multiline ? 'min-h-20' : ''}`}
                         />
-                        {error && (
-                            <p className="text-xs text-destructive">{error}</p>
+                        {errors?.fr && (
+                            <p className="text-xs text-destructive">{errors.fr}</p>
                         )}
                     </div>
-                );
-            })}
         </div>
     );
 }
@@ -153,7 +140,7 @@ export function EntityFormDialog<T extends Record<string, any>>({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-h-[90vh]">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                 </DialogHeader>

@@ -32,7 +32,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
-import LangBadge from '@/components/forms/LangBadge';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import {
     JsonListEditor,
@@ -200,7 +199,7 @@ const AdminDestinations = () => {
         values: DestinationFormValues,
     ): Record<string, string> => {
         const errs: Record<string, string> = {};
-        const langs: DestinationLang[] = ['en', 'fr', 'ar'];
+        const langs: DestinationLang[] = ['fr'];
 
         langs.forEach((l) => {
             if (!values[`name_${l}`])
@@ -567,7 +566,7 @@ const AdminDestinations = () => {
                         : t('admin.destinationAddTitle')
                 }
                 subtitle={t('admin.destinationForm.helper')}
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 layout="grid-2"
                 initial={dialogInitial}
                 sections={[
@@ -590,7 +589,6 @@ const AdminDestinations = () => {
                                             }
                                         >
                                             {t('admin.destinationForm.name')}
-                                            <LangBadge lang={activeLang} />
                                         </Label>
                                         <Input
                                             id={`name_${activeLang}`}
@@ -626,7 +624,6 @@ const AdminDestinations = () => {
                                             }
                                         >
                                             {t('admin.destinationForm.country')}
-                                            <LangBadge lang={activeLang} />
                                         </Label>
                                         <LocationSelect
                                             value={asText(
@@ -721,7 +718,6 @@ const AdminDestinations = () => {
                                             }
                                         >
                                             {t('admin.description')}
-                                            <LangBadge lang={activeLang} />
                                         </Label>
                                         <Textarea
                                             id={localizedKey(
@@ -797,7 +793,6 @@ const AdminDestinations = () => {
                                             }
                                         >
                                             {t('admin.destinationForm.about')}
-                                            <LangBadge lang={activeLang} />
                                         </Label>
                                         <Textarea
                                             id={localizedKey(
@@ -1101,7 +1096,6 @@ const AdminDestinations = () => {
                                 <div className="space-y-2">
                                     <Label className="text-muted-foreground">
                                         {t('admin.destinationForm.bestTime')}
-                                        <LangBadge lang={activeLang} />
                                     </Label>
                                     <Select
                                         value={String(
@@ -1141,7 +1135,6 @@ const AdminDestinations = () => {
                                 <div className="space-y-2">
                                     <Label className="text-muted-foreground">
                                         {t('admin.destinationForm.language')}
-                                        <LangBadge lang={activeLang} />
                                     </Label>
                                     <Select
                                         value={String(
@@ -1181,7 +1174,6 @@ const AdminDestinations = () => {
                                 <div className="space-y-2">
                                     <Label className="text-muted-foreground">
                                         {t('admin.destinationForm.currency')}
-                                        <LangBadge lang={activeLang} />
                                     </Label>
                                     <Select
                                         value={String(
@@ -1221,7 +1213,6 @@ const AdminDestinations = () => {
                                 <div className="space-y-2">
                                     <Label className="text-muted-foreground">
                                         {t('admin.destinationForm.weather')}
-                                        <LangBadge lang={activeLang} />
                                     </Label>
                                     <Select
                                         value={String(

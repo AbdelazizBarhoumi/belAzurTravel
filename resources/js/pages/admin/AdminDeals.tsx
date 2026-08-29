@@ -38,7 +38,6 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
@@ -195,7 +194,7 @@ export default function AdminDeals() {
 
     const validate = (values: AdminRow) => {
         const errs: Record<string, string> = {};
-        ['en', 'fr', 'ar'].forEach((l) => {
+        ['fr'].forEach((l) => {
             if (!values[`title_${l}`])
                 errs[`title_${l}`] = t('admin.fieldRequired');
             if (!values[`description_${l}`])
@@ -329,8 +328,7 @@ export default function AdminDeals() {
                                 htmlFor={`title_${activeLang}`}
                                 className={`text-xs font-semibold ${errors[`title_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                             >
-                                {t('deals.titleLabel')}{' '}
-                                <LangBadge lang={activeLang} />
+                                {t('deals.titleLabel')}
                             </label>
                             <Input
                                 id={`title_${activeLang}`}
@@ -430,7 +428,7 @@ export default function AdminDeals() {
                         htmlFor={`description_${activeLang}`}
                         className={`text-xs font-semibold ${errors[`description_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                     >
-                        {t('deals.description')} <LangBadge lang={activeLang} />
+                        {t('deals.description')}
                     </label>
                     <Textarea
                         id={`description_${activeLang}`}
@@ -639,7 +637,7 @@ export default function AdminDeals() {
                 initial={dialogInitial}
                 onSubmit={(values) => handleSave(values as AdminRow)}
                 errors={errors}
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 preserveArrayKeys={[
                     'highlights_en',
                     'highlights_fr',

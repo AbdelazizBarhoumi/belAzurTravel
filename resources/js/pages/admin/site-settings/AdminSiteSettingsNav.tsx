@@ -91,6 +91,8 @@ import {
     getPagesInGroups,
     createGroupPageEntry,
     createGroupLink,
+    createFilterLink,
+    buildFilterLinkHref,
 } from '@/lib/nav-config';
 import {
     createLocalizedText,
@@ -109,6 +111,7 @@ import type {
     NavGroup,
     GroupPageEntry,
     NavGroupLink,
+    FilterLinkConfig,
 } from '@/lib/nav-config';
 
 const MAX_DEPTH = 2;
@@ -425,23 +428,7 @@ function MiniLangToggle({
     lang: string;
     onLanguageChange: (l: 'fr' | 'en' | 'ar') => void;
 }) {
-    return (
-        <div className="flex items-center gap-1 rounded-md border border-border bg-background px-1.5 py-0.5 text-[10px]">
-            {(['fr', 'en', 'ar'] as const).map((l) => (
-                <button
-                    key={l}
-                    onClick={() => onLanguageChange(l)}
-                    className={`rounded px-1.5 py-0.5 font-semibold transition-colors ${
-                        lang === l
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                    {l === 'ar' ? 'ع' : l.toUpperCase()}
-                </button>
-            ))}
-        </div>
-    );
+    return null;
 }
 
 /* ─── Enhanced Dropdown Item Tree ─── */
@@ -867,8 +854,7 @@ function DropdownItemTree({
                                         <div>
                                             <Label className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
                                                 <Type className="h-3 w-3" />
-                                                {t('admin_settings_label')} (
-                                                {localLang.toUpperCase()})
+                                                {t('admin_settings_label')}
                                             </Label>
                                             <Input
                                                 value={
@@ -889,7 +875,7 @@ function DropdownItemTree({
                                                         } as LocalizedText,
                                                     });
                                                 }}
-                                                placeholder={`${t('admin_settings_label')} ${localLang.toUpperCase()}`}
+                                                placeholder={`${t('admin_settings_label')}`}
                                                 className="h-9 text-xs"
                                             />
                                         </div>
@@ -1406,16 +1392,12 @@ function GroupLinkTree({
                                 <div className="rounded-md bg-muted/20 p-2 md:col-span-12">
                                     <Label className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
                                         <Globe className="h-3 w-3" />
-                                        {t('admin_settings_label')} (
-                                        {localLang.toUpperCase()})
+                                        {t('admin_settings_label')}
                                     </Label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                        {(['en', 'fr', 'ar'] as const).map(
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {(['fr'] as const).map(
                                             (l) => (
                                                 <div key={l}>
-                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                                                        {l}
-                                                    </Label>
                                                     <Input
                                                         value={
                                                             item.label?.[l] ??
@@ -1435,7 +1417,7 @@ function GroupLinkTree({
                                                                 } as LocalizedText,
                                                             });
                                                         }}
-                                                        placeholder={`${t('admin_settings_label')} ${l.toUpperCase()}`}
+                                                        placeholder={`${t('admin_settings_label')}`}
                                                         className="mt-1 h-9 text-xs"
                                                     />
                                                 </div>
@@ -1728,12 +1710,9 @@ function GroupCard({
                                 <Globe className="h-3 w-3" />
                                 {t('admin.settings.groupNameTranslations')}
                             </Label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {(['en', 'fr', 'ar'] as const).map((l) => (
+                            <div className="grid grid-cols-1 gap-2">
+                                {(['fr'] as const).map((l) => (
                                     <div key={l}>
-                                        <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                                            {l}
-                                        </Label>
                                         <Input
                                             value={group.label?.[l] ?? ''}
                                             onChange={(e) => {
@@ -1748,7 +1727,7 @@ function GroupCard({
                                                     },
                                                 });
                                             }}
-                                            placeholder={`${t('admin.settings.groupName')} ${l.toUpperCase()}`}
+                                            placeholder={`${t('admin.settings.groupName')}`}
                                             className="mt-1 h-9 text-xs"
                                         />
                                     </div>
@@ -3270,7 +3249,7 @@ export default function AdminSiteSettingsNav() {
                 errors[key] = t('admin.settings.provideTranslations');
             } else {
                 const label = normalizeLocalizedText(rawLabel);
-                for (const k of ['en', 'fr', 'ar'] as const) {
+                for (const k of ['fr'] as const) {
                     if (!label[k]?.trim()) {
                         errors[key] =
                             t('admin.settings.missingTranslation') +
@@ -3306,7 +3285,7 @@ export default function AdminSiteSettingsNav() {
                 errors[key] = t('admin.settings.provideTranslations');
             } else {
                 const label = normalizeLocalizedText(rawLabel);
-                for (const k of ['en', 'fr', 'ar'] as const) {
+                for (const k of ['fr'] as const) {
                     if (!label[k]?.trim()) {
                         errors[key] =
                             t('admin.settings.missingTranslation') +
@@ -3717,7 +3696,8 @@ export default function AdminSiteSettingsNav() {
                                                                 </TooltipContent>
                                                             </Tooltip>
 
-                                                            {/* Dropdown Toggle */}
+                                                            {/* Dropdown Toggle (hidden when filterLink is active) */}
+                                                            {!entry.filterLink && (
                                                             <Tooltip>
                                                                 <TooltipTrigger
                                                                     asChild
@@ -3758,6 +3738,7 @@ export default function AdminSiteSettingsNav() {
                                                                     </p>
                                                                 </TooltipContent>
                                                             </Tooltip>
+                                                            )}
 
                                                             {entry.isDropdown && (
                                                                 <Tooltip>
@@ -3796,6 +3777,52 @@ export default function AdminSiteSettingsNav() {
                                                                                   )
                                                                                 : t(
                                                                                       'admin.settings.linkSelfDisabled',
+                                                                                  )}
+                                                                        </p>
+                                                                    </TooltipContent>
+                                                                </Tooltip>
+                                                            )}
+
+                                                            {/* Filtered Link Toggle */}
+                                                            {!entry.isDropdown && (
+                                                                <Tooltip>
+                                                                    <TooltipTrigger
+                                                                        asChild
+                                                                    >
+                                                                        <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-2 py-1">
+                                                                            <Label className="cursor-pointer text-[10px] text-muted-foreground">
+                                                                                {t(
+                                                                                    'admin.settings.filteredLink',
+                                                                                )}
+                                                                            </Label>
+                                                                            <Switch
+                                                                                checked={
+                                                                                    !!entry.filterLink
+                                                                                }
+                                                                                onCheckedChange={(
+                                                                                    v,
+                                                                                ) =>
+                                                                                    setHeader(
+                                                                                        idx,
+                                                                                        {
+                                                                                            filterLink:
+                                                                                                v
+                                                                                                    ? createFilterLink()
+                                                                                                    : undefined,
+                                                                                        },
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    </TooltipTrigger>
+                                                                    <TooltipContent>
+                                                                        <p className="text-xs">
+                                                                            {entry.filterLink
+                                                                                ? t(
+                                                                                      'admin.settings.filteredLinkEnabled',
+                                                                                  )
+                                                                                : t(
+                                                                                      'admin.settings.filteredLinkDisabled',
                                                                                   )}
                                                                         </p>
                                                                     </TooltipContent>
@@ -3907,18 +3934,13 @@ export default function AdminSiteSettingsNav() {
                                                                 'admin.settings.linkLabels',
                                                             )}
                                                         </Label>
-                                                        <div className="grid grid-cols-3 gap-2">
+                                                        <div className="grid grid-cols-1 gap-2">
                                                             {(
                                                                 [
-                                                                    'en',
                                                                     'fr',
-                                                                    'ar',
                                                                 ] as const
                                                             ).map((l) => (
                                                                 <div key={l}>
-                                                                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                                                                        {l}
-                                                                    </Label>
                                                                     <Input
                                                                         value={
                                                                             entry
@@ -3959,6 +3981,320 @@ export default function AdminSiteSettingsNav() {
                                                             ))}
                                                         </div>
                                                     </div>
+
+                                                    {/* Filtered Link Config Panel */}
+                                                    {entry.filterLink && (
+                                                        <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4">
+                                                            <div className="mb-3 flex items-center gap-2">
+                                                                <Filter className="h-4 w-4 text-blue-600" />
+                                                                <Label className="text-sm font-medium text-blue-900">
+                                                                    {t(
+                                                                        'admin.settings.filteredLinkConfig',
+                                                                    )}
+                                                                </Label>
+                                                            </div>
+                                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                                                {/* Target Page */}
+                                                                <div>
+                                                                    <Label className="mb-1 block text-xs text-muted-foreground">
+                                                                        {t(
+                                                                            'admin.settings.targetPage',
+                                                                        )}
+                                                                    </Label>
+                                                                    <Select
+                                                                        value={
+                                                                            entry.filterLink
+                                                                                .targetPageKey ??
+                                                                            entry.pageKey
+                                                                        }
+                                                                        onValueChange={(
+                                                                            v,
+                                                                        ) =>
+                                                                            setHeader(
+                                                                                idx,
+                                                                                {
+                                                                                    filterLink:
+                                                                                        {
+                                                                                            ...entry.filterLink!,
+                                                                                            targetPageKey:
+                                                                                                v ===
+                                                                                                entry.pageKey
+                                                                                                    ? undefined
+                                                                                                    : v,
+                                                                                        },
+                                                                                },
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <SelectTrigger className="h-8 bg-background text-xs">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {AVAILABLE_PAGES.map(
+                                                                                (
+                                                                                    p,
+                                                                                ) => (
+                                                                                    <SelectItem
+                                                                                        key={
+                                                                                            p.key
+                                                                                        }
+                                                                                        value={
+                                                                                            p.key
+                                                                                        }
+                                                                                    >
+                                                                                        {
+                                                                                            p.label
+                                                                                        }
+                                                                                    </SelectItem>
+                                                                                ),
+                                                                            )}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+
+                                                                {/* Mode */}
+                                                                <div>
+                                                                    <Label className="mb-1 block text-xs text-muted-foreground">
+                                                                        {t(
+                                                                            'admin.settings.linkMode',
+                                                                        )}
+                                                                    </Label>
+                                                                    <Select
+                                                                        value={
+                                                                            entry
+                                                                                .filterLink
+                                                                                .mode
+                                                                        }
+                                                                        onValueChange={(
+                                                                            v: DropdownItemConfig['mode'],
+                                                                        ) =>
+                                                                            setHeader(
+                                                                                idx,
+                                                                                {
+                                                                                    filterLink:
+                                                                                        {
+                                                                                            ...entry.filterLink!,
+                                                                                            mode: v,
+                                                                                            value:
+                                                                                                '',
+                                                                                        },
+                                                                                },
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <SelectTrigger className="h-8 bg-background text-xs">
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            <SelectItem value="filter">
+                                                                                <span className="flex items-center gap-1.5">
+                                                                                    <Filter className="h-3 w-3" />
+                                                                                    {t(
+                                                                                        'admin.settings.filterMode',
+                                                                                    )}
+                                                                                </span>
+                                                                            </SelectItem>
+                                                                            <SelectItem value="search">
+                                                                                <span className="flex items-center gap-1.5">
+                                                                                    <Search className="h-3 w-3" />
+                                                                                    {t(
+                                                                                        'admin.settings.searchMode',
+                                                                                    )}
+                                                                                </span>
+                                                                            </SelectItem>
+                                                                            <SelectItem value="categories">
+                                                                                <span className="flex items-center gap-1.5">
+                                                                                    <Tag className="h-3 w-3" />
+                                                                                    {t(
+                                                                                        'admin.settings.categoriesMode',
+                                                                                    )}
+                                                                                </span>
+                                                                            </SelectItem>
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </div>
+
+                                                                {/* Value */}
+                                                                <div>
+                                                                    <Label className="mb-1 block text-xs text-muted-foreground">
+                                                                        {t(
+                                                                            'admin.settings.filterValue',
+                                                                        )}
+                                                                    </Label>
+                                                                    {entry.filterLink
+                                                                        .mode ===
+                                                                    'search' ? (
+                                                                        <Input
+                                                                            value={
+                                                                                entry
+                                                                                    .filterLink
+                                                                                    .value
+                                                                            }
+                                                                            onChange={(
+                                                                                e,
+                                                                            ) =>
+                                                                                setHeader(
+                                                                                    idx,
+                                                                                    {
+                                                                                        filterLink:
+                                                                                            {
+                                                                                                ...entry.filterLink!,
+                                                                                                value: e
+                                                                                                    .target
+                                                                                                    .value,
+                                                                                            },
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                            placeholder={t(
+                                                                                'admin.settings.searchKeyword',
+                                                                            )}
+                                                                            className="h-8 bg-background text-xs"
+                                                                        />
+                                                                    ) : entry
+                                                                          .filterLink
+                                                                          .mode ===
+                                                                      'categories' ? (
+                                                                        <Select
+                                                                            value={
+                                                                                entry
+                                                                                    .filterLink
+                                                                                    .value
+                                                                            }
+                                                                            onValueChange={(
+                                                                                v,
+                                                                            ) =>
+                                                                                setHeader(
+                                                                                    idx,
+                                                                                    {
+                                                                                        filterLink:
+                                                                                            {
+                                                                                                ...entry.filterLink!,
+                                                                                                value: v,
+                                                                                            },
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <SelectTrigger className="h-8 bg-background text-xs">
+                                                                                <SelectValue
+                                                                                    placeholder={t(
+                                                                                        'admin.settings.selectCategoryType',
+                                                                                    )}
+                                                                                />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {(
+                                                                                    categoryTypesByPage[
+                                                                                        (
+                                                                                            entry.filterLink
+                                                                                                .targetPageKey ??
+                                                                                            entry.pageKey
+                                                                                        ) as keyof typeof categoryTypesByPage
+                                                                                    ] ?? []
+                                                                                ).map(
+                                                                                    (
+                                                                                        ct,
+                                                                                    ) => (
+                                                                                        <SelectItem
+                                                                                            key={
+                                                                                                ct.key
+                                                                                            }
+                                                                                            value={
+                                                                                                ct.key
+                                                                                            }
+                                                                                        >
+                                                                                            {ct
+                                                                                                .label[
+                                                                                                lang as
+                                                                                                    | 'en'
+                                                                                                    | 'fr'
+                                                                                                    | 'ar'
+                                                                                            ] ??
+                                                                                                ct
+                                                                                                    .label
+                                                                                                    .en}
+                                                                                        </SelectItem>
+                                                                                    ),
+                                                                                )}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    ) : (
+                                                                        <Select
+                                                                            value={
+                                                                                entry
+                                                                                    .filterLink
+                                                                                    .value
+                                                                            }
+                                                                            onValueChange={(
+                                                                                v,
+                                                                            ) =>
+                                                                                setHeader(
+                                                                                    idx,
+                                                                                    {
+                                                                                        filterLink:
+                                                                                            {
+                                                                                                ...entry.filterLink!,
+                                                                                                value: v,
+                                                                                            },
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <SelectTrigger className="h-8 bg-background text-xs">
+                                                                                <SelectValue
+                                                                                    placeholder={t(
+                                                                                        'admin.settings.selectFilterValue',
+                                                                                    )}
+                                                                                />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {getAllCategoryValuesForPage(
+                                                                                    entry
+                                                                                        .filterLink
+                                                                                        .targetPageKey ??
+                                                                                        entry.pageKey,
+                                                                                ).map(
+                                                                                    (
+                                                                                        opt,
+                                                                                    ) => (
+                                                                                        <SelectItem
+                                                                                            key={
+                                                                                                opt.value
+                                                                                            }
+                                                                                            value={
+                                                                                                opt.value
+                                                                                            }
+                                                                                        >
+                                                                                            {
+                                                                                                opt.label
+                                                                                            }
+                                                                                        </SelectItem>
+                                                                                    ),
+                                                                                )}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            {/* Preview URL */}
+                                                            <div className="mt-3 rounded-md bg-background px-3 py-2 text-xs text-muted-foreground">
+                                                                <span className="font-medium">
+                                                                    {t(
+                                                                        'admin.settings.previewUrl',
+                                                                    )}
+                                                                    :
+                                                                </span>{' '}
+                                                                {buildFilterLinkHref(
+                                                                    entry,
+                                                                    lang as
+                                                                        | 'en'
+                                                                        | 'fr'
+                                                                        | 'ar',
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
 
                                                     {/* Dropdown Items Section */}
                                                     {entry.isDropdown && (

@@ -129,7 +129,7 @@ class ClientController extends Controller
     public function updateLanguage(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'language' => ['required', 'in:fr,ar,en'],
+            'language' => ['required', 'in:fr'],
         ]);
 
         $request->user()->update(['preferred_language' => $data['language']]);

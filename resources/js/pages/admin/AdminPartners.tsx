@@ -13,7 +13,6 @@ import type { SectionDef } from '@/components/forms/EntityFormDialog';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/api/entities.api';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -30,7 +29,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
-const PARTNER_LANGUAGES: Lang[] = ['en', 'fr', 'ar'];
+const PARTNER_LANGUAGES: Lang[] = ['fr'];
 
 type PartnerFormValues = {
     name: { en: string; fr: string; ar: string };
@@ -138,7 +137,6 @@ const AdminPartners = () => {
     const validate = (values: PartnerFormValues) => {
         const errs: Record<string, string> = {};
         if (!values.name?.fr) errs.name_fr = t('admin.error.required');
-        if (!values.name?.ar) errs.name_ar = t('admin.error.required');
         if (!values.category) errs.category = t('admin.error.required');
         if (values.website && !/^https?:\/\/.+/.test(values.website)) {
             errs.website = t('admin.invalidUrl');
@@ -209,8 +207,7 @@ const AdminPartners = () => {
                         <div className="space-y-5">
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground">
-                                    {t('admin.partnerForm.name')}{' '}
-                                    <LangBadge lang={currentLang} />
+                                     {t('admin.partnerForm.name')}{' '}
                                 </label>
                                 <input
                                     id={fieldKey}
@@ -235,8 +232,7 @@ const AdminPartners = () => {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground">
-                                    {t('admin.partnerForm.description')}{' '}
-                                    <LangBadge lang={currentLang} />
+                                     {t('admin.partnerForm.description')}{' '}
                                 </label>
                                 <textarea
                                     dir={currentLang === 'ar' ? 'rtl' : 'ltr'}

@@ -160,10 +160,7 @@ function SortableSection({
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <div className="space-y-1.5">
                             <Label className="text-xs">
-                                {t('admin.settings.titleLang').replace(
-                                    '{lang}',
-                                    lang.toUpperCase(),
-                                )}
+                                {t('admin.settings.titleLang')}
                             </Label>
                             <Input
                                 value={config.title?.[lang] ?? ''}
@@ -184,10 +181,7 @@ function SortableSection({
                         </div>
                         <div className="space-y-1.5">
                             <Label className="text-xs">
-                                {t('admin.settings.subtitleLang').replace(
-                                    '{lang}',
-                                    lang.toUpperCase(),
-                                )}
+                                {t('admin.settings.subtitleLang')}
                             </Label>
                             <Input
                                 value={config.subtitle?.[lang] ?? ''}

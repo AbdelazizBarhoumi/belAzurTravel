@@ -24,7 +24,6 @@ import {
     EntityFormDialog,
     type SectionDef,
 } from '@/components/forms/EntityFormDialog';
-import LangBadge from '@/components/forms/LangBadge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Switch } from '@/components/ui/switch';
@@ -168,7 +167,7 @@ const AdminVisas = () => {
 
     const validate = (values: VisaFormValues): Record<string, string> => {
         const errs: Record<string, string> = {};
-        const langs: VisaLang[] = ['en', 'fr', 'ar'];
+        const langs: VisaLang[] = ['fr'];
 
         langs.forEach((l) => {
             if (!values[`name_${l}`])
@@ -313,7 +312,6 @@ const AdminVisas = () => {
                                 }
                             >
                                 {t('admin.visaForm.name')}
-                                <LangBadge lang={activeLang} />
                             </Label>
                             <Input
                                 id={localizedKey(
@@ -651,7 +649,7 @@ const AdminVisas = () => {
                     editing ? t('admin.visaEditTitle') : t('admin.visaAddTitle')
                 }
                 subtitle={t('admin.visaForm.helper')}
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 layout="grid-2"
                 initial={dialogInitial}
                 sections={visaSections}

@@ -60,9 +60,9 @@ class AdminPartnerController extends Controller
     private function attributes(Request $request, ?Partner $item = null): array
     {
         $rules = [
-            'name_en' => 'required|string',
+            'name_en' => 'nullable|string',
             'name_fr' => 'required|string',
-            'name_ar' => 'required|string',
+            'name_ar' => 'nullable|string',
             'description_en' => 'nullable|string',
             'description_fr' => 'nullable|string',
             'description_ar' => 'nullable|string',

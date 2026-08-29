@@ -10,7 +10,7 @@ class SetApplicationLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $supportedLocales = ['en', 'fr', 'ar'];
+        $supportedLocales = ['fr'];
 
         $locale = $request->getPreferredLanguage($supportedLocales)
             ?? config('app.fallback_locale', config('app.locale', 'en'));

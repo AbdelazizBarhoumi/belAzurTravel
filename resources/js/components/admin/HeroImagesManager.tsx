@@ -125,10 +125,7 @@ function SortableSlide({
             <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="grid gap-1.5">
                     <Label className="text-[10px] text-muted-foreground">
-                        {t('admin.heroTitle').replace(
-                            '{lang}',
-                            lang.toUpperCase(),
-                        )}
+                        {t('admin.heroTitle')}
                     </Label>
                     <Input
                         value={slide.title?.[lang] ?? ''}
@@ -141,19 +138,13 @@ function SortableSlide({
                                 },
                             })
                         }
-                        placeholder={t('admin.heroTitle').replace(
-                            '{lang}',
-                            lang.toUpperCase(),
-                        )}
+                        placeholder={t('admin.heroTitle')}
                         className="h-8 text-xs"
                     />
                 </div>
                 <div className="grid gap-1.5">
                     <Label className="text-[10px] text-muted-foreground">
-                        {t('admin.heroSubtitle').replace(
-                            '{lang}',
-                            lang.toUpperCase(),
-                        )}
+                        {t('admin.heroSubtitle')}
                     </Label>
                     <Input
                         value={slide.subtitle?.[lang] ?? ''}
@@ -166,10 +157,7 @@ function SortableSlide({
                                 },
                             })
                         }
-                        placeholder={t('admin.heroSubtitle').replace(
-                            '{lang}',
-                            lang.toUpperCase(),
-                        )}
+                        placeholder={t('admin.heroSubtitle')}
                         className="h-8 text-xs"
                     />
                 </div>

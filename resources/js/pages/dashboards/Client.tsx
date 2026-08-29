@@ -1397,23 +1397,17 @@ const ClientDashboard = () => {
                                         <label className="text-sm font-medium text-muted-foreground">
                                             {t('common.language')}
                                         </label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {['en', 'fr', 'ar'].map((l) => (
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {['fr'].map((l) => (
                                                 <Button
                                                     key={l}
-                                                    variant={
-                                                        lang === l
-                                                            ? 'default'
-                                                            : 'outline'
-                                                    }
+                                                    variant="default"
                                                     size="sm"
-                                                    onClick={() =>
-                                                        langMutation.mutate(l)
-                                                    }
                                                     className="gap-2"
+                                                    disabled
                                                 >
                                                     <Globe className="h-3 w-3" />
-                                                    {l.toUpperCase()}
+                                                    Français
                                                 </Button>
                                             ))}
                                         </div>

@@ -16,7 +16,6 @@ import {
     type SectionDef,
 } from '@/components/forms/EntityFormDialog';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
-import LangBadge from '@/components/forms/LangBadge';
 import {
     Select,
     SelectContent,
@@ -51,7 +50,7 @@ type GalleryFormValues = {
     imagePath?: string;
 };
 
-const GALLERY_LANGUAGES: Lang[] = ['en', 'fr', 'ar'];
+const GALLERY_LANGUAGES: Lang[] = ['fr'];
 
 type ApiValidationError = {
     status?: number;
@@ -196,9 +195,6 @@ const AdminGallery = () => {
         if (!values.title?.fr) {
             errs.title_fr = t('admin.error.required', lang);
         }
-        if (!values.title?.ar) {
-            errs.title_ar = t('admin.error.required', lang);
-        }
         if (!values.category) errs.category = t('admin.error.required', lang);
         if (!editing && !(values.imageFile instanceof File)) {
             errs.image = t('admin.error.required', lang);
@@ -290,7 +286,6 @@ const AdminGallery = () => {
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground">
                                     {t('admin.title', lang)}{' '}
-                                    <LangBadge lang={currentLang} />
                                 </label>
                                 <input
                                     id={fieldKey}

@@ -13,7 +13,6 @@ import type { FieldDef, SectionDef } from '@/components/forms/EntityFormDialog';
 import { EntityFormDialog } from '@/components/forms/EntityFormDialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/api/entities.api';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -77,7 +76,7 @@ const AdminTeam = () => {
     const validate = (values: TeamFormValues) => {
         const errs: Record<string, string> = {};
         ['name', 'role', 'bio'].forEach((k) => {
-            ['en', 'fr', 'ar'].forEach((lang) => {
+            ['fr'].forEach((lang) => {
                 if (!values[`${k}_${lang}`]) {
                     errs[`${k}_${lang}`] = t('admin.error.required');
                 }
@@ -153,8 +152,7 @@ const AdminTeam = () => {
                                         : 'text-muted-foreground',
                                 )}
                             >
-                                {t(`admin.${k}`)}{' '}
-                                <LangBadge lang={activeLang} />
+                                 {t(`admin.${k}`)}{' '}
                             </label>
                             <input
                                 value={String(
@@ -440,7 +438,7 @@ const AdminTeam = () => {
                 onSubmit={(values) =>
                     handleSave(values as unknown as TeamFormValues)
                 }
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 layout="grid-1"
                 isSubmitting={saveMutation.isPending}
             />

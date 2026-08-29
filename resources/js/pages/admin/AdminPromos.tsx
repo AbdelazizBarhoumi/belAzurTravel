@@ -32,7 +32,6 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { Switch } from '@/components/ui/switch';
 
-import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
@@ -222,7 +221,7 @@ export default function AdminPromos() {
     ): Record<string, string> => {
         const errs: Record<string, string> = {};
         if (!values.code) errs.code = t('admin.errors.required');
-        if (!values.title_en) errs.title_en = t('admin.errors.required');
+        if (!values.title_fr) errs.title_fr = t('admin.errors.required');
         if (!values.discount) errs.discount = t('admin.errors.required');
         if (!values.expires) errs.expires = t('admin.errors.required');
         return errs;
@@ -330,8 +329,7 @@ export default function AdminPromos() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-muted-foreground">
-                                {t('admin.promos.titleLabel')}{' '}
-                                <LangBadge lang={activeLang} />
+                                 {t('admin.promos.titleLabel')}{' '}
                             </label>
                             <Input
                                 value={String(
@@ -398,8 +396,7 @@ export default function AdminPromos() {
                 <div className="space-y-6">
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-muted-foreground">
-                            {t('admin.promos.description')}{' '}
-                            <LangBadge lang={activeLang} />
+                             {t('admin.promos.description')}{' '}
                         </label>
                         <Textarea
                             value={String(
@@ -818,7 +815,7 @@ export default function AdminPromos() {
                 sections={promoSections}
                 initial={dialogInitial}
                 onSubmit={handleSave}
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 layout="grid-2"
                 errors={errors}
                 isSubmitting={saveMutation.isPending}

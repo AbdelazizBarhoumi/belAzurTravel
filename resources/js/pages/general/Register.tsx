@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { buildRequestHeaders } from '@/api/requestHeaders';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { Button } from '@/components/ui/button';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Register = () => {
@@ -100,9 +100,7 @@ const Register = () => {
                         <BrandLogo imageClassName="h-12 w-auto" />
                     </Link>
 
-                    <div className="mb-6 flex justify-end">
-                        <LanguageSwitcher />
-                    </div>
+
 
                     <h1 className="mb-2 font-serif text-3xl font-bold text-foreground">
                         {t('register.title')}

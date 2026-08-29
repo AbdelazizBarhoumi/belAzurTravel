@@ -572,7 +572,7 @@ export function EntityFormDialog<T extends object>({
                 <form
                     onSubmit={handleSubmit}
                     noValidate
-                    className="flex max-h-[92vh] flex-col"
+                    className="flex h-full max-h-[92vh] flex-col"
                 >
                     <DialogHeader className="border-b border-border px-6 py-5 text-left">
                         <div className="flex flex-col gap-4 pt-3">
@@ -588,7 +588,7 @@ export function EntityFormDialog<T extends object>({
                                     ) : null}
                                 </div>
 
-                                {languages ? (
+                                {languages && languages.length > 1 ? (
                                     <Badge
                                         variant="secondary"
                                         className="text-xs uppercase tracking-wide"
@@ -597,7 +597,7 @@ export function EntityFormDialog<T extends object>({
                                     </Badge>
                                 ) : null}
                             </div>
-                            {languages ? (
+                            {languages && languages.length > 1 ? (
                                 <div className="flex flex-wrap gap-2">
                                     {languages.map((code) => {
                                         const hasError = Object.keys(
@@ -632,7 +632,7 @@ export function EntityFormDialog<T extends object>({
                         </div>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto px-6 py-6">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
                         {layout === 'grid-2' ? (
                             <div className="space-y-6">
                                 {(() => {

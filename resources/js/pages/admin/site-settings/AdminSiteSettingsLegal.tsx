@@ -139,7 +139,7 @@ export default function AdminSiteSettingsLegal() {
     const removeSection = (idx: number) =>
         setSections((p) => p.filter((_, i) => i !== idx));
 
-    const getActiveLang = (idx: number) => langTabs[idx] ?? 'en';
+    const getActiveLang = (idx: number) => langTabs[idx] ?? 'fr';
 
     const moveSection = (idx: number, dir: number) => {
         const copy = [...sections];
@@ -194,23 +194,7 @@ export default function AdminSiteSettingsLegal() {
                     <Card key={idx} className="p-4">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-                                    <div>
-                                        <Label className="text-xs">
-                                            {t('admin.settings.title_en')}
-                                        </Label>
-                                        <Input
-                                            value={sec.title.en}
-                                            onChange={(e) =>
-                                                updateSection(idx, {
-                                                    title: {
-                                                        ...sec.title,
-                                                        en: e.target.value,
-                                                    },
-                                                })
-                                            }
-                                        />
-                                    </div>
+                                <div className="grid grid-cols-1 gap-2">
                                     <div>
                                         <Label className="text-xs">
                                             {t('admin.settings.title_fr')}
@@ -222,22 +206,6 @@ export default function AdminSiteSettingsLegal() {
                                                     title: {
                                                         ...sec.title,
                                                         fr: e.target.value,
-                                                    },
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs">
-                                            {t('admin.settings.title_ar')}
-                                        </Label>
-                                        <Input
-                                            value={sec.title.ar}
-                                            onChange={(e) =>
-                                                updateSection(idx, {
-                                                    title: {
-                                                        ...sec.title,
-                                                        ar: e.target.value,
                                                     },
                                                 })
                                             }
@@ -274,37 +242,11 @@ export default function AdminSiteSettingsLegal() {
                                     </Select>
                                 </div>
 
-                                <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    {(['en', 'fr', 'ar'] as const).map((lk) => (
-                                        <Button
-                                            key={lk}
-                                            size="sm"
-                                            variant={
-                                                getActiveLang(idx) === lk
-                                                    ? 'default'
-                                                    : 'ghost'
-                                            }
-                                            onClick={() =>
-                                                setLangTabs((p) => ({
-                                                    ...p,
-                                                    [idx]: lk,
-                                                }))
-                                            }
-                                        >
-                                            {lk.toUpperCase()}
-                                        </Button>
-                                    ))}
-                                </div>
-
                                 {sec.body.format === 'markdown' ? (
                                     <div className="mt-3">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-xs">
-                                                {t('admin.settings.body')} (
-                                                {getActiveLang(
-                                                    idx,
-                                                ).toUpperCase()}
-                                                )
+                                                {t('admin.settings.body')}
                                             </Label>
                                             <Button
                                                 size="sm"
@@ -369,8 +311,7 @@ export default function AdminSiteSettingsLegal() {
                                 ) : (
                                     <div className="mt-3">
                                         <Label className="text-xs">
-                                            Body (
-                                            {getActiveLang(idx).toUpperCase()})
+                                            {t('admin.settings.body')}
                                         </Label>
                                         <RichTextEditor
                                             value={

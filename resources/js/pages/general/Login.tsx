@@ -8,7 +8,7 @@ import type { AuthUser } from '@/auth';
 import { redirectAfterLogin, storeAuthUser } from '@/auth';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { Button } from '@/components/ui/button';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 
@@ -122,9 +122,7 @@ const Login = () => {
                         <BrandLogo imageClassName="h-12 w-auto" />
                     </Link>
 
-                    <div className="mb-6 flex justify-end">
-                        <LanguageSwitcher />
-                    </div>
+
 
                     <h1 className="mb-2 font-serif text-3xl font-bold text-foreground">
                         {t('auth.welcomeBack')}

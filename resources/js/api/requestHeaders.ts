@@ -1,19 +1,7 @@
 import type { Lang } from '@/i18n/translations';
 
 export function getStoredLang(): Lang {
-    if (typeof window === 'undefined') return 'en';
-
-    const stored = window.localStorage.getItem('lang');
-    if (stored === 'fr' || stored === 'ar' || stored === 'en') {
-        return stored;
-    }
-
-    const htmlLang = document.documentElement.lang as Lang | string;
-    if (htmlLang === 'fr' || htmlLang === 'ar' || htmlLang === 'en') {
-        return htmlLang;
-    }
-
-    return 'en';
+    return 'fr';
 }
 
 export function csrfToken(): string {

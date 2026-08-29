@@ -2706,25 +2706,7 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'admin.rating': { fr: 'Note', ar: 'التقييم', en: 'Rating' },
     'admin.city': { fr: 'Ville', ar: 'المدينة', en: 'City' },
-    'admin.cityEn': { fr: 'Ville (EN)', ar: 'المدينة (EN)', en: 'City (EN)' },
-    'admin.cityFr': { fr: 'Ville (FR)', ar: 'المدينة (FR)', en: 'City (FR)' },
-    'admin.cityAr': { fr: 'Ville (AR)', ar: 'المدينة (AR)', en: 'City (AR)' },
     'admin.country': { fr: 'Pays', ar: 'البلد', en: 'Country' },
-    'admin.countryEn': {
-        fr: 'Pays (EN)',
-        ar: 'البلد (EN)',
-        en: 'Country (EN)',
-    },
-    'admin.countryFr': {
-        fr: 'Pays (FR)',
-        ar: 'البلد (FR)',
-        en: 'Country (FR)',
-    },
-    'admin.countryAr': {
-        fr: 'Pays (AR)',
-        ar: 'البلد (AR)',
-        en: 'Country (AR)',
-    },
     'admin.discount': { fr: 'Remise', ar: 'الخصم', en: 'Discount' },
     'admin.expires': { fr: 'Expire', ar: 'ينتهي في', en: 'Expires' },
     'admin.role': { fr: 'Rôle', ar: 'الدور', en: 'Role' },
@@ -5144,14 +5126,14 @@ translations['admin.heroInterval'] = {
     en: 'Interval (ms)',
 };
 translations['admin.heroTitle'] = {
-    fr: 'Titre ({lang})',
-    ar: 'العنوان ({lang})',
-    en: 'Title ({lang})',
+    fr: 'Titre',
+    ar: 'العنوان',
+    en: 'Title',
 };
 translations['admin.heroSubtitle'] = {
-    fr: 'Sous-titre ({lang})',
-    ar: 'العنوان الفرعي ({lang})',
-    en: 'Subtitle ({lang})',
+    fr: 'Sous-titre',
+    ar: 'العنوان الفرعي',
+    en: 'Subtitle',
 };
 translations['admin.heroUpload'] = {
     fr: 'Télécharger',
@@ -5773,16 +5755,6 @@ translations['admin.settings.placeholder.whatsapp'] = {
     ar: '21623777771',
     en: '21623777771',
 };
-translations['admin.settings.placeholder.titleEN'] = {
-    fr: 'Titre (EN)',
-    ar: 'العنوان (EN)',
-    en: 'Title (EN)',
-};
-translations['admin.settings.placeholder.titleFR'] = {
-    fr: 'Titre (FR)',
-    ar: 'العنوان (FR)',
-    en: 'Title (FR)',
-};
 translations['admin.settings.add_section'] = {
     fr: 'Ajouter une section',
     ar: 'إضافة قسم',
@@ -5800,19 +5772,19 @@ translations['admin.settings.body_format'] = {
 };
 translations['admin.settings.body'] = { fr: 'Corps', ar: 'الجسم', en: 'Body' };
 translations['admin.settings.title_en'] = {
-    fr: 'Titre (EN)',
-    ar: 'العنوان (EN)',
-    en: 'Title (EN)',
+    fr: 'Titre',
+    ar: 'العنوان',
+    en: 'Title',
 };
 translations['admin.settings.title_fr'] = {
-    fr: 'Titre (FR)',
-    ar: 'العنوان (FR)',
-    en: 'Title (FR)',
+    fr: 'Titre',
+    ar: 'العنوان',
+    en: 'Title',
 };
 translations['admin.settings.title_ar'] = {
-    fr: 'Titre (AR)',
-    ar: 'العنوان (AR)',
-    en: 'Title (AR)',
+    fr: 'Titre',
+    ar: 'العنوان',
+    en: 'Title',
 };
 translations['admin.settings.markdown'] = {
     fr: 'Markdown',
@@ -6432,6 +6404,76 @@ translations['admin.settings.linkSelfDisabled'] = {
     ar: 'النقر على اسم الرابط يفتح القائمة المنسدلة فقط',
     en: 'Clicking the link name only opens the dropdown',
 };
+translations['admin.settings.filteredLink'] = {
+    fr: 'Lien filtré',
+    ar: 'رابط مصفّى',
+    en: 'Filtered Link',
+};
+translations['admin.settings.filteredLinkEnabled'] = {
+    fr: 'Ce lien pointe vers une URL filtrée au lieu de la racine de la page',
+    ar: 'هذا الرابط يشير إلى عنوان URL مصفّى بدلاً من جذر الصفحة',
+    en: 'This link points to a filtered URL instead of the page root',
+};
+translations['admin.settings.filteredLinkDisabled'] = {
+    fr: 'Activer pour lier à une URL avec filtre/recherche spécifique',
+    ar: 'فعّل للربط بعنوان URL مع فلتر/بحث محدد',
+    en: 'Enable to link to a URL with a specific filter/search',
+};
+translations['admin.settings.filteredLinkConfig'] = {
+    fr: 'Configuration du lien filtré',
+    ar: 'إعدادات الرابط المصفّى',
+    en: 'Filtered Link Configuration',
+};
+translations['admin.settings.targetPage'] = {
+    fr: 'Page cible',
+    ar: 'الصفحة المستهدفة',
+    en: 'Target Page',
+};
+translations['admin.settings.linkMode'] = {
+    fr: 'Mode du lien',
+    ar: 'وضع الرابط',
+    en: 'Link Mode',
+};
+translations['admin.settings.filterMode'] = {
+    fr: 'Filtre',
+    ar: 'فلتر',
+    en: 'Filter',
+};
+translations['admin.settings.searchMode'] = {
+    fr: 'Recherche',
+    ar: 'بحث',
+    en: 'Search',
+};
+translations['admin.settings.categoriesMode'] = {
+    fr: 'Catégories',
+    ar: 'فئات',
+    en: 'Categories',
+};
+translations['admin.settings.filterValue'] = {
+    fr: 'Valeur du filtre',
+    ar: 'قيمة الفلتر',
+    en: 'Filter Value',
+};
+translations['admin.settings.searchKeyword'] = {
+    fr: 'Mot-clé de recherche',
+    ar: 'كلمة البحث',
+    en: 'Search keyword',
+};
+translations['admin.settings.selectCategoryType'] = {
+    fr: 'Sélectionner un type de catégorie',
+    ar: 'اختر نوع الفئة',
+    en: 'Select a category type',
+};
+translations['admin.settings.selectFilterValue'] = {
+    fr: 'Sélectionner une valeur',
+    ar: 'اختر قيمة',
+    en: 'Select a value',
+};
+translations['admin.settings.previewUrl'] = {
+    fr: 'Aperçu de l\'URL',
+    ar: 'معاينة الرابط',
+    en: 'Preview URL',
+};
 translations['admin.settings.groupVisible'] = {
     fr: 'Ce groupe est visible',
     ar: 'هذا المجموعة مرئية',
@@ -6902,14 +6944,14 @@ translations['admin.settings.disabled'] = {
     en: '(disabled)',
 };
 translations['admin.settings.titleLang'] = {
-    fr: 'Titre ({lang})',
-    ar: 'العنوان ({lang})',
-    en: 'Title ({lang})',
+    fr: 'Titre',
+    ar: 'العنوان',
+    en: 'Title',
 };
 translations['admin.settings.subtitleLang'] = {
-    fr: 'Sous-titre ({lang})',
-    ar: 'العنوان الفرعي ({lang})',
-    en: 'Subtitle ({lang})',
+    fr: 'Sous-titre',
+    ar: 'العنوان الفرعي',
+    en: 'Subtitle',
 };
 
 // Section labels

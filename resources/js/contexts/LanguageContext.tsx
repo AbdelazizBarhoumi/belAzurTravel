@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { buildRequestHeaders } from '@/api/requestHeaders';
-import { getAuthUser } from '@/auth';
+import { createContext, useContext } from 'react';
 import type { Lang } from '@/i18n/translations';
 import { t as translate } from '@/i18n/translations';
 
@@ -16,57 +14,15 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(
     undefined,
 );
 
+const LANG: Lang = 'fr';
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [lang, setLangState] = useState<Lang>(() => {
-        const saved = (typeof window !== 'undefined' &&
-            localStorage.getItem('lang')) as Lang | null;
-        return saved === 'ar' || saved === 'fr' || saved === 'en'
-            ? saved
-            : 'fr';
-    });
-
-    const dir: 'ltr' | 'rtl' = lang === 'ar' ? 'rtl' : 'ltr';
-
-    useEffect(() => {
-        document.documentElement.lang = lang;
-        document.documentElement.dir = dir;
-        // Add a class to allow stronger CSS targeting for Arabic mode
-        if (dir === 'rtl') {
-            document.documentElement.classList.add('lang-ar');
-        } else {
-            document.documentElement.classList.remove('lang-ar');
-        }
-        localStorage.setItem('lang', lang);
-    }, [lang, dir]);
-
-    const setLang = (l: Lang) => {
-        setLangState(l);
-
-        // Only attempt to persist the language server-side if the user
-        // appears to be authenticated. Guests should not trigger a
-        // /api/user/language request which results in a 401.
-        try {
-            const user = getAuthUser();
-            if (!user) return;
-        } catch {
-            // If anything goes wrong reading auth state, skip the server
-            // call to avoid unnecessary 401s in the console.
-            return;
-        }
-
-        void fetch('/api/user/language', {
-            method: 'PATCH',
-            credentials: 'include',
-            headers: buildRequestHeaders({
-                headers: { 'Content-Type': 'application/json' },
-            }),
-            body: JSON.stringify({ language: l }),
-        }).catch(() => undefined);
-    };
-    const t = (key: string) => translate(key, lang);
+    const t = (key: string) => translate(key, LANG);
 
     return (
-        <LanguageContext.Provider value={{ lang, setLang, t, dir }}>
+        <LanguageContext.Provider
+            value={{ lang: LANG, setLang: () => {}, t, dir: 'ltr' }}
+        >
             {children}
         </LanguageContext.Provider>
     );

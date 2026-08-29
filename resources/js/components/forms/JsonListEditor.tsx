@@ -32,7 +32,6 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
-import LangBadge from './LangBadge';
 
 type JsonItem = Record<string, unknown>;
 
@@ -204,11 +203,8 @@ const SortableItem: React.FC<SortableItemProps> = ({
                             className={`space-y-2 ${field.type === 'textarea' ? 'md:col-span-2' : ''}`}
                         >
                             <Label className="text-xs font-semibold text-muted-foreground">
-                                {fieldLabel}
-                                {field.translatable && (
-                                    <LangBadge lang={activeLang} />
-                                )}
-                            </Label>
+                                 {fieldLabel}
+                             </Label>
                             {field.type === 'textarea' ? (
                                 <Textarea
                                     value={String(value)}

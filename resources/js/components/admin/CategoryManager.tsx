@@ -165,27 +165,8 @@ export function CategoryManager({
                                     >
                                         {editingId === cat.id ? (
                                             <div className="space-y-3">
-                                                <div className="grid grid-cols-3 gap-2">
+                                                <div className="grid grid-cols-1 gap-2">
                                                     <div>
-                                                        <Label className="text-xs">
-                                                            English
-                                                        </Label>
-                                                        <Input
-                                                            value={newName.en}
-                                                            onChange={(e) =>
-                                                                setNewName({
-                                                                    ...newName,
-                                                                    en: e.target
-                                                                        .value,
-                                                                })
-                                                            }
-                                                            size={1}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <Label className="text-xs">
-                                                            French
-                                                        </Label>
                                                         <Input
                                                             value={newName.fr}
                                                             onChange={(e) =>
@@ -195,23 +176,7 @@ export function CategoryManager({
                                                                         .value,
                                                                 })
                                                             }
-                                                            size={1}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <Label className="text-xs">
-                                                            Arabic
-                                                        </Label>
-                                                        <Input
-                                                            value={newName.ar}
-                                                            onChange={(e) =>
-                                                                setNewName({
-                                                                    ...newName,
-                                                                    ar: e.target
-                                                                        .value,
-                                                                })
-                                                            }
-                                                            dir="rtl"
+                                                            placeholder="Nom"
                                                             size={1}
                                                         />
                                                     </div>
@@ -277,26 +242,8 @@ export function CategoryManager({
 
                                 {isCreating ? (
                                     <div className="space-y-3 rounded-lg border-2 border-dashed border-primary/50 p-3">
-                                        <div className="grid grid-cols-3 gap-2">
+                                        <div className="grid grid-cols-1 gap-2">
                                             <div>
-                                                <Label className="text-xs">
-                                                    English
-                                                </Label>
-                                                <Input
-                                                    value={newName.en}
-                                                    onChange={(e) =>
-                                                        setNewName({
-                                                            ...newName,
-                                                            en: e.target.value,
-                                                        })
-                                                    }
-                                                    placeholder="Beach"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label className="text-xs">
-                                                    French
-                                                </Label>
                                                 <Input
                                                     value={newName.fr}
                                                     onChange={(e) =>
@@ -305,23 +252,7 @@ export function CategoryManager({
                                                             fr: e.target.value,
                                                         })
                                                     }
-                                                    placeholder="Plage"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label className="text-xs">
-                                                    Arabic
-                                                </Label>
-                                                <Input
-                                                    value={newName.ar}
-                                                    onChange={(e) =>
-                                                        setNewName({
-                                                            ...newName,
-                                                            ar: e.target.value,
-                                                        })
-                                                    }
-                                                    dir="rtl"
-                                                    placeholder="شاطئ"
+                                                    placeholder="Nom"
                                                 />
                                             </div>
                                         </div>

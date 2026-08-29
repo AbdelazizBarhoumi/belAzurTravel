@@ -56,9 +56,9 @@ class AdminVisaController extends Controller
     {
         $data = $request->validate([
             'code' => 'required|string|max:10|unique:visas,code,'.($existing?->id ?? ''),
-            'name_en' => 'required|string|max:255',
+            'name_en' => 'nullable|string|max:255',
             'name_fr' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
+            'name_ar' => 'nullable|string|max:255',
             'flag' => 'required|string|max:10',
             'processing_en' => 'nullable|string|max:255',
             'processing_fr' => 'nullable|string|max:255',

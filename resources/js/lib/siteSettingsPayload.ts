@@ -1,4 +1,4 @@
-import type { NavSettings, NavGroup } from '@/lib/nav-config';
+import type { NavSettings, NavGroup, FilterLinkConfig } from '@/lib/nav-config';
 
 export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
 
@@ -121,6 +121,19 @@ function normalizeNavGroupForSave(
     return result;
 }
 
+function normalizeFilterLink(
+    fl: Record<string, unknown> | undefined,
+): FilterLinkConfig | undefined {
+    if (!fl || typeof fl !== 'object' || Array.isArray(fl)) return undefined;
+    const mode = fl.mode === 'search' || fl.mode === 'categories' ? fl.mode as FilterLinkConfig['mode'] : 'filter';
+    const value = typeof fl.value === 'string' ? fl.value : '';
+    const result: FilterLinkConfig = { mode, value };
+    if (typeof fl.targetPageKey === 'string' && fl.targetPageKey) {
+        result.targetPageKey = fl.targetPageKey;
+    }
+    return result;
+}
+
 function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
     const groups = Array.isArray(nav.groups)
         ? nav.groups.map(
@@ -137,6 +150,9 @@ function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
             ...(entry.label
                 ? { label: normalizeLocalizedText(entry.label) }
                 : {}),
+            ...(entry.filterLink
+                ? { filterLink: normalizeFilterLink(entry.filterLink as unknown as Record<string, unknown>) }
+                : { filterLink: undefined }),
             items: entry.items.map(
                 (item) =>
                     normalizeDropdownItem(
@@ -247,6 +263,16 @@ export function normalizeSiteSettingsContentForSave(
                             item as Record<string, unknown>,
                         );
                     });
+                }
+
+                if (
+                    Object.prototype.hasOwnProperty.call(nextEntry, 'filterLink')
+                ) {
+                    nextEntry.filterLink = normalizeFilterLink(
+                        nextEntry.filterLink as Record<string, unknown>,
+                    );
+                } else {
+                    nextEntry.filterLink = undefined;
                 }
 
                 return nextEntry;

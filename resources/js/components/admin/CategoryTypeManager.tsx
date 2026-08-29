@@ -335,38 +335,12 @@ export function CategoryTypeManager({
         onChange: (val: { en: string; fr: string; ar: string }) => void,
         placeholders?: { en?: string; fr?: string; ar?: string },
     ) => (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-2">
             <div>
-                <Label className="text-xs">
-                    {t('admin.categoryTypeManager.langEnglish')}
-                </Label>
-                <Input
-                    value={value.en}
-                    onChange={(e) => onChange({ ...value, en: e.target.value })}
-                    placeholder={placeholders?.en}
-                    size={1}
-                />
-            </div>
-            <div>
-                <Label className="text-xs">
-                    {t('admin.categoryTypeManager.langFrench')}
-                </Label>
                 <Input
                     value={value.fr}
                     onChange={(e) => onChange({ ...value, fr: e.target.value })}
                     placeholder={placeholders?.fr}
-                    size={1}
-                />
-            </div>
-            <div>
-                <Label className="text-xs">
-                    {t('admin.categoryTypeManager.langArabic')}
-                </Label>
-                <Input
-                    value={value.ar}
-                    onChange={(e) => onChange({ ...value, ar: e.target.value })}
-                    dir="rtl"
-                    placeholder={placeholders?.ar}
                     size={1}
                 />
             </div>

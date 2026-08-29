@@ -38,7 +38,6 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import {
     Sidebar,
@@ -416,7 +415,7 @@ export function AdminLayout({ children, title, subtitle, actions }: Props) {
                             feedPath="/admin/notifications"
                             queueFeedPath="/admin/queue"
                         />
-                        <LanguageSwitcher />
+
                         {actions}
                     </div>
                 </header>

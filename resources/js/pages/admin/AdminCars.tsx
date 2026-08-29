@@ -53,14 +53,6 @@ import {
     getLocalizedLabel,
 } from '@/data/adminSelectOptions';
 
-function LangBadge({ lang }: { lang: Lang }) {
-    return (
-        <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {lang}
-        </span>
-    );
-}
-
 function asText(value: unknown): string {
     return typeof value === 'string' ? value : '';
 }
@@ -340,7 +332,7 @@ export default function AdminCars() {
     const validate = (values: Record<string, unknown>) => {
         const errs: Record<string, string> = {};
 
-        ['en', 'fr', 'ar'].forEach((locale) => {
+        ['fr'].forEach((locale) => {
             if (!values[`name_${locale}`]) {
                 errs[`name_${locale}`] = t('admin.fieldRequired');
             }
@@ -494,8 +486,7 @@ export default function AdminCars() {
                                 htmlFor={`name_${activeLang}`}
                                 className={`flex items-center gap-2 text-xs font-semibold ${errors[`name_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                             >
-                                {t('admin.name')}
-                                <LangBadge lang={activeLang} />
+                                 {t('admin.name')}
                             </label>
                             <input
                                 id={`name_${activeLang}`}
@@ -674,8 +665,7 @@ export default function AdminCars() {
                                 htmlFor={`car-description-${activeLang}`}
                                 className="text-xs font-semibold text-muted-foreground"
                             >
-                                {t('admin.description')}
-                                <LangBadge lang={activeLang} />
+                                 {t('admin.description')}
                             </label>
                             <textarea
                                 id={`car-description-${activeLang}`}
@@ -939,7 +929,7 @@ export default function AdminCars() {
                 sections={carSections}
                 initial={dialogInitial}
                 onSubmit={handleSave}
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 layout="grid-2"
                 isSubmitting={saveMutation.isPending}
                 errors={errors}

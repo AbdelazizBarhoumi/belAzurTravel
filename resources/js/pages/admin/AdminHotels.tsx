@@ -38,7 +38,6 @@ import {
     type SectionDef,
 } from '@/components/forms/EntityFormDialog';
 import { EntityMediaInputs } from '@/components/forms/EntityMediaInputs';
-import LangBadge from '@/components/forms/LangBadge';
 import {
     JsonListEditor,
     type JsonFieldDef,
@@ -462,7 +461,6 @@ const AdminHotels = () => {
                                             className={`flex items-center gap-2 text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
                                         >
                                             {field.label}
-                                            <LangBadge lang={activeLang} />
                                         </label>
                                         <div className="space-y-1">
                                             <input
@@ -520,7 +518,6 @@ const AdminHotels = () => {
                                     className={`text-xs font-semibold ${errors?.[`description_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                                 >
                                     {t('admin.description')}
-                                    <LangBadge lang={activeLang} />
                                 </label>
                                 <textarea
                                     id={`description_${activeLang}`}
@@ -904,7 +901,6 @@ const AdminHotels = () => {
         // Basic required checks
         if (!values.name_en) errs.name_en = t('admin.required');
         if (!values.name_fr) errs.name_fr = t('admin.required');
-        if (!values.name_ar) errs.name_ar = t('admin.required');
 
         if (!values.location) errs.location = t('admin.required');
 
@@ -1287,7 +1283,7 @@ const AdminHotels = () => {
                 initial={dialogInitial}
                 onSubmit={handleSave}
                 errors={errors}
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 layout="grid-2"
                 activeLang={modalLang}
                 onActiveLangChange={setModalLang}

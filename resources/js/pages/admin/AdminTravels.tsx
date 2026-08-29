@@ -44,7 +44,6 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { LocationSelect } from '@/components/ui/LocationSelect';
-import LangBadge from '@/components/forms/LangBadge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { formatPrice } from '@/lib/utils';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
@@ -262,7 +261,7 @@ const AdminTravels = () => {
         const errs: Record<string, string> = {};
 
         // Language-specific field validation
-        ['en', 'fr', 'ar'].forEach((lang) => {
+        ['fr'].forEach((lang) => {
             if (!values[`name_${lang}`])
                 errs[`name_${lang}`] = t('admin.required');
         });
@@ -450,7 +449,6 @@ const AdminTravels = () => {
                                 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"
                             >
                                 {t('admin.name')}
-                                <LangBadge lang={activeLang} />
                             </label>
                             <Input
                                 id={`name_${activeLang}`}
@@ -540,7 +538,6 @@ const AdminTravels = () => {
                                 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"
                             >
                                 {t('admin.description')}
-                                <LangBadge lang={activeLang} />
                             </label>
                             <Textarea
                                 id={`description_${activeLang}`}
@@ -1110,7 +1107,7 @@ const AdminTravels = () => {
                 onSubmit={(values) =>
                     handleSave(values as unknown as TourFormValues)
                 }
-                languages={['en', 'fr', 'ar']}
+                languages={['fr']}
                 activeLang={modalLang}
                 onActiveLangChange={setModalLang}
                 preserveArrayKeys={PRESERVE_ARRAY_KEYS}

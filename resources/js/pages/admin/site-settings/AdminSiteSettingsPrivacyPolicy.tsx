@@ -40,7 +40,7 @@ export default function AdminSiteSettingsPrivacyPolicy() {
     const { t } = useLanguage();
     const [data, setData] = useState<PolicyData>(EMPTY);
     const [preview, setPreview] = useState<Record<string, boolean>>({});
-    const [activeLang, setActiveLang] = useState<'en' | 'fr' | 'ar'>('en');
+    const [activeLang, setActiveLang] = useState<'en' | 'fr' | 'ar'>('fr');
     const [autosaveStatus, setAutosaveStatus] = useState<
         'idle' | 'saving' | 'saved' | 'error'
     >('idle');
@@ -155,21 +155,7 @@ export default function AdminSiteSettingsPrivacyPolicy() {
             }
         >
             <Card className="space-y-4 p-4">
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <div>
-                        <Label className="text-xs">
-                            {t('admin.settings.title_en')}
-                        </Label>
-                        <Input
-                            value={data.title.en}
-                            onChange={(e) =>
-                                setData((p) => ({
-                                    ...p,
-                                    title: { ...p.title, en: e.target.value },
-                                }))
-                            }
-                        />
-                    </div>
+                <div className="grid grid-cols-1 gap-3">
                     <div>
                         <Label className="text-xs">
                             {t('admin.settings.title_fr')}
@@ -180,20 +166,6 @@ export default function AdminSiteSettingsPrivacyPolicy() {
                                 setData((p) => ({
                                     ...p,
                                     title: { ...p.title, fr: e.target.value },
-                                }))
-                            }
-                        />
-                    </div>
-                    <div>
-                        <Label className="text-xs">
-                            {t('admin.settings.title_ar')}
-                        </Label>
-                        <Input
-                            value={data.title.ar}
-                            onChange={(e) =>
-                                setData((p) => ({
-                                    ...p,
-                                    title: { ...p.title, ar: e.target.value },
                                 }))
                             }
                         />
@@ -230,25 +202,11 @@ export default function AdminSiteSettingsPrivacyPolicy() {
                     </Select>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                    {(['en', 'fr', 'ar'] as const).map((lk) => (
-                        <Button
-                            key={lk}
-                            size="sm"
-                            variant={activeLang === lk ? 'default' : 'ghost'}
-                            onClick={() => setActiveLang(lk)}
-                        >
-                            {lk.toUpperCase()}
-                        </Button>
-                    ))}
-                </div>
-
                 {data.body.format === 'markdown' ? (
                     <div>
                         <div className="flex items-center justify-between">
                             <Label className="text-xs">
-                                {t('admin.settings.body')} (
-                                {activeLang.toUpperCase()})
+                                {t('admin.settings.body')}
                             </Label>
                             <Button
                                 size="sm"
@@ -294,7 +252,7 @@ export default function AdminSiteSettingsPrivacyPolicy() {
                 ) : (
                     <div>
                         <Label className="text-xs">
-                            Body ({activeLang.toUpperCase()})
+                            {t('admin.settings.body')}
                         </Label>
                         <RichTextEditor
                             value={data.body.content[activeLang]}

@@ -60,15 +60,15 @@ class AdminTeamController extends Controller
     private function attributes(Request $request, ?Team $item = null): array
     {
         $rules = [
-            'name_en' => 'required|string',
+            'name_en' => 'nullable|string',
             'name_fr' => 'required|string',
-            'name_ar' => 'required|string',
-            'role_en' => 'required|string',
+            'name_ar' => 'nullable|string',
+            'role_en' => 'nullable|string',
             'role_fr' => 'required|string',
-            'role_ar' => 'required|string',
-            'bio_en' => 'required|string',
+            'role_ar' => 'nullable|string',
+            'bio_en' => 'nullable|string',
             'bio_fr' => 'required|string',
-            'bio_ar' => 'required|string',
+            'bio_ar' => 'nullable|string',
             'linkedin' => 'nullable|url',
             'twitter' => 'nullable|url',
             'email' => 'nullable|email',
