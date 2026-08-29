@@ -77,7 +77,7 @@ export function HorizontalDeals({
                                 <Link
                                     key={it.id}
                                     to={it.href}
-                                    className="card-elevated group relative aspect-[3/4] w-[260px] shrink-0 snap-start overflow-hidden rounded-xl bg-card md:w-[300px]"
+                                    className="card-elevated group relative aspect-[3/4] w-[260px] shrink-0 snap-start overflow-hidden rounded-2xl bg-card md:w-[300px]"
                                 >
                                     <img
                                         src={it.image}

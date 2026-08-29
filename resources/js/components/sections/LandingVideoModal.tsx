@@ -70,7 +70,7 @@ export function LandingVideoModal() {
                     <DialogTitle>Landing Video</DialogTitle>
                 </VisuallyHidden>
                 <div
-                    className="relative mx-auto overflow-hidden rounded-xl bg-black/20 transition-opacity duration-300"
+                    className="relative mx-auto overflow-hidden rounded-2xl bg-black/20 transition-opacity duration-300"
                     style={{ ...boxStyle, opacity: ready ? 1 : 0.6 }}
                 >
                     <video

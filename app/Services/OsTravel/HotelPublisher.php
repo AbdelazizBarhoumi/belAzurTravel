@@ -272,6 +272,7 @@ class HotelPublisher
             'boardings' => $this->normalizeBoardings($detail['Boarding'] ?? []),
             'facilities' => $this->normalizeFacilities($detail['Facilitie'] ?? $list['Facilities'] ?? $details['facilities'] ?? []),
             'amenity_tags' => $this->normalizeAmenityTags($detail['Tag'] ?? $details['amenity_tags'] ?? []),
+            'short_description' => $this->shortDescription($detail),
             'description' => $this->localized(self::htmlToText($detail['LongDescription'] ?? '')),
             'city' => CityNames::normalize(['en' => $cityName, 'fr' => $cityName, 'ar' => $cityName])
                 ?? $this->localized($cityName),
@@ -688,6 +689,23 @@ class HotelPublisher
         $text = (string) preg_replace("/\n{3,}/", "\n\n", $text);
 
         return trim($text);
+    }
+
+    /**
+     * Extract the provider short description (HTML) and convert to plain text.
+     */
+    private function shortDescription(array $detail): ?string
+    {
+        $raw = $detail['LongDescription'] ?? $detail['ShortDescription'] ?? $detail['HotelDescription'] ?? null;
+
+        if ($raw === null || (string) $raw === '') {
+            return null;
+        }
+
+        $text = self::htmlToText((string) $raw);
+        $text = implode("\n", array_map('trim', explode("\n", $text)));
+
+        return $text === '' ? null : $text;
     }
 
     protected function resolveSlug(?Hotel $existing, string $name, string $externalId, string $code): string

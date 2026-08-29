@@ -426,7 +426,7 @@ export default function AdminPromos() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="rounded-xl border border-border bg-muted/20 p-4">
+                        <div className="rounded-2xl border border-border bg-muted/20 p-4">
                             <p className="text-xs text-muted-foreground">
                                 {t('admin.promos.eligibilityHint')}
                             </p>
@@ -456,7 +456,7 @@ export default function AdminPromos() {
                     </div>
 
                     <div className="space-y-4 border-t border-border pt-6">
-                        <div className="rounded-xl border border-border bg-muted/20 p-4">
+                        <div className="rounded-2xl border border-border bg-muted/20 p-4">
                             <p className="text-xs text-muted-foreground">
                                 {t('admin.promos.howToUseHint')}
                             </p>
@@ -486,7 +486,7 @@ export default function AdminPromos() {
                     </div>
 
                     <div className="space-y-4 border-t border-border pt-6">
-                        <div className="rounded-xl border border-border bg-muted/20 p-4">
+                        <div className="rounded-2xl border border-border bg-muted/20 p-4">
                             <p className="text-xs text-muted-foreground">
                                 {t('admin.promos.termsHint')}
                             </p>

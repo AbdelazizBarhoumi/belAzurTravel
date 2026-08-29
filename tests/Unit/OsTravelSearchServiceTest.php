@@ -203,7 +203,7 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertSame(7, $kelibia['nights']);
         // 1113 / 7 = 158.999... -> 159.00
         $this->assertSame(159.0, $kelibia['price_per_night']);
-        $this->assertSame(927.52, $kelibia['base_price']);
+        $this->assertSame(1113, $kelibia['base_price']);
         $this->assertSame('TND', $kelibia['currency']);
         $this->assertSame('eyJ0b2tlbiI6InRlc3QtY2FwLWJvbi1rZWxpYmlhIn0=', $kelibia['rooms'][0]['token']);
         $this->assertSame('LPD', $kelibia['rooms'][0]['boarding']);
@@ -232,12 +232,14 @@ class OsTravelSearchServiceTest extends TestCase
 
         $stopSales = collect($results)->firstWhere('slug', 'stop-sales');
         // All rooms are stop-reserved, so the hotel is unavailable with no live
-        // rooms and no live price.
+        // price. When only_available=false the stopped room is still included
+        // so the UI can label it "On request".
         $this->assertFalse($stopSales['available']);
         $this->assertSame('stop_reservation', $stopSales['unavailable_reason']);
         $this->assertNull($stopSales['first_available_at']);
         $this->assertNull($stopSales['min_nights']);
-        $this->assertSame([], $stopSales['rooms']);
+        $this->assertCount(1, $stopSales['rooms']);
+        $this->assertTrue($stopSales['rooms'][0]['stop_reservation']);
         $this->assertNull($stopSales['price']);
         $this->assertNull($stopSales['price_total']);
     }
@@ -337,9 +339,11 @@ class OsTravelSearchServiceTest extends TestCase
 
         $hotel = $results[0];
         // The only room is stop-reserved, so the hotel is unavailable with no
-        // live rooms and no live price.
+        // live price. When only_available=false the stopped room is still
+        // included so the UI can label it "On request".
         $this->assertFalse($hotel['available']);
-        $this->assertSame([], $hotel['rooms']);
+        $this->assertCount(1, $hotel['rooms']);
+        $this->assertTrue($hotel['rooms'][0]['stop_reservation']);
         $this->assertNull($hotel['price']);
         $this->assertSame('TND', $hotel['currency']);
     }
@@ -369,7 +373,10 @@ class OsTravelSearchServiceTest extends TestCase
         )[0];
 
         $this->assertFalse($result['available']);
-        $this->assertSame([], $result['rooms']);
+        // When only_available=false the room is included so the UI can label it
+        // "On request", but it is not bookable.
+        $this->assertCount(1, $result['rooms']);
+        $this->assertFalse($result['rooms'][0]['bookable']);
         $this->assertNull($result['price']);
         $this->assertSame('stop_sale', $result['unavailable_reason']);
         // The room reopens the day after the window ends.
@@ -814,7 +821,7 @@ class OsTravelSearchServiceTest extends TestCase
 
         $envelope = $this->osTravelSingleRoomEnvelope(178, 800);
         // The provider returns the same hotel Id twice (e.g. once per
-        // promotion group). search() must keep only the first occurrence.
+        // distribution source). search() must keep only one result.
         $envelope['HotelSearch'][] = $envelope['HotelSearch'][0];
 
         Http::fake([
@@ -833,6 +840,36 @@ class OsTravelSearchServiceTest extends TestCase
         $this->assertCount(1, $results);
         $this->assertSame('cap-bon-kelibia', $results[0]['slug']);
         $this->assertTrue($results[0]['available']);
+    }
+
+    public function test_search_keeps_cheapest_when_provider_duplicates_hotel(): void
+    {
+        $this->stagedPublishedHotel(178, 'cap-bon-kelibia', 'Cap Bon Kelibia Beach Hotel & Spa', 1000);
+
+        // Two different source entries for the same hotel: one expensive, one cheap.
+        $expensive = $this->osTravelSingleRoomEnvelope(178, 1500);
+        $cheap = $this->osTravelSingleRoomEnvelope(178, 800);
+
+        $envelope = $expensive;
+        $envelope['HotelSearch'][] = $cheap['HotelSearch'][0];
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/HotelSearch' => Http::response($envelope),
+        ]);
+
+        $results = app(OsTravelSearchService::class)->search(
+            [],
+            [
+                'check_in' => '2026-09-01',
+                'check_out' => '2026-09-08',
+                'only_available' => true,
+            ],
+        );
+
+        $this->assertCount(1, $results);
+        // The cheaper entry must win: 800 base price × 1.20 markup = 960
+        // (vs 1500 × 1.20 = 1800).
+        $this->assertEqualsWithDelta(960, $results[0]['price'], 0.01);
     }
 
     public function test_search_keeps_unavailable_hotels_when_only_available_is_false(): void

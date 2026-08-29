@@ -4,6 +4,7 @@ namespace App\Services\OsTravel;
 
 use App\Exceptions\OsTravelHorizonExceededException;
 use App\Models\Hotel;
+use App\Models\HotelDailyPrice;
 use App\Models\OsTravelHotel;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -52,6 +53,51 @@ class OsTravelSearchService
             return $cached;
         }
 
+        $nights = $this->calculator->nightsBetween(
+            $searchDetails['check_in'],
+            $searchDetails['check_out'],
+        );
+
+        // Manual hotels (Stage 2) are always candidates with their stored
+        // price — never sent to the provider. Provider-only filters (city
+        // external id, category, boarding) don't apply to them. Hotels with
+        // a published provider row are excluded regardless of the column so
+        // a single hotel can never be returned twice.
+        $manualHotels = Hotel::query()
+            ->where('source', Hotel::SOURCE_MANUAL)
+            ->whereNotIn('id', OsTravelHotel::query()
+                ->whereNotNull('hotel_id')
+                ->pluck('hotel_id'))
+            ->when($hotelSlugs !== [], fn ($q) => $q->whereIn('slug', $hotelSlugs))
+            ->when($options['stars'] !== null, fn ($q) => $q->where('stars', '>=', $options['stars']))
+            ->get();
+
+        // ---------------------------------------------------------------
+        // Daily-price shortcut: when the search matches a stored
+        // `hotel_daily_prices` row (fetched nightly at 3 AM) we can skip
+        // the expensive external API call entirely.  The shortcut applies
+        // when:
+        //   • exactly 1 night
+        //   • 1 adult, no children (the default from the landing widget)
+        //   • no boarding / category filters (provider-side only)
+        //   • no city / stars pre-filters
+        // ---------------------------------------------------------------
+        if ($this->canUseDailyPrices($options, $nights, $hotelSlugs)) {
+            $dailyResults = $this->dailyPriceSearch($options, $nights, $hotelSlugs);
+
+            foreach ($manualHotels as $manualHotel) {
+                $dailyResults[] = $this->manualPayload($manualHotel, $nights);
+            }
+
+            $dailyResults = $this->finalize($dailyResults, $options);
+
+            if ($dailyResults !== []) {
+                Cache::put($cacheKey, $dailyResults, now()->addMinutes(5));
+            }
+
+            return $dailyResults;
+        }
+
         $query = OsTravelHotel::query()
             ->whereNotNull('hotel_id')
             ->with('hotel');
@@ -70,20 +116,6 @@ class OsTravelSearchService
 
         $staged = $query->get()->keyBy('external_id');
 
-        // Manual hotels (Stage 2) are always candidates with their stored
-        // price — never sent to the provider. Provider-only filters (city
-        // external id, category, boarding) don't apply to them. Hotels with
-        // a published provider row are excluded regardless of the column so
-        // a single hotel can never be returned twice.
-        $manualHotels = Hotel::query()
-            ->where('source', Hotel::SOURCE_MANUAL)
-            ->whereNotIn('id', OsTravelHotel::query()
-                ->whereNotNull('hotel_id')
-                ->pluck('hotel_id'))
-            ->when($hotelSlugs !== [], fn ($q) => $q->whereIn('slug', $hotelSlugs))
-            ->when($options['stars'] !== null, fn ($q) => $q->where('stars', '>=', $options['stars']))
-            ->get();
-
         if ($staged->isEmpty() && $manualHotels->isEmpty()) {
             return [];
         }
@@ -91,10 +123,6 @@ class OsTravelSearchService
         $results = [];
         $providerSucceeded = false;
         $seenIds = [];
-        $nights = $this->calculator->nightsBetween(
-            $searchDetails['check_in'],
-            $searchDetails['check_out'],
-        );
 
         $chunks = array_chunk($staged->keys()->all(), self::MAX_HOTELS_PER_REQUEST);
         $throttleMs = (int) config('ostravel.search.throttle_ms', 150);
@@ -130,10 +158,9 @@ class OsTravelSearchService
             foreach ($envelope['HotelSearch'] ?? [] as $providerHotel) {
                 $externalId = (string) ($providerHotel['Hotel']['Id'] ?? $providerHotel['Id'] ?? '');
                 $item = $staged->get($externalId);
-                if ($item === null || $item->hotel === null || isset($seenIds[$externalId])) {
+                if ($item === null || $item->hotel === null) {
                     continue;
                 }
-                $seenIds[$externalId] = true;
 
                 $normalized = $this->normalize(
                     $item->hotel,
@@ -168,6 +195,16 @@ class OsTravelSearchService
                     continue;
                 }
 
+                // The provider may echo the same hotel under multiple
+                // distribution sources (e.g. bhr_ost_local-2 vs local-2).
+                // Keep the entry with the cheapest room price.
+                if (isset($seenIds[$externalId])) {
+                    $this->replaceIfCheaper($results, $normalized);
+
+                    continue;
+                }
+
+                $seenIds[$externalId] = true;
                 $results[] = $normalized;
             }
         }
@@ -211,6 +248,36 @@ class OsTravelSearchService
         }
 
         return $results;
+    }
+
+    /**
+     * When the provider echoes the same hotel under multiple distribution
+     * sources, compare the cheapest room price and keep the cheaper entry.
+     * If the existing entry has no price but the new one does, replace it.
+     *
+     * @param  list<array<string, mixed>>  &$results
+     * @param  array<string, mixed>  $normalized
+     */
+    private function replaceIfCheaper(array &$results, array $normalized): void
+    {
+        $slug = $normalized['slug'];
+
+        foreach ($results as $idx => $existing) {
+            if ($existing['slug'] !== $slug) {
+                continue;
+            }
+
+            $existingPrice = $existing['price'];
+            $newPrice = $normalized['price'];
+
+            if ($newPrice !== null && ($existingPrice === null || $newPrice < $existingPrice)) {
+                $results[$idx] = $normalized;
+            }
+
+            return;
+        }
+
+        $results[] = $normalized;
     }
 
     /**
@@ -502,10 +569,8 @@ class OsTravelSearchService
                         'boarding' => $boardingCode,
                         'boarding_name' => $boardingName,
                         'adults' => $adults,
-                        // The room-level `Price` is the bookable sell price; the
-                        // top-level `Price.BasePrice` is a separate reference and
-                        // must never be used. Rooms always carry `Price`.
                         'price' => (float) ($room['Price'] ?? 0),
+                        'base_price' => (float) ($room['BasePrice'] ?? $room['Price'] ?? 0),
                         'stop_reservation' => (bool) ($room['StopReservation'] ?? false),
                         'min_stay' => max(1, (int) ($room['MinStay'] ?? 1)),
                         'on_request' => (bool) ($room['OnRequest'] ?? false),
@@ -574,7 +639,7 @@ class OsTravelSearchService
                 'price' => $this->calculator->applyMarkup($basePrice, $markup),
                 'price_total' => $this->calculator->applyMarkup($basePrice, $markup),
                 'price_per_night' => $this->calculator->perNight($this->calculator->applyMarkup($basePrice, $markup), $nights),
-                'base_price' => $basePrice,
+                'base_price' => $this->calculator->applyMarkup($offer['base_price'], $markup),
                 'currency' => $currency,
                 'nights' => $nights,
                 'token' => $providerHotel['Token'] ?? null,
@@ -755,6 +820,131 @@ class OsTravelSearchService
         }
 
         return array_values(array_unique($features));
+    }
+
+    /**
+     * Determine whether the search can be served entirely from the
+     * pre-fetched `hotel_daily_prices` table, avoiding a provider call.
+     *
+     * Conditions:
+     *  - exactly 1 night stay
+     *  - 1 adult, no children (the default occupancy from the landing widget)
+     *  - no boarding or category filters (provider-side only)
+     *  - no specific hotel slugs (browse-all mode)
+     */
+    private function canUseDailyPrices(array $options, int $nights, array $hotelSlugs): bool
+    {
+        if ($nights !== 1) {
+            return false;
+        }
+
+        // Must be the default single-room, 1 adult, no children query.
+        $rooms = $options['rooms'];
+        if (count($rooms) > 1) {
+            return false;
+        }
+        if ($rooms !== [] && ! ($rooms[0]['adults'] ?? 0 === 1 && ($rooms[0]['children'] ?? []) === [])) {
+            return false;
+        }
+
+        // Provider-side filters that cannot be applied to daily prices.
+        if ($options['boarding_ids'] !== [] || $options['category_ids'] !== []) {
+            return false;
+        }
+
+        // City / stars filters require joining OsTravelHotel — skip shortcut.
+        if ($options['city_id'] !== null || $options['stars'] !== null) {
+            return false;
+        }
+
+        // Slug-restricted queries should always go through the provider
+        // (show page needs room details).
+        if ($hotelSlugs !== []) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Build search results from the pre-fetched `hotel_daily_prices` table
+     * for the requested check-in date.  Hotels without a stored price for
+     * that date are reported as unavailable (matching the provider path
+     * when `only_available=false`).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function dailyPriceSearch(array $options, int $nights, array $hotelSlugs): array
+    {
+        $checkIn = $options['check_in'];
+        $currency = config('ostravel.currency.default', 'TND');
+
+        $dailyPrices = HotelDailyPrice::query()
+            ->where('date', $checkIn)
+            ->with('hotel')
+            ->get()
+            ->keyBy('hotel_id');
+
+        // If no daily prices exist for this date, fall back to provider.
+        if ($dailyPrices->isEmpty()) {
+            return [];
+        }
+
+        $allHotels = Hotel::query()
+            ->where('source', Hotel::SOURCE_OSTRAVEL)
+            ->get()
+            ->keyBy('id');
+
+        $results = [];
+
+        foreach ($allHotels as $hotel) {
+            $daily = $dailyPrices->get($hotel->id);
+
+            if ($daily !== null) {
+                $result = $this->basePayload($hotel);
+                $result['available'] = true;
+                $result['rooms'] = [];
+                $result['promotion'] = null;
+                $result['free_child'] = [];
+                $result['recommended'] = (bool) $hotel->htel_recommande;
+                $result['short_description'] = null;
+
+                $result = array_merge($result, [
+                    'price' => $daily->price,
+                    'price_total' => $daily->price,
+                    'price_per_night' => (float) $daily->price,
+                    'base_price' => $daily->base_price,
+                    'currency' => $daily->currency ?? $currency,
+                    'nights' => $nights,
+                ]);
+
+                $results[] = $result;
+            } elseif ($options['only_available'] !== true) {
+                $result = $this->basePayload($hotel);
+                $result['available'] = false;
+                $result['unavailable_reason'] = 'not_returned';
+                $result['first_available_at'] = null;
+                $result['min_nights'] = null;
+                $result['rooms'] = [];
+                $result['promotion'] = null;
+                $result['free_child'] = [];
+                $result['recommended'] = false;
+                $result['short_description'] = null;
+
+                $result = array_merge($result, [
+                    'price' => null,
+                    'price_total' => null,
+                    'price_per_night' => null,
+                    'base_price' => null,
+                    'currency' => $hotel->currency ?? $currency,
+                    'nights' => $nights,
+                ]);
+
+                $results[] = $result;
+            }
+        }
+
+        return $results;
     }
 
     /**

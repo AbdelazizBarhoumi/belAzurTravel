@@ -128,7 +128,7 @@ export function DealsSection() {
                                         <Link to={`/deals/${deal.slug}`}>
                                             <Button
                                                 variant="ghost"
-                                                className="w-full rounded-xl border border-border bg-background transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+                                                className="w-full rounded-2xl border border-border bg-background transition-all group-hover:bg-primary group-hover:text-primary-foreground"
                                             >
                                                 {t('deals.viewDeal')}
                                             </Button>

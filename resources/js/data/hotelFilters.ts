@@ -210,3 +210,34 @@ export const STARS_LABELS: Record<
     4: { en: '4 Stars', fr: '★★★★ (4 étoiles)', ar: '4 نجوم' },
     5: { en: '5 Stars', fr: '★★★★★ (5 étoiles)', ar: '5 نجوم' },
 };
+
+/**
+ * Maps the raw provider category title (French, as stored in `hotel.category`)
+ * to a stable filter key and translation key.
+ *
+ * Hotels with `stars = 0` (provider hotels with null Category.Star) will use
+ * this map to derive filterable accommodation-type options.
+ */
+export const PROVIDER_CATEGORY_MAP: Record<
+    string,
+    { key: string; translationKey: string }
+> = {
+    Campement: { key: 'campement', translationKey: 'categories.campement' },
+    'Appart Hôtel': {
+        key: 'appart_hotel',
+        translationKey: 'categories.appart_hotel',
+    },
+    "Maison d'hôtes": {
+        key: 'maison_hotes',
+        translationKey: 'categories.maison_hotes',
+    },
+    Appartement: {
+        key: 'appartement',
+        translationKey: 'categories.appartement',
+    },
+    "Parc d'attraction": {
+        key: 'parc_attraction',
+        translationKey: 'categories.parc_attraction',
+    },
+    Villa: { key: 'villa', translationKey: 'categories.villa' },
+};

@@ -109,7 +109,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
         <div
             ref={setNodeRef}
             style={style}
-            className={`space-y-4 rounded-xl border border-border bg-background/50 p-4 shadow-sm transition-shadow ${
+            className={`space-y-4 rounded-2xl border border-border bg-background/50 p-4 shadow-sm transition-shadow ${
                 isDragging
                     ? 'bg-background shadow-xl ring-2 ring-primary/20'
                     : ''
@@ -409,7 +409,7 @@ export const JsonListEditor: React.FC<JsonListEditorProps> = ({
             </div>
 
             {items.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border p-8 text-center">
+                <div className="rounded-2xl border border-dashed border-border p-8 text-center">
                     <p className="text-sm text-muted-foreground">
                         {t('admin.noItemsYet')}
                     </p>

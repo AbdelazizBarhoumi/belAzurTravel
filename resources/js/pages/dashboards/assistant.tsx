@@ -252,7 +252,7 @@ const AssistantDashboard = () => {
                             key={link.labelKey}
                             to={link.to}
                             className={cn(
-                                'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all',
+                                'flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all',
                                 isRtl && 'text-right',
                                 activeTab === link.labelKey
                                     ? 'bg-primary text-primary-foreground'
@@ -311,14 +311,14 @@ const AssistantDashboard = () => {
                                         placeholder={t(
                                             'assistant.searchInquiries',
                                         )}
-                                        className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className="w-full rounded-2xl border border-border bg-background py-2 pl-9 pr-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                                     />
                                 </div>
                                 {inquiries.map((inq) => (
                                     <button
                                         key={inq.id}
                                         onClick={() => setSelectedInquiry(inq)}
-                                        className={`mb-2 w-full rounded-xl p-4 text-left transition-all ${
+                                        className={`mb-2 w-full rounded-2xl p-4 text-left transition-all ${
                                             selectedInquiry?.id === inq.id
                                                 ? 'border border-primary/20 bg-primary/5'
                                                 : 'hover:bg-muted'
@@ -434,10 +434,10 @@ const AssistantDashboard = () => {
                                             setReply(e.target.value)
                                         }
                                         placeholder={t('assistant.typeReply')}
-                                        className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                                     />
                                     <Button
-                                        className="gap-2 rounded-xl bg-primary px-6 text-primary-foreground"
+                                        className="gap-2 rounded-2xl bg-primary px-6 text-primary-foreground"
                                         disabled={
                                             !reply.trim() || !selectedInquiry
                                         }

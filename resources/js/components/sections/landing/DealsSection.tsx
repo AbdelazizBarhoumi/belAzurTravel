@@ -77,7 +77,7 @@ export function DealsSection({ config }: Props) {
                                     transition={{ delay: i * 0.1 }}
                                     className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                 >
-                                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                                         <Zap className="h-6 w-6 text-primary" />
                                     </div>
                                     <div className="mb-2 inline-block rounded-full bg-secondary/10 px-3 py-1 text-xs font-bold text-secondary">
@@ -131,7 +131,7 @@ export function DealsSection({ config }: Props) {
                                 transition={{ delay: i * 0.05 }}
                                 className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                             >
-                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                                     <Zap className="h-6 w-6 text-primary" />
                                 </div>
                                 <div className="mb-2 inline-block rounded-full bg-secondary/10 px-3 py-1 text-xs font-bold text-secondary">

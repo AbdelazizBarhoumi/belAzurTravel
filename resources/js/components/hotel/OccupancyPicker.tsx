@@ -50,12 +50,18 @@ interface OccupancyPickerProps {
     value: Occupancy;
     onChange: (o: Occupancy) => void;
     className?: string;
+    /** Controlled open state for the popover. */
+    open?: boolean;
+    /** Callback when popover open state changes. */
+    onOpenChange?: (open: boolean) => void;
 }
 
 export function OccupancyPicker({
     value,
     onChange,
     className,
+    open,
+    onOpenChange,
 }: OccupancyPickerProps) {
     const { t, dir } = useLanguage();
     const isRtl = dir === 'rtl';
@@ -95,14 +101,14 @@ export function OccupancyPicker({
     };
 
     return (
-        <Popover>
+        <Popover open={open} onOpenChange={onOpenChange}>
             <PopoverTrigger asChild>
                 <Button
                     type="button"
                     variant="outline"
                     aria-label={t('hotelDetail.occupancy')}
                     className={cn(
-                        'h-11 w-full justify-between rounded-xl border-border/70 bg-background px-3 text-sm shadow-sm',
+                        'h-11 w-full justify-between rounded-2xl border-border/70 bg-background px-3 text-sm shadow-sm',
                         isRtl && 'flex-row-reverse text-right',
                         className,
                     )}

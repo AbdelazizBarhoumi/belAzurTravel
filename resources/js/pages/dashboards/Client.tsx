@@ -331,7 +331,7 @@ const ClientDashboard = () => {
                     {sidebarLinks.map((link) => {
                         const active = activeTab === link.labelKey;
                         const className = cn(
-                            'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all',
+                            'flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all',
                             isRtl && 'text-right',
                             active
                                 ? 'bg-primary text-primary-foreground'
@@ -466,7 +466,7 @@ const ClientDashboard = () => {
                                     >
                                         <div className="flex flex-col justify-between gap-4 rounded-2xl border border-border bg-card p-5 md:flex-row md:items-center">
                                             <div className="flex items-center gap-4">
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                                                     <Hotel className="h-5 w-5 text-primary" />
                                                 </div>
                                                 <div>
@@ -552,7 +552,7 @@ const ClientDashboard = () => {
                                         </div>
 
                                         {booking.status === 'Pending' && (
-                                            <div className="flex items-start gap-2 rounded-xl border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm">
+                                            <div className="flex items-start gap-2 rounded-2xl border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm">
                                                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
                                                 <p className="text-muted-foreground">
                                                     {booking.is_request ? (
@@ -580,7 +580,7 @@ const ClientDashboard = () => {
                                         )}
 
                                         {booking.status === 'Approved' && (
-                                            <div className="flex items-start gap-2 rounded-xl border border-blue-300/50 bg-blue-50 px-4 py-3 text-sm">
+                                            <div className="flex items-start gap-2 rounded-2xl border border-blue-300/50 bg-blue-50 px-4 py-3 text-sm">
                                                 <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
                                                 <p className="text-blue-900">
                                                     {t(
@@ -593,7 +593,7 @@ const ClientDashboard = () => {
 
                                         {booking.status === 'Rejected' &&
                                             booking.reject_reason && (
-                                                <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+                                                <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
                                                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                                                     <p className="text-muted-foreground">
                                                         <span className="font-semibold text-destructive">
@@ -609,7 +609,7 @@ const ClientDashboard = () => {
 
                                         {booking.status === 'Cancelled' &&
                                             booking.cancel_reason && (
-                                                <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+                                                <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
                                                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                                                     <p className="text-muted-foreground">
                                                         <span className="font-semibold text-destructive">
@@ -688,7 +688,7 @@ const ClientDashboard = () => {
                                         setSupportSubject(e.target.value)
                                     }
                                     placeholder={t('client.supportSubject')}
-                                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                    className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                                 />
                                 <textarea
                                     value={supportMessage}
@@ -696,7 +696,7 @@ const ClientDashboard = () => {
                                         setSupportMessage(e.target.value)
                                     }
                                     placeholder={t('client.supportMessage')}
-                                    className="min-h-32 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                    className="min-h-32 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                                 />
                                 <Button
                                     disabled={
@@ -727,7 +727,7 @@ const ClientDashboard = () => {
                                         placeholder={t(
                                             'client.complaintSubject',
                                         )}
-                                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                        className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                                     />
                                     <textarea
                                         value={complaintDescription}
@@ -739,7 +739,7 @@ const ClientDashboard = () => {
                                         placeholder={t(
                                             'client.complaintDescription',
                                         )}
-                                        className="min-h-32 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                        className="min-h-32 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                                     />
                                     <Button
                                         disabled={
@@ -826,7 +826,7 @@ const ClientDashboard = () => {
                                                 </div>
                                                 {expandedComplaint ===
                                                     complaint.id && (
-                                                    <div className="mt-4 space-y-3 rounded-xl border border-border bg-background p-4">
+                                                    <div className="mt-4 space-y-3 rounded-2xl border border-border bg-background p-4">
                                                         <p className="text-sm text-foreground">
                                                             {complaint
                                                                 .description[
@@ -856,7 +856,7 @@ const ClientDashboard = () => {
                                                                                 key={
                                                                                     reply.id
                                                                                 }
-                                                                                className={`rounded-xl p-4 ${
+                                                                                className={`rounded-2xl p-4 ${
                                                                                     reply.sender ===
                                                                                     'admin'
                                                                                         ? 'border border-primary/20 bg-primary/5'
@@ -905,7 +905,7 @@ const ClientDashboard = () => {
                                                                     .replies
                                                                     .length ===
                                                                     0) && (
-                                                                <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                                                                <div className="mt-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
                                                                     <div className="mb-2 flex items-center gap-2">
                                                                         <MessageSquare className="h-4 w-4 text-primary" />
                                                                         <span className="text-xs font-semibold text-primary">
@@ -956,7 +956,7 @@ const ClientDashboard = () => {
                                                                             ) ||
                                                                             'Write a reply...'
                                                                         }
-                                                                        className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
+                                                                        className="flex-1 rounded-2xl border border-border bg-background px-4 py-2 text-sm"
                                                                         onClick={(
                                                                             e,
                                                                         ) =>
@@ -1020,7 +1020,7 @@ const ClientDashboard = () => {
                                                     : '',
                                             )
                                         }
-                                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                        className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                                     >
                                         <option value="">
                                             {t('client.selectBooking')}
@@ -1044,7 +1044,7 @@ const ClientDashboard = () => {
                                         placeholder={t(
                                             'client.complaintSubject',
                                         )}
-                                        className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                        className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                                     />
                                     <textarea
                                         value={refundDescription}
@@ -1052,7 +1052,7 @@ const ClientDashboard = () => {
                                             setRefundDescription(e.target.value)
                                         }
                                         placeholder={t('client.refundReason')}
-                                        className="min-h-32 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                                        className="min-h-32 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                                     />
                                     <Button
                                         disabled={
@@ -1146,7 +1146,7 @@ const ClientDashboard = () => {
                                                 </div>
                                                 {expandedComplaint ===
                                                     complaint.id && (
-                                                    <div className="mt-4 space-y-3 rounded-xl border border-border bg-background p-4">
+                                                    <div className="mt-4 space-y-3 rounded-2xl border border-border bg-background p-4">
                                                         <p className="text-sm text-foreground">
                                                             {complaint
                                                                 .description[
@@ -1188,7 +1188,7 @@ const ClientDashboard = () => {
                                                                                 key={
                                                                                     reply.id
                                                                                 }
-                                                                                className={`rounded-xl p-4 ${
+                                                                                className={`rounded-2xl p-4 ${
                                                                                     reply.sender ===
                                                                                     'admin'
                                                                                         ? 'border border-primary/20 bg-primary/5'
@@ -1237,7 +1237,7 @@ const ClientDashboard = () => {
                                                                     .replies
                                                                     .length ===
                                                                     0) && (
-                                                                <div className="mt-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                                                                <div className="mt-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
                                                                     <div className="mb-2 flex items-center gap-2">
                                                                         <MessageSquare className="h-4 w-4 text-primary" />
                                                                         <span className="text-xs font-semibold text-primary">
@@ -1288,7 +1288,7 @@ const ClientDashboard = () => {
                                                                             ) ||
                                                                             'Write a reply...'
                                                                         }
-                                                                        className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm"
+                                                                        className="flex-1 rounded-2xl border border-border bg-background px-4 py-2 text-sm"
                                                                         onClick={(
                                                                             e,
                                                                         ) =>
@@ -1356,7 +1356,7 @@ const ClientDashboard = () => {
                                                         e.target.value,
                                                     )
                                                 }
-                                                className="w-full rounded-xl border border-border bg-background py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary"
+                                                className="w-full rounded-2xl border border-border bg-background py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary"
                                             />
                                         </div>
                                     </div>
@@ -1374,7 +1374,7 @@ const ClientDashboard = () => {
                                                         e.target.value,
                                                     )
                                                 }
-                                                className="w-full rounded-xl border border-border bg-background py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary"
+                                                className="w-full rounded-2xl border border-border bg-background py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary"
                                             />
                                         </div>
                                     </div>

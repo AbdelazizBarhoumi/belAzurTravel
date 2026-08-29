@@ -1146,7 +1146,7 @@ Here are the accessible roles:
   Name "Destination":
   [36m<input[31m
     [33maria-label[31m=[32m"Destination"[31m
-    [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-xl pl-9"[31m
+    [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-2xl pl-9"[31m
     [33mreadonly[31m=[32m""[31m
     [33mvalue[31m=[32m"Santorin, Gr├¿ce"[31m
   [36m/>[31m
@@ -1166,7 +1166,7 @@ Here are the accessible roles:
     [33maria-expanded[31m=[32m"false"[31m
     [33maria-haspopup[31m=[32m"dialog"[31m
     [33maria-label[31m=[32m"Occupation"[31m
-    [33mclass[31m=[32m"inline-flex items-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground py-2 h-11 w-full justify-between rounded-xl border-border/70 bg-background px-3 text-sm shadow-sm"[31m
+    [33mclass[31m=[32m"inline-flex items-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground py-2 h-11 w-full justify-between rounded-2xl border-border/70 bg-background px-3 text-sm shadow-sm"[31m
     [33mdata-state[31m=[32m"closed"[31m
     [33mtype[31m=[32m"button"[31m
   [36m/>[31m
@@ -1215,14 +1215,14 @@ Here are the accessible roles:
 
   Name "Sunset Paradise Resort thumbnail 1":
   [36m<button[31m
-    [33mclass[31m=[32m"group relative shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 border-primary ring-2 ring-primary/30"[31m
+    [33mclass[31m=[32m"group relative shrink-0 overflow-hidden rounded-2xl border-2 transition-all duration-200 border-primary ring-2 ring-primary/30"[31m
     [33mtype[31m=[32m"button"[31m
     [33mwhilehover[31m=[32m"[object Object]"[31m
   [36m/>[31m
 
   Name "Sunset Paradise Resort thumbnail 2":
   [36m<button[31m
-    [33mclass[31m=[32m"group relative shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 border-border opacity-60 hover:opacity-100"[31m
+    [33mclass[31m=[32m"group relative shrink-0 overflow-hidden rounded-2xl border-2 transition-all duration-200 border-border opacity-60 hover:opacity-100"[31m
     [33mtype[31m=[32m"button"[31m
     [33mwhilehover[31m=[32m"[object Object]"[31m
   [36m/>[31m
@@ -1239,7 +1239,7 @@ Here are the accessible roles:
     [33maria-expanded[31m=[32m"false"[31m
     [33maria-haspopup[31m=[32m"dialog"[31m
     [33maria-label[31m=[32m"Occupation"[31m
-    [33mclass[31m=[32m"inline-flex items-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground py-2 h-11 w-full justify-between rounded-xl border-border/70 bg-background px-3 text-sm shadow-sm"[31m
+    [33mclass[31m=[32m"inline-flex items-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground py-2 h-11 w-full justify-between rounded-2xl border-border/70 bg-background px-3 text-sm shadow-sm"[31m
     [33mdata-state[31m=[32m"closed"[31m
     [33mtype[31m=[32m"button"[31m
   [36m/>[31m
@@ -1437,7 +1437,7 @@ Ignored nodes: comments, script, style
                     [36m</svg>[31m
                     [36m<input[31m
                       [33maria-label[31m=[32m"Destination"[31m
-                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-xl pl-9"[31m
+                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-2xl pl-9"[31m
                       [33mreadonly[31m=[32m""[31m
                       [33mvalue[31m=[32m"Santorin, Gr├¿ce"[31m
                     [36m/>[31m
@@ -4132,7 +4132,7 @@ Ignored nodes: comments, script, style
                     [36m</svg>[31m
                     [36m<input[31m
                       [33maria-label[31m=[32m"Destination"[31m
-                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-xl pl-9"[31m
+                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-2xl pl-9"[31m
                       [33mreadonly[31m=[32m""[31m
                       [33mvalue[31m=[32m"123 Beach Road"[31m
                     [36m/>[31m
@@ -4302,7 +4302,7 @@ Here are the accessible roles:
   Name "Destination":
   [36m<input[31m
     [33maria-label[31m=[32m"Destination"[31m
-    [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-xl pl-9"[31m
+    [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-2xl pl-9"[31m
     [33mreadonly[31m=[32m""[31m
     [33mvalue[31m=[32m"123 Beach Road"[31m
   [36m/>[31m
@@ -4322,7 +4322,7 @@ Here are the accessible roles:
     [33maria-expanded[31m=[32m"false"[31m
     [33maria-haspopup[31m=[32m"dialog"[31m
     [33maria-label[31m=[32m"Occupation"[31m
-    [33mclass[31m=[32m"inline-flex items-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground py-2 h-11 w-full justify-between rounded-xl border-border/70 bg-background px-3 text-sm shadow-sm"[31m
+    [33mclass[31m=[32m"inline-flex items-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground py-2 h-11 w-full justify-between rounded-2xl border-border/70 bg-background px-3 text-sm shadow-sm"[31m
     [33mdata-state[31m=[32m"closed"[31m
     [33mtype[31m=[32m"button"[31m
   [36m/>[31m
@@ -4371,14 +4371,14 @@ Here are the accessible roles:
 
   Name "Sunset Paradise Resort thumbnail 1":
   [36m<button[31m
-    [33mclass[31m=[32m"group relative shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 border-primary ring-2 ring-primary/30"[31m
+    [33mclass[31m=[32m"group relative shrink-0 overflow-hidden rounded-2xl border-2 transition-all duration-200 border-primary ring-2 ring-primary/30"[31m
     [33mtype[31m=[32m"button"[31m
     [33mwhilehover[31m=[32m"[object Object]"[31m
   [36m/>[31m
 
   Name "Sunset Paradise Resort thumbnail 2":
   [36m<button[31m
-    [33mclass[31m=[32m"group relative shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 border-border opacity-60 hover:opacity-100"[31m
+    [33mclass[31m=[32m"group relative shrink-0 overflow-hidden rounded-2xl border-2 transition-all duration-200 border-border opacity-60 hover:opacity-100"[31m
     [33mtype[31m=[32m"button"[31m
     [33mwhilehover[31m=[32m"[object Object]"[31m
   [36m/>[31m
@@ -4395,7 +4395,7 @@ Here are the accessible roles:
     [33maria-expanded[31m=[32m"false"[31m
     [33maria-haspopup[31m=[32m"dialog"[31m
     [33maria-label[31m=[32m"Occupation"[31m
-    [33mclass[31m=[32m"inline-flex items-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground py-2 h-11 w-full justify-between rounded-xl border-border/70 bg-background px-3 text-sm shadow-sm"[31m
+    [33mclass[31m=[32m"inline-flex items-center gap-2 whitespace-nowrap font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:bg-accent hover:text-accent-foreground py-2 h-11 w-full justify-between rounded-2xl border-border/70 bg-background px-3 text-sm shadow-sm"[31m
     [33mdata-state[31m=[32m"closed"[31m
     [33mtype[31m=[32m"button"[31m
   [36m/>[31m
@@ -4474,7 +4474,7 @@ Here are the accessible roles:
   [36m<button[31m
     [33maria-controls[31m=[32m"radix-:r10:-content-dining"[31m
     [33maria-selected[31m=[32m"false"[31m
-    [33mclass[31m=[32m"inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-xl px-4 py-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"[31m
+    [33mclass[31m=[32m"inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-2xl px-4 py-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"[31m
     [33mdata-orientation[31m=[32m"horizontal"[31m
     [33mdata-radix-collection-item[31m=[32m""[31m
     [33mdata-state[31m=[32m"inactive"[31m
@@ -4489,7 +4489,7 @@ Here are the accessible roles:
   [36m<button[31m
     [33maria-controls[31m=[32m"radix-:r10:-content-practical"[31m
     [33maria-selected[31m=[32m"false"[31m
-    [33mclass[31m=[32m"inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-xl px-4 py-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"[31m
+    [33mclass[31m=[32m"inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-2xl px-4 py-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"[31m
     [33mdata-orientation[31m=[32m"horizontal"[31m
     [33mdata-radix-collection-item[31m=[32m""[31m
     [33mdata-state[31m=[32m"inactive"[31m
@@ -4641,7 +4641,7 @@ Ignored nodes: comments, script, style
                     [36m</svg>[31m
                     [36m<input[31m
                       [33maria-label[31m=[32m"Destination"[31m
-                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-xl pl-9"[31m
+                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-2xl pl-9"[31m
                       [33mreadonly[31m=[32m""[31m
                       [33mvalue[31m=[32m"123 Beach Road"[31m
                     [36m/>[31m
@@ -4788,7 +4788,7 @@ Ignored nodes: comments, script, style
                     [36m</svg>[31m
                     [36m<input[31m
                       [33maria-label[31m=[32m"Destination"[31m
-                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-xl pl-9"[31m
+                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-2xl pl-9"[31m
                       [33mreadonly[31m=[32m""[31m
                       [33mvalue[31m=[32m"123 Beach Road"[31m
                     [36m/>[31m
@@ -4939,7 +4939,7 @@ Ignored nodes: comments, script, style
                     [36m</svg>[31m
                     [36m<input[31m
                       [33maria-label[31m=[32m"Destination"[31m
-                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-xl pl-9"[31m
+                      [33mclass[31m=[32m"flex w-full border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm h-11 rounded-2xl pl-9"[31m
                       [33mreadonly[31m=[32m""[31m
                       [33mvalue[31m=[32m"123 Beach Road"[31m
                     [36m/>[31m
@@ -5100,7 +5100,7 @@ Ignored nodes: comments, script, style
         [33mclass[31m=[32m"flex gap-3 rounded-2xl border border-border bg-muted/30 p-4"[31m
       [36m>[31m
         [36m<div[31m
-          [33mclass[31m=[32m"hidden h-16 w-20 shrink-0 items-center justify-center rounded-xl bg-muted sm:flex"[31m
+          [33mclass[31m=[32m"hidden h-16 w-20 shrink-0 items-center justify-center rounded-2xl bg-muted sm:flex"[31m
         [36m>[31m
           [36m<svg[31m
             [33mclass[31m=[32m"lucide lucide-bed-double h-6 w-6 text-muted-foreground/50"[31m
@@ -5251,7 +5251,7 @@ Ignored nodes: comments, script, style
         [33mclass[31m=[32m"flex gap-3 rounded-2xl border border-border bg-muted/30 p-4"[31m
       [36m>[31m
         [36m<div[31m
-          [33mclass[31m=[32m"hidden h-16 w-20 shrink-0 items-center justify-center rounded-xl bg-muted sm:flex"[31m
+          [33mclass[31m=[32m"hidden h-16 w-20 shrink-0 items-center justify-center rounded-2xl bg-muted sm:flex"[31m
         [36m>[31m
           [36m<svg[31m
             [33mclass[31m=[32m"lucide lucide-bed-double h-6 w-6 text-muted-foreground/50"[31m
@@ -5407,7 +5407,7 @@ Ignored nodes: comments, script, style
         [33mclass[31m=[32m"flex gap-3 rounded-2xl border border-border bg-muted/30 p-4"[31m
       [36m>[31m
         [36m<div[31m
-          [33mclass[31m=[32m"hidden h-16 w-20 shrink-0 items-center justify-center rounded-xl bg-muted sm:flex"[31m
+          [33mclass[31m=[32m"hidden h-16 w-20 shrink-0 items-center justify-center rounded-2xl bg-muted sm:flex"[31m
         [36m>[31m
           [36m<svg[31m
             [33mclass[31m=[32m"lucide lucide-bed-double h-6 w-6 text-muted-foreground/50"[31m

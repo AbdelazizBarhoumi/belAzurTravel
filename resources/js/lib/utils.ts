@@ -105,3 +105,43 @@ export const promoPrice = (
         discounted: Math.round(price * (1 - value / 100)),
     };
 };
+
+export interface RoomPromo {
+    original: number;
+    discounted: number;
+    percent: number;
+}
+
+/**
+ * Detect a room-level promo by comparing the actual price against the
+ * reference base price. When `price < basePrice` the room is discounted.
+ * The percentage is derived from the price difference, not from any
+ * external promotion rate.
+ */
+export const roomPromo = (
+    price: number | null | undefined,
+    basePrice: number | null | undefined,
+): RoomPromo | null => {
+    if (
+        price == null ||
+        basePrice == null ||
+        !Number.isFinite(price) ||
+        !Number.isFinite(basePrice) ||
+        price <= 0 ||
+        basePrice <= 0
+    ) {
+        return null;
+    }
+
+    if (price >= basePrice) {
+        return null;
+    }
+
+    const percent = Math.round((1 - price / basePrice) * 100);
+
+    return {
+        original: Math.round(basePrice),
+        discounted: Math.round(price),
+        percent,
+    };
+};

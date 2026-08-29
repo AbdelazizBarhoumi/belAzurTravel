@@ -48,7 +48,7 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
 
     return (
         <>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 gap-4 rounded-2xl overflow-hidden shadow-sm md:grid-cols-4 md:h-[500px]">
                 {/* Main image */}
                 <motion.div
                     role="button"
@@ -62,7 +62,7 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                         }
                     }}
                     whileHover={{ y: -2 }}
-                    className="group relative w-full overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
+                    className="group relative h-[300px] w-full overflow-hidden md:col-span-3 md:h-full"
                 >
                     <AnimatePresence mode="wait">
                         <motion.img
@@ -73,7 +73,7 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="h-[300px] w-full object-cover md:h-[500px]"
+                            className="h-full w-full object-cover"
                             loading="eager"
                         />
                     </AnimatePresence>
@@ -121,34 +121,32 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                     </button>
                 </motion.div>
 
-                {/* Thumbnails row */}
-                <div className="hidden gap-2 overflow-x-auto pb-1 lg:flex">
-                    {visibleThumbnails.map((image, index) => {
+                {/* Thumbnails column - right side */}
+                <div className="hidden md:grid md:col-span-1 md:grid-rows-2 gap-4 h-full">
+                    {visibleThumbnails.slice(0, 2).map((image, index) => {
                         const active = index === selectedIndex;
                         const isOverflowTile =
-                            index === visibleThumbnails.length - 1 &&
+                            index === 1 &&
                             overflowCount > 0;
                         return (
                             <motion.button
                                 key={`${image}-${index}`}
                                 type="button"
                                 onClick={() => setSelectedIndex(index)}
-                                whileHover={{ scale: 1.04 }}
-                                className={`group relative shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 ${
-                                    active
-                                        ? 'border-primary ring-2 ring-primary/30'
-                                        : 'border-border opacity-60 hover:opacity-100'
-                                }`}
+                                whileHover={{ scale: 1.02 }}
+                                className="group relative h-full w-full overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
                             >
                                 <img
                                     src={image}
                                     alt={`${hotelName} thumbnail ${index + 1}`}
-                                    className="h-14 w-20 object-cover transition-transform duration-300 group-hover:scale-105"
+                                    className="h-full w-full object-cover"
                                     loading="lazy"
                                 />
                                 {isOverflowTile && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/55 text-sm font-bold text-white">
-                                        +{overflowCount}
+                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center cursor-pointer hover:bg-black/20 transition-colors">
+                                        <span className="text-white font-medium text-sm tracking-widest uppercase">
+                                            +{overflowCount} More
+                                        </span>
                                     </div>
                                 )}
                             </motion.button>

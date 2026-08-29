@@ -592,7 +592,7 @@ function Grid({
                             </div>
                         )}
                         <div
-                            className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${active ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
+                            className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${active ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}
                         >
                             <Icon className="h-5 w-5" />
                         </div>

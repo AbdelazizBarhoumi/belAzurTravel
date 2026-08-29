@@ -62,7 +62,7 @@ export function LandingTrustStrip() {
                                 transition={{ delay: index * 0.08 }}
                                 className="rounded-2xl border border-border bg-card p-6 shadow-sm"
                             >
-                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                                     <Icon className="h-6 w-6" />
                                 </div>
                                 <h3 className="mb-2 font-serif text-xl font-bold text-foreground">

@@ -8,7 +8,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn, formatPrice, promoPrice } from '@/lib/utils';
+import { cn, formatPrice, roomPromo } from '@/lib/utils';
 
 export interface RateRoom {
     id: string;
@@ -21,6 +21,7 @@ export interface RateRoom {
     // Live OS-TRAVEL offers carry a TOTAL-stay price with a fixed boarding.
     priceTotal?: number;
     pricePerNight: number;
+    basePrice?: number;
     nights?: number;
     boardingName?: string;
     // Provider bookability metadata powering the row badges.
@@ -44,10 +45,13 @@ interface RoomRatesTableProps {
     rooms: RateRoom[];
     occupancy: Occupancy;
     currency?: string;
-    promoRate?: string | null;
     bookDisabled?: boolean;
     onReserve: (room: RateRoom) => void;
+    /** Called whenever the user switches boarding selection (radio change). */
+    onSelect?: (room: RateRoom) => void;
     requestMode?: boolean;
+    /** Change this value to reset the internal selection (e.g. when new search results arrive). */
+    resetKey?: string | number;
 }
 
 // One physical room, with every boarding/rate plan offered for it nested
@@ -121,10 +125,11 @@ export function RoomRatesTable({
     rooms,
     occupancy,
     currency = 'TND',
-    promoRate = null,
     bookDisabled = false,
     onReserve,
+    onSelect,
     requestMode = false,
+    resetKey,
 }: RoomRatesTableProps) {
     const { t, lang } = useLanguage();
     const groups = useMemo(() => groupByRoomType(rooms), [rooms]);
@@ -140,10 +145,9 @@ export function RoomRatesTable({
 
     useEffect(() => {
         setSelected(groups[0]?.rates.length ? `${groups[0].key}::0` : '');
-        // Reset to the first rate whenever a new search result comes in —
-        // the previously selected key may no longer exist.
+        // Reset to the first rate whenever new search results arrive.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [rooms]);
+    }, [resetKey]);
 
     const activeEntry = useMemo(() => {
         for (const group of groups) {
@@ -163,10 +167,13 @@ export function RoomRatesTable({
     const activeTotal = active
         ? (active.priceTotal ?? active.pricePerNight) * occupancy.rooms
         : 0;
-    const activeTotalPromo = promoPrice(activeTotal, promoRate);
+    const activeBaseTotal = active
+        ? (active.basePrice ?? active.priceTotal ?? active.pricePerNight) * occupancy.rooms
+        : 0;
+    const activeTotalPromo = roomPromo(activeTotal, activeBaseTotal);
 
     return (
-        <div className="overflow-hidden rounded-3xl border border-border bg-card">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
             {/* Occupancy is identical for every room/rate below (it's the
                 same search), so it's stated once here instead of being
                 repeated as icons on every single row. */}
@@ -195,10 +202,10 @@ export function RoomRatesTable({
                                     src={group.images[0]}
                                     alt={group.name}
                                     loading="lazy"
-                                    className="hidden h-20 w-24 shrink-0 rounded-xl object-cover sm:block"
+                                    className="hidden h-20 w-24 shrink-0 rounded-2xl object-cover sm:block"
                                 />
                             ) : (
-                                <div className="hidden h-20 w-24 shrink-0 items-center justify-center rounded-xl bg-muted sm:flex">
+                                <div className="hidden h-20 w-24 shrink-0 items-center justify-center rounded-2xl bg-muted sm:flex">
                                     <BedDouble className="h-6 w-6 text-muted-foreground/60" />
                                 </div>
                             )}
@@ -246,13 +253,16 @@ export function RoomRatesTable({
                                 const total =
                                     (rate.priceTotal ?? rate.pricePerNight) *
                                     occupancy.rooms;
-                                const totalPromo = promoPrice(total, promoRate);
+                                const baseTotal =
+                                    (rate.basePrice ?? rate.priceTotal ?? rate.pricePerNight) *
+                                    occupancy.rooms;
+                                const totalPromo = roomPromo(total, baseTotal);
 
                                 return (
                                     <label
                                         key={selKey}
                                         className={cn(
-                                            'flex cursor-pointer flex-wrap items-center gap-3 rounded-xl border px-4 py-3 transition-colors',
+                                            'flex cursor-pointer flex-wrap items-center gap-3 rounded-2xl border px-4 py-3 transition-colors',
                                             isSelected
                                                 ? 'border-primary bg-primary/5'
                                                 : 'border-border hover:bg-muted/40',
@@ -268,7 +278,10 @@ export function RoomRatesTable({
                                             type="radio"
                                             name="rate-select"
                                             checked={isSelected}
-                                            onChange={() => setSelected(selKey)}
+                                            onChange={() => {
+                                                setSelected(selKey);
+                                                onSelect?.(rate);
+                                            }}
                                             className="h-4 w-4 accent-primary"
                                             aria-label={`Select ${group.name} — ${rate.boardingName ?? ''}`}
                                         />

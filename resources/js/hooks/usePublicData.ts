@@ -30,6 +30,7 @@ export type HotelDetailLookupData = {
     rating: number;
     reviews: number;
     description?: Record<string, string>;
+    short_description?: string | null;
     about?: Record<string, string>;
     images?: string[];
     gallery?: string[];

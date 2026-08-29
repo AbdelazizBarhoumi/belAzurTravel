@@ -20,8 +20,8 @@ class DebugProviderSearch extends Command
 
         $envelope = $client->hotelSearch([
             'BookingDetails' => [
-                'CheckIn' => '2026-08-23',
-                'CheckOut' => '2026-08-25',
+                'CheckIn' => now()->addDay()->toDateString(),
+                'CheckOut' => now()->addDays(3)->toDateString(),
                 'Hotels' => $ids,
             ],
             'Filters' => [
@@ -38,7 +38,17 @@ class DebugProviderSearch extends Command
         foreach ($hotels as $i => $hotel) {
             $id = $hotel['Hotel']['Id'] ?? $hotel['Id'] ?? '?';
             $name = $hotel['Hotel']['Name'] ?? '?';
-            $this->line("  [{$i}] Hotel ID={$id}  Name={$name}");
+            $source = $hotel['Source'] ?? '?';
+            $token = $hotel['Token'] ?? '';
+            $roomCount = 0;
+            foreach ($hotel['Price']['Boarding'] ?? [] as $b) {
+                foreach ($b['Pax'] ?? [] as $p) {
+                    $roomCount += count($p['Rooms'] ?? []);
+                }
+            }
+            $themes = implode(', ', $hotel['Hotel']['Theme'] ?? []);
+            $this->line("  [{$i}] Hotel ID={$id}  Name=\"{$name}\"");
+            $this->line("       Source={$source}  Rooms={$roomCount}  Themes=[{$themes}]");
         }
 
         // Count by ID to highlight duplicates

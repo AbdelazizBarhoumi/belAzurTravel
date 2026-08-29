@@ -394,7 +394,7 @@ const AdminOsTravel = () => {
                                     onClick={() =>
                                         setStatus(s === 'all' ? '' : s)
                                     }
-                                    className={`rounded-xl border p-3 text-start transition-colors ${
+                                    className={`rounded-2xl border p-3 text-start transition-colors ${
                                         status === (s === 'all' ? '' : s)
                                             ? 'border-primary bg-primary/5'
                                             : 'border-border bg-background hover:bg-muted/20'
@@ -420,7 +420,7 @@ const AdminOsTravel = () => {
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
                         placeholder={t('osTravel.filterCity')}
-                        className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
+                        className="rounded-2xl border border-border bg-card px-4 py-2 text-sm"
                     />
                     <Select
                         value={countryId}
@@ -477,7 +477,7 @@ const AdminOsTravel = () => {
                         value={starsFilter}
                         onChange={(e) => setStarsFilter(e.target.value)}
                         aria-label={t('osTravel.filterStars')}
-                        className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
+                        className="rounded-2xl border border-border bg-card px-4 py-2 text-sm"
                     >
                         <option value="">{t('osTravel.allStars')}</option>
                         {[1, 2, 3, 4, 5].map((n) => (
@@ -836,7 +836,7 @@ const AdminOsTravel = () => {
                         <div className="space-y-4 pr-1">
                             {detailLoading ? (
                                 <>
-                                    <Skeleton className="h-44 w-full rounded-xl" />
+                                    <Skeleton className="h-44 w-full rounded-2xl" />
                                     <div className="flex gap-2 overflow-x-auto">
                                         {Array.from({ length: 4 }).map(
                                             (_, i) => (
@@ -850,7 +850,7 @@ const AdminOsTravel = () => {
                                     <Skeleton className="h-4 w-full" />
                                     <Skeleton className="h-4 w-3/4" />
                                     <Skeleton className="h-4 w-1/2" />
-                                    <div className="rounded-xl border border-border bg-muted/20 p-4">
+                                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
                                         <div className="flex items-center justify-between">
                                             <Skeleton className="h-3 w-24" />
                                             <Skeleton className="h-8 w-28 rounded-lg" />
@@ -863,7 +863,7 @@ const AdminOsTravel = () => {
                                                         className="space-y-1"
                                                     >
                                                         <Skeleton className="h-3 w-16" />
-                                                        <Skeleton className="h-10 rounded-xl" />
+                                                        <Skeleton className="h-10 rounded-2xl" />
                                                     </div>
                                                 ),
                                             )}
@@ -876,7 +876,7 @@ const AdminOsTravel = () => {
                                         <img
                                             src={preview.image}
                                             alt={preview.name}
-                                            className="h-44 w-full rounded-xl object-cover"
+                                            className="h-44 w-full rounded-2xl object-cover"
                                             onError={(e) => {
                                                 e.currentTarget.style.display =
                                                     'none';
@@ -917,7 +917,7 @@ const AdminOsTravel = () => {
                                     )}
 
                                     {/* Price section */}
-                                    <div className="rounded-xl border border-border bg-muted/20 p-4">
+                                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
                                         <div className="flex flex-wrap items-center justify-between gap-2">
                                             <p className="text-xs font-semibold uppercase text-muted-foreground">
                                                 {t('osTravel.priceSection')}

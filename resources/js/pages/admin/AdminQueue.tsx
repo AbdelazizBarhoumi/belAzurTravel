@@ -382,7 +382,7 @@ const AdminQueue = () => {
                         type="button"
                         onClick={() => setActiveTabWithParam(section.key)}
                         className={cn(
-                            'inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all',
+                            'inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition-all',
                             activeTab === section.key
                                 ? 'bg-primary text-primary-foreground'
                                 : 'bg-muted text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -759,7 +759,7 @@ function ComplaintsTable({
                 <select
                     value={typeFilter}
                     onChange={(e) => onTypeFilterChange(e.target.value)}
-                    className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
+                    className="rounded-2xl border border-border bg-card px-4 py-2 text-sm"
                 >
                     <option value="">{t('admin.allTypes')}</option>
                     <option value="complaint">
@@ -772,7 +772,7 @@ function ComplaintsTable({
                 <select
                     value={statusFilter}
                     onChange={(e) => onStatusFilterChange(e.target.value)}
-                    className="rounded-xl border border-border bg-card px-4 py-2 text-sm"
+                    className="rounded-2xl border border-border bg-card px-4 py-2 text-sm"
                 >
                     <option value="">{t('admin.allStatuses')}</option>
                     <option value="pending">
@@ -1103,7 +1103,7 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                 </div>
 
                 {b.details?.room_name && (
-                    <div className="mt-3 rounded-xl border border-border bg-muted/20 p-3 text-sm">
+                    <div className="mt-3 rounded-2xl border border-border bg-muted/20 p-3 text-sm">
                         <p className="font-medium">{b.details.room_name}</p>
                         {b.details.boarding_name && (
                             <p className="text-muted-foreground">
@@ -1117,7 +1117,7 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                     <img
                         src={b.details.image}
                         alt=""
-                        className="mt-3 h-32 w-full rounded-xl object-cover"
+                        className="mt-3 h-32 w-full rounded-2xl object-cover"
                     />
                 )}
 
@@ -1132,7 +1132,7 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                 )}
 
                 {((b as any).reject_reason || (b as any).cancel_reason) && (
-                    <div className="mt-3 rounded-xl bg-destructive/5 p-3 text-sm text-destructive">
+                    <div className="mt-3 rounded-2xl bg-destructive/5 p-3 text-sm text-destructive">
                         {(b as any).reject_reason && (
                             <p>
                                 <strong>{t('admin.rejectReason')}:</strong>{' '}
@@ -1382,7 +1382,7 @@ function ComplaintDetail({
                 </p>
 
                 {complaint.booking && (
-                    <div className="mt-3 rounded-xl border border-border bg-muted/20 p-3 text-sm">
+                    <div className="mt-3 rounded-2xl border border-border bg-muted/20 p-3 text-sm">
                         <p className="font-medium">
                             {t('admin.booking')} #
                             {complaint.booking.booking_ref ??
@@ -1435,7 +1435,7 @@ function ComplaintDetail({
                         <div
                             key={reply.id}
                             className={cn(
-                                'max-w-[85%] rounded-xl px-3 py-2 text-sm',
+                                'max-w-[85%] rounded-2xl px-3 py-2 text-sm',
                                 reply.sender === 'admin'
                                     ? 'ms-auto bg-primary/10 text-primary'
                                     : 'bg-muted text-foreground',
@@ -1452,7 +1452,7 @@ function ComplaintDetail({
                     ))}
                     {complaint.admin_reply &&
                         complaint.replies.length === 0 && (
-                            <div className="max-w-[85%] rounded-xl bg-primary/10 px-3 py-2 text-sm text-primary">
+                            <div className="max-w-[85%] rounded-2xl bg-primary/10 px-3 py-2 text-sm text-primary">
                                 {localize(lang, complaint.admin_reply)}
                             </div>
                         )}
@@ -1469,7 +1469,7 @@ function ComplaintDetail({
                     onChange={(e) => onDraftChange(e.target.value)}
                     placeholder={t('client.adminReply')}
                     rows={3}
-                    className="mt-3 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                    className="mt-3 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                 />
                 <div className="mt-2 flex flex-wrap gap-2">
                     <Button
@@ -1610,7 +1610,7 @@ function SupportDetail({
                         <div
                             key={`${inquiry.id}-${i}`}
                             className={cn(
-                                'max-w-[85%] rounded-xl px-3 py-2 text-sm',
+                                'max-w-[85%] rounded-2xl px-3 py-2 text-sm',
                                 reply.author_id
                                     ? 'ms-auto bg-primary/10 text-primary'
                                     : 'bg-muted text-foreground',
@@ -1635,7 +1635,7 @@ function SupportDetail({
                     onChange={(e) => onDraftChange(e.target.value)}
                     placeholder={t('client.adminReply')}
                     rows={3}
-                    className="mt-3 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                    className="mt-3 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                 />
                 <Button
                     size="sm"

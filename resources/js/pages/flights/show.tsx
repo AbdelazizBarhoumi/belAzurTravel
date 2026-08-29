@@ -94,7 +94,7 @@ export default function FlightDetail() {
                                         flight.details.cabin,
                                         lang,
                                     ) && (
-                                        <div className="rounded-xl bg-muted/40 p-4">
+                                        <div className="rounded-2xl bg-muted/40 p-4">
                                             <p className="mb-1 text-xs text-muted-foreground">
                                                 {t('label.cabin')}
                                             </p>
@@ -110,7 +110,7 @@ export default function FlightDetail() {
                                         flight.details.baggage,
                                         lang,
                                     ) && (
-                                        <div className="rounded-xl bg-muted/40 p-4">
+                                        <div className="rounded-2xl bg-muted/40 p-4">
                                             <p className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
                                                 <Briefcase className="h-3 w-3" />{' '}
                                                 {t('label.baggage')}
@@ -127,7 +127,7 @@ export default function FlightDetail() {
                                         flight.details.aircraft,
                                         lang,
                                     ) && (
-                                        <div className="rounded-xl bg-muted/40 p-4">
+                                        <div className="rounded-2xl bg-muted/40 p-4">
                                             <p className="mb-1 text-xs text-muted-foreground">
                                                 {t('label.aircraft')}
                                             </p>

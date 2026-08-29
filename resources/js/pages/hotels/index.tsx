@@ -45,6 +45,7 @@ import { StarRating } from '@/components/ui/StarRating';
 import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
+import { PROVIDER_CATEGORY_MAP } from '@/data/hotelFilters';
 import { useCountryByCode } from '@/hooks/useCountries';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import {
@@ -62,16 +63,15 @@ import {
     cn,
     earliestCheckIn,
     formatPrice,
-    formatPromoRate,
     parseChildAges,
-    promoPrice,
+    roomPromo,
     toLocalISODate,
 } from '@/lib/utils';
 import type { HotelItem } from '@/types/public/hotel.types';
 
 // A card is either a stored browse record or a live result (name/location are
 // wider `Record<string, string>` after merging the live spread over browse).
-type HotelCard = Omit<HotelItem, 'name' | 'location' | 'category'> &
+type HotelCard = Omit<HotelItem, 'name' | 'location'> &
     Partial<HotelSearchResult>;
 
 type SortValue = 'price_asc' | 'price_desc' | 'stars_desc';
@@ -124,6 +124,7 @@ const BOARDING_TO_PRICING: Record<string, string> = {
 // - `stars` param from the landing widget (property class)
 // - `cat` param from the landing widget (room type)
 // - `country` param from the landing widget (country code -> English name)
+// - `cat_type` param for accommodation type filters (e.g. cat_type=villa,campement)
 function buildCategoryFilters(
     params: URLSearchParams,
     countryEnglishName: string | undefined,
@@ -140,6 +141,15 @@ function buildCategoryFilters(
     const starNum = Number((params.get('stars') ?? '').replace(/[^0-9]/g, ''));
     if (Number.isFinite(starNum) && starNum >= 1 && starNum <= 5) {
         filters[`dynamic_star_${starNum}`] = [String(starNum)];
+    }
+
+    // Accommodation type filters (non-starred categories from provider).
+    const catTypeParam = params.get('cat_type');
+    if (catTypeParam) {
+        const catKeys = catTypeParam.split(',').filter(Boolean);
+        for (const catKey of catKeys) {
+            filters[`dynamic_cat_${catKey}`] = [catKey];
+        }
     }
 
     const roomKey = params.get('cat')
@@ -351,6 +361,18 @@ export default function Hotels() {
         [categoryTypeFilters],
     );
 
+    // Selected provider category keys (dynamic_cat_* filters).
+    const selectedCategoryKeys = useMemo(
+        () =>
+            Object.entries(categoryTypeFilters)
+                .filter(
+                    ([key, values]) =>
+                        key.startsWith('dynamic_cat_') && values.length > 0,
+                )
+                .flatMap(([, values]) => values),
+        [categoryTypeFilters],
+    );
+
     // The price filter is "active" as soon as the user moves the slider.
     // It used to be split between a client-side pass (browse mode) and a
     // server-side `price_min`/`price_max` param (live mode); now it's
@@ -375,13 +397,32 @@ export default function Hotels() {
             ]);
             if (!matchesSearch) return false;
 
-            // Stars are an exact OR group: only hotels whose star rating is
-            // one of the selected values pass.
+            // Stars and accommodation categories are OR-ed: a hotel passes if
+            // its star rating matches any selected star value OR its provider
+            // category matches any selected category key.
             if (
-                selectedStarValues.length > 0 &&
-                !selectedStarValues.includes(hotel.stars ?? 0)
+                selectedStarValues.length > 0 ||
+                selectedCategoryKeys.length > 0
             ) {
-                return false;
+                const matchesStar = selectedStarValues.includes(
+                    hotel.stars ?? 0,
+                );
+                let matchesCategory = false;
+                if (selectedCategoryKeys.length > 0 && hotel.stars === 0) {
+                    const catObj = hotel.category;
+                    if (catObj && typeof catObj === 'object') {
+                        const rawTitle = catObj.fr || catObj.en || '';
+                        const mapping = PROVIDER_CATEGORY_MAP[rawTitle];
+                        if (mapping) {
+                            matchesCategory = selectedCategoryKeys.includes(
+                                mapping.key,
+                            );
+                        }
+                    }
+                }
+                if (!matchesStar && !matchesCategory) {
+                    return false;
+                }
             }
 
             // Price is total stay; a hotel with no known price must not
@@ -454,6 +495,7 @@ export default function Hotels() {
         [
             searchQuery,
             selectedStarValues,
+            selectedCategoryKeys,
             priceFilterActive,
             hotelPriceRange,
             showUnavailable,
@@ -823,7 +865,7 @@ export default function Hotels() {
                                         type="button"
                                         variant="outline"
                                         aria-label={t('hotels.filtersButton')}
-                                        className="h-10 w-full rounded-xl border-border/70 bg-background/80 px-4 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm"
+                                        className="h-10 w-full rounded-2xl border-border/70 bg-background/80 px-4 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm"
                                     >
                                         <SlidersHorizontal className="h-4 w-4 text-primary" />
                                         {t('hotels.filtersButton')}
@@ -903,7 +945,7 @@ export default function Hotels() {
                             >
                                 <SelectTrigger
                                     aria-label={t('hotels.sortBy')}
-                                    className="h-10 w-44 rounded-xl border-border/70 bg-background/80 px-3 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm"
+                                    className="h-10 w-44 rounded-2xl border-border/70 bg-background/80 px-3 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm"
                                 >
                                     <SelectValue
                                         placeholder={t('hotels.sortDefault')}
@@ -1133,11 +1175,9 @@ export default function Hotels() {
                                                                 {liveLoaded
                                                                     ? (() => {
                                                                           const promo =
-                                                                              promoPrice(
+                                                                              roomPromo(
                                                                                   hotel.price_total,
-                                                                                  hotel
-                                                                                      .promotion
-                                                                                      ?.rate,
+                                                                                  hotel.base_price,
                                                                               );
                                                                           const currency =
                                                                               hotel.currency ??
@@ -1240,43 +1280,22 @@ export default function Hotels() {
                                                             </div>
 
                                                             {liveLoaded ? (
-                                                                (hotel.promotion
-                                                                    ?.rate ||
-                                                                    hotel
-                                                                        .free_child
-                                                                        ?.length ||
+                                                                (hotel.price != null &&
+                                                                    hotel.base_price != null &&
+                                                                    hotel.price < hotel.base_price ||
+                                                                    hotel.free_child?.length ||
                                                                     hotel.recommended) && (
                                                                     <div className="mb-3 flex flex-wrap gap-2">
-                                                                        {hotel
-                                                                            .promotion
-                                                                            ?.rate && (
-                                                                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                                                                                {t(
-                                                                                    'hotelDetail.promo',
-                                                                                )}{' '}
-                                                                                {
-                                                                                    hotel
-                                                                                        .promotion
-                                                                                        .title
-                                                                                }
-                                                                                {formatPromoRate(
-                                                                                    hotel
-                                                                                        .promotion
-                                                                                        .rate,
-                                                                                ) && (
-                                                                                    <>
-                                                                                        {
-                                                                                            ' · '
-                                                                                        }
-                                                                                        {formatPromoRate(
-                                                                                            hotel
-                                                                                                .promotion
-                                                                                                .rate,
-                                                                                        )}
-                                                                                    </>
-                                                                                )}
-                                                                            </span>
-                                                                        )}
+                                                                        {hotel.price != null &&
+                                                                            hotel.base_price != null &&
+                                                                            hotel.price < hotel.base_price && (() => {
+                                                                                const pct = Math.round((1 - hotel.price / hotel.base_price!) * 100);
+                                                                                return (
+                                                                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                                                        {t('hotelDetail.promo')} · -{pct}%
+                                                                                    </span>
+                                                                                );
+                                                                            })()}
                                                                         {hotel
                                                                             .free_child
                                                                             ?.length ? (

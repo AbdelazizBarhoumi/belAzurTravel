@@ -5,6 +5,7 @@ import {
 } from '@/components/ui/OccupancyPicker';
 import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { PROVIDER_CATEGORY_MAP } from '@/data/hotelFilters';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { getStaticFilterGroup } from '@/lib/nav-static-filters';
 import type { HotelItem } from '@/types/public/hotel.types';
@@ -126,6 +127,41 @@ export function HotelFilters({
         }
         return counts;
     }, [hotels, availableStars]);
+
+    // Compute available non-starred categories from hotels where stars=0.
+    // Uses the hotel.category field (provider title) and maps through
+    // PROVIDER_CATEGORY_MAP to get stable keys and translated labels.
+    const availableCategories = useMemo(() => {
+        const catMap = new Map<
+            string,
+            { key: string; label: { en: string; fr: string; ar: string }; count: number }
+        >();
+        for (const hotel of hotels) {
+            if (hotel.stars !== 0) continue;
+            const catObj = hotel.category;
+            if (!catObj || typeof catObj !== 'object') continue;
+            // The provider stores the same French title in all locales
+            const rawTitle = catObj.fr || catObj.en || '';
+            if (!rawTitle) continue;
+            const mapping = PROVIDER_CATEGORY_MAP[rawTitle];
+            if (!mapping) continue;
+            const existing = catMap.get(mapping.key);
+            if (existing) {
+                existing.count++;
+            } else {
+                catMap.set(mapping.key, {
+                    key: mapping.key,
+                    label: {
+                        en: catObj.en || rawTitle,
+                        fr: catObj.fr || rawTitle,
+                        ar: catObj.ar || rawTitle,
+                    },
+                    count: 1,
+                });
+            }
+        }
+        return Array.from(catMap.values());
+    }, [hotels]);
 
     const STARS_LABELS = STARS_LABELS_FROM_CONFIG;
 
@@ -299,14 +335,10 @@ export function HotelFilters({
                 </div>
             )}
 
-            {/* Stars Filter */}
+            {/* Stars & Accommodation Type Filter */}
             <div className="my-3 border-t border-border py-3 sm:my-4 sm:py-4">
                 <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
-                    {lang === 'fr'
-                        ? 'Étoiles'
-                        : lang === 'ar'
-                          ? 'نجوم'
-                          : 'Stars'}
+                    {t('hotels.filterByCategory')}
                 </h3>
                 <div className="space-y-0.5 sm:space-y-1">
                     {availableStars.map((star) => {
@@ -383,6 +415,75 @@ export function HotelFilters({
                                 </div>
                                 <span className="text-xs text-muted-foreground">
                                     ({count})
+                                </span>
+                            </label>
+                        );
+                    })}
+                    {availableCategories.map((cat) => {
+                        const filterKey = `dynamic_cat_${cat.key}`;
+                        const isActive =
+                            categoryTypeFilters[filterKey]?.length > 0;
+                        return (
+                            <label
+                                key={cat.key}
+                                className={`flex cursor-pointer items-center justify-between gap-1.5 rounded-md px-2 py-1.5 transition-colors sm:gap-2 sm:rounded-lg sm:px-3 sm:py-2 ${
+                                    isActive
+                                        ? 'border border-primary/30 bg-primary/10'
+                                        : 'border border-transparent hover:bg-muted/50'
+                                }`}
+                            >
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <div
+                                        className={`flex h-3.5 w-3.5 items-center justify-center rounded border-2 transition-colors sm:h-4 sm:w-4 ${
+                                            isActive
+                                                ? 'border-primary bg-primary'
+                                                : 'border-muted-foreground/30 bg-background'
+                                        }`}
+                                    >
+                                        {isActive && (
+                                            <svg
+                                                className="h-2.5 w-2.5 text-primary-foreground sm:h-3 sm:w-3"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                                strokeWidth={3}
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M5 13l4 4L19 7"
+                                                />
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={isActive}
+                                        onChange={(e) => {
+                                            const currentValues =
+                                                categoryTypeFilters[
+                                                    filterKey
+                                                ] || [];
+                                            const newValues = e.target.checked
+                                                ? [...currentValues, cat.key]
+                                                : currentValues.filter(
+                                                      (v) => v !== cat.key,
+                                                  );
+                                            onCategoryTypeChange(
+                                                filterKey,
+                                                newValues,
+                                            );
+                                        }}
+                                        className="sr-only"
+                                    />
+                                    <span
+                                        className={`text-sm ${isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}`}
+                                    >
+                                        {cat.label[lang] || cat.label.en}
+                                    </span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                    ({cat.count})
                                 </span>
                             </label>
                         );

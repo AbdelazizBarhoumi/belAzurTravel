@@ -125,7 +125,7 @@ const Register = () => {
                                             setErrors(newErrors);
                                         }
                                     }}
-                                    className={`w-full rounded-xl border bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                                    className={`w-full rounded-2xl border bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                                         errors.name
                                             ? 'border-destructive'
                                             : 'border-border'
@@ -156,7 +156,7 @@ const Register = () => {
                                             setErrors(newErrors);
                                         }
                                     }}
-                                    className={`w-full rounded-xl border bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                                    className={`w-full rounded-2xl border bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                                         errors.email
                                             ? 'border-destructive'
                                             : 'border-border'
@@ -187,7 +187,7 @@ const Register = () => {
                                             setErrors(newErrors);
                                         }
                                     }}
-                                    className={`w-full rounded-xl border bg-background py-3 pl-11 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                                    className={`w-full rounded-2xl border bg-background py-3 pl-11 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                                         errors.password
                                             ? 'border-destructive'
                                             : 'border-border'
@@ -226,7 +226,7 @@ const Register = () => {
 
                         <Button
                             type="submit"
-                            className="w-full rounded-xl bg-primary py-3 text-sm text-primary-foreground hover:bg-primary/90"
+                            className="w-full rounded-2xl bg-primary py-3 text-sm text-primary-foreground hover:bg-primary/90"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? (

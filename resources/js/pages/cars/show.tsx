@@ -93,7 +93,7 @@ export default function CarDetail() {
                                 {car.features?.map((feature: LocalizedText) => (
                                     <div
                                         key={String(feature.en)}
-                                        className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
+                                        className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
                                     >
                                         <Check className="h-4 w-4 shrink-0 text-primary" />
                                         <span className="text-sm text-foreground">

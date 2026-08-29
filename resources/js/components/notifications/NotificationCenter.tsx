@@ -269,7 +269,7 @@ export function NotificationCenter({
                                     />
                                     <div
                                         className={cn(
-                                            'relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+                                            'relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl',
                                             colorFor[type] ||
                                                 'bg-muted text-muted-foreground',
                                         )}

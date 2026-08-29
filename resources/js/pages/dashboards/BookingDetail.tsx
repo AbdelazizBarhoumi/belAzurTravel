@@ -119,7 +119,7 @@ export default function BookingDetail() {
     if (isLoading) {
         return (
             <div className="mx-auto max-w-3xl space-y-6 p-6">
-                <Skeleton className="h-8 w-64 rounded-xl" />
+                <Skeleton className="h-8 w-64 rounded-2xl" />
                 <Skeleton className="h-40 w-full rounded-2xl" />
                 <Skeleton className="h-48 w-full rounded-2xl" />
             </div>
@@ -155,7 +155,7 @@ export default function BookingDetail() {
     const renderStatusBanner = () => {
         if (status === 'Pending') {
             return (
-                <div className="flex items-start gap-2 rounded-xl border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm">
+                <div className="flex items-start gap-2 rounded-2xl border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm">
                     <Clock className="mt-0.5 h-4 w-4 shrink-0 text-secondary" />
                     <p className="text-muted-foreground">
                         {t('client.bookingDecisionWindow')}{' '}
@@ -169,7 +169,7 @@ export default function BookingDetail() {
 
         if (status === 'Approved') {
             return (
-                <div className="flex items-start gap-2 rounded-xl border border-blue-300/50 bg-blue-50 px-4 py-3 text-sm">
+                <div className="flex items-start gap-2 rounded-2xl border border-blue-300/50 bg-blue-50 px-4 py-3 text-sm">
                     <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
                     <p className="text-blue-900">
                         {t('bookingDetail.approvedNote') ||
@@ -181,7 +181,7 @@ export default function BookingDetail() {
 
         if (status === 'Rejected' && booking.reject_reason) {
             return (
-                <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+                <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                     <p className="text-muted-foreground">
                         <span className="font-semibold text-destructive">
@@ -195,7 +195,7 @@ export default function BookingDetail() {
 
         if (status === 'Cancelled' && booking.cancel_reason) {
             return (
-                <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+                <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
                     <p className="text-muted-foreground">
                         <span className="font-semibold text-destructive">
@@ -209,7 +209,7 @@ export default function BookingDetail() {
 
         if (status === 'Expired') {
             return (
-                <div className="flex items-start gap-2 rounded-xl border border-muted bg-muted/40 px-4 py-3 text-sm">
+                <div className="flex items-start gap-2 rounded-2xl border border-muted bg-muted/40 px-4 py-3 text-sm">
                     <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                     <p className="text-muted-foreground">
                         {t('bookingDetail.expiredNote') ||
@@ -271,10 +271,10 @@ export default function BookingDetail() {
                         <img
                             src={details.image}
                             alt=""
-                            className="h-14 w-16 shrink-0 rounded-xl object-cover"
+                            className="h-14 w-16 shrink-0 rounded-2xl object-cover"
                         />
                     ) : (
-                        <div className="flex h-14 w-16 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                        <div className="flex h-14 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
                             <Hotel className="h-5 w-5 text-primary" />
                         </div>
                     )}

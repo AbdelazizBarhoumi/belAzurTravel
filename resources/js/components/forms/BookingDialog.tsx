@@ -61,8 +61,6 @@ interface BookingDialogProps {
     isRequest?: boolean;
     /** Price before any promo discount — the "was" price. */
     basePrice?: number;
-    /** Promo rate string (e.g. "10%") applied to this offer. */
-    promoRate?: string | null;
     // OS-TRAVEL live-search context captured on the hotel detail page.
     provider?: {
         token?: string | null;
@@ -159,7 +157,6 @@ export function BookingDialog({
     cancellationPolicy,
     supplements,
     basePrice,
-    promoRate,
 }: BookingDialogProps) {
     const { t, lang } = useLanguage();
     const { data: user } = useAuthUser();
@@ -374,7 +371,6 @@ export function BookingDialog({
                           currency,
                           base_price: basePrice ?? null,
                           final_price: amount,
-                          promo_rate: promoRate ?? null,
                           not_refundable: notRefundable ?? false,
                           free_cancellation_until:
                               freeCancellationUntil ?? null,
@@ -423,7 +419,8 @@ export function BookingDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[560px]">
+            <DialogContent className="sm:max-w-[560px] pe-0">
+                <div className="pe-6">
                 {submittedBooking ? (
                     <>
                         <div className="flex flex-col items-center gap-3 pb-1 pt-2 text-center">
@@ -545,10 +542,10 @@ export function BookingDialog({
                                 <img
                                     src={image}
                                     alt={itemName}
-                                    className="hidden h-16 w-20 shrink-0 rounded-xl object-cover sm:block"
+                                    className="hidden h-16 w-20 shrink-0 rounded-2xl object-cover sm:block"
                                 />
                             ) : (
-                                <div className="hidden h-16 w-20 shrink-0 items-center justify-center rounded-xl bg-muted sm:flex">
+                                <div className="hidden h-16 w-20 shrink-0 items-center justify-center rounded-2xl bg-muted sm:flex">
                                     <BedDouble className="h-6 w-6 text-muted-foreground/50" />
                                 </div>
                             )}
@@ -605,18 +602,7 @@ export function BookingDialog({
                                     </div>
                                 )}
                             </div>
-                            <div className="shrink-0 text-right">
-                                {nights && pricePerNight ? (
-                                    <p className="text-[11px] text-muted-foreground">
-                                        {nights}{' '}
-                                        {nights === 1
-                                            ? t('hotelDetail.nightLabel') ||
-                                              'night'
-                                            : t('hotelDetail.nightsLabel') ||
-                                              'nights'}{' '}
-                                        · {formatPrice(pricePerNight, currency)}
-                                    </p>
-                                ) : null}
+                            <div className="shrink-0 text-right flex flex-col items-end justify-center gap-0.5">
                                 <p className="font-serif text-lg font-bold text-primary">
                                     {formatPrice(amount, currency)}
                                 </p>
@@ -624,7 +610,7 @@ export function BookingDialog({
                         </div>
 
                         {isRequest && (
-                            <div className="rounded-xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                            <div className="rounded-2xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                                 {t('booking.requestNotice') ||
                                     "This is a request booking. We'll contact the hotel to check availability."}
                             </div>
@@ -688,7 +674,7 @@ export function BookingDialog({
                                     {guests.map((row, index) => (
                                         <div
                                             key={index}
-                                            className="space-y-3 rounded-xl border border-border p-4"
+                                            className="space-y-3 rounded-2xl border border-border p-4"
                                         >
                                             <p className="text-xs font-medium text-muted-foreground">
                                                 {t('booking.guestNumber')}{' '}
@@ -956,6 +942,7 @@ export function BookingDialog({
                         </form>
                     </>
                 )}
+                </div>
             </DialogContent>
         </Dialog>
     );

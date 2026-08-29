@@ -680,7 +680,7 @@
     .rounded-md {
         border-radius: var(--radius-md);
     }
-    .rounded-xl {
+    .rounded-2xl {
         border-radius: var(--radius-xl);
     }
     .rounded-t-lg {

@@ -136,7 +136,7 @@ export default function BlogPostDetail() {
                 <img
                     src={post.image}
                     alt={localize(post.title, lang)}
-                    className="mb-6 max-h-96 w-full rounded-xl object-cover object-center"
+                    className="mb-6 max-h-96 w-full rounded-2xl object-cover object-center"
                 />
                 <div className="mb-4 flex items-center gap-3 text-sm text-muted-foreground">
                     <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">

@@ -1445,6 +1445,33 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Filter by stars',
     },
     'hotels.stars': { fr: 'étoile(s)', ar: 'نجمة', en: 'star(s)' },
+    'hotels.filterByCategory': {
+        fr: "Type d'hébergement",
+        ar: 'نوع الإقامة',
+        en: 'Accommodation type',
+    },
+    'categories.campement': { fr: 'Campement', ar: 'مخيم', en: 'Camp' },
+    'categories.appart_hotel': {
+        fr: 'Appart Hôtel',
+        ar: 'Residence hotel',
+        en: 'Aparthotel',
+    },
+    'categories.maison_hotes': {
+        fr: "Maison d'hôtes",
+        ar: 'بيت ضيافة',
+        en: 'Guesthouse',
+    },
+    'categories.appartement': {
+        fr: 'Appartement',
+        ar: 'شقة',
+        en: 'Apartment',
+    },
+    'categories.parc_attraction': {
+        fr: "Parc d'attraction",
+        ar: 'حديقة ملاهي',
+        en: 'Theme Park',
+    },
+    'categories.villa': { fr: 'Villa', ar: 'فيلا', en: 'Villa' },
     'hotels.filterByPrice': {
         fr: 'Filtrer par prix',
         ar: 'التصفية حسب السعر',
@@ -1514,13 +1541,13 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'total stay',
     },
     'hotels.occupancy': {
-        fr: 'Voyageurs',
-        ar: 'المسافرون',
-        en: 'Travelers',
+        fr: 'Invités',
+        ar: 'الضيوف',
+        en: 'Guests',
     },
     'hotels.guestsLabel': {
-        fr: 'voyageur(s)',
-        ar: 'مسافر(ون)',
+        fr: 'invité(s)',
+        ar: 'ضيف (ضيوف)',
         en: 'guest(s)',
     },
     'hotels.childrenLabel': {
@@ -1692,9 +1719,9 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Check the price for your dates',
     },
     'hotelDetail.livePriceHint': {
-        fr: 'Sélectionnez vos dates et le nombre de voyageurs pour obtenir les prix et la disponibilité en temps réel.',
-        ar: 'اختر تواريخك وعدد المسافرين للحصول على الأسعار والتوفر في الوقت الفعلي.',
-        en: 'Pick your dates and number of travelers to get real-time prices and availability.',
+        fr: 'Sélectionnez vos dates et le nombre d\'invités pour obtenir les prix et la disponibilité en temps réel.',
+        ar: 'اختر تواريخك وعدد الضيوف للحصول على الأسعار والتوفر في الوقت الفعلي.',
+        en: 'Pick your dates and number of guests to get real-time prices and availability.',
     },
     'hotelDetail.availableFrom': {
         fr: 'Disponible à partir du',
@@ -1707,6 +1734,11 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Minimum stay',
     },
     'hotelDetail.night': {
+        fr: 'nuit',
+        ar: 'ليلة',
+        en: 'night',
+    },
+    'hotelDetail.nightLabel': {
         fr: 'nuit',
         ar: 'ليلة',
         en: 'night',
@@ -1883,11 +1915,6 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'أفضل سعر مضمون',
         en: 'Best rate guaranteed',
     },
-    'hotelDetail.bestRateHint': {
-        fr: "Confirmez aujourd'hui : les prix peuvent augmenter à l'approche des dates.",
-        ar: 'أكّد اليوم: قد ترتفع الأسعار مع اقتراب المواعيد.',
-        en: 'Confirm today: prices can increase as your dates approach.',
-    },
     'hotelDetail.servicesAndEquipments': {
         fr: 'Services & équipements',
         ar: 'الخدمات والمرافق',
@@ -1897,11 +1924,6 @@ export const translations: Record<string, TranslationEntry> = {
         fr: "Garantissez-vous un super tarif pour votre prochain séjour. Confirmez votre réservation aujourd'hui car les prix peuvent augmenter.",
         ar: 'تأكّد من الحصول على سعر ممتاز لإقامتك القادمة. أكّد حجزك اليوم لأن الأسعار قد ترتفع.',
         en: 'Lock in a great rate for your stay. Confirm your booking today as prices may rise.',
-    },
-    'hotelDetail.freeCancellationNote': {
-        fr: "Sur notre site, l'annulation est gratuite pour la plupart des hébergements et vous recevez une confirmation instantanée.",
-        ar: 'على موقعنا، الإلغاء مجاني لمعظم أماكن الإقامة وستتلقى تأكيداً فورياً.',
-        en: 'Free cancellation on most stays and instant confirmation when you book on our site.',
     },
     'hotelDetail.datesAndRates': {
         fr: 'Dates & Tarifs',
@@ -1999,8 +2021,14 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'hotelDetail.rooms': { fr: 'Chambres', ar: 'الغرف', en: 'Rooms' },
     'hotelDetail.roomsShort': { fr: 'ch.', ar: 'غرفة', en: 'rm' },
+    'hotelDetail.guestsShort': { fr: 'voyageur(s)', ar: 'ضيوف', en: 'guest(s)' },
+    'hotelDetail.selectDates': { fr: 'Choisir les dates', ar: 'اختر التواريخ', en: 'Select dates' },
+    'hotelDetail.dates': { fr: 'Dates', ar: 'التواريخ', en: 'Dates' },
+    'hotelDetail.occupation': { fr: 'Occupation', ar: 'الإشغال', en: 'Occupancy' },
     'hotelDetail.adults': { fr: 'Adultes', ar: 'بالغون', en: 'Adults' },
     'hotelDetail.children': { fr: 'Enfants', ar: 'أطفال', en: 'Children' },
+    'hotelDetail.today': { fr: "Aujourd'hui", ar: 'اليوم', en: 'Today' },
+    'hotelDetail.wontBeCharged': { fr: "Vous ne serez pas débité", ar: 'لن يتم خصم أموالك', en: "You won't be charged yet" },
     'hotelDetail.scoreExcellent': {
         fr: 'Exceptionnel',
         ar: 'استثنائي',
@@ -4665,6 +4693,11 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Please log in to make a booking.',
     },
     'booking.title': { fr: 'Réserver', ar: 'حجز', en: 'Book' },
+    'booking.titleGeneric': {
+        fr: 'Finalisez votre réservation',
+        ar: 'أكمل حجزك',
+        en: 'Complete your booking',
+    },
     'booking.description': {
         fr: 'Remplissez les détails ci-dessous pour demander une réservation.',
         ar: 'املأ التفاصيل أدناه لطلب حجز.',

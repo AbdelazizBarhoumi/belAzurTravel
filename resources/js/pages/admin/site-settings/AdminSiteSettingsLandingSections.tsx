@@ -94,7 +94,7 @@ function SortableSection({
         <div
             ref={setNodeRef}
             style={style}
-            className="rounded-xl border border-border bg-card"
+            className="rounded-2xl border border-border bg-card"
         >
             <div className="flex items-center gap-3 p-4">
                 <button

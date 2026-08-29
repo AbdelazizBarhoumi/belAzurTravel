@@ -65,7 +65,7 @@ export function ListFilterBar({
                             aria-label={searchPlaceholder ?? t('common.search')}
                             type="search"
                             className={cn(
-                                'h-10 rounded-xl border-border/70 bg-background/90 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm',
+                                'h-10 rounded-2xl border-border/70 bg-background/90 text-xs shadow-sm sm:h-12 sm:rounded-2xl sm:text-sm',
                                 isRtl
                                     ? 'pr-9 text-right sm:pr-11'
                                     : 'pl-9 sm:pl-11',
@@ -81,7 +81,7 @@ export function ListFilterBar({
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="h-10 rounded-xl px-3 text-xs sm:h-12 sm:rounded-2xl sm:px-4 sm:text-sm"
+                                className="h-10 rounded-2xl px-3 text-xs sm:h-12 sm:rounded-2xl sm:px-4 sm:text-sm"
                                 onClick={onClearFilters}
                             >
                                 {t('common.clearFilters')}

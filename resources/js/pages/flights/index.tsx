@@ -406,7 +406,7 @@ function FlightsContent() {
                                 className="card-elevated flex flex-col items-center gap-6 rounded-2xl bg-card p-5 md:flex-row"
                             >
                                 <div className="flex items-center gap-3 md:w-40">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                                         <Plane className="h-5 w-5 text-primary" />
                                     </div>
                                     <div>

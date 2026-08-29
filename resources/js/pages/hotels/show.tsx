@@ -1,4 +1,6 @@
 import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { arSA, enUS, fr } from 'date-fns/locale';
 import {
     BadgePercent,
     Bed,
@@ -8,6 +10,8 @@ import {
     LogOut,
     Map as MapIcon,
     MapPin,
+    Minus,
+    Plus,
     Ruler,
     Search,
     ShieldCheck,
@@ -36,8 +40,9 @@ import {
 import { PageShell } from '@/components/layout/PageShell';
 import { Gallery } from '@/components/media/Gallery';
 import { Button } from '@/components/ui/button';
-import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -50,13 +55,18 @@ import type { Lang } from '@/i18n/translations';
 import {
     cn,
     formatPrice,
-    formatPromoRate,
     parseChildAges,
-    promoPrice,
+    roomPromo,
     toLocalISODate,
 } from '@/lib/utils';
 
 const tomorrowDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+function datePickerLocale(lang: Lang) {
+    if (lang === 'fr') return fr;
+    if (lang === 'ar') return arSA;
+    return enUS;
+}
 
 type RoomView = {
     id: string;
@@ -66,6 +76,7 @@ type RoomView = {
     // Live OS-TRAVEL rooms carry a TOTAL-stay price; static admin rooms only
     // have an admin-defined per-night price.
     priceTotal?: number;
+    basePrice?: number;
     nights?: number;
     capacity: number;
     size: number;
@@ -179,6 +190,7 @@ export default function HotelDetail() {
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
+    const [activeRate, setActiveRate] = useState<RoomView | null>(null);
     const [requestMode, setRequestMode] = useState(false);
 
     // Search context preserved from the hotels listing: ?from&to&guests&rooms&children
@@ -208,6 +220,8 @@ export default function HotelDetail() {
         adults: Number.isFinite(urlGuests) && urlGuests > 0 ? urlGuests : 1,
         childAges: urlChildren,
     });
+    const [datePickerOpen, setDatePickerOpen] = useState(false);
+    const [occupancyPickerOpen, setOccupancyPickerOpen] = useState(false);
     const [selectedBoardingIds] = useState<number[]>([]);
     // Policy notice (e.g. "couples & families only", tourist tax) is
     // collapsed to 2 lines by default but always visible — this used to be
@@ -285,6 +299,17 @@ export default function HotelDetail() {
         !liveHotel &&
         !unavailableHotel;
 
+    // Pre-compute static rooms early so useMemo hooks stay above any early returns.
+    const detail = (hotel ?? {}) as HotelDetailLookupData;
+    const staticRooms = useMemo(
+        () => (detail.rooms ?? []).map((room) => toRoomView(room, lang)),
+        [detail.rooms, lang],
+    );
+    const staticRoomByName = useMemo(
+        () => new Map(staticRooms.map((room) => [room.name, room])),
+        [staticRooms],
+    );
+
     if (isLoading) {
         return (
             <PageShell
@@ -295,17 +320,17 @@ export default function HotelDetail() {
             >
                 <div className="grid items-start gap-8 lg:grid-cols-[320px_1fr]">
                     <aside className="space-y-4">
-                        <Skeleton className="h-96 rounded-3xl" />
-                        <Skeleton className="h-44 rounded-3xl" />
+                        <Skeleton className="h-96 rounded-2xl" />
+                        <Skeleton className="h-44 rounded-2xl" />
                     </aside>
                     <div className="min-w-0 space-y-10">
                         <Skeleton className="h-16 w-2/3 rounded-2xl" />
-                        <Skeleton className="h-[300px] w-full rounded-3xl md:h-[500px]" />
+                        <Skeleton className="h-[300px] w-full rounded-2xl md:h-[500px]" />
                         <div className="grid gap-3 sm:grid-cols-2">
                             <Skeleton className="h-24 rounded-2xl" />
                             <Skeleton className="h-24 rounded-2xl" />
                         </div>
-                        <Skeleton className="h-40 w-full rounded-3xl" />
+                        <Skeleton className="h-40 w-full rounded-2xl" />
                     </div>
                 </div>
             </PageShell>
@@ -316,7 +341,6 @@ export default function HotelDetail() {
         return <Navigate to="/hotels" replace />;
     }
 
-    const detail = hotel as HotelDetailLookupData;
     const otherImages = detail.gallery?.length
         ? detail.gallery
         : detail.images?.length
@@ -328,12 +352,6 @@ export default function HotelDetail() {
               ...otherImages.filter((image) => image !== detail.image),
           ]
         : otherImages;
-    const staticRooms = (detail.rooms ?? []).map((room) =>
-        toRoomView(room, lang),
-    );
-    const staticRoomByName = new Map(
-        staticRooms.map((room) => [room.name, room]),
-    );
 
     // When Phase 2 returns a hotel with available=false, show all rooms
     // as "On request" instead of filtering to only bookable ones.
@@ -343,12 +361,7 @@ export default function HotelDetail() {
 
     const liveRooms: RoomView[] = (effectiveHotel?.rooms ?? [])
         .filter((room) => {
-            // In request mode, show all rooms (including non-bookable ones)
-            // so the UI can display each with its availability status.
             if (isRequestMode) return true;
-            // Only offer rooms that are actually bookable for the searched
-            // window: not stop-reserved, minimum stay fits, and no stop-sale
-            // range covers the dates.
             if (room.stop_reservation) return false;
             if ((room.min_stay ?? 1) > (room.nights ?? 1)) return false;
             if (room.stop_sales && dateRange?.from && dateRange?.to) {
@@ -376,6 +389,7 @@ export default function HotelDetail() {
                     '',
                 pricePerNight: room.price_per_night,
                 priceTotal: room.price_total,
+                basePrice: room.base_price,
                 nights: room.nights,
                 capacity: staticRoom?.capacity ?? 2,
                 size: staticRoom?.size ?? 0,
@@ -436,6 +450,16 @@ export default function HotelDetail() {
         : detail.provider === 'manual'
           ? displayMinPrice
           : null;
+    // Match the "Montant total du séjour" calculation in BookingDialog
+    const sidebarPrice = activeRate
+        ? (activeRate.priceTotal ?? activeRate.pricePerNight) *
+          occupancy.rooms
+        : headerDisplayPrice;
+    const sidebarBasePrice = activeRate
+        ? (activeRate.basePrice ?? activeRate.priceTotal ?? activeRate.pricePerNight) *
+          occupancy.rooms
+        : sidebarPrice;
+    const sidebarPromo = roomPromo(sidebarPrice, sidebarBasePrice);
     const title = localizeText(detail.name, lang);
     const location = localizeText(detail.location, lang);
     const description = localizeText(detail.description ?? detail.about, lang);
@@ -536,186 +560,71 @@ export default function HotelDetail() {
                 { label: title, active: true },
             ]}
         >
-            <div className="grid items-start gap-8 lg:grid-cols-[320px_1fr]">
-                {/* ── Sticky search sidebar ─────────────────────────── */}
-                <aside className="space-y-4 lg:sticky lg:top-24">
-                    <div className="rounded-3xl border border-border bg-card p-5">
-                        <h2 className="mb-4 font-serif text-xl font-bold text-foreground">
-                            {t('hotelDetail.search')}
-                        </h2>
-                        <div className="space-y-3">
-                            <div className="relative">
-                                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
-                                <Input
-                                    value={address}
-                                    readOnly
-                                    aria-label={t('hotelDetail.destination')}
-                                    className="h-11 rounded-xl pl-9"
-                                />
-                            </div>
-                            <DateRangePicker
-                                value={dateRange}
-                                onChange={setDateRange}
-                                className="w-full"
-                                fromDate={tomorrowDate}
-                            />
-                            <OccupancyPicker
-                                value={occupancy}
-                                onChange={setOccupancy}
-                            />
-                            <Button
-                                type="button"
-                                onClick={handleSearchRedirect}
-                                className="h-11 w-full bg-primary text-primary-foreground"
-                            >
-                                <Search className="h-4 w-4" />
-                                {t('hotelDetail.search')}
-                            </Button>
-                        </div>
+            {/* Gallery — full width at top */}
+            <section className="mb-8">
+                {gallery.length > 0 ? (
+                    <Gallery
+                        images={gallery}
+                        hotelName={title}
+                        favoriteItem={{
+                            id: `hotel-${detail.id}`,
+                            type: 'hotel',
+                            name: title,
+                            image: gallery[0] ?? '',
+                            price: minPrice,
+                            location,
+                        }}
+                    />
+                ) : (
+                    <div className="flex h-[300px] w-full items-center justify-center rounded-2xl border border-border bg-muted md:h-[500px]">
+                        <Building2 className="h-12 w-12 text-muted-foreground" />
                     </div>
+                )}
+            </section>
 
-                    {/* Map card */}
-                    {hasMap && (
-                        <div className="relative h-44 overflow-hidden rounded-3xl border border-border">
-                            <iframe
-                                title={`${t('hotelDetail.mapOf')} ${title}`}
-                                src={mapSrc}
-                                loading="lazy"
-                                className="h-full w-full border-0 saturate-50"
-                            />
-                            <a
-                                href={mapLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="absolute inset-x-6 bottom-4 inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-card text-xs font-medium text-foreground shadow-md hover:bg-card/90"
-                            >
-                                <MapIcon className="h-4 w-4" />
-                                {t('hotelDetail.viewOnMap')}
-                            </a>
-                        </div>
-                    )}
-
-                    {/* Best-rate guarantee card */}
-                    <div className="space-y-2 rounded-3xl border border-primary/20 bg-primary/5 p-5">
-                        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                            <ShieldCheck className="h-4 w-4 text-primary" />
-                            {t('hotelDetail.bestRateGuaranteed')}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                            {t('hotelDetail.bestRateHint')}
-                        </p>
-                    </div>
-                </aside>
-
+            <div className="grid items-start gap-8 lg:grid-cols-[1fr_355px]">
                 {/* ── Main content ──────────────────────────────────── */}
                 <div className="min-w-0 space-y-10">
-                    {/* Header */}
-                    <motion.header
+                    {/* Info Header */}
+                    <motion.div
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-wrap items-start justify-between gap-4"
                     >
-                        <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <h1 className="font-serif text-3xl font-bold text-foreground md:text-4xl">
-                                    {title}
-                                </h1>
-                                {detail.hotel_type ? (
-                                    <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                        {detail.hotel_type}
-                                    </span>
-                                ) : null}
-                                <div className="flex text-secondary">
-                                    {Array.from({ length: stars }).map(
-                                        (_, i) => (
-                                            <Star
-                                                key={i}
-                                                className="h-4 w-4 fill-current"
-                                            />
-                                        ),
-                                    )}
-                                </div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="flex text-secondary">
+                                {Array.from({ length: stars }).map((_, i) => (
+                                    <Star
+                                        key={i}
+                                        className="h-4 w-4 fill-current"
+                                    />
+                                ))}
                             </div>
-                            <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                            <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
                                 <MapPin className="h-3.5 w-3.5" />
                                 {location}
-                            </p>
+                            </span>
                         </div>
-                        <div className="text-right">
-                            {headerDisplayPrice !== null &&
-                            headerDisplayPrice > 0
-                                ? (() => {
-                                      const promo = promoPrice(
-                                          headerDisplayPrice,
-                                          effectiveHotel?.promotion?.rate,
-                                      );
-                                      const shown = promo
-                                          ? promo.discounted
-                                          : headerDisplayPrice;
-                                      return (
-                                          <>
-                                              <p className="text-3xl font-bold text-foreground">
-                                                  {formatPrice(shown)}
-                                                  <span className="align-top text-sm font-semibold">
-                                                      {' '}
-                                                      {currency}
-                                                  </span>
-                                              </p>
-                                              {promo && (
-                                                  <p className="text-xs font-medium text-muted-foreground line-through">
-                                                       {formatPrice(promo.original, currency)}
-                                                   </p>
-                                              )}
-                                              {headerNights === 1 && (
-                                                  <p className="mb-3 text-xs text-muted-foreground">
-                                                      {t(
-                                                          'hotelDetail.perNightFrom',
-                                                      )}
-                                                  </p>
-                                              )}
-                                              {headerNights > 1 && (
-                                                  <p className="mb-3 text-xs text-muted-foreground">
-                                                      {headerNights}{' '}
-                                                      {t(
-                                                          'hotelDetail.nightsLabel',
-                                                      )}
-                                                  </p>
-                                              )}
-                                          </>
-                                      );
-                                  })()
-                                : null}
-                            <Button
-                                type="button"
-                                onClick={scrollToRates}
-                                className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                            >
-                                {t('hotelDetail.roomsAndRates')}
-                            </Button>
-                        </div>
-                    </motion.header>
-
-                    {/* Gallery */}
-                    <section className="relative">
-                        {gallery.length > 0 ? (
-                            <Gallery
-                                images={gallery}
-                                hotelName={title}
-                                favoriteItem={{
-                                    id: `hotel-${detail.id}`,
-                                    type: 'hotel',
-                                    name: title,
-                                    image: gallery[0] ?? '',
-                                    price: minPrice,
-                                    location,
-                                }}
-                            />
-                        ) : (
-                            <div className="flex h-[300px] w-full items-center justify-center rounded-3xl border border-border bg-muted md:h-[500px]">
-                                <Building2 className="h-12 w-12 text-muted-foreground" />
-                            </div>
-                        )}
-                    </section>
+                        <h1 className="font-serif text-3xl font-bold text-primary mb-4 md:text-4xl">
+                            {title}
+                        </h1>
+                        {(() => {
+                            const shortDesc =
+                                cleanDescription(detail.short_description) ||
+                                cleanDescription(
+                                    (effectiveHotel as { short_description?: string | null })
+                                        ?.short_description,
+                                ) ||
+                                cleanDescription(localizeText(detail.description ?? detail.about, lang));
+                            if (shortDesc) {
+                                return (
+                                    <p className="text-base text-muted-foreground leading-relaxed">
+                                        {shortDesc}
+                                    </p>
+                                );
+                            }
+                            return null;
+                        })()}
+                    </motion.div>
 
                     {/* Highlights — a teaser of the richest amenity data
                         (icons + real photos), replacing what used to be a
@@ -756,17 +665,11 @@ export default function HotelDetail() {
                             </div>
                         )}
 
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div className="mt-4 gap-3">
                             <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
                                 <BadgePercent className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                                 <p className="text-sm text-foreground">
                                     {t('hotelDetail.bestPriceNote')}
-                                </p>
-                            </div>
-                            <div className="flex items-start gap-3 rounded-2xl border border-secondary/30 bg-secondary/10 p-4">
-                                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-secondary" />
-                                <p className="text-sm text-foreground">
-                                    {t('hotelDetail.freeCancellationNote')}
                                 </p>
                             </div>
                         </div>
@@ -818,74 +721,13 @@ export default function HotelDetail() {
                             {t('hotelDetail.datesAndRates')}
                         </h2>
 
-                        <div className="mt-4 grid items-end gap-3 rounded-3xl border border-border bg-card p-5 md:grid-cols-[1.4fr_1.2fr_auto]">
-                            {/* flex flex-col (not space-y-1.5) is load-bearing
-                                here: DateRangePicker's root is a plain
-                                <button> (Popover adds no wrapper element), so
-                                it's an inline-level sibling of the <label>.
-                                space-y-1.5 only adds margin-top — it can't
-                                force a line break between inline elements,
-                                which is why the label and button were
-                                crowding onto the same row. A flex column
-                                stacks any child regardless of its own
-                                display type, so this fix holds even if
-                                DateRangePicker's internals change later. */}
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">
-                                    {t('hotelDetail.checkInOut')}
-                                </label>
-                                <DateRangePicker
-                                    value={dateRange}
-                                    onChange={setDateRange}
-                                    className="w-full"
-                                    fromDate={tomorrowDate}
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-medium text-muted-foreground">
-                                    {t('hotelDetail.occupancy')}
-                                </label>
-                                <OccupancyPicker
-                                    value={occupancy}
-                                    onChange={setOccupancy}
-                                />
-                            </div>
-                            <Button
-                                type="button"
-                                disabled={!liveQuery}
-                                onClick={scrollToRates}
-                                className="h-11 bg-primary text-primary-foreground"
-                            >
-                                {liveSearchLoading
-                                    ? t('hotelDetail.checkingAvailability')
-                                    : t('hotelDetail.checkAvailability')}
-                            </Button>
-                        </div>
-
-                        <div className="mt-5">
                             {effectiveHotel &&
-                            (effectiveHotel.promotion?.rate ||
+                            (effectiveHotel.price != null &&
+                                effectiveHotel.base_price != null &&
+                                effectiveHotel.price < effectiveHotel.base_price ||
                                 effectiveHotel.free_child?.length ||
                                 effectiveHotel.recommended) ? (
                                 <div className="mb-4 flex flex-wrap gap-2">
-                                    {effectiveHotel.promotion?.rate &&
-                                    effectiveHotel.promotion.title ? (
-                                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-semibold text-amber-800">
-                                            {t('hotelDetail.promo')}{' '}
-                                            {effectiveHotel.promotion.title}
-                                            {formatPromoRate(
-                                                effectiveHotel.promotion.rate,
-                                            ) && (
-                                                <>
-                                                    {' · '}
-                                                    {formatPromoRate(
-                                                        effectiveHotel.promotion
-                                                            .rate,
-                                                    )}
-                                                </>
-                                            )}
-                                        </span>
-                                    ) : null}
                                     {effectiveHotel.free_child?.length ? (
                                         <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
                                             {t('hotelDetail.freeChild')}
@@ -917,7 +759,7 @@ export default function HotelDetail() {
                                     </Button>
                                 </div>
                             ) : effectiveLoading ? (
-                                <div className="overflow-hidden rounded-3xl border border-border bg-card">
+                                <div className="overflow-hidden rounded-2xl border border-border bg-card">
                                     <div className="flex items-center gap-2 bg-muted/60 px-5 py-3">
                                         <Skeleton className="h-4 w-32" />
                                     </div>
@@ -926,7 +768,7 @@ export default function HotelDetail() {
                                             (_, i) => (
                                                 <div key={i} className="p-5">
                                                     <div className="flex gap-4">
-                                                        <Skeleton className="hidden h-20 w-24 shrink-0 rounded-xl sm:block" />
+                                                        <Skeleton className="hidden h-20 w-24 shrink-0 rounded-2xl sm:block" />
                                                         <div className="flex-1 space-y-2">
                                                             <Skeleton className="h-4 w-40" />
                                                             <Skeleton className="h-3 w-24" />
@@ -934,7 +776,7 @@ export default function HotelDetail() {
                                                         </div>
                                                     </div>
                                                     <div className="mt-3 space-y-2 sm:pl-[104px]">
-                                                        <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
+                                                        <div className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3">
                                                             <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
                                                             <div className="flex-1 space-y-1.5">
                                                                 <Skeleton className="h-4 w-28" />
@@ -958,7 +800,7 @@ export default function HotelDetail() {
                                         initial={{ opacity: 0, y: 12 }}
                                         animate={{ opacity: 1, y: 0 }}
                                     >
-                                        <div className="mb-3 rounded-xl border border-amber-300/50 bg-amber-50 p-4">
+                                        <div className="mb-3 rounded-2xl border border-amber-300/50 bg-amber-50 p-4">
                                             <p className="text-sm text-amber-800">
                                                 {t(
                                                     'hotelDetail.requestNotice',
@@ -985,7 +827,9 @@ export default function HotelDetail() {
                                             occupancy={occupancy}
                                             currency={currency}
                                             onReserve={handleReserve}
+                                            onSelect={(room) => setActiveRate(room)}
                                             requestMode
+                                            resetKey={effectiveHotel?.id ?? 'static'}
                                         />
                                     </motion.div>
                                 ) : (
@@ -1050,159 +894,235 @@ export default function HotelDetail() {
                                         rooms={rateRooms}
                                         occupancy={occupancy}
                                         currency={currency}
-                                        promoRate={
-                                            effectiveHotel?.promotion?.rate
-                                        }
                                         onReserve={handleReserve}
+                                        onSelect={(room) => setActiveRate(room)}
+                                        resetKey={effectiveHotel?.id ?? 'static'}
                                     />
                                 </motion.div>
                             ) : null}
-                        </div>
                     </section>
+                </div>
 
-                    {/* Hébergement — description now sits alongside an
-                        "at a glance" card instead of leaving the right half
-                        of the row empty. Themes fill it further. */}
-                    <section>
-                        <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
-                            {t('hotelDetail.accommodation')}
-                        </h2>
-
-                        <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_280px]">
-                            {cleanDescription(description) && (
-                                <div>
-                                    <h3 className="mb-1 text-sm font-bold text-foreground">
-                                        {t('hotelDetail.discover')} {title}
-                                    </h3>
-                                    <p className="text-sm leading-relaxed text-muted-foreground">
-                                        {cleanDescription(description)}
-                                    </p>
-                                </div>
-                            )}
-
-                            <aside className="h-fit space-y-3 rounded-2xl border border-border bg-card p-4">
-                                <div className="flex items-start gap-2.5">
-                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                    <span className="text-xs text-muted-foreground">
-                                        {address}
+                {/* ── Sticky sidebar ─────────────────────────── */}
+                <aside className="space-y-4 lg:sticky lg:top-24">
+                    <div className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                        {/* Price header */}
+                        {sidebarPrice !== null && sidebarPrice > 0 && (
+                            <div className="mb-4">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-bold text-primary">
+                                        {formatPrice(
+                                            sidebarPromo ? sidebarPromo.discounted : sidebarPrice,
+                                            currency,
+                                        )}
                                     </span>
+                                    {sidebarPromo && (
+                                        <span className="ml-auto bg-destructive/10 text-destructive text-xs font-medium px-2 py-1 rounded-full">
+                                            -{Math.round(((sidebarPromo.original - sidebarPromo.discounted) / sidebarPromo.original) * 100)}% {t('hotelDetail.today')}
+                                        </span>
+                                    )}
                                 </div>
-                                {detail.check_in_time && (
-                                    <div className="flex items-center gap-2.5">
-                                        <LogIn className="h-4 w-4 shrink-0 text-primary" />
-                                        <span className="text-xs text-muted-foreground">
-                                            {t('hotelInfo.checkIn')}{' '}
-                                            {detail.check_in_time}
-                                        </span>
-                                    </div>
+                                {sidebarPromo && (
+                                    <p className="text-xs font-medium text-muted-foreground line-through">
+                                        {formatPrice(sidebarPromo.original, currency)}
+                                    </p>
                                 )}
-                                {detail.check_out_time && (
-                                    <div className="flex items-center gap-2.5">
-                                        <LogOut className="h-4 w-4 shrink-0 text-primary" />
-                                        <span className="text-xs text-muted-foreground">
-                                            {t('hotelInfo.checkOut')}{' '}
-                                            {detail.check_out_time}
-                                        </span>
-                                    </div>
-                                )}
-                                {themes.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5 pt-1">
-                                        {themes.map((theme) => (
-                                            <span
-                                                key={theme}
-                                                className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
-                                            >
-                                                {theme}
+                            </div>
+                        )}
+
+                        {/* Dates popover */}
+                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                            <PopoverTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="w-full border border-border rounded-lg p-3 text-left hover:bg-muted/50 transition-colors mb-4"
+                                >
+                                    <div className="flex">
+                                        <div className="flex-1 border-r border-border">
+                                            <span className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">{t('hotelDetail.checkIn')}</span>
+                                            <span className="text-sm font-medium text-foreground">
+                                                {dateRange?.from
+                                                    ? format(dateRange.from, 'd MMM yyyy', { locale: datePickerLocale(lang) })
+                                                    : '—'}
                                             </span>
+                                        </div>
+                                        <div className="flex-1 pl-3">
+                                            <span className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">{t('hotelDetail.checkOut')}</span>
+                                            <span className="text-sm font-medium text-foreground">
+                                                {dateRange?.to
+                                                    ? format(dateRange.to, 'd MMM yyyy', { locale: datePickerLocale(lang) })
+                                                    : '—'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="range"
+                                    selected={dateRange}
+                                    onSelect={setDateRange}
+                                    numberOfMonths={2}
+                                    initialFocus
+                                    locale={datePickerLocale(lang)}
+                                    fromDate={tomorrowDate}
+                                />
+                            </PopoverContent>
+                        </Popover>
+
+                        {/* Occupancy popover */}
+                        <Popover open={occupancyPickerOpen} onOpenChange={setOccupancyPickerOpen}>
+                            <PopoverTrigger asChild>
+                                <button
+                                    type="button"
+                                    className="w-full border border-border rounded-lg p-3 text-left hover:bg-muted/50 transition-colors mb-6"
+                                >
+                                    <span className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">{t('hotelDetail.guests')}</span>
+                                    <span className="text-sm font-medium text-foreground">
+                                        {occupancy.adults} {t('hotelDetail.adults')}, {occupancy.childAges.length} {t('hotelDetail.children')}
+                                    </span>
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-72 space-y-4" align="start">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">{t('hotelDetail.roomsTitle')}</p>
+                                        <p className="text-xs text-muted-foreground">{t('hotelDetail.advancedSearch')}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, rooms: Math.max(1, occupancy.rooms - 1) })} disabled={occupancy.rooms <= 1}>
+                                            <Minus className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <span className="min-w-8 text-center text-base font-semibold">{occupancy.rooms}</span>
+                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, rooms: Math.min(8, occupancy.rooms + 1) })} disabled={occupancy.rooms >= 8}>
+                                            <Plus className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">{t('hotelDetail.adults')}</p>
+                                        <p className="text-xs text-muted-foreground">{t('hotels.adultsHelp')}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, adults: Math.max(1, occupancy.adults - 1) })} disabled={occupancy.adults <= 1}>
+                                            <Minus className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <span className="min-w-8 text-center text-base font-semibold">{occupancy.adults}</span>
+                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, adults: Math.min(10, occupancy.adults + 1) })} disabled={occupancy.adults >= 10}>
+                                            <Plus className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">{t('hotelDetail.children')}</p>
+                                        <p className="text-xs text-muted-foreground">{t('hotels.childrenHelp')}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, childAges: occupancy.childAges.slice(0, -1) })} disabled={occupancy.childAges.length === 0}>
+                                            <Minus className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <span className="min-w-8 text-center text-base font-semibold">{occupancy.childAges.length}</span>
+                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, childAges: [...occupancy.childAges, 8] })} disabled={occupancy.childAges.length >= 6}>
+                                            <Plus className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                {occupancy.childAges.length > 0 && (
+                                    <div className="space-y-2 pt-2 border-t border-border">
+                                        {occupancy.childAges.map((age, i) => (
+                                            <div key={i} className="flex items-center justify-between">
+                                                <span className="text-sm text-muted-foreground">{t('hotels.child')} {i + 1}</span>
+                                                <select value={age} onChange={(e) => {
+                                                    const newAges = [...occupancy.childAges];
+                                                    newAges[i] = Number(e.target.value);
+                                                    setOccupancy({ ...occupancy, childAges: newAges });
+                                                }} className="border border-border rounded-md px-2 py-1 text-sm">
+                                                    {Array.from({ length: 18 }, (_, i) => (
+                                                        <option key={i} value={i}>{i} {t('hotels.yearsOld')}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         ))}
                                     </div>
                                 )}
-                            </aside>
-                        </div>
-                    </section>
+                            </PopoverContent>
+                        </Popover>
 
-                    {/* Chambres */}
-                    {staticRooms.length > 0 && (
-                        <section>
-                            <h2 className="mb-4 inline-block border-b-2 border-secondary pb-1 font-serif text-2xl font-bold text-foreground">
-                                {t('hotelDetail.roomsTitle')}
-                            </h2>
-                            <div className="mt-4 max-w-3xl space-y-3">
-                                {staticRooms.map((room) => (
-                                    <div
-                                        key={room.id}
-                                        className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-5"
-                                    >
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                                            <Bed className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div className="min-w-[140px] flex-1">
-                                            <h3 className="font-serif text-lg font-bold text-foreground">
-                                                {room.name}
-                                            </h3>
-                                            <p className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                {room.size ? (
-                                                    <span className="inline-flex items-center gap-1">
-                                                        <Ruler className="h-3 w-3" />{' '}
-                                                        {room.size} m²
-                                                    </span>
-                                                ) : null}
-                                                <span className="inline-flex items-center gap-1">
-                                                    <Users className="h-3 w-3" />{' '}
-                                                    {room.capacity}{' '}
-                                                    {t('hotelDetail.guests')}
-                                                </span>
-                                            </p>
-                                        </div>
-                                        <div className="text-right">
-                                            {detail.provider === 'manual' ? (
-                                                <>
-                                                    <p className="text-xl font-bold text-primary">
-                                                        {formatPrice(room.pricePerNight, currency)}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {t(
-                                                            'hotelDetail.pernight',
-                                                        )}
-                                                    </p>
-                                                </>
-                                            ) : (
-                                                <p className="text-xs text-muted-foreground">
-                                                    {t(
-                                                        'hotelDetail.livePriceHint',
-                                                    )}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            className="bg-primary text-primary-foreground"
-                                            onClick={scrollToRates}
-                                        >
-                                            {t('hotelDetail.reserve')}
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
+                        {/* Check availability button */}
+                        <Button
+                            type="button"
+                            onClick={scrollToRates}
+                            className="h-12 w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                        >
+                            {t('hotelDetail.checkAvailability')}
+                        </Button>
+                    </div>
+
+                    {/* Map card */}
+                    {hasMap && (
+                        <div className="relative h-44 overflow-hidden rounded-2xl border border-border">
+                            <iframe
+                                title={`${t('hotelDetail.mapOf')} ${title}`}
+                                src={mapSrc}
+                                loading="lazy"
+                                className="h-full w-full border-0 saturate-50"
+                            />
+                            <a
+                                href={mapLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="absolute inset-x-6 bottom-4 inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-card text-xs font-medium text-foreground shadow-md hover:bg-card/90"
+                            >
+                                <MapIcon className="h-4 w-4" />
+                                {t('hotelDetail.viewOnMap')}
+                            </a>
+                        </div>
                     )}
 
-                    {/* Practical info + boardings + options + tags.
-                        `description`, `category` and `note` are no longer
-                        passed here — they're now owned by the sections
-                        above, so this component isn't rendering a second,
-                        emptier copy of the same content. */}
-                    <HotelInfo
-                        amenities={[]}
-                        checkIn={detail.check_in_time}
-                        checkOut={detail.check_out_time}
-                        address={detail.address}
-                        options={detail.options}
-                        boardings={detail.boardings}
-                        facilities={detail.facilities}
-                        amenityTags={detail.amenity_tags}
-                    />
-                </div>
+                    {/* Info card */}
+                    <aside className="h-fit space-y-3 rounded-2xl border border-border bg-card p-4">
+                        <div className="flex items-start gap-2.5">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <span className="text-xs text-muted-foreground">
+                                {address}
+                            </span>
+                        </div>
+                        <div className="flex flex-row justify-between gap-3 mx-8">
+                        {detail.check_in_time && (
+                            <div className="flex items-center gap-2.5">
+                                <LogIn className="h-4 w-4 shrink-0 text-primary" />
+                                <span className="text-xs text-muted-foreground">
+                                    {t('hotelInfo.checkIn')}{' '}
+                                    {detail.check_in_time}
+                                </span>
+                            </div>
+                        )}
+                        {detail.check_out_time && (
+                            <div className="flex items-center gap-2.5">
+                                <LogOut className="h-4 w-4 shrink-0 text-primary" />
+                                <span className="text-xs text-muted-foreground">
+                                    {t('hotelInfo.checkOut')}{' '}
+                                    {detail.check_out_time}
+                                </span>
+                            </div>
+                        )}
+                        </div>
+                        {themes.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                                {themes.map((theme) => (
+                                    <span
+                                        key={theme}
+                                        className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                                    >
+                                        {theme}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </aside>
+                </aside>
             </div>
 
             {bookingRoom && (
@@ -1217,9 +1137,9 @@ export default function HotelDetail() {
                         const raw =
                             (bookingRoom.priceTotal ??
                                 bookingRoom.pricePerNight) * occupancy.rooms;
-                        const promo = promoPrice(
+                        const promo = roomPromo(
                             raw,
-                            effectiveHotel?.promotion?.rate,
+                            (bookingRoom.basePrice ?? bookingRoom.pricePerNight) * occupancy.rooms,
                         );
                         return promo ? promo.discounted : raw;
                     })()}
@@ -1231,10 +1151,9 @@ export default function HotelDetail() {
                     notRefundable={bookingRoom.notRefundable}
                     freeCancellationUntil={bookingRoom.cancellationDeadline}
                     basePrice={
-                        (bookingRoom.priceTotal ?? bookingRoom.pricePerNight) *
+                        (bookingRoom.basePrice ?? bookingRoom.priceTotal ?? bookingRoom.pricePerNight) *
                         occupancy.rooms
                     }
-                    promoRate={effectiveHotel?.promotion?.rate ?? null}
                     provider={
                         effectiveHotel
                             ? {

@@ -74,7 +74,7 @@ const PaymentResult = () => {
 
                 {/* Booking Details */}
                 {booking && (
-                    <div className="mb-6 rounded-xl border border-border bg-muted/30 p-4 text-left">
+                    <div className="mb-6 rounded-2xl border border-border bg-muted/30 p-4 text-left">
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">

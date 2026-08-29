@@ -109,7 +109,7 @@ function Tile({
 }) {
     const content = (
         <>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
                 <Icon className="h-4 w-4 text-primary" />
             </div>
 
@@ -260,7 +260,7 @@ export function HotelInfo({
                             key={tab.value}
                             value={tab.value}
                             dir={dir}
-                            className="rounded-xl px-4 py-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"
+                            className="rounded-2xl px-4 py-2 text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow"
                         >
                             {tab.label}
                         </TabsTrigger>
@@ -296,14 +296,14 @@ export function HotelInfo({
                                                 src={tag.image}
                                                 alt=""
                                                 loading="lazy"
-                                                className="h-10 w-10 shrink-0 rounded-xl object-cover"
+                                                className="h-10 w-10 shrink-0 rounded-2xl object-cover"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display =
                                                         'none';
                                                 }}
                                             />
                                         ) : (
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
                                                 <Tag className="h-4 w-4 text-primary" />
                                             </div>
                                         )}
@@ -331,7 +331,7 @@ export function HotelInfo({
                                     <div
                                         key={a.id}
                                         dir={dir}
-                                        className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                                        className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                                     >
                                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                                             <AmenityGlyph amenity={a} />
@@ -421,7 +421,7 @@ export function HotelInfo({
                                         className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
                                                 <UtensilsCrossed className="h-4 w-4 text-primary" />
                                             </div>
 

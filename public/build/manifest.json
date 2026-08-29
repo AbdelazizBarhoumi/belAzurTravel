@@ -100,12 +100,12 @@
     "src": "resources/js/assets/visa.png"
   },
   "resources/js/main.tsx": {
-    "file": "assets/main-CqMX1KgT.js",
+    "file": "assets/main-CqINXCSR.js",
     "name": "main",
     "src": "resources/js/main.tsx",
     "isEntry": true,
     "css": [
-      "assets/main-D4zsx01Q.css"
+      "assets/main-BIvFTO4v.css"
     ],
     "assets": [
       "assets/dest-bali-NpOK_V95.jpg",

@@ -277,7 +277,7 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.ComponentProps<"main
       ref={ref}
       className={cn(
         "relative flex min-h-svh flex-1 flex-col bg-background",
-        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
+        "peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:shadow",
         className,
       )}
       {...props}
@@ -414,7 +414,7 @@ const SidebarMenuItem = React.forwardRef<HTMLLIElement, React.ComponentProps<"li
 SidebarMenuItem.displayName = "SidebarMenuItem";
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-2.5 text-left text-sm font-medium outline-none ring-sidebar-ring transition-all focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:overflow-visible [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>span]:group-data-[collapsible=icon]:hidden [&>[class*='grid']]:group-data-[collapsible=icon]:contents [&>[class*='grid']>div]:group-data-[collapsible=icon]:hidden [&>[class*='grid']>img]:group-data-[collapsible=icon]:h-5 [&>[class*='grid']>img]:group-data-[collapsible=icon]:w-5",
+  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-2xl px-4 py-2.5 text-left text-sm font-medium outline-none ring-sidebar-ring transition-all focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:overflow-visible [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&>span]:group-data-[collapsible=icon]:hidden [&>[class*='grid']]:group-data-[collapsible=icon]:contents [&>[class*='grid']>div]:group-data-[collapsible=icon]:hidden [&>[class*='grid']>img]:group-data-[collapsible=icon]:h-5 [&>[class*='grid']>img]:group-data-[collapsible=icon]:w-5",
   {
     variants: {
       variant: {

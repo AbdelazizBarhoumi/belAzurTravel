@@ -157,6 +157,7 @@ class HotelController extends Controller
             'city' => $details['city'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'country' => $details['country'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
             'description' => $details['description'] ?? ['en' => '', 'fr' => '', 'ar' => ''],
+            'short_description' => $details['short_description'] ?? null,
             'address' => $details['address'] ?? '',
             'phone' => $details['phone'] ?? '',
             'email' => $details['email'] ?? '',

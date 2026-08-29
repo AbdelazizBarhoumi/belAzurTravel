@@ -466,7 +466,7 @@ export default function AdminBlog() {
                                             }
                                         >
                                             <SelectTrigger
-                                                className={`w-full rounded-xl border border-border bg-background px-3 py-2 text-sm`}
+                                                className={`w-full rounded-2xl border border-border bg-background px-3 py-2 text-sm`}
                                             >
                                                 <SelectValue
                                                     placeholder={t(
@@ -741,7 +741,7 @@ export default function AdminBlog() {
                                                         key={
                                                             section.id ?? index
                                                         }
-                                                        className="space-y-4 rounded-xl border border-border bg-background p-4"
+                                                        className="space-y-4 rounded-2xl border border-border bg-background p-4"
                                                     >
                                                         <div className="flex items-center justify-between">
                                                             <h4 className="text-sm font-semibold text-foreground">

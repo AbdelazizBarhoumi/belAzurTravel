@@ -71,7 +71,7 @@ export function StatusSelect({
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="rounded-xl">
+      <SelectContent className="rounded-2xl">
         {options.map((option) => {
           const optValue = option.value.toLowerCase();
           const optIndicator = option.indicatorClass || defaultIndicatorColors[optValue] || "bg-muted-foreground";

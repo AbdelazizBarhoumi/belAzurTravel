@@ -33,6 +33,10 @@ interface DateRangePickerProps {
     fromDate?: Date;
     /** Date ranges that must not be selectable (stop-sale / unavailable days). */
     disabledRanges?: Array<{ from: Date; to: Date }>;
+    /** Controlled open state for the popover. */
+    open?: boolean;
+    /** Callback when popover open state changes. */
+    onOpenChange?: (open: boolean) => void;
 }
 
 export function DateRangePicker({
@@ -45,6 +49,8 @@ export function DateRangePicker({
     placeholderEmpty,
     fromDate,
     disabledRanges,
+    open,
+    onOpenChange,
 }: DateRangePickerProps) {
     const { lang, t, dir } = useLanguage();
     const isRtl = dir === 'rtl';
@@ -61,13 +67,13 @@ export function DateRangePicker({
     const emptyLabel = placeholderEmpty ?? t('search.placeholders.dates');
 
     return (
-        <Popover>
+        <Popover open={open} onOpenChange={onOpenChange}>
             <PopoverTrigger asChild>
                 <Button
                     type="button"
                     variant="outline"
                     className={cn(
-                        'h-10 sm:h-12 justify-start gap-2 sm:gap-3 rounded-xl sm:rounded-2xl border-border/70 bg-background/80 px-3 sm:px-4 font-normal shadow-sm backdrop-blur-sm hover:bg-background',
+                        'h-10 sm:h-12 justify-start gap-2 sm:gap-3 rounded-2xl sm:rounded-2xl border-border/70 bg-background/80 px-3 sm:px-4 font-normal shadow-sm backdrop-blur-sm hover:bg-background',
                         isRtl ? 'flex-row-reverse text-right' : 'text-left',
                         className,
                     )}

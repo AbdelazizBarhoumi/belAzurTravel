@@ -91,21 +91,22 @@ class FetchTomorrowHotelPrices extends Command
                         continue;
                     }
 
-                    $minPrice = $this->findCheapestRoomPrice($providerHotel);
+                    $minRoom = $this->findCheapestRoom($providerHotel);
 
-                    if ($minPrice === null) {
+                    if ($minRoom === null) {
                         continue;
                     }
 
                     $markup = (float) $item->hotel->markup_percentage;
-                    $markedUpPrice = $calculator->applyMarkup($minPrice, $markup);
+                    $markedUpPrice = $calculator->applyMarkup($minRoom['price'], $markup);
+                    $markedUpBasePrice = $calculator->applyMarkup($minRoom['base_price'], $markup);
                     $currency = $calculator->currency($providerHotel['Currency'] ?? $item->hotel->currency);
 
                     $results[] = [
                         'hotel_id' => $item->hotel_id,
                         'date' => $tomorrow,
                         'price' => $markedUpPrice,
-                        'base_price' => (int) $minPrice,
+                        'base_price' => $markedUpBasePrice,
                         'currency' => $currency,
                         'fetched_at' => now(),
                     ];
@@ -144,11 +145,11 @@ class FetchTomorrowHotelPrices extends Command
     }
 
     /**
-     * Find the cheapest bookable room price from a provider hotel response.
+     * Find the cheapest bookable room from a provider hotel response.
      */
-    private function findCheapestRoomPrice(array $providerHotel): ?float
+    private function findCheapestRoom(array $providerHotel): ?array
     {
-        $prices = [];
+        $best = null;
 
         foreach ($providerHotel['Price']['Boarding'] ?? [] as $boarding) {
             foreach ($boarding['Pax'] ?? [] as $pax) {
@@ -158,13 +159,20 @@ class FetchTomorrowHotelPrices extends Command
                     }
 
                     $price = $room['Price'] ?? null;
-                    if ($price !== null && is_numeric($price)) {
-                        $prices[] = (float) $price;
+                    if ($price === null || ! is_numeric($price)) {
+                        continue;
+                    }
+
+                    $price = (float) $price;
+                    $basePrice = (float) ($room['BasePrice'] ?? $room['Price'] ?? $price);
+
+                    if ($best === null || $price < $best['price']) {
+                        $best = ['price' => $price, 'base_price' => $basePrice];
                     }
                 }
             }
         }
 
-        return $prices === [] ? null : min($prices);
+        return $best;
     }
 }
