@@ -116,6 +116,9 @@ class HotelPublisher
         // Assign pricing_type category based on the hotel's boarding codes.
         $this->assignPricingType($hotel, $detail['Boarding'] ?? []);
 
+        // Assign feature tags (animation, thalasso, etc.) for the sidebar filter.
+        $this->assignFeatures($hotel);
+
         // `hotel_id` is unique on `os_travel_hotels`, so a published `hotels`
         // row can be wired to exactly one staging row. When the database holds
         // duplicate staging rows for the same external hotel (e.g. produced by
@@ -213,6 +216,9 @@ class HotelPublisher
                     // Re-assign pricing_type so boarding-code changes are
                     // reflected in the category filter sidebar daily.
                     $this->assignPricingType($hotel, $detail['Boarding'] ?? []);
+
+                    // Re-assign features from tags.
+                    $this->assignFeatures($hotel);
 
                     // The refreshed main image/gallery may have replaced
                     // previously downloaded files; remove the ones no longer
@@ -429,7 +435,7 @@ class HotelPublisher
      * @param  list<array{Id?: int, Title?: string, Image?: string}>  $tags
      * @return list<array{id: int, title: string, image: string}>
      */
-    protected function normalizeAmenityTags(array $tags): array
+    public function normalizeAmenityTags(array $tags): array
     {
         $normalized = [];
 
@@ -695,6 +701,78 @@ class HotelPublisher
         }
 
         Cache::forget('hotels.index');
+    }
+
+    /**
+     * Assign "features" category values from the hotel's amenity tags.
+     *
+     * Tags come from the provider's HotelDetail Tag[] field and are stored
+     * in hotel.details.amenity_tags as {id, title, image}. This method maps
+     * tag titles to category_value keys and writes entity_category_assignments.
+     */
+    public function assignFeatures(Hotel $hotel): void
+    {
+        $type = CategoryType::where('entity_type', 'hotels')
+            ->where('key', 'features')
+            ->first();
+
+        if (! $type) {
+            return;
+        }
+
+        $tags = $hotel->details['amenity_tags'] ?? [];
+
+        // Map provider tag titles → category_value keys.
+        $tagToFeatureKey = [
+            'Pieds dans l\'eau'    => 'pied-dans-leau',
+            'Animation'            => 'animation',
+            'Couple & Famille seulement' => 'couple-famille',
+            'Bon rapport qualité prix' => 'bon-rapport',
+            'Burkini autorisé'     => 'burkini-autorise',
+            'Wifi gratuit'         => 'wifi-gratuit',
+            'Burkini non autorisé' => 'burkini-non-autorise',
+            'Toboggan'             => 'toboggan',
+            'Luxe et calme'        => 'luxe-calme',
+            'Vue sur la ville'     => 'vue-ville',
+            'Aire de jeux pour enfants' => 'aire-jeux',
+            'Plage privé'          => 'plage-privee',
+            'En face de la mer'    => 'en-face-mer',
+            'Centre Thalasso'      => 'centre-thalasso',
+            'terrain football'     => 'terrain-football',
+            'Emplacement stratégique' => 'emplacement',
+            'Court de tennis'      => 'court-tennis',
+            'Congress center'      => 'congress',
+            'Padel'                => 'padel',
+        ];
+
+        $featureKeys = [];
+        foreach ($tags as $tag) {
+            $title = trim((string) ($tag['title'] ?? ''));
+            if (isset($tagToFeatureKey[$title])) {
+                $featureKeys[] = $tagToFeatureKey[$title];
+            }
+        }
+
+        $featureKeys = array_unique($featureKeys);
+
+        EntityCategoryAssignment::where('entity_type', 'hotels')
+            ->where('entity_id', $hotel->id)
+            ->where('category_type_id', $type->id)
+            ->delete();
+
+        foreach ($featureKeys as $key) {
+            $value = $type->values()->where('key', $key)->first();
+            if (! $value) {
+                continue;
+            }
+
+            EntityCategoryAssignment::create([
+                'entity_type' => 'hotels',
+                'entity_id' => $hotel->id,
+                'category_type_id' => $type->id,
+                'category_value_id' => $value->id,
+            ]);
+        }
     }
 
     protected function localized(string $value): array

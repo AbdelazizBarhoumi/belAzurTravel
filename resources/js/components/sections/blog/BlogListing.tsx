@@ -21,8 +21,11 @@ import {
     useCategories,
     useCategoryTypesPublic,
 } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 import type { Lang } from '@/i18n/translations';
 import { matchesSearchText } from '@/lib/listFilters';
+import { cn } from '@/lib/utils';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 
 type LocalizedText = Record<Lang, string>;
 
@@ -60,6 +63,7 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedCategory, setSelectedCategory] = useState(initialCategory);
     const [currentPage, setCurrentPage] = useState(1);
+    const [viewMode, setViewMode] = useViewMode();
 
     // Category type filters from URL params
     const initialCategoryTypeFilters = useMemo(() => {
@@ -192,13 +196,23 @@ export function BlogListing({ pageSize = 6 }: BlogListingProps) {
                     )}
                 </ListFilterBar>
 
-                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                <div className="mb-4 flex items-center justify-end">
+                    <ViewToggle value={viewMode} onChange={setViewMode} />
+                </div>
+                <div
+                    className={cn(
+                        'grid gap-8',
+                        viewMode === 'grid' ? 'md:grid-cols-3' : 'grid-cols-1',
+                    )}
+                >
                     {paginatedPosts.length === 0 ? (
                         <RequestThingEmptyState
                             variant={
                                 posts.length === 0 ? 'empty' : 'no-results'
                             }
-                            className="md:col-span-3"
+                            className={
+                                viewMode === 'grid' ? 'md:col-span-3' : ''
+                            }
                         />
                     ) : (
                         paginatedPosts.map((post, i) => (

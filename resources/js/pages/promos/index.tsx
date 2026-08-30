@@ -16,9 +16,12 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { usePromos } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 import { matchesSearchText } from '@/lib/listFilters';
 import { getPromoBackground } from '@/lib/promoColor';
+import { cn } from '@/lib/utils';
 import type { PromoItem } from '@/types/public';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 
 const ALL = 'all';
 
@@ -36,6 +39,7 @@ function PromosContent() {
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedType, setSelectedType] = useState(initialType);
     const [specialOnly, setSpecialOnly] = useState(initialSpecial);
+    const [viewMode, setViewMode] = useViewMode();
 
     const filteredPromos = useMemo(
         () =>
@@ -135,11 +139,19 @@ function PromosContent() {
                 </div>
             </ListFilterBar>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="mb-4 flex items-center justify-end">
+                <ViewToggle value={viewMode} onChange={setViewMode} />
+            </div>
+            <div
+                className={cn(
+                    'grid gap-6',
+                    viewMode === 'grid' ? 'md:grid-cols-2' : 'grid-cols-1',
+                )}
+            >
                 {filteredPromos.length === 0 ? (
                     <RequestThingEmptyState
                         variant={promos.length === 0 ? 'empty' : 'no-results'}
-                        className="md:col-span-2"
+                        className={viewMode === 'grid' ? 'md:col-span-2' : ''}
                     />
                 ) : (
                     filteredPromos.map((p, i) => (

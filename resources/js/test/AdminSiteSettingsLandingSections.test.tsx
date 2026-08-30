@@ -53,8 +53,9 @@ describe('AdminSiteSettingsLandingSections', () => {
             </MemoryRouter>,
         );
 
-        expect(screen.getByText('Location')).toBeInTheDocument();
+        expect(screen.getByText('Emplacement')).toBeInTheDocument();
         expect(screen.getByText('Blog')).toBeInTheDocument();
-        expect(screen.getByText('Tours')).toBeInTheDocument();
+        expect(screen.getByText('Circuit & Excursions')).toBeInTheDocument();
+        expect(screen.getByText('Nos Points Forts')).toBeInTheDocument();
     });
 });

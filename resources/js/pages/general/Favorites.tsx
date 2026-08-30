@@ -3,13 +3,16 @@ import { Heart, MapPin } from 'lucide-react';
 import { PageShell } from '@/components/layout/PageShell';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { formatPrice } from '@/lib/utils';
+import { useViewMode } from '@/hooks/useViewMode';
+import { formatPrice, cn } from '@/lib/utils';
 
 const Favorites = () => {
     const { favorites } = useFavorites();
     const { t } = useLanguage();
+    const [viewMode, setViewMode] = useViewMode();
 
     return (
         <PageShell
@@ -28,7 +31,18 @@ const Favorites = () => {
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <>
+                    <div className="mb-4 flex items-center justify-end">
+                        <ViewToggle value={viewMode} onChange={setViewMode} />
+                    </div>
+                    <div
+                        className={cn(
+                            'grid gap-6',
+                            viewMode === 'grid'
+                                ? 'sm:grid-cols-2 lg:grid-cols-3'
+                                : 'grid-cols-1',
+                        )}
+                    >
                     {favorites.map((f, i) => (
                         <motion.div
                             key={f.id}
@@ -84,7 +98,8 @@ const Favorites = () => {
                             </div>
                         </motion.div>
                     ))}
-                </div>
+                    </div>
+                </>
             )}
         </PageShell>
     );

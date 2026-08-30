@@ -12,6 +12,7 @@ import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import CardMedia from '@/components/ui/CardMedia';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -36,9 +37,10 @@ import {
     useCategories,
     useCategoryTypesPublic,
 } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, cn } from '@/lib/utils';
 
 const SORT_OPTIONS = [
     { value: 'featured', labelKey: 'dest.sort.featured' },
@@ -60,6 +62,7 @@ const Destinations = () => {
     const [sortBy, setSortBy] = useState<
         'featured' | 'price-asc' | 'price-desc' | 'rating'
     >('featured');
+    const [viewMode, setViewMode] = useViewMode();
     const { t, lang, dir } = useLanguage();
     const { data: allDestinations = [] } = useDestinations();
     const { data: dynamicCategories = [] } = useCategories('destinations');
@@ -385,7 +388,21 @@ const Destinations = () => {
                                     }
                                 />
                             ) : (
-                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <>
+                                    <div className="mb-4 flex items-center justify-end">
+                                        <ViewToggle
+                                            value={viewMode}
+                                            onChange={setViewMode}
+                                        />
+                                    </div>
+                                    <div
+                                        className={cn(
+                                            'grid gap-6',
+                                            viewMode === 'grid'
+                                                ? 'sm:grid-cols-2 lg:grid-cols-3'
+                                                : 'grid-cols-1',
+                                        )}
+                                    >
                                     {filtered.map((dest, i) => (
                                         <Link
                                             key={localizeText(dest.name, lang)}
@@ -484,7 +501,8 @@ const Destinations = () => {
                                             </motion.div>
                                         </Link>
                                     ))}
-                                </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>

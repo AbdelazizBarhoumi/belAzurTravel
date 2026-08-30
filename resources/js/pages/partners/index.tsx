@@ -12,7 +12,10 @@ import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 import type { Lang } from '@/i18n/translations';
+import { cn } from '@/lib/utils';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 
 interface Category {
     id: number;
@@ -31,6 +34,7 @@ const Partners = () => {
     const [params] = useSearchParams();
     const [q, setQ] = useState('');
     const [cat, setCat] = useState<string>('All');
+    const [viewMode, setViewMode] = useViewMode();
 
     const { data: partners = [], isLoading } = useQuery<PartnerItem[]>({
         queryKey: ['partners'],
@@ -234,7 +238,21 @@ const Partners = () => {
                                     {t('partners.noResults')}
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+                                <>
+                                    <div className="mb-4 flex items-center justify-end">
+                                        <ViewToggle
+                                            value={viewMode}
+                                            onChange={setViewMode}
+                                        />
+                                    </div>
+                                    <div
+                                        className={cn(
+                                            'grid gap-6',
+                                            viewMode === 'grid'
+                                                ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                                                : 'grid-cols-1',
+                                        )}
+                                    >
                                     {filtered.map((p, i) => (
                                         <motion.a
                                             key={p.id}
@@ -275,7 +293,8 @@ const Partners = () => {
                                             )}
                                         </motion.a>
                                     ))}
-                                </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>

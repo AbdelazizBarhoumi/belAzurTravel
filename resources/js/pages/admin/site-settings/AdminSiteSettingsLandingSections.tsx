@@ -23,6 +23,7 @@ import {
     Trash2,
     Image as ImageIcon,
     Video,
+    Plus,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -45,6 +46,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import type {
     LandingSectionConfig,
+    LandingSectionItem,
     PageHeroSlide,
 } from '@/api/siteSettings.api';
 import {
@@ -53,6 +55,21 @@ import {
     buildLandingSectionDefaults,
     normalizeLandingSections,
 } from '@/lib/landingSections';
+
+const STRONG_POINT_ICON_OPTIONS = [
+    { value: 'award', label: 'Award' },
+    { value: 'tag', label: 'Tag' },
+    { value: 'compass', label: 'Compass' },
+    { value: 'briefcase', label: 'Briefcase' },
+    { value: 'headphones', label: 'Headphones' },
+    { value: 'heart', label: 'Heart' },
+    { value: 'shield', label: 'Shield' },
+    { value: 'star', label: 'Star' },
+    { value: 'users', label: 'Users' },
+    { value: 'zap', label: 'Zap' },
+    { value: 'clock', label: 'Clock' },
+    { value: 'globe', label: 'Globe' },
+];
 
 function SortableSection({
     sectionKey,
@@ -168,10 +185,10 @@ function SortableSection({
                                     onUpdate(sectionKey, {
                                         title: {
                                             ...config.title,
-                                            [lang]: e.target.value,
                                             en: config.title?.en ?? '',
                                             fr: config.title?.fr ?? '',
                                             ar: config.title?.ar ?? '',
+                                            [lang]: e.target.value,
                                         },
                                     })
                                 }
@@ -189,10 +206,10 @@ function SortableSection({
                                     onUpdate(sectionKey, {
                                         subtitle: {
                                             ...config.subtitle,
-                                            [lang]: e.target.value,
                                             en: config.subtitle?.en ?? '',
                                             fr: config.subtitle?.fr ?? '',
                                             ar: config.subtitle?.ar ?? '',
+                                            [lang]: e.target.value,
                                         },
                                     })
                                 }
@@ -201,6 +218,194 @@ function SortableSection({
                             />
                         </div>
                     </div>
+
+                    {sectionKey === 'strongPoints' && (
+                        <div className="mt-4 space-y-3">
+                            <Label className="text-xs font-semibold">
+                                {t('admin.settings.strongPointsItems') ?? 'Items'}
+                            </Label>
+                            {(config.items ?? []).map(
+                                (item: LandingSectionItem, idx: number) => (
+                                    <div
+                                        key={idx}
+                                        className="space-y-2 rounded-lg border border-border/60 p-3"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-muted-foreground">
+                                                #{idx + 1}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newItems = [
+                                                        ...(config.items ?? []),
+                                                    ];
+                                                    newItems.splice(idx, 1);
+                                                    onUpdate(sectionKey, {
+                                                        items: newItems,
+                                                    });
+                                                }}
+                                                className="text-destructive hover:text-destructive/80"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px]">
+                                                    Icon
+                                                </Label>
+                                                <Select
+                                                    value={item.icon ?? 'award'}
+                                                    onValueChange={(v) => {
+                                                        const newItems = [
+                                                            ...(config.items ??
+                                                                []),
+                                                        ];
+                                                        newItems[idx] = {
+                                                            ...newItems[idx],
+                                                            icon: v,
+                                                        };
+                                                        onUpdate(sectionKey, {
+                                                            items: newItems,
+                                                        });
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="h-8 text-xs">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {STRONG_POINT_ICON_OPTIONS.map(
+                                                            (opt) => (
+                                                                <SelectItem
+                                                                    key={opt.value}
+                                                                    value={
+                                                                        opt.value
+                                                                    }
+                                                                >
+                                                                    {opt.label}
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px]">
+                                                    {t(
+                                                        'admin.settings.titleLang',
+                                                    )}
+                                                </Label>
+                                                <Input
+                                                    value={
+                                                        item.title?.[lang] ?? ''
+                                                    }
+                                                    onChange={(e) => {
+                                                        const newItems = [
+                                                            ...(config.items ??
+                                                                []),
+                                                        ];
+                                                        newItems[idx] = {
+                                                            ...newItems[idx],
+                                                            title: {
+                                                                ...newItems[idx]
+                                                                    .title,
+                                                                en: newItems[
+                                                                    idx
+                                                                ].title?.en ?? '',
+                                                                fr: newItems[
+                                                                    idx
+                                                                ].title?.fr ?? '',
+                                                                ar: newItems[
+                                                                    idx
+                                                                ].title?.ar ?? '',
+                                                                [lang]: e.target
+                                                                    .value,
+                                                            },
+                                                        };
+                                                        onUpdate(sectionKey, {
+                                                            items: newItems,
+                                                        });
+                                                    }}
+                                                    placeholder="Title"
+                                                    className="h-8 text-xs"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px]">
+                                                    {t(
+                                                        'admin.settings.subtitleLang',
+                                                    )}
+                                                </Label>
+                                                <Input
+                                                    value={
+                                                        item.description?.[
+                                                            lang
+                                                        ] ?? ''
+                                                    }
+                                                    onChange={(e) => {
+                                                        const newItems = [
+                                                            ...(config.items ??
+                                                                []),
+                                                        ];
+                                                        newItems[idx] = {
+                                                            ...newItems[idx],
+                                                            description: {
+                                                                ...newItems[idx]
+                                                                    .description,
+                                                                en: newItems[
+                                                                    idx
+                                                                ].description
+                                                                    ?.en ?? '',
+                                                                fr: newItems[
+                                                                    idx
+                                                                ].description
+                                                                    ?.fr ?? '',
+                                                                ar: newItems[
+                                                                    idx
+                                                                ].description
+                                                                    ?.ar ?? '',
+                                                                [lang]: e.target
+                                                                    .value,
+                                                            },
+                                                        };
+                                                        onUpdate(sectionKey, {
+                                                            items: newItems,
+                                                        });
+                                                    }}
+                                                    placeholder="Description"
+                                                    className="h-8 text-xs"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ),
+                            )}
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                    const newItems = [
+                                        ...(config.items ?? []),
+                                        {
+                                            icon: 'award',
+                                            title: { en: '', fr: '', ar: '' },
+                                            description: {
+                                                en: '',
+                                                fr: '',
+                                                ar: '',
+                                            },
+                                        },
+                                    ];
+                                    onUpdate(sectionKey, { items: newItems });
+                                }}
+                                className="w-full"
+                            >
+                                <Plus className="mr-1 h-3.5 w-3.5" /> Add Item
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

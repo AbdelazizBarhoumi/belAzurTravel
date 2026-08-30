@@ -11,6 +11,7 @@ import { HotelsSection } from './landing/HotelsSection';
 import { HotelSelectionSection } from './landing/HotelSelectionSection';
 import { LocationSection } from './landing/LocationSection';
 import { OrganizedSection } from './landing/OrganizedSection';
+import { StrongPointsSection } from './landing/StrongPointsSection';
 import { ToursSection } from './landing/ToursSection';
 import { VisaSection } from './landing/VisaSection';
 
@@ -29,6 +30,7 @@ const SECTION_COMPONENTS: Record<
     deals: DealsSection,
     blog: BlogSection,
     visas: VisaSection,
+    strongPoints: StrongPointsSection,
     location: LocationSection,
 };
 

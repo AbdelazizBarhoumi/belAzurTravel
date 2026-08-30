@@ -48,6 +48,10 @@ export const LANDING_SECTION_META = {
         labelKey: 'admin.section.visas',
         styles: ['carousel', 'cards', 'grid'],
     },
+    strongPoints: {
+        labelKey: 'admin.section.strongPoints',
+        styles: ['default'],
+    },
     location: { labelKey: 'admin.section.location', styles: ['default'] },
 } as const;
 
@@ -63,6 +67,7 @@ export const LANDING_SECTION_ORDER = [
     'deals',
     'blog',
     'visas',
+    'strongPoints',
     'location',
 ] as const;
 

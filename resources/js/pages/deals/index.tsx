@@ -11,14 +11,17 @@ import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import {
     useDeals,
     useCategories,
     useCategoryTypesPublic,
 } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
+import { cn } from '@/lib/utils';
 
 const ALL = 'all';
 
@@ -27,6 +30,7 @@ export default function Deals() {
     const [params] = useSearchParams();
     const initialSearch = params.get('q') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || ALL;
+    const [viewMode, setViewMode] = useViewMode();
 
     const { data: deals = [] } = useDeals();
     const { data: dynamicCategories = [] } = useCategories('deals');
@@ -232,7 +236,21 @@ export default function Deals() {
                                     }
                                 />
                             ) : (
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+                                <>
+                                    <div className="mb-4 flex items-center justify-end">
+                                        <ViewToggle
+                                            value={viewMode}
+                                            onChange={setViewMode}
+                                        />
+                                    </div>
+                                    <div
+                                        className={cn(
+                                            'grid gap-6',
+                                            viewMode === 'grid'
+                                                ? 'md:grid-cols-2 xl:grid-cols-3'
+                                                : 'grid-cols-1',
+                                        )}
+                                    >
                                     {filteredDeals.map((deal, i) => (
                                         <motion.article
                                             key={deal.slug}
@@ -289,7 +307,8 @@ export default function Deals() {
                                             </div>
                                         </motion.article>
                                     ))}
-                                </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>

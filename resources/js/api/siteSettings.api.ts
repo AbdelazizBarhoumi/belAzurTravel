@@ -16,11 +16,18 @@ export interface PageHeroConfig {
     interval?: number;
 }
 
+export interface LandingSectionItem {
+    icon?: string;
+    title?: LocalizedText;
+    description?: LocalizedText;
+}
+
 export interface LandingSectionConfig {
     enabled: boolean;
     title?: LocalizedText;
     subtitle?: LocalizedText;
     style?: string;
+    items?: LandingSectionItem[];
 }
 
 export interface LandingSections {

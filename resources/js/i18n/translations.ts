@@ -671,11 +671,6 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'لماذا تختارنا',
         en: 'Why choose us',
     },
-    'home.trust.title': {
-        fr: 'Une expérience qui rassure avant même la réservation',
-        ar: 'تجربة تمنحك الثقة قبل الحجز حتى',
-        en: 'Confidence that starts before you even book',
-    },
     'home.trust.subtitle': {
         fr: 'Les visiteurs veulent savoir si l’offre est fiable, simple et accompagnée. Cette section répond immédiatement à cette attente.',
         ar: 'يريد الزائرون أن يعرفوا ما إذا كانت الخدمة موثوقة وسهلة ومدعومة. هذا القسم يجيب على ذلك فورًا.',
@@ -710,6 +705,16 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Un conseiller reste disponible si l\u2019utilisateur a besoin d\u2019aide avant de finaliser son choix.',
         ar: 'يبقى المستشار متاحًا إذا احتاج المستخدم للمساعدة قبل اتخاذ القرار النهائي.',
         en: 'A travel advisor is available when a user needs help before making the final choice.',
+    },
+    'home.strongPoints.title': {
+        fr: 'Nos Points Forts',
+        ar: 'نقاط قوتنا',
+        en: 'Why Choose Us',
+    },
+    'home.strongPoints.subtitle': {
+        fr: 'Ce qui nous rend unique dans l\'organisation de vos voyages.',
+        ar: 'ما يميزنا في تنظيم رحلاتك.',
+        en: 'What makes us unique in organizing your trips.',
     },
     'home.showcase.title': {
         fr: 'Moments de nos voyageurs',
@@ -1189,6 +1194,8 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Load more',
     },
     'common.results': { fr: 'résultats', ar: 'نتائج', en: 'results' },
+    'common.gridView': { fr: 'Grille', ar: 'شبكة', en: 'Grid' },
+    'common.listView': { fr: 'Liste', ar: 'قائمة', en: 'List' },
     'common.noResults': {
         fr: 'Aucun résultat trouvé.',
         ar: 'لم يتم العثور على نتائج.',
@@ -7117,6 +7124,11 @@ translations['admin.section.hotelSelection'] = {
     fr: "Sélection d'Hôtels",
     ar: 'اختيار الفنادق',
     en: 'Hotel Selection',
+};
+translations['admin.section.strongPoints'] = {
+    fr: 'Nos Points Forts',
+    ar: 'نقاط قوتنا',
+    en: 'Strong Points',
 };
 
 // Visa page

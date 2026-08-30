@@ -18,15 +18,18 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import {
     useEvents,
     useCategories,
     useCategoryTypesPublic,
 } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
+import { cn } from '@/lib/utils';
 
 const ALL = 'all';
 
@@ -40,6 +43,7 @@ function EventsContent() {
     const [params] = useSearchParams();
     const initialSearch = params.get('q') || '';
     const initialCategory = params.get('cat')?.toLowerCase() || ALL;
+    const [viewMode, setViewMode] = useViewMode();
 
     const { data: events = [] } = useEvents();
     const { data: dynamicCategories = [] } = useCategories('events');
@@ -281,7 +285,21 @@ function EventsContent() {
                                     }
                                 />
                             ) : (
-                                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                                <>
+                                    <div className="mb-4 flex items-center justify-end">
+                                        <ViewToggle
+                                            value={viewMode}
+                                            onChange={setViewMode}
+                                        />
+                                    </div>
+                                    <div
+                                        className={cn(
+                                            'grid gap-8',
+                                            viewMode === 'grid'
+                                                ? 'md:grid-cols-2'
+                                                : 'grid-cols-1',
+                                        )}
+                                    >
                                     {filteredEvents.map((e, i) => (
                                         <motion.div
                                             key={e.slug}
@@ -352,7 +370,8 @@ function EventsContent() {
                                             </div>
                                         </motion.div>
                                     ))}
-                                </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>

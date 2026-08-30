@@ -1,7 +1,6 @@
 import { HeroSection } from '@/components/sections/HeroSection';
 import { LandingCtaSection } from '@/components/sections/LandingCtaSection';
 import { LandingSections } from '@/components/sections/LandingSections';
-import { LandingTrustStrip } from '@/components/sections/LandingTrustStrip';
 import { LandingVideoModal } from '@/components/sections/LandingVideoModal';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { MarqueeShowcase } from '@/components/ui/MarqueeShowcase';
@@ -15,7 +14,6 @@ const Index = () => {
                 <HeroSection />
             </div>
             <LandingSections />
-            <LandingTrustStrip />
             <MarqueeShowcase />
             <LandingCtaSection />
         </main>

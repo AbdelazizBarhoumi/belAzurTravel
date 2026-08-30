@@ -12,12 +12,14 @@ import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useTours, useCategoryTypesPublic } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 
 import { matchesSearchText } from '@/lib/listFilters';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, cn } from '@/lib/utils';
 
 const Tours = () => {
     const { t, lang, dir } = useLanguage();
@@ -49,6 +51,7 @@ const Tours = () => {
         from: initialFromDate ? new Date(initialFromDate) : undefined,
         to: initialToDate ? new Date(initialToDate) : undefined,
     });
+    const [viewMode, setViewMode] = useViewMode();
 
     const maxPrice =
         tours.length > 0 ? Math.max(...tours.map((t) => t.price)) : 1000;
@@ -235,7 +238,21 @@ const Tours = () => {
                                     }
                                 />
                             ) : (
-                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                <>
+                                    <div className="mb-4 flex items-center justify-end">
+                                        <ViewToggle
+                                            value={viewMode}
+                                            onChange={setViewMode}
+                                        />
+                                    </div>
+                                    <div
+                                        className={cn(
+                                            'grid gap-6',
+                                            viewMode === 'grid'
+                                                ? 'lg:grid-cols-2'
+                                                : 'grid-cols-1',
+                                        )}
+                                    >
                                     {filteredTours.map((tour, i) => (
                                         <Link
                                             key={localizeText(tour.name, lang)}
@@ -352,7 +369,8 @@ const Tours = () => {
                                             </motion.div>
                                         </Link>
                                     ))}
-                                </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>

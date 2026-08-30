@@ -18,15 +18,18 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import {
     useCars,
     useCategories,
     useCategoryTypesPublic,
 } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 
 import { getLocalizedCategoryLabel } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
 import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
+import { cn } from '@/lib/utils';
 
 const ALL = 'all';
 
@@ -40,6 +43,7 @@ function CarsContent() {
     const [params] = useSearchParams();
     const initialSearch = params.get('q') || '';
     const initialCategory = params.get('type')?.toLowerCase() || ALL;
+    const [viewMode, setViewMode] = useViewMode();
 
     const { data: cars = [] } = useCars();
     const { data: dynamicCategories = [] } = useCategories('cars');
@@ -382,7 +386,21 @@ function CarsContent() {
                                     }
                                 />
                             ) : (
-                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                                <>
+                                    <div className="mb-4 flex items-center justify-end">
+                                        <ViewToggle
+                                            value={viewMode}
+                                            onChange={setViewMode}
+                                        />
+                                    </div>
+                                    <div
+                                        className={cn(
+                                            'grid gap-6',
+                                            viewMode === 'grid'
+                                                ? 'sm:grid-cols-2 lg:grid-cols-3'
+                                                : 'grid-cols-1',
+                                        )}
+                                    >
                                     {filteredCars.map((c, i) => (
                                         <Link
                                             key={c.slug}
@@ -459,7 +477,8 @@ function CarsContent() {
                                             </motion.div>
                                         </Link>
                                     ))}
-                                </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </div>
