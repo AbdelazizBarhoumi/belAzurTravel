@@ -669,6 +669,15 @@ class OsTravelSearchService
 
         $result = array_merge($this->basePayload($hotel), $this->hotelPayload($providerHotel));
 
+        // Sync the provider's Recommended flag to the DB so the home page
+        // (which reads from the DB, not live search) can surface
+        // recommended hotels.  Full sync — provider is the single source
+        // of truth for this field.
+        $recommended = ! empty($result['recommended']);
+        if ($recommended !== (bool) $hotel->htel_recommande) {
+            Hotel::where('id', $hotel->id)->update(['htel_recommande' => $recommended]);
+        }
+
         // The provider returns hotels with no bookable room for the searched
         // window only when `OnlyAvailable: false`. Surface them as unavailable
         // with the metadata the provider returned (StopSales range → nearest

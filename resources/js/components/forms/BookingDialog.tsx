@@ -419,529 +419,560 @@ export function BookingDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[560px] pe-0">
+            <DialogContent className="pe-0 sm:max-w-[560px]">
                 <div className="pe-6">
-                {submittedBooking ? (
-                    <>
-                        <div className="flex flex-col items-center gap-3 pb-1 pt-2 text-center">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
-                                <Check className="h-7 w-7 text-emerald-600" />
+                    {submittedBooking ? (
+                        <>
+                            <div className="flex flex-col items-center gap-3 pb-1 pt-2 text-center">
+                                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+                                    <Check className="h-7 w-7 text-emerald-600" />
+                                </div>
+                                <div>
+                                    <DialogTitle className="font-serif text-xl font-bold">
+                                        {t('booking.submittedTitle') ||
+                                            'Request submitted'}
+                                    </DialogTitle>
+                                    <DialogDescription className="mt-1">
+                                        {t('booking.submittedDescription') ||
+                                            "We've received your request. You'll be notified once it's confirmed."}
+                                    </DialogDescription>
+                                </div>
                             </div>
-                            <div>
-                                <DialogTitle className="font-serif text-xl font-bold">
-                                    {t('booking.submittedTitle') ||
-                                        'Request submitted'}
-                                </DialogTitle>
-                                <DialogDescription className="mt-1">
-                                    {t('booking.submittedDescription') ||
-                                        "We've received your request. You'll be notified once it's confirmed."}
-                                </DialogDescription>
-                            </div>
-                        </div>
 
-                        <div className="space-y-3 py-3">
-                            <div className="rounded-2xl border border-border bg-muted/30 p-4">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold text-foreground">
-                                            {itemName}
-                                        </p>
-                                        {summaryDatesLabel && (
-                                            <p className="mt-0.5 text-xs text-muted-foreground">
-                                                {summaryDatesLabel}
+                            <div className="space-y-3 py-3">
+                                <div className="rounded-2xl border border-border bg-muted/30 p-4">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <p className="truncate text-sm font-semibold text-foreground">
+                                                {itemName}
                                             </p>
-                                        )}
+                                            {summaryDatesLabel && (
+                                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                                    {summaryDatesLabel}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                            <span className="text-xs text-muted-foreground">
+                                                {t('booking.submittedTotal') ||
+                                                    'Estimated total'}
+                                            </span>
+                                            <p className="font-serif text-xl font-bold text-primary">
+                                                {formatPrice(
+                                                    submittedBooking.total,
+                                                    submittedBooking.currency,
+                                                )}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="shrink-0 text-right">
-                                        <span className="text-xs text-muted-foreground">
-                                            {t('booking.submittedTotal') ||
-                                                'Estimated total'}
+                                    <p className="mt-2 text-[11px] text-muted-foreground">
+                                        {t('booking.referenceLabel') ||
+                                            'Reference'}{' '}
+                                        #{submittedBooking.id}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2.5 rounded-2xl border border-border p-4">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                        {t('booking.whatsNext') ||
+                                            "What's next"}
+                                    </p>
+                                    <div className="flex items-start gap-2.5 text-sm text-foreground">
+                                        <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                        <span>
+                                            {t('booking.nextStepEmail') ||
+                                                "You'll receive a confirmation email shortly."}
                                         </span>
-                                        <p className="font-serif text-xl font-bold text-primary">
-                                            {formatPrice(submittedBooking.total, submittedBooking.currency)}
-                                        </p>
+                                    </div>
+                                    <div className="flex items-start gap-2.5 text-sm text-foreground">
+                                        <Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                        <span>
+                                            {t('booking.nextStepReview') ||
+                                                'Our team reviews availability, usually within 24 hours.'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-start gap-2.5 text-sm text-foreground">
+                                        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                        <span>
+                                            {t('booking.nextStepPayment') ||
+                                                'No payment is taken until your booking is confirmed.'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-start gap-2.5 text-sm text-foreground">
+                                        <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                        <span>
+                                            {t('booking.nextStepContact') ||
+                                                'For any questions, contact us at'}{' '}
+                                            <a
+                                                href="mailto:contact@belazurtravel.com"
+                                                className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
+                                            >
+                                                contact@belazurtravel.com
+                                            </a>
+                                        </span>
                                     </div>
                                 </div>
-                                <p className="mt-2 text-[11px] text-muted-foreground">
-                                    {t('booking.referenceLabel') || 'Reference'}{' '}
-                                    #{submittedBooking.id}
-                                </p>
                             </div>
 
-                            <div className="space-y-2.5 rounded-2xl border border-border p-4">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                    {t('booking.whatsNext') || "What's next"}
-                                </p>
-                                <div className="flex items-start gap-2.5 text-sm text-foreground">
-                                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                    <span>
-                                        {t('booking.nextStepEmail') ||
-                                            "You'll receive a confirmation email shortly."}
-                                    </span>
-                                </div>
-                                <div className="flex items-start gap-2.5 text-sm text-foreground">
-                                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                    <span>
-                                        {t('booking.nextStepReview') ||
-                                            'Our team reviews availability, usually within 24 hours.'}
-                                    </span>
-                                </div>
-                                <div className="flex items-start gap-2.5 text-sm text-foreground">
-                                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                    <span>
-                                        {t('booking.nextStepPayment') ||
-                                            'No payment is taken until your booking is confirmed.'}
-                                    </span>
-                                </div>
-                                <div className="flex items-start gap-2.5 text-sm text-foreground">
-                                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                                    <span>
-                                        {t('booking.nextStepContact') ||
-                                            'For any questions, contact us at'}{' '}
-                                        <a
-                                            href="mailto:contact@belazurtravel.com"
-                                            className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80"
-                                        >
-                                            contact@belazurtravel.com
-                                        </a>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                            <DialogFooter>
+                                <Button
+                                    onClick={() => onOpenChange(false)}
+                                    className="w-full sm:w-auto"
+                                >
+                                    {t('booking.submittedDone') || 'Done'}
+                                </Button>
+                            </DialogFooter>
+                        </>
+                    ) : (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle>
+                                    {t('booking.titleGeneric') ||
+                                        'Complete your booking'}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    {t('booking.description') ||
+                                        'Fill in the details below to request a booking.'}
+                                </DialogDescription>
+                            </DialogHeader>
 
-                        <DialogFooter>
-                            <Button
-                                onClick={() => onOpenChange(false)}
-                                className="w-full sm:w-auto"
-                            >
-                                {t('booking.submittedDone') || 'Done'}
-                            </Button>
-                        </DialogFooter>
-                    </>
-                ) : (
-                    <>
-                        <DialogHeader>
-                            <DialogTitle>
-                                {t('booking.titleGeneric') ||
-                                    'Complete your booking'}
-                            </DialogTitle>
-                            <DialogDescription>
-                                {t('booking.description') ||
-                                    'Fill in the details below to request a booking.'}
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        {/* Booking summary — visible the instant the dialog
+                            {/* Booking summary — visible the instant the dialog
                             opens, so the guest sees exactly what they're
                             reserving and for how much before typing
                             anything. This is what used to be missing: the
                             form appeared with no recap of the room, dates,
                             or price at all. */}
-                        <div className="flex gap-3 rounded-2xl border border-border bg-muted/30 p-4">
-                            {image ? (
-                                <img
-                                    src={image}
-                                    alt={itemName}
-                                    className="hidden h-16 w-20 shrink-0 rounded-2xl object-cover sm:block"
-                                />
-                            ) : (
-                                <div className="hidden h-16 w-20 shrink-0 items-center justify-center rounded-2xl bg-muted sm:flex">
-                                    <BedDouble className="h-6 w-6 text-muted-foreground/50" />
-                                </div>
-                            )}
-                            <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-foreground">
-                                    {itemName}
-                                </p>
-                                {subLabel && (
-                                    <p className="text-xs text-muted-foreground">
-                                        {subLabel}
-                                    </p>
+                            <div className="flex gap-3 rounded-2xl border border-border bg-muted/30 p-4">
+                                {image ? (
+                                    <img
+                                        src={image}
+                                        alt={itemName}
+                                        className="hidden h-16 w-20 shrink-0 rounded-2xl object-cover sm:block"
+                                    />
+                                ) : (
+                                    <div className="hidden h-16 w-20 shrink-0 items-center justify-center rounded-2xl bg-muted sm:flex">
+                                        <BedDouble className="h-6 w-6 text-muted-foreground/50" />
+                                    </div>
                                 )}
-                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                                    {summaryDatesLabel && (
-                                        <span className="inline-flex items-center gap-1">
-                                            <CalendarDays className="h-3.5 w-3.5" />
-                                            {summaryDatesLabel}
-                                        </span>
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-semibold text-foreground">
+                                        {itemName}
+                                    </p>
+                                    {subLabel && (
+                                        <p className="text-xs text-muted-foreground">
+                                            {subLabel}
+                                        </p>
                                     )}
-                                    {hasProviderOffer && (
-                                        <span className="inline-flex items-center gap-1">
-                                            <Users className="h-3.5 w-3.5" />
-                                            {adultCount}{' '}
-                                            {t('hotelDetail.guests') ||
-                                                'guests'}
-                                            {childCount > 0
-                                                ? ` +${childCount}`
-                                                : ''}
-                                        </span>
-                                    )}
-                                </div>
-                                {(notRefundable || freeCancellationUntil) && (
-                                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                                        {freeCancellationUntil && (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                                                <ShieldCheck className="h-3 w-3" />
-                                                {t(
-                                                    'hotelDetail.freeCancellationUntil',
-                                                ) ||
-                                                    'Free cancellation until'}{' '}
-                                                {formatShortDateFromISO(
-                                                    freeCancellationUntil,
-                                                    lang,
-                                                )}
+                                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                        {summaryDatesLabel && (
+                                            <span className="inline-flex items-center gap-1">
+                                                <CalendarDays className="h-3.5 w-3.5" />
+                                                {summaryDatesLabel}
                                             </span>
                                         )}
-                                        {notRefundable && (
-                                            <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-                                                {t(
-                                                    'hotelDetail.nonRefundable',
-                                                ) || 'Non-refundable'}
+                                        {hasProviderOffer && (
+                                            <span className="inline-flex items-center gap-1">
+                                                <Users className="h-3.5 w-3.5" />
+                                                {adultCount}{' '}
+                                                {t('hotelDetail.guests') ||
+                                                    'guests'}
+                                                {childCount > 0
+                                                    ? ` +${childCount}`
+                                                    : ''}
                                             </span>
                                         )}
                                     </div>
-                                )}
+                                    {(notRefundable ||
+                                        freeCancellationUntil) && (
+                                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                            {freeCancellationUntil && (
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                    <ShieldCheck className="h-3 w-3" />
+                                                    {t(
+                                                        'hotelDetail.freeCancellationUntil',
+                                                    ) ||
+                                                        'Free cancellation until'}{' '}
+                                                    {formatShortDateFromISO(
+                                                        freeCancellationUntil,
+                                                        lang,
+                                                    )}
+                                                </span>
+                                            )}
+                                            {notRefundable && (
+                                                <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                                                    {t(
+                                                        'hotelDetail.nonRefundable',
+                                                    ) || 'Non-refundable'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-right">
+                                    <p className="font-serif text-lg font-bold text-primary">
+                                        {formatPrice(amount, currency)}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="shrink-0 text-right flex flex-col items-end justify-center gap-0.5">
-                                <p className="font-serif text-lg font-bold text-primary">
-                                    {formatPrice(amount, currency)}
-                                </p>
-                            </div>
-                        </div>
 
-                        {isRequest && (
-                            <div className="rounded-2xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                                {t('booking.requestNotice') ||
-                                    "This is a request booking. We'll contact the hotel to check availability."}
-                            </div>
-                        )}
-                        <form
-                            onSubmit={handleSubmit}
-                            className="space-y-4 py-4"
-                        >
-                            <div className="space-y-2">
-                                <Label htmlFor="name">
-                                    {t('label.fullName') || 'Full Name'}
-                                </Label>
-                                <Input
-                                    id="name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            {isRequest && (
+                                <div className="rounded-2xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                    {t('booking.requestNotice') ||
+                                        "This is a request booking. We'll contact the hotel to check availability."}
+                                </div>
+                            )}
+                            <form
+                                onSubmit={handleSubmit}
+                                className="space-y-4 py-4"
+                            >
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">
-                                        {t('label.email') || 'Email'}
+                                    <Label htmlFor="name">
+                                        {t('label.fullName') || 'Full Name'}
                                     </Label>
                                     <Input
-                                        id="email"
-                                        type="email"
-                                        value={email}
+                                        id="name"
+                                        value={name}
                                         onChange={(e) =>
-                                            setEmail(e.target.value)
+                                            setName(e.target.value)
                                         }
                                         required
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone">
-                                        {t('label.phone') || 'Phone'}
-                                    </Label>
-                                    <Input
-                                        id="phone"
-                                        value={phone}
-                                        onChange={(e) =>
-                                            setPhone(e.target.value)
-                                        }
-                                    />
-                                </div>
-                            </div>
-
-                            {hasProviderOffer && guests.length > 0 && (
-                                <div className="space-y-4">
-                                    <div className="h-px bg-border" />
-                                    <div>
-                                        <h3 className="mb-1 text-sm font-semibold text-foreground">
-                                            {t('booking.guests') || 'Guests'}
-                                        </h3>
-                                        <p className="text-xs text-muted-foreground">
-                                            {t('booking.guestsHint') ||
-                                                'Add each guest. The first adult is the booking holder.'}
-                                        </p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email">
+                                            {t('label.email') || 'Email'}
+                                        </Label>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) =>
+                                                setEmail(e.target.value)
+                                            }
+                                            required
+                                        />
                                     </div>
-                                    {guests.map((row, index) => (
-                                        <div
-                                            key={index}
-                                            className="space-y-3 rounded-2xl border border-border p-4"
-                                        >
-                                            <p className="text-xs font-medium text-muted-foreground">
-                                                {t('booking.guestNumber')}{' '}
-                                                {index + 1}{' '}
-                                                {row.age !== null
-                                                    ? `· ${t('hotels.childrenLabel')}`
-                                                    : ''}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="phone">
+                                            {t('label.phone') || 'Phone'}
+                                        </Label>
+                                        <Input
+                                            id="phone"
+                                            value={phone}
+                                            onChange={(e) =>
+                                                setPhone(e.target.value)
+                                            }
+                                        />
+                                    </div>
+                                </div>
+
+                                {hasProviderOffer && guests.length > 0 && (
+                                    <div className="space-y-4">
+                                        <div className="h-px bg-border" />
+                                        <div>
+                                            <h3 className="mb-1 text-sm font-semibold text-foreground">
+                                                {t('booking.guests') ||
+                                                    'Guests'}
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                {t('booking.guestsHint') ||
+                                                    'Add each guest. The first adult is the booking holder.'}
                                             </p>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="space-y-2">
-                                                    <Label
-                                                        htmlFor={`pax-${index}-civility`}
-                                                    >
-                                                        {t(
-                                                            'booking.civility',
-                                                        ) || 'Civility'}
-                                                    </Label>
-                                                    <Select
-                                                        value={row.civility}
-                                                        onValueChange={(v) =>
-                                                            updateGuest(index, {
-                                                                civility:
-                                                                    v as Civility,
-                                                            })
-                                                        }
-                                                    >
-                                                        <SelectTrigger
-                                                            id={`pax-${index}-civility`}
-                                                        >
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {civilityOptions.map(
-                                                                (option) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            option.value
-                                                                        }
-                                                                        value={
-                                                                            option.value
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            option.label
-                                                                        }
-                                                                    </SelectItem>
-                                                                ),
-                                                            )}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                {row.age !== null && (
-                                                    <div className="space-y-2">
-                                                        <Label
-                                                            htmlFor={`pax-${index}-age`}
-                                                        >
-                                                            {t('booking.age') ||
-                                                                'Age'}
-                                                        </Label>
-                                                        <Input
-                                                            id={`pax-${index}-age`}
-                                                            type="number"
-                                                            min={0}
-                                                            max={17}
-                                                            value={row.age}
-                                                            onChange={(e) =>
-                                                                updateGuest(
-                                                                    index,
-                                                                    {
-                                                                        age: Number(
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        ),
-                                                                    },
-                                                                )
-                                                            }
-                                                        />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div className="space-y-2">
-                                                    <Label
-                                                        htmlFor={`pax-${index}-firstName`}
-                                                    >
-                                                        {t(
-                                                            'booking.firstName',
-                                                        ) || 'First name'}
-                                                    </Label>
-                                                    <Input
-                                                        id={`pax-${index}-firstName`}
-                                                        value={row.firstName}
-                                                        onChange={(e) =>
-                                                            updateGuest(index, {
-                                                                firstName:
-                                                                    e.target
-                                                                        .value,
-                                                            })
-                                                        }
-                                                        required={
-                                                            row.age !== null
-                                                        }
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label
-                                                        htmlFor={`pax-${index}-lastName`}
-                                                    >
-                                                        {t(
-                                                            'booking.lastName',
-                                                        ) || 'Last name'}
-                                                    </Label>
-                                                    <Input
-                                                        id={`pax-${index}-lastName`}
-                                                        value={row.lastName}
-                                                        onChange={(e) =>
-                                                            updateGuest(index, {
-                                                                lastName:
-                                                                    e.target
-                                                                        .value,
-                                                            })
-                                                        }
-                                                        required={
-                                                            row.age !== null
-                                                        }
-                                                    />
-                                                </div>
-                                            </div>
-                                            {row.age === null && (
+                                        </div>
+                                        {guests.map((row, index) => (
+                                            <div
+                                                key={index}
+                                                className="space-y-3 rounded-2xl border border-border p-4"
+                                            >
+                                                <p className="text-xs font-medium text-muted-foreground">
+                                                    {t('booking.guestNumber')}{' '}
+                                                    {index + 1}{' '}
+                                                    {row.age !== null
+                                                        ? `· ${t('hotels.childrenLabel')}`
+                                                        : ''}
+                                                </p>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div className="space-y-2">
                                                         <Label
-                                                            htmlFor={`pax-${index}-passportNumber`}
+                                                            htmlFor={`pax-${index}-civility`}
                                                         >
                                                             {t(
-                                                                'booking.passportNumber',
-                                                            ) ||
-                                                                'Passport number'}
+                                                                'booking.civility',
+                                                            ) || 'Civility'}
+                                                        </Label>
+                                                        <Select
+                                                            value={row.civility}
+                                                            onValueChange={(
+                                                                v,
+                                                            ) =>
+                                                                updateGuest(
+                                                                    index,
+                                                                    {
+                                                                        civility:
+                                                                            v as Civility,
+                                                                    },
+                                                                )
+                                                            }
+                                                        >
+                                                            <SelectTrigger
+                                                                id={`pax-${index}-civility`}
+                                                            >
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {civilityOptions.map(
+                                                                    (
+                                                                        option,
+                                                                    ) => (
+                                                                        <SelectItem
+                                                                            key={
+                                                                                option.value
+                                                                            }
+                                                                            value={
+                                                                                option.value
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                option.label
+                                                                            }
+                                                                        </SelectItem>
+                                                                    ),
+                                                                )}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                    {row.age !== null && (
+                                                        <div className="space-y-2">
+                                                            <Label
+                                                                htmlFor={`pax-${index}-age`}
+                                                            >
+                                                                {t(
+                                                                    'booking.age',
+                                                                ) || 'Age'}
+                                                            </Label>
+                                                            <Input
+                                                                id={`pax-${index}-age`}
+                                                                type="number"
+                                                                min={0}
+                                                                max={17}
+                                                                value={row.age}
+                                                                onChange={(e) =>
+                                                                    updateGuest(
+                                                                        index,
+                                                                        {
+                                                                            age: Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            ),
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="space-y-2">
+                                                        <Label
+                                                            htmlFor={`pax-${index}-firstName`}
+                                                        >
+                                                            {t(
+                                                                'booking.firstName',
+                                                            ) || 'First name'}
                                                         </Label>
                                                         <Input
-                                                            id={`pax-${index}-passportNumber`}
+                                                            id={`pax-${index}-firstName`}
                                                             value={
-                                                                row.passportNumber
+                                                                row.firstName
                                                             }
                                                             onChange={(e) =>
                                                                 updateGuest(
                                                                     index,
                                                                     {
-                                                                        passportNumber:
+                                                                        firstName:
                                                                             e
                                                                                 .target
                                                                                 .value,
                                                                     },
                                                                 )
+                                                            }
+                                                            required={
+                                                                row.age !== null
                                                             }
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label
-                                                            htmlFor={`pax-${index}-passportExpiry`}
+                                                            htmlFor={`pax-${index}-lastName`}
                                                         >
                                                             {t(
-                                                                'booking.passportExpiry',
-                                                            ) ||
-                                                                'Passport expiry'}
+                                                                'booking.lastName',
+                                                            ) || 'Last name'}
                                                         </Label>
                                                         <Input
-                                                            id={`pax-${index}-passportExpiry`}
-                                                            type="date"
-                                                            value={
-                                                                row.passportExpiry
-                                                            }
+                                                            id={`pax-${index}-lastName`}
+                                                            value={row.lastName}
                                                             onChange={(e) =>
                                                                 updateGuest(
                                                                     index,
                                                                     {
-                                                                        passportExpiry:
+                                                                        lastName:
                                                                             e
                                                                                 .target
                                                                                 .value,
                                                                     },
                                                                 )
                                                             }
+                                                            required={
+                                                                row.age !== null
+                                                            }
                                                         />
                                                     </div>
                                                 </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {provider?.options?.length ? (
-                                <div className="space-y-2">
-                                    <div className="h-px bg-border" />
-                                    <Label>
-                                        {t('booking.preferences') ||
-                                            'Preferences'}
-                                    </Label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {provider.options.map((option) => {
-                                            const checked =
-                                                selectedOptionIds.includes(
-                                                    option.id,
-                                                );
-                                            return (
-                                                <button
-                                                    key={option.id}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setSelectedOptionIds(
-                                                            (ids) =>
-                                                                checked
-                                                                    ? ids.filter(
-                                                                          (i) =>
-                                                                              i !==
-                                                                              option.id,
-                                                                      )
-                                                                    : [
-                                                                          ...ids,
-                                                                          option.id,
-                                                                      ],
-                                                        )
-                                                    }
-                                                    className={
-                                                        checked
-                                                            ? 'rounded-full border border-primary bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary'
-                                                            : 'rounded-full border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40'
-                                                    }
-                                                >
-                                                    {option.title}
-                                                </button>
-                                            );
-                                        })}
+                                                {row.age === null && (
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="space-y-2">
+                                                            <Label
+                                                                htmlFor={`pax-${index}-passportNumber`}
+                                                            >
+                                                                {t(
+                                                                    'booking.passportNumber',
+                                                                ) ||
+                                                                    'Passport number'}
+                                                            </Label>
+                                                            <Input
+                                                                id={`pax-${index}-passportNumber`}
+                                                                value={
+                                                                    row.passportNumber
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateGuest(
+                                                                        index,
+                                                                        {
+                                                                            passportNumber:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label
+                                                                htmlFor={`pax-${index}-passportExpiry`}
+                                                            >
+                                                                {t(
+                                                                    'booking.passportExpiry',
+                                                                ) ||
+                                                                    'Passport expiry'}
+                                                            </Label>
+                                                            <Input
+                                                                id={`pax-${index}-passportExpiry`}
+                                                                type="date"
+                                                                value={
+                                                                    row.passportExpiry
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateGuest(
+                                                                        index,
+                                                                        {
+                                                                            passportExpiry:
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                        },
+                                                                    )
+                                                                }
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
-                            ) : null}
+                                )}
 
-                            <div className="space-y-2">
-                                <Label htmlFor="notes">
-                                    {t('label.notes') || 'Notes'}
-                                </Label>
-                                <Textarea
-                                    id="notes"
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    placeholder={
-                                        t('booking.notesPlaceholder') ||
-                                        'Any special requests?'
-                                    }
-                                />
-                            </div>
-                            <DialogFooter>
-                                <Button
-                                    type="submit"
-                                    disabled={mutation.isPending}
-                                >
-                                    {mutation.isPending
-                                        ? t('common.processing') ||
-                                          'Processing...'
-                                        : `${t('booking.submit') || 'Request booking'} · ${formatPrice(amount, currency)}`}
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    </>
-                )}
+                                {provider?.options?.length ? (
+                                    <div className="space-y-2">
+                                        <div className="h-px bg-border" />
+                                        <Label>
+                                            {t('booking.preferences') ||
+                                                'Preferences'}
+                                        </Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {provider.options.map((option) => {
+                                                const checked =
+                                                    selectedOptionIds.includes(
+                                                        option.id,
+                                                    );
+                                                return (
+                                                    <button
+                                                        key={option.id}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setSelectedOptionIds(
+                                                                (ids) =>
+                                                                    checked
+                                                                        ? ids.filter(
+                                                                              (
+                                                                                  i,
+                                                                              ) =>
+                                                                                  i !==
+                                                                                  option.id,
+                                                                          )
+                                                                        : [
+                                                                              ...ids,
+                                                                              option.id,
+                                                                          ],
+                                                            )
+                                                        }
+                                                        className={
+                                                            checked
+                                                                ? 'rounded-full border border-primary bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary'
+                                                                : 'rounded-full border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary/40'
+                                                        }
+                                                    >
+                                                        {option.title}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ) : null}
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="notes">
+                                        {t('label.notes') || 'Notes'}
+                                    </Label>
+                                    <Textarea
+                                        id="notes"
+                                        value={notes}
+                                        onChange={(e) =>
+                                            setNotes(e.target.value)
+                                        }
+                                        placeholder={
+                                            t('booking.notesPlaceholder') ||
+                                            'Any special requests?'
+                                        }
+                                    />
+                                </div>
+                                <DialogFooter>
+                                    <Button
+                                        type="submit"
+                                        disabled={mutation.isPending}
+                                    >
+                                        {mutation.isPending
+                                            ? t('common.processing') ||
+                                              'Processing...'
+                                            : `${t('booking.submit') || 'Request booking'} · ${formatPrice(amount, currency)}`}
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

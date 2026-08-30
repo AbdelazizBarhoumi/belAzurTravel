@@ -8,6 +8,7 @@ import { DestinationsSection } from './landing/DestinationsSection';
 import { EventsSection } from './landing/EventsSection';
 import { FlightsSection } from './landing/FlightsSection';
 import { HotelsSection } from './landing/HotelsSection';
+import { HotelSelectionSection } from './landing/HotelSelectionSection';
 import { LocationSection } from './landing/LocationSection';
 import { OrganizedSection } from './landing/OrganizedSection';
 import { ToursSection } from './landing/ToursSection';
@@ -19,6 +20,7 @@ const SECTION_COMPONENTS: Record<
 > = {
     destinations: DestinationsSection,
     hotels: HotelsSection,
+    hotelSelection: HotelSelectionSection,
     organized: OrganizedSection,
     tours: ToursSection,
     cars: CarsSection,

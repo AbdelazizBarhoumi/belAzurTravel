@@ -329,7 +329,7 @@ export default function AdminPromos() {
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-semibold text-muted-foreground">
-                                 {t('admin.promos.titleLabel')}{' '}
+                                {t('admin.promos.titleLabel')}{' '}
                             </label>
                             <Input
                                 value={String(
@@ -396,7 +396,7 @@ export default function AdminPromos() {
                 <div className="space-y-6">
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-muted-foreground">
-                             {t('admin.promos.description')}{' '}
+                            {t('admin.promos.description')}{' '}
                         </label>
                         <Textarea
                             value={String(

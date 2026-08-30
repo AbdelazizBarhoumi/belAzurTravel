@@ -297,7 +297,7 @@ export function getCountries(): CountryItem[] {
 }
 
 export function getCitiesByCountry(countryCode: string | null): CityItem[] {
-    if (!countryCode) return [];
+    if (!countryCode) return CITIES;
     return CITIES.filter((city) => city.countryCode === countryCode);
 }
 

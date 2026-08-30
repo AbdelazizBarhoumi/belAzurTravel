@@ -152,7 +152,7 @@ const AdminTeam = () => {
                                         : 'text-muted-foreground',
                                 )}
                             >
-                                 {t(`admin.${k}`)}{' '}
+                                {t(`admin.${k}`)}{' '}
                             </label>
                             <input
                                 value={String(

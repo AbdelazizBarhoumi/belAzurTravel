@@ -79,7 +79,9 @@ describe('AdminTours', () => {
 
         const heading = screen
             .getAllByRole('heading', { level: 1 })
-            .find((node) => /Tours|Circuit & Excursions/.test(node.textContent ?? ''));
+            .find((node) =>
+                /Tours|Circuit & Excursions/.test(node.textContent ?? ''),
+            );
 
         expect(heading).toBeDefined();
 

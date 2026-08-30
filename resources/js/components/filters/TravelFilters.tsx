@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import type { TravelItem } from '@/api/entities.api';
+import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { localizeText } from '@/data';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
+import { CollapsibleSection } from './CollapsibleSection';
 import { FilterRenderer } from './FilterRenderer';
 
 interface TravelFiltersProps {
@@ -57,15 +59,14 @@ export function TravelFilters({
     return (
         <div className="space-y-0">
             {/* Country Filter - First */}
-            <div>
-                <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
-                    {lang === 'fr'
-                        ? 'Pays'
-                        : lang === 'ar'
-                          ? 'البلد'
-                          : 'Country'}
-                </h3>
-                <div className="space-y-0.5 sm:space-y-1">
+            <CollapsibleSection
+                title={
+                    lang === 'fr' ? 'Pays' : lang === 'ar' ? 'البلد' : 'Country'
+                }
+            >
+                <div
+                    className={`space-y-0.5 sm:space-y-1 ${availableCountries.length > 8 ? 'scrollbar-thin max-h-[288px] overflow-y-auto' : ''}`}
+                >
                     {availableCountries.map(
                         ([countryKey, { count, label }]) => {
                             const key = `country_${countryKey}`;
@@ -144,10 +145,12 @@ export function TravelFilters({
                         },
                     )}
                 </div>
-            </div>
+            </CollapsibleSection>
+
+            <Separator />
 
             {/* Travelers Field */}
-            <div className="my-3 border-t border-border py-3 sm:my-4 sm:py-4">
+            <div className="py-3 sm:py-4">
                 <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
                     {lang === 'fr'
                         ? 'Voyageurs'
@@ -178,8 +181,10 @@ export function TravelFilters({
                 </div>
             </div>
 
+            <Separator />
+
             {/* Price Filter */}
-            <div className="my-3 border-t border-border py-3 sm:my-4 sm:py-4">
+            <div className="py-3 sm:py-4">
                 <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
                     {lang === 'fr'
                         ? 'Budget'
@@ -209,10 +214,8 @@ export function TravelFilters({
 
             {/* Category Types from API */}
             {categoryTypes.map((catType) => (
-                <div
-                    key={catType.key}
-                    className="my-3 border-t border-border py-3 sm:my-4 sm:py-4"
-                >
+                <div key={catType.key}>
+                    <Separator />
                     <FilterRenderer
                         categoryType={catType}
                         selectedValues={categoryTypeFilters[catType.key] ?? []}

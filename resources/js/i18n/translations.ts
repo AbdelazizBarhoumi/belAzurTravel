@@ -460,13 +460,22 @@ export const translations: Record<string, TranslationEntry> = {
 
     // Search Widget
     'search.tabs.hotels': { fr: 'Hôtels', ar: 'فنادق', en: 'Hotels' },
-    'search.tabs.tours': { fr: 'Circuit & Excursions', ar: 'جولات', en: 'Tours' },
+    'search.tabs.tours': {
+        fr: 'Circuit & Excursions',
+        ar: 'جولات',
+        en: 'Tours',
+    },
     'search.tabs.flights': { fr: 'Vols', ar: 'رحلات', en: 'Flights' },
 
     'search.fields.destination': {
         fr: 'Destination',
         ar: 'الوجهة',
         en: 'Destination',
+    },
+    'search.fields.hotelName': {
+        fr: 'Nom de l\'hôtel',
+        ar: 'اسم الفندق',
+        en: 'Hotel name',
     },
     'search.fields.country': { fr: 'Pays', ar: 'البلد', en: 'Country' },
     'search.placeholders.country': {
@@ -526,6 +535,11 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Ville, hôtel ou lieu',
         ar: 'مدينة أو فندق أو موقع',
         en: 'City, hotel, or place',
+    },
+    'search.placeholders.hotelName': {
+        fr: 'Rechercher par nom d\'hôtel',
+        ar: 'البحث بالاسم',
+        en: 'Search by hotel name',
     },
     'search.placeholders.checkIn': {
         fr: 'Arrivée',
@@ -1421,9 +1435,9 @@ export const translations: Record<string, TranslationEntry> = {
 
     // Hotels Page
     'hotels.title': {
-        fr: 'Hôtels de Luxe',
-        ar: 'الفنادق الفاخرة',
-        en: 'Luxury Hotels',
+        fr: 'Hôtels',
+        ar: 'الفنادق ',
+        en: 'Hotels',
     },
     'hotels.subtitle': {
         fr: "Hébergements sélectionnés offrant un mélange parfait de confort, de luxe et d'expériences inoubliables.",
@@ -1719,7 +1733,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Check the price for your dates',
     },
     'hotelDetail.livePriceHint': {
-        fr: 'Sélectionnez vos dates et le nombre d\'invités pour obtenir les prix et la disponibilité en temps réel.',
+        fr: "Sélectionnez vos dates et le nombre d'invités pour obtenir les prix et la disponibilité en temps réel.",
         ar: 'اختر تواريخك وعدد الضيوف للحصول على الأسعار والتوفر في الوقت الفعلي.',
         en: 'Pick your dates and number of guests to get real-time prices and availability.',
     },
@@ -2021,14 +2035,30 @@ export const translations: Record<string, TranslationEntry> = {
     },
     'hotelDetail.rooms': { fr: 'Chambres', ar: 'الغرف', en: 'Rooms' },
     'hotelDetail.roomsShort': { fr: 'ch.', ar: 'غرفة', en: 'rm' },
-    'hotelDetail.guestsShort': { fr: 'voyageur(s)', ar: 'ضيوف', en: 'guest(s)' },
-    'hotelDetail.selectDates': { fr: 'Choisir les dates', ar: 'اختر التواريخ', en: 'Select dates' },
+    'hotelDetail.guestsShort': {
+        fr: 'voyageur(s)',
+        ar: 'ضيوف',
+        en: 'guest(s)',
+    },
+    'hotelDetail.selectDates': {
+        fr: 'Choisir les dates',
+        ar: 'اختر التواريخ',
+        en: 'Select dates',
+    },
     'hotelDetail.dates': { fr: 'Dates', ar: 'التواريخ', en: 'Dates' },
-    'hotelDetail.occupation': { fr: 'Occupation', ar: 'الإشغال', en: 'Occupancy' },
+    'hotelDetail.occupation': {
+        fr: 'Occupation',
+        ar: 'الإشغال',
+        en: 'Occupancy',
+    },
     'hotelDetail.adults': { fr: 'Adultes', ar: 'بالغون', en: 'Adults' },
     'hotelDetail.children': { fr: 'Enfants', ar: 'أطفال', en: 'Children' },
     'hotelDetail.today': { fr: "Aujourd'hui", ar: 'اليوم', en: 'Today' },
-    'hotelDetail.wontBeCharged': { fr: "Vous ne serez pas débité", ar: 'لن يتم خصم أموالك', en: "You won't be charged yet" },
+    'hotelDetail.wontBeCharged': {
+        fr: 'Vous ne serez pas débité',
+        ar: 'لن يتم خصم أموالك',
+        en: "You won't be charged yet",
+    },
     'hotelDetail.scoreExcellent': {
         fr: 'Exceptionnel',
         ar: 'استثنائي',
@@ -5063,6 +5093,16 @@ translations['home.featuredHotelsDesc'] = {
     ar: 'أفضل أماكن الإقامة',
     en: 'The best stays',
 };
+translations['home.hotelSelection'] = {
+    fr: "Sélection d'Hôtels",
+    ar: 'اختيار الفنادق',
+    en: 'Hotel Selection',
+};
+translations['home.hotelSelectionDesc'] = {
+    fr: 'Nos hébergements recommandés',
+    ar: 'الفنادق الموصى بها',
+    en: 'Our recommended hotels',
+};
 translations['home.featuredTours'] = {
     fr: 'Circuits & Excursions',
     ar: 'جولات ورحلات',
@@ -6533,7 +6573,7 @@ translations['admin.settings.selectFilterValue'] = {
     en: 'Select a value',
 };
 translations['admin.settings.previewUrl'] = {
-    fr: 'Aperçu de l\'URL',
+    fr: "Aperçu de l'URL",
     ar: 'معاينة الرابط',
     en: 'Preview URL',
 };
@@ -7072,6 +7112,11 @@ translations['admin.section.location'] = {
     fr: 'Emplacement',
     ar: 'الموقع',
     en: 'Location',
+};
+translations['admin.section.hotelSelection'] = {
+    fr: "Sélection d'Hôtels",
+    ar: 'اختيار الفنادق',
+    en: 'Hotel Selection',
 };
 
 // Visa page

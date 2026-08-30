@@ -1750,14 +1750,19 @@ export function Navbar() {
                                             <li className="mt-1 border-t border-border/60 pt-1">
                                                 <ul className="space-y-0.5">
                                                     {moreLinks.map((link) => {
-                                                        const href = buildNavLinkHref(link, lang);
+                                                        const href =
+                                                            buildNavLinkHref(
+                                                                link,
+                                                                lang,
+                                                            );
                                                         return (
                                                             <li key={link.key}>
                                                                 <Link
                                                                     to={href}
                                                                     className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                                 >
-                                                                    {link.label || link.key}
+                                                                    {link.label ||
+                                                                        link.key}
                                                                 </Link>
                                                             </li>
                                                         );
@@ -2140,15 +2145,24 @@ export function Navbar() {
                                             <div className="mt-2 border-t border-border/60 pt-2">
                                                 <div className="flex flex-col gap-1">
                                                     {moreLinks.map((link) => {
-                                                        const href = buildNavLinkHref(link, lang);
+                                                        const href =
+                                                            buildNavLinkHref(
+                                                                link,
+                                                                lang,
+                                                            );
                                                         return (
                                                             <Link
                                                                 key={link.key}
                                                                 to={href}
-                                                                onClick={() => setOpen(false)}
+                                                                onClick={() =>
+                                                                    setOpen(
+                                                                        false,
+                                                                    )
+                                                                }
                                                                 className="py-1 text-sm text-muted-foreground"
                                                             >
-                                                                {link.label || link.key}
+                                                                {link.label ||
+                                                                    link.key}
                                                             </Link>
                                                         );
                                                     })}

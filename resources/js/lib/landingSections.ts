@@ -12,6 +12,10 @@ export const LANDING_SECTION_META = {
         labelKey: 'admin.section.hotels',
         styles: ['carousel', 'cards', 'grid'],
     },
+    hotelSelection: {
+        labelKey: 'admin.section.hotelSelection',
+        styles: ['carousel', 'cards', 'grid'],
+    },
     organized: {
         labelKey: 'admin.section.organized',
         styles: ['carousel', 'cards', 'grid'],
@@ -50,6 +54,7 @@ export const LANDING_SECTION_META = {
 export const LANDING_SECTION_ORDER = [
     'destinations',
     'hotels',
+    'hotelSelection',
     'organized',
     'tours',
     'cars',

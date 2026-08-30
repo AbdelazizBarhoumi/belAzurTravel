@@ -203,8 +203,8 @@ const SortableItem: React.FC<SortableItemProps> = ({
                             className={`space-y-2 ${field.type === 'textarea' ? 'md:col-span-2' : ''}`}
                         >
                             <Label className="text-xs font-semibold text-muted-foreground">
-                                 {fieldLabel}
-                             </Label>
+                                {fieldLabel}
+                            </Label>
                             {field.type === 'textarea' ? (
                                 <Textarea
                                     value={String(value)}

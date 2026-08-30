@@ -316,7 +316,8 @@ export default function BookingDetail() {
                         ) : null}
                         {details?.price_per_night && details?.nights ? (
                             <p className="mt-0.5 text-xs text-muted-foreground">
-                                {formatPrice(details.price_per_night, currency)} / night
+                                {formatPrice(details.price_per_night, currency)}{' '}
+                                / night
                             </p>
                         ) : null}
                         <p className="text-xs text-muted-foreground">
@@ -531,13 +532,22 @@ export default function BookingDetail() {
                                                               );
                                                     return (
                                                         <>
-                                                            {formatPrice(displayTotal, room.currency ?? currency)}
+                                                            {formatPrice(
+                                                                displayTotal,
+                                                                room.currency ??
+                                                                    currency,
+                                                            )}
                                                         </>
                                                     );
                                                 })()}
                                                 {room.price_per_night ? (
                                                     <span className="block text-xs font-normal text-muted-foreground">
-                                                        ~{formatPrice(room.price_per_night, room.currency ?? currency)}{' '}
+                                                        ~
+                                                        {formatPrice(
+                                                            room.price_per_night,
+                                                            room.currency ??
+                                                                currency,
+                                                        )}{' '}
                                                         {t(
                                                             'bookingDetail.perNight',
                                                         ) || 'per night'}

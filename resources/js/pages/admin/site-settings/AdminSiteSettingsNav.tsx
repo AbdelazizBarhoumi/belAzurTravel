@@ -1399,34 +1399,30 @@ function GroupLinkTree({
                                         {t('admin_settings_label')}
                                     </Label>
                                     <div className="grid grid-cols-1 gap-2">
-                                        {(['fr'] as const).map(
-                                            (l) => (
-                                                <div key={l}>
-                                                    <Input
-                                                        value={
-                                                            item.label?.[l] ??
-                                                            ''
-                                                        }
-                                                        onChange={(e) => {
-                                                            const current =
-                                                                normalizeLocalizedText(
-                                                                    item.label,
-                                                                );
-                                                            onUpdate(itemPath, {
-                                                                label: {
-                                                                    ...current,
-                                                                    [l]: e
-                                                                        .target
-                                                                        .value,
-                                                                } as LocalizedText,
-                                                            });
-                                                        }}
-                                                        placeholder={`${t('admin_settings_label')}`}
-                                                        className="mt-1 h-9 text-xs"
-                                                    />
-                                                </div>
-                                            ),
-                                        )}
+                                        {(['fr'] as const).map((l) => (
+                                            <div key={l}>
+                                                <Input
+                                                    value={
+                                                        item.label?.[l] ?? ''
+                                                    }
+                                                    onChange={(e) => {
+                                                        const current =
+                                                            normalizeLocalizedText(
+                                                                item.label,
+                                                            );
+                                                        onUpdate(itemPath, {
+                                                            label: {
+                                                                ...current,
+                                                                [l]: e.target
+                                                                    .value,
+                                                            } as LocalizedText,
+                                                        });
+                                                    }}
+                                                    placeholder={`${t('admin_settings_label')}`}
+                                                    className="mt-1 h-9 text-xs"
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -2675,7 +2671,9 @@ export default function AdminSiteSettingsNav() {
     const [moveToGroupTarget, setMoveToGroupTarget] = useState<
         Record<number, string>
     >({});
-    const [activeTab, setActiveTab] = useState<'header' | 'groups' | 'links'>('header');
+    const [activeTab, setActiveTab] = useState<'header' | 'groups' | 'links'>(
+        'header',
+    );
     const [isSaving, setIsSaving] = useState(false);
     const [selectedLinkPage, setSelectedLinkPage] = useState<string>('');
 
@@ -3396,7 +3394,9 @@ export default function AdminSiteSettingsNav() {
         return errors;
     };
 
-    const validateStandaloneLinks = (links: NavLink[]): Record<string, string> => {
+    const validateStandaloneLinks = (
+        links: NavLink[],
+    ): Record<string, string> => {
         const errors: Record<string, string> = {};
         for (const link of links) {
             if (!(link.label ?? '').trim()) {
@@ -3996,9 +3996,7 @@ export default function AdminSiteSettingsNav() {
                                                         </Label>
                                                         <div className="grid grid-cols-1 gap-2">
                                                             {(
-                                                                [
-                                                                    'fr',
-                                                                ] as const
+                                                                ['fr'] as const
                                                             ).map((l) => (
                                                                 <div key={l}>
                                                                     <Input
@@ -4331,15 +4329,21 @@ export default function AdminSiteSettingsNav() {
                                     <div className="flex-1">
                                         <Label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
                                             <Plus className="h-4 w-4 text-primary" />
-                                            {t('admin.settings.addLinkToHeader')}
+                                            {t(
+                                                'admin.settings.addLinkToHeader',
+                                            )}
                                         </Label>
                                         <p className="mb-2 text-xs text-muted-foreground">
-                                            {t('admin.settings.addLinkDescription')}
+                                            {t(
+                                                'admin.settings.addLinkDescription',
+                                            )}
                                         </p>
                                         <div className="flex gap-2">
                                             <Select
                                                 value={selectedLinkPage}
-                                                onValueChange={setSelectedLinkPage}
+                                                onValueChange={
+                                                    setSelectedLinkPage
+                                                }
                                             >
                                                 <SelectTrigger className="bg-background">
                                                     <SelectValue
@@ -4349,24 +4353,26 @@ export default function AdminSiteSettingsNav() {
                                                     />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {AVAILABLE_PAGES.map((p) => (
-                                                        <SelectItem
-                                                            key={p.key}
-                                                            value={p.key}
-                                                        >
-                                                            <span className="flex items-center gap-2">
-                                                                <span className="font-medium">
-                                                                    {t(
-                                                                        'nav.' +
-                                                                            p.key,
-                                                                    )}
+                                                    {AVAILABLE_PAGES.map(
+                                                        (p) => (
+                                                            <SelectItem
+                                                                key={p.key}
+                                                                value={p.key}
+                                                            >
+                                                                <span className="flex items-center gap-2">
+                                                                    <span className="font-medium">
+                                                                        {t(
+                                                                            'nav.' +
+                                                                                p.key,
+                                                                        )}
+                                                                    </span>
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        {p.href}
+                                                                    </span>
                                                                 </span>
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {p.href}
-                                                                </span>
-                                                            </span>
-                                                        </SelectItem>
-                                                    ))}
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
                                                 </SelectContent>
                                             </Select>
                                             <Button
@@ -4423,7 +4429,9 @@ export default function AdminSiteSettingsNav() {
                             >
                                 <div className="grid gap-4">
                                     {(draft.links ?? []).map((link) => {
-                                        const page = getPage(link.targetPageKey);
+                                        const page = getPage(
+                                            link.targetPageKey,
+                                        );
                                         const previewHref = buildNavLinkHref(
                                             link,
                                             lang as 'en' | 'fr' | 'ar',
@@ -4453,10 +4461,13 @@ export default function AdminSiteSettingsNav() {
                                                                         <span
                                                                             className={`block truncate font-semibold ${!link.enabled ? 'text-muted-foreground line-through' : ''}`}
                                                                         >
-                                                                            {link.label || link.key}
+                                                                            {link.label ||
+                                                                                link.key}
                                                                         </span>
                                                                         <span className="text-xs text-muted-foreground">
-                                                                            {previewHref}
+                                                                            {
+                                                                                previewHref
+                                                                            }
                                                                         </span>
                                                                     </div>
                                                                     {!link.enabled && (
@@ -4642,8 +4653,7 @@ export default function AdminSiteSettingsNav() {
                                                                                     {
                                                                                         targetPageKey:
                                                                                             v,
-                                                                                        value:
-                                                                                            '',
+                                                                                        value: '',
                                                                                     },
                                                                                 )
                                                                             }
@@ -4664,9 +4674,10 @@ export default function AdminSiteSettingsNav() {
                                                                                                 p.key
                                                                                             }
                                                                                         >
-                                                                                            {
-                                                                                                t('nav.' + p.key)
-                                                                                            }
+                                                                                            {t(
+                                                                                                'nav.' +
+                                                                                                    p.key,
+                                                                                            )}
                                                                                         </SelectItem>
                                                                                     ),
                                                                                 )}
@@ -4692,8 +4703,7 @@ export default function AdminSiteSettingsNav() {
                                                                                     link.key,
                                                                                     {
                                                                                         mode: v,
-                                                                                        value:
-                                                                                            '',
+                                                                                        value: '',
                                                                                     },
                                                                                 )
                                                                             }
@@ -4809,7 +4819,9 @@ export default function AdminSiteSettingsNav() {
                                                                         )}
                                                                         :
                                                                     </span>{' '}
-                                                                    {previewHref}
+                                                                    {
+                                                                        previewHref
+                                                                    }
                                                                 </div>
                                                             </div>
                                                         </div>

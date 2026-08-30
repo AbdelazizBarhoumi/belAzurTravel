@@ -308,7 +308,7 @@ export default function AdminEvents() {
                                             htmlFor={fieldKey}
                                             className={`text-xs font-semibold ${error ? 'text-destructive' : 'text-muted-foreground'}`}
                                         >
-                                             {field.label}
+                                            {field.label}
                                         </label>
                                         <input
                                             id={fieldKey}
@@ -385,7 +385,7 @@ export default function AdminEvents() {
                             htmlFor={`description_${activeLang}`}
                             className="text-xs font-semibold text-muted-foreground"
                         >
-                             {t('admin.description')}
+                            {t('admin.description')}
                         </label>
                         <textarea
                             id={`description_${activeLang}`}
@@ -410,7 +410,7 @@ export default function AdminEvents() {
                                 htmlFor={`about_${activeLang}`}
                                 className="text-xs font-semibold text-muted-foreground"
                             >
-                                 {t('admin.eventForm.about')}
+                                {t('admin.eventForm.about')}
                             </label>
                             <textarea
                                 id={`about_${activeLang}`}
@@ -434,7 +434,7 @@ export default function AdminEvents() {
                                 htmlFor={`attendees_${activeLang}`}
                                 className="text-xs font-semibold text-muted-foreground"
                             >
-                                 {t('admin.eventForm.attendees')}
+                                {t('admin.eventForm.attendees')}
                             </label>
                             <input
                                 id={`attendees_${activeLang}`}

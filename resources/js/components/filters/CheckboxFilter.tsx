@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
+import { CollapsibleSection } from './CollapsibleSection';
 
 export interface CategorizedItem {
     category_assignments?: Record<string, string | string[]>;
@@ -30,8 +31,6 @@ export function CheckboxFilter({
                 const assignments = item.category_assignments;
                 if (!assignments) return false;
                 const assigned = assignments[categoryType.key];
-                // assigned may be a string or an array of strings
-                // (e.g. pricing_type from multiple boarding codes).
                 if (Array.isArray(assigned)) {
                     return assigned.includes(val.key);
                 }
@@ -49,15 +48,16 @@ export function CheckboxFilter({
         onChange(next);
     };
 
-    return (
-        <div>
-            {/* Group title */}
-            <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
-                {categoryType.label[lang] || categoryType.label.en}
-            </h3>
+    const hasScroll = categoryType.values.length > 8;
 
-            {/* Checkbox options */}
-            <div className="space-y-0.5 sm:space-y-1">
+    return (
+        <CollapsibleSection
+            title={categoryType.label[lang] || categoryType.label.en}
+            activeCount={selectedValues.length}
+        >
+            <div
+                className={`space-y-0.5 sm:space-y-1 ${hasScroll ? 'scrollbar-thin max-h-[288px] overflow-y-auto' : ''}`}
+            >
                 {categoryType.values.map((val) => {
                     const isActive = selectedValues.includes(val.key);
                     const count = valueCounts[val.key] || 0;
@@ -113,6 +113,6 @@ export function CheckboxFilter({
                     );
                 })}
             </div>
-        </div>
+        </CollapsibleSection>
     );
 }

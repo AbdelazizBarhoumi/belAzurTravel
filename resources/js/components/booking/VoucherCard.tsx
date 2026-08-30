@@ -170,7 +170,10 @@ export function VoucherCard({ booking }: VoucherCardProps) {
                                             </td>
                                         )}
                                         <td className="px-2 py-2 font-semibold text-foreground">
-                                            {formatPrice(room.total ?? 0, room.currency ?? currency)}
+                                            {formatPrice(
+                                                room.total ?? 0,
+                                                room.currency ?? currency,
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

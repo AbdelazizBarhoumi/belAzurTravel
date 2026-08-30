@@ -78,19 +78,19 @@ class TestDataSeeder extends Seeder
     {
         $types = [
             // Hotels
-            ['entity_type' => 'hotels', 'key' => 'pricing_type', 'label' => $this->loc('Pricing Type', 'Type de tarif', 'نوع التسعير'), 'filter_style' => 'pills', 'locked' => true, 'values' => [
+            ['entity_type' => 'hotels', 'key' => 'pricing_type', 'label' => $this->loc('Pricing Type', 'Formule repas', 'نوع التسعير'), 'filter_style' => 'pills', 'locked' => true, 'values' => [
                 ['key' => 'all-inclusive', 'name' => $this->loc('All Inclusive', 'Tout inclus', 'شامل كل شيء')],
                 ['key' => 'half-board', 'name' => $this->loc('Half Board', 'Demi pension', 'إجازة نصف')],
                 ['key' => 'bed-breakfast', 'name' => $this->loc('Bed & Breakfast', 'Petit déjeuner inclus', 'فطور')],
                 ['key' => 'room-only', 'name' => $this->loc('Room Only', 'Chambre seulement', 'غرفة فقط')],
             ]],
             // Tours
-            ['entity_type' => 'tours', 'key' => 'pricing_type', 'label' => $this->loc('Pricing Type', 'Type de tarif', 'نوع التسعير'), 'filter_style' => 'pills', 'locked' => true, 'values' => [
+            ['entity_type' => 'tours', 'key' => 'pricing_type', 'label' => $this->loc('Pricing Type', 'Formule repas', 'نوع التسعير'), 'filter_style' => 'pills', 'locked' => true, 'values' => [
                 ['key' => 'per-person', 'name' => $this->loc('Per Person', 'Par personne', 'لكل فرد')],
                 ['key' => 'per-group', 'name' => $this->loc('Per Group', 'Par groupe', 'للمجموعة')],
             ]],
             // Travels
-            ['entity_type' => 'travels', 'key' => 'pricing_type', 'label' => $this->loc('Pricing Type', 'Type de tarif', 'نوع التسعير'), 'filter_style' => 'pills', 'locked' => true, 'values' => [
+            ['entity_type' => 'travels', 'key' => 'pricing_type', 'label' => $this->loc('Pricing Type', 'Formule repas', 'نوع التسعير'), 'filter_style' => 'pills', 'locked' => true, 'values' => [
                 ['key' => 'per-person', 'name' => $this->loc('Per Person', 'Par personne', 'لكل فرد')],
                 ['key' => 'per-group', 'name' => $this->loc('Per Group', 'Par groupe', 'للمجموعة')],
             ]],
@@ -1044,7 +1044,7 @@ class TestDataSeeder extends Seeder
                 'hotels' => [
                     'interval' => 6000,
                     'images' => [
-                        ['url' => $this->img('photo-1566073771259-6a8506099945', 1600, 900), 'title' => $this->loc('Luxury Hotels', 'Hôtels de Luxe', 'فنادق فاخرة'), 'subtitle' => $this->loc('Best stays in Tunisia', 'Meilleurs hébergements en Tunisie', 'أفضل الإقامات في تونس')],
+                        ['url' => $this->img('photo-1566073771259-6a8506099945', 1600, 900), 'title' => $this->loc('Luxury Hotels', 'Hôtels', 'فنادق فاخرة'), 'subtitle' => $this->loc('Best stays in Tunisia', 'Meilleurs hébergements en Tunisie', 'أفضل الإقامات في تونس')],
                         ['url' => $this->img('photo-1520250497591-112f2f40a3f4', 1600, 900), 'title' => $this->loc('Beach Resorts', 'Resorts de Plage', 'منتجعات شاطئية'), 'subtitle' => $this->loc('Oceanfront paradise', 'Paradis en bord de mer', 'جنة على شاطئ البحر')],
                     ],
                 ],

@@ -168,7 +168,8 @@ export function RoomRatesTable({
         ? (active.priceTotal ?? active.pricePerNight) * occupancy.rooms
         : 0;
     const activeBaseTotal = active
-        ? (active.basePrice ?? active.priceTotal ?? active.pricePerNight) * occupancy.rooms
+        ? (active.basePrice ?? active.priceTotal ?? active.pricePerNight) *
+          occupancy.rooms
         : 0;
     const activeTotalPromo = roomPromo(activeTotal, activeBaseTotal);
 
@@ -254,8 +255,9 @@ export function RoomRatesTable({
                                     (rate.priceTotal ?? rate.pricePerNight) *
                                     occupancy.rooms;
                                 const baseTotal =
-                                    (rate.basePrice ?? rate.priceTotal ?? rate.pricePerNight) *
-                                    occupancy.rooms;
+                                    (rate.basePrice ??
+                                        rate.priceTotal ??
+                                        rate.pricePerNight) * occupancy.rooms;
                                 const totalPromo = roomPromo(total, baseTotal);
 
                                 return (
@@ -399,7 +401,10 @@ export function RoomRatesTable({
                                                                     className="text-[11px] text-muted-foreground"
                                                                 >
                                                                     +
-                                                                    {formatPrice(supplement.price, currency)}{' '}
+                                                                    {formatPrice(
+                                                                        supplement.price,
+                                                                        currency,
+                                                                    )}{' '}
                                                                     {
                                                                         supplement.name
                                                                     }
@@ -430,7 +435,10 @@ export function RoomRatesTable({
                                             </p>
                                             {!requestMode && totalPromo && (
                                                 <p className="text-xs font-medium text-muted-foreground line-through">
-                                                    {formatPrice(totalPromo.original, currency)}
+                                                    {formatPrice(
+                                                        totalPromo.original,
+                                                        currency,
+                                                    )}
                                                 </p>
                                             )}
                                         </div>
@@ -472,7 +480,10 @@ export function RoomRatesTable({
                         </p>
                         {!requestMode && activeTotalPromo && (
                             <p className="text-xs font-medium text-muted-foreground line-through">
-                                {formatPrice(activeTotalPromo.original, currency)}
+                                {formatPrice(
+                                    activeTotalPromo.original,
+                                    currency,
+                                )}
                             </p>
                         )}
                     </div>

@@ -632,7 +632,7 @@ export function EntityFormDialog<T extends object>({
                         </div>
                     </DialogHeader>
 
-                    <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6">
+                    <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
                         {layout === 'grid-2' ? (
                             <div className="space-y-6">
                                 {(() => {

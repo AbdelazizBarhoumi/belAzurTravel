@@ -205,7 +205,8 @@ export function RoomsList({
                                             </div>
                                             <div className="mb-4 font-serif text-3xl font-bold text-secondary">
                                                 {formatPrice(
-                                                    room.priceTotal ?? room.pricePerNight,
+                                                    room.priceTotal ??
+                                                        room.pricePerNight,
                                                     currency,
                                                 )}
                                             </div>
@@ -213,7 +214,10 @@ export function RoomsList({
                                             room.nights ? (
                                                 <div className="mb-4 text-xs text-muted-foreground">
                                                     ~
-                                                    {formatPrice(room.pricePerNight, currency)}{' '}
+                                                    {formatPrice(
+                                                        room.pricePerNight,
+                                                        currency,
+                                                    )}{' '}
                                                     {t('hotelDetail.pernight')}{' '}
                                                     · {room.nights}{' '}
                                                     {t(
@@ -241,7 +245,11 @@ export function RoomsList({
                                                                     }
                                                                 </span>
                                                                 <span className="font-semibold text-foreground">
-                                                                    +{formatPrice(supplement.price, currency)}
+                                                                    +
+                                                                    {formatPrice(
+                                                                        supplement.price,
+                                                                        currency,
+                                                                    )}
                                                                     {supplement.perNight
                                                                         ? ` ${t('hotelDetail.pernight')}`
                                                                         : ''}

@@ -103,23 +103,29 @@ export default {
                     from: { opacity: '0', transform: 'translateX(30px)' },
                     to: { opacity: '1', transform: 'translateX(0)' },
                 },
-                "marquee-left": {
-                    from: { transform: "translateX(0)" },
-                    to: { transform: "translateX(-50%)" },
+
+                'marquee-left': {
+                    from: { transform: 'translateX(0)' },
+                    to: { transform: 'translateX(-50%)' },
                 },
-                "marquee-right": {
-                    from: { transform: "translateX(-50%)" },
-                    to: { transform: "translateX(0)" },
+
+                'marquee-right': {
+                    from: { transform: 'translateX(-50%)' },
+                    to: { transform: 'translateX(0)' },
                 },
             },
+
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
                 'accordion-up': 'accordion-up 0.2s ease-out',
                 'fade-up': 'fade-up 0.6s ease-out forwards',
                 'fade-in': 'fade-in 0.5s ease-out forwards',
                 'slide-in-right': 'slide-in-right 0.5s ease-out forwards',
-                'marquee-left': 'marquee-left 30s linear infinite',
-                'marquee-right': 'marquee-right 30s linear infinite',
+
+                // Default duration.
+                // The React component will override this based on content width.
+                'marquee-left': 'marquee-left var(--marquee-duration, 40s) linear infinite',
+                'marquee-right': 'marquee-right var(--marquee-duration, 40s) linear infinite',
             },
             zIndex: {
                 9999: '9999',
@@ -137,6 +143,22 @@ export default {
                     'scrollbar-width': 'none',
                     '&::-webkit-scrollbar': {
                         display: 'none',
+                    },
+                },
+                '.scrollbar-thin': {
+                    'scrollbar-width': 'thin',
+                    '&::-webkit-scrollbar': {
+                        width: '4px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        background: 'transparent',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        'background-color': 'hsl(var(--muted-foreground) / 0.2)',
+                        'border-radius': '9999px',
+                    },
+                    '&::-webkit-scrollbar-thumb:hover': {
+                        'background-color': 'hsl(var(--muted-foreground) / 0.4)',
                     },
                 },
             });

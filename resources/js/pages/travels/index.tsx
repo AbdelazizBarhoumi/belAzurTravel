@@ -338,7 +338,10 @@ const Travels = () => {
                                                                     </span>
                                                                 </div>
                                                                 <span className="text-lg font-bold text-primary">
-                                                                    {formatPrice(tour.price, 'TND')}
+                                                                    {formatPrice(
+                                                                        tour.price,
+                                                                        'TND',
+                                                                    )}
                                                                 </span>
                                                                 <span className="ml-1 text-xs text-muted-foreground">
                                                                     {t(

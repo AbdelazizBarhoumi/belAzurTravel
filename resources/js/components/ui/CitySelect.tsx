@@ -51,15 +51,11 @@ export function CitySelect({
                     onChange(city.name);
                 }
             }}
-            disabled={disabled || !countryCode}
+            disabled={disabled}
         >
             <SelectTrigger className={className}>
                 <SelectValue
-                    placeholder={
-                        !countryCode
-                            ? 'Select country first'
-                            : placeholder || 'Select city'
-                    }
+                    placeholder={placeholder || 'Select destination'}
                 >
                     {selectedCity
                         ? localizeName(selectedCity.name, lang)

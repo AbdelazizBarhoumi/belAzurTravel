@@ -14,23 +14,27 @@ interface Props {
     config: LandingSectionConfig;
 }
 
-export function HotelsSection({ config }: Props) {
+export function HotelSelectionSection({ config }: Props) {
     const { lang, t } = useLanguage();
     const { data: hotels = [] } = useHotels();
     const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
 
+    const recommended = hotels.filter((h) => h.htel_recommande === true);
+
     const title =
-        config.title?.[lang] ?? config.title?.en ?? t('home.featuredHotels');
+        config.title?.[lang] ??
+        config.title?.en ??
+        t('home.hotelSelection');
     const subtitle =
         config.subtitle?.[lang] ??
         config.subtitle?.en ??
-        t('home.featuredHotelsDesc');
-    if (hotels.length === 0) return null;
+        t('home.hotelSelectionDesc');
+    if (recommended.length === 0) return null;
 
     const style = config.style ?? 'carousel';
 
     if (style === 'carousel') {
-        const withPromo = hotels
+        const withPromo = recommended
             .map((h) => ({ hotel: h, promo: roomPromo(h.price, h.base_price) }))
             .filter((e) => e.promo !== null)
             .sort((a, b) => b.promo!.percent - a.promo!.percent);
@@ -41,7 +45,7 @@ export function HotelsSection({ config }: Props) {
                       hotel: e.hotel,
                       promo: e.promo!,
                   }))
-                : hotels.slice(0, 6).map((h) => ({
+                : recommended.slice(0, 6).map((h) => ({
                       hotel: h,
                       promo: null,
                   }));
@@ -72,13 +76,13 @@ export function HotelsSection({ config }: Props) {
                 ctaLabel={t('common.viewAll')}
                 ctaHref="/hotels"
                 items={items}
-                accent="primary"
+                accent="secondary"
             />
         );
     }
 
     if (style === 'cards') {
-        const withPromo = hotels
+        const withPromo = recommended
             .map((h) => ({ hotel: h, promo: roomPromo(h.price, h.base_price) }))
             .filter((e) => e.promo !== null)
             .sort((a, b) => b.promo!.percent - a.promo!.percent);
@@ -89,7 +93,7 @@ export function HotelsSection({ config }: Props) {
                       hotel: e.hotel,
                       promo: e.promo!,
                   }))
-                : hotels.slice(0, 3).map((h) => ({
+                : recommended.slice(0, 3).map((h) => ({
                       hotel: h,
                       promo: null,
                   }));
@@ -208,7 +212,7 @@ export function HotelsSection({ config }: Props) {
     }
 
     // grid — 6 items, 2 rows of 3
-    const withPromoGrid = hotels
+    const withPromoGrid = recommended
         .map((h) => ({ hotel: h, promo: roomPromo(h.price, h.base_price) }))
         .filter((e) => e.promo !== null)
         .sort((a, b) => b.promo!.percent - a.promo!.percent);
@@ -219,7 +223,7 @@ export function HotelsSection({ config }: Props) {
                   hotel: e.hotel,
                   promo: e.promo!,
               }))
-            : hotels.slice(0, 6).map((h) => ({
+            : recommended.slice(0, 6).map((h) => ({
                   hotel: h,
                   promo: null,
               }));

@@ -42,7 +42,11 @@ import { Gallery } from '@/components/media/Gallery';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
@@ -212,9 +216,10 @@ export default function HotelDetail() {
         ? new Date(`${urlCheckOut}T00:00:00`)
         : new Date(initialFrom.getTime() + 86_400_000);
 
-    const [dateRange, setDateRange] = useState<DateRange | undefined>(
-        { from: initialFrom, to: initialTo },
-    );
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: initialFrom,
+        to: initialTo,
+    });
     const [occupancy, setOccupancy] = useState<Occupancy>({
         rooms: Number.isFinite(urlRooms) && urlRooms > 0 ? urlRooms : 1,
         adults: Number.isFinite(urlGuests) && urlGuests > 0 ? urlGuests : 1,
@@ -452,12 +457,12 @@ export default function HotelDetail() {
           : null;
     // Match the "Montant total du séjour" calculation in BookingDialog
     const sidebarPrice = activeRate
-        ? (activeRate.priceTotal ?? activeRate.pricePerNight) *
-          occupancy.rooms
+        ? (activeRate.priceTotal ?? activeRate.pricePerNight) * occupancy.rooms
         : headerDisplayPrice;
     const sidebarBasePrice = activeRate
-        ? (activeRate.basePrice ?? activeRate.priceTotal ?? activeRate.pricePerNight) *
-          occupancy.rooms
+        ? (activeRate.basePrice ??
+              activeRate.priceTotal ??
+              activeRate.pricePerNight) * occupancy.rooms
         : sidebarPrice;
     const sidebarPromo = roomPromo(sidebarPrice, sidebarBasePrice);
     const title = localizeText(detail.name, lang);
@@ -590,7 +595,7 @@ export default function HotelDetail() {
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                     >
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="mb-2 flex items-center gap-2">
                             <div className="flex text-secondary">
                                 {Array.from({ length: stars }).map((_, i) => (
                                     <Star
@@ -599,25 +604,33 @@ export default function HotelDetail() {
                                     />
                                 ))}
                             </div>
-                            <span className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                            <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
                                 <MapPin className="h-3.5 w-3.5" />
                                 {location}
                             </span>
                         </div>
-                        <h1 className="font-serif text-3xl font-bold text-primary mb-4 md:text-4xl">
+                        <h1 className="mb-4 font-serif text-3xl font-bold text-primary md:text-4xl">
                             {title}
                         </h1>
                         {(() => {
                             const shortDesc =
                                 cleanDescription(detail.short_description) ||
                                 cleanDescription(
-                                    (effectiveHotel as { short_description?: string | null })
-                                        ?.short_description,
+                                    (
+                                        effectiveHotel as {
+                                            short_description?: string | null;
+                                        }
+                                    )?.short_description,
                                 ) ||
-                                cleanDescription(localizeText(detail.description ?? detail.about, lang));
+                                cleanDescription(
+                                    localizeText(
+                                        detail.description ?? detail.about,
+                                        lang,
+                                    ),
+                                );
                             if (shortDesc) {
                                 return (
-                                    <p className="text-base text-muted-foreground leading-relaxed">
+                                    <p className="text-base leading-relaxed text-muted-foreground">
                                         {shortDesc}
                                     </p>
                                 );
@@ -665,12 +678,32 @@ export default function HotelDetail() {
                             </div>
                         )}
 
-                        <div className="mt-4 gap-3">
-                            <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
-                                <BadgePercent className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                                <p className="text-sm text-foreground">
+                        <div className="mt-4">
+                            <div
+                                className="flex items-start gap-3 rounded-2xl border-2 border-primary/30 bg-primary/10 p-5 shadow-sm"
+                                style={{
+                                    animation:
+                                        'pulseScale 2s ease-in-out infinite',
+                                }}
+                            >
+                                <BadgePercent className="mt-0.5 h-6 w-6 shrink-0 text-primary" />
+
+                                <p className="text-sm font-semibold leading-6 text-foreground">
                                     {t('hotelDetail.bestPriceNote')}
                                 </p>
+
+                                <style>{`
+            @keyframes pulseScale {
+                0%, 100% {
+                    transform: scale(1);
+                    opacity: 0.8;
+                }
+                50% {
+                    transform: scale(1.03);
+                    opacity: 1;
+                }
+            }
+        `}</style>
                             </div>
                         </div>
                     </section>
@@ -721,94 +754,135 @@ export default function HotelDetail() {
                             {t('hotelDetail.datesAndRates')}
                         </h2>
 
-                            {effectiveHotel &&
-                            (effectiveHotel.price != null &&
-                                effectiveHotel.base_price != null &&
-                                effectiveHotel.price < effectiveHotel.base_price ||
-                                effectiveHotel.free_child?.length ||
-                                effectiveHotel.recommended) ? (
-                                <div className="mb-4 flex flex-wrap gap-2">
-                                    {effectiveHotel.free_child?.length ? (
-                                        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                                            {t('hotelDetail.freeChild')}
-                                        </span>
-                                    ) : null}
-                                    {effectiveHotel.recommended && (
-                                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
-                                            {t('hotelDetail.recommended')}
-                                        </span>
-                                    )}
-                                </div>
-                            ) : null}
+                        {effectiveHotel &&
+                        ((effectiveHotel.price != null &&
+                            effectiveHotel.base_price != null &&
+                            effectiveHotel.price < effectiveHotel.base_price) ||
+                            effectiveHotel.free_child?.length ||
+                            effectiveHotel.recommended) ? (
+                            <div className="mb-4 flex flex-wrap gap-2">
+                                {effectiveHotel.free_child?.length ? (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                        {t('hotelDetail.freeChild')}
+                                    </span>
+                                ) : null}
+                                {effectiveHotel.recommended && (
+                                    <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                                        {t('hotelDetail.recommended')}
+                                    </span>
+                                )}
+                            </div>
+                        ) : null}
 
-                            {liveSearchError ? (
-                                <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm">
-                                    <p className="font-semibold text-destructive">
-                                        {t('search.error.title')}
-                                    </p>
-                                    <p className="mt-1 text-muted-foreground">
-                                        {t('search.error.description')}
-                                    </p>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="mt-3"
-                                        onClick={() => refetchSearch()}
-                                    >
-                                        {t('search.error.retry')}
-                                    </Button>
+                        {liveSearchError ? (
+                            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm">
+                                <p className="font-semibold text-destructive">
+                                    {t('search.error.title')}
+                                </p>
+                                <p className="mt-1 text-muted-foreground">
+                                    {t('search.error.description')}
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="mt-3"
+                                    onClick={() => refetchSearch()}
+                                >
+                                    {t('search.error.retry')}
+                                </Button>
+                            </div>
+                        ) : effectiveLoading ? (
+                            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                                <div className="flex items-center gap-2 bg-muted/60 px-5 py-3">
+                                    <Skeleton className="h-4 w-32" />
                                 </div>
-                            ) : effectiveLoading ? (
-                                <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                                    <div className="flex items-center gap-2 bg-muted/60 px-5 py-3">
-                                        <Skeleton className="h-4 w-32" />
-                                    </div>
-                                    <div className="divide-y divide-border">
-                                        {Array.from({ length: 2 }).map(
-                                            (_, i) => (
-                                                <div key={i} className="p-5">
-                                                    <div className="flex gap-4">
-                                                        <Skeleton className="hidden h-20 w-24 shrink-0 rounded-2xl sm:block" />
-                                                        <div className="flex-1 space-y-2">
-                                                            <Skeleton className="h-4 w-40" />
-                                                            <Skeleton className="h-3 w-24" />
-                                                            <Skeleton className="h-3 w-64" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-3 space-y-2 sm:pl-[104px]">
-                                                        <div className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3">
-                                                            <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
-                                                            <div className="flex-1 space-y-1.5">
-                                                                <Skeleton className="h-4 w-28" />
-                                                                <Skeleton className="h-3 w-16" />
-                                                            </div>
-                                                            <Skeleton className="h-5 w-20" />
-                                                        </div>
-                                                    </div>
+                                <div className="divide-y divide-border">
+                                    {Array.from({ length: 2 }).map((_, i) => (
+                                        <div key={i} className="p-5">
+                                            <div className="flex gap-4">
+                                                <Skeleton className="hidden h-20 w-24 shrink-0 rounded-2xl sm:block" />
+                                                <div className="flex-1 space-y-2">
+                                                    <Skeleton className="h-4 w-40" />
+                                                    <Skeleton className="h-3 w-24" />
+                                                    <Skeleton className="h-3 w-64" />
                                                 </div>
-                                            ),
+                                            </div>
+                                            <div className="mt-3 space-y-2 sm:pl-[104px]">
+                                                <div className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3">
+                                                    <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
+                                                    <div className="flex-1 space-y-1.5">
+                                                        <Skeleton className="h-4 w-28" />
+                                                        <Skeleton className="h-3 w-16" />
+                                                    </div>
+                                                    <Skeleton className="h-5 w-20" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex items-center justify-end gap-4 border-t border-border bg-muted/50 px-5 py-4">
+                                    <Skeleton className="h-4 w-24" />
+                                    <Skeleton className="h-10 w-28 rounded-md" />
+                                </div>
+                            </div>
+                        ) : searchedUnavailable ? (
+                            rateRooms.length > 0 ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                >
+                                    <div className="mb-3 rounded-2xl border border-amber-300/50 bg-amber-50 p-4">
+                                        <p className="text-sm text-amber-800">
+                                            {t('hotelDetail.requestNotice') ||
+                                                'This hotel has no availability for your selected dates, but you can submit a request.'}
+                                        </p>
+                                        {unavailableHotel?.first_available_at && (
+                                            <p className="mt-1 text-xs font-semibold text-amber-700">
+                                                {t('hotelDetail.availableFrom')}{' '}
+                                                {
+                                                    unavailableHotel.first_available_at
+                                                }
+                                                {unavailableHotel.min_nights &&
+                                                    unavailableHotel.min_nights >
+                                                        1 &&
+                                                    ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
+                                            </p>
                                         )}
                                     </div>
-                                    <div className="flex items-center justify-end gap-4 border-t border-border bg-muted/50 px-5 py-4">
-                                        <Skeleton className="h-4 w-24" />
-                                        <Skeleton className="h-10 w-28 rounded-md" />
-                                    </div>
-                                </div>
-                            ) : searchedUnavailable ? (
-                                rateRooms.length > 0 ? (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                    >
-                                        <div className="mb-3 rounded-2xl border border-amber-300/50 bg-amber-50 p-4">
-                                            <p className="text-sm text-amber-800">
+                                    <RoomRatesTable
+                                        rooms={rateRooms}
+                                        occupancy={occupancy}
+                                        currency={currency}
+                                        onReserve={handleReserve}
+                                        onSelect={(room) => setActiveRate(room)}
+                                        requestMode
+                                        resetKey={
+                                            effectiveHotel?.id ?? 'static'
+                                        }
+                                    />
+                                </motion.div>
+                            ) : (
+                                <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-6">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                                            <span className="text-lg text-amber-700">
+                                                ?
+                                            </span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-serif text-lg font-bold text-amber-900">
+                                                {t(
+                                                    'hotelDetail.requestTitle',
+                                                ) || 'Per request'}
+                                            </h3>
+                                            <p className="mt-1 text-sm text-amber-800">
                                                 {t(
                                                     'hotelDetail.requestNotice',
                                                 ) ||
                                                     'This hotel has no availability for your selected dates, but you can submit a request.'}
                                             </p>
                                             {unavailableHotel?.first_available_at && (
-                                                <p className="mt-1 text-xs font-semibold text-amber-700">
+                                                <p className="mt-2 text-xs font-semibold text-amber-700">
                                                     {t(
                                                         'hotelDetail.availableFrom',
                                                     )}{' '}
@@ -821,85 +895,40 @@ export default function HotelDetail() {
                                                         ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
                                                 </p>
                                             )}
-                                        </div>
-                                        <RoomRatesTable
-                                            rooms={rateRooms}
-                                            occupancy={occupancy}
-                                            currency={currency}
-                                            onReserve={handleReserve}
-                                            onSelect={(room) => setActiveRate(room)}
-                                            requestMode
-                                            resetKey={effectiveHotel?.id ?? 'static'}
-                                        />
-                                    </motion.div>
-                                ) : (
-                                    <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-6">
-                                        <div className="flex items-start gap-3">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100">
-                                                <span className="text-lg text-amber-700">
-                                                    ?
-                                                </span>
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="font-serif text-lg font-bold text-amber-900">
-                                                    {t(
-                                                        'hotelDetail.requestTitle',
-                                                    ) || 'Per request'}
-                                                </h3>
-                                                <p className="mt-1 text-sm text-amber-800">
-                                                    {t(
-                                                        'hotelDetail.requestNotice',
-                                                    ) ||
-                                                        'This hotel has no availability for your selected dates, but you can submit a request.'}
-                                                </p>
-                                                {unavailableHotel?.first_available_at && (
-                                                    <p className="mt-2 text-xs font-semibold text-amber-700">
-                                                        {t(
-                                                            'hotelDetail.availableFrom',
-                                                        )}{' '}
-                                                        {
-                                                            unavailableHotel.first_available_at
-                                                        }
-                                                        {unavailableHotel.min_nights &&
-                                                            unavailableHotel.min_nights >
-                                                                1 &&
-                                                            ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
-                                                    </p>
-                                                )}
-                                                <Button
-                                                    className="mt-4 bg-amber-600 text-white hover:bg-amber-700"
-                                                    onClick={() => {
-                                                        setRequestMode(true);
-                                                    }}
-                                                >
-                                                    {t(
-                                                        'hotelDetail.requestBooking',
-                                                    ) || 'Request Booking'}
-                                                </Button>
-                                            </div>
+                                            <Button
+                                                className="mt-4 bg-amber-600 text-white hover:bg-amber-700"
+                                                onClick={() => {
+                                                    setRequestMode(true);
+                                                }}
+                                            >
+                                                {t(
+                                                    'hotelDetail.requestBooking',
+                                                ) || 'Request Booking'}
+                                            </Button>
                                         </div>
                                     </div>
-                                )
-                            ) : hotelNotFound ? (
-                                <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-800">
-                                    {t('hotelDetail.unavailableNotice') ||
-                                        'This hotel has no availability for the selected dates. Try other dates.'}
                                 </div>
-                            ) : activeQuery && effectiveHotel ? (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 12 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                >
-                                    <RoomRatesTable
-                                        rooms={rateRooms}
-                                        occupancy={occupancy}
-                                        currency={currency}
-                                        onReserve={handleReserve}
-                                        onSelect={(room) => setActiveRate(room)}
-                                        resetKey={effectiveHotel?.id ?? 'static'}
-                                    />
-                                </motion.div>
-                            ) : null}
+                            )
+                        ) : hotelNotFound ? (
+                            <div className="rounded-2xl border border-amber-300/50 bg-amber-50 p-4 text-sm text-amber-800">
+                                {t('hotelDetail.unavailableNotice') ||
+                                    'This hotel has no availability for the selected dates. Try other dates.'}
+                            </div>
+                        ) : activeQuery && effectiveHotel ? (
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <RoomRatesTable
+                                    rooms={rateRooms}
+                                    occupancy={occupancy}
+                                    currency={currency}
+                                    onReserve={handleReserve}
+                                    onSelect={(room) => setActiveRate(room)}
+                                    resetKey={effectiveHotel?.id ?? 'static'}
+                                />
+                            </motion.div>
+                        ) : null}
                     </section>
                 </div>
 
@@ -912,52 +941,90 @@ export default function HotelDetail() {
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-2xl font-bold text-primary">
                                         {formatPrice(
-                                            sidebarPromo ? sidebarPromo.discounted : sidebarPrice,
+                                            sidebarPromo
+                                                ? sidebarPromo.discounted
+                                                : sidebarPrice,
                                             currency,
                                         )}
                                     </span>
                                     {sidebarPromo && (
-                                        <span className="ml-auto bg-destructive/10 text-destructive text-xs font-medium px-2 py-1 rounded-full">
-                                            -{Math.round(((sidebarPromo.original - sidebarPromo.discounted) / sidebarPromo.original) * 100)}% {t('hotelDetail.today')}
+                                        <span className="ml-auto rounded-full bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
+                                            -
+                                            {Math.round(
+                                                ((sidebarPromo.original -
+                                                    sidebarPromo.discounted) /
+                                                    sidebarPromo.original) *
+                                                    100,
+                                            )}
+                                            % {t('hotelDetail.today')}
                                         </span>
                                     )}
                                 </div>
                                 {sidebarPromo && (
                                     <p className="text-xs font-medium text-muted-foreground line-through">
-                                        {formatPrice(sidebarPromo.original, currency)}
+                                        {formatPrice(
+                                            sidebarPromo.original,
+                                            currency,
+                                        )}
                                     </p>
                                 )}
                             </div>
                         )}
 
                         {/* Dates popover */}
-                        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                        <Popover
+                            open={datePickerOpen}
+                            onOpenChange={setDatePickerOpen}
+                        >
                             <PopoverTrigger asChild>
                                 <button
                                     type="button"
-                                    className="w-full border border-border rounded-lg p-3 text-left hover:bg-muted/50 transition-colors mb-4"
+                                    className="mb-4 w-full rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted/50"
                                 >
                                     <div className="flex">
                                         <div className="flex-1 border-r border-border">
-                                            <span className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">{t('hotelDetail.checkIn')}</span>
+                                            <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">
+                                                {t('hotelDetail.checkIn')}
+                                            </span>
                                             <span className="text-sm font-medium text-foreground">
                                                 {dateRange?.from
-                                                    ? format(dateRange.from, 'd MMM yyyy', { locale: datePickerLocale(lang) })
+                                                    ? format(
+                                                          dateRange.from,
+                                                          'd MMM yyyy',
+                                                          {
+                                                              locale: datePickerLocale(
+                                                                  lang,
+                                                              ),
+                                                          },
+                                                      )
                                                     : '—'}
                                             </span>
                                         </div>
                                         <div className="flex-1 pl-3">
-                                            <span className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">{t('hotelDetail.checkOut')}</span>
+                                            <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">
+                                                {t('hotelDetail.checkOut')}
+                                            </span>
                                             <span className="text-sm font-medium text-foreground">
                                                 {dateRange?.to
-                                                    ? format(dateRange.to, 'd MMM yyyy', { locale: datePickerLocale(lang) })
+                                                    ? format(
+                                                          dateRange.to,
+                                                          'd MMM yyyy',
+                                                          {
+                                                              locale: datePickerLocale(
+                                                                  lang,
+                                                              ),
+                                                          },
+                                                      )
                                                     : '—'}
                                             </span>
                                         </div>
                                     </div>
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent
+                                className="w-auto p-0"
+                                align="start"
+                            >
                                 <Calendar
                                     mode="range"
                                     selected={dateRange}
@@ -971,77 +1038,222 @@ export default function HotelDetail() {
                         </Popover>
 
                         {/* Occupancy popover */}
-                        <Popover open={occupancyPickerOpen} onOpenChange={setOccupancyPickerOpen}>
+                        <Popover
+                            open={occupancyPickerOpen}
+                            onOpenChange={setOccupancyPickerOpen}
+                        >
                             <PopoverTrigger asChild>
                                 <button
                                     type="button"
-                                    className="w-full border border-border rounded-lg p-3 text-left hover:bg-muted/50 transition-colors mb-6"
+                                    className="mb-6 w-full rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted/50"
                                 >
-                                    <span className="block text-xs text-muted-foreground uppercase tracking-wider mb-1">{t('hotelDetail.guests')}</span>
+                                    <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">
+                                        {t('hotelDetail.guests')}
+                                    </span>
                                     <span className="text-sm font-medium text-foreground">
-                                        {occupancy.adults} {t('hotelDetail.adults')}, {occupancy.childAges.length} {t('hotelDetail.children')}
+                                        {occupancy.adults}{' '}
+                                        {t('hotelDetail.adults')},{' '}
+                                        {occupancy.childAges.length}{' '}
+                                        {t('hotelDetail.children')}
                                     </span>
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-72 space-y-4" align="start">
+                            <PopoverContent
+                                className="w-72 space-y-4"
+                                align="start"
+                            >
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="text-sm font-medium text-foreground">{t('hotelDetail.roomsTitle')}</p>
-                                        <p className="text-xs text-muted-foreground">{t('hotelDetail.advancedSearch')}</p>
+                                        <p className="text-sm font-medium text-foreground">
+                                            {t('hotelDetail.roomsTitle')}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('hotelDetail.advancedSearch')}
+                                        </p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, rooms: Math.max(1, occupancy.rooms - 1) })} disabled={occupancy.rooms <= 1}>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setOccupancy({
+                                                    ...occupancy,
+                                                    rooms: Math.max(
+                                                        1,
+                                                        occupancy.rooms - 1,
+                                                    ),
+                                                })
+                                            }
+                                            disabled={occupancy.rooms <= 1}
+                                        >
                                             <Minus className="h-3.5 w-3.5" />
                                         </Button>
-                                        <span className="min-w-8 text-center text-base font-semibold">{occupancy.rooms}</span>
-                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, rooms: Math.min(8, occupancy.rooms + 1) })} disabled={occupancy.rooms >= 8}>
+                                        <span className="min-w-8 text-center text-base font-semibold">
+                                            {occupancy.rooms}
+                                        </span>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setOccupancy({
+                                                    ...occupancy,
+                                                    rooms: Math.min(
+                                                        8,
+                                                        occupancy.rooms + 1,
+                                                    ),
+                                                })
+                                            }
+                                            disabled={occupancy.rooms >= 8}
+                                        >
                                             <Plus className="h-3.5 w-3.5" />
                                         </Button>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="text-sm font-medium text-foreground">{t('hotelDetail.adults')}</p>
-                                        <p className="text-xs text-muted-foreground">{t('hotels.adultsHelp')}</p>
+                                        <p className="text-sm font-medium text-foreground">
+                                            {t('hotelDetail.adults')}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('hotels.adultsHelp')}
+                                        </p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, adults: Math.max(1, occupancy.adults - 1) })} disabled={occupancy.adults <= 1}>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setOccupancy({
+                                                    ...occupancy,
+                                                    adults: Math.max(
+                                                        1,
+                                                        occupancy.adults - 1,
+                                                    ),
+                                                })
+                                            }
+                                            disabled={occupancy.adults <= 1}
+                                        >
                                             <Minus className="h-3.5 w-3.5" />
                                         </Button>
-                                        <span className="min-w-8 text-center text-base font-semibold">{occupancy.adults}</span>
-                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, adults: Math.min(10, occupancy.adults + 1) })} disabled={occupancy.adults >= 10}>
+                                        <span className="min-w-8 text-center text-base font-semibold">
+                                            {occupancy.adults}
+                                        </span>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setOccupancy({
+                                                    ...occupancy,
+                                                    adults: Math.min(
+                                                        10,
+                                                        occupancy.adults + 1,
+                                                    ),
+                                                })
+                                            }
+                                            disabled={occupancy.adults >= 10}
+                                        >
                                             <Plus className="h-3.5 w-3.5" />
                                         </Button>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="text-sm font-medium text-foreground">{t('hotelDetail.children')}</p>
-                                        <p className="text-xs text-muted-foreground">{t('hotels.childrenHelp')}</p>
+                                        <p className="text-sm font-medium text-foreground">
+                                            {t('hotelDetail.children')}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {t('hotels.childrenHelp')}
+                                        </p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, childAges: occupancy.childAges.slice(0, -1) })} disabled={occupancy.childAges.length === 0}>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setOccupancy({
+                                                    ...occupancy,
+                                                    childAges:
+                                                        occupancy.childAges.slice(
+                                                            0,
+                                                            -1,
+                                                        ),
+                                                })
+                                            }
+                                            disabled={
+                                                occupancy.childAges.length === 0
+                                            }
+                                        >
                                             <Minus className="h-3.5 w-3.5" />
                                         </Button>
-                                        <span className="min-w-8 text-center text-base font-semibold">{occupancy.childAges.length}</span>
-                                        <Button type="button" variant="outline" size="icon" onClick={() => setOccupancy({ ...occupancy, childAges: [...occupancy.childAges, 8] })} disabled={occupancy.childAges.length >= 6}>
+                                        <span className="min-w-8 text-center text-base font-semibold">
+                                            {occupancy.childAges.length}
+                                        </span>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() =>
+                                                setOccupancy({
+                                                    ...occupancy,
+                                                    childAges: [
+                                                        ...occupancy.childAges,
+                                                        8,
+                                                    ],
+                                                })
+                                            }
+                                            disabled={
+                                                occupancy.childAges.length >= 6
+                                            }
+                                        >
                                             <Plus className="h-3.5 w-3.5" />
                                         </Button>
                                     </div>
                                 </div>
                                 {occupancy.childAges.length > 0 && (
-                                    <div className="space-y-2 pt-2 border-t border-border">
+                                    <div className="space-y-2 border-t border-border pt-2">
                                         {occupancy.childAges.map((age, i) => (
-                                            <div key={i} className="flex items-center justify-between">
-                                                <span className="text-sm text-muted-foreground">{t('hotels.child')} {i + 1}</span>
-                                                <select value={age} onChange={(e) => {
-                                                    const newAges = [...occupancy.childAges];
-                                                    newAges[i] = Number(e.target.value);
-                                                    setOccupancy({ ...occupancy, childAges: newAges });
-                                                }} className="border border-border rounded-md px-2 py-1 text-sm">
-                                                    {Array.from({ length: 18 }, (_, i) => (
-                                                        <option key={i} value={i}>{i} {t('hotels.yearsOld')}</option>
-                                                    ))}
+                                            <div
+                                                key={i}
+                                                className="flex items-center justify-between"
+                                            >
+                                                <span className="text-sm text-muted-foreground">
+                                                    {t('hotels.child')} {i + 1}
+                                                </span>
+                                                <select
+                                                    value={age}
+                                                    onChange={(e) => {
+                                                        const newAges = [
+                                                            ...occupancy.childAges,
+                                                        ];
+                                                        newAges[i] = Number(
+                                                            e.target.value,
+                                                        );
+                                                        setOccupancy({
+                                                            ...occupancy,
+                                                            childAges: newAges,
+                                                        });
+                                                    }}
+                                                    className="rounded-md border border-border px-2 py-1 text-sm"
+                                                >
+                                                    {Array.from(
+                                                        { length: 18 },
+                                                        (_, i) => (
+                                                            <option
+                                                                key={i}
+                                                                value={i}
+                                                            >
+                                                                {i}{' '}
+                                                                {t(
+                                                                    'hotels.yearsOld',
+                                                                )}
+                                                            </option>
+                                                        ),
+                                                    )}
                                                 </select>
                                             </div>
                                         ))}
@@ -1089,25 +1301,25 @@ export default function HotelDetail() {
                                 {address}
                             </span>
                         </div>
-                        <div className="flex flex-row justify-between gap-3 mx-8">
-                        {detail.check_in_time && (
-                            <div className="flex items-center gap-2.5">
-                                <LogIn className="h-4 w-4 shrink-0 text-primary" />
-                                <span className="text-xs text-muted-foreground">
-                                    {t('hotelInfo.checkIn')}{' '}
-                                    {detail.check_in_time}
-                                </span>
-                            </div>
-                        )}
-                        {detail.check_out_time && (
-                            <div className="flex items-center gap-2.5">
-                                <LogOut className="h-4 w-4 shrink-0 text-primary" />
-                                <span className="text-xs text-muted-foreground">
-                                    {t('hotelInfo.checkOut')}{' '}
-                                    {detail.check_out_time}
-                                </span>
-                            </div>
-                        )}
+                        <div className="mx-8 flex flex-row justify-between gap-3">
+                            {detail.check_in_time && (
+                                <div className="flex items-center gap-2.5">
+                                    <LogIn className="h-4 w-4 shrink-0 text-primary" />
+                                    <span className="text-xs text-muted-foreground">
+                                        {t('hotelInfo.checkIn')}{' '}
+                                        {detail.check_in_time}
+                                    </span>
+                                </div>
+                            )}
+                            {detail.check_out_time && (
+                                <div className="flex items-center gap-2.5">
+                                    <LogOut className="h-4 w-4 shrink-0 text-primary" />
+                                    <span className="text-xs text-muted-foreground">
+                                        {t('hotelInfo.checkOut')}{' '}
+                                        {detail.check_out_time}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         {themes.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -1139,7 +1351,8 @@ export default function HotelDetail() {
                                 bookingRoom.pricePerNight) * occupancy.rooms;
                         const promo = roomPromo(
                             raw,
-                            (bookingRoom.basePrice ?? bookingRoom.pricePerNight) * occupancy.rooms,
+                            (bookingRoom.basePrice ??
+                                bookingRoom.pricePerNight) * occupancy.rooms,
                         );
                         return promo ? promo.discounted : raw;
                     })()}
@@ -1151,8 +1364,9 @@ export default function HotelDetail() {
                     notRefundable={bookingRoom.notRefundable}
                     freeCancellationUntil={bookingRoom.cancellationDeadline}
                     basePrice={
-                        (bookingRoom.basePrice ?? bookingRoom.priceTotal ?? bookingRoom.pricePerNight) *
-                        occupancy.rooms
+                        (bookingRoom.basePrice ??
+                            bookingRoom.priceTotal ??
+                            bookingRoom.pricePerNight) * occupancy.rooms
                     }
                     provider={
                         effectiveHotel

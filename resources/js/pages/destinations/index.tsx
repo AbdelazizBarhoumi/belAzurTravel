@@ -456,7 +456,10 @@ const Destinations = () => {
                                                             {dest.price > 0 && (
                                                                 <span className="font-bold text-primary">
                                                                     From{' '}
-                                                                    {formatPrice(dest.price, 'TND')}
+                                                                    {formatPrice(
+                                                                        dest.price,
+                                                                        'TND',
+                                                                    )}
                                                                 </span>
                                                             )}
                                                             <Button

@@ -191,7 +191,8 @@ export default function Hotels() {
     const initialFromDate = params.get('from') || '';
     const initialToDate = params.get('to') || '';
     const tomorrowISO = toLocalISODate(new Date(Date.now() + 86400000)) ?? '';
-    const tomorrowPlusOne = toLocalISODate(new Date(Date.now() + 2 * 86400000)) ?? '';
+    const tomorrowPlusOne =
+        toLocalISODate(new Date(Date.now() + 2 * 86400000)) ?? '';
     const [showMobileFilter, setShowMobileFilter] = useState(false);
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [occupancy, setOccupancy] = useState<Occupancy>({
@@ -204,8 +205,12 @@ export default function Hotels() {
     const [sort, setSort] = useState<SortValue>('price_asc');
     const [showUnavailable, setShowUnavailable] = useState(false);
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
-        from: initialFromDate ? new Date(initialFromDate) : new Date(`${tomorrowISO}T00:00:00`),
-        to: initialToDate ? new Date(initialToDate) : new Date(`${tomorrowPlusOne}T00:00:00`),
+        from: initialFromDate
+            ? new Date(initialFromDate)
+            : new Date(`${tomorrowISO}T00:00:00`),
+        to: initialToDate
+            ? new Date(initialToDate)
+            : new Date(`${tomorrowPlusOne}T00:00:00`),
     });
     const { data: hotels = [] } = useHotels();
     const { data: categoryTypes = [] } = useCategoryTypesPublic('hotels');
@@ -635,9 +640,9 @@ export default function Hotels() {
     const priceBounds: readonly [number, number] =
         allStayPrices.length > 0
             ? [
-                Math.floor(Math.min(...allStayPrices)),
-                Math.ceil(Math.max(...allStayPrices)),
-            ]
+                  Math.floor(Math.min(...allStayPrices)),
+                  Math.ceil(Math.max(...allStayPrices)),
+              ]
             : [dataMinPrice, dataMaxPrice];
     const priceBoundsChanged =
         (liveStayPrices.length > 0 || storedPrices.length > 0) &&
@@ -677,39 +682,38 @@ export default function Hotels() {
     // supplies the richer card metadata (amenities, category assignments).
     const baseList: HotelCard[] = liveLoaded
         ? liveResults.map((live) => {
-            const browse = browseBySlug.get(live.slug);
-            const merged = browse
-                ? ({ ...browse, ...live } as unknown as HotelCard)
-                : (live as unknown as HotelCard);
+              const browse = browseBySlug.get(live.slug);
+              const merged = browse
+                  ? ({ ...browse, ...live } as unknown as HotelCard)
+                  : (live as unknown as HotelCard);
 
-            // Derive pricing_type from room boarding codes when not already
-            // set by the browse record. This gives the sidebar filter
-            // accurate counts for provider hotels.
-            if (
-                merged.category_assignments?.pricing_type == null &&
-                live.rooms?.length > 0
-            ) {
-                const pricingTypes = [
-                    ...new Set(
-                        live.rooms
-                            .map((r) => {
-                                const code = (r.boarding ?? '')
-                                    .toUpperCase();
-                                return BOARDING_TO_PRICING[code] ?? null;
-                            })
-                            .filter(Boolean) as string[],
-                    ),
-                ];
-                if (pricingTypes.length > 0) {
-                    merged.category_assignments = {
-                        ...(merged.category_assignments ?? {}),
-                        pricing_type: pricingTypes,
-                    };
-                }
-            }
+              // Derive pricing_type from room boarding codes when not already
+              // set by the browse record. This gives the sidebar filter
+              // accurate counts for provider hotels.
+              if (
+                  merged.category_assignments?.pricing_type == null &&
+                  live.rooms?.length > 0
+              ) {
+                  const pricingTypes = [
+                      ...new Set(
+                          live.rooms
+                              .map((r) => {
+                                  const code = (r.boarding ?? '').toUpperCase();
+                                  return BOARDING_TO_PRICING[code] ?? null;
+                              })
+                              .filter(Boolean) as string[],
+                      ),
+                  ];
+                  if (pricingTypes.length > 0) {
+                      merged.category_assignments = {
+                          ...(merged.category_assignments ?? {}),
+                          pricing_type: pricingTypes,
+                      };
+                  }
+              }
 
-            return merged;
-        })
+              return merged;
+          })
         : (hotels as HotelCard[]);
 
     // Client refinements apply to the live base list too; date/price/sort are
@@ -885,7 +889,9 @@ export default function Hotels() {
                                     </SheetHeader>
                                     <HotelFilters
                                         hotels={hotels as HotelItem[]}
-                                        hotelsWithCategoryData={displayedHotels as HotelItem[]}
+                                        hotelsWithCategoryData={
+                                            displayedHotels as HotelItem[]
+                                        }
                                         lang={lang}
                                         priceRange={hotelPriceRange}
                                         onPriceChange={handlePriceChange}
@@ -994,13 +1000,14 @@ export default function Hotels() {
                             transition={{ delay: 0.05 }}
                             className="hidden flex-shrink-0 md:block md:w-72"
                         >
-                            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-3xl border border-border bg-card p-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                <div className="mb-6 flex items-center justify-between gap-4">
-                                    <h2 className="font-serif text-lg font-bold text-foreground">
-                                        {t('hotels.filters')}
-                                    </h2>
-                                    {(hasActiveCategoryTypeFilters ||
-                                        priceFilterActive) && (
+                            <div className="sticky top-24 rounded-3xl border border-border bg-card p-6">
+                                <div className="max-h-[calc(100vh-7rem)] overflow-y-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <h2 className="font-serif text-lg font-bold text-foreground">
+                                            {t('hotels.filters')}
+                                        </h2>
+                                        {(hasActiveCategoryTypeFilters ||
+                                            priceFilterActive) && (
                                             <button
                                                 type="button"
                                                 onClick={handleClearAll}
@@ -1009,36 +1016,44 @@ export default function Hotels() {
                                                 {t('common.viewAll')}
                                             </button>
                                         )}
-                                </div>
+                                    </div>
 
-                                <HotelFilters
-                                    hotels={hotels as HotelItem[]}
-                                    hotelsWithCategoryData={displayedHotels as HotelItem[]}
-                                    lang={lang}
-                                    priceRange={hotelPriceRange}
-                                    onPriceChange={handlePriceChange}
-                                    maxPrice={priceBounds[1]}
-                                    minPrice={priceBounds[0]}
-                                    liveMode={liveLoaded}
-                                    hasPriceData={hasPriceData}
-                                    categoryTypes={categoryTypes}
-                                    categoryTypeFilters={categoryTypeFilters}
-                                    onCategoryTypeChange={(typeKey, values) =>
-                                        setCategoryTypeFilters((prev) => ({
-                                            ...prev,
-                                            [typeKey]: values,
-                                        }))
-                                    }
-                                    occupancy={occupancy}
-                                    onOccupancyChange={setOccupancy}
-                                />
+                                    <HotelFilters
+                                        hotels={hotels as HotelItem[]}
+                                        hotelsWithCategoryData={
+                                            displayedHotels as HotelItem[]
+                                        }
+                                        lang={lang}
+                                        priceRange={hotelPriceRange}
+                                        onPriceChange={handlePriceChange}
+                                        maxPrice={priceBounds[1]}
+                                        minPrice={priceBounds[0]}
+                                        liveMode={liveLoaded}
+                                        hasPriceData={hasPriceData}
+                                        categoryTypes={categoryTypes}
+                                        categoryTypeFilters={
+                                            categoryTypeFilters
+                                        }
+                                        onCategoryTypeChange={(
+                                            typeKey,
+                                            values,
+                                        ) =>
+                                            setCategoryTypeFilters((prev) => ({
+                                                ...prev,
+                                                [typeKey]: values,
+                                            }))
+                                        }
+                                        occupancy={occupancy}
+                                        onOccupancyChange={setOccupancy}
+                                    />
+                                </div>
                             </div>
                         </motion.aside>
                         {/* Main Content */}
                         <div className="min-w-0 flex-1">
                             {hasDates &&
-                                liveQuery !== undefined &&
-                                liveSearchError ? (
+                            liveQuery !== undefined &&
+                            liveSearchError ? (
                                 <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm">
                                     <p className="font-semibold text-destructive">
                                         {t('search.error.title')}
@@ -1056,9 +1071,9 @@ export default function Hotels() {
                                     </Button>
                                 </div>
                             ) : hasDates &&
-                                liveQuery !== undefined &&
-                                (displayPages === undefined || liveFetching) &&
-                                !isFetchingNextPage ? (
+                              liveQuery !== undefined &&
+                              (displayPages === undefined || liveFetching) &&
+                              !isFetchingNextPage ? (
                                 <div className="mb-6 flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/80 px-4 py-3 text-sm text-muted-foreground">
                                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                                     {t('hotels.checkingAvailability')}
@@ -1098,9 +1113,9 @@ export default function Hotels() {
                                                         isNewFromScroll
                                                             ? { opacity: 0 }
                                                             : {
-                                                                opacity: 0,
-                                                                y: 20,
-                                                            }
+                                                                  opacity: 0,
+                                                                  y: 20,
+                                                              }
                                                     }
                                                     animate={{
                                                         opacity: 1,
@@ -1110,21 +1125,22 @@ export default function Hotels() {
                                                         isNewFromScroll
                                                             ? { duration: 0.25 }
                                                             : {
-                                                                delay:
-                                                                    index *
-                                                                    0.05,
-                                                            }
+                                                                  delay:
+                                                                      index *
+                                                                      0.05,
+                                                              }
                                                     }
                                                     className={cn(
                                                         unavailable &&
-                                                        'opacity-60 grayscale',
+                                                            'opacity-60 grayscale',
                                                     )}
                                                 >
                                                     <Link
-                                                        to={`/hotels/${hotel.slug}${detailLinkParams
+                                                        to={`/hotels/${hotel.slug}${
+                                                            detailLinkParams
                                                                 ? `?${detailLinkParams}`
                                                                 : ''
-                                                            }`}
+                                                        }`}
                                                         className="group block transform-gpu overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                                                     >
                                                         <div className="relative h-56 overflow-hidden">
@@ -1168,81 +1184,129 @@ export default function Hotels() {
                                                                 <div className="rounded-l-2xl bg-card/95 px-3 py-2 text-xs font-bold text-foreground shadow-md backdrop-blur">
                                                                     {liveLoaded
                                                                         ? (() => {
-                                                                            const promo =
-                                                                                roomPromo(
-                                                                                    hotel.price_total,
-                                                                                    hotel.base_price,
-                                                                                );
-                                                                            const currency =
-                                                                                hotel.currency ??
-                                                                                'TND';
-                                                                            if (
-                                                                                promo
-                                                                            ) {
-                                                                                return (
-                                                                                    <div className="flex items-center gap-3">
-                                                                                        <span className="text-base font-extrabold text-primary">
-                                                                                            {formatPrice(promo.discounted, currency)}
-                                                                                        </span>
-                                                                                        <div className="flex flex-col items-end gap-0 text-right">
-                                                                                            {hotel.nights ? (
-                                                                                                <span className="text-[10px] font-medium text-muted-foreground">
-                                                                                                    {
-                                                                                                        hotel.nights
-                                                                                                    }{' '}
-                                                                                                    {t(
-                                                                                                        'hotelDetail.nightsLabel',
-                                                                                                    )}
-                                                                                                </span>
-                                                                                            ) : null}
-                                                                                            <span className="text-[10px] font-medium text-destructive line-through">
-                                                                                                {formatPrice(promo.original, currency)}
-                                                                                            </span>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                );
-                                                                            }
-                                                                            return (
-                                                                                <span>
-                                                                                    {formatPrice(hotel.price_total, currency)}
-                                                                                    {hotel.nights
-                                                                                        ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
-                                                                                        : ''}
-                                                                                </span>
-                                                                            );
-                                                                        })()
+                                                                              const promo =
+                                                                                  roomPromo(
+                                                                                      hotel.price_total,
+                                                                                      hotel.base_price,
+                                                                                  );
+                                                                              const currency =
+                                                                                  hotel.currency ??
+                                                                                  'TND';
+                                                                              if (
+                                                                                  promo
+                                                                              ) {
+                                                                                  return (
+                                                                                      <div className="flex items-center gap-3">
+                                                                                          <span className="text-base font-extrabold text-primary">
+                                                                                              {formatPrice(
+                                                                                                  promo.discounted,
+                                                                                                  currency,
+                                                                                              )}
+                                                                                          </span>
+                                                                                          <div className="flex flex-col items-end gap-0 text-right">
+                                                                                              {hotel.nights ? (
+                                                                                                  <span className="text-[10px] font-medium text-muted-foreground">
+                                                                                                      {
+                                                                                                          hotel.nights
+                                                                                                      }{' '}
+                                                                                                      {t(
+                                                                                                          'hotelDetail.nightsLabel',
+                                                                                                      )}
+                                                                                                  </span>
+                                                                                              ) : null}
+                                                                                              <span className="text-[10px] font-medium text-destructive line-through">
+                                                                                                  {formatPrice(
+                                                                                                      promo.original,
+                                                                                                      currency,
+                                                                                                  )}
+                                                                                              </span>
+                                                                                          </div>
+                                                                                      </div>
+                                                                                  );
+                                                                              }
+                                                                              return (
+                                                                                  <span>
+                                                                                      {formatPrice(
+                                                                                          hotel.price_total,
+                                                                                          currency,
+                                                                                      )}
+                                                                                      {hotel.nights
+                                                                                          ? ` · ${hotel.nights} ${t('hotelDetail.nightsLabel')}`
+                                                                                          : ''}
+                                                                                  </span>
+                                                                              );
+                                                                          })()
                                                                         : t(
-                                                                            'hotelDetail.checkAvailability',
-                                                                        )}
+                                                                              'hotelDetail.checkAvailability',
+                                                                          )}
                                                                 </div>
                                                                 {liveLoaded ? (
-                                                                    (hotel.price != null &&
-                                                                        hotel.base_price != null &&
-                                                                        hotel.price < hotel.base_price ||
-                                                                        hotel.free_child?.length ||
+                                                                    ((hotel.price !=
+                                                                        null &&
+                                                                        hotel.base_price !=
+                                                                            null &&
+                                                                        hotel.price <
+                                                                            hotel.base_price) ||
+                                                                        hotel
+                                                                            .free_child
+                                                                            ?.length ||
                                                                         hotel.recommended) && (
                                                                         <div className="flex flex-col items-end gap-1">
                                                                             {hotel.recommended ? (
-                                                                                <span className="inline-flex items-center rounded-l-sm bg-emerald-100 pl-2 pr-6 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                                                <span className="inline-flex items-center rounded-l-sm bg-emerald-100 py-0.5 pl-2 pr-6 text-[10px] font-semibold text-emerald-700">
                                                                                     {t(
                                                                                         'hotelDetail.recommended',
                                                                                     )}
                                                                                 </span>
                                                                             ) : null}
-                                                                            {hotel.price != null &&
-                                                                                hotel.base_price != null &&
-                                                                                hotel.price < hotel.base_price && (() => {
-                                                                                    const pct = Math.round((1 - hotel.price / hotel.base_price!) * 100);
+                                                                            {hotel.price !=
+                                                                                null &&
+                                                                                hotel.base_price !=
+                                                                                    null &&
+                                                                                hotel.price <
+                                                                                    hotel.base_price &&
+                                                                                (() => {
+                                                                                    const pct =
+                                                                                        Math.round(
+                                                                                            (1 -
+                                                                                                hotel.price /
+                                                                                                    hotel.base_price!) *
+                                                                                                100,
+                                                                                        );
                                                                                     return (
-                                                                                        <span className="inline-flex items-center rounded-l-sm bg-amber-100 pl-2 pr-6 py-0.5 text-[10px] font-semibold text-amber-800">
-                                                                                            {t('hotelDetail.promo')} · -{pct}%
+                                                                                        <span
+                                                                                            className="inline-flex animate-[pulseScale_2s_ease-in-out_infinite] items-center rounded-l-sm bg-amber-100 py-0.5 pl-2 pr-6 text-[10px] font-semibold text-amber-800"
+                                                                                            style={{
+                                                                                                animation:
+                                                                                                    'pulseScale 2s ease-in-out infinite',
+                                                                                            }}
+                                                                                        >
+                                                                                            {t(
+                                                                                                'hotelDetail.promo',
+                                                                                            )}{' '}
+                                                                                            ·
+                                                                                            -
+                                                                                            {
+                                                                                                pct
+                                                                                            }
+                                                                                            %
+                                                                                            <style>{`
+        @keyframes pulseScale {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+        }
+    `}</style>
                                                                                         </span>
                                                                                     );
                                                                                 })()}
                                                                             {hotel
                                                                                 .free_child
                                                                                 ?.length ? (
-                                                                                <span className="inline-flex items-center rounded-l-sm bg-indigo-100 pl-2 pr-6 py-0.5 text-[10px] font-semibold text-indigo-700">
+                                                                                <span className="inline-flex items-center rounded-l-sm bg-indigo-100 py-0.5 pl-2 pr-6 text-[10px] font-semibold text-indigo-700">
                                                                                     {t(
                                                                                         'hotelDetail.freeChild',
                                                                                     )}
@@ -1251,25 +1315,25 @@ export default function Hotels() {
                                                                         </div>
                                                                     )
                                                                 ) : hotel.tarifs_promo ||
-                                                                    hotel.enfant_gratuit ||
-                                                                    hotel.htel_recommande ? (
+                                                                  hotel.enfant_gratuit ||
+                                                                  hotel.htel_recommande ? (
                                                                     <div className="flex flex-col items-end gap-1">
                                                                         {hotel.htel_recommande && (
-                                                                            <span className="inline-flex items-center rounded-full bg-indigo-100 pl-2 pr-6 py-0.5 text-[10px] font-semibold text-indigo-700">
+                                                                            <span className="inline-flex items-center rounded-l-sm bg-emerald-100 py-0.5 pl-2 pr-6 text-[10px] font-semibold text-emerald-700">
                                                                                 {t(
                                                                                     'hotelDetail.recommended',
                                                                                 )}
                                                                             </span>
                                                                         )}
                                                                         {hotel.tarifs_promo && (
-                                                                            <span className="inline-flex items-center rounded-full bg-amber-100 pl-2 pr-6 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                                            <span className="inline-flex items-center rounded-l-sm bg-amber-100 py-0.5 pl-2 pr-6 text-[10px] font-semibold text-amber-800">
                                                                                 {t(
                                                                                     'hotelDetail.promo',
                                                                                 )}
                                                                             </span>
                                                                         )}
                                                                         {hotel.enfant_gratuit && (
-                                                                            <span className="inline-flex items-center rounded-full bg-emerald-100 pl-2 pr-6 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                                                            <span className="inline-flex items-center rounded-l-sm bg-indigo-100 py-0.5 pl-2 pr-6 text-[10px] font-semibold text-indigo-700">
                                                                                 {t(
                                                                                     'hotelDetail.freeChild',
                                                                                 )}
@@ -1278,7 +1342,7 @@ export default function Hotels() {
                                                                     </div>
                                                                 ) : null}
                                                                 {unavailable && (
-                                                                    <span className="inline-flex items-center rounded-full bg-amber-100 pl-2 pr-6 py-0.5 text-[10px] font-semibold text-amber-800">
+                                                                    <span className="inline-flex items-center rounded-l-sm bg-amber-100 py-0.5 pl-2 pr-6 text-[10px] font-semibold text-amber-800">
                                                                         {t(
                                                                             'hotels.perRequest',
                                                                         )}
@@ -1310,7 +1374,7 @@ export default function Hotels() {
                                                                     )}
                                                                     {hotel.min_nights &&
                                                                         hotel.min_nights >
-                                                                        1 &&
+                                                                            1 &&
                                                                         ` · ${t('hotelDetail.minimumNights')} ${hotel.min_nights}`}
                                                                 </div>
                                                             )}

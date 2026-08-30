@@ -130,7 +130,12 @@ function normalizeNavLink(
         label = rest.label;
     } else if (rest.label && typeof rest.label === 'object') {
         const l = rest.label as Record<string, unknown>;
-        label = typeof l.fr === 'string' ? l.fr : typeof l.en === 'string' ? l.en : '';
+        label =
+            typeof l.fr === 'string'
+                ? l.fr
+                : typeof l.en === 'string'
+                  ? l.en
+                  : '';
     }
     return {
         key: typeof rest.key === 'string' ? rest.key : '',
@@ -139,7 +144,10 @@ function normalizeNavLink(
         placement: ['topbar', 'top', 'more'].includes(rest.placement as string)
             ? rest.placement
             : 'top',
-        targetPageKey: typeof rest.targetPageKey === 'string' ? rest.targetPageKey : 'destinations',
+        targetPageKey:
+            typeof rest.targetPageKey === 'string'
+                ? rest.targetPageKey
+                : 'destinations',
         mode: ['filter', 'search', 'categories'].includes(rest.mode as string)
             ? rest.mode
             : 'filter',

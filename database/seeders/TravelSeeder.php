@@ -19,7 +19,7 @@ class TravelSeeder extends Seeder
                 'key' => 'pricing_type',
             ],
             [
-                'label' => ['en' => 'Pricing Type', 'fr' => 'Type de tarif', 'ar' => 'نوع التسعير'],
+                'label' => ['en' => 'Pricing Type', 'fr' => 'Formule repas', 'ar' => 'نوع التسعير'],
                 'filter_style' => 'radio',
                 'sort_order' => 1,
                 'locked' => true,

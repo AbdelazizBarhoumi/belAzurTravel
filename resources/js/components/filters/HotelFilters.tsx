@@ -3,13 +3,14 @@ import {
     OccupancyPicker,
     type Occupancy,
 } from '@/components/ui/OccupancyPicker';
+import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PROVIDER_CATEGORY_MAP } from '@/data/hotelFilters';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
 import { getStaticFilterGroup } from '@/lib/nav-static-filters';
 import type { HotelItem } from '@/types/public/hotel.types';
-import { CityFilter } from './CityFilter';
+import { CollapsibleSection } from './CollapsibleSection';
 import { FilterRenderer } from './FilterRenderer';
 
 // Derived from the shared static filters config — computed once at module load
@@ -141,7 +142,11 @@ export function HotelFilters({
     const availableCategories = useMemo(() => {
         const catMap = new Map<
             string,
-            { key: string; label: { en: string; fr: string; ar: string }; count: number }
+            {
+                key: string;
+                label: { en: string; fr: string; ar: string };
+                count: number;
+            }
         >();
         for (const hotel of hotels) {
             if (hotel.stars !== 0) continue;
@@ -173,17 +178,16 @@ export function HotelFilters({
     const STARS_LABELS = STARS_LABELS_FROM_CONFIG;
 
     return (
-        <div className="space-y-0">
+        <div className="space-y-2 sm:space-y-3">
             {/* Country Filter */}
-            <div>
-                <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
-                    {lang === 'fr'
-                        ? 'Pays'
-                        : lang === 'ar'
-                          ? 'البلد'
-                          : 'Country'}
-                </h3>
-                <div className="space-y-0.5 sm:space-y-1">
+            <CollapsibleSection
+                title={
+                    lang === 'fr' ? 'Pays' : lang === 'ar' ? 'البلد' : 'Country'
+                }
+            >
+                <div
+                    className={`${availableCountries.length > 8 ? 'scrollbar-thin max-h-[288px] overflow-y-auto' : ''}`}
+                >
                     {availableCountries.map(
                         ([countryKey, { count, label }]) => {
                             const key = `country_${countryKey}`;
@@ -262,37 +266,101 @@ export function HotelFilters({
                         },
                     )}
                 </div>
-            </div>
+            </CollapsibleSection>
+
+            <Separator />
 
             {/* City Filter */}
             {availableCities.length > 0 && (
-                <div>
-                    <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
-                        {lang === 'fr'
+                <CollapsibleSection
+                    title={
+                        lang === 'fr'
                             ? 'Ville'
                             : lang === 'ar'
                               ? 'المدينة'
-                              : 'City'}
-                    </h3>
-                    <CityFilter
-                        cities={availableCities.map(
-                            ([key, { count, label }]) => ({
-                                key,
-                                count,
-                                label,
-                            }),
-                        )}
-                        selected={categoryTypeFilters['dynamic_city'] ?? []}
-                        onChange={(values) =>
-                            onCategoryTypeChange('dynamic_city', values)
-                        }
-                        lang={lang}
-                    />
-                </div>
+                              : 'City'
+                    }
+                >
+                    <div
+                        className={`${availableCities.length > 8 ? 'scrollbar-thin max-h-[288px] overflow-y-auto' : ''}`}
+                    >
+                        {availableCities.map(([cityKey, { count, label }]) => {
+                            const isActive = (
+                                categoryTypeFilters['dynamic_city'] ?? []
+                            ).includes(cityKey);
+                            return (
+                                <label
+                                    key={cityKey}
+                                    className={`flex cursor-pointer items-center justify-between gap-1.5 rounded-md px-2 py-1.5 transition-colors sm:gap-2 sm:rounded-lg sm:px-3 sm:py-2 ${
+                                        isActive
+                                            ? 'border border-primary/30 bg-primary/10'
+                                            : 'border border-transparent hover:bg-muted/50'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-1.5 sm:gap-2">
+                                        <div
+                                            className={`flex h-3.5 w-3.5 items-center justify-center rounded border-2 transition-colors sm:h-4 sm:w-4 ${
+                                                isActive
+                                                    ? 'border-primary bg-primary'
+                                                    : 'border-muted-foreground/30 bg-background'
+                                            }`}
+                                        >
+                                            {isActive && (
+                                                <svg
+                                                    className="h-2.5 w-2.5 text-primary-foreground sm:h-3 sm:w-3"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    strokeWidth={3}
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M5 13l4 4L19 7"
+                                                    />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            checked={isActive}
+                                            onChange={() => {
+                                                const current =
+                                                    (categoryTypeFilters[
+                                                        'dynamic_city'
+                                                    ] as string[]) ?? [];
+                                                const next = isActive
+                                                    ? current.filter(
+                                                          (v) => v !== cityKey,
+                                                      )
+                                                    : [...current, cityKey];
+                                                onCategoryTypeChange(
+                                                    'dynamic_city',
+                                                    next,
+                                                );
+                                            }}
+                                            className="sr-only"
+                                        />
+                                        <span
+                                            className={`text-sm ${isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}`}
+                                        >
+                                            {label[lang] || label.en}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">
+                                        ({count})
+                                    </span>
+                                </label>
+                            );
+                        })}
+                    </div>
+                </CollapsibleSection>
             )}
 
+            <Separator />
+
             {/* Occupancy Field */}
-            <div className="my-3 border-t border-border py-3 sm:my-4 sm:py-4">
+            <div className="py-3 sm:py-4">
                 <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
                     {t('hotels.occupancy')}
                 </h3>
@@ -304,9 +372,11 @@ export function HotelFilters({
                 />
             </div>
 
+            <Separator />
+
             {/* Price Slider */}
             {hasPriceData && (
-                <div className="my-3 border-t border-border py-3 sm:my-4 sm:py-4">
+                <div className="py-3 sm:py-4">
                     <div className="mb-2 flex items-baseline justify-between gap-2 sm:mb-3">
                         <h3 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-xs">
                             {lang === 'fr'
@@ -338,16 +408,19 @@ export function HotelFilters({
                             </span>
                             <span>{maxPrice} DT</span>
                         </div>
+                        <Separator />
                     </div>
                 </div>
             )}
 
             {/* Stars & Accommodation Type Filter */}
-            <div className="my-3 border-t border-border py-3 sm:my-4 sm:py-4">
-                <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground sm:mb-3 sm:text-xs">
-                    {t('hotels.filterByCategory')}
-                </h3>
-                <div className="space-y-0.5 sm:space-y-1">
+            <CollapsibleSection
+                title={t('hotels.filterByCategory')}
+                defaultOpen={true}
+            >
+                <div
+                    className={`${availableStars.length + availableCategories.length > 8 ? 'scrollbar-thin max-h-[288px] overflow-y-auto' : ''}`}
+                >
                     {availableStars.map((star) => {
                         const key = `star_${star}`;
                         const isActive =
@@ -496,14 +569,12 @@ export function HotelFilters({
                         );
                     })}
                 </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Category Types from API */}
             {categoryTypes.map((catType) => (
-                <div
-                    key={catType.key}
-                    className="my-3 border-t border-border py-3 sm:my-4 sm:py-4"
-                >
+                <div key={catType.key} className="space-y-2 sm:space-y-3">
+                    <Separator />
                     <FilterRenderer
                         categoryType={catType}
                         selectedValues={categoryTypeFilters[catType.key] ?? []}

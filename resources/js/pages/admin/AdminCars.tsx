@@ -486,7 +486,7 @@ export default function AdminCars() {
                                 htmlFor={`name_${activeLang}`}
                                 className={`flex items-center gap-2 text-xs font-semibold ${errors[`name_${activeLang}`] ? 'text-destructive' : 'text-muted-foreground'}`}
                             >
-                                 {t('admin.name')}
+                                {t('admin.name')}
                             </label>
                             <input
                                 id={`name_${activeLang}`}
@@ -665,7 +665,7 @@ export default function AdminCars() {
                                 htmlFor={`car-description-${activeLang}`}
                                 className="text-xs font-semibold text-muted-foreground"
                             >
-                                 {t('admin.description')}
+                                {t('admin.description')}
                             </label>
                             <textarea
                                 id={`car-description-${activeLang}`}

@@ -1,11 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Globe, MapPin, Search } from 'lucide-react';
+import { MapPin, Search } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CitySelect } from '@/components/ui/CitySelect';
-import { CountrySelect } from '@/components/ui/CountrySelect';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import {
     OccupancyPicker,
@@ -30,8 +29,8 @@ interface SearchWidgetProps {
 }
 
 interface SearchFormValues {
-    country: string;
     city: LocalizedName | null;
+    hotelName: string;
     dateRange: DateRange | undefined;
     occupancy: Occupancy;
     extras: Record<string, string>;
@@ -60,18 +59,7 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
         titleKey: 'search.tabs.hotels',
         buttonKey: 'search.actions.hotels',
         guestLabelKey: 'search.fields.guests',
-        extraFields: [
-            {
-                key: 'propertyClass',
-                labelKey: 'search.fields.stars',
-                options: [
-                    { value: 'any', labelKey: 'search.options.any' },
-                    { value: '3-star', labelKey: 'search.options.threeStar' },
-                    { value: '4-star', labelKey: 'search.options.fourStar' },
-                    { value: '5-star', labelKey: 'search.options.fiveStar' },
-                ],
-            },
-        ],
+        extraFields: [],
     },
     tours: {
         titleKey: 'search.tabs.tours',
@@ -140,17 +128,17 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
 
 const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
     hotels: {
-        country: '',
         city: null,
+        hotelName: '',
         dateRange: undefined,
-        occupancy: { adults: 2, childAges: [] },
+        occupancy: { adults: 1, childAges: [] },
         extras: {
             propertyClass: 'any',
         },
     },
     tours: {
-        country: '',
         city: null,
+        hotelName: '',
         dateRange: undefined,
         occupancy: { adults: 2, childAges: [] },
         extras: {
@@ -159,8 +147,8 @@ const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
         },
     },
     flights: {
-        country: '',
         city: null,
+        hotelName: '',
         dateRange: undefined,
         occupancy: { adults: 1, childAges: [] },
         extras: {
@@ -181,8 +169,8 @@ const SEARCH_TARGETS: Record<SearchTab, string> = {
 interface ActiveSearchFormProps {
     tab: SearchTab;
     values: SearchFormValues;
-    onCountryChange: (code: string, names: LocalizedName) => void;
     onCityChange: (names: LocalizedName) => void;
+    onHotelNameChange: (value: string) => void;
     onDateRangeChange: (value: DateRange | undefined) => void;
     onOccupancyChange: (value: Occupancy) => void;
     onExtraChange: (key: string, value: string) => void;
@@ -268,8 +256,8 @@ const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
 function ActiveSearchForm({
     tab,
     values,
-    onCountryChange,
     onCityChange,
+    onHotelNameChange,
     onDateRangeChange,
     onOccupancyChange,
     onExtraChange,
@@ -279,26 +267,6 @@ function ActiveSearchForm({
     const config = SEARCH_TABS[tab];
 
     const topFields = [
-        <label
-            key="country"
-            className="flex min-w-0 flex-col gap-2"
-        >
-            <SearchFieldLabel>{t('search.fields.country')}</SearchFieldLabel>
-            <div
-                className={cn(
-                    'flex h-12 items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm',
-                    isRtl && 'flex-row-reverse',
-                )}
-            >
-                <Globe className="h-5 w-5 shrink-0 text-primary" />
-                <CountrySelect
-                    value={values.country}
-                    onChange={onCountryChange}
-                    placeholder={t('search.placeholders.country')}
-                    className="border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0"
-                />
-            </div>
-        </label>,
         <label
             key="city"
             className="flex min-w-0 flex-col gap-2"
@@ -312,18 +280,39 @@ function ActiveSearchForm({
             >
                 <MapPin className="h-5 w-5 shrink-0 text-primary" />
                 <CitySelect
-                    countryCode={values.country || null}
+                    countryCode={null}
                     value={values.city?.en || ''}
                     onChange={onCityChange}
-                    placeholder={
-                        !values.country
-                            ? t('search.placeholders.country')
-                            : t('search.placeholders.destination')
-                    }
+                    placeholder={t('search.placeholders.destination')}
                     className="border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0"
                 />
             </div>
         </label>,
+        ...(tab === 'hotels'
+            ? [
+                  <label
+                      key="hotelName"
+                      className="flex min-w-0 flex-col gap-2"
+                  >
+                      <SearchFieldLabel>{t('search.fields.hotelName')}</SearchFieldLabel>
+                      <div
+                          className={cn(
+                              'flex h-12 items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 shadow-sm backdrop-blur-sm',
+                              isRtl && 'flex-row-reverse',
+                          )}
+                      >
+                          <Search className="h-5 w-5 shrink-0 text-primary" />
+                          <input
+                              type="text"
+                              value={values.hotelName}
+                              onChange={(e) => onHotelNameChange(e.target.value)}
+                              placeholder={t('search.placeholders.hotelName')}
+                              className="border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:outline-none"
+                          />
+                      </div>
+                  </label>,
+              ]
+            : []),
         <DateRangePicker
             key="dates"
             value={values.dateRange}
@@ -356,7 +345,7 @@ function ActiveSearchForm({
                     values={values}
                     onChange={onExtraChange}
                 />
-                <div className={cn(isRtl && 'xl:justify-self-start')}>
+                <div className={cn('xl:col-start-3 justify-self-end', isRtl && 'xl:justify-self-start')}>
                     <SearchButton label={t(config.buttonKey)} />
                 </div>
             </div>
@@ -403,20 +392,15 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         setActiveTab(value as SearchTab);
     };
 
-    const handleCountryChange = (
-        tab: SearchTab,
-        code: string,
-        _names: LocalizedName,
-    ) => {
-        updateForm(tab, 'country', code);
-        updateForm(tab, 'city', null);
-    };
-
     const handleCityChange = (
         tab: SearchTab,
         names: LocalizedName,
     ) => {
         updateForm(tab, 'city', names);
+    };
+
+    const handleHotelNameChange = (tab: SearchTab, value: string) => {
+        updateForm(tab, 'hotelName', value);
     };
 
     const handleOccupancyChange = (
@@ -432,12 +416,10 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         const values = formState[activeTab];
         const params = new URLSearchParams();
 
-        if (values.city?.en) {
+        if (activeTab === 'hotels' && values.hotelName) {
+            params.set('q', values.hotelName);
+        } else if (values.city?.en) {
             params.set('q', values.city.en);
-        }
-
-        if (values.country) {
-            params.set('country', values.country);
         }
 
         if (values.dateRange?.from) {
@@ -592,11 +574,11 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                                 <ActiveSearchForm
                                     tab={activeTab}
                                     values={formState[activeTab]}
-                                    onCountryChange={(code, names) =>
-                                        handleCountryChange(activeTab, code, names)
-                                    }
                                     onCityChange={(names) =>
                                         handleCityChange(activeTab, names)
+                                    }
+                                    onHotelNameChange={(value) =>
+                                        handleHotelNameChange(activeTab, value)
                                     }
                                     onDateRangeChange={(value) =>
                                         updateForm(activeTab, 'dateRange', value)

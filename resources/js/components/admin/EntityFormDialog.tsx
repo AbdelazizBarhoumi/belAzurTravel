@@ -84,18 +84,18 @@ function I18nInput({
     return (
         <div className="grid grid-cols-1 gap-2">
             <div className="space-y-1">
-                        <Input
-                            type="text"
-                            value={obj.fr ?? ''}
-                            onChange={(e: any) =>
-                                onChange({ ...obj, fr: e.target.value })
-                            }
-                            className={`w-full rounded-lg border px-3 py-2 text-sm ${errors?.fr ? 'border-destructive ring-1 ring-destructive' : 'border-border'} ${multiline ? 'min-h-20' : ''}`}
-                        />
-                        {errors?.fr && (
-                            <p className="text-xs text-destructive">{errors.fr}</p>
-                        )}
-                    </div>
+                <Input
+                    type="text"
+                    value={obj.fr ?? ''}
+                    onChange={(e: any) =>
+                        onChange({ ...obj, fr: e.target.value })
+                    }
+                    className={`w-full rounded-lg border px-3 py-2 text-sm ${errors?.fr ? 'border-destructive ring-1 ring-destructive' : 'border-border'} ${multiline ? 'min-h-20' : ''}`}
+                />
+                {errors?.fr && (
+                    <p className="text-xs text-destructive">{errors.fr}</p>
+                )}
+            </div>
         </div>
     );
 }

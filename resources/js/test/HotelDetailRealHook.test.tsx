@@ -223,7 +223,8 @@ describe('HotelDetail real search hook flow', () => {
             JSON.parse(String(init?.body ?? '{}')),
         );
         const dates = bodies.map(
-            (b: { check_in: string; check_out: string }) => `${b.check_in}-${b.check_out}`,
+            (b: { check_in: string; check_out: string }) =>
+                `${b.check_in}-${b.check_out}`,
         );
         expect(new Set(dates).size).toBeGreaterThan(1);
     });

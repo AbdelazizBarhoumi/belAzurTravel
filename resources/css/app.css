@@ -174,7 +174,7 @@
 
 /* Dancing Script – unlayered so Tailwind v4 cannot strip it */
 .dancing-script-regular {
-    font-family: "Dancing Script", cursive;
+    font-family: 'Dancing Script', cursive;
     font-optical-sizing: auto;
     font-weight: 700;
     font-style: normal;

@@ -48,7 +48,7 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
 
     return (
         <>
-            <div className="grid grid-cols-1 gap-4 rounded-2xl overflow-hidden shadow-sm md:grid-cols-4 md:h-[500px]">
+            <div className="grid grid-cols-1 gap-4 overflow-hidden rounded-2xl shadow-sm md:h-[500px] md:grid-cols-4">
                 {/* Main image */}
                 <motion.div
                     role="button"
@@ -122,19 +122,17 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                 </motion.div>
 
                 {/* Thumbnails column - right side */}
-                <div className="hidden md:grid md:col-span-1 md:grid-rows-2 gap-4 h-full">
+                <div className="hidden h-full gap-4 md:col-span-1 md:grid md:grid-rows-2">
                     {visibleThumbnails.slice(0, 2).map((image, index) => {
                         const active = index === selectedIndex;
-                        const isOverflowTile =
-                            index === 1 &&
-                            overflowCount > 0;
+                        const isOverflowTile = index === 1 && overflowCount > 0;
                         return (
                             <motion.button
                                 key={`${image}-${index}`}
                                 type="button"
                                 onClick={() => setSelectedIndex(index)}
                                 whileHover={{ scale: 1.02 }}
-                                className="group relative h-full w-full overflow-hidden cursor-pointer hover:opacity-95 transition-opacity"
+                                className="group relative h-full w-full cursor-pointer overflow-hidden transition-opacity hover:opacity-95"
                             >
                                 <img
                                     src={image}
@@ -143,8 +141,8 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                                     loading="lazy"
                                 />
                                 {isOverflowTile && (
-                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center cursor-pointer hover:bg-black/20 transition-colors">
-                                        <span className="text-white font-medium text-sm tracking-widest uppercase">
+                                    <div className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/30 transition-colors hover:bg-black/20">
+                                        <span className="text-sm font-medium uppercase tracking-widest text-white">
                                             +{overflowCount} More
                                         </span>
                                     </div>

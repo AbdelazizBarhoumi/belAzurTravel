@@ -114,6 +114,14 @@ class FetchTomorrowHotelPrices extends Command
                     ];
                     $fetched++;
 
+                    // Sync the provider's Recommended flag so the home
+                    // page can surface recommended hotels without a
+                    // manual admin toggle.
+                    $recommended = (bool) ($providerHotel['Recommended'] ?? 0);
+                    if ($recommended !== (bool) $item->hotel->htel_recommande) {
+                        Hotel::where('id', $item->hotel_id)->update(['htel_recommande' => $recommended]);
+                    }
+
                     // Assign pricing_type from boarding codes so the
                     // filter sidebar has correct counts even when the
                     // daily-price shortcut path omits room details.

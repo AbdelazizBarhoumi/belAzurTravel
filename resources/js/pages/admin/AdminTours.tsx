@@ -448,7 +448,7 @@ const AdminTours = () => {
                                 htmlFor={`name_${activeLang}`}
                                 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"
                             >
-                                 {t('admin.name')}
+                                {t('admin.name')}
                             </label>
                             <Input
                                 id={`name_${activeLang}`}
@@ -537,7 +537,7 @@ const AdminTours = () => {
                                 htmlFor={`description_${activeLang}`}
                                 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"
                             >
-                                 {t('admin.description')}
+                                {t('admin.description')}
                             </label>
                             <Textarea
                                 id={`description_${activeLang}`}

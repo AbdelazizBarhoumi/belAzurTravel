@@ -207,7 +207,7 @@ const AdminPartners = () => {
                         <div className="space-y-5">
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground">
-                                     {t('admin.partnerForm.name')}{' '}
+                                    {t('admin.partnerForm.name')}{' '}
                                 </label>
                                 <input
                                     id={fieldKey}
@@ -232,7 +232,7 @@ const AdminPartners = () => {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground">
-                                     {t('admin.partnerForm.description')}{' '}
+                                    {t('admin.partnerForm.description')}{' '}
                                 </label>
                                 <textarea
                                     dir={currentLang === 'ar' ? 'rtl' : 'ltr'}
