@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Hotel;
 use App\Models\HotelDailyPrice;
 use App\Models\OsTravelHotel;
+use App\Services\OsTravel\HotelPublisher;
 use App\Services\OsTravel\OsTravelClient;
 use App\Services\OsTravel\OsTravelPriceCalculator;
 use Illuminate\Console\Command;
@@ -24,6 +25,7 @@ class FetchTomorrowHotelPrices extends Command
     public function handle(
         OsTravelClient $client,
         OsTravelPriceCalculator $calculator,
+        HotelPublisher $publisher,
     ): int {
         $tomorrow = Carbon::tomorrow()->toDateString();
         $checkOut = Carbon::tomorrow()->addDay()->toDateString();
@@ -111,6 +113,12 @@ class FetchTomorrowHotelPrices extends Command
                         'fetched_at' => now(),
                     ];
                     $fetched++;
+
+                    // Assign pricing_type from boarding codes so the
+                    // filter sidebar has correct counts even when the
+                    // daily-price shortcut path omits room details.
+                    $boarding = $providerHotel['Price']['Boarding'] ?? [];
+                    $publisher->assignPricingType($item->hotel, $boarding);
                 }
             }
 

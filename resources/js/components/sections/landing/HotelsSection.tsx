@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useHotels, useCategoryTypesPublic } from '@/hooks/usePublicData';
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
+import { formatPrice, roomPromo } from '@/lib/utils';
 
 interface Props {
     config: LandingSectionConfig;
@@ -29,10 +30,34 @@ export function HotelsSection({ config }: Props) {
     const style = config.style ?? 'carousel';
 
     if (style === 'carousel') {
-        const items = hotels.slice(0, 6).map((hotel) => ({
+        const withPromo = hotels
+            .map((h) => ({ hotel: h, promo: roomPromo(h.price, h.base_price) }))
+            .filter((e) => e.promo !== null)
+            .sort((a, b) => (b.promo!.percent - a.promo!.percent));
+
+        const display =
+            withPromo.length > 0
+                ? withPromo.slice(0, 6).map((e) => ({
+                      hotel: e.hotel,
+                      promo: e.promo!,
+                  }))
+                : hotels.slice(0, 6).map((h) => ({
+                      hotel: h,
+                      promo: null,
+                  }));
+
+        const items = display.map(({ hotel, promo }) => ({
             id: hotel.slug,
             title: localizeText(hotel.name, lang),
-            price: '',
+            price: promo
+                ? `${promo.discounted} ${hotel.currency ?? 'TND'}`
+                : hotel.price
+                  ? `${hotel.price} ${hotel.currency ?? 'TND'}`
+                  : '',
+            originalPrice: promo
+                ? `${promo.original} ${hotel.currency ?? 'TND'}`
+                : undefined,
+            promoPercent: promo?.percent,
             meta: localizeText(hotel.location, lang),
             image: hotel.image,
             href: `/hotels/${hotel.slug}`,
@@ -53,13 +78,28 @@ export function HotelsSection({ config }: Props) {
     }
 
     if (style === 'cards') {
-        const items = hotels.slice(0, 3);
+        const withPromo = hotels
+            .map((h) => ({ hotel: h, promo: roomPromo(h.price, h.base_price) }))
+            .filter((e) => e.promo !== null)
+            .sort((a, b) => (b.promo!.percent - a.promo!.percent));
+
+        const display =
+            withPromo.length > 0
+                ? withPromo.slice(0, 3).map((e) => ({
+                      hotel: e.hotel,
+                      promo: e.promo!,
+                  }))
+                : hotels.slice(0, 3).map((h) => ({
+                      hotel: h,
+                      promo: null,
+                  }));
+
         return (
             <section className="py-16">
                 <div className="container mx-auto px-4">
                     <Header title={title} subtitle={subtitle} />
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {items.map((hotel, i) => (
+                        {display.map(({ hotel, promo }, i) => (
                             <Link
                                 key={hotel.slug}
                                 to={`/hotels/${hotel.slug}`}
@@ -77,6 +117,11 @@ export function HotelsSection({ config }: Props) {
                                             alt={localizeText(hotel.name, lang)}
                                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
+                                        {promo ? (
+                                            <span className="absolute right-3 top-3 z-10 rounded-full bg-destructive px-2.5 py-1 text-xs font-bold text-destructive-foreground shadow">
+                                                -{promo.percent}%
+                                            </span>
+                                        ) : null}
                                     </div>
                                     <div className="p-5">
                                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -94,6 +139,22 @@ export function HotelsSection({ config }: Props) {
                                                 {hotel.rating}
                                             </span>
                                         </div>
+                                        {promo ? (
+                                            <div className="mt-2">
+                                                <span className="text-sm text-muted-foreground line-through">
+                                                    {formatPrice(promo.original, hotel.currency)}
+                                                </span>
+                                                <span className="ml-2 text-lg font-bold text-secondary">
+                                                    {formatPrice(promo.discounted, hotel.currency)}
+                                                </span>
+                                            </div>
+                                        ) : hotel.price ? (
+                                            <div className="mt-2">
+                                                <span className="text-lg font-bold text-secondary">
+                                                    {formatPrice(hotel.price, hotel.currency)}
+                                                </span>
+                                            </div>
+                                        ) : null}
                                         {(() => {
                                             const catLabels =
                                                 getHotelCategoryLabels(
@@ -138,13 +199,28 @@ export function HotelsSection({ config }: Props) {
     }
 
     // grid — 6 items, 2 rows of 3
-    const items = hotels.slice(0, 6);
+    const withPromoGrid = hotels
+        .map((h) => ({ hotel: h, promo: roomPromo(h.price, h.base_price) }))
+        .filter((e) => e.promo !== null)
+        .sort((a, b) => (b.promo!.percent - a.promo!.percent));
+
+    const displayGrid =
+        withPromoGrid.length > 0
+            ? withPromoGrid.slice(0, 6).map((e) => ({
+                  hotel: e.hotel,
+                  promo: e.promo!,
+              }))
+            : hotels.slice(0, 6).map((h) => ({
+                  hotel: h,
+                  promo: null,
+              }));
+
     return (
         <section className="py-16">
             <div className="container mx-auto px-4">
                 <Header title={title} subtitle={subtitle} />
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {items.map((hotel, i) => (
+                    {displayGrid.map(({ hotel, promo }, i) => (
                         <Link
                             key={hotel.slug}
                             to={`/hotels/${hotel.slug}`}
@@ -162,6 +238,11 @@ export function HotelsSection({ config }: Props) {
                                         alt={localizeText(hotel.name, lang)}
                                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
+                                    {promo ? (
+                                        <span className="absolute right-3 top-3 z-10 rounded-full bg-destructive px-2.5 py-1 text-xs font-bold text-destructive-foreground shadow">
+                                            -{promo.percent}%
+                                        </span>
+                                    ) : null}
                                 </div>
                                 <div className="p-5">
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -179,6 +260,22 @@ export function HotelsSection({ config }: Props) {
                                             {hotel.rating}
                                         </span>
                                     </div>
+                                    {promo ? (
+                                        <div className="mt-2">
+                                            <span className="text-sm text-muted-foreground line-through">
+                                                {formatPrice(promo.original, hotel.currency)}
+                                            </span>
+                                            <span className="ml-2 text-lg font-bold text-secondary">
+                                                {formatPrice(promo.discounted, hotel.currency)}
+                                            </span>
+                                        </div>
+                                    ) : hotel.price ? (
+                                        <div className="mt-2">
+                                            <span className="text-lg font-bold text-secondary">
+                                                {formatPrice(hotel.price, hotel.currency)}
+                                            </span>
+                                        </div>
+                                    ) : null}
                                     {(() => {
                                         const catLabels =
                                             getHotelCategoryLabels(

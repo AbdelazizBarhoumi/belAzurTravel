@@ -56,6 +56,7 @@ function sanitizeNavSettings(nav: NavSettings): NavSettings {
             pageKeys: c.pageKeys.filter((k) => allowedPageKeys.has(k)),
         })),
         groups: nav.groups ?? [],
+        links: nav.links ?? [],
     };
 }
 

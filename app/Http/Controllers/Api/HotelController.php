@@ -97,8 +97,10 @@ class HotelController extends Controller
             'location' => $item->location,
             'category_key' => $item->category_key,
             'category' => $category,
-            'category_assignments' => collect($item->categoryAssignments ?? [])->mapWithKeys(
-                fn ($a) => [$a->categoryType->key => $a->categoryValue->key]
+            'category_assignments' => collect($item->categoryAssignments ?? [])->groupBy(
+                fn ($a) => $a->categoryType->key
+            )->mapWithKeys(
+                fn ($group, $key) => [$key => $group->pluck('categoryValue.key')->values()->toArray()]
             )->toArray(),
             'price' => $price,
             'base_price' => $basePrice,

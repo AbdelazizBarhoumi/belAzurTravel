@@ -7,6 +7,7 @@ use App\Models\Hotel;
 use App\Models\HotelDailyPrice;
 use App\Models\OsTravelHotel;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -85,17 +86,22 @@ class OsTravelSearchService
         if ($this->canUseDailyPrices($options, $nights, $hotelSlugs)) {
             $dailyResults = $this->dailyPriceSearch($options, $nights, $hotelSlugs);
 
-            foreach ($manualHotels as $manualHotel) {
-                $dailyResults[] = $this->manualPayload($manualHotel, $nights);
-            }
+            // Only use the fast path when we actually have stored prices.
+            // If dailyPriceSearch returned empty (no prices for this date),
+            // it already queued an async retry — fall through to the provider.
+            $hasPricedHotels = collect($dailyResults)->contains(fn ($r) => $r['price'] !== null);
 
-            $dailyResults = $this->finalize($dailyResults, $options);
+            if ($hasPricedHotels) {
+                foreach ($manualHotels as $manualHotel) {
+                    $dailyResults[] = $this->manualPayload($manualHotel, $nights);
+                }
 
-            if ($dailyResults !== []) {
+                $dailyResults = $this->finalize($dailyResults, $options);
+
                 Cache::put($cacheKey, $dailyResults, now()->addMinutes(5));
-            }
 
-            return $dailyResults;
+                return $dailyResults;
+            }
         }
 
         $query = OsTravelHotel::query()
@@ -885,8 +891,21 @@ class OsTravelSearchService
             ->get()
             ->keyBy('hotel_id');
 
-        // If no daily prices exist for this date, fall back to provider.
+        // If no daily prices exist for this date, trigger an async re-fetch
+        // (the 3 AM scheduler may have failed) and fall back to the provider.
         if ($dailyPrices->isEmpty()) {
+            $tomorrow = Carbon::tomorrow()->toDateString();
+            if ($checkIn === $tomorrow) {
+                $lock = Cache::lock("daily_price_retry_{$checkIn}", 300);
+                if ($lock->get()) {
+                    try {
+                        dispatch(fn () => Artisan::call('hotels:fetch-tomorrow-prices'));
+                    } finally {
+                        $lock->release();
+                    }
+                }
+            }
+
             return [];
         }
 

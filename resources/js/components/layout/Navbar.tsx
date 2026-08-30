@@ -38,9 +38,10 @@ import {
     type DropdownItemConfig,
     type HeaderEntry,
     type NavGroup,
+    type NavLink,
     getPage,
     buildItemHref,
-    buildFilterLinkHref,
+    buildNavLinkHref,
     DEFAULT_NAV_SETTINGS,
     type NavSettings,
     type LocalizedText,
@@ -1167,6 +1168,10 @@ export function Navbar() {
     const topGroups = enabledGroups.filter((g) => g.placement === 'top');
     const moreGroups = enabledGroups.filter((g) => g.placement === 'more');
 
+    const enabledLinks = (navSettings.links ?? []).filter((l) => l.enabled);
+    const topLinks = enabledLinks.filter((l) => l.placement === 'top');
+    const moreLinks = enabledLinks.filter((l) => l.placement === 'more');
+
     const categoriesByPage = useMemo(
         () => ({
             destinations: destinationCategories,
@@ -1374,13 +1379,10 @@ export function Navbar() {
                                 entry.label?.[lang] ??
                                 entry.label?.en ??
                                 t('nav.' + page.key);
-                            const href = entry.filterLink
-                                ? buildFilterLinkHref(entry, lang)
-                                : page.href;
                             return (
                                 <Link
                                     key={entry.pageKey}
-                                    to={href}
+                                    to={page.href}
                                     className="font-medium transition-colors hover:text-secondary"
                                 >
                                     {displayName}
@@ -1411,21 +1413,6 @@ export function Navbar() {
                     {topEntriesFiltered.map((entry) => {
                         const page = getPage(entry.pageKey);
                         if (!page) return null;
-
-                        // Standalone filtered link — always renders as a simple link
-                        if (entry.filterLink) {
-                            const href = buildFilterLinkHref(entry, lang);
-                            return (
-                                <Link
-                                    key={entry.pageKey}
-                                    to={href}
-                                    className={`inline-flex h-10 items-center px-3 text-sm font-medium transition-colors ${isActiveSection(page.href) ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
-                                >
-                                    {resolvePageName(entry, page)}
-                                </Link>
-                            );
-                        }
-
                         const dropdownItems = resolveDropdownItems(entry);
 
                         if (entry.isDropdown) {
@@ -1526,8 +1513,22 @@ export function Navbar() {
                         />
                     ))}
 
+                    {topLinks.map((link) => {
+                        const href = buildNavLinkHref(link, lang);
+                        return (
+                            <Link
+                                key={link.key}
+                                to={href}
+                                className={`inline-flex h-10 items-center px-3 text-sm font-medium transition-colors ${isActiveSection(getPage(link.targetPageKey)?.href ?? '') ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                            >
+                                {link.label || link.key}
+                            </Link>
+                        );
+                    })}
+
                     {(moreEntriesFiltered.length > 0 ||
-                        moreGroups.length > 0) && (
+                        moreGroups.length > 0 ||
+                        moreLinks.length > 0) && (
                         <div
                             className="relative"
                             onMouseEnter={() => {
@@ -1555,21 +1556,6 @@ export function Navbar() {
                                             const isExpanded =
                                                 openMoreSection ===
                                                 entry.pageKey;
-
-                                            // Standalone filtered link in More menu
-                                            if (entry.filterLink) {
-                                                const href = buildFilterLinkHref(entry, lang);
-                                                return (
-                                                    <li key={entry.pageKey}>
-                                                        <Link
-                                                            to={href}
-                                                            className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                                                        >
-                                                            {resolvePageName(entry, page)}
-                                                        </Link>
-                                                    </li>
-                                                );
-                                            }
 
                                             return (
                                                 <li key={entry.pageKey}>
@@ -1760,6 +1746,25 @@ export function Navbar() {
                                                 </ul>
                                             </li>
                                         ))}
+                                        {moreLinks.length > 0 && (
+                                            <li className="mt-1 border-t border-border/60 pt-1">
+                                                <ul className="space-y-0.5">
+                                                    {moreLinks.map((link) => {
+                                                        const href = buildNavLinkHref(link, lang);
+                                                        return (
+                                                            <li key={link.key}>
+                                                                <Link
+                                                                    to={href}
+                                                                    className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                >
+                                                                    {link.label || link.key}
+                                                                </Link>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            </li>
+                                        )}
                                     </ul>
                                 </div>
                             )}
@@ -1826,22 +1831,6 @@ export function Navbar() {
                             {topEntriesFiltered.map((entry) => {
                                 const page = getPage(entry.pageKey);
                                 if (!page) return null;
-
-                                // Standalone filtered link in mobile
-                                if (entry.filterLink) {
-                                    const href = buildFilterLinkHref(entry, lang);
-                                    return (
-                                        <Link
-                                            key={entry.pageKey}
-                                            to={href}
-                                            onClick={() => setOpen(false)}
-                                            className="py-2 text-sm font-medium text-foreground"
-                                        >
-                                            {resolvePageName(entry, page)}
-                                        </Link>
-                                    );
-                                }
-
                                 const dropdownItems =
                                     resolveDropdownItems(entry);
 
@@ -1930,9 +1919,25 @@ export function Navbar() {
                                 />
                             ))}
 
+                            {/* Top standalone links */}
+                            {topLinks.map((link) => {
+                                const href = buildNavLinkHref(link, lang);
+                                return (
+                                    <Link
+                                        key={link.key}
+                                        to={href}
+                                        onClick={() => setOpen(false)}
+                                        className="py-2 text-sm font-medium text-foreground"
+                                    >
+                                        {link.label || link.key}
+                                    </Link>
+                                );
+                            })}
+
                             {/* More entries grouped under a single "More" collapsible on mobile */}
                             {(moreEntriesFiltered.length > 0 ||
-                                moreGroups.length > 0) && (
+                                moreGroups.length > 0 ||
+                                moreLinks.length > 0) && (
                                 <details className="group/main">
                                     <summary className="flex cursor-pointer items-center justify-between py-2 text-sm font-medium text-foreground">
                                         {t('nav.more')}
@@ -1942,22 +1947,6 @@ export function Navbar() {
                                         {moreEntriesFiltered.map((entry) => {
                                             const page = getPage(entry.pageKey);
                                             if (!page) return null;
-
-                                            // Standalone filtered link in mobile More
-                                            if (entry.filterLink) {
-                                                const href = buildFilterLinkHref(entry, lang);
-                                                return (
-                                                    <Link
-                                                        key={entry.pageKey}
-                                                        to={href}
-                                                        onClick={() => setOpen(false)}
-                                                        className="py-2 text-sm font-medium text-foreground"
-                                                    >
-                                                        {resolvePageName(entry, page)}
-                                                    </Link>
-                                                );
-                                            }
-
                                             const dropdownItems =
                                                 resolveDropdownItems(entry);
 
@@ -2147,6 +2136,25 @@ export function Navbar() {
                                                 </div>
                                             </div>
                                         ))}
+                                        {moreLinks.length > 0 && (
+                                            <div className="mt-2 border-t border-border/60 pt-2">
+                                                <div className="flex flex-col gap-1">
+                                                    {moreLinks.map((link) => {
+                                                        const href = buildNavLinkHref(link, lang);
+                                                        return (
+                                                            <Link
+                                                                key={link.key}
+                                                                to={href}
+                                                                onClick={() => setOpen(false)}
+                                                                className="py-1 text-sm text-muted-foreground"
+                                                            >
+                                                                {link.label || link.key}
+                                                            </Link>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </details>
                             )}

@@ -271,14 +271,14 @@ class AdminHotelController extends Controller
         $gallery = array_map(fn ($img) => $this->normalizeApiOutputPath($img), $item->details['gallery'] ?? [$item->image]);
         $category = $item->category ?? $item->details['category'] ?? ['en' => '', 'fr' => '', 'ar' => ''];
 
-        // Build category_assignments map from relationships
+        // Build category_assignments map from relationships (arrays per type)
         $categoryAssignments = [];
         if ($item->relationLoaded('categoryAssignments')) {
             foreach ($item->categoryAssignments as $assignment) {
                 $typeKey = $assignment->categoryType?->key;
                 $valueKey = $assignment->categoryValue?->key;
                 if ($typeKey && $valueKey) {
-                    $categoryAssignments[$typeKey] = $valueKey;
+                    $categoryAssignments[$typeKey][] = $valueKey;
                 }
             }
         }

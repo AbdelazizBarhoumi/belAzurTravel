@@ -136,16 +136,6 @@ export interface DropdownItemConfig {
 
 export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
 
-/** Config for a standalone filtered link in the header (links to a page with a specific filter/search). */
-export interface FilterLinkConfig {
-    /** Which page to link to (defaults to the entry's pageKey). */
-    targetPageKey?: string;
-    /** How the value is interpreted. */
-    mode: DropdownItemMode;
-    /** filter -> "typeKey:valueKey" or "static:groupKey:optionKey" or "param=value"; search -> keyword */
-    value: string;
-}
-
 export interface HeaderEntry {
     pageKey: string;
     enabled: boolean;
@@ -157,8 +147,6 @@ export interface HeaderEntry {
     items: DropdownItemConfig[];
     /** Admin-customizable display name (en/fr/ar). Falls back to translation key if unset. */
     label?: LocalizedText;
-    /** When set, the entry links to a filtered URL instead of the page root. Forces a simple link (no dropdown). */
-    filterLink?: FilterLinkConfig;
 }
 
 export interface FooterColumn {
@@ -190,10 +178,22 @@ export interface NavGroup {
     groups?: NavGroup[];
 }
 
+/** A standalone filtered link in the header (not inside a group). Each links to a specific page+filter/search. */
+export interface NavLink {
+    key: string;
+    label: string;
+    enabled: boolean;
+    placement: 'topbar' | 'top' | 'more';
+    targetPageKey: string;
+    mode: DropdownItemMode;
+    value: string;
+}
+
 export interface NavSettings {
     header: HeaderEntry[];
     footer: FooterColumn[];
     groups: NavGroup[];
+    links: NavLink[];
 }
 
 export const DEFAULT_FOOTER_COLUMNS: {
@@ -284,6 +284,7 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
         pageKeys: c.defaultKeys,
     })),
     groups: [],
+    links: [],
 };
 
 export function buildItemHref(
@@ -328,25 +329,44 @@ export function buildItemHref(
     return `${page.href}?${param}=${encodeURIComponent(item.value)}`;
 }
 
-/** Build a href for a standalone filtered link. Wraps buildItemHref with the FilterLinkConfig shape. */
-export function buildFilterLinkHref(
-    entry: HeaderEntry,
+/** Build a href for a standalone NavLink. */
+export function buildNavLinkHref(
+    link: NavLink,
     lang: 'en' | 'fr' | 'ar' = 'en',
 ): string {
-    if (!entry.filterLink) return getPage(entry.pageKey)?.href ?? '#';
-    const fl = entry.filterLink;
-    const targetKey = fl.targetPageKey ?? entry.pageKey;
+    const page = getPage(link.targetPageKey);
+    if (!page) return '#';
+    if (link.mode === 'search') {
+        return `${page.href}?q=${encodeURIComponent(link.value)}`;
+    }
     const dummyItem: DropdownItemConfig = {
-        label: entry.label ?? { en: '', fr: '', ar: '' },
-        mode: fl.mode,
-        value: fl.value,
-        pageKey: targetKey,
+        label: { en: link.label, fr: link.label, ar: link.label },
+        mode: link.mode,
+        value: link.value,
+        pageKey: link.targetPageKey,
     };
-    return buildItemHref(targetKey, dummyItem, lang);
+    return buildItemHref(link.targetPageKey, dummyItem, lang);
 }
 
-export function createFilterLink(): FilterLinkConfig {
+export function getNextLinkKey(links: NavLink[]): string {
+    let maxNum = 0;
+    for (const l of links) {
+        const match = l.key.match(/^link-(\d+)$/);
+        if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) maxNum = num;
+        }
+    }
+    return `link-${maxNum + 1}`;
+}
+
+export function createNavLink(): NavLink {
     return {
+        key: '',
+        label: '',
+        enabled: true,
+        placement: 'top',
+        targetPageKey: 'destinations',
         mode: 'filter',
         value: '',
     };

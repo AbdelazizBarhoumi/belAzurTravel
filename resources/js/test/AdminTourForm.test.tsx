@@ -79,14 +79,14 @@ describe('AdminTours', () => {
 
         const heading = screen
             .getAllByRole('heading', { level: 1 })
-            .find((node) => /Tours|Circuits/.test(node.textContent ?? ''));
+            .find((node) => /Tours|Circuit & Excursions/.test(node.textContent ?? ''));
 
         expect(heading).toBeDefined();
 
         const initialHeading = heading?.textContent ?? 'Tours';
         const targetButton = initialHeading === 'Tours' ? 'FR' : 'EN';
         const expectedHeading =
-            initialHeading === 'Tours' ? 'Circuits' : 'Tours';
+            initialHeading === 'Tours' ? 'Circuit & Excursions' : 'Tours';
 
         fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
         const dialog = await screen.findByRole('dialog');

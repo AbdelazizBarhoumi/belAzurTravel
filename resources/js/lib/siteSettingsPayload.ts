@@ -1,4 +1,4 @@
-import type { NavSettings, NavGroup, FilterLinkConfig } from '@/lib/nav-config';
+import type { NavSettings, NavGroup, NavLink } from '@/lib/nav-config';
 
 export type LocalizedText = Record<'en' | 'fr' | 'ar', string>;
 
@@ -121,17 +121,30 @@ function normalizeNavGroupForSave(
     return result;
 }
 
-function normalizeFilterLink(
-    fl: Record<string, unknown> | undefined,
-): FilterLinkConfig | undefined {
-    if (!fl || typeof fl !== 'object' || Array.isArray(fl)) return undefined;
-    const mode = fl.mode === 'search' || fl.mode === 'categories' ? fl.mode as FilterLinkConfig['mode'] : 'filter';
-    const value = typeof fl.value === 'string' ? fl.value : '';
-    const result: FilterLinkConfig = { mode, value };
-    if (typeof fl.targetPageKey === 'string' && fl.targetPageKey) {
-        result.targetPageKey = fl.targetPageKey;
+function normalizeNavLink(
+    link: Record<string, unknown>,
+): Record<string, unknown> {
+    const { activeLang: _activeLang, ...rest } = link;
+    let label = '';
+    if (typeof rest.label === 'string') {
+        label = rest.label;
+    } else if (rest.label && typeof rest.label === 'object') {
+        const l = rest.label as Record<string, unknown>;
+        label = typeof l.fr === 'string' ? l.fr : typeof l.en === 'string' ? l.en : '';
     }
-    return result;
+    return {
+        key: typeof rest.key === 'string' ? rest.key : '',
+        label,
+        enabled: rest.enabled !== false,
+        placement: ['topbar', 'top', 'more'].includes(rest.placement as string)
+            ? rest.placement
+            : 'top',
+        targetPageKey: typeof rest.targetPageKey === 'string' ? rest.targetPageKey : 'destinations',
+        mode: ['filter', 'search', 'categories'].includes(rest.mode as string)
+            ? rest.mode
+            : 'filter',
+        value: typeof rest.value === 'string' ? rest.value : '',
+    };
 }
 
 function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
@@ -150,9 +163,6 @@ function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
             ...(entry.label
                 ? { label: normalizeLocalizedText(entry.label) }
                 : {}),
-            ...(entry.filterLink
-                ? { filterLink: normalizeFilterLink(entry.filterLink as unknown as Record<string, unknown>) }
-                : { filterLink: undefined }),
             items: entry.items.map(
                 (item) =>
                     normalizeDropdownItem(
@@ -162,6 +172,14 @@ function normalizeNavSettingsForSave(nav: NavSettings): NavSettings {
         })),
         footer: nav.footer.map((column) => ({ ...column })),
         groups,
+        links: Array.isArray(nav.links)
+            ? nav.links.map(
+                  (l) =>
+                      normalizeNavLink(
+                          l as unknown as Record<string, unknown>,
+                      ) as unknown as NavLink,
+              )
+            : [],
     };
 }
 
@@ -265,16 +283,6 @@ export function normalizeSiteSettingsContentForSave(
                     });
                 }
 
-                if (
-                    Object.prototype.hasOwnProperty.call(nextEntry, 'filterLink')
-                ) {
-                    nextEntry.filterLink = normalizeFilterLink(
-                        nextEntry.filterLink as Record<string, unknown>,
-                    );
-                } else {
-                    nextEntry.filterLink = undefined;
-                }
-
                 return nextEntry;
             });
         }
@@ -288,6 +296,17 @@ export function normalizeSiteSettingsContentForSave(
             });
         } else {
             settings.groups = [];
+        }
+
+        if (Array.isArray(settings.links)) {
+            settings.links = settings.links.map((l) => {
+                if (!l || typeof l !== 'object' || Array.isArray(l)) {
+                    return l;
+                }
+                return normalizeNavLink(l as Record<string, unknown>);
+            });
+        } else {
+            settings.links = [];
         }
 
         navContent.settings = settings;

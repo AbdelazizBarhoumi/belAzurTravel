@@ -8,6 +8,8 @@ export interface HDeal {
     id: string;
     title: string;
     price: string;
+    originalPrice?: string;
+    promoPercent?: number;
     meta: string;
     image: string;
     href: string;
@@ -50,7 +52,8 @@ export function HorizontalDeals({
                 <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-[280px_1fr]">
                     <div>
                         <p
-                            className={`font-serif text-2xl italic ${accentText} mb-1`}
+                            className={`text-3xl ${accentText} mb-1`}
+                            style={{ fontFamily: '"Dancing Script", cursive' }}
                         >
                             {eyebrow}
                         </p>
@@ -84,6 +87,11 @@ export function HorizontalDeals({
                                         alt={it.title}
                                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                     />
+                                    {it.promoPercent ? (
+                                        <span className="absolute right-3 top-3 z-10 rounded-full bg-destructive px-2.5 py-1 text-xs font-bold text-destructive-foreground shadow">
+                                            -{it.promoPercent}%
+                                        </span>
+                                    ) : null}
                                     <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-primary/80 to-transparent p-4">
                                         <h3 className="line-clamp-2 font-serif text-lg font-bold text-primary-foreground drop-shadow">
                                             {it.title}
@@ -101,9 +109,16 @@ export function HorizontalDeals({
                                             </div>
                                         ) : null}
                                         {it.price ? (
-                                            <p className="text-2xl font-bold text-secondary drop-shadow">
-                                                {it.price}
-                                            </p>
+                                            <div>
+                                                {it.originalPrice ? (
+                                                    <p className="text-sm text-primary-foreground/60 line-through">
+                                                        {it.originalPrice}
+                                                    </p>
+                                                ) : null}
+                                                <p className="text-2xl font-bold text-secondary drop-shadow">
+                                                    {it.price}
+                                                </p>
+                                            </div>
                                         ) : null}
                                         <p className="text-xs text-primary-foreground/80">
                                             {it.meta}

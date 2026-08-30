@@ -9,6 +9,9 @@
 @import '@fontsource/tajawal/500.css';
 @import '@fontsource/tajawal/700.css';
 
+/* Dancing Script */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
+
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
@@ -167,6 +170,14 @@
             'Apple Color Emoji',
             'Segoe UI Emoji';
     }
+}
+
+/* Dancing Script – unlayered so Tailwind v4 cannot strip it */
+.dancing-script-regular {
+    font-family: "Dancing Script", cursive;
+    font-optical-sizing: auto;
+    font-weight: 700;
+    font-style: normal;
 }
 
 /* Make the default Tailwind ring color use the project's primary color

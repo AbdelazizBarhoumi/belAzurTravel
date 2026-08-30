@@ -31,6 +31,9 @@ const STARS_LABELS_FROM_CONFIG: Record<
 
 interface HotelFiltersProps {
     hotels: HotelItem[];
+    /** Hotels with category_assignments populated (e.g. displayedHotels in live
+     *  mode). Used for category-type filter counts. Falls back to `hotels`. */
+    hotelsWithCategoryData?: HotelItem[];
     lang: string;
     priceRange: [number, number];
     onPriceChange: (range: [number, number]) => void;
@@ -50,6 +53,7 @@ interface HotelFiltersProps {
 
 export function HotelFilters({
     hotels,
+    hotelsWithCategoryData,
     lang,
     priceRange,
     onPriceChange,
@@ -64,6 +68,9 @@ export function HotelFilters({
     onOccupancyChange,
 }: HotelFiltersProps) {
     const { t } = useLanguage();
+    // Use displayedHotels (with category_assignments) for category-type filter
+    // counts, falling back to the full hotels list for browse mode.
+    const categoryDataHotels = hotelsWithCategoryData ?? hotels;
     // Get unique countries from hotels
     const availableCountries = useMemo(() => {
         const countriesMap = new Map<
@@ -504,7 +511,7 @@ export function HotelFilters({
                             onCategoryTypeChange(catType.key, values)
                         }
                         lang={lang}
-                        items={hotels}
+                        items={categoryDataHotels}
                     />
                 </div>
             ))}

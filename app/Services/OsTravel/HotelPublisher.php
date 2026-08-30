@@ -210,6 +210,10 @@ class HotelPublisher
                         'meta' => $meta,
                     ], $mapped['filter_booleans']))->save();
 
+                    // Re-assign pricing_type so boarding-code changes are
+                    // reflected in the category filter sidebar daily.
+                    $this->assignPricingType($hotel, $detail['Boarding'] ?? []);
+
                     // The refreshed main image/gallery may have replaced
                     // previously downloaded files; remove the ones no longer
                     // referenced.
@@ -600,7 +604,7 @@ class HotelPublisher
      *
      * @param  list<array{Code?: string}>  $boardings
      */
-    protected function assignPricingType(Hotel $hotel, array $boardings): void
+    public function assignPricingType(Hotel $hotel, array $boardings): void
     {
         $type = CategoryType::where('entity_type', 'hotels')
             ->where('key', 'pricing_type')
@@ -617,14 +621,49 @@ class HotelPublisher
 
         // Map provider boarding codes to pricing_type value keys.
         $codeToPricingKey = [
-            'AI' => 'all-inclusive',
-            'HB' => 'half-board',
-            'BB' => 'bed-breakfast',
+            // Core types
+            'LS'  => 'room-only',
             'LPD' => 'bed-breakfast',
-            'RO' => 'room-only',
-            'LS' => 'room-only',
-            'DP' => 'half-board',
-            'PC' => 'all-inclusive',
+            'LPD+'=> 'bed-breakfast',
+            'LB'  => 'bed-breakfast',
+            'DP'  => 'half-board',
+            'DP+' => 'half-board-plus',
+            'DPP' => 'half-board-plus',
+            '50'  => 'half-board-plus',
+            'PC'  => 'full-board',
+            'PC+' => 'full-board-plus',
+            'PCP' => 'full-board-plus',
+            'ALL' => 'all-inclusive',
+            'Al +' => 'all-inclusive',
+            'SALL'=> 'soft-all-inclusive',
+            'ALLS+'=> 'soft-all-inclusive',
+            'UA'  => 'ultra-all-inclusive',
+            'UAI' => 'ultra-all-inclusive',
+            'UAIS'=> 'ultra-all-inclusive-soft',
+            'ALS' => 'ultra-all-inclusive-soft',
+            'UASD'=> 'ultra-ai-soft-drink',
+            'ETS' => 'entry-only',
+            'DU'  => 'day-use',
+            // Special event / zone codes → map to base type
+            'ArXML'=> 'room-only',
+            'ZA'  => 'room-only',
+            'ZB'  => 'room-only',
+            'ZC'  => 'room-only',
+            'ZD'  => 'room-only',
+            'ZVIP'=> 'room-only',
+            'DP31'=> 'half-board',
+            'PC+31'=> 'full-board',
+            'AS'  => 'half-board',
+            'P+'  => 'full-board-plus',
+            'A22' => 'soft-all-inclusive',
+            'STVD'=> 'half-board',
+            'STVAI'=> 'soft-all-inclusive',
+            'STVA'=> 'all-inclusive',
+            // Legacy codes
+            'AI'  => 'all-inclusive',
+            'HB'  => 'half-board',
+            'BB'  => 'bed-breakfast',
+            'RO'  => 'room-only',
         ];
 
         $pricingKeys = array_unique(array_filter(array_map(
@@ -632,20 +671,27 @@ class HotelPublisher
             $boardingCodes,
         )));
 
+        // Delete old pricing_type assignments for this hotel before inserting
+        // new ones. This ensures removed boarding codes are reflected and
+        // prevents the old updateOrCreate from overwriting (unique constraint
+        // on entity_type+entity_id+category_type_id kept only one row).
+        EntityCategoryAssignment::where('entity_type', 'hotels')
+            ->where('entity_id', $hotel->id)
+            ->where('category_type_id', $type->id)
+            ->delete();
+
         foreach ($pricingKeys as $key) {
             $value = $type->values()->where('key', $key)->first();
             if (! $value) {
                 continue;
             }
 
-            EntityCategoryAssignment::updateOrCreate(
-                [
-                    'entity_type' => 'hotels',
-                    'entity_id' => $hotel->id,
-                    'category_type_id' => $type->id,
-                ],
-                ['category_value_id' => $value->id],
-            );
+            EntityCategoryAssignment::create([
+                'entity_type' => 'hotels',
+                'entity_id' => $hotel->id,
+                'category_type_id' => $type->id,
+                'category_value_id' => $value->id,
+            ]);
         }
 
         Cache::forget('hotels.index');

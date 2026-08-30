@@ -91,8 +91,9 @@ import {
     getPagesInGroups,
     createGroupPageEntry,
     createGroupLink,
-    createFilterLink,
-    buildFilterLinkHref,
+    getNextLinkKey,
+    createNavLink,
+    buildNavLinkHref,
 } from '@/lib/nav-config';
 import {
     createLocalizedText,
@@ -111,7 +112,7 @@ import type {
     NavGroup,
     GroupPageEntry,
     NavGroupLink,
-    FilterLinkConfig,
+    NavLink,
 } from '@/lib/nav-config';
 
 const MAX_DEPTH = 2;
@@ -140,6 +141,9 @@ function sanitizeNavSettings(nav: NavSettings): NavSettings {
             pageKeys: c.pageKeys.filter((k) => allowedPageKeys.has(k)),
         })),
         groups: Array.isArray(nav.groups) ? sanitizeGroups(nav.groups) : [],
+        links: Array.isArray(nav.links)
+            ? nav.links.filter((l) => allowedPageKeys.has(l.targetPageKey))
+            : [],
     };
 }
 
@@ -2664,14 +2668,16 @@ export default function AdminSiteSettingsNav() {
         header: [],
         footer: DEFAULT_NAV_SETTINGS.footer,
         groups: [],
+        links: [],
     });
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [selectedPage, setSelectedPage] = useState<string>('');
     const [moveToGroupTarget, setMoveToGroupTarget] = useState<
         Record<number, string>
     >({});
-    const [activeTab, setActiveTab] = useState<'header' | 'groups'>('header');
+    const [activeTab, setActiveTab] = useState<'header' | 'groups' | 'links'>('header');
     const [isSaving, setIsSaving] = useState(false);
+    const [selectedLinkPage, setSelectedLinkPage] = useState<string>('');
 
     /* Data fetching */
     const { data: destinationCategories = [] } = useCategories('destinations');
@@ -3166,7 +3172,58 @@ export default function AdminSiteSettingsNav() {
                 header: draft.header.filter((_, i) => i !== headerIdx),
                 footer: draft.footer,
                 groups: addToList(draft.groups ?? []),
+                links: draft.links ?? [],
             });
+        },
+        [draft],
+    );
+
+    /* ─── Standalone Link Handlers ─── */
+    const addStandaloneLink = useCallback(() => {
+        if (!selectedLinkPage) return;
+        const page = getPage(selectedLinkPage);
+        if (!page) return;
+        const newLink: NavLink = {
+            ...createNavLink(),
+            key: getNextLinkKey(draft.links ?? []),
+            targetPageKey: selectedLinkPage,
+            label: t('nav.' + page.key),
+        };
+        setDraft({ ...draft, links: [...(draft.links ?? []), newLink] });
+        setSelectedLinkPage('');
+    }, [selectedLinkPage, draft, t]);
+
+    const updateLink = useCallback(
+        (linkKey: string, patch: Partial<NavLink>) => {
+            setDraft({
+                ...draft,
+                links: (draft.links ?? []).map((l) =>
+                    l.key === linkKey ? { ...l, ...patch } : l,
+                ),
+            });
+        },
+        [draft],
+    );
+
+    const removeLink = useCallback(
+        (linkKey: string) => {
+            setDraft({
+                ...draft,
+                links: (draft.links ?? []).filter((l) => l.key !== linkKey),
+            });
+        },
+        [draft],
+    );
+
+    const moveLink = useCallback(
+        (linkKey: string, direction: 'up' | 'down') => {
+            const links = [...(draft.links ?? [])];
+            const idx = links.findIndex((l) => l.key === linkKey);
+            if (idx < 0) return;
+            const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+            if (swapIdx < 0 || swapIdx >= links.length) return;
+            [links[idx], links[swapIdx]] = [links[swapIdx], links[idx]];
+            setDraft({ ...draft, links });
         },
         [draft],
     );
@@ -3221,6 +3278,29 @@ export default function AdminSiteSettingsNav() {
                             ...draft,
                             groups: arrayMove(
                                 draft.groups ?? [],
+                                oldIndex,
+                                newIndex,
+                            ),
+                        });
+                    }
+                }
+            }
+
+            if (activeId.startsWith('link-')) {
+                const activeLinkKey = activeId.replace('link-', '');
+                if (overId.startsWith('link-')) {
+                    const overLinkKey = overId.replace('link-', '');
+                    const oldIndex = (draft.links ?? []).findIndex(
+                        (l) => l.key === activeLinkKey,
+                    );
+                    const newIndex = (draft.links ?? []).findIndex(
+                        (l) => l.key === overLinkKey,
+                    );
+                    if (oldIndex >= 0 && newIndex >= 0) {
+                        setDraft({
+                            ...draft,
+                            links: arrayMove(
+                                draft.links ?? [],
                                 oldIndex,
                                 newIndex,
                             ),
@@ -3316,6 +3396,19 @@ export default function AdminSiteSettingsNav() {
         return errors;
     };
 
+    const validateStandaloneLinks = (links: NavLink[]): Record<string, string> => {
+        const errors: Record<string, string> = {};
+        for (const link of links) {
+            if (!(link.label ?? '').trim()) {
+                errors[`link-${link.key}-label`] = 'Label required';
+            }
+            if (!link.targetPageKey || !getPage(link.targetPageKey)) {
+                errors[`link-${link.key}-page`] = 'Invalid target page';
+            }
+        }
+        return errors;
+    };
+
     const save = async () => {
         const errors: Record<string, string> = {};
         for (const [hIdx, entry] of draft.header.entries()) {
@@ -3324,6 +3417,7 @@ export default function AdminSiteSettingsNav() {
             }
         }
         Object.assign(errors, validateGroupLinks(draft.groups ?? []));
+        Object.assign(errors, validateStandaloneLinks(draft.links ?? []));
         if (Object.keys(errors).length > 0) {
             setFormErrors(errors);
             toast.error(Object.values(errors)[0]);
@@ -3440,6 +3534,20 @@ export default function AdminSiteSettingsNav() {
                         {t('admin.settings.headerGroups')}
                         <Badge variant="secondary" className="ml-1 text-[10px]">
                             {(draft.groups ?? []).length}
+                        </Badge>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('links')}
+                        className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${
+                            activeTab === 'links'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                    >
+                        <Filter className="h-4 w-4" />
+                        {t('admin.settings.customLinks')}
+                        <Badge variant="secondary" className="ml-1 text-[10px]">
+                            {(draft.links ?? []).length}
                         </Badge>
                     </button>
                 </div>
@@ -3696,8 +3804,7 @@ export default function AdminSiteSettingsNav() {
                                                                 </TooltipContent>
                                                             </Tooltip>
 
-                                                            {/* Dropdown Toggle (hidden when filterLink is active) */}
-                                                            {!entry.filterLink && (
+                                                            {/* Dropdown Toggle */}
                                                             <Tooltip>
                                                                 <TooltipTrigger
                                                                     asChild
@@ -3738,7 +3845,6 @@ export default function AdminSiteSettingsNav() {
                                                                     </p>
                                                                 </TooltipContent>
                                                             </Tooltip>
-                                                            )}
 
                                                             {entry.isDropdown && (
                                                                 <Tooltip>
@@ -3777,52 +3883,6 @@ export default function AdminSiteSettingsNav() {
                                                                                   )
                                                                                 : t(
                                                                                       'admin.settings.linkSelfDisabled',
-                                                                                  )}
-                                                                        </p>
-                                                                    </TooltipContent>
-                                                                </Tooltip>
-                                                            )}
-
-                                                            {/* Filtered Link Toggle */}
-                                                            {!entry.isDropdown && (
-                                                                <Tooltip>
-                                                                    <TooltipTrigger
-                                                                        asChild
-                                                                    >
-                                                                        <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-2 py-1">
-                                                                            <Label className="cursor-pointer text-[10px] text-muted-foreground">
-                                                                                {t(
-                                                                                    'admin.settings.filteredLink',
-                                                                                )}
-                                                                            </Label>
-                                                                            <Switch
-                                                                                checked={
-                                                                                    !!entry.filterLink
-                                                                                }
-                                                                                onCheckedChange={(
-                                                                                    v,
-                                                                                ) =>
-                                                                                    setHeader(
-                                                                                        idx,
-                                                                                        {
-                                                                                            filterLink:
-                                                                                                v
-                                                                                                    ? createFilterLink()
-                                                                                                    : undefined,
-                                                                                        },
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        </div>
-                                                                    </TooltipTrigger>
-                                                                    <TooltipContent>
-                                                                        <p className="text-xs">
-                                                                            {entry.filterLink
-                                                                                ? t(
-                                                                                      'admin.settings.filteredLinkEnabled',
-                                                                                  )
-                                                                                : t(
-                                                                                      'admin.settings.filteredLinkDisabled',
                                                                                   )}
                                                                         </p>
                                                                     </TooltipContent>
@@ -3981,320 +4041,6 @@ export default function AdminSiteSettingsNav() {
                                                             ))}
                                                         </div>
                                                     </div>
-
-                                                    {/* Filtered Link Config Panel */}
-                                                    {entry.filterLink && (
-                                                        <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4">
-                                                            <div className="mb-3 flex items-center gap-2">
-                                                                <Filter className="h-4 w-4 text-blue-600" />
-                                                                <Label className="text-sm font-medium text-blue-900">
-                                                                    {t(
-                                                                        'admin.settings.filteredLinkConfig',
-                                                                    )}
-                                                                </Label>
-                                                            </div>
-                                                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                                                {/* Target Page */}
-                                                                <div>
-                                                                    <Label className="mb-1 block text-xs text-muted-foreground">
-                                                                        {t(
-                                                                            'admin.settings.targetPage',
-                                                                        )}
-                                                                    </Label>
-                                                                    <Select
-                                                                        value={
-                                                                            entry.filterLink
-                                                                                .targetPageKey ??
-                                                                            entry.pageKey
-                                                                        }
-                                                                        onValueChange={(
-                                                                            v,
-                                                                        ) =>
-                                                                            setHeader(
-                                                                                idx,
-                                                                                {
-                                                                                    filterLink:
-                                                                                        {
-                                                                                            ...entry.filterLink!,
-                                                                                            targetPageKey:
-                                                                                                v ===
-                                                                                                entry.pageKey
-                                                                                                    ? undefined
-                                                                                                    : v,
-                                                                                        },
-                                                                                },
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <SelectTrigger className="h-8 bg-background text-xs">
-                                                                            <SelectValue />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {AVAILABLE_PAGES.map(
-                                                                                (
-                                                                                    p,
-                                                                                ) => (
-                                                                                    <SelectItem
-                                                                                        key={
-                                                                                            p.key
-                                                                                        }
-                                                                                        value={
-                                                                                            p.key
-                                                                                        }
-                                                                                    >
-                                                                                        {
-                                                                                            p.label
-                                                                                        }
-                                                                                    </SelectItem>
-                                                                                ),
-                                                                            )}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-
-                                                                {/* Mode */}
-                                                                <div>
-                                                                    <Label className="mb-1 block text-xs text-muted-foreground">
-                                                                        {t(
-                                                                            'admin.settings.linkMode',
-                                                                        )}
-                                                                    </Label>
-                                                                    <Select
-                                                                        value={
-                                                                            entry
-                                                                                .filterLink
-                                                                                .mode
-                                                                        }
-                                                                        onValueChange={(
-                                                                            v: DropdownItemConfig['mode'],
-                                                                        ) =>
-                                                                            setHeader(
-                                                                                idx,
-                                                                                {
-                                                                                    filterLink:
-                                                                                        {
-                                                                                            ...entry.filterLink!,
-                                                                                            mode: v,
-                                                                                            value:
-                                                                                                '',
-                                                                                        },
-                                                                                },
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <SelectTrigger className="h-8 bg-background text-xs">
-                                                                            <SelectValue />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            <SelectItem value="filter">
-                                                                                <span className="flex items-center gap-1.5">
-                                                                                    <Filter className="h-3 w-3" />
-                                                                                    {t(
-                                                                                        'admin.settings.filterMode',
-                                                                                    )}
-                                                                                </span>
-                                                                            </SelectItem>
-                                                                            <SelectItem value="search">
-                                                                                <span className="flex items-center gap-1.5">
-                                                                                    <Search className="h-3 w-3" />
-                                                                                    {t(
-                                                                                        'admin.settings.searchMode',
-                                                                                    )}
-                                                                                </span>
-                                                                            </SelectItem>
-                                                                            <SelectItem value="categories">
-                                                                                <span className="flex items-center gap-1.5">
-                                                                                    <Tag className="h-3 w-3" />
-                                                                                    {t(
-                                                                                        'admin.settings.categoriesMode',
-                                                                                    )}
-                                                                                </span>
-                                                                            </SelectItem>
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </div>
-
-                                                                {/* Value */}
-                                                                <div>
-                                                                    <Label className="mb-1 block text-xs text-muted-foreground">
-                                                                        {t(
-                                                                            'admin.settings.filterValue',
-                                                                        )}
-                                                                    </Label>
-                                                                    {entry.filterLink
-                                                                        .mode ===
-                                                                    'search' ? (
-                                                                        <Input
-                                                                            value={
-                                                                                entry
-                                                                                    .filterLink
-                                                                                    .value
-                                                                            }
-                                                                            onChange={(
-                                                                                e,
-                                                                            ) =>
-                                                                                setHeader(
-                                                                                    idx,
-                                                                                    {
-                                                                                        filterLink:
-                                                                                            {
-                                                                                                ...entry.filterLink!,
-                                                                                                value: e
-                                                                                                    .target
-                                                                                                    .value,
-                                                                                            },
-                                                                                    },
-                                                                                )
-                                                                            }
-                                                                            placeholder={t(
-                                                                                'admin.settings.searchKeyword',
-                                                                            )}
-                                                                            className="h-8 bg-background text-xs"
-                                                                        />
-                                                                    ) : entry
-                                                                          .filterLink
-                                                                          .mode ===
-                                                                      'categories' ? (
-                                                                        <Select
-                                                                            value={
-                                                                                entry
-                                                                                    .filterLink
-                                                                                    .value
-                                                                            }
-                                                                            onValueChange={(
-                                                                                v,
-                                                                            ) =>
-                                                                                setHeader(
-                                                                                    idx,
-                                                                                    {
-                                                                                        filterLink:
-                                                                                            {
-                                                                                                ...entry.filterLink!,
-                                                                                                value: v,
-                                                                                            },
-                                                                                    },
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            <SelectTrigger className="h-8 bg-background text-xs">
-                                                                                <SelectValue
-                                                                                    placeholder={t(
-                                                                                        'admin.settings.selectCategoryType',
-                                                                                    )}
-                                                                                />
-                                                                            </SelectTrigger>
-                                                                            <SelectContent>
-                                                                                {(
-                                                                                    categoryTypesByPage[
-                                                                                        (
-                                                                                            entry.filterLink
-                                                                                                .targetPageKey ??
-                                                                                            entry.pageKey
-                                                                                        ) as keyof typeof categoryTypesByPage
-                                                                                    ] ?? []
-                                                                                ).map(
-                                                                                    (
-                                                                                        ct,
-                                                                                    ) => (
-                                                                                        <SelectItem
-                                                                                            key={
-                                                                                                ct.key
-                                                                                            }
-                                                                                            value={
-                                                                                                ct.key
-                                                                                            }
-                                                                                        >
-                                                                                            {ct
-                                                                                                .label[
-                                                                                                lang as
-                                                                                                    | 'en'
-                                                                                                    | 'fr'
-                                                                                                    | 'ar'
-                                                                                            ] ??
-                                                                                                ct
-                                                                                                    .label
-                                                                                                    .en}
-                                                                                        </SelectItem>
-                                                                                    ),
-                                                                                )}
-                                                                            </SelectContent>
-                                                                        </Select>
-                                                                    ) : (
-                                                                        <Select
-                                                                            value={
-                                                                                entry
-                                                                                    .filterLink
-                                                                                    .value
-                                                                            }
-                                                                            onValueChange={(
-                                                                                v,
-                                                                            ) =>
-                                                                                setHeader(
-                                                                                    idx,
-                                                                                    {
-                                                                                        filterLink:
-                                                                                            {
-                                                                                                ...entry.filterLink!,
-                                                                                                value: v,
-                                                                                            },
-                                                                                    },
-                                                                                )
-                                                                            }
-                                                                        >
-                                                                            <SelectTrigger className="h-8 bg-background text-xs">
-                                                                                <SelectValue
-                                                                                    placeholder={t(
-                                                                                        'admin.settings.selectFilterValue',
-                                                                                    )}
-                                                                                />
-                                                                            </SelectTrigger>
-                                                                            <SelectContent>
-                                                                                {getAllCategoryValuesForPage(
-                                                                                    entry
-                                                                                        .filterLink
-                                                                                        .targetPageKey ??
-                                                                                        entry.pageKey,
-                                                                                ).map(
-                                                                                    (
-                                                                                        opt,
-                                                                                    ) => (
-                                                                                        <SelectItem
-                                                                                            key={
-                                                                                                opt.value
-                                                                                            }
-                                                                                            value={
-                                                                                                opt.value
-                                                                                            }
-                                                                                        >
-                                                                                            {
-                                                                                                opt.label
-                                                                                            }
-                                                                                        </SelectItem>
-                                                                                    ),
-                                                                                )}
-                                                                            </SelectContent>
-                                                                        </Select>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            {/* Preview URL */}
-                                                            <div className="mt-3 rounded-md bg-background px-3 py-2 text-xs text-muted-foreground">
-                                                                <span className="font-medium">
-                                                                    {t(
-                                                                        'admin.settings.previewUrl',
-                                                                    )}
-                                                                    :
-                                                                </span>{' '}
-                                                                {buildFilterLinkHref(
-                                                                    entry,
-                                                                    lang as
-                                                                        | 'en'
-                                                                        | 'fr'
-                                                                        | 'ar',
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
 
                                                     {/* Dropdown Items Section */}
                                                     {entry.isDropdown && (
@@ -4569,6 +4315,509 @@ export default function AdminSiteSettingsNav() {
                                             t={t}
                                         />
                                     ))}
+                                </div>
+                            </SortableContext>
+                        </DndContext>
+                    </div>
+                )}
+
+                {/* ─── CUSTOM LINKS TAB ─── */}
+                {activeTab === 'links' && (
+                    <div className="space-y-6">
+                        {/* Add Link Card */}
+                        <Card className="border-2 border-dashed bg-muted/20">
+                            <CardContent className="p-4">
+                                <div className="flex items-end gap-3">
+                                    <div className="flex-1">
+                                        <Label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
+                                            <Plus className="h-4 w-4 text-primary" />
+                                            {t('admin.settings.addLinkToHeader')}
+                                        </Label>
+                                        <p className="mb-2 text-xs text-muted-foreground">
+                                            {t('admin.settings.addLinkDescription')}
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <Select
+                                                value={selectedLinkPage}
+                                                onValueChange={setSelectedLinkPage}
+                                            >
+                                                <SelectTrigger className="bg-background">
+                                                    <SelectValue
+                                                        placeholder={t(
+                                                            'admin.settings.selectPageForLink',
+                                                        )}
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {AVAILABLE_PAGES.map((p) => (
+                                                        <SelectItem
+                                                            key={p.key}
+                                                            value={p.key}
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                <span className="font-medium">
+                                                                    {t(
+                                                                        'nav.' +
+                                                                            p.key,
+                                                                    )}
+                                                                </span>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {p.href}
+                                                                </span>
+                                                            </span>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <Button
+                                                onClick={addStandaloneLink}
+                                                disabled={!selectedLinkPage}
+                                                className="gap-1.5"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                                {t('admin.settings.addLink')}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {(draft.links ?? []).length === 0 && (
+                            <EmptyState
+                                icon={Filter}
+                                title={t('admin.settings.noLinks')}
+                                description={t(
+                                    'admin.settings.noLinksDescription',
+                                )}
+                                action={
+                                    <Button
+                                        size="sm"
+                                        onClick={() =>
+                                            document
+                                                .querySelector(
+                                                    '[data-add-link-trigger]',
+                                                )
+                                                ?.scrollIntoView({
+                                                    behavior: 'smooth',
+                                                })
+                                        }
+                                    >
+                                        <Plus className="mr-1 h-4 w-4" />
+                                        {t('admin.settings.createFirstLink')}
+                                    </Button>
+                                }
+                            />
+                        )}
+
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext
+                                items={(draft.links ?? []).map(
+                                    (l) => `link-${l.key}`,
+                                )}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <div className="grid gap-4">
+                                    {(draft.links ?? []).map((link) => {
+                                        const page = getPage(link.targetPageKey);
+                                        const previewHref = buildNavLinkHref(
+                                            link,
+                                            lang as 'en' | 'fr' | 'ar',
+                                        );
+
+                                        return (
+                                            <Card
+                                                key={link.key}
+                                                className="overflow-hidden shadow-sm transition-shadow hover:shadow-md"
+                                            >
+                                                <div className="flex items-start gap-1 p-5">
+                                                    <div className="min-w-0 flex-1 pt-0.5">
+                                                        <div className="space-y-4">
+                                                            {/* Top Row: Identity + Quick Actions */}
+                                                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                                                <div className="flex min-w-0 items-center gap-3">
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="border-blue-200 bg-blue-50 text-[10px] text-blue-700"
+                                                                    >
+                                                                        <Filter className="mr-1 h-3 w-3" />
+                                                                        {t(
+                                                                            'admin.settings.customLink',
+                                                                        )}
+                                                                    </Badge>
+                                                                    <div className="min-w-0">
+                                                                        <span
+                                                                            className={`block truncate font-semibold ${!link.enabled ? 'text-muted-foreground line-through' : ''}`}
+                                                                        >
+                                                                            {link.label || link.key}
+                                                                        </span>
+                                                                        <span className="text-xs text-muted-foreground">
+                                                                            {previewHref}
+                                                                        </span>
+                                                                    </div>
+                                                                    {!link.enabled && (
+                                                                        <Badge
+                                                                            variant="outline"
+                                                                            className="border-muted text-[10px] text-muted-foreground"
+                                                                        >
+                                                                            <EyeOff className="mr-1 h-3 w-3" />
+                                                                            {t(
+                                                                                'admin.settings.hidden',
+                                                                            )}
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    {/* Placement */}
+                                                                    <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-2 py-1">
+                                                                        <Label className="text-[10px] text-muted-foreground">
+                                                                            {t(
+                                                                                'admin.settings.placement',
+                                                                            )}
+                                                                        </Label>
+                                                                        <Select
+                                                                            value={
+                                                                                link.placement
+                                                                            }
+                                                                            onValueChange={(
+                                                                                v: any,
+                                                                            ) =>
+                                                                                updateLink(
+                                                                                    link.key,
+                                                                                    {
+                                                                                        placement:
+                                                                                            v,
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <SelectTrigger className="h-7 w-28 border-0 bg-transparent text-xs focus:ring-0">
+                                                                                <SelectValue />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="topbar">
+                                                                                    {t(
+                                                                                        'admin.settings.topbarPlacement',
+                                                                                    )}
+                                                                                </SelectItem>
+                                                                                <SelectItem value="top">
+                                                                                    {t(
+                                                                                        'admin.settings.mainNav',
+                                                                                    )}
+                                                                                </SelectItem>
+                                                                                <SelectItem value="more">
+                                                                                    {t(
+                                                                                        'admin.settings.plusMore',
+                                                                                    )}
+                                                                                </SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+
+                                                                    {/* Enabled Toggle */}
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger
+                                                                            asChild
+                                                                        >
+                                                                            <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-2 py-1">
+                                                                                <Label className="cursor-pointer text-[10px] text-muted-foreground">
+                                                                                    {link.enabled
+                                                                                        ? t(
+                                                                                              'admin.settings.visible',
+                                                                                          )
+                                                                                        : t(
+                                                                                              'admin.settings.hidden',
+                                                                                          )}
+                                                                                </Label>
+                                                                                <Switch
+                                                                                    checked={
+                                                                                        link.enabled
+                                                                                    }
+                                                                                    onCheckedChange={(
+                                                                                        v,
+                                                                                    ) =>
+                                                                                        updateLink(
+                                                                                            link.key,
+                                                                                            {
+                                                                                                enabled:
+                                                                                                    v,
+                                                                                            },
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </div>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p className="text-xs">
+                                                                                {link.enabled
+                                                                                    ? t(
+                                                                                          'admin.settings.linkVisible',
+                                                                                      )
+                                                                                    : t(
+                                                                                          'admin.settings.linkHidden',
+                                                                                      )}
+                                                                            </p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    <Button
+                                                                        size="icon"
+                                                                        variant="ghost"
+                                                                        className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                                                                        onClick={() =>
+                                                                            removeLink(
+                                                                                link.key,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Label */}
+                                                            <div className="rounded-lg bg-muted/30 p-3">
+                                                                <Label className="mb-2 flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                                                                    <Globe className="h-3 w-3" />
+                                                                    {t(
+                                                                        'admin.settings.linkLabels',
+                                                                    )}
+                                                                </Label>
+                                                                <Input
+                                                                    value={
+                                                                        link.label ??
+                                                                        ''
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) => {
+                                                                        updateLink(
+                                                                            link.key,
+                                                                            {
+                                                                                label: e
+                                                                                    .target
+                                                                                    .value,
+                                                                            },
+                                                                        );
+                                                                    }}
+                                                                    placeholder={t(
+                                                                        'admin.settings.linkLabels',
+                                                                    )}
+                                                                    className="h-8 text-xs"
+                                                                />
+                                                            </div>
+
+                                                            {/* Link Config */}
+                                                            <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+                                                                <div className="mb-3 flex items-center gap-2">
+                                                                    <NavBadge type="item" />
+                                                                    <Label className="text-sm font-medium">
+                                                                        {t(
+                                                                            'admin.settings.linkConfig',
+                                                                        )}
+                                                                    </Label>
+                                                                </div>
+                                                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                                                    {/* Target Page */}
+                                                                    <div>
+                                                                        <Label className="mb-1 block text-xs text-muted-foreground">
+                                                                            {t(
+                                                                                'admin.settings.targetPage',
+                                                                            )}
+                                                                        </Label>
+                                                                        <Select
+                                                                            value={
+                                                                                link.targetPageKey
+                                                                            }
+                                                                            onValueChange={(
+                                                                                v,
+                                                                            ) =>
+                                                                                updateLink(
+                                                                                    link.key,
+                                                                                    {
+                                                                                        targetPageKey:
+                                                                                            v,
+                                                                                        value:
+                                                                                            '',
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <SelectTrigger className="h-8 bg-background text-xs">
+                                                                                <SelectValue />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {AVAILABLE_PAGES.map(
+                                                                                    (
+                                                                                        p,
+                                                                                    ) => (
+                                                                                        <SelectItem
+                                                                                            key={
+                                                                                                p.key
+                                                                                            }
+                                                                                            value={
+                                                                                                p.key
+                                                                                            }
+                                                                                        >
+                                                                                            {
+                                                                                                t('nav.' + p.key)
+                                                                                            }
+                                                                                        </SelectItem>
+                                                                                    ),
+                                                                                )}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+
+                                                                    {/* Mode */}
+                                                                    <div>
+                                                                        <Label className="mb-1 block text-xs text-muted-foreground">
+                                                                            {t(
+                                                                                'admin.settings.linkMode',
+                                                                            )}
+                                                                        </Label>
+                                                                        <Select
+                                                                            value={
+                                                                                link.mode
+                                                                            }
+                                                                            onValueChange={(
+                                                                                v: DropdownItemConfig['mode'],
+                                                                            ) =>
+                                                                                updateLink(
+                                                                                    link.key,
+                                                                                    {
+                                                                                        mode: v,
+                                                                                        value:
+                                                                                            '',
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <SelectTrigger className="h-8 bg-background text-xs">
+                                                                                <SelectValue />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                <SelectItem value="filter">
+                                                                                    <span className="flex items-center gap-1.5">
+                                                                                        <Filter className="h-3 w-3" />
+                                                                                        {t(
+                                                                                            'admin.settings.filterMode',
+                                                                                        )}
+                                                                                    </span>
+                                                                                </SelectItem>
+                                                                                <SelectItem value="search">
+                                                                                    <span className="flex items-center gap-1.5">
+                                                                                        <Search className="h-3 w-3" />
+                                                                                        {t(
+                                                                                            'admin.settings.searchMode',
+                                                                                        )}
+                                                                                    </span>
+                                                                                </SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+
+                                                                    {/* Value */}
+                                                                    <div>
+                                                                        <Label className="mb-1 block text-xs text-muted-foreground">
+                                                                            {t(
+                                                                                'admin.settings.filterValue',
+                                                                            )}
+                                                                        </Label>
+                                                                        {link.mode ===
+                                                                        'search' ? (
+                                                                            <Input
+                                                                                value={
+                                                                                    link.value
+                                                                                }
+                                                                                onChange={(
+                                                                                    e,
+                                                                                ) =>
+                                                                                    updateLink(
+                                                                                        link.key,
+                                                                                        {
+                                                                                            value: e
+                                                                                                .target
+                                                                                                .value,
+                                                                                        },
+                                                                                    )
+                                                                                }
+                                                                                placeholder={t(
+                                                                                    'admin.settings.searchKeyword',
+                                                                                )}
+                                                                                className="h-8 bg-background text-xs"
+                                                                            />
+                                                                        ) : (
+                                                                            <Select
+                                                                                value={
+                                                                                    link.value
+                                                                                }
+                                                                                onValueChange={(
+                                                                                    v,
+                                                                                ) =>
+                                                                                    updateLink(
+                                                                                        link.key,
+                                                                                        {
+                                                                                            value: v,
+                                                                                        },
+                                                                                    )
+                                                                                }
+                                                                            >
+                                                                                <SelectTrigger className="h-8 bg-background text-xs">
+                                                                                    <SelectValue
+                                                                                        placeholder={t(
+                                                                                            'admin.settings.selectFilterValue',
+                                                                                        )}
+                                                                                    />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {getAllCategoryValuesForPage(
+                                                                                        link.targetPageKey,
+                                                                                    ).map(
+                                                                                        (
+                                                                                            opt,
+                                                                                        ) => (
+                                                                                            <SelectItem
+                                                                                                key={
+                                                                                                    opt.value
+                                                                                                }
+                                                                                                value={
+                                                                                                    opt.value
+                                                                                                }
+                                                                                            >
+                                                                                                {
+                                                                                                    opt.label
+                                                                                                }
+                                                                                            </SelectItem>
+                                                                                        ),
+                                                                                    )}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                {/* Preview URL */}
+                                                                <div className="mt-3 rounded-md bg-background px-3 py-2 text-xs text-muted-foreground">
+                                                                    <span className="font-medium">
+                                                                        {t(
+                                                                            'admin.settings.previewUrl',
+                                                                        )}
+                                                                        :
+                                                                    </span>{' '}
+                                                                    {previewHref}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        );
+                                    })}
                                 </div>
                             </SortableContext>
                         </DndContext>

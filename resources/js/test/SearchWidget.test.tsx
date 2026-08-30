@@ -37,7 +37,7 @@ describe('SearchWidget', () => {
         renderSearchWidget();
 
         expect(
-            screen.getByRole('tab', { name: /Circuits/i }),
+            screen.getByRole('tab', { name: /Circuit & Excursions/i }),
         ).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: /Vols/i })).toBeInTheDocument();
     });

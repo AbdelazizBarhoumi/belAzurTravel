@@ -57,7 +57,7 @@ class SiteSettingsControllerTest extends TestCase
                             'label' => ['en' => 'Services', 'fr' => 'Services', 'ar' => 'الخدمات'],
                             'items' => [
                                 [
-                                    'label' => ['en' => 'Tours', 'fr' => 'Circuits', 'ar' => 'الجولات'],
+                                    'label' => ['en' => 'Tours', 'fr' => 'Circuit & Excursions', 'ar' => 'الجولات'],
                                     'mode' => 'filter',
                                     'value' => 'tours',
                                     'href' => '/tours',
@@ -224,7 +224,7 @@ class SiteSettingsControllerTest extends TestCase
                     'type' => 'dropdown',
                     'label' => ['en' => 'Services', 'fr' => 'Services', 'ar' => 'الخدمات'],
                     'items' => [
-                        ['label' => ['en' => 'Tours', 'fr' => 'Circuits', 'ar' => 'الجولات'], 'href' => '/tours'],
+                        ['label' => ['en' => 'Tours', 'fr' => 'Circuit & Excursions', 'ar' => 'الجولات'], 'href' => '/tours'],
                         ['label' => ['en' => 'Hotels', 'fr' => 'Hôtels', 'ar' => 'الفنادق'], 'href' => '/hotels'],
                     ],
                 ],
@@ -335,7 +335,7 @@ class SiteSettingsControllerTest extends TestCase
                             'label' => ['en' => 'Services', 'fr' => 'Services', 'ar' => 'الخدمات'],
                             'items' => [
                                 [
-                                    'label' => ['en' => 'Tours', 'fr' => 'Circuits'],
+                                    'label' => ['en' => 'Tours', 'fr' => 'Circuit & Excursions'],
                                     'mode' => 'filter',
                                     'value' => 'tours',
                                     'href' => '/tours',

@@ -14,7 +14,7 @@ const tr = (fr: string, ar: string, en: string): TranslationEntry => ({
 
 const DESTINATIONS = tr('Destinations', 'الوجهات', 'Destinations');
 const HOTELS = tr('Hôtels', 'الفنادق', 'Hotels');
-const TOURS = tr('Circuits', 'الجولات', 'Tours');
+const TOURS = tr('Circuit & Excursions', 'الجولات', 'Tours');
 const GALLERY = tr('Galerie', 'المعرض', 'Gallery');
 const BLOG = tr('Blog', 'المدونة', 'Blog');
 const BOOK = tr('Réserver', 'احجز', 'Book');
@@ -460,7 +460,7 @@ export const translations: Record<string, TranslationEntry> = {
 
     // Search Widget
     'search.tabs.hotels': { fr: 'Hôtels', ar: 'فنادق', en: 'Hotels' },
-    'search.tabs.tours': { fr: 'Circuits', ar: 'جولات', en: 'Tours' },
+    'search.tabs.tours': { fr: 'Circuit & Excursions', ar: 'جولات', en: 'Tours' },
     'search.tabs.flights': { fr: 'Vols', ar: 'رحلات', en: 'Flights' },
 
     'search.fields.destination': {
@@ -2212,7 +2212,7 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Where to stay',
     },
     'destinationDetail.suggestedTours': {
-        fr: 'Circuits suggérés',
+        fr: 'Circuit & Excursions suggérés',
         ar: 'جولات مقترحة',
         en: 'Suggested tours',
     },
@@ -2244,7 +2244,7 @@ export const translations: Record<string, TranslationEntry> = {
 
     // Tours Page
     'tours.title': {
-        fr: 'Circuits Guidés',
+        fr: 'Circuit & Excursions Guidés',
         ar: 'الجولات الموجهة',
         en: 'Guided Tours',
     },
@@ -6437,25 +6437,55 @@ translations['admin.settings.linkSelfDisabled'] = {
     ar: 'النقر على اسم الرابط يفتح القائمة المنسدلة فقط',
     en: 'Clicking the link name only opens the dropdown',
 };
-translations['admin.settings.filteredLink'] = {
-    fr: 'Lien filtré',
-    ar: 'رابط مصفّى',
-    en: 'Filtered Link',
+translations['admin.settings.customLinks'] = {
+    fr: 'Liens personnalisés',
+    ar: 'روابط مخصصة',
+    en: 'Custom Links',
 };
-translations['admin.settings.filteredLinkEnabled'] = {
-    fr: 'Ce lien pointe vers une URL filtrée au lieu de la racine de la page',
-    ar: 'هذا الرابط يشير إلى عنوان URL مصفّى بدلاً من جذر الصفحة',
-    en: 'This link points to a filtered URL instead of the page root',
+translations['admin.settings.customLink'] = {
+    fr: 'Lien personnalisé',
+    ar: 'رابط مخصص',
+    en: 'Custom Link',
 };
-translations['admin.settings.filteredLinkDisabled'] = {
-    fr: 'Activer pour lier à une URL avec filtre/recherche spécifique',
-    ar: 'فعّل للربط بعنوان URL مع فلتر/بحث محدد',
-    en: 'Enable to link to a URL with a specific filter/search',
+translations['admin.settings.addLinkToHeader'] = {
+    fr: 'Ajouter un lien personnalisé',
+    ar: 'إضافة رابط مخصص',
+    en: 'Add Custom Link',
 };
-translations['admin.settings.filteredLinkConfig'] = {
-    fr: 'Configuration du lien filtré',
-    ar: 'إعدادات الرابط المصفّى',
-    en: 'Filtered Link Configuration',
+translations['admin.settings.addLinkDescription'] = {
+    fr: 'Créez un lien de navigation vers une page avec un filtre ou une recherche spécifique.',
+    ar: 'أنشئ رابط تنقل إلى صفحة مع فلتر أو بحث محدد.',
+    en: 'Create a nav link to a page with a specific filter or search.',
+};
+translations['admin.settings.selectPageForLink'] = {
+    fr: 'Sélectionner une page',
+    ar: 'اختر صفحة',
+    en: 'Select a page',
+};
+translations['admin.settings.addLink'] = {
+    fr: 'Ajouter le lien',
+    ar: 'إضافة الرابط',
+    en: 'Add Link',
+};
+translations['admin.settings.noLinks'] = {
+    fr: 'Aucun lien personnalisé',
+    ar: 'لا توجد روابط مخصصة',
+    en: 'No Custom Links',
+};
+translations['admin.settings.noLinksDescription'] = {
+    fr: 'Créez des liens de navigation vers des pages avec des filtres ou recherches spécifiques.',
+    ar: 'أنشئ روابط تنقل إلى صفحات مع فلاتر أو بحث محدد.',
+    en: 'Create nav links to pages with specific filters or searches.',
+};
+translations['admin.settings.createFirstLink'] = {
+    fr: 'Créer le premier lien',
+    ar: 'إنشاء أول رابط',
+    en: 'Create first link',
+};
+translations['admin.settings.linkConfig'] = {
+    fr: 'Configuration du lien',
+    ar: 'إعدادات الرابط',
+    en: 'Link Configuration',
 };
 translations['admin.settings.targetPage'] = {
     fr: 'Page cible',
@@ -6999,12 +7029,12 @@ translations['admin.section.hotels'] = {
     en: 'Hotels',
 };
 translations['admin.section.organized'] = {
-    fr: 'Circuits organisés',
+    fr: 'Circuit & Excursions organisés',
     ar: 'جولات منظمة',
     en: 'Organized Tours',
 };
 translations['admin.section.tours'] = {
-    fr: 'Circuits',
+    fr: 'Circuit & Excursions',
     ar: 'جولات',
     en: 'Tours',
 };

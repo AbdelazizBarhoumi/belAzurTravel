@@ -14,6 +14,7 @@ export interface HotelItem {
     category_key?: string;
     category?: LocalizedText;
     price: number | null;
+    base_price: number | null;
     markup_percentage?: string | number;
     currency?: string;
     source?: 'ostravel' | 'manual';

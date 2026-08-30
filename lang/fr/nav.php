@@ -4,7 +4,7 @@ return [
     'home' => 'Accueil',
     'destinations' => 'Destinations',
     'hotels' => 'Hôtels',
-    'tours' => 'Circuits',
+    'tours' => 'Circuit & Excursions',
     'travels' => 'Voyages à l\'étranger',
     'deals' => 'Offres',
     'gallery' => 'Galerie',
