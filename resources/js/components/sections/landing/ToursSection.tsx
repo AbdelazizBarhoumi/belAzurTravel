@@ -16,12 +16,12 @@ export function ToursSection({ config }: Props) {
     const { lang, t } = useLanguage();
     const { data: tours = [] } = useTours();
 
-    const title =
-        config.title?.[lang] ?? config.title?.en ?? t('home.featuredTours');
-    const subtitle =
-        config.subtitle?.[lang] ??
-        config.subtitle?.en ??
-        t('home.featuredToursDesc');
+    const title = config.hideTitle
+        ? ''
+        : (config.title?.[lang] ?? config.title?.en ?? t('home.featuredTours'));
+    const subtitle = config.hideTitle
+        ? ''
+        : (config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredToursDesc'));
 
     const items = tours.map((tour) => ({
         id: tour.slug,
@@ -61,12 +61,16 @@ export function ToursSection({ config }: Props) {
                     whileInView={{ opacity: 1, y: 0 }}
                     className="mb-10 text-center"
                 >
-                    <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                        {title}
-                    </h2>
-                    <p className="mx-auto max-w-xl text-muted-foreground">
-                        {subtitle}
-                    </p>
+                    {title && (
+                        <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                            {title}
+                        </h2>
+                    )}
+                    {subtitle && (
+                        <p className="mx-auto max-w-xl text-muted-foreground">
+                            {subtitle}
+                        </p>
+                    )}
                 </motion.div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {displayItems.map((tour, i) => (

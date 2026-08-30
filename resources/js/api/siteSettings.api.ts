@@ -28,6 +28,7 @@ export interface LandingSectionConfig {
     subtitle?: LocalizedText;
     style?: string;
     items?: LandingSectionItem[];
+    hideTitle?: boolean;
 }
 
 export interface LandingSections {

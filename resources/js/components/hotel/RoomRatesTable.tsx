@@ -218,10 +218,19 @@ export function RoomRatesTable({
                                 </p>
                                 <p className="mt-0.5 text-xs text-muted-foreground">
                                     {group.size ? `${group.size} m²` : ''}
-                                    {group.size && group.capacity ? ' · ' : ''}
-                                    {group.capacity
-                                        ? `${group.capacity} ${t('hotelDetail.guests')}`
+                                    {group.size &&
+                                    occupancy.adults +
+                                        occupancy.childAges.length >
+                                        0
+                                        ? ' · '
                                         : ''}
+                                    {occupancy.adults +
+                                        occupancy.childAges.length >
+                                    0
+                                        ? `${occupancy.adults + occupancy.childAges.length} ${t('hotelDetail.guests')}`
+                                        : group.capacity
+                                          ? `${group.capacity} ${t('hotelDetail.guests')}`
+                                          : ''}
                                 </p>
                                 {group.description ? (
                                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
@@ -475,6 +484,17 @@ export function RoomRatesTable({
                                             : activeTotal,
                                         currency,
                                     )}
+                                    {active?.nights != null &&
+                                        active.nights > 0 && (
+                                            <span className="ml-2 text-sm font-normal text-muted-foreground">
+                                                · {active.nights}{' '}
+                                                {active.nights === 1
+                                                    ? t('hotelDetail.night')
+                                                    : t(
+                                                          'hotelDetail.nightsLabel',
+                                                      )}
+                                            </span>
+                                        )}
                                 </>
                             )}
                         </p>

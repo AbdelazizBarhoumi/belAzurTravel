@@ -100,14 +100,12 @@ function getIcon(iconName?: string): LucideIcon {
 export function StrongPointsSection({ config }: Props) {
     const { lang, t } = useLanguage();
 
-    const title =
-        config.title?.[lang] ??
-        config.title?.en ??
-        t('home.strongPoints.title');
-    const subtitle =
-        config.subtitle?.[lang] ??
-        config.subtitle?.en ??
-        t('home.strongPoints.subtitle');
+    const title = config.hideTitle
+        ? ''
+        : (config.title?.[lang] ?? config.title?.en ?? t('home.strongPoints.title'));
+    const subtitle = config.hideTitle
+        ? ''
+        : (config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.strongPoints.subtitle'));
 
     const items =
         config.items && config.items.length > 0
@@ -123,12 +121,16 @@ export function StrongPointsSection({ config }: Props) {
                     viewport={{ once: true, margin: '-80px' }}
                     className="mb-10 text-center"
                 >
-                    <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-secondary">
-                        {t('home.trust.eyebrow')}
-                    </p>
-                    <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                        {title}
-                    </h2>
+                    {!config.hideTitle && (
+                        <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-secondary">
+                            {t('home.trust.eyebrow')}
+                        </p>
+                    )}
+                    {title && (
+                        <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                            {title}
+                        </h2>
+                    )}
                     {subtitle && (
                         <p className="mx-auto max-w-xl text-muted-foreground">
                             {subtitle}

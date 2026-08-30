@@ -490,3 +490,15 @@ export function searchAirports(query: string): Airport[] {
             a.country.toLowerCase().includes(lower),
     );
 }
+
+export function getAirportDisplayName(iata: string): string {
+    const airport = getAirportByIata(iata);
+    if (!airport) return iata;
+    return `${airport.city} (${airport.iata})`;
+}
+
+export function getCityNameByIata(iata: string): string {
+    const airport = getAirportByIata(iata);
+    if (!airport) return iata;
+    return airport.city;
+}

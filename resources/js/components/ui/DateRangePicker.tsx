@@ -66,6 +66,13 @@ export function DateRangePicker({
 
     const emptyLabel = placeholderEmpty ?? t('search.placeholders.dates');
 
+    const nights =
+        value?.from && value?.to
+            ? Math.round(
+                  (value.to.getTime() - value.from.getTime()) / 86_400_000,
+              )
+            : 0;
+
     return (
         <Popover open={open} onOpenChange={onOpenChange}>
             <PopoverTrigger asChild>
@@ -90,6 +97,11 @@ export function DateRangePicker({
                                 <span>
                                     {value?.to ? endLabel : (placeholderSingle ?? t('search.placeholders.flexibleDates'))}
                                 </span>
+                                {nights > 0 && (
+                                    <span className="ml-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                                        {nights} {nights === 1 ? t('hotelDetail.night') : t('hotelDetail.nightsLabel')}
+                                    </span>
+                                )}
                             </span>
                         ) : (
                             emptyLabel

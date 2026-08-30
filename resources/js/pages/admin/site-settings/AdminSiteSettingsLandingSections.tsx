@@ -159,6 +159,22 @@ function SortableSection({
                     </Select>
                 )}
 
+                {config.enabled && (
+                    <div className="flex items-center gap-1.5">
+                        <Switch
+                            checked={config.hideTitle ?? false}
+                            onCheckedChange={() =>
+                                onUpdate(sectionKey, {
+                                    hideTitle: !config.hideTitle,
+                                })
+                            }
+                        />
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                            {t('admin.settings.hideTitle')}
+                        </span>
+                    </div>
+                )}
+
                 <button
                     type="button"
                     onClick={() => onExpandToggle(sectionKey)}

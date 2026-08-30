@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CitySelect } from '@/components/ui/CitySelect';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import { FlightSearchWidget } from '@/components/ui/FlightSearchWidget';
 import {
     OccupancyPicker,
     type Occupancy,
@@ -264,6 +265,11 @@ function ActiveSearchForm({
 }: ActiveSearchFormProps) {
     const { t, dir } = useLanguage();
     const isRtl = dir === 'rtl';
+
+    if (tab === 'flights') {
+        return <FlightSearchWidget />;
+    }
+
     const config = SEARCH_TABS[tab];
 
     const topFields = [

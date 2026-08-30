@@ -51,6 +51,9 @@ interface StickyBookingCardProps {
     phoneNumber?: string;
     onBook?: () => void;
     onWhatsApp?: () => void;
+    // Flight context
+    passengers?: number;
+    cabinClass?: string;
 }
 
 export function StickyBookingCard({
@@ -79,6 +82,8 @@ export function StickyBookingCard({
     phoneNumber,
     onBook,
     onWhatsApp,
+    passengers,
+    cabinClass,
 }: StickyBookingCardProps) {
     const { t } = useLanguage();
     const [bookingOpen, setBookingOpen] = useState(false);
@@ -320,6 +325,8 @@ export function StickyBookingCard({
                     itemId={itemId}
                     itemName={title || ''}
                     amount={displayPrice}
+                    passengers={passengers}
+                    cabinClass={cabinClass}
                 />
             )}
         </div>

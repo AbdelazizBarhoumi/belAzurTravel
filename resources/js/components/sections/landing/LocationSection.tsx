@@ -21,12 +21,12 @@ export function LocationSection({ config }: Props) {
     const mapQuery = getMapQuery(settings);
     if (!mapQuery) return null;
 
-    const title =
-        config.title?.[lang] ?? config.title?.en ?? t('contact.locationTitle');
-    const subtitle =
-        config.subtitle?.[lang] ??
-        config.subtitle?.en ??
-        t('contact.locationSubtitle');
+    const title = config.hideTitle
+        ? ''
+        : (config.title?.[lang] ?? config.title?.en ?? t('contact.locationTitle'));
+    const subtitle = config.hideTitle
+        ? ''
+        : (config.subtitle?.[lang] ?? config.subtitle?.en ?? t('contact.locationSubtitle'));
 
     return (
         <section className="py-16">
@@ -41,16 +41,20 @@ export function LocationSection({ config }: Props) {
                             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/15 text-secondary">
                                 <MapPin className="h-5 w-5" />
                             </div>
-                            <div>
-                                <h2 className="font-serif text-2xl font-bold text-foreground">
-                                    {title}
-                                </h2>
-                                {subtitle && (
-                                    <p className="text-sm text-muted-foreground">
-                                        {subtitle}
-                                    </p>
-                                )}
-                            </div>
+                            {(title || subtitle) && (
+                                <div>
+                                    {title && (
+                                        <h2 className="font-serif text-2xl font-bold text-foreground">
+                                            {title}
+                                        </h2>
+                                    )}
+                                    {subtitle && (
+                                        <p className="text-sm text-muted-foreground">
+                                            {subtitle}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="overflow-hidden rounded-2xl border border-border/60 bg-muted/30">

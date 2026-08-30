@@ -3,7 +3,6 @@ import { arSA, enUS, fr } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import {
     BadgePercent,
-    Bed,
     Building2,
     Info,
     LogIn,
@@ -12,27 +11,14 @@ import {
     MapPin,
     Minus,
     Plus,
-    Ruler,
-    Search,
-    ShieldCheck,
     Sparkles,
     Star,
-    Users,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import {
-    Navigate,
-    useNavigate,
-    useParams,
-    useSearchParams,
-} from 'react-router-dom';
-import { HotelInfo } from '@/components/cards/HotelInfo';
+import { Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { BookingDialog } from '@/components/forms/BookingDialog';
-import {
-    OccupancyPicker,
-    type Occupancy,
-} from '@/components/hotel/OccupancyPicker';
+import { type Occupancy } from '@/components/hotel/OccupancyPicker';
 import {
     RoomRatesTable,
     type RateRoom,
@@ -41,7 +27,6 @@ import { PageShell } from '@/components/layout/PageShell';
 import { Gallery } from '@/components/media/Gallery';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Input } from '@/components/ui/input';
 import {
     Popover,
     PopoverContent,
@@ -190,7 +175,6 @@ function toRoomView(
 
 export default function HotelDetail() {
     const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
     const { lang, t } = useLanguage();
     const { data: hotel, isLoading } = useHotelById(id);
     const [selectedRoom, setSelectedRoom] = useState<RoomView | null>(null);
@@ -467,7 +451,6 @@ export default function HotelDetail() {
     const sidebarPromo = roomPromo(sidebarPrice, sidebarBasePrice);
     const title = localizeText(detail.name, lang);
     const location = localizeText(detail.location, lang);
-    const description = localizeText(detail.description ?? detail.about, lang);
     const address = detail.address ?? location;
     const rawLatitude = detail.coordinates?.latitude;
     const rawLongitude = detail.coordinates?.longitude;
@@ -527,34 +510,6 @@ export default function HotelDetail() {
 
     // The sidebar search hands the selected destination, dates and guest
     // count over to the hotels listing, which reads them from the URL.
-    const handleSearchRedirect = () => {
-        const params = new URLSearchParams();
-
-        if (location.trim()) {
-            params.set('q', location.trim());
-        }
-
-        const checkIn = toLocalISODate(dateRange?.from);
-        const checkOut = toLocalISODate(dateRange?.to);
-        if (checkIn) {
-            params.set('from', checkIn);
-        }
-        if (checkOut) {
-            params.set('to', checkOut);
-        }
-
-        params.set('guests', String(occupancy.adults));
-        if (occupancy.rooms > 1) {
-            params.set('rooms', String(occupancy.rooms));
-        }
-        if (occupancy.childAges.length > 0) {
-            params.set('children', occupancy.childAges.join(','));
-        }
-
-        const queryString = params.toString();
-        navigate(queryString ? `/hotels?${queryString}` : '/hotels');
-    };
-
     const bookingRoom = selectedRoom;
 
     return (
@@ -947,6 +902,14 @@ export default function HotelDetail() {
                                             currency,
                                         )}
                                     </span>
+                                    {headerNights > 0 && (
+                                        <span className="text-sm text-muted-foreground">
+                                            · {headerNights}{' '}
+                                            {headerNights === 1
+                                                ? t('hotelDetail.night')
+                                                : t('hotelDetail.nightsLabel')}
+                                        </span>
+                                    )}
                                     {sidebarPromo && (
                                         <span className="ml-auto rounded-full bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
                                             -

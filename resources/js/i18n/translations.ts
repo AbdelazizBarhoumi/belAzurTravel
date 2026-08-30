@@ -306,6 +306,16 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'سعر غير صالح',
         en: 'Invalid price',
     },
+    'admin.flightForm.flightConfiguration': {
+        fr: 'Configuration du vol',
+        ar: 'إعدادات الرحلة',
+        en: 'Flight Configuration',
+    },
+    'admin.flightForm.flightConfigurationHint': {
+        fr: 'Configurez le type de trajet, les vols directs et les options de bagages.',
+        ar: 'تكوين نوع الرحلة والرحلات المباشرة وخيارات الأمتعة.',
+        en: 'Configure trip type, direct flights, and baggage options.',
+    },
     'admin.flightForm.coreDetails': {
         fr: 'Détails du vol',
         ar: 'تفاصيل الرحلة',
@@ -529,6 +539,67 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Classe cabine',
         ar: 'درجة المقعد',
         en: 'Cabin class',
+    },
+    'search.fields.departure': {
+        fr: 'Départ',
+        ar: 'المغادرة',
+        en: 'From',
+    },
+    'search.fields.directFlights': {
+        fr: 'Vols directs uniquement',
+        ar: 'الرحلات المباشرة فقط',
+        en: 'Direct flights only',
+    },
+    'search.fields.withBaggage': {
+        fr: 'Avec bagage',
+        ar: 'مع أمتعة',
+        en: 'With baggage',
+    },
+    'search.fields.flexibility': {
+        fr: 'Flexibilité',
+        ar: 'المرونة',
+        en: 'Flexibility',
+    },
+    'search.fields.infants': {
+        fr: 'Bébés',
+        ar: 'رضّع',
+        en: 'Infants',
+    },
+    'search.options.exactDates': {
+        fr: 'Dates exactes',
+        ar: 'تواريخ دقيقة',
+        en: 'Exact dates',
+    },
+    'search.options.plusMinus1Day': {
+        fr: '± 1 jour',
+        ar: '± يوم واحد',
+        en: '± 1 day',
+    },
+    'search.options.plusMinus2Days': {
+        fr: '± 2 jours',
+        ar: '± يومان',
+        en: '± 2 days',
+    },
+    'search.options.plusMinus3Days': {
+        fr: '± 3 jours',
+        ar: '± 3 أيام',
+        en: '± 3 days',
+    },
+    'search.options.addFlight': {
+        fr: 'Ajouter un vol',
+        ar: 'أضف رحلة',
+        en: 'Add flight',
+    },
+    'search.options.removeFlight': {
+        fr: 'Supprimer',
+        ar: 'حذف',
+        en: 'Remove',
+    },
+
+    'search.placeholders.departure': {
+        fr: 'D\'où partez-vous?',
+        ar: 'من أين تغادر؟',
+        en: 'Where departing from?',
     },
 
     'search.placeholders.destination': {
@@ -2481,6 +2552,16 @@ export const translations: Record<string, TranslationEntry> = {
     'flights.direct': { fr: 'Direct', ar: 'مباشر', en: 'Direct' },
     'flights.stop': { fr: 'Escale', ar: 'توقف', en: 'Stop' },
     'flights.select': { fr: 'Sélectionner', ar: 'اختر', en: 'Select' },
+    'flights.directOnly': {
+        fr: 'Direct uniquement',
+        ar: 'مباشر فقط',
+        en: 'Direct only',
+    },
+    'flights.withBaggage': {
+        fr: 'Avec bagage',
+        ar: 'مع أمتعة',
+        en: 'With baggage',
+    },
     'flightDetail.totalPerPassenger': {
         fr: 'Total par passager',
         ar: 'الإجمالي لكل مسافر',
@@ -2495,6 +2576,21 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Passer à la réservation du vol',
         ar: 'الانتقال إلى حجز الرحلة',
         en: 'Proceed to flight booking flow',
+    },
+    'flightDetail.tripType': {
+        fr: 'Type de trajet',
+        ar: 'نوع الرحلة',
+        en: 'Trip type',
+    },
+    'flightDetail.baggageIncluded': {
+        fr: 'Bagages inclus',
+        ar: 'الأمتعة مشمولة',
+        en: 'Baggage included',
+    },
+    'flightDetail.directFlight': {
+        fr: 'Vol direct',
+        ar: 'رحلة مباشرة',
+        en: 'Direct flight',
     },
 
     // Cars Page
@@ -7062,6 +7158,11 @@ translations['admin.settings.subtitleLang'] = {
     fr: 'Sous-titre',
     ar: 'العنوان الفرعي',
     en: 'Subtitle',
+};
+translations['admin.settings.hideTitle'] = {
+    fr: 'Masquer le titre',
+    ar: 'إخفاء العنوان',
+    en: 'Hide title',
 };
 
 // Section labels

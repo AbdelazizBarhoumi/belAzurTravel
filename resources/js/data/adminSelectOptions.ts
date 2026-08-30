@@ -54,6 +54,34 @@ export const VISA_REGIONS: LocalizedOption[] = [
     { value: 'other', label: { en: 'Other', fr: 'Autre', ar: 'أخرى' } },
 ];
 
+// --- Flight Trip Types ---
+export const FLIGHT_TRIP_TYPES: LocalizedOption[] = [
+    {
+        value: 'round-trip',
+        label: {
+            en: 'Round trip',
+            fr: 'Aller-retour',
+            ar: 'ذهاب وعودة',
+        },
+    },
+    {
+        value: 'one-way',
+        label: {
+            en: 'One-way',
+            fr: 'Aller simple',
+            ar: 'ذهاب فقط',
+        },
+    },
+    {
+        value: 'multi-city',
+        label: {
+            en: 'Multi-city',
+            fr: 'Multi-ville',
+            ar: 'عدة مدن',
+        },
+    },
+];
+
 // --- Cabin Classes ---
 export const CABIN_CLASSES: LocalizedOption[] = [
     {

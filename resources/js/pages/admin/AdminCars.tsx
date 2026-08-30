@@ -861,7 +861,10 @@ export default function AdminCars() {
                                             asText(row.category_key)}
                                     </td>
                                     <td className="px-4 py-3 text-sm font-semibold">
-                                        {formatPrice(row.price, 'TND')}
+                                        {formatPrice(
+                                            Number(row.price) || null,
+                                            'TND',
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 text-sm">
                                         {asText(row.seats)}

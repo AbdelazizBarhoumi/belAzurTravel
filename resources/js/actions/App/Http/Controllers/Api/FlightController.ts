@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\FlightController::index
- * @see app/Http/Controllers/Api/FlightController.php:15
+ * @see app/Http/Controllers/Api/FlightController.php:16
  * @route '/api/flights'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\FlightController::index
- * @see app/Http/Controllers/Api/FlightController.php:15
+ * @see app/Http/Controllers/Api/FlightController.php:16
  * @route '/api/flights'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\FlightController::index
- * @see app/Http/Controllers/Api/FlightController.php:15
+ * @see app/Http/Controllers/Api/FlightController.php:16
  * @route '/api/flights'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\FlightController::index
- * @see app/Http/Controllers/Api/FlightController.php:15
+ * @see app/Http/Controllers/Api/FlightController.php:16
  * @route '/api/flights'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\FlightController::index
- * @see app/Http/Controllers/Api/FlightController.php:15
+ * @see app/Http/Controllers/Api/FlightController.php:16
  * @route '/api/flights'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\FlightController::index
- * @see app/Http/Controllers/Api/FlightController.php:15
+ * @see app/Http/Controllers/Api/FlightController.php:16
  * @route '/api/flights'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\FlightController::index
- * @see app/Http/Controllers/Api/FlightController.php:15
+ * @see app/Http/Controllers/Api/FlightController.php:16
  * @route '/api/flights'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\FlightController::show
- * @see app/Http/Controllers/Api/FlightController.php:30
+ * @see app/Http/Controllers/Api/FlightController.php:38
  * @route '/api/flights/{code}'
  */
 export const show = (args: { code: string | number } | [code: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\FlightController::show
- * @see app/Http/Controllers/Api/FlightController.php:30
+ * @see app/Http/Controllers/Api/FlightController.php:38
  * @route '/api/flights/{code}'
  */
 show.url = (args: { code: string | number } | [code: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -122,7 +122,7 @@ show.url = (args: { code: string | number } | [code: string | number ] | string 
 
 /**
 * @see \App\Http\Controllers\Api\FlightController::show
- * @see app/Http/Controllers/Api/FlightController.php:30
+ * @see app/Http/Controllers/Api/FlightController.php:38
  * @route '/api/flights/{code}'
  */
 show.get = (args: { code: string | number } | [code: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -131,7 +131,7 @@ show.get = (args: { code: string | number } | [code: string | number ] | string 
 })
 /**
 * @see \App\Http\Controllers\Api\FlightController::show
- * @see app/Http/Controllers/Api/FlightController.php:30
+ * @see app/Http/Controllers/Api/FlightController.php:38
  * @route '/api/flights/{code}'
  */
 show.head = (args: { code: string | number } | [code: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -141,7 +141,7 @@ show.head = (args: { code: string | number } | [code: string | number ] | string
 
     /**
 * @see \App\Http\Controllers\Api\FlightController::show
- * @see app/Http/Controllers/Api/FlightController.php:30
+ * @see app/Http/Controllers/Api/FlightController.php:38
  * @route '/api/flights/{code}'
  */
     const showForm = (args: { code: string | number } | [code: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -151,7 +151,7 @@ show.head = (args: { code: string | number } | [code: string | number ] | string
 
             /**
 * @see \App\Http\Controllers\Api\FlightController::show
- * @see app/Http/Controllers/Api/FlightController.php:30
+ * @see app/Http/Controllers/Api/FlightController.php:38
  * @route '/api/flights/{code}'
  */
         showForm.get = (args: { code: string | number } | [code: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -160,7 +160,7 @@ show.head = (args: { code: string | number } | [code: string | number ] | string
         })
             /**
 * @see \App\Http\Controllers\Api\FlightController::show
- * @see app/Http/Controllers/Api/FlightController.php:30
+ * @see app/Http/Controllers/Api/FlightController.php:38
  * @route '/api/flights/{code}'
  */
         showForm.head = (args: { code: string | number } | [code: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

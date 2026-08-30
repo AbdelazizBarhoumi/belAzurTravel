@@ -4,6 +4,7 @@ import type { LandingSectionConfig } from '@/api/siteSettings.api';
 import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
+import { getAirportDisplayName, getCityNameByIata } from '@/data/airports';
 import { useFlights } from '@/hooks/usePublicData';
 
 interface Props {
@@ -14,12 +15,12 @@ export function FlightsSection({ config }: Props) {
     const { lang, t } = useLanguage();
     const { data: flights = [] } = useFlights();
 
-    const title =
-        config.title?.[lang] ?? config.title?.en ?? t('home.featuredFlights');
-    const subtitle =
-        config.subtitle?.[lang] ??
-        config.subtitle?.en ??
-        t('home.featuredFlightsDesc');
+    const title = config.hideTitle
+        ? ''
+        : (config.title?.[lang] ?? config.title?.en ?? t('home.featuredFlights'));
+    const subtitle = config.hideTitle
+        ? ''
+        : (config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredFlightsDesc'));
     if (flights.length === 0) return null;
 
     const style = config.style ?? 'carousel';
@@ -27,7 +28,7 @@ export function FlightsSection({ config }: Props) {
     if (style === 'carousel') {
         const items = flights.slice(0, 6).map((flight) => ({
             id: flight.code,
-            title: `${flight.from} → ${localizeText(flight.to, lang)}`,
+            title: `${flight.from} → ${getCityNameByIata(flight.to)}`,
             price: `${flight.price} TND`,
             meta: `${localizeText(flight.airline, lang)} · ${localizeText(flight.duration, lang)}`,
             image: '/placeholder-flight.jpg',
@@ -56,12 +57,16 @@ export function FlightsSection({ config }: Props) {
                         whileInView={{ opacity: 1, y: 0 }}
                         className="mb-10 text-center"
                     >
-                        <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                            {title}
-                        </h2>
-                        <p className="mx-auto max-w-xl text-muted-foreground">
-                            {subtitle}
-                        </p>
+                        {title && (
+                            <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                                {title}
+                            </h2>
+                        )}
+                        {subtitle && (
+                            <p className="mx-auto max-w-xl text-muted-foreground">
+                                {subtitle}
+                            </p>
+                        )}
                     </motion.div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {items.map((flight, i) => (
@@ -81,9 +86,7 @@ export function FlightsSection({ config }: Props) {
                                         <span className="text-muted-foreground">
                                             →
                                         </span>
-                                        <span>
-                                            {localizeText(flight.to, lang)}
-                                        </span>
+                                            <span>{getCityNameByIata(flight.to)}</span>
                                     </div>
                                     <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                                         <span>
@@ -121,12 +124,16 @@ export function FlightsSection({ config }: Props) {
                     whileInView={{ opacity: 1, y: 0 }}
                     className="mb-10 text-center"
                 >
-                    <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                        {title}
-                    </h2>
-                    <p className="mx-auto max-w-xl text-muted-foreground">
-                        {subtitle}
-                    </p>
+                    {title && (
+                        <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                            {title}
+                        </h2>
+                    )}
+                    {subtitle && (
+                        <p className="mx-auto max-w-xl text-muted-foreground">
+                            {subtitle}
+                        </p>
+                    )}
                 </motion.div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {items.map((flight, i) => (
@@ -146,7 +153,7 @@ export function FlightsSection({ config }: Props) {
                                     <span className="text-muted-foreground">
                                         →
                                     </span>
-                                    <span>{localizeText(flight.to, lang)}</span>
+                                    <span>{getCityNameByIata(flight.to)}</span>
                                 </div>
                                 <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                                     <span>

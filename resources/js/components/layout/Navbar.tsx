@@ -116,14 +116,15 @@ function DropdownItemContent({
  *  value="static:stars" -> only stars options, value="colors" -> only that API category, value="" -> all */
 function resolveCategoriesDropdownItems(
     pageKey: string,
-    value: string,
+    value: string | null | undefined,
     categoryTypes: PublicCategoryType[],
 ): DropdownItemConfig[] {
     const items: DropdownItemConfig[] = [];
+    const safeValue = value ?? '';
 
     // Static filter group selected
-    if (value.startsWith('static:')) {
-        const groupKey = value.replace('static:', '');
+    if (safeValue.startsWith('static:')) {
+        const groupKey = safeValue.replace('static:', '');
         const group = getStaticFiltersForPage(pageKey).find(
             (g) => g.key === groupKey,
         );
@@ -143,8 +144,8 @@ function resolveCategoriesDropdownItems(
     }
 
     // Dynamic API category type selected
-    if (value) {
-        const selectedType = categoryTypes.find((ct) => ct.key === value);
+    if (safeValue) {
+        const selectedType = categoryTypes.find((ct) => ct.key === safeValue);
         if (selectedType?.values) {
             for (const val of selectedType.values) {
                 items.push({
@@ -158,7 +159,7 @@ function resolveCategoriesDropdownItems(
         return items;
     }
 
-    // No specific value selected — show all static groups + all dynamic categories
+    // No specific value selected — show all static groups + dynamic categories
     const staticGroups = getStaticFiltersForPage(pageKey);
     for (const group of staticGroups) {
         for (const opt of group.options) {
@@ -173,7 +174,7 @@ function resolveCategoriesDropdownItems(
         }
     }
     for (const ct of categoryTypes) {
-        if (ct.values) {
+        if (ct.values && ct.values.length > 0) {
             for (const val of ct.values) {
                 items.push({
                     label: val.name as unknown as LocalizedText,
@@ -208,17 +209,28 @@ function DesktopFlyoutItems({
     setHoveredPath: (path: string | null) => void;
     hover: { schedule: (fn: () => void) => void; clear: () => void };
 }) {
+    const COL_SIZE = 10;
+    const colCount = Math.ceil(items.length / COL_SIZE);
+
     return (
-        <ul className="min-w-56 space-y-1 rounded-lg border border-border bg-card p-2">
+        <ul
+            className="space-y-1 rounded-lg border border-border bg-card p-2"
+            style={
+                colCount > 1
+                    ? { columnCount: colCount, minWidth: `${colCount * 14}rem` }
+                    : undefined
+            }
+        >
             {items.map((item, idx) => {
                 const itemPath = `${entry.pageKey}:${idx}`;
-                const hasChildren = item.children && item.children.length > 0;
+                const hasChildren =
+                    item.children && item.children.length > 0;
                 const isActive = hoveredPath?.startsWith(itemPath);
 
                 return (
                     <li
                         key={idx}
-                        className="relative"
+                        className="relative break-inside-avoid"
                         onMouseEnter={() => {
                             hover.clear();
                             if (hasChildren) {
@@ -384,10 +396,11 @@ function DesktopGroupDropdown({
     const resolveDropdownItems = (
         items: DropdownItemConfig[],
         pageKey: string,
-    ): DropdownItemConfig[] =>
-        items.flatMap((item): DropdownItemConfig[] => {
-            if (item.mode === 'categories' && item.value) {
-                const categoryTypes = categoryTypesByPage[pageKey] ?? [];
+    ): DropdownItemConfig[] => {
+        const categoryTypes = categoryTypesByPage[pageKey] ?? [];
+
+        const result = items.flatMap((item): DropdownItemConfig[] => {
+            if (item.mode === 'categories') {
                 return resolveCategoriesDropdownItems(
                     pageKey,
                     item.value,
@@ -400,10 +413,33 @@ function DesktopGroupDropdown({
             return [{ ...item, pageKey, children: resolvedChildren }];
         });
 
+        const coveredValues = new Set(
+            items
+                .filter((i) => i.mode === 'categories' && i.value)
+                .map((i) => i.value),
+        );
+        if (!coveredValues.has('')) {
+            for (const ct of categoryTypes) {
+                if (ct.values && ct.values.length > 0) {
+                    for (const val of ct.values) {
+                        result.push({
+                            label: val.name as unknown as LocalizedText,
+                            mode: 'filter' as const,
+                            value: `${ct.key}:${val.key}`,
+                            pageKey,
+                        });
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
     const resolveLinks = (links: DropdownItemConfig[]): DropdownItemConfig[] =>
         links.flatMap((link): DropdownItemConfig[] => {
             const pageKey = link.pageKey ?? '';
-            if (link.mode === 'categories' && link.value) {
+            if (link.mode === 'categories') {
                 const categoryTypes = categoryTypesByPage[pageKey] ?? [];
                 return resolveCategoriesDropdownItems(
                     pageKey,
@@ -883,10 +919,11 @@ function MobileGroupSection({
     const resolveDropdownItems = (
         items: DropdownItemConfig[],
         pageKey: string,
-    ): DropdownItemConfig[] =>
-        items.flatMap((item): DropdownItemConfig[] => {
-            if (item.mode === 'categories' && item.value) {
-                const categoryTypes = categoryTypesByPage[pageKey] ?? [];
+    ): DropdownItemConfig[] => {
+        const categoryTypes = categoryTypesByPage[pageKey] ?? [];
+
+        const result = items.flatMap((item): DropdownItemConfig[] => {
+            if (item.mode === 'categories') {
                 return resolveCategoriesDropdownItems(
                     pageKey,
                     item.value,
@@ -899,10 +936,33 @@ function MobileGroupSection({
             return [{ ...item, pageKey, children: resolvedChildren }];
         });
 
+        const coveredValues = new Set(
+            items
+                .filter((i) => i.mode === 'categories' && i.value)
+                .map((i) => i.value),
+        );
+        if (!coveredValues.has('')) {
+            for (const ct of categoryTypes) {
+                if (ct.values && ct.values.length > 0) {
+                    for (const val of ct.values) {
+                        result.push({
+                            label: val.name as unknown as LocalizedText,
+                            mode: 'filter' as const,
+                            value: `${ct.key}:${val.key}`,
+                            pageKey,
+                        });
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
     const resolveLinks = (links: DropdownItemConfig[]): DropdownItemConfig[] =>
         links.flatMap((link): DropdownItemConfig[] => {
             const pageKey = link.pageKey ?? '';
-            if (link.mode === 'categories' && link.value) {
+            if (link.mode === 'categories') {
                 const categoryTypes = categoryTypesByPage[pageKey] ?? [];
                 return resolveCategoriesDropdownItems(
                     pageKey,
@@ -1273,13 +1333,14 @@ export function Navbar() {
         return resolveLabel(item.label);
     };
 
-    const resolveDropdownItems = (entry: HeaderEntry): DropdownItemConfig[] =>
-        entry.items.flatMap((item): DropdownItemConfig[] => {
-            if (item.mode === 'categories' && item.value) {
-                const categoryTypes =
-                    categoryTypesByPage[
-                        entry.pageKey as keyof typeof categoryTypesByPage
-                    ] ?? [];
+    const resolveDropdownItems = (entry: HeaderEntry): DropdownItemConfig[] => {
+        const categoryTypes =
+            categoryTypesByPage[
+                entry.pageKey as keyof typeof categoryTypesByPage
+            ] ?? [];
+
+        const result = entry.items.flatMap((item): DropdownItemConfig[] => {
+            if (item.mode === 'categories') {
                 return resolveCategoriesDropdownItems(
                     entry.pageKey,
                     item.value,
@@ -1292,6 +1353,32 @@ export function Navbar() {
                 : undefined;
             return [{ ...item, children: resolvedChildren }];
         });
+
+        // Auto-append dynamic API categories if no "show all" item is present.
+        // This ensures categories like "Formule repas" and "Équipements &
+        // Ambiance" appear alongside the admin-configured static groups.
+        const coveredValues = new Set(
+            entry.items
+                .filter((i) => i.mode === 'categories' && i.value)
+                .map((i) => i.value),
+        );
+        if (!coveredValues.has('')) {
+            for (const ct of categoryTypes) {
+                if (ct.values && ct.values.length > 0) {
+                    for (const val of ct.values) {
+                        result.push({
+                            label: val.name as unknown as LocalizedText,
+                            mode: 'filter' as const,
+                            value: `${ct.key}:${val.key}`,
+                            pageKey: entry.pageKey,
+                        });
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
 
     if (loading) {
         return (

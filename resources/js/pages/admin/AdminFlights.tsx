@@ -31,11 +31,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { AIRPORTS } from '@/data/airports';
 import {
     AIRLINE_NAMES,
     CABIN_CLASSES,
     FLIGHT_STOPS,
+    FLIGHT_TRIP_TYPES,
     getLocalizedLabel,
 } from '@/data/adminSelectOptions';
 
@@ -151,6 +153,7 @@ export default function AdminFlights() {
         if (!values.from) errs.from = t('validation.required');
         if (!values.to) errs.to = t('validation.required');
         if (!values.airline) errs.airline = t('validation.required');
+        if (!values.trip_type) errs.trip_type = t('validation.required');
         if (!values.departure) errs.departure = t('validation.required');
         if (!values.arrival) errs.arrival = t('validation.required');
         if (!values.date) errs.date = t('validation.required');
@@ -183,6 +186,59 @@ export default function AdminFlights() {
     }
 
     const flightSections: SectionDef[] = [
+        {
+            title: t('admin.flightForm.flightConfiguration') || 'Flight Configuration',
+            description: t('admin.flightForm.flightConfigurationHint') || 'Configure trip type, direct flights, and baggage options.',
+            columns: 3,
+            render: ({ values, setField }) => (
+                <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('search.fields.tripType')}
+                        </label>
+                        <Select
+                            value={String(values.trip_type ?? 'round-trip')}
+                            onValueChange={(val) => setField('trip_type', val)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder={t('search.fields.tripType')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {FLIGHT_TRIP_TYPES.map((tt) => (
+                                    <SelectItem key={tt.value} value={tt.value}>
+                                        {getLocalizedLabel(tt, lang)}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('search.fields.directFlights') || 'Direct flights only'}
+                        </label>
+                        <div className="flex h-10 items-center">
+                            <Switch
+                                checked={Boolean(values.direct_only)}
+                                onCheckedChange={(checked) => setField('direct_only', checked)}
+                            />
+                            <span className="ml-2 text-sm">{t('flights.directOnly') || 'Direct only'}</span>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-semibold text-muted-foreground">
+                            {t('search.fields.withBaggage') || 'With baggage'}
+                        </label>
+                        <div className="flex h-10 items-center">
+                            <Switch
+                                checked={Boolean(values.baggage_included)}
+                                onCheckedChange={(checked) => setField('baggage_included', checked)}
+                            />
+                            <span className="ml-2 text-sm">{t('flights.withBaggage') || 'With baggage'}</span>
+                        </div>
+                    </div>
+                </div>
+            ),
+        },
         {
             title: t('admin.flightForm.coreDetails'),
             description: t('admin.flightForm.coreDetailsHint'),
@@ -241,9 +297,9 @@ export default function AdminFlights() {
                                 {AIRPORTS.map((a) => (
                                     <SelectItem
                                         key={a.iata}
-                                        value={`${a.city} (${a.iata})`}
+                                        value={a.iata}
                                     >
-                                        {a.city} - {a.iata}
+                                        {a.city} ({a.iata})
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -330,9 +386,9 @@ export default function AdminFlights() {
                                 {AIRPORTS.map((a) => (
                                     <SelectItem
                                         key={a.iata}
-                                        value={`${a.city} (${a.iata})`}
+                                        value={a.iata}
                                     >
-                                        {a.city} - {a.iata}
+                                        {a.city} ({a.iata})
                                     </SelectItem>
                                 ))}
                             </SelectContent>

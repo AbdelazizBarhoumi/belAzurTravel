@@ -15,9 +15,10 @@ export function VisaSection({ config }: Props) {
     const { data: response } = useVisas();
     const visas = response?.data ?? [];
 
-    const title =
-        config.title?.[lang] ?? config.title?.en ?? t('admin.section.visas');
-    const subtitle = config.subtitle?.[lang] ?? config.subtitle?.en ?? '';
+    const title = config.hideTitle
+        ? ''
+        : (config.title?.[lang] ?? config.title?.en ?? t('admin.section.visas'));
+    const subtitle = config.hideTitle ? '' : (config.subtitle?.[lang] ?? config.subtitle?.en ?? '');
 
     const items = visas.map((visa) => ({
         id: visa.code,
@@ -57,9 +58,11 @@ export function VisaSection({ config }: Props) {
                     whileInView={{ opacity: 1, y: 0 }}
                     className="mb-10 text-center"
                 >
-                    <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                        {title}
-                    </h2>
+                    {title && (
+                        <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                            {title}
+                        </h2>
+                    )}
                     {subtitle && (
                         <p className="mx-auto max-w-xl text-muted-foreground">
                             {subtitle}

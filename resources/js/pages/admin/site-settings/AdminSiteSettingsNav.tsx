@@ -784,24 +784,7 @@ function DropdownItemTree({
                                             </Select>
                                             {item.value?.startsWith(
                                                 'static:',
-                                            ) && (
-                                                <p className="mt-1.5 flex items-center gap-1 text-xs text-blue-600">
-                                                    <Info className="h-3 w-3" />
-                                                    This is a static filter from
-                                                    the config.{' '}
-                                                    {getStaticFiltersForPage(
-                                                        pageKey,
-                                                    ).find(
-                                                        (g) =>
-                                                            g.key ===
-                                                            item.value?.replace(
-                                                                'static:',
-                                                                '',
-                                                            ),
-                                                    )?.options.length ?? 0}{' '}
-                                                    options will appear in the
-                                                    dropdown.
-                                                </p>
+                                            ) && ( null
                                             )}
                                         </div>
                                     ) : item.mode === 'filter' ? (

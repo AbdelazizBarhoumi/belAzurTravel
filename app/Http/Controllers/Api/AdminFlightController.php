@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
 use App\Models\Flight;
+use App\Models\FlightSegment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -26,6 +28,7 @@ class AdminFlightController extends Controller
     {
         $data = Cache::remember('admin.entity.flights', now()->addMinutes(5), function () {
             return Flight::query()
+                ->with('segments')
                 ->oldest('id')
                 ->get()
                 ->map(fn (Model $item) => $this->adminPayload($item))
@@ -38,6 +41,7 @@ class AdminFlightController extends Controller
     public function store(Request $request): JsonResponse
     {
         $item = Flight::create($this->attributes($request));
+        $this->syncSegments($item, $request);
         $this->flushAdminCache('flights', $item->code ?? null);
 
         return response()->json(['data' => $this->adminPayload($item)], 201);
@@ -54,9 +58,10 @@ class AdminFlightController extends Controller
     {
         $item = $this->findFlight($id);
         $item->update($this->attributes($request, $item));
+        $this->syncSegments($item, $request);
         $this->flushAdminCache('flights', $item->code ?? null);
 
-        return response()->json(['data' => $this->adminPayload($item->refresh())]);
+        return response()->json(['data' => $this->adminPayload($item->refresh()->load('segments'))]);
     }
 
     public function destroy(int|string $id): JsonResponse
@@ -86,12 +91,15 @@ class AdminFlightController extends Controller
 
         $rules = [
             'code' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
+            'trip_type' => ['sometimes', 'nullable', 'string', 'in:round-trip,one-way,multi-city'],
+            'direct_only' => ['sometimes', 'boolean'],
+            'baggage_included' => ['sometimes', 'boolean'],
             'airline' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
             'airline_en' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
             'airline_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'airline_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'from' => ['sometimes', 'nullable', 'string', 'max:16'],
-            'to' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'from' => ['sometimes', 'nullable', 'string', 'max:3'],
+            'to' => ['sometimes', 'nullable', 'string', 'max:3'],
             'to_en' => $existing ? ['sometimes', 'nullable', 'string', 'max:255'] : ['sometimes', 'string', 'max:255'],
             'to_fr' => ['sometimes', 'nullable', 'string', 'max:255'],
             'to_ar' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -128,6 +136,13 @@ class AdminFlightController extends Controller
             'gallery' => ['sometimes', 'nullable', 'array'],
             'gallery_files' => ['sometimes', 'array'],
             'gallery_files.*' => ['image', 'max:4096'],
+            'segments' => ['sometimes', 'nullable', 'array'],
+            'segments.*.from_airport' => ['required_with:segments', 'string', 'max:3'],
+            'segments.*.to_airport' => ['required_with:segments', 'string', 'max:3'],
+            'segments.*.departure_time' => ['sometimes', 'nullable', 'string', 'max:8'],
+            'segments.*.arrival_time' => ['sometimes', 'nullable', 'string', 'max:8'],
+            'segments.*.date' => ['sometimes', 'nullable', 'date'],
+            'segments.*.duration' => ['sometimes', 'nullable', 'string', 'max:32'],
         ];
 
         $data = $request->validate($rules);
@@ -138,11 +153,18 @@ class AdminFlightController extends Controller
 
         $gallery = $this->handleGallery($request, $existing?->details['gallery'] ?? [], 'uploads/flights');
 
+        // Normalize from/to to IATA codes
+        $fromIata = $this->normalizeToIata($data['from'] ?? null) ?? $existing?->from ?? '';
+        $toIata = $this->normalizeToIata($data['to'] ?? null) ?? $existing?->to ?? '';
+
         return [
             'code' => $code,
+            'trip_type' => $data['trip_type'] ?? $existing?->trip_type ?? 'round-trip',
+            'direct_only' => $this->booleanOrExisting($data['direct_only'] ?? null, $existing?->direct_only, false),
+            'baggage_included' => $this->booleanOrExisting($data['baggage_included'] ?? null, $existing?->baggage_included, false),
             'airline' => $localized('airline', $label),
-            'from' => $data['from'] ?? $existing?->from ?? '',
-            'to' => $localized('to'),
+            'from' => $fromIata,
+            'to' => $toIata,
             'duration' => $localized('duration'),
             'price' => (int) ($data['price'] ?? 0),
             'stops' => $localized('stops'),
@@ -155,25 +177,92 @@ class AdminFlightController extends Controller
         ];
     }
 
+    /**
+     * Normalize a value to a 3-letter IATA code.
+     * Handles: "TUN", "Tunis (TUN)", "Tunis", localized JSON, etc.
+     */
+    private function normalizeToIata(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = trim($value);
+
+        // Already a 3-letter IATA code
+        if (preg_match('/^[A-Z]{3}$/', $value)) {
+            return $value;
+        }
+
+        // Format: "City (IATA)" — extract IATA
+        if (preg_match('/\(([A-Z]{3})\)$/', $value, $m)) {
+            return $m[1];
+        }
+
+        return $value;
+    }
+
+    private function booleanOrExisting(mixed $new, mixed $existing, bool $default): bool
+    {
+        if ($new !== null) {
+            return filter_var($new, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        if ($existing !== null) {
+            return (bool) $existing;
+        }
+
+        return $default;
+    }
+
+    private function syncSegments(Flight $flight, Request $request): void
+    {
+        if ($flight->trip_type !== 'multi-city') {
+            // Not multi-city — delete any existing segments
+            $flight->segments()->delete();
+            return;
+        }
+
+        $segments = $request->input('segments');
+        if (! is_array($segments)) {
+            $flight->segments()->delete();
+            return;
+        }
+
+        // Replace all segments with the new set
+        $flight->segments()->delete();
+
+        foreach ($segments as $order => $seg) {
+            FlightSegment::create([
+                'flight_id' => $flight->id,
+                'segment_order' => $order,
+                'from_airport' => strtoupper($seg['from_airport'] ?? ''),
+                'to_airport' => strtoupper($seg['to_airport'] ?? ''),
+                'departure_time' => $seg['departure_time'] ?? null,
+                'arrival_time' => $seg['arrival_time'] ?? null,
+                'date' => $seg['date'] ?? null,
+                'duration' => $seg['duration'] ?? null,
+            ]);
+        }
+    }
+
     private function adminPayload(Model $item): array
     {
         $details = $item->details ?? [];
+        $segments = $item->segments ?? collect();
 
         return [
             'id' => (string) $item->id,
             'code' => $item->code,
+            'trip_type' => $item->trip_type,
+            'direct_only' => $item->direct_only,
+            'baggage_included' => $item->baggage_included,
             'airline' => $item->airline,
             'airline_en' => $item->airline['en'] ?? '',
             'airline_fr' => $item->airline['fr'] ?? '',
             'airline_ar' => $item->airline['ar'] ?? '',
             'from' => $item->from,
-            'from_en' => $item->from['en'] ?? '',
-            'from_fr' => $item->from['fr'] ?? '',
-            'from_ar' => $item->from['ar'] ?? '',
             'to' => $item->to,
-            'to_en' => $item->to['en'] ?? '',
-            'to_fr' => $item->to['fr'] ?? '',
-            'to_ar' => $item->to['ar'] ?? '',
             'duration' => $item->duration,
             'duration_en' => $item->duration['en'] ?? '',
             'duration_fr' => $item->duration['fr'] ?? '',
@@ -216,12 +305,23 @@ class AdminFlightController extends Controller
             'refund_en' => $details['refund']['en'] ?? '',
             'refund_fr' => $details['refund']['fr'] ?? '',
             'refund_ar' => $details['refund']['ar'] ?? '',
+            'segments' => $segments->map(fn (FlightSegment $seg) => [
+                'id' => $seg->id,
+                'segment_order' => $seg->segment_order,
+                'from_airport' => $seg->from_airport,
+                'to_airport' => $seg->to_airport,
+                'departure_time' => $seg->departure_time,
+                'arrival_time' => $seg->arrival_time,
+                'date' => $seg->date?->format('Y-m-d'),
+                'duration' => $seg->duration,
+            ])->all(),
         ];
     }
 
     private function findFlight(int|string $id): Flight
     {
         return Flight::query()
+            ->with('segments')
             ->whereKey($id)
             ->orWhere('code', (string) $id)
             ->firstOrFail();

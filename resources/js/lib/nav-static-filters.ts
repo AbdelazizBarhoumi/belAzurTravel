@@ -218,6 +218,66 @@ export const STATIC_FILTERS_BY_PAGE: Record<string, StaticFilterGroup[]> = {
                 },
             ],
         },
+        {
+            key: 'accommodation_type',
+            label: {
+                en: 'Accommodation Type',
+                fr: "Type d'hébergement",
+                ar: 'نوع الإقامة',
+            },
+            options: [
+                {
+                    key: 'campement',
+                    label: {
+                        en: 'Camp',
+                        fr: 'Campement',
+                        ar: 'مخيم',
+                    },
+                    href: 'cat_type=campement',
+                },
+                {
+                    key: 'appart_hotel',
+                    label: {
+                        en: 'Aparthotel',
+                        fr: 'Appart Hôtel',
+                        ar: 'Residence hotel',
+                    },
+                    href: 'cat_type=appart_hotel',
+                },
+                {
+                    key: 'maison_hotes',
+                    label: {
+                        en: 'Guesthouse',
+                        fr: "Maison d'hôtes",
+                        ar: 'بيت ضيافة',
+                    },
+                    href: 'cat_type=maison_hotes',
+                },
+                {
+                    key: 'appartement',
+                    label: {
+                        en: 'Apartment',
+                        fr: 'Appartement',
+                        ar: 'شقة',
+                    },
+                    href: 'cat_type=appartement',
+                },
+                {
+                    key: 'parc_attraction',
+                    label: {
+                        en: 'Theme Park',
+                        fr: "Parc d'attraction",
+                        ar: 'حديقة ملاهي',
+                    },
+                    href: 'cat_type=parc_attraction',
+                },
+                {
+                    key: 'villa',
+                    label: { en: 'Villa', fr: 'Villa', ar: 'فيلا' },
+                    href: 'cat_type=villa',
+                },
+            ],
+        },
     ],
 
     /* ────────── FLIGHTS ────────── */

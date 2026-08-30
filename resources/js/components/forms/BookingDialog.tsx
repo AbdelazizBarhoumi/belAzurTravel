@@ -106,6 +106,9 @@ interface BookingDialogProps {
         from_date: string | null;
     }>;
     supplements?: Array<{ name: string; price: number; perNight?: boolean }>;
+    // -- Flight booking context --
+    passengers?: number;
+    cabinClass?: string;
 }
 
 function emptyGuest(age: number | null): GuestRow {
@@ -157,6 +160,8 @@ export function BookingDialog({
     cancellationPolicy,
     supplements,
     basePrice,
+    passengers,
+    cabinClass,
 }: BookingDialogProps) {
     const { t, lang } = useLanguage();
     const { data: user } = useAuthUser();
@@ -361,7 +366,7 @@ export function BookingDialog({
                 .filter(Boolean)
                 .map((line) => ({ name: line })),
             details:
-                roomName || boardingName || cancellationPolicy?.length
+                roomName || boardingName || cancellationPolicy?.length || type === 'flight'
                     ? {
                           room_name: roomName ?? null,
                           boarding_name: boardingName ?? null,
@@ -383,6 +388,11 @@ export function BookingDialog({
                           room_features: roomFeatures?.length
                               ? roomFeatures
                               : null,
+                          // Flight-specific fields
+                          ...(type === 'flight' ? {
+                              passengers: passengers ?? 1,
+                              cabin_class: cabinClass ?? 'economy',
+                          } : {}),
                       }
                     : undefined,
         };

@@ -15,12 +15,12 @@ export function DealsSection({ config }: Props) {
     const { lang, t } = useLanguage();
     const { data: deals = [] } = useDeals();
 
-    const title =
-        config.title?.[lang] ?? config.title?.en ?? t('home.featuredDeals');
-    const subtitle =
-        config.subtitle?.[lang] ??
-        config.subtitle?.en ??
-        t('home.featuredDealsDesc');
+    const title = config.hideTitle
+        ? ''
+        : (config.title?.[lang] ?? config.title?.en ?? t('home.featuredDeals'));
+    const subtitle = config.hideTitle
+        ? ''
+        : (config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredDealsDesc'));
     if (deals.length === 0) return null;
 
     const style = config.style ?? 'carousel';
@@ -57,12 +57,16 @@ export function DealsSection({ config }: Props) {
                         whileInView={{ opacity: 1, y: 0 }}
                         className="mb-10 text-center"
                     >
-                        <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                            {title}
-                        </h2>
-                        <p className="mx-auto max-w-xl text-muted-foreground">
-                            {subtitle}
-                        </p>
+                        {title && (
+                            <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                                {title}
+                            </h2>
+                        )}
+                        {subtitle && (
+                            <p className="mx-auto max-w-xl text-muted-foreground">
+                                {subtitle}
+                            </p>
+                        )}
                     </motion.div>
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {items.map((deal, i) => (
@@ -111,12 +115,16 @@ export function DealsSection({ config }: Props) {
                     whileInView={{ opacity: 1, y: 0 }}
                     className="mb-10 text-center"
                 >
-                    <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                        {title}
-                    </h2>
-                    <p className="mx-auto max-w-xl text-muted-foreground">
-                        {subtitle}
-                    </p>
+                    {title && (
+                        <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                            {title}
+                        </h2>
+                    )}
+                    {subtitle && (
+                        <p className="mx-auto max-w-xl text-muted-foreground">
+                            {subtitle}
+                        </p>
+                    )}
                 </motion.div>
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {items.map((deal, i) => (

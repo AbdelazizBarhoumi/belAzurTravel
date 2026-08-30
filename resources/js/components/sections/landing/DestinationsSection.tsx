@@ -15,14 +15,12 @@ export function DestinationsSection({ config }: Props) {
     const { lang, t } = useLanguage();
     const { data: destinations = [] } = useDestinations();
 
-    const title =
-        config.title?.[lang] ??
-        config.title?.en ??
-        t('home.featuredDestinations');
-    const subtitle =
-        config.subtitle?.[lang] ??
-        config.subtitle?.en ??
-        t('home.featuredDestinationsDesc');
+    const title = config.hideTitle
+        ? ''
+        : (config.title?.[lang] ?? config.title?.en ?? t('home.featuredDestinations'));
+    const subtitle = config.hideTitle
+        ? ''
+        : (config.subtitle?.[lang] ?? config.subtitle?.en ?? t('home.featuredDestinationsDesc'));
 
     if (destinations.length === 0) return null;
 
@@ -172,16 +170,21 @@ function SectionHeader({
     title: string;
     subtitle: string;
 }) {
+    if (!title && !subtitle) return null;
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             className="mb-10 text-center"
         >
-            <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
-                {title}
-            </h2>
-            <p className="mx-auto max-w-xl text-muted-foreground">{subtitle}</p>
+            {title && (
+                <h2 className="mb-3 font-serif text-3xl font-bold text-foreground md:text-4xl">
+                    {title}
+                </h2>
+            )}
+            {subtitle && (
+                <p className="mx-auto max-w-xl text-muted-foreground">{subtitle}</p>
+            )}
         </motion.div>
     );
 }

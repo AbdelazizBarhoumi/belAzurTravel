@@ -47,7 +47,7 @@ export function PageHeroCarousel({
 
     return (
         <section
-            className={cn('relative pt-24', className)}
+            className={cn('relative lg:pt-24', className)}
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >

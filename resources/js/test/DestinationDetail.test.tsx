@@ -60,6 +60,7 @@ function makeHotel(overrides: Partial<HotelItem> = {}): HotelItem {
         },
         location: { en: 'Santorini', fr: 'Santorin', ar: 'سانتوريني' },
         price: 320,
+        base_price: null,
         rating: 4.6,
         stars: 4,
         reviews: 123,

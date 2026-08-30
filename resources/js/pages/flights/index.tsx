@@ -7,6 +7,8 @@ import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { DatePicker } from '@/components/ui/DatePicker';
 import {
     Select,
@@ -17,8 +19,11 @@ import {
 } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
+import { getAirportDisplayName, getCityNameByIata } from '@/data/airports';
 import { useFlights } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 import { matchesSearchText } from '@/lib/listFilters';
+import { cn } from '@/lib/utils';
 import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
 
 const ALL = 'all';
@@ -27,16 +32,22 @@ function FlightsContent() {
     const { t, dir, lang } = useLanguage();
     const navigate = useNavigate();
     const [params] = useSearchParams();
+    const [viewMode, setViewMode] = useViewMode();
     const { data: flights = [] } = useFlights();
-    // Accept landing widget destination as fallback for q
+    // Accept search params from landing widget / FlightSearchWidget
     const initialSearch = params.get('q') || params.get('destination') || '';
     const initialAirline = params.get('airline') || ALL;
     const initialCabin =
         params.get('cabinClass') || params.get('cabinclass') || ALL;
-    const initialTripType = params.get('type') || ALL;
-    const initialPassengers = Number(params.get('guests') || 1);
-    const initialFromDate = params.get('from') || '';
-    const initialToDate = params.get('to') || '';
+    const initialTripType = params.get('tripType') || params.get('type') || ALL;
+    const initialPassengers = Number(
+        params.get('passengers') || params.get('guests') || 1,
+    );
+    const initialFromDate = params.get('departureDate') || params.get('from') || '';
+    const initialToDate = params.get('returnDate') || params.get('to') || '';
+    const initialDirectOnly = params.get('directOnly') === '1';
+    const initialBaggageIncluded = params.get('baggageIncluded') === '1';
+    const initialFlexibility = (params.get('flexibility') || 'exact') as 'exact' | '±1' | '±2' | '±3';
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedAirline, setSelectedAirline] = useState(initialAirline);
     const [selectedStops, setSelectedStops] = useState(ALL);
@@ -49,11 +60,16 @@ function FlightsContent() {
     );
     const [fromDate, setFromDate] = useState(initialFromDate);
     const [toDate, setToDate] = useState(initialToDate);
+    const [directOnly, setDirectOnly] = useState(initialDirectOnly);
+    const [baggageIncluded, setBaggageIncluded] = useState(initialBaggageIncluded);
+    const [flexibility, setFlexibility] = useState(initialFlexibility);
 
     const airlineOptions = useMemo(
         () =>
             uniqueNonEmptySelectOptions(
-                flights.map((flight) => localizeText(flight.airline, lang)),
+                flights.map((flight) =>
+                    localizeText(flight.airline, lang),
+                ),
             ),
         [flights, lang],
     );
@@ -89,7 +105,7 @@ function FlightsContent() {
                 const matchesSearch = matchesSearchText(searchQuery, [
                     localizeText(flight.airline, lang),
                     flight.from,
-                    localizeText(flight.to, lang),
+                    getCityNameByIata(flight.to),
                     localizeText(flight.duration, lang),
                     localizeText(flight.stops, lang),
                     localizeText(flight.details.cabin, lang),
@@ -133,15 +149,14 @@ function FlightsContent() {
                         : true);
                 const matchesTripType =
                     selectedTripType === ALL ||
-                    (selectedTripType === 'round-trip'
-                        ? true
-                        : selectedTripType === 'one-way'
-                          ? localizeText(flight.stops, lang)
-                                .toLowerCase()
-                                .includes('direct')
-                          : !localizeText(flight.stops, lang)
-                                .toLowerCase()
-                                .includes('direct'));
+                    flight.trip_type === selectedTripType;
+                const matchesDirect =
+                    !directOnly ||
+                    flight.direct_only ||
+                    localizeText(flight.stops, lang).toLowerCase().includes('direct');
+                const matchesBaggage =
+                    !baggageIncluded ||
+                    flight.baggage_included;
 
                 return (
                     matchesSearch &&
@@ -150,7 +165,9 @@ function FlightsContent() {
                     matchesCabin &&
                     matchesPassengers &&
                     matchesDate &&
-                    matchesTripType
+                    matchesTripType &&
+                    matchesDirect &&
+                    matchesBaggage
                 );
             }),
         [
@@ -164,6 +181,8 @@ function FlightsContent() {
             passengers,
             fromDate,
             toDate,
+            directOnly,
+            baggageIncluded,
         ],
     );
 
@@ -175,7 +194,9 @@ function FlightsContent() {
         selectedTripType !== ALL ||
         passengers !== 1 ||
         fromDate !== '' ||
-        toDate !== '';
+        toDate !== '' ||
+        directOnly ||
+        baggageIncluded;
 
     const clearFilters = () => {
         setSearchQuery('');
@@ -186,6 +207,8 @@ function FlightsContent() {
         setPassengers(1);
         setFromDate('');
         setToDate('');
+        setDirectOnly(false);
+        setBaggageIncluded(false);
     };
 
     return (
@@ -386,10 +409,40 @@ function FlightsContent() {
                                 </SelectContent>
                             </Select>
                         </label>
+
+                        <label className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background/90 px-4 py-3 shadow-sm">
+                            <Switch
+                                checked={directOnly}
+                                onCheckedChange={setDirectOnly}
+                            />
+                            <span className="text-sm text-foreground">
+                                {t('flights.directOnly') || 'Direct only'}
+                            </span>
+                        </label>
+
+                        <label className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background/90 px-4 py-3 shadow-sm">
+                            <Switch
+                                checked={baggageIncluded}
+                                onCheckedChange={setBaggageIncluded}
+                            />
+                            <span className="text-sm text-foreground">
+                                {t('flights.withBaggage') || 'With baggage'}
+                            </span>
+                        </label>
+
+                        <ViewToggle
+                            value={viewMode}
+                            onChange={setViewMode}
+                        />
                     </div>
                 </ListFilterBar>
 
-                <div className="space-y-4">
+                <div className={cn(
+                    'grid gap-4',
+                    viewMode === 'grid'
+                        ? 'md:grid-cols-2'
+                        : 'grid-cols-1',
+                )}>
                     {filteredFlights.length === 0 ? (
                         <RequestThingEmptyState
                             variant={
@@ -425,7 +478,7 @@ function FlightsContent() {
                                             {f.departure}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            {f.from}
+                                            {getAirportDisplayName(f.from)}
                                         </p>
                                     </div>
                                     <div className="flex flex-col items-center text-muted-foreground">
@@ -444,9 +497,37 @@ function FlightsContent() {
                                             {f.arrival}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            {localizeText(f.to, lang)}
+                                            {getAirportDisplayName(f.to)}
                                         </p>
                                     </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                    {f.trip_type === 'round-trip' && (
+                                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
+                                            {t('search.options.roundTrip')}
+                                        </span>
+                                    )}
+                                    {f.trip_type === 'one-way' && (
+                                        <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-600">
+                                            {t('search.options.oneWay')}
+                                        </span>
+                                    )}
+                                    {f.trip_type === 'multi-city' && (
+                                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-600">
+                                            {t('search.options.multiCity')}
+                                        </span>
+                                    )}
+                                    {f.direct_only && (
+                                        <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-600">
+                                            {t('flights.directOnly') || 'Direct'}
+                                        </span>
+                                    )}
+                                    {f.baggage_included && (
+                                        <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-600">
+                                            {t('flights.withBaggage') || 'Baggage'}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div
