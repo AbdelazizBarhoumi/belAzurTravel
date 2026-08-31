@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\CategoryType;
+use App\Models\EntityCategoryAssignment;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * AdminFlightController
@@ -42,6 +45,7 @@ class AdminFlightController extends Controller
     {
         $item = Flight::create($this->attributes($request));
         $this->syncSegments($item, $request);
+        $this->syncCategoryAssignments($item, 'flights', $request->input('category_assignments', []));
         $this->flushAdminCache('flights', $item->code ?? null);
 
         return response()->json(['data' => $this->adminPayload($item)], 201);
@@ -59,6 +63,7 @@ class AdminFlightController extends Controller
         $item = $this->findFlight($id);
         $item->update($this->attributes($request, $item));
         $this->syncSegments($item, $request);
+        $this->syncCategoryAssignments($item, 'flights', $request->input('category_assignments', []));
         $this->flushAdminCache('flights', $item->code ?? null);
 
         return response()->json(['data' => $this->adminPayload($item->refresh()->load('segments'))]);
@@ -251,6 +256,18 @@ class AdminFlightController extends Controller
         $details = $item->details ?? [];
         $segments = $item->segments ?? collect();
 
+        // Build category_assignments map from relationships
+        $categoryAssignments = [];
+        if ($item->relationLoaded('categoryAssignments')) {
+            foreach ($item->categoryAssignments as $assignment) {
+                $typeKey = $assignment->categoryType?->key;
+                $valueKey = $assignment->categoryValue?->key;
+                if ($typeKey && $valueKey) {
+                    $categoryAssignments[$typeKey][] = $valueKey;
+                }
+            }
+        }
+
         return [
             'id' => (string) $item->id,
             'code' => $item->code,
@@ -315,6 +332,7 @@ class AdminFlightController extends Controller
                 'date' => $seg->date?->format('Y-m-d'),
                 'duration' => $seg->duration,
             ])->all(),
+            'category_assignments' => $categoryAssignments,
         ];
     }
 
@@ -410,6 +428,42 @@ class AdminFlightController extends Controller
         Cache::forget("entity.{$type}.index");
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("entity.{$type}.{$identifier}");
+        }
+    }
+
+    private function syncCategoryAssignments(Model $entity, string $entityType, array $assignments): void
+    {
+        EntityCategoryAssignment::where('entity_type', $entityType)
+            ->where('entity_id', $entity->id)
+            ->delete();
+
+        $firstValue = null;
+
+        foreach ($assignments as $typeKey => $valueKeys) {
+            $type = CategoryType::where('entity_type', $entityType)->where('key', $typeKey)->first();
+            if (! $type) {
+                continue;
+            }
+
+            $keys = is_array($valueKeys) ? $valueKeys : [$valueKeys];
+
+            foreach ($keys as $valueKey) {
+                $value = $type->values()->where('key', $valueKey)->first();
+                if (! $value) {
+                    continue;
+                }
+
+                EntityCategoryAssignment::create([
+                    'entity_type' => $entityType,
+                    'entity_id' => $entity->id,
+                    'category_type_id' => $type->id,
+                    'category_value_id' => $value->id,
+                ]);
+
+                if (! $firstValue) {
+                    $firstValue = $value;
+                }
+            }
         }
     }
 }

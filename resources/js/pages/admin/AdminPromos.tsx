@@ -36,6 +36,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import type { Lang } from '@/i18n/translations';
 import { isHexColor } from '@/lib/promoColor';
+import { useCategoryTypes } from '@/hooks/useCategoryTypes';
+import { MultiSelect } from '@/components/admin/MultiSelect';
 
 type Copy = Record<Lang, string>;
 
@@ -154,6 +156,7 @@ function flattenValidationErrors(
 
 export default function AdminPromos() {
     useAdminGuard();
+    const { data: categoryTypes = [] } = useCategoryTypes('promos');
     const { t, lang } = useLanguage();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
@@ -257,6 +260,21 @@ export default function AdminPromos() {
             terms: Array.isArray(values.terms) ? values.terms : [],
         };
 
+        const categoryAssignments: Record<string, string | string[]> = {};
+        categoryTypes.forEach((ct) => {
+            const val = values[`category_${ct.key}`];
+            if (ct.multi) {
+                if (Array.isArray(val) && val.length > 0) {
+                    categoryAssignments[ct.key] = val;
+                }
+            } else {
+                if (val && typeof val === 'string' && val !== '') {
+                    categoryAssignments[ct.key] = val;
+                }
+            }
+        });
+        payload.category_assignments = categoryAssignments;
+
         saveMutation.mutate(payload, {
             onSuccess: () => {
                 toast.success(
@@ -282,6 +300,47 @@ export default function AdminPromos() {
     }
 
     const promoSections: SectionDef[] = [
+        {
+            title: t('admin.categories') || 'Categories',
+            render: ({ values, setField, activeLang }) => (
+                <div className="grid gap-4 md:grid-cols-2">
+                    {categoryTypes.map((catType) => (
+                        <div key={catType.key} className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {catType.label[activeLang] || catType.label.en}
+                            </label>
+                            {catType.multi ? (
+                                <MultiSelect
+                                    options={catType.values.map((v) => ({
+                                        key: v.key,
+                                        label: v.name[activeLang] || v.name.en,
+                                    }))}
+                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                    onChange={(val) => setField(`category_${catType.key}`, val)}
+                                    placeholder={t('actions.select')}
+                                />
+                            ) : (
+                                <Select
+                                    value={String(values[`category_${catType.key}`] || '')}
+                                    onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('actions.select')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {catType.values.map((v) => (
+                                            <SelectItem key={v.key} value={v.key}>
+                                                {v.name[activeLang] || v.name.en}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            ),
+        },
         {
             title: t('admin.promos.coreInfoTitle'),
             description: t('admin.promos.coreInfoDescription'),

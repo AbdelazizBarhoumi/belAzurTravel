@@ -13,6 +13,7 @@ import type { Lang } from '@/i18n/translations';
 
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
 import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { MultiSelect } from '@/components/admin/MultiSelect';
 import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { toast } from 'sonner';
@@ -376,10 +377,14 @@ const AdminHotels = () => {
                       : '') ??
                   '',
               ...Object.fromEntries(
-                  categoryTypes.map((ct) => [
-                      `category_${ct.key}`,
-                      (editing as any).category_assignments?.[ct.key] || '',
-                  ]),
+                  categoryTypes.map((ct) => {
+                      const raw = (editing as any).category_assignments?.[ct.key];
+                      if (ct.multi) {
+                          // multi types store arrays
+                          return [`category_${ct.key}`, Array.isArray(raw) ? raw : raw ? [raw] : []];
+                      }
+                      return [`category_${ct.key}`, raw || ''];
+                  }),
               ),
               imagePath: asText(editing.image),
               imageFile: null,
@@ -562,44 +567,58 @@ const AdminHotels = () => {
                                             catType.label.en}
                                     </label>
                                 </div>
-                                <Select
-                                    value={String(
-                                        values[`category_${catType.key}`] || '',
-                                    )}
-                                    onValueChange={(val) => {
-                                        setField(
-                                            `category_${catType.key}`,
-                                            val,
-                                        );
-                                        const selected = catType.values.find(
-                                            (v) => v.key === val,
-                                        );
-                                        syncCategoryFields(
-                                            setField,
-                                            selected,
-                                            val,
-                                        );
-                                    }}
-                                >
-                                    <SelectTrigger
-                                        className={baseFieldClass(false)}
+                                {catType.multi ? (
+                                    <MultiSelect
+                                        options={catType.values.map((v) => ({
+                                            key: v.key,
+                                            label: v.name[activeLang] || v.name.en,
+                                        }))}
+                                        value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                        onChange={(val) => {
+                                            setField(`category_${catType.key}`, val);
+                                        }}
+                                        placeholder={t('actions.select')}
+                                    />
+                                ) : (
+                                    <Select
+                                        value={String(
+                                            values[`category_${catType.key}`] || '',
+                                        )}
+                                        onValueChange={(val) => {
+                                            setField(
+                                                `category_${catType.key}`,
+                                                val,
+                                            );
+                                            const selected = catType.values.find(
+                                                (v) => v.key === val,
+                                            );
+                                            syncCategoryFields(
+                                                setField,
+                                                selected,
+                                                val,
+                                            );
+                                        }}
                                     >
-                                        <SelectValue
-                                            placeholder={t('actions.select')}
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {catType.values.map((v) => (
-                                            <SelectItem
-                                                key={v.key}
-                                                value={v.key}
-                                            >
-                                                {v.name[activeLang] ||
-                                                    v.name.en}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                        <SelectTrigger
+                                            className={baseFieldClass(false)}
+                                        >
+                                            <SelectValue
+                                                placeholder={t('actions.select')}
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {catType.values.map((v) => (
+                                                <SelectItem
+                                                    key={v.key}
+                                                    value={v.key}
+                                                >
+                                                    {v.name[activeLang] ||
+                                                        v.name.en}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -957,11 +976,19 @@ const AdminHotels = () => {
             values.category_ar,
         );
 
-        const categoryAssignments: Record<string, string> = {};
+        const categoryAssignments: Record<string, string | string[]> = {};
         categoryTypes.forEach((ct) => {
             const val = values[`category_${ct.key}`];
-            if (val && typeof val === 'string' && val !== '') {
-                categoryAssignments[ct.key] = val;
+            if (ct.multi) {
+                // multi types: store array of selected keys
+                if (Array.isArray(val) && val.length > 0) {
+                    categoryAssignments[ct.key] = val;
+                }
+            } else {
+                // single types: store single key string
+                if (val && typeof val === 'string' && val !== '') {
+                    categoryAssignments[ct.key] = val;
+                }
             }
         });
 

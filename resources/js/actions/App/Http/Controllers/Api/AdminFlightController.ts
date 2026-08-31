@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::index
- * @see app/Http/Controllers/Api/AdminFlightController.php:27
+ * @see app/Http/Controllers/Api/AdminFlightController.php:30
  * @route '/api/admin/flights'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::index
- * @see app/Http/Controllers/Api/AdminFlightController.php:27
+ * @see app/Http/Controllers/Api/AdminFlightController.php:30
  * @route '/api/admin/flights'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::index
- * @see app/Http/Controllers/Api/AdminFlightController.php:27
+ * @see app/Http/Controllers/Api/AdminFlightController.php:30
  * @route '/api/admin/flights'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::index
- * @see app/Http/Controllers/Api/AdminFlightController.php:27
+ * @see app/Http/Controllers/Api/AdminFlightController.php:30
  * @route '/api/admin/flights'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminFlightController::index
- * @see app/Http/Controllers/Api/AdminFlightController.php:27
+ * @see app/Http/Controllers/Api/AdminFlightController.php:30
  * @route '/api/admin/flights'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminFlightController::index
- * @see app/Http/Controllers/Api/AdminFlightController.php:27
+ * @see app/Http/Controllers/Api/AdminFlightController.php:30
  * @route '/api/admin/flights'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\AdminFlightController::index
- * @see app/Http/Controllers/Api/AdminFlightController.php:27
+ * @see app/Http/Controllers/Api/AdminFlightController.php:30
  * @route '/api/admin/flights'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::store
- * @see app/Http/Controllers/Api/AdminFlightController.php:41
+ * @see app/Http/Controllers/Api/AdminFlightController.php:44
  * @route '/api/admin/flights'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::store
- * @see app/Http/Controllers/Api/AdminFlightController.php:41
+ * @see app/Http/Controllers/Api/AdminFlightController.php:44
  * @route '/api/admin/flights'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::store
- * @see app/Http/Controllers/Api/AdminFlightController.php:41
+ * @see app/Http/Controllers/Api/AdminFlightController.php:44
  * @route '/api/admin/flights'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminFlightController::store
- * @see app/Http/Controllers/Api/AdminFlightController.php:41
+ * @see app/Http/Controllers/Api/AdminFlightController.php:44
  * @route '/api/admin/flights'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminFlightController::store
- * @see app/Http/Controllers/Api/AdminFlightController.php:41
+ * @see app/Http/Controllers/Api/AdminFlightController.php:44
  * @route '/api/admin/flights'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -134,7 +134,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::show
- * @see app/Http/Controllers/Api/AdminFlightController.php:50
+ * @see app/Http/Controllers/Api/AdminFlightController.php:54
  * @route '/api/admin/flights/{id}'
  */
 export const show = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -149,7 +149,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::show
- * @see app/Http/Controllers/Api/AdminFlightController.php:50
+ * @see app/Http/Controllers/Api/AdminFlightController.php:54
  * @route '/api/admin/flights/{id}'
  */
 show.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -177,7 +177,7 @@ show.url = (args: { id: string | number } | [id: string | number ] | string | nu
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::show
- * @see app/Http/Controllers/Api/AdminFlightController.php:50
+ * @see app/Http/Controllers/Api/AdminFlightController.php:54
  * @route '/api/admin/flights/{id}'
  */
 show.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -186,7 +186,7 @@ show.get = (args: { id: string | number } | [id: string | number ] | string | nu
 })
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::show
- * @see app/Http/Controllers/Api/AdminFlightController.php:50
+ * @see app/Http/Controllers/Api/AdminFlightController.php:54
  * @route '/api/admin/flights/{id}'
  */
 show.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -196,7 +196,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
     /**
 * @see \App\Http\Controllers\Api\AdminFlightController::show
- * @see app/Http/Controllers/Api/AdminFlightController.php:50
+ * @see app/Http/Controllers/Api/AdminFlightController.php:54
  * @route '/api/admin/flights/{id}'
  */
     const showForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -206,7 +206,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
 
             /**
 * @see \App\Http\Controllers\Api\AdminFlightController::show
- * @see app/Http/Controllers/Api/AdminFlightController.php:50
+ * @see app/Http/Controllers/Api/AdminFlightController.php:54
  * @route '/api/admin/flights/{id}'
  */
         showForm.get = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -215,7 +215,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
         })
             /**
 * @see \App\Http\Controllers\Api\AdminFlightController::show
- * @see app/Http/Controllers/Api/AdminFlightController.php:50
+ * @see app/Http/Controllers/Api/AdminFlightController.php:54
  * @route '/api/admin/flights/{id}'
  */
         showForm.head = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -231,7 +231,7 @@ show.head = (args: { id: string | number } | [id: string | number ] | string | n
     show.form = showForm
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::update
- * @see app/Http/Controllers/Api/AdminFlightController.php:57
+ * @see app/Http/Controllers/Api/AdminFlightController.php:61
  * @route '/api/admin/flights/{id}'
  */
 export const update = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -246,7 +246,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::update
- * @see app/Http/Controllers/Api/AdminFlightController.php:57
+ * @see app/Http/Controllers/Api/AdminFlightController.php:61
  * @route '/api/admin/flights/{id}'
  */
 update.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -274,7 +274,7 @@ update.url = (args: { id: string | number } | [id: string | number ] | string | 
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::update
- * @see app/Http/Controllers/Api/AdminFlightController.php:57
+ * @see app/Http/Controllers/Api/AdminFlightController.php:61
  * @route '/api/admin/flights/{id}'
  */
 update.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -284,7 +284,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
     /**
 * @see \App\Http\Controllers\Api\AdminFlightController::update
- * @see app/Http/Controllers/Api/AdminFlightController.php:57
+ * @see app/Http/Controllers/Api/AdminFlightController.php:61
  * @route '/api/admin/flights/{id}'
  */
     const updateForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -299,7 +299,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
 
             /**
 * @see \App\Http\Controllers\Api\AdminFlightController::update
- * @see app/Http/Controllers/Api/AdminFlightController.php:57
+ * @see app/Http/Controllers/Api/AdminFlightController.php:61
  * @route '/api/admin/flights/{id}'
  */
         updateForm.put = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -315,7 +315,7 @@ update.put = (args: { id: string | number } | [id: string | number ] | string | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::destroy
- * @see app/Http/Controllers/Api/AdminFlightController.php:67
+ * @see app/Http/Controllers/Api/AdminFlightController.php:72
  * @route '/api/admin/flights/{id}'
  */
 export const destroy = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -330,7 +330,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::destroy
- * @see app/Http/Controllers/Api/AdminFlightController.php:67
+ * @see app/Http/Controllers/Api/AdminFlightController.php:72
  * @route '/api/admin/flights/{id}'
  */
 destroy.url = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions) => {
@@ -358,7 +358,7 @@ destroy.url = (args: { id: string | number } | [id: string | number ] | string |
 
 /**
 * @see \App\Http\Controllers\Api\AdminFlightController::destroy
- * @see app/Http/Controllers/Api/AdminFlightController.php:67
+ * @see app/Http/Controllers/Api/AdminFlightController.php:72
  * @route '/api/admin/flights/{id}'
  */
 destroy.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -368,7 +368,7 @@ destroy.delete = (args: { id: string | number } | [id: string | number ] | strin
 
     /**
 * @see \App\Http\Controllers\Api\AdminFlightController::destroy
- * @see app/Http/Controllers/Api/AdminFlightController.php:67
+ * @see app/Http/Controllers/Api/AdminFlightController.php:72
  * @route '/api/admin/flights/{id}'
  */
     const destroyForm = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -383,7 +383,7 @@ destroy.delete = (args: { id: string | number } | [id: string | number ] | strin
 
             /**
 * @see \App\Http\Controllers\Api\AdminFlightController::destroy
- * @see app/Http/Controllers/Api/AdminFlightController.php:67
+ * @see app/Http/Controllers/Api/AdminFlightController.php:72
  * @route '/api/admin/flights/{id}'
  */
         destroyForm.delete = (args: { id: string | number } | [id: string | number ] | string | number, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

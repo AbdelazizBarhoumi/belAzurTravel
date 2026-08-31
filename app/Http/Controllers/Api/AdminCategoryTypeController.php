@@ -47,6 +47,7 @@ class AdminCategoryTypeController extends Controller
             'label.ar' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer'],
             'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio'],
+            'multi' => ['nullable', 'boolean'],
         ]);
 
         $key = Str::slug($data['label']['en'] ?? $data['label']['fr']);
@@ -63,6 +64,7 @@ class AdminCategoryTypeController extends Controller
             'label' => $data['label'],
             'sort_order' => $data['sort_order'] ?? 0,
             'filter_style' => $data['filter_style'] ?? 'pills',
+            'multi' => $data['multi'] ?? false,
         ]);
 
         $this->clearCache($data['entity_type']);
@@ -79,6 +81,7 @@ class AdminCategoryTypeController extends Controller
             'label.ar' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer'],
             'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio'],
+            'multi' => ['nullable', 'boolean'],
         ]);
 
         $updateData = ['label' => $data['label']];
@@ -87,6 +90,9 @@ class AdminCategoryTypeController extends Controller
         }
         if (isset($data['filter_style'])) {
             $updateData['filter_style'] = $data['filter_style'];
+        }
+        if (array_key_exists('multi', $data)) {
+            $updateData['multi'] = (bool) $data['multi'];
         }
 
         $categoryType->update($updateData);

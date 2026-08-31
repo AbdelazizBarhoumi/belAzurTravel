@@ -49,6 +49,7 @@ import { localizeText } from '@/data';
 import { PROVIDER_CATEGORY_MAP } from '@/data/hotelFilters';
 import { useCountryByCode } from '@/hooks/useCountries';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { getStaticFilterGroup } from '@/lib/nav-static-filters';
 import {
     useHotels,
     useHotelSearchInfinite,
@@ -521,16 +522,14 @@ export default function Hotels() {
         const boardingIds: number[] = [];
         const pricingTypeValues = categoryTypeFilters['pricing_type'] ?? [];
         if (pricingTypeValues.length > 0) {
-            const pricingType = categoryTypes.find(
-                (ct) => ct.key === 'pricing_type',
-            );
-            if (pricingType) {
-                for (const val of pricingType.values) {
+            const pricingGroup = getStaticFilterGroup('hotels', 'pricing_type');
+            if (pricingGroup) {
+                for (const opt of pricingGroup.options) {
                     if (
-                        pricingTypeValues.includes(val.key) &&
-                        typeof val.provider_id === 'number'
+                        pricingTypeValues.includes(opt.key) &&
+                        typeof opt.provider_id === 'number'
                     ) {
-                        boardingIds.push(val.provider_id);
+                        boardingIds.push(opt.provider_id);
                     }
                 }
             }

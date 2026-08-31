@@ -660,25 +660,30 @@ class AdminHotelController extends Controller
 
         $firstValue = null;
 
-        foreach ($assignments as $typeKey => $valueKey) {
+        foreach ($assignments as $typeKey => $valueKeys) {
             $type = CategoryType::where('entity_type', $entityType)->where('key', $typeKey)->first();
             if (! $type) {
                 continue;
             }
-            $value = $type->values()->where('key', $valueKey)->first();
-            if (! $value) {
-                continue;
-            }
 
-            EntityCategoryAssignment::create([
-                'entity_type' => $entityType,
-                'entity_id' => $entity->id,
-                'category_type_id' => $type->id,
-                'category_value_id' => $value->id,
-            ]);
+            $keys = is_array($valueKeys) ? $valueKeys : [$valueKeys];
 
-            if (! $firstValue) {
-                $firstValue = $value;
+            foreach ($keys as $valueKey) {
+                $value = $type->values()->where('key', $valueKey)->first();
+                if (! $value) {
+                    continue;
+                }
+
+                EntityCategoryAssignment::create([
+                    'entity_type' => $entityType,
+                    'entity_id' => $entity->id,
+                    'category_type_id' => $type->id,
+                    'category_value_id' => $value->id,
+                ]);
+
+                if (! $firstValue) {
+                    $firstValue = $value;
+                }
             }
         }
 

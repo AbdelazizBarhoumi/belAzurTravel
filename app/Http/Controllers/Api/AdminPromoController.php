@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Concerns\HandlesAdminMedia;
 use App\Http\Controllers\Controller;
+use App\Models\CategoryType;
+use App\Models\EntityCategoryAssignment;
 use App\Models\Promo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -36,6 +38,7 @@ class AdminPromoController extends Controller
     public function store(Request $request): JsonResponse
     {
         $item = Promo::create($this->attributes($request));
+        $this->syncCategoryAssignments($item, 'promos', $request->input('category_assignments', []));
         $this->flushAdminCache('promos', $item->code ?? null);
 
         return response()->json(['data' => $this->adminPayload($item)], 201);
@@ -52,6 +55,7 @@ class AdminPromoController extends Controller
     {
         $item = Promo::query()->findOrFail($id);
         $item->update($this->attributes($request, $item));
+        $this->syncCategoryAssignments($item, 'promos', $request->input('category_assignments', []));
         $this->flushAdminCache('promos', $item->code ?? null);
 
         return response()->json(['data' => $this->adminPayload($item->refresh())]);
@@ -179,6 +183,10 @@ class AdminPromoController extends Controller
         $payload['active'] = $item->details['active'] ?? true;
         $payload['is_special'] = $item->details['is_special'] ?? false;
 
+        $payload['category_assignments'] = $item->categoryAssignments->mapToGroups(function (EntityCategoryAssignment $a) {
+            return [$a->categoryType->key => $a->categoryValue->key];
+        })->map(fn ($keys) => $keys->values()->all())->all();
+
         return $payload;
     }
 
@@ -256,6 +264,36 @@ class AdminPromoController extends Controller
         Cache::forget("{$type}.index");
         if ($identifier !== null && $identifier !== '') {
             Cache::forget("{$type}.{$identifier}");
+        }
+    }
+
+    private function syncCategoryAssignments($entity, string $entityType, array $assignments): void
+    {
+        EntityCategoryAssignment::where('entity_type', $entityType)
+            ->where('entity_id', $entity->id)
+            ->delete();
+
+        foreach ($assignments as $typeKey => $valueKeys) {
+            $type = CategoryType::where('entity_type', $entityType)->where('key', $typeKey)->first();
+            if (! $type) {
+                continue;
+            }
+
+            $keys = is_array($valueKeys) ? $valueKeys : [$valueKeys];
+
+            foreach ($keys as $valueKey) {
+                $value = $type->values()->where('key', $valueKey)->first();
+                if (! $value) {
+                    continue;
+                }
+
+                EntityCategoryAssignment::create([
+                    'entity_type' => $entityType,
+                    'entity_id' => $entity->id,
+                    'category_type_id' => $type->id,
+                    'category_value_id' => $value->id,
+                ]);
+            }
         }
     }
 

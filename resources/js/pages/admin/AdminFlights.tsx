@@ -40,6 +40,8 @@ import {
     FLIGHT_TRIP_TYPES,
     getLocalizedLabel,
 } from '@/data/adminSelectOptions';
+import { useCategoryTypes } from '@/hooks/useCategoryTypes';
+import { MultiSelect } from '@/components/admin/MultiSelect';
 
 const FLIGHT_LOCALIZED_KEYS = [
     'airline',
@@ -68,6 +70,7 @@ function stripLocalizedObjects(values: Record<string, unknown>) {
 
 export default function AdminFlights() {
     useAdminGuard();
+    const { data: categoryTypes = [] } = useCategoryTypes('flights');
     const { t, lang } = useLanguage();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
@@ -177,10 +180,26 @@ export default function AdminFlights() {
             toast.error(t('admin.pleaseFixErrors'));
             return;
         }
+
+        const categoryAssignments: Record<string, string | string[]> = {};
+        categoryTypes.forEach((ct) => {
+            const val = values[`category_${ct.key}`];
+            if (ct.multi) {
+                if (Array.isArray(val) && val.length > 0) {
+                    categoryAssignments[ct.key] = val;
+                }
+            } else {
+                if (val && typeof val === 'string' && val !== '') {
+                    categoryAssignments[ct.key] = val;
+                }
+            }
+        });
+
         saveMutation.mutate(
             stripLocalizedObjects({
                 ...values,
                 id: editing?.id ?? '',
+                category_assignments: categoryAssignments,
             }) as AdminRow,
         );
     }
@@ -236,6 +255,49 @@ export default function AdminFlights() {
                             <span className="ml-2 text-sm">{t('flights.withBaggage') || 'With baggage'}</span>
                         </div>
                     </div>
+                </div>
+            ),
+        },
+        {
+            title: t('admin.categories') || 'Categories',
+            description: t('admin.categoriesHint') || 'Assign categories to this flight.',
+            columns: 2,
+            render: ({ values, setField, activeLang }) => (
+                <div className="grid gap-4 md:grid-cols-2">
+                    {categoryTypes.map((catType) => (
+                        <div key={catType.key} className="space-y-2">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                                {catType.label[activeLang] || catType.label.en}
+                            </label>
+                            {catType.multi ? (
+                                <MultiSelect
+                                    options={catType.values.map((v) => ({
+                                        key: v.key,
+                                        label: v.name[activeLang] || v.name.en,
+                                    }))}
+                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                    onChange={(val) => setField(`category_${catType.key}`, val)}
+                                    placeholder={t('actions.select')}
+                                />
+                            ) : (
+                                <Select
+                                    value={String(values[`category_${catType.key}`] || '')}
+                                    onValueChange={(val) => setField(`category_${catType.key}`, val)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={t('actions.select')} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {catType.values.map((v) => (
+                                            <SelectItem key={v.key} value={v.key}>
+                                                {v.name[activeLang] || v.name.en}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        </div>
+                    ))}
                 </div>
             ),
         },

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\EntityCategoryAssignment;
 
 class Flight extends Model
 {
@@ -28,5 +29,10 @@ class Flight extends Model
     public function segments(): HasMany
     {
         return $this->hasMany(FlightSegment::class, 'flight_id')->orderBy('segment_order');
+    }
+
+    public function categoryAssignments()
+    {
+        return $this->hasMany(EntityCategoryAssignment::class, 'entity_id')->where('entity_type', 'flights');
     }
 }

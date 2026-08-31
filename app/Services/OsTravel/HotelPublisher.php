@@ -604,6 +604,88 @@ class HotelPublisher
         ], $boardings, $themeFlags);
     }
 
+    protected function ensurePricingType(): CategoryType
+    {
+        return CategoryType::firstOrCreate(
+            ['entity_type' => 'hotels', 'key' => 'pricing_type'],
+            [
+                'label' => ['en' => 'Pricing Type', 'fr' => 'Formule repas', 'ar' => 'نوع التسعير'],
+                'filter_style' => 'pills',
+                'locked' => false,
+                'sort_order' => 0,
+            ],
+        );
+    }
+
+    protected function ensurePricingTypeValues(CategoryType $type): void
+    {
+        $values = [
+            'all-inclusive' => ['en' => 'All Inclusive', 'fr' => 'Tout inclus', 'ar' => 'شامل كل شيء'],
+            'half-board' => ['en' => 'Half Board', 'fr' => 'Demi pension', 'ar' => 'إجازة نصف'],
+            'bed-breakfast' => ['en' => 'Bed & Breakfast', 'fr' => 'Petit déjeuner inclus', 'ar' => 'فطور'],
+            'room-only' => ['en' => 'Room Only', 'fr' => 'Chambre seulement', 'ar' => 'غرفة فقط'],
+            'soft-all-inclusive' => ['en' => 'Soft All Inclusive', 'fr' => 'Soft All Inclusive', 'ar' => 'شامل كل شيء بارد'],
+            'ultra-all-inclusive' => ['en' => 'Ultra All Inclusive', 'fr' => 'Ultra All Inclusive', 'ar' => 'شامل كل شيء ultra'],
+            'ultra-all-inclusive-soft' => ['en' => 'Ultra All Inclusive Soft', 'fr' => 'Ultra All Inclusive Soft', 'ar' => 'شامل كل شيء ultra بارد'],
+            'full-board' => ['en' => 'Full Board', 'fr' => 'Pension Complète', 'ar' => 'إقامة كاملة'],
+            'full-board-plus' => ['en' => 'Full Board Plus', 'fr' => 'Pension Complète +', 'ar' => 'إقامة كاملة +'],
+            'half-board-plus' => ['en' => 'Half Board Plus', 'fr' => 'Demi Pension +', 'ar' => 'نصف إقامة +'],
+            'entry-only' => ['en' => 'Entry Only', 'fr' => 'Entrée Simple', 'ar' => 'دخول فقط'],
+            'day-use' => ['en' => 'Day Use', 'fr' => 'Day Use', 'ar' => 'استخدام نهاري'],
+            'ultra-ai-soft-drink' => ['en' => 'Ultra AI Soft Drink', 'fr' => 'Ultra AI Soft Drink', 'ar' => 'شامل كل شيء ultra مشروبات باردة'],
+        ];
+        foreach ($values as $key => $name) {
+            CategoryValue::firstOrCreate(
+                ['category_type_id' => $type->id, 'key' => $key],
+                ['name' => $name],
+            );
+        }
+    }
+
+    protected function ensureFeatures(): CategoryType
+    {
+        return CategoryType::firstOrCreate(
+            ['entity_type' => 'hotels', 'key' => 'features'],
+            [
+                'label' => ['en' => 'Features', 'fr' => 'Équipements & Ambiance', 'ar' => 'الميزات'],
+                'filter_style' => 'pills',
+                'locked' => false,
+                'sort_order' => 1,
+            ],
+        );
+    }
+
+    protected function ensureFeaturesValues(CategoryType $type): void
+    {
+        $values = [
+            'pied-dans-leau' => ['en' => "Pieds dans l'eau", 'fr' => "Pieds dans l'eau", 'ar' => 'أقدام في الماء'],
+            'animation' => ['en' => 'Animation', 'fr' => 'Animation', 'ar' => 'ترفيه'],
+            'couple-famille' => ['en' => 'Couple & Family Only', 'fr' => 'Couple & Famille seulement', 'ar' => 'أزواج وعائلات فقط'],
+            'bon-rapport' => ['en' => 'Good Value', 'fr' => 'Bon rapport qualité prix', 'ar' => 'قيمة جيدة'],
+            'burkini-autorise' => ['en' => 'Burkini Allowed', 'fr' => 'Burkini autorisé', 'ar' => 'بركيني مسموح'],
+            'wifi-gratuit' => ['en' => 'Free WiFi', 'fr' => 'Wifi gratuit', 'ar' => 'واي فاي مجاني'],
+            'burkini-non-autorise' => ['en' => 'Burkini Not Allowed', 'fr' => 'Burkini non autorisé', 'ar' => 'بركيني غير مسموح'],
+            'toboggan' => ['en' => 'Water Slides', 'fr' => 'Toboggans', 'ar' => 'زلاقات مائية'],
+            'luxe-calme' => ['en' => 'Luxury & Quiet', 'fr' => 'Luxe et calme', 'ar' => 'فخامة وهدوء'],
+            'vue-ville' => ['en' => 'City View', 'fr' => 'Vue sur la ville', 'ar' => 'إطلالة على المدينة'],
+            'aire-jeux' => ['en' => 'Kids Playground', 'fr' => 'Aire de jeux pour enfants', 'ar' => 'ملعب أطفال'],
+            'plage-privee' => ['en' => 'Private Beach', 'fr' => 'Plage privée', 'ar' => 'شاطئ خاص'],
+            'en-face-mer' => ['en' => 'Seafront', 'fr' => 'En face de la mer', 'ar' => 'أمام البحر'],
+            'centre-thalasso' => ['en' => 'Thalassotherapy', 'fr' => 'Centre Thalasso', 'ar' => 'مركز تالاسو'],
+            'terrain-football' => ['en' => 'Football Field', 'fr' => 'Terrain de football', 'ar' => 'ملعب كرة قدم'],
+            'emplacement' => ['en' => 'Great Location', 'fr' => 'Emplacement stratégique', 'ar' => 'موقع استراتيجي'],
+            'court-tennis' => ['en' => 'Tennis Court', 'fr' => 'Court de tennis', 'ar' => 'ملعب تنس'],
+            'congress' => ['en' => 'Conference Center', 'fr' => 'Congress center', 'ar' => 'مركز مؤتمرات'],
+            'padel' => ['en' => 'Padel', 'fr' => 'Padel', 'ar' => 'بادل'],
+        ];
+        foreach ($values as $key => $name) {
+            CategoryValue::firstOrCreate(
+                ['category_type_id' => $type->id, 'key' => $key],
+                ['name' => $name],
+            );
+        }
+    }
+
     /**
      * Create EntityCategoryAssignment records for pricing_type based on the
      * hotel's boarding codes from the provider.
@@ -612,13 +694,8 @@ class HotelPublisher
      */
     public function assignPricingType(Hotel $hotel, array $boardings): void
     {
-        $type = CategoryType::where('entity_type', 'hotels')
-            ->where('key', 'pricing_type')
-            ->first();
-
-        if (! $type) {
-            return;
-        }
+        $type = $this->ensurePricingType();
+        $this->ensurePricingTypeValues($type);
 
         $boardingCodes = array_map(
             fn ($b) => strtoupper((string) ($b['Code'] ?? '')),
@@ -712,13 +789,8 @@ class HotelPublisher
      */
     public function assignFeatures(Hotel $hotel): void
     {
-        $type = CategoryType::where('entity_type', 'hotels')
-            ->where('key', 'features')
-            ->first();
-
-        if (! $type) {
-            return;
-        }
+        $type = $this->ensureFeatures();
+        $this->ensureFeaturesValues($type);
 
         $tags = $hotel->details['amenity_tags'] ?? [];
 

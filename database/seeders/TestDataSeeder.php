@@ -77,8 +77,8 @@ class TestDataSeeder extends Seeder
     private function seedCategoryTypesAndValues(): void
     {
         $types = [
-            // Hotels
-            ['entity_type' => 'hotels', 'key' => 'pricing_type', 'label' => $this->loc('Pricing Type', 'Formule repas', 'نوع التسعير'), 'filter_style' => 'pills', 'locked' => true, 'values' => [
+            // Hotels pricing_type (locked=false, hidden from admin UI, managed as static filter in frontend)
+            ['entity_type' => 'hotels', 'key' => 'pricing_type', 'label' => $this->loc('Pricing Type', 'Formule repas', 'نوع التسعير'), 'filter_style' => 'pills', 'locked' => false, 'values' => [
                 ['key' => 'all-inclusive', 'name' => $this->loc('All Inclusive', 'Tout inclus', 'شامل كل شيء')],
                 ['key' => 'half-board', 'name' => $this->loc('Half Board', 'Demi pension', 'إجازة نصف')],
                 ['key' => 'bed-breakfast', 'name' => $this->loc('Bed & Breakfast', 'Petit déjeuner inclus', 'فطور')],

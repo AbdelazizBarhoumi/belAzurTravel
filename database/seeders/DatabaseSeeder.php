@@ -49,6 +49,8 @@ class DatabaseSeeder extends Seeder
             HotelCategoryTypesSeeder::class,
             TourCategoryTypesSeeder::class,
             TravelCategoryTypesSeeder::class,
+            FlightCategoryTypesSeeder::class,
+            PromoCategoryTypesSeeder::class,
             VisaSeeder::class,
             VisaApplicationSeeder::class,
         ]);

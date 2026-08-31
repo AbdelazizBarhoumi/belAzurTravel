@@ -1377,8 +1377,8 @@ export function Navbar() {
         });
 
         // Auto-append dynamic API categories if no "show all" item is present.
-        // This ensures categories like "Formule repas" and "Équipements &
-        // Ambiance" appear alongside the admin-configured static groups.
+        // This ensures any dynamic (non-locked) API category types
+        // appear alongside the admin-configured static groups.
         const coveredValues = new Set(
             entry.items
                 .filter((i) => i.mode === 'categories' && i.value)

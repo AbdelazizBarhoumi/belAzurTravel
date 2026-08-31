@@ -390,7 +390,13 @@ export function CategoryTypeManager({
                         ) : view === 'types' ? (
                             // --- Level 1: Category Types ---
                             <div className="max-h-[60vh] space-y-3 overflow-y-auto pr-2">
-                                {types.map((type) => (
+                                {types
+                                    .filter((type) =>
+                                        entityType === 'hotels'
+                                            ? type.key !== 'pricing_type' && type.key !== 'features'
+                                            : true,
+                                    )
+                                    .map((type) => (
                                     <div
                                         key={type.id}
                                         className="flex flex-col gap-2 rounded-lg border p-3"

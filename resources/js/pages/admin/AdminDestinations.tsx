@@ -19,6 +19,7 @@ import { apiFetch } from '@/api/http';
 import type { PageHeroSlide } from '@/api/siteSettings.api';
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
 import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { MultiSelect } from '@/components/admin/MultiSelect';
 import { useCategoryTypes, type CategoryType } from '@/hooks/useCategoryTypes';
 import {
     Select,
@@ -311,13 +312,16 @@ const AdminDestinations = () => {
             ...editing,
             category_key: resolvedCategoryKey,
             ...Object.fromEntries(
-                categoryTypes.map((ct) => [
-                    `category_${ct.key}`,
-                    (editing as any).category_assignments?.[ct.key] ||
+                categoryTypes.map((ct) => {
+                    const raw = (editing as any).category_assignments?.[ct.key] ||
                         (ct.values.some((v) => v.key === resolvedCategoryKey)
                             ? resolvedCategoryKey
-                            : ''),
-                ]),
+                            : '');
+                    if (ct.multi) {
+                        return [`category_${ct.key}`, Array.isArray(raw) ? raw : raw ? [raw] : []];
+                    }
+                    return [`category_${ct.key}`, raw || ''];
+                }),
             ),
             imagePath: asText(editingRecord.image),
             imageFile: null,
@@ -658,45 +662,57 @@ const AdminDestinations = () => {
                                                 {catType.label[activeLang] ||
                                                     catType.label.en}
                                             </Label>
-                                            <Select
-                                                value={String(
-                                                    values[
-                                                        `category_${catType.key}`
-                                                    ] || '',
-                                                )}
-                                                onValueChange={(val) =>
-                                                    setField(
-                                                        `category_${catType.key}`,
-                                                        val,
-                                                    )
-                                                }
-                                            >
-                                                <SelectTrigger
-                                                    className={
-                                                        errors?.category_key
-                                                            ? 'border-destructive ring-1 ring-destructive'
-                                                            : ''
+                                            {catType.multi ? (
+                                                <MultiSelect
+                                                    options={catType.values.map((v) => ({
+                                                        key: v.key,
+                                                        label: v.name[activeLang] || v.name.en,
+                                                    }))}
+                                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                                    onChange={(val) => setField(`category_${catType.key}`, val)}
+                                                    placeholder={t('actions.select')}
+                                                />
+                                            ) : (
+                                                <Select
+                                                    value={String(
+                                                        values[
+                                                            `category_${catType.key}`
+                                                        ] || '',
+                                                    )}
+                                                    onValueChange={(val) =>
+                                                        setField(
+                                                            `category_${catType.key}`,
+                                                            val,
+                                                        )
                                                     }
                                                 >
-                                                    <SelectValue
-                                                        placeholder={t(
-                                                            'actions.select',
-                                                        )}
-                                                    />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {catType.values.map((v) => (
-                                                        <SelectItem
-                                                            key={v.key}
-                                                            value={v.key}
-                                                        >
-                                                            {v.name[
-                                                                activeLang
-                                                            ] || v.name.en}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                                    <SelectTrigger
+                                                        className={
+                                                            errors?.category_key
+                                                                ? 'border-destructive ring-1 ring-destructive'
+                                                                : ''
+                                                        }
+                                                    >
+                                                        <SelectValue
+                                                            placeholder={t(
+                                                                'actions.select',
+                                                            )}
+                                                        />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {catType.values.map((v) => (
+                                                            <SelectItem
+                                                                key={v.key}
+                                                                value={v.key}
+                                                            >
+                                                                {v.name[
+                                                                    activeLang
+                                                                ] || v.name.en}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
                                         </div>
                                     ))}
 
@@ -1331,11 +1347,17 @@ const AdminDestinations = () => {
                         CURRENCIES,
                     );
 
-                    const categoryAssignments: Record<string, string> = {};
+                    const categoryAssignments: Record<string, string | string[]> = {};
                     categoryTypes.forEach((ct) => {
                         const val = values[`category_${ct.key}`];
-                        if (val && typeof val === 'string' && val !== '') {
-                            categoryAssignments[ct.key] = val;
+                        if (ct.multi) {
+                            if (Array.isArray(val) && val.length > 0) {
+                                categoryAssignments[ct.key] = val;
+                            }
+                        } else {
+                            if (val && typeof val === 'string' && val !== '') {
+                                categoryAssignments[ct.key] = val;
+                            }
                         }
                     });
 

@@ -63,6 +63,18 @@ class HotelCategoryTypesSeeder extends Seeder
                     ['key' => 'detente', 'name' => ['en' => 'Relaxation', 'fr' => 'Détente', 'ar' => 'استرخاء']],
                 ],
             ],
+            [
+                'key' => 'accommodation_type',
+                'label' => ['en' => 'Accommodation Type', 'fr' => "Type d'hébergement", 'ar' => 'نوع الإقامة'],
+                'values' => [
+                    ['key' => 'campement', 'name' => ['en' => 'Camp', 'fr' => 'Campement', 'ar' => 'مخيم']],
+                    ['key' => 'appart_hotel', 'name' => ['en' => 'Aparthotel', 'fr' => 'Appart Hôtel', 'ar' => 'Residence hotel']],
+                    ['key' => 'maison_hotes', 'name' => ['en' => 'Guesthouse', 'fr' => "Maison d'hôtes", 'ar' => 'بيت ضيافة']],
+                    ['key' => 'appartement', 'name' => ['en' => 'Apartment', 'fr' => 'Appartement', 'ar' => 'شقة']],
+                    ['key' => 'parc_attraction', 'name' => ['en' => 'Theme Park', 'fr' => "Parc d'attraction", 'ar' => 'حديقة ملاهي']],
+                    ['key' => 'villa', 'name' => ['en' => 'Villa', 'fr' => 'Villa', 'ar' => 'فيلا']],
+                ],
+            ],
         ];
 
         foreach ($types as $index => $typeData) {
@@ -83,5 +95,10 @@ class HotelCategoryTypesSeeder extends Seeder
                 );
             }
         }
+
+        // Set multi=true for pricing_type and features (can have multiple values per hotel)
+        CategoryType::where('entity_type', 'hotels')
+            ->whereIn('key', ['pricing_type', 'features'])
+            ->update(['multi' => true]);
     }
 }

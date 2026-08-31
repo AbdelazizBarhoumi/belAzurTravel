@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PROVIDER_CATEGORY_MAP } from '@/data/hotelFilters';
 import type { PublicCategoryType } from '@/hooks/usePublicData';
-import { getStaticFilterGroup } from '@/lib/nav-static-filters';
+import { getStaticFilterGroup, getStaticFiltersForPage } from '@/lib/nav-static-filters';
 import type { HotelItem } from '@/types/public/hotel.types';
 import { CollapsibleSection } from './CollapsibleSection';
 import { FilterRenderer } from './FilterRenderer';
@@ -572,7 +572,9 @@ export function HotelFilters({
             </CollapsibleSection>
 
             {/* Category Types from API */}
-            {categoryTypes.map((catType) => (
+            {categoryTypes
+                .filter((ct) => ct.key !== 'pricing_type' && ct.key !== 'features')
+                .map((catType) => (
                 <div key={catType.key} className="space-y-2 sm:space-y-3">
                     <Separator />
                     <FilterRenderer
@@ -586,6 +588,78 @@ export function HotelFilters({
                     />
                 </div>
             ))}
+
+            {/* Static filter groups (pricing_type, features) from nav-static-filters.ts */}
+            {getStaticFiltersForPage('hotels')
+                .filter((g) => g.key === 'pricing_type' || g.key === 'features')
+                .map((group) => (
+                    <div key={group.key} className="space-y-2 sm:space-y-3">
+                        <Separator />
+                        <CollapsibleSection
+                            title={group.label[lang as 'en' | 'fr' | 'ar'] ?? group.label.en ?? group.key}
+                            defaultOpen={false}
+                        >
+                            {group.options.map((opt) => {
+                                const isActive =
+                                    (categoryTypeFilters[group.key] ?? []).includes(opt.key);
+                                return (
+                                    <label
+                                        key={opt.key}
+                                        className={`flex cursor-pointer items-center justify-between gap-1.5 rounded-md px-2 py-1.5 transition-colors sm:gap-2 sm:rounded-lg sm:px-3 sm:py-2 ${
+                                            isActive
+                                                ? 'border border-primary/30 bg-primary/10'
+                                                : 'border border-transparent hover:bg-muted/50'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                            <div
+                                                className={`flex h-3.5 w-3.5 items-center justify-center rounded border-2 transition-colors sm:h-4 sm:w-4 ${
+                                                    isActive
+                                                        ? 'border-primary bg-primary'
+                                                        : 'border-muted-foreground/30 bg-background'
+                                                }`}
+                                            >
+                                                {isActive && (
+                                                    <svg
+                                                        className="h-2.5 w-2.5 text-primary-foreground sm:h-3 sm:w-3"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                        strokeWidth={3}
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            d="M5 13l4 4L19 7"
+                                                        />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                checked={isActive}
+                                                onChange={(e) => {
+                                                    const currentValues =
+                                                        categoryTypeFilters[group.key] || [];
+                                                    const newValues = e.target.checked
+                                                        ? [...currentValues, opt.key]
+                                                        : currentValues.filter((v) => v !== opt.key);
+                                                    onCategoryTypeChange(group.key, newValues);
+                                                }}
+                                                className="sr-only"
+                                            />
+                                            <span
+                                                className={`text-sm ${isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}`}
+                                            >
+                                                {opt.label[lang as 'en' | 'fr' | 'ar'] ?? opt.label.en ?? opt.key}
+                                            </span>
+                                        </div>
+                                    </label>
+                                );
+                            })}
+                        </CollapsibleSection>
+                    </div>
+                ))}
         </div>
     );
 }

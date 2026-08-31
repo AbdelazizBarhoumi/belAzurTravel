@@ -230,13 +230,15 @@ class OsTravelCatalogSync
      */
     protected function updateBoardingProviderIds(array $boardings): void
     {
-        $type = CategoryType::where('entity_type', 'hotels')
-            ->where('key', 'pricing_type')
-            ->first();
-
-        if (! $type) {
-            return;
-        }
+        $type = CategoryType::firstOrCreate(
+            ['entity_type' => 'hotels', 'key' => 'pricing_type'],
+            [
+                'label' => ['en' => 'Pricing Type', 'fr' => 'Formule repas', 'ar' => 'نوع التسعير'],
+                'filter_style' => 'pills',
+                'locked' => false,
+                'sort_order' => 0,
+            ],
+        );
 
         // Map provider boarding codes to pricing_type value keys.
         $codeToPricingKey = [

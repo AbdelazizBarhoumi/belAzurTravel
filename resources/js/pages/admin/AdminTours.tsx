@@ -12,6 +12,7 @@ import {
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { CategoryTypeManager } from '@/components/admin/CategoryTypeManager';
 import { HeroImagesManager } from '@/components/admin/HeroImagesManager';
+import { MultiSelect } from '@/components/admin/MultiSelect';
 import { useCategoryTypes } from '@/hooks/useCategoryTypes';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { toast } from 'sonner';
@@ -298,11 +299,17 @@ const AdminTours = () => {
             ...rest
         } = values;
 
-        const categoryAssignments: Record<string, string> = {};
+        const categoryAssignments: Record<string, string | string[]> = {};
         categoryTypes.forEach((ct) => {
             const val = values[`category_${ct.key}`];
-            if (val && typeof val === 'string' && val !== '') {
-                categoryAssignments[ct.key] = val;
+            if (ct.multi) {
+                if (Array.isArray(val) && val.length > 0) {
+                    categoryAssignments[ct.key] = val;
+                }
+            } else {
+                if (val && typeof val === 'string' && val !== '') {
+                    categoryAssignments[ct.key] = val;
+                }
             }
         });
 
@@ -427,10 +434,13 @@ const AdminTours = () => {
             category_fr: (editing as any).category_fr ?? '',
             category_ar: (editing as any).category_ar ?? '',
             ...Object.fromEntries(
-                categoryTypes.map((ct) => [
-                    `category_${ct.key}`,
-                    (editing as any).category_assignments?.[ct.key] || '',
-                ]),
+                categoryTypes.map((ct) => {
+                    const raw = (editing as any).category_assignments?.[ct.key];
+                    if (ct.multi) {
+                        return [`category_${ct.key}`, Array.isArray(raw) ? raw : raw ? [raw] : []];
+                    }
+                    return [`category_${ct.key}`, raw || ''];
+                }),
             ),
         } as unknown as TourFormValues;
     }, [editing, categoryTypes]);
@@ -742,29 +752,41 @@ const AdminTours = () => {
                                         catType.label.en}
                                 </label>
                             </div>
-                            <Select
-                                value={String(
-                                    values[`category_${catType.key}`] || '',
-                                )}
-                                onValueChange={(val) =>
-                                    setField(`category_${catType.key}`, val)
-                                }
-                            >
-                                <SelectTrigger
-                                    className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20`}
+                            {catType.multi ? (
+                                <MultiSelect
+                                    options={catType.values.map((v) => ({
+                                        key: v.key,
+                                        label: v.name[activeLang] || v.name.en,
+                                    }))}
+                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                    onChange={(val) => setField(`category_${catType.key}`, val)}
+                                    placeholder={t('actions.select')}
+                                />
+                            ) : (
+                                <Select
+                                    value={String(
+                                        values[`category_${catType.key}`] || '',
+                                    )}
+                                    onValueChange={(val) =>
+                                        setField(`category_${catType.key}`, val)
+                                    }
                                 >
-                                    <SelectValue
-                                        placeholder={t('actions.select')}
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {catType.values.map((v) => (
-                                        <SelectItem key={v.key} value={v.key}>
-                                            {v.name[activeLang] || v.name.en}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                    <SelectTrigger
+                                        className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20`}
+                                    >
+                                        <SelectValue
+                                            placeholder={t('actions.select')}
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {catType.values.map((v) => (
+                                            <SelectItem key={v.key} value={v.key}>
+                                                {v.name[activeLang] || v.name.en}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
                         </div>
                     ))}
                 </div>

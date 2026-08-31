@@ -8,6 +8,7 @@ export interface CategoryType {
     sort_order: number;
     filter_style: FilterStyle;
     locked?: boolean;
+    multi?: boolean;
     values: CategoryTypeValue[];
 }
 
@@ -38,6 +39,7 @@ export async function createCategoryType(data: {
     label: { en: string; fr: string; ar: string };
     sort_order?: number;
     filter_style?: FilterStyle;
+    multi?: boolean;
 }): Promise<CategoryType> {
     const res = await apiFetch<{ data: CategoryType }>(
         '/api/admin/category-types',
@@ -55,6 +57,7 @@ export async function updateCategoryType(
         label: { en: string; fr: string; ar: string };
         sort_order?: number;
         filter_style?: FilterStyle;
+        multi?: boolean;
     },
 ): Promise<CategoryType> {
     const res = await apiFetch<{ data: CategoryType }>(
