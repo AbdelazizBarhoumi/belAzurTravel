@@ -24,6 +24,7 @@ const { mockHotels, mockHotelSearch } = vi.hoisted(() => ({
         fetching: false,
     },
 }));
+const stableFetchNextPage = vi.fn();
 
 const defaultBrowseHotels = [
     {
@@ -132,7 +133,7 @@ vi.mock('@/hooks/usePublicData', () => ({
             isFetching: mockHotelSearch.fetching,
             isFetchingNextPage: false,
             hasNextPage: false,
-            fetchNextPage: vi.fn(),
+            fetchNextPage: stableFetchNextPage,
         };
     }),
 }));
@@ -163,6 +164,7 @@ function renderPage(initialEntry = '/hotels?stars=5') {
 describe('Hotels', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        stableFetchNextPage.mockReset();
         mockHotels.data = defaultBrowseHotels;
         mockHotelSearch.data = [];
         mockHotelSearch.calls = [];

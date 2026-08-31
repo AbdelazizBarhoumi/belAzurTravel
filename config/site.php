@@ -23,6 +23,7 @@ return [
             'destinations',
             'hotels',
             'tours',
+            'travels',
             'deals',
             'gallery',
             'events',

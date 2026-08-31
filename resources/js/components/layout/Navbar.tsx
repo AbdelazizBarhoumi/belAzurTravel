@@ -418,8 +418,19 @@ function DesktopGroupDropdown({
                 .filter((i) => i.mode === 'categories' && i.value)
                 .map((i) => i.value),
         );
+        // Also skip types already referenced by explicit filter items
+        for (const i of items) {
+            if (i.mode === 'filter' && i.value.includes(':')) {
+                coveredValues.add(i.value.split(':')[0]);
+            }
+        }
+        // Strip 'static:' prefix so static types match dynamic ct.key
+        for (const v of [...coveredValues]) {
+            if (v.startsWith('static:')) coveredValues.add(v.slice(7));
+        }
         if (!coveredValues.has('')) {
             for (const ct of categoryTypes) {
+                if (coveredValues.has(ct.key)) continue;
                 if (ct.values && ct.values.length > 0) {
                     for (const val of ct.values) {
                         result.push({
@@ -941,8 +952,19 @@ function MobileGroupSection({
                 .filter((i) => i.mode === 'categories' && i.value)
                 .map((i) => i.value),
         );
+        // Also skip types already referenced by explicit filter items
+        for (const i of items) {
+            if (i.mode === 'filter' && i.value.includes(':')) {
+                coveredValues.add(i.value.split(':')[0]);
+            }
+        }
+        // Strip 'static:' prefix so static types match dynamic ct.key
+        for (const v of [...coveredValues]) {
+            if (v.startsWith('static:')) coveredValues.add(v.slice(7));
+        }
         if (!coveredValues.has('')) {
             for (const ct of categoryTypes) {
+                if (coveredValues.has(ct.key)) continue;
                 if (ct.values && ct.values.length > 0) {
                     for (const val of ct.values) {
                         result.push({
@@ -1362,8 +1384,19 @@ export function Navbar() {
                 .filter((i) => i.mode === 'categories' && i.value)
                 .map((i) => i.value),
         );
+        // Also skip types already referenced by explicit filter items
+        for (const i of entry.items) {
+            if (i.mode === 'filter' && i.value.includes(':')) {
+                coveredValues.add(i.value.split(':')[0]);
+            }
+        }
+        // Strip 'static:' prefix so static types match dynamic ct.key
+        for (const v of [...coveredValues]) {
+            if (v.startsWith('static:')) coveredValues.add(v.slice(7));
+        }
         if (!coveredValues.has('')) {
             for (const ct of categoryTypes) {
+                if (coveredValues.has(ct.key)) continue;
                 if (ct.values && ct.values.length > 0) {
                     for (const val of ct.values) {
                         result.push({

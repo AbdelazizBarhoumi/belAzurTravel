@@ -15,6 +15,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/components/ui/pagination';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     useBlogPosts,
@@ -25,7 +26,6 @@ import { useViewMode } from '@/hooks/useViewMode';
 import type { Lang } from '@/i18n/translations';
 import { matchesSearchText } from '@/lib/listFilters';
 import { cn } from '@/lib/utils';
-import { ViewToggle } from '@/components/ui/ViewToggle';
 
 type LocalizedText = Record<Lang, string>;
 

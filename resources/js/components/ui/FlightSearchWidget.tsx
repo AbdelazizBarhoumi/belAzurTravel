@@ -1,9 +1,9 @@
 import { ArrowLeftRight, Minus, Plus, Plane, PlaneTakeoff, Search, X } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AirportAutocomplete } from '@/components/ui/AirportAutocomplete';
 import { Button } from '@/components/ui/button';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
-import { AirportAutocomplete } from '@/components/ui/AirportAutocomplete';
 import {
     PassengerCabinPicker,
     type PassengerCabinState,

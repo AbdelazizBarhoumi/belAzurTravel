@@ -476,6 +476,11 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Tours',
     },
     'search.tabs.flights': { fr: 'Vols', ar: 'رحلات', en: 'Flights' },
+    'search.tabs.travels': {
+        fr: 'Voyage Organisée & à la carte',
+        ar: 'رحلة منظمة وحسب الطلب',
+        en: 'Organized & Custom Trips',
+    },
 
     'search.fields.destination': {
         fr: 'Destination',
@@ -532,6 +537,11 @@ export const translations: Record<string, TranslationEntry> = {
     'search.fields.duration': { fr: 'Durée', ar: 'المدة', en: 'Duration' },
     'search.fields.tripType': {
         fr: 'Type de trajet',
+        ar: 'نوع الرحلة',
+        en: 'Trip type',
+    },
+    'search.fields.tripTypeTravel': {
+        fr: 'Type de voyage',
         ar: 'نوع الرحلة',
         en: 'Trip type',
     },
@@ -659,6 +669,11 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'ابحث عن رحلات',
         en: 'Search Flights',
     },
+    'search.actions.travels': {
+        fr: 'Rechercher des voyages',
+        ar: 'ابحث عن رحلات',
+        en: 'Search Trips',
+    },
     'search.actions.decreaseGuests': {
         fr: 'Réduire le nombre de voyageurs',
         ar: 'تقليل عدد المسافرين',
@@ -722,6 +737,16 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Business',
     },
     'search.options.first': { fr: 'Première', ar: 'الأولى', en: 'First' },
+    'search.options.organized': {
+        fr: 'Voyage organisé',
+        ar: 'رحلة منظمة',
+        en: 'Organized Trip',
+    },
+    'search.options.aLaCarte': {
+        fr: 'À la carte',
+        ar: 'حسب الطلب',
+        en: 'Custom / À la carte',
+    },
 
     // Featured Destinations
     'featured.explore': { fr: 'Découvrir', ar: 'استكشاف', en: 'Explore' },
@@ -1358,6 +1383,16 @@ export const translations: Record<string, TranslationEntry> = {
         fr: 'Votre session a expiré en raison de l’inactivité. Veuillez rafraîchir la page pour continuer.',
         ar: 'انتهت جلستك بسبب عدم النشاط. يرجى تحديث الصفحة للمتابعة.',
         en: 'Your session has expired due to inactivity. Please refresh the page to continue.',
+    },
+    'common.required': {
+        fr: 'Ce champ est requis',
+        ar: 'هذا الحقل مطلوب',
+        en: 'This field is required',
+    },
+    'common.invalidEmail': {
+        fr: 'Adresse email invalide',
+        ar: 'بريد إلكتروني غير صالح',
+        en: 'Invalid email address',
     },
     'common.refresh': {
         fr: 'Rafraîchir la page',
@@ -4413,19 +4448,19 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Item name',
     },
     'nav.travels': {
-        fr: "Voyages à l'étranger",
-        ar: 'رحلات دولية',
-        en: 'International Travel',
+        fr: 'Voyages organisés & à la carte',
+        ar: 'رحلات منظمة وحسب الطلب',
+        en: 'Organized & Custom Trips',
     },
     'travels.title': {
-        fr: "Voyages à l'étranger",
-        ar: 'رحلات دولية',
-        en: 'International Travel',
+        fr: 'Voyages organisés & à la carte',
+        ar: 'رحلات منظمة وحسب الطلب',
+        en: 'Organized & Custom Trips',
     },
     'travels.subtitle': {
-        fr: 'Découvrez nos voyages internationaux',
-        ar: 'اكتشف رحلاتنا الدولية',
-        en: 'Discover our international travel packages',
+        fr: 'Découvrez nos voyages organisés et sur mesure',
+        ar: 'اكتشف رحلاتنا المنظمة والمخصصة',
+        en: 'Discover our organized and custom travel packages',
     },
     'travels.person': { fr: 'personne', ar: 'شخص', en: 'person' },
     'travels.bookTravel': { fr: 'Réserver', ar: 'احجز', en: 'Book' },
@@ -4440,6 +4475,96 @@ export const translations: Record<string, TranslationEntry> = {
         en: 'Filter by duration',
     },
     'travels.max': { fr: 'Max', ar: 'الحد الأقصى', en: 'Max' },
+    'travels.emptyTitle': {
+        fr: 'Aucun voyage disponible pour le moment',
+        ar: 'لا توجد رحلات متاحة في الوقت الحالي',
+        en: 'No trips available at the moment',
+    },
+    'travels.emptyDescription': {
+        fr: 'Vous recherchez une destination ou souhaitez organiser un voyage sur mesure ? Contactez-nous et nous vous aiderons à préparer votre voyage.',
+        ar: 'تبحث عن وجهة أو ترغب في تنظيم رحلة مخصصة؟ اتصل بنا وسنساعدك في التخطيط لرحلتك.',
+        en: 'Looking for a destination or want to organize a custom trip? Contact us and we will help you plan your journey.',
+    },
+    'travels.requestTitle': {
+        fr: 'Vous ne trouvez pas ce que vous cherchez ?',
+        ar: 'لم تجد ما تبحث عنه؟',
+        en: "Can't find what you're looking for?",
+    },
+    'travels.requestDescription': {
+        fr: 'Demandez un voyage sur mesure et nous vous préparerons une offre adaptée à vos besoins.',
+        ar: 'اطلب رحلة مخصصة وسنعد لك عرضاً يناسب احتياجاتك.',
+        en: 'Request a custom trip and we will prepare an offer tailored to your needs.',
+    },
+    'travels.requestButton': {
+        fr: 'Demander un voyage sur mesure',
+        ar: 'طلب رحلة مخصصة',
+        en: 'Request a Custom Trip',
+    },
+    'travels.contactTitle': {
+        fr: 'Contactez-nous',
+        ar: 'اتصل بنا',
+        en: 'Contact Us',
+    },
+    'travels.committeeName': {
+        fr: 'Nom du comité ou de l\'Amicale',
+        ar: 'اسم اللجنة أو الجمعية',
+        en: 'Committee or Association Name',
+    },
+    'travels.memberCount': {
+        fr: 'Nombre d\'adhérents',
+        ar: 'عدد الأعضاء',
+        en: 'Number of Members',
+    },
+    'travels.civility': {
+        fr: 'Civilité',
+        ar: 'اللقب',
+        en: 'Civility',
+    },
+    'travels.lastName': {
+        fr: 'Nom du contact',
+        ar: 'اسم جهة الاتصال',
+        en: 'Contact Last Name',
+    },
+    'travels.firstName': {
+        fr: 'Prénom',
+        ar: 'الاسم الأول',
+        en: 'First Name',
+    },
+    'travels.phone': {
+        fr: 'Téléphone',
+        ar: 'الهاتف',
+        en: 'Phone',
+    },
+    'travels.email': {
+        fr: 'Email',
+        ar: 'البريد الإلكتروني',
+        en: 'Email',
+    },
+    'travels.message': {
+        fr: 'Votre demande',
+        ar: 'طلبك',
+        en: 'Your Request',
+    },
+    'travels.messagePlaceholder': {
+        fr: 'Décrivez votre voyage ou votre demande...',
+        ar: 'صف رحلتك أو طلبك...',
+        en: 'Describe your trip or request...',
+    },
+    'travels.submitButton': {
+        fr: 'Envoyer',
+        ar: 'إرسال',
+        en: 'Send',
+    },
+    'travels.submitSuccess': {
+        fr: 'Votre demande a été envoyée avec succès ! Nous vous contacterons bientôt.',
+        ar: 'تم إرسال طلبك بنجاح! سنتواصل معك قريباً.',
+        en: 'Your request has been sent successfully! We will contact you soon.',
+    },
+    'travels.submitError': {
+        fr: 'Une erreur est survenue. Veuillez réessayer.',
+        ar: 'حدث خطأ. يرجى المحاولة مرة أخرى.',
+        en: 'An error occurred. Please try again.',
+    },
     'admin.bookings': { fr: 'Réservations', ar: 'الحجوزات', en: 'Bookings' },
     'admin.users': { fr: 'Utilisateurs', ar: 'المستخدمون', en: 'Users' },
     'admin.reports': { fr: 'Rapports', ar: 'التقارير', en: 'Reports' },

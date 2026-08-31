@@ -23,7 +23,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import type { LocalizedName } from '@/data/locations';
 import { cn, toLocalISODate } from '@/lib/utils';
 
-type SearchTab = 'hotels' | 'tours' | 'flights';
+type SearchTab = 'hotels' | 'tours' | 'flights' | 'travels';
 
 interface SearchWidgetProps {
     className?: string;
@@ -125,6 +125,21 @@ const SEARCH_TABS: Record<SearchTab, SearchTabConfig> = {
             },
         ],
     },
+    travels: {
+        titleKey: 'search.tabs.travels',
+        buttonKey: 'search.actions.travels',
+        guestLabelKey: 'search.fields.travelers',
+        extraFields: [
+            {
+                key: 'tripType',
+                labelKey: 'search.fields.tripTypeTravel',
+                options: [
+                    { value: 'organise', labelKey: 'search.options.organized' },
+                    { value: 'a_la_carte', labelKey: 'search.options.aLaCarte' },
+                ],
+            },
+        ],
+    },
 };
 
 const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
@@ -157,6 +172,15 @@ const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
             cabinClass: 'economy',
         },
     },
+    travels: {
+        city: null,
+        hotelName: '',
+        dateRange: undefined,
+        occupancy: { adults: 2, childAges: [] },
+        extras: {
+            tripType: 'organise',
+        },
+    },
 };
 
 const MotionTabsTrigger = motion.create(TabsTrigger);
@@ -165,6 +189,7 @@ const SEARCH_TARGETS: Record<SearchTab, string> = {
     hotels: '/hotels',
     tours: '/tours',
     flights: '/flights',
+    travels: '/travels',
 };
 
 interface ActiveSearchFormProps {
@@ -482,6 +507,14 @@ export function SearchWidget({ className }: SearchWidgetProps) {
             }
         }
 
+        if (activeTab === 'travels') {
+            const tripType = values.extras.tripType;
+
+            if (tripType) {
+                params.set('category_trip_type', tripType);
+            }
+        }
+
         Object.entries(values.extras).forEach(([key, value]) => {
             if (
                 activeTab === 'hotels' &&
@@ -502,6 +535,10 @@ export function SearchWidget({ className }: SearchWidgetProps) {
             }
 
             if (activeTab === 'flights' && key === 'tripType') {
+                return;
+            }
+
+            if (activeTab === 'travels' && key === 'tripType') {
                 return;
             }
 
@@ -535,7 +572,7 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                     onValueChange={handleTabChange}
                     className="w-full"
                 >
-                    <TabsList className="grid h-auto w-full grid-cols-3 rounded-[1.25rem] bg-background/40 p-1 text-foreground/80">
+                    <TabsList className="grid h-auto w-full grid-cols-4 rounded-[1.25rem] bg-background/40 p-1 text-foreground/80">
                         {orderedTabs.map((tab) => (
                             <MotionTabsTrigger
                                 key={tab}

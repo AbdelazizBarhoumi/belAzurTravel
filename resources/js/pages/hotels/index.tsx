@@ -49,7 +49,6 @@ import { localizeText } from '@/data';
 import { PROVIDER_CATEGORY_MAP } from '@/data/hotelFilters';
 import { useCountryByCode } from '@/hooks/useCountries';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { useViewMode } from '@/hooks/useViewMode';
 import {
     useHotels,
     useHotelSearchInfinite,
@@ -57,6 +56,7 @@ import {
     type HotelSearchInfiniteQuery,
     type HotelSearchResult,
 } from '@/hooks/usePublicData';
+import { useViewMode } from '@/hooks/useViewMode';
 import type { Lang } from '@/i18n/translations';
 
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';

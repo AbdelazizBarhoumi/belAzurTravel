@@ -13,6 +13,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { usePromos } from '@/hooks/usePublicData';
@@ -21,7 +22,6 @@ import { matchesSearchText } from '@/lib/listFilters';
 import { getPromoBackground } from '@/lib/promoColor';
 import { cn } from '@/lib/utils';
 import type { PromoItem } from '@/types/public';
-import { ViewToggle } from '@/components/ui/ViewToggle';
 
 const ALL = 'all';
 

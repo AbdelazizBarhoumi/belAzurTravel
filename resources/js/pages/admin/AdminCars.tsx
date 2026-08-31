@@ -932,7 +932,7 @@ export default function AdminCars() {
                 sections={carSections}
                 initial={dialogInitial}
                 onSubmit={handleSave}
-                languages={['fr']}
+                languages={['en', 'fr', 'ar']}
                 layout="grid-2"
                 isSubmitting={saveMutation.isPending}
                 errors={errors}

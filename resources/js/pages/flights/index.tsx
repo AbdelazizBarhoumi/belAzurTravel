@@ -7,8 +7,6 @@ import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { ViewToggle } from '@/components/ui/ViewToggle';
 import { DatePicker } from '@/components/ui/DatePicker';
 import {
     Select,
@@ -17,14 +15,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { getAirportDisplayName, getCityNameByIata } from '@/data/airports';
 import { useFlights } from '@/hooks/usePublicData';
 import { useViewMode } from '@/hooks/useViewMode';
 import { matchesSearchText } from '@/lib/listFilters';
-import { cn } from '@/lib/utils';
 import { uniqueNonEmptySelectOptions } from '@/lib/selectOptions';
+import { cn } from '@/lib/utils';
 
 const ALL = 'all';
 

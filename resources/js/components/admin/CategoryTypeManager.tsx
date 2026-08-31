@@ -144,14 +144,18 @@ export function CategoryTypeManager({
     // --- Type CRUD ---
 
     const handleCreateType = async () => {
-        if (!newTypeLabel.en || !newTypeLabel.fr || !newTypeLabel.ar) {
+        if (!newTypeLabel.fr) {
             toast.error(t('admin.categoryTypeManager.validationAllLangs'));
             return;
         }
         try {
             await createCategoryType({
                 entity_type: entityType,
-                label: newTypeLabel,
+                label: {
+                    en: newTypeLabel.en || null,
+                    fr: newTypeLabel.fr,
+                    ar: newTypeLabel.ar || null,
+                },
                 filter_style: newTypeFilterStyle,
             });
             queryClient.invalidateQueries({
@@ -170,13 +174,17 @@ export function CategoryTypeManager({
     };
 
     const handleUpdateType = async (id: number) => {
-        if (!newTypeLabel.en || !newTypeLabel.fr || !newTypeLabel.ar) {
+        if (!newTypeLabel.fr) {
             toast.error(t('admin.categoryTypeManager.validationAllLangs'));
             return;
         }
         try {
             await updateCategoryType(id, {
-                label: newTypeLabel,
+                label: {
+                    en: newTypeLabel.en || null,
+                    fr: newTypeLabel.fr,
+                    ar: newTypeLabel.ar || null,
+                },
                 filter_style: newTypeFilterStyle,
             });
             queryClient.invalidateQueries({
@@ -249,13 +257,20 @@ export function CategoryTypeManager({
     // --- Value CRUD ---
 
     const handleCreateValue = async () => {
-        if (!newValueName.en || !newValueName.fr || !newValueName.ar) {
+        if (!newValueName.fr) {
             toast.error(t('admin.categoryTypeManager.validationAllLangs'));
             return;
         }
         if (!selectedType) return;
         try {
-            await createCategoryValue(selectedType.id, newValueName);
+            await createCategoryValue(
+                selectedType.id,
+                {
+                    en: newValueName.en || null,
+                    fr: newValueName.fr,
+                    ar: newValueName.ar || null,
+                } as any,
+            );
             queryClient.invalidateQueries({
                 queryKey: ['admin', 'category-types'],
             });
@@ -273,13 +288,21 @@ export function CategoryTypeManager({
     };
 
     const handleUpdateValue = async (valueId: number) => {
-        if (!newValueName.en || !newValueName.fr || !newValueName.ar) {
+        if (!newValueName.fr) {
             toast.error(t('admin.categoryTypeManager.validationAllLangs'));
             return;
         }
         if (!selectedType) return;
         try {
-            await updateCategoryValue(selectedType.id, valueId, newValueName);
+            await updateCategoryValue(
+                selectedType.id,
+                valueId,
+                {
+                    en: newValueName.en || null,
+                    fr: newValueName.fr,
+                    ar: newValueName.ar || null,
+                } as any,
+            );
             queryClient.invalidateQueries({
                 queryKey: ['admin', 'category-types'],
             });

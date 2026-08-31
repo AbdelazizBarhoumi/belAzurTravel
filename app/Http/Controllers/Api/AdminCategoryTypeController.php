@@ -42,14 +42,14 @@ class AdminCategoryTypeController extends Controller
         $data = $request->validate([
             'entity_type' => ['required', 'string'],
             'label' => ['required', 'array'],
-            'label.en' => ['required', 'string'],
+            'label.en' => ['nullable', 'string'],
             'label.fr' => ['required', 'string'],
-            'label.ar' => ['required', 'string'],
+            'label.ar' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer'],
             'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio'],
         ]);
 
-        $key = Str::slug($data['label']['en']);
+        $key = Str::slug($data['label']['en'] ?? $data['label']['fr']);
 
         $baseKey = $key;
         $counter = 1;
@@ -74,9 +74,9 @@ class AdminCategoryTypeController extends Controller
     {
         $data = $request->validate([
             'label' => ['required', 'array'],
-            'label.en' => ['required', 'string'],
+            'label.en' => ['nullable', 'string'],
             'label.fr' => ['required', 'string'],
-            'label.ar' => ['required', 'string'],
+            'label.ar' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer'],
             'filter_style' => ['nullable', 'string', 'in:pills,checkbox,dropdown,slider,radio'],
         ]);
@@ -140,13 +140,13 @@ class AdminCategoryTypeController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'array'],
-            'name.en' => ['required', 'string'],
+            'name.en' => ['nullable', 'string'],
             'name.fr' => ['required', 'string'],
-            'name.ar' => ['required', 'string'],
+            'name.ar' => ['nullable', 'string'],
             'color' => ['nullable', 'string', 'max:7'],
         ]);
 
-        $key = Str::slug($data['name']['en']);
+        $key = Str::slug($data['name']['en'] ?? $data['name']['fr']);
 
         $baseKey = $key;
         $counter = 1;
@@ -170,9 +170,9 @@ class AdminCategoryTypeController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'array'],
-            'name.en' => ['required', 'string'],
+            'name.en' => ['nullable', 'string'],
             'name.fr' => ['required', 'string'],
-            'name.ar' => ['required', 'string'],
+            'name.ar' => ['nullable', 'string'],
             'color' => ['nullable', 'string', 'max:7'],
         ]);
 

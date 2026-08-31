@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\SiteSettingsController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TourController;
 use App\Http\Controllers\Api\TravelController;
+use App\Http\Controllers\Api\TravelRequestController;
 use App\Http\Controllers\Api\VisaApplicationController;
 use App\Http\Controllers\Api\VisaController;
 use Illuminate\Support\Facades\Route;
@@ -75,6 +76,7 @@ Route::get('tours/{slug}', [TourController::class, 'show'])->middleware(['check-
 
 Route::get('travels', [TravelController::class, 'index'])->middleware(['check-nav-page:travels']);
 Route::get('travels/{slug}', [TravelController::class, 'show'])->middleware(['check-nav-page:travels']);
+Route::post('travel-request', [TravelRequestController::class, 'store']);
 
 Route::get('cars', [CarController::class, 'index'])->middleware(['check-nav-page:cars']);
 Route::get('cars/{slug}', [CarController::class, 'show'])->middleware(['check-nav-page:cars']);

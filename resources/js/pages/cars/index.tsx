@@ -16,9 +16,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { ViewToggle } from '@/components/ui/ViewToggle';
 import {
     useCars,
     useCategories,

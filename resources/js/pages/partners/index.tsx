@@ -10,12 +10,12 @@ import { FilterSidebar } from '@/components/lists/FilterSidebar';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCategoryTypesPublic } from '@/hooks/usePublicData';
 import { useViewMode } from '@/hooks/useViewMode';
 import type { Lang } from '@/i18n/translations';
 import { cn } from '@/lib/utils';
-import { ViewToggle } from '@/components/ui/ViewToggle';
 
 interface Category {
     id: number;

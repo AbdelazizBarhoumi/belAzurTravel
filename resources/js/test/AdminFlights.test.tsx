@@ -117,6 +117,7 @@ describe('AdminFlights page', () => {
             {
                 id: 'flight-1',
                 code: 'flight-1',
+                trip_type: 'round-trip',
                 airline_en: 'Existing Airline',
                 airline_fr: 'Compagnie existante',
                 airline_ar: 'شركة موجودة',
@@ -233,6 +234,7 @@ describe('AdminFlights page', () => {
             {
                 id: 'flight-2',
                 code: 'flight-2',
+                trip_type: 'round-trip',
                 airline_en: 'Airline Two',
                 airline_fr: 'Compagnie Deux',
                 airline_ar: 'شركة ثانية',

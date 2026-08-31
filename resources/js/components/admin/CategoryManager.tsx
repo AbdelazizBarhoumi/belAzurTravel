@@ -77,13 +77,16 @@ export function CategoryManager({
     }, [isOpen, type]);
 
     const handleCreate = async () => {
-        if (!newName.en || !newName.fr || !newName.ar) {
-            toast.error('Please provide translations in all languages');
+        if (!newName.fr) {
+            toast.error('Please provide a name');
             return;
         }
 
         try {
-            await createCategory({ entity_type: type, name: newName });
+            await createCategory({
+                entity_type: type,
+                name: { en: newName.en || null, fr: newName.fr, ar: newName.ar || null },
+            });
             clearCachedCategories();
             queryClient.invalidateQueries({ queryKey: ['categories'] });
             toast.success('Category created');
@@ -96,13 +99,17 @@ export function CategoryManager({
     };
 
     const handleUpdate = async (id: number) => {
-        if (!newName.en || !newName.fr || !newName.ar) {
-            toast.error('Please provide translations in all languages');
+        if (!newName.fr) {
+            toast.error('Please provide a name');
             return;
         }
 
         try {
-            await updateCategory(id, newName);
+            await updateCategory(id, {
+                en: newName.en || null,
+                fr: newName.fr,
+                ar: newName.ar || null,
+            });
             clearCachedCategories();
             queryClient.invalidateQueries({ queryKey: ['categories'] });
             toast.success('Category updated');

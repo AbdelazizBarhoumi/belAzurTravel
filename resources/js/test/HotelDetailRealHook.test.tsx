@@ -72,33 +72,38 @@ vi.mock('@/hooks/usePublicData', async (importOriginal) => {
     };
 });
 
-vi.mock('@/components/ui/DateRangePicker', () => {
-    const dates: Array<{ from: string; to: string }> = [
-        { from: '2026-09-01T12:00:00', to: '2026-09-05T12:00:00' },
-        { from: '2026-10-01T12:00:00', to: '2026-10-05T12:00:00' },
-    ];
-    const state = { index: 0 };
-    return {
-        DateRangePicker: (props: Record<string, unknown>) => {
-            return (
+vi.mock('@/components/ui/popover', () => ({
+    Popover: ({ children }: { children: React.ReactNode }) => (
+        <div>{children}</div>
+    ),
+    PopoverTrigger: ({ children }: { children: React.ReactNode }) => (
+        <span>{children}</span>
+    ),
+    PopoverContent: ({ children }: { children: React.ReactNode }) => (
+        <div>{children}</div>
+    ),
+}));
+
+vi.mock('@/components/ui/calendar', () => ({
+    Calendar: (props: Record<string, unknown>) => {
+        return (
+            <div data-testid="calendar">
                 <button
                     type="button"
                     data-testid="set-dates"
                     onClick={() => {
-                        const next = dates[state.index % dates.length];
-                        state.index += 1;
-                        (props.onChange as (value: unknown) => void)({
-                            from: new Date(next.from),
-                            to: new Date(next.to),
+                        (props.onSelect as (value: unknown) => void)({
+                            from: new Date('2026-09-01T12:00:00'),
+                            to: new Date('2026-09-05T12:00:00'),
                         });
                     }}
                 >
                     set-dates
                 </button>
-            );
-        },
-    };
-});
+            </div>
+        );
+    },
+}));
 
 vi.mock('@/components/forms/BookingDialog', () => ({
     BookingDialog: () => <div data-testid="booking-dialog" />,

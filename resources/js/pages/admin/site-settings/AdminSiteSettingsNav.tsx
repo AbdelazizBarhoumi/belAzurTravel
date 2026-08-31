@@ -798,11 +798,26 @@ function DropdownItemTree({
                                                 </Label>
                                                 <Select
                                                     value={item.value}
-                                                    onValueChange={(v) =>
+                                                    onValueChange={(v) => {
+                                                        const matched =
+                                                            allCategoryValues.find(
+                                                                (cv) =>
+                                                                    cv.value ===
+                                                                    v,
+                                                            );
                                                         onUpdate(itemPath, {
                                                             value: v,
-                                                        })
-                                                    }
+                                                            label: {
+                                                                en:
+                                                                    matched?.label ??
+                                                                    v,
+                                                                fr: matched?.label ??
+                                                                    v,
+                                                                ar: matched?.label ??
+                                                                    v,
+                                                            },
+                                                        });
+                                                    }}
                                                 >
                                                     <SelectTrigger className="h-9 text-xs">
                                                         <SelectValue
@@ -1326,11 +1341,26 @@ function GroupLinkTree({
                                                 </Label>
                                                 <Select
                                                     value={item.value}
-                                                    onValueChange={(v) =>
+                                                    onValueChange={(v) => {
+                                                        const matched =
+                                                            valueOptions.find(
+                                                                (cv) =>
+                                                                    cv.value ===
+                                                                    v,
+                                                            );
                                                         onUpdate(itemPath, {
                                                             value: v,
-                                                        })
-                                                    }
+                                                            label: {
+                                                                en:
+                                                                    matched?.label ??
+                                                                    v,
+                                                                fr: matched?.label ??
+                                                                    v,
+                                                                ar: matched?.label ??
+                                                                    v,
+                                                            },
+                                                        });
+                                                    }}
                                                 >
                                                     <SelectTrigger className="h-9 text-xs">
                                                         <SelectValue
@@ -2668,12 +2698,16 @@ export default function AdminSiteSettingsNav() {
     const { data: eventCategories = [] } = useCategories('events');
     const { data: dealCategories = [] } = useCategories('deals');
     const { data: blogCategories = [] } = useCategories('blog');
+    const { data: travelCategories = [] } = useCategories('travels');
+    const { data: flightCategories = [] } = useCategories('flights');
 
     const categoriesByPage = useMemo(
         () => ({
             destinations: destinationCategories,
             hotels: hotelCategories,
             tours: tourCategories,
+            travels: travelCategories,
+            flights: flightCategories,
             cars: carCategories,
             events: eventCategories,
             deals: dealCategories,
@@ -2683,6 +2717,8 @@ export default function AdminSiteSettingsNav() {
             destinationCategories,
             hotelCategories,
             tourCategories,
+            travelCategories,
+            flightCategories,
             carCategories,
             eventCategories,
             dealCategories,
@@ -2698,12 +2734,16 @@ export default function AdminSiteSettingsNav() {
     const { data: eventCategoryTypes = [] } = useCategoryTypes('events');
     const { data: dealCategoryTypes = [] } = useCategoryTypes('deals');
     const { data: blogCategoryTypes = [] } = useCategoryTypes('blog');
+    const { data: travelCategoryTypes = [] } = useCategoryTypes('travels');
+    const { data: flightCategoryTypes = [] } = useCategoryTypes('flights');
 
     const categoryTypesByPage = useMemo(
         () => ({
             destinations: destinationCategoryTypes,
             hotels: hotelCategoryTypes,
             tours: tourCategoryTypes,
+            travels: travelCategoryTypes,
+            flights: flightCategoryTypes,
             cars: carCategoryTypes,
             events: eventCategoryTypes,
             deals: dealCategoryTypes,
@@ -2713,6 +2753,8 @@ export default function AdminSiteSettingsNav() {
             destinationCategoryTypes,
             hotelCategoryTypes,
             tourCategoryTypes,
+            travelCategoryTypes,
+            flightCategoryTypes,
             carCategoryTypes,
             eventCategoryTypes,
             dealCategoryTypes,
@@ -2722,16 +2764,26 @@ export default function AdminSiteSettingsNav() {
 
     const getAllCategoryValuesForPage = useCallback(
         (pageKey: string): { value: string; label: string }[] => {
+            const result: { value: string; label: string }[] = [];
+            // 1. Static filter groups from config
+            for (const group of getStaticFiltersForPage(pageKey)) {
+                for (const opt of group.options) {
+                    result.push({
+                        value: `static:${group.key}:${opt.key}`,
+                        label: (opt.label as Record<string, string>)[lang] ?? opt.label.en ?? opt.key,
+                    });
+                }
+            }
+            // 2. Dynamic API category types
             const types =
                 categoryTypesByPage[
                     pageKey as keyof typeof categoryTypesByPage
                 ] ?? [];
-            const result: { value: string; label: string }[] = [];
             for (const ct of types) {
                 for (const val of ct.values ?? []) {
                     result.push({
                         value: `${ct.key}:${val.key}`,
-                        label: `${ct.label[lang] ?? ct.label.en ?? ct.key} > ${val.name[lang] ?? val.name.en ?? val.key}`,
+                        label: val.name[lang] ?? val.name.en ?? val.key,
                     });
                 }
             }
@@ -4752,14 +4804,27 @@ export default function AdminSiteSettingsNav() {
                                                                                 }
                                                                                 onValueChange={(
                                                                                     v,
-                                                                                ) =>
+                                                                                ) => {
+                                                                                    const opts =
+                                                                                        getAllCategoryValuesForPage(
+                                                                                            link.targetPageKey,
+                                                                                        );
+                                                                                    const matched =
+                                                                                        opts.find(
+                                                                                            (
+                                                                                                opt,
+                                                                                            ) =>
+                                                                                                opt.value ===
+                                                                                                v,
+                                                                                        );
                                                                                     updateLink(
                                                                                         link.key,
                                                                                         {
                                                                                             value: v,
+                                                                                            label: matched?.label ?? v,
                                                                                         },
-                                                                                    )
-                                                                                }
+                                                                                    );
+                                                                                }}
                                                                             >
                                                                                 <SelectTrigger className="h-8 bg-background text-xs">
                                                                                     <SelectValue

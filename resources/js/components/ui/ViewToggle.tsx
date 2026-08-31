@@ -1,7 +1,7 @@
 import { LayoutGrid, List } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { cn } from '@/lib/utils';
 import type { ViewMode } from '@/hooks/useViewMode';
+import { cn } from '@/lib/utils';
 
 interface ViewToggleProps {
     value: ViewMode;

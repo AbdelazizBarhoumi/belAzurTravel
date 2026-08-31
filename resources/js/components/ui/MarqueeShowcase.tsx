@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { fetchGallery, type GalleryImage } from '@/api/gallery.api';
 import { fetchPartners, type PartnerItem } from '@/api/partners.api';
 import { useLanguage } from '@/contexts/LanguageContext';

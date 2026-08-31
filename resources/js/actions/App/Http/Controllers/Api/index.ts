@@ -11,6 +11,7 @@ import HotelImageController from './HotelImageController'
 import HotelSearchController from './HotelSearchController'
 import TourController from './TourController'
 import TravelController from './TravelController'
+import TravelRequestController from './TravelRequestController'
 import CarController from './CarController'
 import FlightController from './FlightController'
 import EventController from './EventController'
@@ -57,6 +58,7 @@ HotelImageController: Object.assign(HotelImageController, HotelImageController),
 HotelSearchController: Object.assign(HotelSearchController, HotelSearchController),
 TourController: Object.assign(TourController, TourController),
 TravelController: Object.assign(TravelController, TravelController),
+TravelRequestController: Object.assign(TravelRequestController, TravelRequestController),
 CarController: Object.assign(CarController, CarController),
 FlightController: Object.assign(FlightController, FlightController),
 EventController: Object.assign(EventController, EventController),

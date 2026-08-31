@@ -12,7 +12,6 @@ import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import CardMedia from '@/components/ui/CardMedia';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
-import { ViewToggle } from '@/components/ui/ViewToggle';
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -29,6 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { useCountries } from '@/hooks/useCountries';

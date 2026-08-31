@@ -4,12 +4,18 @@ import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Link, useSearchParams } from 'react-router-dom';
 import { TravelFilters } from '@/components/filters/TravelFilters';
+import { TravelRequestForm } from '@/components/forms/TravelRequestForm';
 import { FilterSidebar } from '@/components/lists/FilterSidebar';
 import { ListFilterBar } from '@/components/lists/ListFilterBar';
-import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyState';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { ViewToggle } from '@/components/ui/ViewToggle';
@@ -52,6 +58,7 @@ const Travels = () => {
         to: initialToDate ? new Date(initialToDate) : undefined,
     });
     const [viewMode, setViewMode] = useViewMode();
+    const [formOpen, setFormOpen] = useState(false);
 
     const maxPrice =
         tours.length > 0 ? Math.max(...tours.map((t) => t.price)) : 1000;
@@ -174,7 +181,7 @@ const Travels = () => {
                         <Breadcrumb
                             items={[
                                 { label: t('common.home'), href: '/' },
-                                { label: t('nav.tours'), active: true },
+                                { label: t('nav.travels'), active: true },
                             ]}
                         />
                     </motion.div>
@@ -239,13 +246,20 @@ const Travels = () => {
 
                         <div className="min-w-0 flex-1">
                             {filteredTours.length === 0 ? (
-                                <RequestThingEmptyState
-                                    variant={
-                                        tours.length === 0
-                                            ? 'empty'
-                                            : 'no-results'
-                                    }
-                                />
+                                <div className="rounded-3xl border border-dashed border-border bg-card/80 p-10 text-center shadow-sm backdrop-blur-sm sm:p-12">
+                                    <h3 className="mt-3 font-serif text-2xl font-bold text-foreground">
+                                        {t('travels.emptyTitle')}
+                                    </h3>
+                                    <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                                        {t('travels.emptyDescription')}
+                                    </p>
+                                    <Button
+                                        onClick={() => setFormOpen(true)}
+                                        className="mt-6 rounded-full px-8"
+                                    >
+                                        {t('travels.requestButton')}
+                                    </Button>
+                                </div>
                             ) : (
                                 <>
                                     <div className="mb-4 flex items-center justify-end">
@@ -265,7 +279,7 @@ const Travels = () => {
                                     {filteredTours.map((tour, i) => (
                                         <Link
                                             key={localizeText(tour.name, lang)}
-                                            to={`/tours/${tour.slug}`}
+                                            to={`/travels/${tour.slug}`}
                                             className="group block h-full"
                                         >
                                             <motion.div
@@ -378,12 +392,38 @@ const Travels = () => {
                                         </Link>
                                     ))}
                                     </div>
+
+                                    <div className="mt-12 text-center">
+                                        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-secondary">
+                                            {t('travels.requestTitle')}
+                                        </p>
+                                        <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
+                                            {t('travels.requestDescription')}
+                                        </p>
+                                        <Button
+                                            onClick={() => setFormOpen(true)}
+                                            className="mt-6 rounded-full px-8"
+                                        >
+                                            {t('travels.requestButton')}
+                                        </Button>
+                                    </div>
                                 </>
                             )}
                         </div>
                     </div>
                 </div>
             </div>
+
+            <Dialog open={formOpen} onOpenChange={setFormOpen}>
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="font-serif text-2xl font-bold">
+                            {t('travels.contactTitle')}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <TravelRequestForm />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

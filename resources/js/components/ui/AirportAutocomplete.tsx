@@ -1,8 +1,8 @@
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from 'cmdk';
 import { Search } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from 'cmdk';
-import { AIRPORTS } from '@/data/airports';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { AIRPORTS } from '@/data/airports';
 import { cn } from '@/lib/utils';
 
 interface AirportAutocompleteProps {

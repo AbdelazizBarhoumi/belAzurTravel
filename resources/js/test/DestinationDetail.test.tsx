@@ -70,7 +70,7 @@ function makeHotel(overrides: Partial<HotelItem> = {}): HotelItem {
             { name: { en: 'WiFi', fr: 'Wi-Fi', ar: 'واي فاي' }, icon: 'wifi' },
         ],
         ...overrides,
-    };
+    } as HotelItem;
 }
 
 function makeTour(overrides: Partial<TourItem> = {}): TourItem {

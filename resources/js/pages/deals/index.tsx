@@ -9,9 +9,9 @@ import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyStat
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
+import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { ViewToggle } from '@/components/ui/ViewToggle';
 import {
     useDeals,
     useCategories,

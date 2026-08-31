@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { createContext, useContext } from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { Lang } from '@/i18n/translations';
 import { t as translate } from '@/i18n/translations';
 
@@ -14,15 +14,18 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(
     undefined,
 );
 
-const LANG: Lang = 'fr';
-
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const t = (key: string) => translate(key, LANG);
+    const LANG: Lang = 'fr';
+    const t = useCallback((key: string) => translate(key, LANG), []);
+    const dir: 'ltr' | 'rtl' = 'ltr';
+
+    const value = useMemo(
+        () => ({ lang: LANG, setLang: () => {}, t, dir }),
+        [t, dir],
+    );
 
     return (
-        <LanguageContext.Provider
-            value={{ lang: LANG, setLang: () => {}, t, dir: 'ltr' }}
-        >
+        <LanguageContext.Provider value={value}>
             {children}
         </LanguageContext.Provider>
     );

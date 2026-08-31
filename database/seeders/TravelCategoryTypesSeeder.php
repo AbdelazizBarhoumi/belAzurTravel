@@ -14,6 +14,8 @@ class TravelCategoryTypesSeeder extends Seeder
             [
                 'key' => 'destination',
                 'label' => ['en' => 'Destination', 'fr' => 'Destination', 'ar' => 'الوجهة'],
+                'filter_style' => 'checkbox',
+                'locked' => false,
                 'values' => [
                     ['key' => 'istanbul', 'name' => ['en' => 'Istanbul', 'fr' => 'Istanbul', 'ar' => 'اسطنبول']],
                     ['key' => 'asie', 'name' => ['en' => 'Asia', 'fr' => 'Asie', 'ar' => 'آسيا']],
@@ -24,6 +26,8 @@ class TravelCategoryTypesSeeder extends Seeder
             [
                 'key' => 'jeunes',
                 'label' => ['en' => 'Young', 'fr' => 'Jeunes', 'ar' => 'شباب'],
+                'filter_style' => 'checkbox',
+                'locked' => false,
                 'values' => [
                     ['key' => 'jeune', 'name' => ['en' => 'Young', 'fr' => 'Jeune', 'ar' => 'شباب']],
                 ],
@@ -31,8 +35,20 @@ class TravelCategoryTypesSeeder extends Seeder
             [
                 'key' => 'niveau_physique',
                 'label' => ['en' => 'Physical Level', 'fr' => 'Niveau physique', 'ar' => 'المستوى البدني'],
+                'filter_style' => 'checkbox',
+                'locked' => false,
                 'values' => [
                     ['key' => 'tranquille', 'name' => ['en' => 'Easy', 'fr' => 'Tranquille', 'ar' => 'هادئ']],
+                ],
+            ],
+            [
+                'key' => 'trip_type',
+                'label' => ['en' => 'Trip Type', 'fr' => 'Type de voyage', 'ar' => 'نوع الرحلة'],
+                'filter_style' => 'pills',
+                'locked' => true,
+                'values' => [
+                    ['key' => 'organise', 'name' => ['en' => 'Organized Trip', 'fr' => 'Voyage organisé', 'ar' => 'رحلة منظمة']],
+                    ['key' => 'a_la_carte', 'name' => ['en' => 'Custom / À la carte', 'fr' => 'À la carte', 'ar' => 'حسب الطلب']],
                 ],
             ],
         ];
@@ -43,8 +59,8 @@ class TravelCategoryTypesSeeder extends Seeder
                 [
                     'label' => $typeData['label'],
                     'sort_order' => $index,
-                    'filter_style' => 'checkbox',
-                    'locked' => false,
+                    'filter_style' => $typeData['filter_style'] ?? 'checkbox',
+                    'locked' => $typeData['locked'] ?? false,
                 ]
             );
 

@@ -62,7 +62,13 @@ return new class extends Migration
         });
 
         // Make `to` non-nullable now that data is migrated
-        DB::statement('ALTER TABLE flights MODIFY `to` VARCHAR(3) NOT NULL DEFAULT ""');
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE flights MODIFY `to` VARCHAR(3) NOT NULL DEFAULT ""');
+        } else {
+            Schema::table('flights', function (Blueprint $table) {
+                $table->string('to', 3)->nullable(false)->default('')->change();
+            });
+        }
 
         // 3. Create flight_segments table
         Schema::create('flight_segments', function (Blueprint $table) {

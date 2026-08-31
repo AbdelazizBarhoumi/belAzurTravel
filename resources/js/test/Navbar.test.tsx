@@ -156,6 +156,7 @@ vi.mock('@/hooks/useSiteSettings', () => ({
 describe('Navbar', () => {
     beforeEach(() => {
         document.documentElement.innerHTML = '';
+        localStorage.clear();
         setDefaultNavSettings();
     });
 

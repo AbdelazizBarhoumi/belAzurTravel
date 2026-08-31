@@ -67,12 +67,12 @@ class AdminCategoryController extends Controller
         $data = $request->validate([
             'entity_type' => ['required', 'string'],
             'name' => ['required', 'array'],
-            'name.en' => ['required', 'string'],
+            'name.en' => ['nullable', 'string'],
             'name.fr' => ['required', 'string'],
-            'name.ar' => ['required', 'string'],
+            'name.ar' => ['nullable', 'string'],
         ]);
 
-        $key = Str::slug($data['name']['en']);
+        $key = Str::slug($data['name']['en'] ?? $data['name']['fr']);
 
         // Ensure key uniqueness for this entity type
         $baseKey = $key;
@@ -96,9 +96,9 @@ class AdminCategoryController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'array'],
-            'name.en' => ['required', 'string'],
+            'name.en' => ['nullable', 'string'],
             'name.fr' => ['required', 'string'],
-            'name.ar' => ['required', 'string'],
+            'name.ar' => ['nullable', 'string'],
         ]);
 
         $oldKey = $category->key;
