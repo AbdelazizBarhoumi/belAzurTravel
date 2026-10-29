@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 
 const VerifyEmail = () => {
-    useLanguage();
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const { data: user, refetch } = useAuthUser();
     const [isResending, setIsResending] = useState(false);
@@ -34,12 +34,12 @@ const VerifyEmail = () => {
             });
 
             if (res.ok) {
-                toast.success('Verification link sent!');
+                toast.success(t('verify.linkSent'));
             } else {
-                toast.error('Failed to resend link. Please try again later.');
+                toast.error(t('verify.resendFailed'));
             }
         } catch {
-            toast.error('An error occurred.');
+            toast.error(t('common.error'));
         } finally {
             setIsResending(false);
         }
@@ -53,12 +53,12 @@ const VerifyEmail = () => {
     const handleRefresh = async () => {
         const { data } = await refetch();
         if (data?.email_verified_at) {
-            toast.success('Email verified!');
+            toast.success(t('verify.verified'));
             navigate(redirectAfterLogin(data.role ?? user?.role ?? 'client'), {
                 replace: true,
             });
         } else {
-            toast.info('Email not yet verified. Please check your inbox.');
+            toast.info(t('verify.notYet'));
         }
     };
 
@@ -75,13 +75,10 @@ const VerifyEmail = () => {
                     </div>
 
                     <h1 className="font-serif text-2xl font-bold text-foreground">
-                        Verify your email
+                        {t('verify.title')}
                     </h1>
                     <p className="mt-4 text-muted-foreground">
-                        Thanks for signing up! Before getting started, could you
-                        verify your email address by clicking on the link we
-                        just emailed to you? If you didn't receive the email, we
-                        will gladly send you another.
+                        {t('verify.description')}
                     </p>
 
                     <div className="mt-8 flex flex-col gap-3">
@@ -92,8 +89,8 @@ const VerifyEmail = () => {
                         >
                             <Send className="mr-2 h-4 w-4" />
                             {isResending
-                                ? 'Sending...'
-                                : 'Resend Verification Email'}
+                                ? t('verify.sending')
+                                : t('verify.resend')}
                         </Button>
 
                         <Button
@@ -101,7 +98,7 @@ const VerifyEmail = () => {
                             onClick={handleRefresh}
                             className="w-full"
                         >
-                            I've verified my email
+                            {t('verify.done')}
                         </Button>
                     </div>
                 </div>
@@ -112,7 +109,7 @@ const VerifyEmail = () => {
                         className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
                     >
                         <LogOut className="mr-2 h-4 w-4" />
-                        Sign Out
+                        {t('dashboard.signOut')}
                     </button>
                 </div>
             </div>

@@ -527,11 +527,12 @@ export default function HotelDetail() {
                         images={gallery}
                         hotelName={title}
                         favoriteItem={{
-                            id: `hotel-${detail.id}`,
+                            id: detail.id,
                             type: 'hotel',
                             name: title,
                             image: gallery[0] ?? '',
-                            price: minPrice,
+                            // Provider hotels have no price until searched.
+                            price: minPrice > 0 ? minPrice : null,
                             location,
                         }}
                     />

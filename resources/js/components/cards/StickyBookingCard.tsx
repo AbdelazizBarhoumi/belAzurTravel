@@ -1,10 +1,11 @@
 import type { LucideIcon } from 'lucide-react';
 import { MapPin, MessageCircle, Phone, Star, Clock, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { notifyInteraction } from '@/api/interactions.api';
 import { BookingDialog } from '@/components/forms/BookingDialog';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { bookingDraftKey, claimBookingReopen } from '@/lib/bookingDraft';
 import { formatPrice } from '@/lib/utils';
 
 type DetailItem = {
@@ -87,6 +88,17 @@ export function StickyBookingCard({
 }: StickyBookingCardProps) {
     const { t } = useLanguage();
     const [bookingOpen, setBookingOpen] = useState(false);
+
+    // Back from the login redirect: reopen the dialog with the saved form.
+    useEffect(() => {
+        if (
+            entityType &&
+            claimBookingReopen(bookingDraftKey(entityType, itemSlug ?? itemId))
+        ) {
+            // Deferred like the dashboard tab sync: no setState inside the effect body.
+            setTimeout(() => setBookingOpen(true), 0);
+        }
+    }, [entityType, itemSlug, itemId]);
 
     const handleCall = () => {
         notifyInteraction('call');

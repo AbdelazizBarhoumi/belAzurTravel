@@ -11,8 +11,17 @@ class LoginResponse implements LoginResponseContract
         $user = $request->user();
 
         if ($request->wantsJson()) {
+            // A page that required login (e.g. an email verification link)
+            // stored its URL; hand the same-site path back to the SPA.
+            $intended = $request->session()->pull('url.intended');
+            $redirect = null;
+            if (is_string($intended) && str_starts_with($intended, rtrim((string) config('app.url'), '/').'/')) {
+                $redirect = '/'.ltrim(substr($intended, strlen(rtrim((string) config('app.url'), '/'))), '/');
+            }
+
             return response()->json([
                 'token' => null,
+                'redirect' => $redirect,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,

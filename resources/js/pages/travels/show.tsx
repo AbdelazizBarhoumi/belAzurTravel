@@ -315,7 +315,7 @@ export default function TravelDetail() {
                                         : travel.name
                                 }
                                 favoriteItem={{
-                                    id: `travel-${travel.slug}`,
+                                    id: travel.slug,
                                     type: 'travel',
                                     name:
                                         typeof travel.name === 'object'

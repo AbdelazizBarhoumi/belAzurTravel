@@ -33,6 +33,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { api } from '@/hooks/useBooking';
+import {
+    bookingDraftKey,
+    saveBookingDraft,
+    takeBookingDraft,
+} from '@/lib/bookingDraft';
 import { formatPrice, toLocalISODate } from '@/lib/utils';
 
 type Civility = 'Mr' | 'Mrs' | 'Ms';
@@ -176,12 +181,32 @@ export function BookingDialog({
     const [notes, setNotes] = useState('');
     const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
     const [guests, setGuests] = useState<GuestRow[]>([]);
+    const [participants, setParticipants] = useState(1);
     // Step 2: booking created — the request is awaiting admin approval.
     const [submittedBooking, setSubmittedBooking] = useState<{
-        id: number;
+        ref: number | string;
         total: number;
         currency: string;
     } | null>(null);
+
+    const draftKey = bookingDraftKey(type, itemSlug ?? itemId);
+
+    // Each opening starts a fresh request; a guest coming back from the
+    // login redirect gets the form they had filled in.
+    useEffect(() => {
+        if (!open) return;
+        setSubmittedBooking(null);
+        const draft = takeBookingDraft(draftKey);
+        if (draft) {
+            setName(draft.name);
+            setEmail(draft.email);
+            setPhone(draft.phone);
+            setStartDate(draft.startDate ? new Date(`${draft.startDate}T00:00:00`) : undefined);
+            setEndDate(draft.endDate ? new Date(`${draft.endDate}T00:00:00`) : undefined);
+            setNotes(draft.notes);
+            setParticipants(Math.max(1, draft.participants || 1));
+        }
+    }, [open, draftKey]);
 
     const hasProviderOffer =
         !isRequest &&
@@ -219,7 +244,14 @@ export function BookingDialog({
 
     // Free-date bookings (everything except live hotel offers and flights,
     // which carry their own dates) ask the client for the travel window.
-    const askDates = !lockDates && type !== 'flight';
+    // Events run on their own fixed date, so there is nothing to pick.
+    const askDates = !lockDates && type !== 'flight' && type !== 'event';
+    // Priced per traveller: the client says how many people are coming.
+    const perPerson =
+        type === 'tour' ||
+        type === 'travel' ||
+        type === 'event' ||
+        type === 'destination';
     const todayISO = toLocalISODate(new Date()) ?? '';
     const parseISODate = (value: string) =>
         value ? new Date(`${value}T00:00:00`) : undefined;
@@ -240,6 +272,15 @@ export function BookingDialog({
         const value = Math.round(ms / 86_400_000);
         return value > 0 ? value : null;
     }, [effectiveStartDate, effectiveEndDate]);
+
+    // Mirrors the server's catalogue pricing (BookingController::catalogTotal);
+    // the server total is authoritative and shown after submission.
+    const estimatedTotal = useMemo(() => {
+        if (type === 'flight') return amount * Math.max(1, passengers ?? 1);
+        if (perPerson) return amount * participants;
+        if (type === 'car') return amount * (nights ?? 1);
+        return amount;
+    }, [type, amount, passengers, perPerson, participants, nights]);
 
     const summaryDatesLabel = useMemo(() => {
         if (!effectiveStartDate || !effectiveEndDate) return null;
@@ -292,7 +333,8 @@ export function BookingDialog({
     const mutation = useMutation({
         mutationFn: (payload: Record<string, unknown>) =>
             api.createBooking(payload) as Promise<{
-                id: number;
+                id: string;
+                booking_ref?: number;
                 status?: string;
                 total_amount?: number;
                 provider_prebook?: { currency?: string };
@@ -315,8 +357,8 @@ export function BookingDialog({
             }
 
             setSubmittedBooking({
-                id: data.id,
-                total: data.total_amount ?? amount,
+                ref: data.booking_ref ?? data.id,
+                total: data.total_amount ?? estimatedTotal,
                 currency: data.provider_prebook?.currency ?? currency,
             });
         },
@@ -353,6 +395,15 @@ export function BookingDialog({
         e.preventDefault();
 
         if (!user) {
+            saveBookingDraft(draftKey, {
+                name,
+                email,
+                phone,
+                startDate: toLocalISODate(startDate) ?? null,
+                endDate: toLocalISODate(endDate) ?? null,
+                notes,
+                participants,
+            });
             window.location.href = `/login?redirect=${encodeURIComponent(pathname)}`;
             return;
         }
@@ -372,11 +423,14 @@ export function BookingDialog({
             amount,
             is_request: isRequest || undefined,
             guests: guests
-                .map((row) => `${row.firstName} ${row.lastName}`.trim())
-                .filter(Boolean)
-                .map((line) => ({ name: line })),
+                .map((row) => ({
+                    name: `${row.firstName} ${row.lastName}`.trim(),
+                    passport_number: row.passportNumber.trim() || undefined,
+                    passport_expiry: row.passportExpiry || undefined,
+                }))
+                .filter((row) => row.name),
             details:
-                roomName || boardingName || cancellationPolicy?.length || type === 'flight'
+                roomName || boardingName || cancellationPolicy?.length || type === 'flight' || perPerson
                     ? {
                           room_name: roomName ?? null,
                           boarding_name: boardingName ?? null,
@@ -385,7 +439,8 @@ export function BookingDialog({
                           nights: nights ?? null,
                           currency,
                           base_price: basePrice ?? null,
-                          final_price: amount,
+                          final_price: estimatedTotal,
+                          ...(perPerson ? { participants } : {}),
                           not_refundable: notRefundable ?? false,
                           free_cancellation_until:
                               freeCancellationUntil ?? null,
@@ -488,7 +543,7 @@ export function BookingDialog({
                                     <p className="mt-2 text-[11px] text-muted-foreground">
                                         {t('booking.referenceLabel') ||
                                             'Reference'}{' '}
-                                        #{submittedBooking.id}
+                                        #{submittedBooking.ref}
                                     </p>
                                 </div>
 
@@ -630,8 +685,18 @@ export function BookingDialog({
                                 </div>
                                 <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-right">
                                     <p className="font-serif text-lg font-bold text-primary">
-                                        {formatPrice(amount, currency)}
+                                        {formatPrice(estimatedTotal, currency)}
                                     </p>
+                                    {estimatedTotal !== amount && amount > 0 && (
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {formatPrice(amount, currency)} ×{' '}
+                                            {type === 'flight'
+                                                ? Math.max(1, passengers ?? 1)
+                                                : perPerson
+                                                  ? participants
+                                                  : nights}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
@@ -686,6 +751,34 @@ export function BookingDialog({
                                         />
                                     </div>
                                 </div>
+
+                                {perPerson && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="participants">
+                                            {t('booking.participants') ||
+                                                'Travellers'}
+                                        </Label>
+                                        <Input
+                                            id="participants"
+                                            type="number"
+                                            min={1}
+                                            max={50}
+                                            value={participants}
+                                            onChange={(e) =>
+                                                setParticipants(
+                                                    Math.min(
+                                                        50,
+                                                        Math.max(
+                                                            1,
+                                                            Number(e.target.value) || 1,
+                                                        ),
+                                                    ),
+                                                )
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                )}
 
                                 {askDates && (
                                     <div className="grid grid-cols-2 gap-4">
@@ -1047,7 +1140,7 @@ export function BookingDialog({
                                         {mutation.isPending
                                             ? t('common.processing') ||
                                               'Processing...'
-                                            : `${t('booking.submit') || 'Request booking'} · ${formatPrice(amount, currency)}`}
+                                            : `${t('booking.submit') || 'Request booking'} · ${formatPrice(estimatedTotal, currency)}`}
                                     </Button>
                                 </DialogFooter>
                             </form>

@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\BlockDirectApiAccess;
 use App\Http\Middleware\CheckNavPageEnabled;
+use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\ExtendRequestTimeout;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check-nav-page' => CheckNavPageEnabled::class,
             'block-direct-api' => BlockDirectApiAccess::class,
             'extend-timeout' => ExtendRequestTimeout::class,
+            'active' => EnsureUserIsActive::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

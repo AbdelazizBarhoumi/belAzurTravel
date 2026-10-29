@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\ClientController::dashboard
- * @see app/Http/Controllers/Api/ClientController.php:20
+ * @see app/Http/Controllers/Api/ClientController.php:23
  * @route '/api/client/dashboard'
  */
 export const dashboard = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ dashboard.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::dashboard
- * @see app/Http/Controllers/Api/ClientController.php:20
+ * @see app/Http/Controllers/Api/ClientController.php:23
  * @route '/api/client/dashboard'
  */
 dashboard.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ dashboard.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::dashboard
- * @see app/Http/Controllers/Api/ClientController.php:20
+ * @see app/Http/Controllers/Api/ClientController.php:23
  * @route '/api/client/dashboard'
  */
 dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ dashboard.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\ClientController::dashboard
- * @see app/Http/Controllers/Api/ClientController.php:20
+ * @see app/Http/Controllers/Api/ClientController.php:23
  * @route '/api/client/dashboard'
  */
 dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::dashboard
- * @see app/Http/Controllers/Api/ClientController.php:20
+ * @see app/Http/Controllers/Api/ClientController.php:23
  * @route '/api/client/dashboard'
  */
     const dashboardForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::dashboard
- * @see app/Http/Controllers/Api/ClientController.php:20
+ * @see app/Http/Controllers/Api/ClientController.php:23
  * @route '/api/client/dashboard'
  */
         dashboardForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\ClientController::dashboard
- * @see app/Http/Controllers/Api/ClientController.php:20
+ * @see app/Http/Controllers/Api/ClientController.php:23
  * @route '/api/client/dashboard'
  */
         dashboardForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ dashboard.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     dashboard.form = dashboardForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::bookings
- * @see app/Http/Controllers/Api/ClientController.php:44
+ * @see app/Http/Controllers/Api/ClientController.php:47
  * @route '/api/client/bookings'
  */
 export const bookings = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ bookings.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::bookings
- * @see app/Http/Controllers/Api/ClientController.php:44
+ * @see app/Http/Controllers/Api/ClientController.php:47
  * @route '/api/client/bookings'
  */
 bookings.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ bookings.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::bookings
- * @see app/Http/Controllers/Api/ClientController.php:44
+ * @see app/Http/Controllers/Api/ClientController.php:47
  * @route '/api/client/bookings'
  */
 bookings.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ bookings.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\ClientController::bookings
- * @see app/Http/Controllers/Api/ClientController.php:44
+ * @see app/Http/Controllers/Api/ClientController.php:47
  * @route '/api/client/bookings'
  */
 bookings.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ bookings.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::bookings
- * @see app/Http/Controllers/Api/ClientController.php:44
+ * @see app/Http/Controllers/Api/ClientController.php:47
  * @route '/api/client/bookings'
  */
     const bookingsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ bookings.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::bookings
- * @see app/Http/Controllers/Api/ClientController.php:44
+ * @see app/Http/Controllers/Api/ClientController.php:47
  * @route '/api/client/bookings'
  */
         bookingsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ bookings.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\ClientController::bookings
- * @see app/Http/Controllers/Api/ClientController.php:44
+ * @see app/Http/Controllers/Api/ClientController.php:47
  * @route '/api/client/bookings'
  */
         bookingsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ bookings.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     bookings.form = bookingsForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::payments
- * @see app/Http/Controllers/Api/ClientController.php:55
+ * @see app/Http/Controllers/Api/ClientController.php:58
  * @route '/api/client/payments'
  */
 export const payments = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -172,7 +172,7 @@ payments.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::payments
- * @see app/Http/Controllers/Api/ClientController.php:55
+ * @see app/Http/Controllers/Api/ClientController.php:58
  * @route '/api/client/payments'
  */
 payments.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ payments.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::payments
- * @see app/Http/Controllers/Api/ClientController.php:55
+ * @see app/Http/Controllers/Api/ClientController.php:58
  * @route '/api/client/payments'
  */
 payments.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -190,7 +190,7 @@ payments.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\ClientController::payments
- * @see app/Http/Controllers/Api/ClientController.php:55
+ * @see app/Http/Controllers/Api/ClientController.php:58
  * @route '/api/client/payments'
  */
 payments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -200,7 +200,7 @@ payments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::payments
- * @see app/Http/Controllers/Api/ClientController.php:55
+ * @see app/Http/Controllers/Api/ClientController.php:58
  * @route '/api/client/payments'
  */
     const paymentsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -210,7 +210,7 @@ payments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::payments
- * @see app/Http/Controllers/Api/ClientController.php:55
+ * @see app/Http/Controllers/Api/ClientController.php:58
  * @route '/api/client/payments'
  */
         paymentsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -219,7 +219,7 @@ payments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\ClientController::payments
- * @see app/Http/Controllers/Api/ClientController.php:55
+ * @see app/Http/Controllers/Api/ClientController.php:58
  * @route '/api/client/payments'
  */
         paymentsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -235,7 +235,7 @@ payments.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     payments.form = paymentsForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:76
+ * @see app/Http/Controllers/Api/ClientController.php:79
  * @route '/api/client/support'
  */
 export const support = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -250,7 +250,7 @@ support.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:76
+ * @see app/Http/Controllers/Api/ClientController.php:79
  * @route '/api/client/support'
  */
 support.url = (options?: RouteQueryOptions) => {
@@ -259,7 +259,7 @@ support.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:76
+ * @see app/Http/Controllers/Api/ClientController.php:79
  * @route '/api/client/support'
  */
 support.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -268,7 +268,7 @@ support.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:76
+ * @see app/Http/Controllers/Api/ClientController.php:79
  * @route '/api/client/support'
  */
 support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -278,7 +278,7 @@ support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:76
+ * @see app/Http/Controllers/Api/ClientController.php:79
  * @route '/api/client/support'
  */
     const supportForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -288,7 +288,7 @@ support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:76
+ * @see app/Http/Controllers/Api/ClientController.php:79
  * @route '/api/client/support'
  */
         supportForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -297,7 +297,7 @@ support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\ClientController::support
- * @see app/Http/Controllers/Api/ClientController.php:76
+ * @see app/Http/Controllers/Api/ClientController.php:79
  * @route '/api/client/support'
  */
         supportForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -313,7 +313,7 @@ support.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     support.form = supportForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:95
+ * @see app/Http/Controllers/Api/ClientController.php:98
  * @route '/api/client/support'
  */
 export const createSupport = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -328,7 +328,7 @@ createSupport.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:95
+ * @see app/Http/Controllers/Api/ClientController.php:98
  * @route '/api/client/support'
  */
 createSupport.url = (options?: RouteQueryOptions) => {
@@ -337,7 +337,7 @@ createSupport.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:95
+ * @see app/Http/Controllers/Api/ClientController.php:98
  * @route '/api/client/support'
  */
 createSupport.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -347,7 +347,7 @@ createSupport.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:95
+ * @see app/Http/Controllers/Api/ClientController.php:98
  * @route '/api/client/support'
  */
     const createSupportForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -357,7 +357,7 @@ createSupport.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::createSupport
- * @see app/Http/Controllers/Api/ClientController.php:95
+ * @see app/Http/Controllers/Api/ClientController.php:98
  * @route '/api/client/support'
  */
         createSupportForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -368,7 +368,7 @@ createSupport.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => (
     createSupport.form = createSupportForm
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:140
+ * @see app/Http/Controllers/Api/ClientController.php:143
  * @route '/api/client/profile'
  */
 export const updateProfile = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -383,7 +383,7 @@ updateProfile.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:140
+ * @see app/Http/Controllers/Api/ClientController.php:143
  * @route '/api/client/profile'
  */
 updateProfile.url = (options?: RouteQueryOptions) => {
@@ -392,7 +392,7 @@ updateProfile.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:140
+ * @see app/Http/Controllers/Api/ClientController.php:143
  * @route '/api/client/profile'
  */
 updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -402,7 +402,7 @@ updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:140
+ * @see app/Http/Controllers/Api/ClientController.php:143
  * @route '/api/client/profile'
  */
     const updateProfileForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -417,7 +417,7 @@ updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::updateProfile
- * @see app/Http/Controllers/Api/ClientController.php:140
+ * @see app/Http/Controllers/Api/ClientController.php:143
  * @route '/api/client/profile'
  */
         updateProfileForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -432,8 +432,138 @@ updateProfile.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     
     updateProfile.form = updateProfileForm
 /**
+* @see \App\Http\Controllers\Api\ClientController::updatePassword
+ * @see app/Http/Controllers/Api/ClientController.php:165
+ * @route '/api/client/password'
+ */
+export const updatePassword = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+    url: updatePassword.url(options),
+    method: 'put',
+})
+
+updatePassword.definition = {
+    methods: ["put"],
+    url: '/api/client/password',
+} satisfies RouteDefinition<["put"]>
+
+/**
+* @see \App\Http\Controllers\Api\ClientController::updatePassword
+ * @see app/Http/Controllers/Api/ClientController.php:165
+ * @route '/api/client/password'
+ */
+updatePassword.url = (options?: RouteQueryOptions) => {
+    return updatePassword.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Api\ClientController::updatePassword
+ * @see app/Http/Controllers/Api/ClientController.php:165
+ * @route '/api/client/password'
+ */
+updatePassword.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+    url: updatePassword.url(options),
+    method: 'put',
+})
+
+    /**
+* @see \App\Http\Controllers\Api\ClientController::updatePassword
+ * @see app/Http/Controllers/Api/ClientController.php:165
+ * @route '/api/client/password'
+ */
+    const updatePasswordForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: updatePassword.url({
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Api\ClientController::updatePassword
+ * @see app/Http/Controllers/Api/ClientController.php:165
+ * @route '/api/client/password'
+ */
+        updatePasswordForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: updatePassword.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    updatePassword.form = updatePasswordForm
+/**
+* @see \App\Http\Controllers\Api\ClientController::deleteAccount
+ * @see app/Http/Controllers/Api/ClientController.php:172
+ * @route '/api/client/account'
+ */
+export const deleteAccount = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: deleteAccount.url(options),
+    method: 'delete',
+})
+
+deleteAccount.definition = {
+    methods: ["delete"],
+    url: '/api/client/account',
+} satisfies RouteDefinition<["delete"]>
+
+/**
+* @see \App\Http\Controllers\Api\ClientController::deleteAccount
+ * @see app/Http/Controllers/Api/ClientController.php:172
+ * @route '/api/client/account'
+ */
+deleteAccount.url = (options?: RouteQueryOptions) => {
+    return deleteAccount.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Api\ClientController::deleteAccount
+ * @see app/Http/Controllers/Api/ClientController.php:172
+ * @route '/api/client/account'
+ */
+deleteAccount.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+    url: deleteAccount.url(options),
+    method: 'delete',
+})
+
+    /**
+* @see \App\Http\Controllers\Api\ClientController::deleteAccount
+ * @see app/Http/Controllers/Api/ClientController.php:172
+ * @route '/api/client/account'
+ */
+    const deleteAccountForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: deleteAccount.url({
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Api\ClientController::deleteAccount
+ * @see app/Http/Controllers/Api/ClientController.php:172
+ * @route '/api/client/account'
+ */
+        deleteAccountForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: deleteAccount.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    deleteAccount.form = deleteAccountForm
+/**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:129
+ * @see app/Http/Controllers/Api/ClientController.php:132
  * @route '/api/user/language'
  */
 export const updateLanguage = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -448,7 +578,7 @@ updateLanguage.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:129
+ * @see app/Http/Controllers/Api/ClientController.php:132
  * @route '/api/user/language'
  */
 updateLanguage.url = (options?: RouteQueryOptions) => {
@@ -457,7 +587,7 @@ updateLanguage.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:129
+ * @see app/Http/Controllers/Api/ClientController.php:132
  * @route '/api/user/language'
  */
 updateLanguage.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -467,7 +597,7 @@ updateLanguage.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =
 
     /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:129
+ * @see app/Http/Controllers/Api/ClientController.php:132
  * @route '/api/user/language'
  */
     const updateLanguageForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -482,7 +612,7 @@ updateLanguage.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =
 
             /**
 * @see \App\Http\Controllers\Api\ClientController::updateLanguage
- * @see app/Http/Controllers/Api/ClientController.php:129
+ * @see app/Http/Controllers/Api/ClientController.php:132
  * @route '/api/user/language'
  */
         updateLanguageForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -496,6 +626,6 @@ updateLanguage.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> =
         })
     
     updateLanguage.form = updateLanguageForm
-const ClientController = { dashboard, bookings, payments, support, createSupport, updateProfile, updateLanguage }
+const ClientController = { dashboard, bookings, payments, support, createSupport, updateProfile, updatePassword, deleteAccount, updateLanguage }
 
 export default ClientController

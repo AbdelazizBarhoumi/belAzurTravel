@@ -1580,10 +1580,10 @@ function SupportDetail({
                         className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
                     >
                         <option value="new">
-                            {t('complaint.status.pending')}
+                            {t('complaint.status.new')}
                         </option>
                         <option value="in-progress">
-                            {t('complaint.status.in_review')}
+                            {t('complaint.status.in-progress')}
                         </option>
                         <option value="resolved">
                             {t('complaint.status.resolved')}

@@ -21,7 +21,7 @@ class BookingE2ETest extends TestCase
         // 1. Setup Admin and Client
         $admin = User::factory()->create(['role' => 'admin', 'active' => true]);
         $client = User::factory()->create(['role' => 'client']);
-        $destination = Destination::factory()->create(['slug' => 'paris']);
+        $destination = Destination::factory()->create(['slug' => 'paris', 'price' => 1500]);
 
         // 2. Client creates a booking
         $bookingData = [

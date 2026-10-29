@@ -208,6 +208,9 @@ class AdminComplaintController extends Controller
 
     private function payload(Complaint $complaint): array
     {
+        // Models are strict (no lazy loading): load what the payload reads.
+        $complaint->loadMissing(['user', 'booking', 'replies']);
+
         return [
             'id' => $complaint->id,
             'type' => $complaint->type,

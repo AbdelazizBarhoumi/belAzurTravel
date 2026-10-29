@@ -67,5 +67,6 @@ Schedule::command('send:admin-digest')
 // (e.g. mail from scheduled commands or retries).
 Schedule::command('queue:work database --stop-when-empty --tries=4 --backoff=1800 --max-time=50')
     ->everyMinute()
-    ->withoutOverlapping()
+    // A killed worker must not hold the lock for the default 24 hours.
+    ->withoutOverlapping(5)
     ->onOneServer();

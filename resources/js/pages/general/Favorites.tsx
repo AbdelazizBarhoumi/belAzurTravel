@@ -8,28 +8,12 @@ import { ViewToggle } from '@/components/ui/ViewToggle';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useViewMode } from '@/hooks/useViewMode';
+import {
+    favoriteKey,
+    favoritePath,
+    favoriteTypeLabelKey,
+} from '@/lib/favorites';
 import { formatPrice, cn } from '@/lib/utils';
-import type { FavoriteItem } from '@/contexts/FavoritesContext';
-
-// Favorite ids are only guaranteed to be slugs for hotels; every other type
-// sends the visitor to its catalog to pick the item and book from there.
-const CATALOG_PATHS: Partial<Record<FavoriteItem['type'], string>> = {
-    destination: '/destinations',
-    tour: '/tours',
-    travel: '/travels',
-    car: '/cars',
-    flight: '/flights',
-    event: '/events',
-    deal: '/deals',
-    promo: '/deals',
-};
-
-function favoriteBookingPath(item: FavoriteItem): string {
-    if (item.type === 'hotel') {
-        return `/hotels/${encodeURIComponent(item.id)}`;
-    }
-    return CATALOG_PATHS[item.type] ?? '/';
-}
 
 const Favorites = () => {
     const { favorites } = useFavorites();
@@ -67,7 +51,7 @@ const Favorites = () => {
                     >
                     {favorites.map((f, i) => (
                         <motion.div
-                            key={f.id}
+                            key={favoriteKey(f)}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.05 }}
@@ -82,12 +66,12 @@ const Favorites = () => {
                                 />
                                 <FavoriteButton
                                     item={f}
-                                    className="absolute right-3 top-3"
+                                    className="absolute end-3 top-3"
                                 />
                             </div>
                             <div className="p-5">
                                 <span className="text-xs font-semibold uppercase text-secondary">
-                                    {f.type}
+                                    {t(favoriteTypeLabelKey(f.type))}
                                 </span>
                                 <h3 className="mt-1 font-serif text-lg font-bold text-foreground">
                                     {f.name}
@@ -103,7 +87,7 @@ const Favorites = () => {
                                         <span className="text-xs font-medium text-primary">
                                             {t('hotelDetail.checkAvailability')}
                                         </span>
-                                    ) : f.price ? (
+                                    ) : f.price && f.price > 0 ? (
                                         <span className="font-bold text-primary">
                                             {formatPrice(f.price, 'TND')}
                                         </span>
@@ -115,7 +99,7 @@ const Favorites = () => {
                                         size="sm"
                                         className="bg-primary text-xs text-primary-foreground"
                                     >
-                                        <Link to={favoriteBookingPath(f)}>
+                                        <Link to={favoritePath(f)}>
                                             {t('common.book')}
                                         </Link>
                                     </Button>

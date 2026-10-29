@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Briefcase, Clock, Plane, Users } from 'lucide-re
 import { useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { StickyBookingCard } from '@/components/cards/StickyBookingCard';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { getAirportDisplayName, getCityNameByIata } from '@/data/airports';
@@ -51,7 +52,7 @@ export default function FlightDetail() {
                                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
                                         <Plane className="h-6 w-6 text-primary" />
                                     </div>
-                                    <div>
+                                    <div className="min-w-0 flex-1">
                                         <h1 className="font-serif text-3xl font-bold text-foreground">
                                             {localizeText(flight.airline, lang)}
                                         </h1>
@@ -63,6 +64,17 @@ export default function FlightDetail() {
                                             )}
                                         </p>
                                     </div>
+                                    <FavoriteButton
+                                        className="shrink-0"
+                                        item={{
+                                            id: String(flight.id),
+                                            type: 'flight',
+                                            name: `${localizeText(flight.airline, lang)} · ${routeLabel}`,
+                                            image: '/images/hero-travel.jpg',
+                                            price: flight.price,
+                                            location: routeLabel,
+                                        }}
+                                    />
                                 </div>
 
                                 <div className="mb-6 flex flex-wrap items-center gap-2">

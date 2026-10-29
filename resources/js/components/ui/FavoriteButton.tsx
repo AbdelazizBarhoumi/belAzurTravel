@@ -12,7 +12,7 @@ interface Props {
 export function FavoriteButton({ item, className }: Props) {
     const { isFavorite, toggle } = useFavorites();
     const { t } = useLanguage();
-    const active = isFavorite(item.id);
+    const active = isFavorite(item);
 
     return (
         <button

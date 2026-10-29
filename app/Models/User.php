@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -27,6 +30,11 @@ class User extends Authenticatable implements MustVerifyEmail
             $this->notifyUnguarded($instance);
         } catch (\Throwable $e) {
             report($e);
+
+            // Account emails must not be reported as "sent" when they were not.
+            if ($instance instanceof VerifyEmail || $instance instanceof ResetPassword) {
+                throw $e;
+            }
         }
     }
 
@@ -79,5 +87,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'two_factor_confirmed_at' => 'datetime',
             'active' => 'boolean',
         ];
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
     }
 }

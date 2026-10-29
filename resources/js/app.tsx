@@ -45,6 +45,7 @@ import AdminTeam from './pages/admin/AdminTeam';
 import AdminTours from './pages/admin/AdminTours';
 import AdminTravels from './pages/admin/AdminTravels';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminVisaApplications from './pages/admin/AdminVisaApplications';
 import AdminVisas from './pages/admin/AdminVisas';
 import AdminSiteSettingsCompany from './pages/admin/site-settings/AdminSiteSettingsCompany';
 import AdminSiteSettingsFooter from './pages/admin/site-settings/AdminSiteSettingsFooter';
@@ -54,6 +55,8 @@ import AdminSiteSettingsNav from './pages/admin/site-settings/AdminSiteSettingsN
 import AdminSiteSettingsPrivacyPolicy from './pages/admin/site-settings/AdminSiteSettingsPrivacyPolicy';
 import AdminSiteSettingsPurchasePolicy from './pages/admin/site-settings/AdminSiteSettingsPurchasePolicy';
 import AdminSiteSettingsSocial from './pages/admin/site-settings/AdminSiteSettingsSocial';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 import VerifyEmail from './pages/auth/VerifyEmail';
 import Blog from './pages/blog';
 import BlogPostDetail from './pages/blog/show';
@@ -118,13 +121,14 @@ const LayoutWrapper = () => {
     // Verification redirect logic
     useEffect(() => {
         if (user && !user.email_verified_at && user.role !== 'owner') {
-            const isAuthPath = [
-                '/login',
-                '/register',
-                '/verify-email',
-                '/forgot-password',
-                '/reset-password',
-            ].includes(location.pathname);
+            const isAuthPath =
+                [
+                    '/login',
+                    '/register',
+                    '/verify-email',
+                    '/forgot-password',
+                ].includes(location.pathname) ||
+                location.pathname.startsWith('/reset-password/');
             if (!isAuthPath) {
                 navigate('/verify-email', { replace: true });
             }
@@ -177,6 +181,14 @@ const LayoutWrapper = () => {
                     <Route path="/" element={<Index />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/verify-email" element={<VerifyEmail />} />
+                    <Route
+                        path="/forgot-password"
+                        element={<ForgotPassword />}
+                    />
+                    <Route
+                        path="/reset-password/:token"
+                        element={<ResetPassword />}
+                    />
                     <Route path="/session-expired" element={<Error419 />} />
                     <Route path="/unauthorized" element={<Unauthorized />} />
                     <Route path="/register" element={<Register />} />
@@ -222,6 +234,10 @@ const LayoutWrapper = () => {
                     />
                     <Route
                         path="/client/notifications"
+                        element={clientGuard(<ClientDashboard />)}
+                    />
+                    <Route
+                        path="/client/wishlist"
                         element={clientGuard(<ClientDashboard />)}
                     />
                     <Route
@@ -312,6 +328,10 @@ const LayoutWrapper = () => {
                     <Route
                         path="/admin/visas"
                         element={adminGuard(<AdminVisas />)}
+                    />
+                    <Route
+                        path="/admin/visa-applications"
+                        element={adminGuard(<AdminVisaApplications />)}
                     />
                     <Route
                         path="/admin/site-settings"

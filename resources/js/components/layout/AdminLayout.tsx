@@ -25,6 +25,7 @@ import {
     Shield,
     ShoppingCart,
     FileCheck,
+    FileLock2,
     CloudDownload,
     ListChecks,
 } from 'lucide-react';
@@ -153,6 +154,11 @@ const links: LinkItem[] = [
     { to: '/admin/deals', icon: TicketPercent, labelKey: 'admin.deals' },
     { to: '/admin/promos', icon: TicketPercent, labelKey: 'admin.promos' },
     { to: '/admin/visas', icon: FileCheck, labelKey: 'admin.visas' },
+    {
+        to: '/admin/visa-applications',
+        icon: FileLock2,
+        labelKey: 'admin.visaApplications.nav',
+    },
     { to: '/admin/team', icon: Users, labelKey: 'admin.team' },
     { to: '/admin/partners', icon: Handshake, labelKey: 'admin.partners' },
     { to: '/admin/blog', icon: Newspaper, labelKey: 'admin.blog' },

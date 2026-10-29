@@ -14,21 +14,23 @@ class ComplaintReplyNotification extends Notification implements ShouldQueue
     use NotifiesByMail;
     use Queueable;
 
+    public bool $deleteWhenMissingModels = true;
+
     public function __construct(private readonly Complaint $complaint) {}
 
 
     public function toDatabase(object $notifiable): array
     {
-        $type = $this->complaint->type === 'refund_request' ? 'refund request' : 'complaint';
+        $isRefund = $this->complaint->type === 'refund_request';
 
         return [
             'type' => 'complaint.reply',
             'complaint_id' => $this->complaint->id,
             'complaint_type' => $this->complaint->type,
-            'url' => '/client/complaints',
-            'fr' => "Réponse à votre {$type}",
-            'ar' => "رد على {$type} الخاصة بك",
-            'en' => "Reply to your {$type}",
+            'url' => $this->clientPath(),
+            'fr' => $isRefund ? 'Réponse à votre demande de remboursement' : 'Réponse à votre réclamation',
+            'ar' => $isRefund ? 'رد على طلب الاسترداد الخاص بك' : 'رد على شكواك',
+            'en' => $isRefund ? 'Reply to your refund request' : 'Reply to your complaint',
         ];
     }
 
@@ -50,8 +52,13 @@ class ComplaintReplyNotification extends Notification implements ShouldQueue
                 'typeLabel' => 'Type',
                 'statusLabel' => 'Status',
                 'actionText' => 'View & Reply',
-                'actionUrl' => config('app.url').'/client/complaints',
+                'actionUrl' => config('app.url').$this->clientPath(),
                 'closingLine' => 'You can reply to this message directly from your dashboard.',
             ]);
+    }
+
+    private function clientPath(): string
+    {
+        return $this->complaint->type === 'refund_request' ? '/client/refunds' : '/client/complaints';
     }
 }

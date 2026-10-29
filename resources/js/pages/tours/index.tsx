@@ -277,9 +277,9 @@ const Tours = () => {
                                                             loading="lazy"
                                                         />
                                                         <FavoriteButton
-                                                            className="absolute right-3 top-3"
+                                                            className="absolute end-3 top-3"
                                                             item={{
-                                                                id: `tour-${localizeText(tour.name, lang)}`,
+                                                                id: tour.slug,
                                                                 type: 'tour',
                                                                 name: localizeText(
                                                                     tour.name,

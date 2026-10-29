@@ -8,7 +8,6 @@ import {
     CreditCard,
     User,
     LogOut,
-    Settings,
     Heart,
     Clock,
     Star,
@@ -22,6 +21,9 @@ import {
     ChevronDown,
     ChevronUp,
     MessageSquare,
+    Menu,
+    LifeBuoy,
+    KeyRound,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -29,11 +31,16 @@ import { toast } from 'sonner';
 import {
     cancelBooking,
     createSupportInquiry,
+    deleteClientAccount,
+    getClientBookings,
     getClientDashboard,
     getClientPayments,
+    getClientSupport,
     updateClientLanguage,
+    updateClientPassword,
     updateClientProfile,
     type ClientBookingRow,
+    type ClientSupportThread,
 } from '@/api/booking.api';
 import {
     getClientComplaints,
@@ -46,13 +53,25 @@ import { VoucherCard } from '@/components/booking/VoucherCard';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import {
+    Sheet,
+    SheetContent,
+    SheetTitle,
+    SheetTrigger,
+} from '@/components/ui/sheet';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { useDestinations } from '@/hooks/usePublicData';
 import type { Lang } from '@/i18n/translations';
 import { bookingStatusLabels } from '@/lib/adminI18n';
+import {
+    favoriteKey,
+    favoritePath,
+    favoriteTypeLabelKey,
+} from '@/lib/favorites';
 import { cn, formatPrice } from '@/lib/utils';
 
 type LocalizedText = Record<Lang, string>;
@@ -68,8 +87,7 @@ const sidebarLinks = [
         labelKey: 'notifications.title',
         to: '/client/notifications',
     },
-    { icon: Heart, labelKey: 'dashboard.wishlist' },
-    { icon: Calendar, labelKey: 'dashboard.itineraries' },
+    { icon: Heart, labelKey: 'dashboard.wishlist', to: '/client/wishlist' },
     {
         icon: CreditCard,
         labelKey: 'dashboard.payments',
@@ -82,25 +100,37 @@ const sidebarLinks = [
         to: '/client/complaints',
     },
     { icon: RotateCcw, labelKey: 'client.refunds', to: '/client/refunds' },
-    { icon: Settings, labelKey: 'dashboard.settings', to: '/client/support' },
+    { icon: LifeBuoy, labelKey: 'client.support', to: '/client/support' },
 ];
+
+function tabForPath(pathname: string): string {
+    if (pathname.includes('/payments')) return 'dashboard.payments';
+    if (pathname.includes('/profile')) return 'dashboard.profile';
+    if (pathname.includes('/support')) return 'client.support';
+    if (pathname.includes('/notifications')) return 'notifications.title';
+    if (pathname.includes('/complaints')) return 'client.complaints';
+    if (pathname.includes('/refunds')) return 'client.refunds';
+    if (pathname.includes('/wishlist')) return 'dashboard.wishlist';
+    return 'dashboard.myBookings';
+}
 
 const ClientDashboard = () => {
     const { pathname } = useLocation();
-    const [activeTab, setActiveTab] = useState(() => {
-        if (pathname.includes('/payments')) return 'dashboard.payments';
-        if (pathname.includes('/profile')) return 'dashboard.profile';
-        if (pathname.includes('/support')) return 'dashboard.settings';
-        if (pathname.includes('/notifications')) return 'notifications.title';
-        if (pathname.includes('/complaints')) return 'client.complaints';
-        if (pathname.includes('/refunds')) return 'client.refunds';
-        return 'dashboard.myBookings';
-    });
+    const [activeTab, setActiveTab] = useState(() => tabForPath(pathname));
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    const [cancelTarget, setCancelTarget] = useState<ClientBookingRow | null>(
+        null,
+    );
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
     const [supportSubject, setSupportSubject] = useState('');
     const [supportMessage, setSupportMessage] = useState('');
     const [complaintSubject, setComplaintSubject] = useState('');
     const [complaintDescription, setComplaintDescription] = useState('');
-    const [refundBookingId, setRefundBookingId] = useState<number | ''>('');
+    const [refundBookingId, setRefundBookingId] = useState('');
     const [refundSubject, setRefundSubject] = useState('');
     const [refundDescription, setRefundDescription] = useState('');
     const [expandedComplaint, setExpandedComplaint] = useState<number | null>(
@@ -143,6 +173,23 @@ const ClientDashboard = () => {
         queryFn: getClientPayments,
         enabled: activeTab === 'dashboard.payments',
     });
+    // The dashboard payload only carries the latest bookings; the bookings
+    // and refunds tabs need the full history.
+    const { data: allBookings } = useQuery({
+        queryKey: ['client', 'bookings'],
+        queryFn: getClientBookings,
+        enabled:
+            activeTab === 'dashboard.myBookings' ||
+            activeTab === 'client.refunds',
+    });
+    const { data: supportThreads = [] } = useQuery<ClientSupportThread[]>({
+        queryKey: ['client', 'support'],
+        queryFn: getClientSupport,
+        enabled: activeTab === 'client.support',
+    });
+    const showError = (error: Error) => {
+        toast.error(error.message || t('common.error') || 'Something went wrong.');
+    };
     const { data: complaints = [] } = useQuery<Complaint[]>({
         queryKey: ['client', 'complaints'],
         queryFn: getClientComplaints,
@@ -152,11 +199,13 @@ const ClientDashboard = () => {
     const cancelMutation = useMutation({
         mutationFn: (id: string) => cancelBooking(id),
         onSuccess: () => {
+            setCancelTarget(null);
             queryClient.invalidateQueries({ queryKey: ['client'] });
             toast.success(
                 t('booking.cancelled') || 'Booking cancelled successfully.',
             );
         },
+        onError: showError,
     });
     const supportMutation = useMutation({
         mutationFn: () =>
@@ -170,6 +219,7 @@ const ClientDashboard = () => {
             queryClient.invalidateQueries({ queryKey: ['client'] });
             toast.success(t('client.supportSuccess') || 'Message sent.');
         },
+        onError: showError,
     });
 
     const complaintMutation = useMutation({
@@ -189,6 +239,7 @@ const ClientDashboard = () => {
                 t('client.complaintSuccess') || 'Complaint submitted.',
             );
         },
+        onError: showError,
     });
 
     const refundMutation = useMutation({
@@ -197,9 +248,7 @@ const ClientDashboard = () => {
                 type: 'refund_request',
                 subject: refundSubject,
                 description: refundDescription,
-                booking_id: refundBookingId
-                    ? String(refundBookingId)
-                    : undefined,
+                booking_id: refundBookingId || undefined,
             }),
         onSuccess: () => {
             setRefundBookingId('');
@@ -212,6 +261,7 @@ const ClientDashboard = () => {
                 t('client.refundSuccess') || 'Refund request submitted.',
             );
         },
+        onError: showError,
     });
 
     const clientReplyMutation = useMutation({
@@ -224,6 +274,7 @@ const ClientDashboard = () => {
             });
             toast.success(t('client.replySent') || 'Reply sent.');
         },
+        onError: showError,
     });
 
     const profileMutation = useMutation({
@@ -233,6 +284,31 @@ const ClientDashboard = () => {
             queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
             toast.success(t('client.profileUpdated') || 'Profile updated.');
         },
+        onError: showError,
+    });
+
+    const passwordMutation = useMutation({
+        mutationFn: () =>
+            updateClientPassword({
+                current_password: currentPassword,
+                password: newPassword,
+                password_confirmation: newPasswordConfirm,
+            }),
+        onSuccess: (data) => {
+            setCurrentPassword('');
+            setNewPassword('');
+            setNewPasswordConfirm('');
+            toast.success(data.message || t('client.passwordUpdated'));
+        },
+        onError: showError,
+    });
+
+    const deleteAccountMutation = useMutation({
+        mutationFn: () => deleteClientAccount(deletePassword),
+        onSuccess: () => {
+            window.location.href = '/';
+        },
+        onError: showError,
     });
 
     const langMutation = useMutation({
@@ -241,28 +317,22 @@ const ClientDashboard = () => {
             setLang(newLang as Lang);
             toast.success(t('client.languageUpdated') || 'Language updated.');
         },
+        onError: showError,
     });
 
-    const bookings = dashboard?.bookings ?? [];
+    const bookings = allBookings ?? dashboard?.bookings ?? [];
+
+    const complaintStatusLabel = (status: string) => {
+        const label = t(`client.complaintStatus.${status}`);
+        return label === `client.complaintStatus.${status}` ? status : label;
+    };
 
     useEffect(() => {
         // Defer setState to avoid synchronous state updates inside effect
         // which can trigger cascading renders during navigation.
         setTimeout(() => {
-            if (pathname.includes('/payments'))
-                setActiveTab('dashboard.payments');
-            else if (pathname.includes('/profile'))
-                setActiveTab('dashboard.profile');
-            else if (pathname.includes('/support'))
-                setActiveTab('dashboard.settings');
-            else if (pathname.includes('/notifications'))
-                setActiveTab('notifications.title');
-            else if (pathname.includes('/complaints'))
-                setActiveTab('client.complaints');
-            else if (pathname.includes('/refunds'))
-                setActiveTab('client.refunds');
-            else if (pathname.includes('/dashboard'))
-                setActiveTab('dashboard.myBookings');
+            setActiveTab(tabForPath(pathname));
+            setMobileNavOpen(false);
         }, 0);
     }, [pathname]);
 
@@ -302,6 +372,25 @@ const ClientDashboard = () => {
     const formattedAmount = (booking: ClientBookingRow) =>
         formatPrice(booking.total_amount, booking.currency ?? 'TND');
 
+    const renderNavLinks = () =>
+        sidebarLinks.map((link) => {
+            const active = activeTab === link.labelKey;
+            const className = cn(
+                'flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all',
+                isRtl && 'text-right',
+                active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+            );
+
+            return (
+                <Link key={link.labelKey} to={link.to} className={className}>
+                    <link.icon className="h-4 w-4" />
+                    {t(link.labelKey)}
+                </Link>
+            );
+        });
+
     return (
         <div
             className={cn(
@@ -327,42 +416,7 @@ const ClientDashboard = () => {
                     </Link>
                 </div>
 
-                <nav className="flex-1 space-y-1 px-4">
-                    {sidebarLinks.map((link) => {
-                        const active = activeTab === link.labelKey;
-                        const className = cn(
-                            'flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all',
-                            isRtl && 'text-right',
-                            active
-                                ? 'bg-primary text-primary-foreground'
-                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                        );
-
-                        if (link.to) {
-                            return (
-                                <Link
-                                    key={link.labelKey}
-                                    to={link.to}
-                                    className={className}
-                                >
-                                    <link.icon className="h-4 w-4" />
-                                    {t(link.labelKey)}
-                                </Link>
-                            );
-                        }
-
-                        return (
-                            <button
-                                key={link.labelKey}
-                                onClick={() => setActiveTab(link.labelKey)}
-                                className={className}
-                            >
-                                <link.icon className="h-4 w-4" />
-                                {t(link.labelKey)}
-                            </button>
-                        );
-                    })}
-                </nav>
+                <nav className="flex-1 space-y-1 px-4">{renderNavLinks()}</nav>
 
                 <div className="border-t border-border p-4">
                     <Button
@@ -379,9 +433,42 @@ const ClientDashboard = () => {
             </aside>
 
             <main className="flex-1 overflow-auto">
-                <header className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
-                    <div>
-                        <h1 className="font-serif text-2xl font-bold text-foreground">
+                <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-4 sm:px-6">
+                    <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+                        <SheetTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="shrink-0 lg:hidden"
+                                aria-label={t('nav.menu') || 'Menu'}
+                            >
+                                <Menu className="h-5 w-5" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent
+                            side={isRtl ? 'right' : 'left'}
+                            className="flex w-72 flex-col p-0"
+                        >
+                            <SheetTitle className="p-6">
+                                <BrandLogo imageClassName="h-10 w-auto" />
+                            </SheetTitle>
+                            <nav className="flex-1 space-y-1 overflow-y-auto px-4">
+                                {renderNavLinks()}
+                            </nav>
+                            <div className="border-t border-border p-4">
+                                <Button
+                                    onClick={handleLogout}
+                                    variant="ghost"
+                                    className="w-full justify-start gap-2 text-muted-foreground"
+                                >
+                                    <LogOut className="h-4 w-4" />{' '}
+                                    {t('dashboard.signOut')}
+                                </Button>
+                            </div>
+                        </SheetContent>
+                    </Sheet>
+                    <div className="min-w-0 flex-1">
+                        <h1 className="truncate font-serif text-xl font-bold text-foreground sm:text-2xl">
                             {t('client.welcome')}, {user?.name || ''}
                         </h1>
                         <p className="text-sm text-muted-foreground">
@@ -396,7 +483,7 @@ const ClientDashboard = () => {
                     </div>
                 </header>
 
-                <div className="space-y-8 p-6">
+                <div className="space-y-8 p-4 sm:p-6">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {[
                             {
@@ -541,9 +628,7 @@ const ClientDashboard = () => {
                                                               undefined)
                                                     }
                                                     onClick={() =>
-                                                        cancelMutation.mutate(
-                                                            booking.id,
-                                                        )
+                                                        setCancelTarget(booking)
                                                     }
                                                 >
                                                     {t('actions.cancel')}
@@ -676,7 +761,8 @@ const ClientDashboard = () => {
                         </div>
                     )}
 
-                    {activeTab === 'dashboard.settings' && (
+                    {activeTab === 'client.support' && (
+                        <div className="space-y-6">
                         <div className="rounded-2xl border border-border bg-card p-6">
                             <h2 className="font-serif text-xl font-bold text-foreground">
                                 {t('client.support')}
@@ -709,6 +795,69 @@ const ClientDashboard = () => {
                                     {t('assistant.send')}
                                 </Button>
                             </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-border bg-card">
+                            <div className="border-b border-border p-5">
+                                <h2 className="font-serif text-xl font-bold text-foreground">
+                                    {t('client.supportHistory')}
+                                </h2>
+                            </div>
+                            <div className="divide-y divide-border">
+                                {supportThreads.map((thread) => (
+                                    <div key={thread.id} className="space-y-3 p-5">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <p className="font-medium text-foreground">
+                                                {thread.subject[lang] ||
+                                                    thread.subject.fr ||
+                                                    thread.subject.en}
+                                            </p>
+                                            <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">
+                                                {complaintStatusLabel(thread.status)}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                            {new Date(
+                                                thread.created_at,
+                                            ).toLocaleString()}
+                                        </p>
+                                        <p className="whitespace-pre-line text-sm text-foreground">
+                                            {thread.message[lang] ||
+                                                thread.message.fr ||
+                                                thread.message.en}
+                                        </p>
+                                        {thread.replies.map((reply, index) => (
+                                            <div
+                                                key={index}
+                                                className="rounded-2xl border border-primary/20 bg-primary/5 p-4"
+                                            >
+                                                <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-primary">
+                                                    <MessageSquare className="h-4 w-4" />
+                                                    {reply.author ||
+                                                        t('admin.admin') ||
+                                                        'Admin'}
+                                                    {reply.created_at && (
+                                                        <span className="font-normal text-muted-foreground">
+                                                            {new Date(
+                                                                reply.created_at,
+                                                            ).toLocaleString()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="whitespace-pre-line text-sm text-foreground">
+                                                    {reply.message}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                                {supportThreads.length === 0 && (
+                                    <p className="p-8 text-center text-muted-foreground">
+                                        {t('client.supportEmpty')}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
                         </div>
                     )}
 
@@ -814,7 +963,9 @@ const ClientDashboard = () => {
                                                                       : 'bg-secondary/10 text-secondary'
                                                             }`}
                                                         >
-                                                            {complaint.status}
+                                                            {complaintStatusLabel(
+                                                                complaint.status,
+                                                            )}
                                                         </span>
                                                         {expandedComplaint ===
                                                         complaint.id ? (
@@ -1014,11 +1165,7 @@ const ClientDashboard = () => {
                                     <select
                                         value={refundBookingId}
                                         onChange={(e) =>
-                                            setRefundBookingId(
-                                                e.target.value
-                                                    ? Number(e.target.value)
-                                                    : '',
-                                            )
+                                            setRefundBookingId(e.target.value)
                                         }
                                         className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm"
                                     >
@@ -1031,8 +1178,9 @@ const ClientDashboard = () => {
                                             )
                                             .map((b) => (
                                                 <option key={b.id} value={b.id}>
-                                                    #{b.id} - {b.type} (
-                                                    {b.total_amount} TND)
+                                                    #{b.booking_ref} -{' '}
+                                                    {formatBookingTitle(b)} (
+                                                    {formattedAmount(b)})
                                                 </option>
                                             ))}
                                     </select>
@@ -1109,7 +1257,8 @@ const ClientDashboard = () => {
                                                             </p>
                                                             <p className="text-xs text-muted-foreground">
                                                                 #{complaint.id}{' '}
-                                                                &middot; Booking
+                                                                &middot;{' '}
+                                                                {t('admin.booking')}{' '}
                                                                 #
                                                                 {complaint
                                                                     .booking
@@ -1134,7 +1283,9 @@ const ClientDashboard = () => {
                                                                       : 'bg-secondary/10 text-secondary'
                                                             }`}
                                                         >
-                                                            {complaint.status}
+                                                            {complaintStatusLabel(
+                                                                complaint.status,
+                                                            )}
                                                         </span>
                                                         {expandedComplaint ===
                                                         complaint.id ? (
@@ -1389,6 +1540,97 @@ const ClientDashboard = () => {
                             </div>
 
                             <div className="rounded-2xl border border-border bg-card p-6">
+                                <h2 className="mb-6 flex items-center gap-2 font-serif text-xl font-bold text-foreground">
+                                    <KeyRound className="h-5 w-5 text-primary" />
+                                    {t('client.security')}
+                                </h2>
+                                <form
+                                    className="max-w-md space-y-4"
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        passwordMutation.mutate();
+                                    }}
+                                >
+                                    {[
+                                        {
+                                            id: 'current_password',
+                                            label: t('client.currentPassword'),
+                                            value: currentPassword,
+                                            set: setCurrentPassword,
+                                            autoComplete: 'current-password',
+                                        },
+                                        {
+                                            id: 'new_password',
+                                            label: t('client.newPassword'),
+                                            value: newPassword,
+                                            set: setNewPassword,
+                                            autoComplete: 'new-password',
+                                        },
+                                        {
+                                            id: 'new_password_confirmation',
+                                            label: t('auth.confirmPassword'),
+                                            value: newPasswordConfirm,
+                                            set: setNewPasswordConfirm,
+                                            autoComplete: 'new-password',
+                                        },
+                                    ].map((field) => (
+                                        <div key={field.id} className="space-y-2">
+                                            <label
+                                                htmlFor={field.id}
+                                                className="text-sm font-medium text-muted-foreground"
+                                            >
+                                                {field.label}
+                                            </label>
+                                            <input
+                                                id={field.id}
+                                                type="password"
+                                                autoComplete={field.autoComplete}
+                                                value={field.value}
+                                                onChange={(e) =>
+                                                    field.set(e.target.value)
+                                                }
+                                                required
+                                                className="w-full rounded-2xl border border-border bg-background px-4 py-2 text-sm focus:ring-2 focus:ring-primary"
+                                            />
+                                        </div>
+                                    ))}
+                                    {newPasswordConfirm &&
+                                        newPassword !== newPasswordConfirm && (
+                                            <p className="text-sm text-destructive">
+                                                {t('auth.passwordMismatch')}
+                                            </p>
+                                        )}
+                                    <Button
+                                        type="submit"
+                                        disabled={
+                                            passwordMutation.isPending ||
+                                            !currentPassword ||
+                                            !newPassword ||
+                                            newPassword !== newPasswordConfirm
+                                        }
+                                    >
+                                        {t('client.updatePassword')}
+                                    </Button>
+                                </form>
+                            </div>
+
+                            <div className="rounded-2xl border border-destructive/30 bg-card p-6">
+                                <h2 className="mb-2 font-serif text-xl font-bold text-destructive">
+                                    {t('client.deleteAccount')}
+                                </h2>
+                                <p className="mb-4 max-w-md text-sm text-muted-foreground">
+                                    {t('client.deleteAccountHint')}
+                                </p>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setDeleteOpen(true)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    {t('client.deleteAccount')}
+                                </Button>
+                            </div>
+
+                            <div className="rounded-2xl border border-border bg-card p-6">
                                 <h2 className="mb-6 font-serif text-xl font-bold text-foreground">
                                     {t('dashboard.settings')}
                                 </h2>
@@ -1436,7 +1678,7 @@ const ClientDashboard = () => {
                             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                                 {favorites.map((item) => (
                                     <motion.div
-                                        key={item.id}
+                                        key={favoriteKey(item)}
                                         layout
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
@@ -1458,8 +1700,10 @@ const ClientDashboard = () => {
                                                     </h3>
                                                     <p className="text-xs text-muted-foreground">
                                                         {t(
-                                                            `nav.${item.type}s`,
-                                                        ) || item.type}
+                                                            favoriteTypeLabelKey(
+                                                                item.type,
+                                                            ),
+                                                        )}
                                                     </p>
                                                 </div>
                                                 <Button
@@ -1467,20 +1711,26 @@ const ClientDashboard = () => {
                                                     size="icon"
                                                     className="h-8 w-8 text-destructive hover:bg-destructive/10"
                                                     onClick={() =>
-                                                        removeFavorite(item.id)
+                                                        removeFavorite(item)
                                                     }
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                {item.price && (
+                                                {item.price != null &&
+                                                item.price > 0 ? (
                                                     <p className="font-bold text-primary">
-                                                        ${item.price}
+                                                        {formatPrice(
+                                                            item.price,
+                                                            'TND',
+                                                        )}
                                                     </p>
+                                                ) : (
+                                                    <span />
                                                 )}
                                                 <Link
-                                                    to={`/${item.type}s/${item.id}`}
+                                                    to={favoritePath(item)}
                                                     className="text-xs font-medium text-secondary hover:underline"
                                                 >
                                                     {t('common.viewDetails')}
@@ -1547,8 +1797,11 @@ const ClientDashboard = () => {
                                                             </div>
                                                         </div>
                                                         <p className="text-sm font-bold text-primary">
-                                                            {t('common.from')} $
-                                                            {rec.price}
+                                                            {t('common.from')}{' '}
+                                                            {formatPrice(
+                                                                rec.price,
+                                                                'TND',
+                                                            )}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1560,6 +1813,68 @@ const ClientDashboard = () => {
                     )}
                 </div>
             </main>
+
+            <ConfirmDialog
+                open={cancelTarget !== null}
+                onOpenChange={(open) => !open && setCancelTarget(null)}
+                title={t('client.cancelBookingTitle')}
+                description={
+                    cancelTarget
+                        ? `#${cancelTarget.booking_ref} · ${formatBookingTitle(cancelTarget)}`
+                        : ''
+                }
+                confirmText={
+                    cancelMutation.isPending
+                        ? t('common.loading') || '...'
+                        : t('client.cancelBookingConfirm')
+                }
+                cancelText={t('client.keepBooking')}
+                onConfirm={() =>
+                    cancelTarget &&
+                    !cancelMutation.isPending &&
+                    cancelMutation.mutate(cancelTarget.id)
+                }
+            >
+                <p className="px-6 text-sm text-muted-foreground">
+                    {cancelTarget?.provider_booking_id
+                        ? t('client.cancelPenaltyWarning')
+                        : t('client.cancelBookingWarning')}
+                </p>
+            </ConfirmDialog>
+
+            <ConfirmDialog
+                open={deleteOpen}
+                onOpenChange={(open) => {
+                    setDeleteOpen(open);
+                    if (!open) setDeletePassword('');
+                }}
+                title={t('client.deleteAccount')}
+                description={t('client.deleteAccountHint')}
+                confirmText={t('client.deleteAccountConfirm')}
+                cancelText={t('actions.cancel')}
+                onConfirm={() =>
+                    deletePassword &&
+                    !deleteAccountMutation.isPending &&
+                    deleteAccountMutation.mutate()
+                }
+            >
+                <div className="space-y-2 px-6">
+                    <label
+                        htmlFor="delete_password"
+                        className="text-sm font-medium text-muted-foreground"
+                    >
+                        {t('client.currentPassword')}
+                    </label>
+                    <input
+                        id="delete_password"
+                        type="password"
+                        autoComplete="current-password"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        className="w-full rounded-2xl border border-border bg-background px-4 py-2 text-sm"
+                    />
+                </div>
+            </ConfirmDialog>
         </div>
     );
 };

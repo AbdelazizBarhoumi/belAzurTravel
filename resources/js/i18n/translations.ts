@@ -4797,6 +4797,21 @@ export const translations: Record<string, TranslationEntry> = {
         ar: 'تم الاسترداد',
         en: 'Refunded',
     },
+    'complaint.status.new': {
+        fr: 'Nouveau',
+        ar: 'جديد',
+        en: 'New',
+    },
+    'complaint.status.in-progress': {
+        fr: 'En cours',
+        ar: 'قيد المعالجة',
+        en: 'In progress',
+    },
+    'complaint.status.closed': {
+        fr: 'Clôturé',
+        ar: 'مغلق',
+        en: 'Closed',
+    },
 
     // Complaint types
     'complaint.type.complaint': {
@@ -6086,6 +6101,151 @@ translations['admin.settings.title_en'] = {
     fr: 'Titre',
     ar: 'العنوان',
     en: 'Title',
+};
+translations['admin.visaApplications.nav'] = {
+    fr: 'Demandes de visa',
+    ar: 'طلبات التأشيرة',
+    en: 'Visa applications',
+};
+translations['admin.visaApplications.title'] = {
+    fr: 'Demandes de visa',
+    ar: 'طلبات التأشيرة',
+    en: 'Visa applications',
+};
+translations['admin.visaApplications.subtitle'] = {
+    fr: 'Dossiers reçus — les données de passeport sont chiffrées',
+    ar: 'الملفات المستلمة — بيانات جواز السفر مشفّرة',
+    en: 'Received files — passport data is encrypted',
+};
+translations['admin.visaApplications.search'] = {
+    fr: 'Nom, email, téléphone ou pays…',
+    ar: 'الاسم أو البريد أو الهاتف أو الدولة…',
+    en: 'Name, email, phone or country…',
+};
+translations['admin.visaApplications.applicant'] = {
+    fr: 'Demandeur',
+    ar: 'مقدّم الطلب',
+    en: 'Applicant',
+};
+translations['admin.visaApplications.country'] = {
+    fr: 'Destination',
+    ar: 'الوجهة',
+    en: 'Destination',
+};
+translations['admin.visaApplications.passport'] = {
+    fr: 'N° de passeport',
+    ar: 'رقم جواز السفر',
+    en: 'Passport number',
+};
+translations['admin.visaApplications.travelDate'] = {
+    fr: 'Date de voyage',
+    ar: 'تاريخ السفر',
+    en: 'Travel date',
+};
+translations['admin.visaApplications.statusLabel'] = {
+    fr: 'Statut',
+    ar: 'الحالة',
+    en: 'Status',
+};
+translations['admin.visaApplications.received'] = {
+    fr: 'Reçue le',
+    ar: 'تاريخ الاستلام',
+    en: 'Received',
+};
+translations['admin.visaApplications.empty'] = {
+    fr: 'Aucune demande de visa.',
+    ar: 'لا توجد طلبات تأشيرة.',
+    en: 'No visa applications.',
+};
+translations['admin.visaApplications.visaType'] = {
+    fr: 'Type de visa',
+    ar: 'نوع التأشيرة',
+    en: 'Visa type',
+};
+translations['admin.visaApplications.birthDate'] = {
+    fr: 'Date de naissance',
+    ar: 'تاريخ الميلاد',
+    en: 'Date of birth',
+};
+translations['admin.visaApplications.email'] = {
+    fr: 'Email',
+    ar: 'البريد الإلكتروني',
+    en: 'Email',
+};
+translations['admin.visaApplications.phone'] = {
+    fr: 'Téléphone',
+    ar: 'الهاتف',
+    en: 'Phone',
+};
+translations['admin.visaApplications.previousVisa'] = {
+    fr: 'Visa précédent',
+    ar: 'تأشيرة سابقة',
+    en: 'Previous visa',
+};
+translations['admin.visaApplications.notes'] = {
+    fr: 'Remarques',
+    ar: 'ملاحظات',
+    en: 'Notes',
+};
+translations['admin.visaApplications.yes'] = {
+    fr: 'Oui',
+    ar: 'نعم',
+    en: 'Yes',
+};
+translations['admin.visaApplications.no'] = {
+    fr: 'Non',
+    ar: 'لا',
+    en: 'No',
+};
+translations['admin.visaApplications.scanTitle'] = {
+    fr: 'Copie du passeport',
+    ar: 'نسخة جواز السفر',
+    en: 'Passport copy',
+};
+translations['admin.visaApplications.view'] = {
+    fr: 'Afficher',
+    ar: 'عرض',
+    en: 'View',
+};
+translations['admin.visaApplications.download'] = {
+    fr: 'Télécharger',
+    ar: 'تنزيل',
+    en: 'Download',
+};
+translations['admin.visaApplications.noScan'] = {
+    fr: 'Aucune copie n\'a été fournie.',
+    ar: 'لم يتم تقديم أي نسخة.',
+    en: 'No copy was provided.',
+};
+translations['admin.visaApplications.scanError'] = {
+    fr: 'Impossible d\'ouvrir la copie du passeport.',
+    ar: 'تعذّر فتح نسخة جواز السفر.',
+    en: 'Could not open the passport copy.',
+};
+translations['admin.visaApplications.encryptedHint'] = {
+    fr: 'Stockée chiffrée sur le serveur ; déchiffrée uniquement pour cet affichage. Chaque consultation est enregistrée.',
+    ar: 'مخزّنة مشفّرة على الخادم، وتُفكّ فقط لهذا العرض. يتم تسجيل كل اطلاع.',
+    en: 'Stored encrypted on the server; decrypted only for this view. Every access is logged.',
+};
+translations['admin.visaApplications.status.pending'] = {
+    fr: 'En attente',
+    ar: 'قيد الانتظار',
+    en: 'Pending',
+};
+translations['admin.visaApplications.status.processing'] = {
+    fr: 'En cours',
+    ar: 'قيد المعالجة',
+    en: 'Processing',
+};
+translations['admin.visaApplications.status.approved'] = {
+    fr: 'Accordé',
+    ar: 'مقبول',
+    en: 'Approved',
+};
+translations['admin.visaApplications.status.rejected'] = {
+    fr: 'Refusé',
+    ar: 'مرفوض',
+    en: 'Rejected',
 };
 translations['admin.visaSearchPlaceholder'] = {
     fr: 'Rechercher un pays…',
@@ -8277,6 +8437,16 @@ translations['admin.queue.sendReply'] = {
     ar: 'إرسال الرد',
     en: 'Send reply',
 };
+translations['admin.guests'] = {
+    fr: 'Voyageurs',
+    ar: 'المسافرون',
+    en: 'Guests',
+};
+translations['admin.notes'] = {
+    fr: 'Notes',
+    ar: 'ملاحظات',
+    en: 'Notes',
+};
 translations['admin.queue.approve'] = {
     fr: 'Approuver',
     ar: 'موافقة',
@@ -8520,4 +8690,279 @@ translations['search.error.retry'] = {
     fr: 'Réessayer',
     ar: 'إعادة المحاولة',
     en: 'Retry',
+};
+translations['booking.participants'] = {
+    fr: 'Voyageurs',
+    ar: 'المسافرون',
+    en: 'Travellers',
+};
+translations['booking.cancelled'] = {
+    fr: 'Réservation annulée',
+    ar: 'تم إلغاء الحجز',
+    en: 'Booking cancelled',
+};
+translations['common.error'] = {
+    fr: 'Une erreur est survenue.',
+    ar: 'حدث خطأ ما.',
+    en: 'Something went wrong.',
+};
+translations['nav.menu'] = {
+    fr: 'Menu',
+    ar: 'القائمة',
+    en: 'Menu',
+};
+translations['auth.confirmPassword'] = {
+    fr: 'Confirmer le mot de passe',
+    ar: 'تأكيد كلمة المرور',
+    en: 'Confirm password',
+};
+translations['auth.passwordMismatch'] = {
+    fr: 'Les mots de passe ne correspondent pas.',
+    ar: 'كلمتا المرور غير متطابقتين.',
+    en: 'Passwords do not match.',
+};
+translations['admin.admin'] = {
+    fr: 'Équipe Bel Azur',
+    ar: 'فريق بل أزور',
+    en: 'Bel Azur team',
+};
+translations['client.supportHistory'] = {
+    fr: 'Mes messages',
+    ar: 'رسائلي',
+    en: 'My messages',
+};
+translations['client.supportEmpty'] = {
+    fr: 'Vous n\'avez encore envoyé aucun message.',
+    ar: 'لم ترسل أي رسالة بعد.',
+    en: 'You haven\'t sent any messages yet.',
+};
+translations['client.security'] = {
+    fr: 'Sécurité',
+    ar: 'الأمان',
+    en: 'Security',
+};
+translations['client.currentPassword'] = {
+    fr: 'Mot de passe actuel',
+    ar: 'كلمة المرور الحالية',
+    en: 'Current password',
+};
+translations['client.newPassword'] = {
+    fr: 'Nouveau mot de passe',
+    ar: 'كلمة المرور الجديدة',
+    en: 'New password',
+};
+translations['client.updatePassword'] = {
+    fr: 'Mettre à jour le mot de passe',
+    ar: 'تحديث كلمة المرور',
+    en: 'Update password',
+};
+translations['client.passwordUpdated'] = {
+    fr: 'Mot de passe mis à jour.',
+    ar: 'تم تحديث كلمة المرور.',
+    en: 'Password updated.',
+};
+translations['client.deleteAccount'] = {
+    fr: 'Supprimer mon compte',
+    ar: 'حذف حسابي',
+    en: 'Delete my account',
+};
+translations['client.deleteAccountHint'] = {
+    fr: 'Votre compte sera définitivement supprimé. Vos réservations restent enregistrées chez nous pour le suivi.',
+    ar: 'سيتم حذف حسابك نهائياً. تبقى حجوزاتك مسجلة لدينا للمتابعة.',
+    en: 'Your account will be permanently deleted. Your bookings stay on file with us for follow-up.',
+};
+translations['client.deleteAccountConfirm'] = {
+    fr: 'Supprimer définitivement',
+    ar: 'حذف نهائي',
+    en: 'Delete permanently',
+};
+translations['client.cancelBookingTitle'] = {
+    fr: 'Annuler cette réservation ?',
+    ar: 'إلغاء هذا الحجز؟',
+    en: 'Cancel this booking?',
+};
+translations['client.cancelBookingConfirm'] = {
+    fr: 'Oui, annuler',
+    ar: 'نعم، إلغاء',
+    en: 'Yes, cancel',
+};
+translations['client.keepBooking'] = {
+    fr: 'Garder la réservation',
+    ar: 'الاحتفاظ بالحجز',
+    en: 'Keep booking',
+};
+translations['client.cancelBookingWarning'] = {
+    fr: 'Cette action est définitive.',
+    ar: 'هذا الإجراء نهائي.',
+    en: 'This cannot be undone.',
+};
+translations['client.cancelPenaltyWarning'] = {
+    fr: 'Cette réservation est confirmée auprès de l\'hôtel : des frais d\'annulation peuvent s\'appliquer selon les conditions de l\'offre. Cette action est définitive.',
+    ar: 'هذا الحجز مؤكد لدى الفندق: قد تُطبق رسوم إلغاء حسب شروط العرض. هذا الإجراء نهائي.',
+    en: 'This booking is confirmed with the hotel: cancellation fees may apply under the offer\'s terms. This cannot be undone.',
+};
+translations['client.complaintStatus.pending'] = {
+    fr: 'En attente',
+    ar: 'قيد الانتظار',
+    en: 'Pending',
+};
+translations['client.complaintStatus.in_review'] = {
+    fr: 'En cours d\'examen',
+    ar: 'قيد المراجعة',
+    en: 'In review',
+};
+translations['client.complaintStatus.resolved'] = {
+    fr: 'Résolue',
+    ar: 'تم الحل',
+    en: 'Resolved',
+};
+translations['client.complaintStatus.rejected'] = {
+    fr: 'Rejetée',
+    ar: 'مرفوضة',
+    en: 'Rejected',
+};
+translations['client.complaintStatus.refunded'] = {
+    fr: 'Remboursée',
+    ar: 'تم الاسترداد',
+    en: 'Refunded',
+};
+translations['client.complaintStatus.new'] = {
+    fr: 'Nouveau',
+    ar: 'جديد',
+    en: 'New',
+};
+translations['client.complaintStatus.in-progress'] = {
+    fr: 'En cours',
+    ar: 'قيد المعالجة',
+    en: 'In progress',
+};
+translations['client.complaintStatus.closed'] = {
+    fr: 'Clôturé',
+    ar: 'مغلق',
+    en: 'Closed',
+};
+translations['auth.forgotTitle'] = {
+    fr: 'Mot de passe oublié',
+    ar: 'نسيت كلمة المرور',
+    en: 'Forgot password',
+};
+translations['auth.forgotDescription'] = {
+    fr: 'Indiquez votre adresse e-mail : nous vous enverrons un lien pour choisir un nouveau mot de passe.',
+    ar: 'أدخل بريدك الإلكتروني وسنرسل لك رابطاً لاختيار كلمة مرور جديدة.',
+    en: 'Enter your email address and we\'ll send you a link to choose a new password.',
+};
+translations['auth.sendResetLink'] = {
+    fr: 'Envoyer le lien',
+    ar: 'إرسال الرابط',
+    en: 'Send reset link',
+};
+translations['auth.resetLinkSent'] = {
+    fr: 'Si un compte existe pour cette adresse, un lien de réinitialisation vient de vous être envoyé. Pensez à vérifier vos spams.',
+    ar: 'إذا كان هناك حساب بهذا العنوان، فقد أرسلنا لك رابط إعادة التعيين. تحقق من مجلد الرسائل غير المرغوب فيها.',
+    en: 'If an account exists for that address, a reset link is on its way. Remember to check your spam folder.',
+};
+translations['auth.backToLogin'] = {
+    fr: 'Retour à la connexion',
+    ar: 'العودة إلى تسجيل الدخول',
+    en: 'Back to sign in',
+};
+translations['auth.resetTitle'] = {
+    fr: 'Choisir un nouveau mot de passe',
+    ar: 'اختر كلمة مرور جديدة',
+    en: 'Choose a new password',
+};
+translations['auth.resetSubmit'] = {
+    fr: 'Réinitialiser le mot de passe',
+    ar: 'إعادة تعيين كلمة المرور',
+    en: 'Reset password',
+};
+translations['auth.passwordResetDone'] = {
+    fr: 'Mot de passe réinitialisé. Vous pouvez vous connecter.',
+    ar: 'تمت إعادة تعيين كلمة المرور. يمكنك تسجيل الدخول الآن.',
+    en: 'Password reset. You can sign in now.',
+};
+translations['auth.requestNewLink'] = {
+    fr: 'Demander un nouveau lien',
+    ar: 'طلب رابط جديد',
+    en: 'Request a new link',
+};
+translations['verify.title'] = {
+    fr: 'Vérifiez votre adresse e-mail',
+    ar: 'تحقق من بريدك الإلكتروني',
+    en: 'Verify your email',
+};
+translations['verify.description'] = {
+    fr: 'Merci pour votre inscription ! Avant de commencer, cliquez sur le lien que nous venons de vous envoyer par e-mail. Vous ne l\'avez pas reçu ? Nous pouvons vous en envoyer un autre.',
+    ar: 'شكراً لتسجيلك! قبل البدء، انقر على الرابط الذي أرسلناه إلى بريدك الإلكتروني. لم يصلك؟ يمكننا إرسال رابط آخر.',
+    en: 'Thanks for signing up! Before getting started, click the link we just emailed you. Didn\'t get it? We\'ll gladly send another.',
+};
+translations['verify.resend'] = {
+    fr: 'Renvoyer l\'e-mail de vérification',
+    ar: 'إعادة إرسال رسالة التحقق',
+    en: 'Resend verification email',
+};
+translations['verify.sending'] = {
+    fr: 'Envoi…',
+    ar: 'جارٍ الإرسال…',
+    en: 'Sending…',
+};
+translations['verify.done'] = {
+    fr: 'J\'ai vérifié mon adresse',
+    ar: 'لقد تحققت من بريدي',
+    en: 'I\'ve verified my email',
+};
+translations['verify.linkSent'] = {
+    fr: 'Lien de vérification envoyé !',
+    ar: 'تم إرسال رابط التحقق!',
+    en: 'Verification link sent!',
+};
+translations['verify.resendFailed'] = {
+    fr: 'Impossible d\'envoyer le lien. Réessayez plus tard.',
+    ar: 'تعذر إرسال الرابط. حاول لاحقاً.',
+    en: 'Couldn\'t send the link. Please try again later.',
+};
+translations['verify.verified'] = {
+    fr: 'Adresse e-mail vérifiée !',
+    ar: 'تم التحقق من البريد الإلكتروني!',
+    en: 'Email verified!',
+};
+translations['verify.notYet'] = {
+    fr: 'Adresse pas encore vérifiée. Consultez votre boîte de réception.',
+    ar: 'لم يتم التحقق بعد. يرجى مراجعة بريدك الوارد.',
+    en: 'Email not verified yet. Please check your inbox.',
+};
+translations['favorites.type.destination'] = {
+    fr: 'Destination',
+    ar: 'وجهة',
+    en: 'Destination',
+};
+translations['favorites.type.hotel'] = {
+    fr: 'Hôtel',
+    ar: 'فندق',
+    en: 'Hotel',
+};
+translations['favorites.type.tour'] = {
+    fr: 'Circuit',
+    ar: 'جولة',
+    en: 'Tour',
+};
+translations['favorites.type.travel'] = {
+    fr: 'Voyage',
+    ar: 'رحلة',
+    en: 'Trip',
+};
+translations['favorites.type.event'] = {
+    fr: 'Événement',
+    ar: 'فعالية',
+    en: 'Event',
+};
+translations['favorites.type.car'] = {
+    fr: 'Voiture',
+    ar: 'سيارة',
+    en: 'Car',
+};
+translations['favorites.type.flight'] = {
+    fr: 'Vol',
+    ar: 'رحلة جوية',
+    en: 'Flight',
 };

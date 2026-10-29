@@ -4,11 +4,11 @@ namespace App\Notifications;
 
 use App\Models\VisaApplication;
 use App\Notifications\Concerns\NotifiesByMail;
+use App\Security\PassportVault;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * A new visa application: the full file (with the passport copy attached) for
@@ -77,10 +77,11 @@ class VisaApplicationNotification extends Notification implements ShouldQueue
         if ($this->audience === self::FOR_TEAM) {
             $message->replyTo($application->email, $applicant);
 
-            $path = $application->passport_copy_path;
-            if ($path && Storage::disk('public')->exists($path)) {
-                $message->attach(Storage::disk('public')->path($path), [
-                    'as' => 'passport-'.str($applicant)->slug().'.'.pathinfo($path, PATHINFO_EXTENSION),
+            // Decrypted in memory only for the attachment; never written in clear.
+            $scan = app(PassportVault::class)->readFile($application->passport_copy_path);
+            if ($scan !== null) {
+                $message->attachData($scan, $application->passportCopyFilename(), [
+                    'mime' => $application->passport_copy_mime ?: 'application/octet-stream',
                 ]);
             }
         }

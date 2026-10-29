@@ -14,6 +14,8 @@ class ComplaintResolvedNotification extends Notification implements ShouldQueue
     use NotifiesByMail;
     use Queueable;
 
+    public bool $deleteWhenMissingModels = true;
+
     public function __construct(
         private readonly Complaint $complaint,
         private readonly string $resolution,
@@ -29,7 +31,7 @@ class ComplaintResolvedNotification extends Notification implements ShouldQueue
             'complaint_id' => $this->complaint->id,
             'complaint_type' => $this->complaint->type,
             'resolution' => $this->resolution,
-            'url' => '/client/complaints',
+            'url' => $this->clientPath(),
             'fr' => $this->resolution === 'resolved'
                 ? "Votre {$type} #{$this->complaint->id} a été résolue"
                 : "Votre {$type} #{$this->complaint->id} a été rejetée",
@@ -62,10 +64,15 @@ class ComplaintResolvedNotification extends Notification implements ShouldQueue
                 'statusLabel' => 'Status',
                 'refundAmountLabel' => 'Refund Amount',
                 'actionText' => 'View Details',
-                'actionUrl' => config('app.url').'/client/complaints',
+                'actionUrl' => config('app.url').$this->clientPath(),
                 'closingLine' => $isResolved
                     ? "If you have any further questions, please don't hesitate to contact us."
                     : 'If you believe this decision was made in error, please contact our support team for further assistance.',
             ]);
+    }
+
+    private function clientPath(): string
+    {
+        return $this->complaint->type === 'refund_request' ? '/client/refunds' : '/client/complaints';
     }
 }

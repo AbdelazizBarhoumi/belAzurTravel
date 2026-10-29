@@ -14,6 +14,8 @@ class BookingActivityNotification extends Notification implements ShouldQueue
     use NotifiesByMail;
     use Queueable;
 
+    public bool $deleteWhenMissingModels = true;
+
     public function __construct(
         private readonly Booking $booking,
         private readonly string $activityType,
@@ -96,6 +98,7 @@ class BookingActivityNotification extends Notification implements ShouldQueue
             'booking.approved' => __('messages.booking_approved_for', ['client' => $client], $lang),
             'booking.rejected' => __('messages.booking_rejected_for', ['client' => $client], $lang),
             'booking.expired' => __('messages.booking_expired_for', ['client' => $client], $lang),
+            'booking.paid' => __('messages.booking_paid_by', ['client' => $client], $lang),
             default => __('messages.booking_created', ['client' => $client], $lang),
         };
     }

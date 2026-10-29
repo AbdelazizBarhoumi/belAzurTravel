@@ -14,6 +14,8 @@ class TripReminderNotification extends Notification implements ShouldQueue
     use NotifiesByMail;
     use Queueable;
 
+    public bool $deleteWhenMissingModels = true;
+
     public function __construct(
         private readonly Booking $booking,
         private readonly int $daysUntil,

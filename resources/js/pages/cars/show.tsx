@@ -50,6 +50,13 @@ export default function CarDetail() {
                     <Gallery
                         images={gallery}
                         hotelName={localizeText(car.name, lang)}
+                        favoriteItem={{
+                            id: car.slug,
+                            type: 'car',
+                            name: localizeText(car.name, lang),
+                            image: gallery[0] ?? '',
+                            price: car.price,
+                        }}
                     />
 
                     <div className="mt-8 lg:hidden">

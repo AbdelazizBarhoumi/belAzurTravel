@@ -426,9 +426,9 @@ const Destinations = () => {
                                                         imgClass="transition-transform duration-500 group-hover:scale-105"
                                                     />
                                                     <FavoriteButton
-                                                        className="absolute right-3 top-3"
+                                                        className="absolute end-3 top-3"
                                                         item={{
-                                                            id: `dest-${localizeText(dest.name, lang)}`,
+                                                            id: dest.slug,
                                                             type: 'destination',
                                                             name: localizeText(
                                                                 dest.name,

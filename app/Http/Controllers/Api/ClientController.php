@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Concerns\ProfileValidationRules;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\PasswordUpdateRequest;
+use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\SupportInquiry;
@@ -12,6 +14,7 @@ use App\Notifications\SupportInquiryNotification;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
 {
@@ -141,9 +144,42 @@ class ClientController extends Controller
     {
         $data = $request->validate($this->profileRules($request->user()->id));
 
-        $request->user()->update($data);
+        $user = $request->user();
+        $user->fill($data);
 
-        return response()->json($request->user());
+        // A new address must be verified again, like the settings profile page.
+        $emailChanged = $user->isDirty('email');
+        if ($emailChanged) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        if ($emailChanged) {
+            $user->sendEmailVerificationNotification();
+        }
+
+        return response()->json($user);
+    }
+
+    public function updatePassword(PasswordUpdateRequest $request): JsonResponse
+    {
+        $request->user()->update(['password' => $request->validated('password')]);
+
+        return response()->json(['message' => __('messages.password_updated')]);
+    }
+
+    public function deleteAccount(ProfileDeleteRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        Auth::guard('web')->logout();
+        $user->delete();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json(['message' => __('messages.account_deleted')]);
     }
 
     private function localized(string $value): array
@@ -184,7 +220,7 @@ class ClientController extends Controller
             // Voucher data — populated once an OS-TRAVEL hotel is confirmed.
             'provider_booking_id' => $booking->provider_booking_id,
             'provider_booking_reference' => $booking->provider_booking_reference,
-            'provider_prebook' => $prebook,
+            'provider_prebook' => $booking->clientPrebook(),
         ];
     }
 

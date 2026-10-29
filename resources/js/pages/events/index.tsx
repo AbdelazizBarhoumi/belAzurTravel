@@ -9,6 +9,7 @@ import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyStat
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import {
     Select,
     SelectContent,
@@ -308,7 +309,7 @@ function EventsContent() {
                                             transition={{ delay: i * 0.1 }}
                                             className="card-elevated group overflow-hidden rounded-2xl bg-card"
                                         >
-                                            <div className="h-56 overflow-hidden">
+                                            <div className="relative h-56 overflow-hidden">
                                                 <img
                                                     src={e.image}
                                                     alt={localizeText(
@@ -317,6 +318,23 @@ function EventsContent() {
                                                     )}
                                                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                     loading="lazy"
+                                                />
+                                                <FavoriteButton
+                                                    className="absolute end-3 top-3"
+                                                    item={{
+                                                        id: e.slug,
+                                                        type: 'event',
+                                                        name: localizeText(
+                                                            e.title,
+                                                            lang,
+                                                        ),
+                                                        image: e.image ?? '',
+                                                        price: e.price,
+                                                        location: localizeText(
+                                                            e.location,
+                                                            lang,
+                                                        ),
+                                                    }}
                                                 />
                                             </div>
                                             <div className="p-6">

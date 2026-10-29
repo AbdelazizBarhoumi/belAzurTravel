@@ -120,7 +120,10 @@ describe('ClientDashboard booking cards', () => {
                     notifications: [],
                 } as never;
             }
-            if (url === '/api/destinations') {
+            if (url === '/api/client/bookings') {
+                return bookings as never;
+            }
+            if (url === '/api/destinations' || url === '/api/favorites') {
                 return [] as never;
             }
             if (url.includes('/notifications')) {

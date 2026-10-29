@@ -20,7 +20,10 @@ const Login = () => {
     const [showPass, setShowPass] = useState(false);
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const redirectTo = searchParams.get('redirect');
+    // Only same-site paths: `//host` and absolute URLs would leave the site.
+    const rawRedirect = searchParams.get('redirect');
+    const redirectTo =
+        rawRedirect && /^\/(?![/\\])/.test(rawRedirect) ? rawRedirect : null;
     const { t } = useLanguage();
     const { data: currentUser, isPending, isFetching } = useAuthUser();
     const [consentChecked, setConsentChecked] = useState(false);
@@ -88,7 +91,10 @@ const Login = () => {
                 return;
             }
 
-            const data = (await res.json()) as { user: AuthUser };
+            const data = (await res.json()) as {
+                user: AuthUser;
+                redirect?: string | null;
+            };
             const user = data.user;
             storeAuthUser(user);
 
@@ -99,7 +105,12 @@ const Login = () => {
             }
 
             // Full reload so the new session's CSRF token is embedded in the page
-            window.location.href = redirectTo || redirectAfterLogin(user.role);
+            const serverRedirect =
+                data.redirect && /^\/(?![/\\])/.test(data.redirect)
+                    ? data.redirect
+                    : null;
+            window.location.href =
+                redirectTo || serverRedirect || redirectAfterLogin(user.role);
         } catch (error) {
             console.error('Login catch:', error);
             toast.error(
@@ -224,12 +235,12 @@ const Login = () => {
                                     </a>
                                 </span>
                             </label>
-                            <a
-                                href="#"
+                            <Link
+                                to="/forgot-password"
                                 className="text-primary hover:underline"
                             >
                                 {t('auth.forgotPassword')}
-                            </a>
+                            </Link>
                         </div>
 
                         <Button

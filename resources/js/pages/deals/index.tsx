@@ -247,7 +247,7 @@ export default function Deals() {
                                         className={cn(
                                             'grid gap-6',
                                             viewMode === 'grid'
-                                                ? 'md:grid-cols-2 xl:grid-cols-3'
+                                                ? 'sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3'
                                                 : 'grid-cols-1',
                                         )}
                                     >
@@ -257,9 +257,9 @@ export default function Deals() {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: i * 0.06 }}
-                                            className="rounded-2xl border border-border bg-card p-6 shadow-sm"
+                                            className="flex h-full min-w-0 flex-col rounded-2xl border border-border bg-card p-6 shadow-sm"
                                         >
-                                            <div className="mb-4 flex items-center justify-between">
+                                            <div className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
                                                 <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                                                     <Tag className="h-3 w-3" />{' '}
                                                     {localizeText(
@@ -284,23 +284,23 @@ export default function Deals() {
                                                     lang,
                                                 )}
                                             </p>
-                                            <div className="flex gap-2">
+                                            <div className="mt-auto flex gap-2 pt-2">
                                                 <Link
                                                     to={`/deals/${deal.slug}`}
-                                                    className="flex-1"
+                                                    className="min-w-0 flex-1"
                                                 >
                                                     <Button
                                                         variant="outline"
-                                                        className="w-full"
+                                                        className="h-auto min-h-10 w-full whitespace-normal px-3 py-2 text-center leading-tight"
                                                     >
                                                         {t('deals.viewDeal')}
                                                     </Button>
                                                 </Link>
                                                 <Link
                                                     to={`/deals/${deal.slug}`}
-                                                    className="flex-1"
+                                                    className="min-w-0 flex-1"
                                                 >
-                                                    <Button className="w-full">
+                                                    <Button className="h-auto min-h-10 w-full whitespace-normal px-3 py-2 text-center leading-tight">
                                                         {t('common.bookNow')}
                                                     </Button>
                                                 </Link>

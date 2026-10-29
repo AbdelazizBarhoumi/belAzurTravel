@@ -34,6 +34,12 @@ return [
             'intro' => 'Bonne nouvelle ! Votre réservation #:id a été confirmée.',
             'next_steps' => 'Vous recevrez vos documents de voyage sous peu. Si vous avez des questions, n\'hésitez pas à nous contacter.',
         ],
+        'received' => [
+            'subject' => 'Demande de réservation #:id reçue',
+            'greeting' => 'Nous avons bien reçu votre demande',
+            'intro' => 'Merci ! Votre demande de réservation #:id a bien été reçue et est en cours d’examen par notre équipe.',
+            'next_steps' => 'Nous répondons généralement sous 24 heures. Aucun paiement n’est demandé avant la confirmation de votre réservation.',
+        ],
         'approved_pending' => [
             'subject' => 'Réservation #:id approuvée',
             'greeting' => 'Votre réservation est approuvée',

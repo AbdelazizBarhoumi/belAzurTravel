@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\VisaApplication;
 use App\Notifications\VisaApplicationNotification;
+use App\Security\PassportVault;
 use App\Support\CommercialMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ use Throwable;
 
 class VisaApplicationController extends Controller
 {
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, PassportVault $vault): JsonResponse
     {
         $data = $request->validate([
             'visa_id' => 'required|exists:visas,id',
@@ -30,9 +31,18 @@ class VisaApplicationController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
+        // Passport data is encrypted at rest with PASSPORT_KEY; never store it
+        // in clear when the key is missing.
+        abort_unless($vault->isConfigured(), 503, __('messages.passport_storage_unavailable'));
+
         $passportCopyPath = null;
+        $passportCopyMime = null;
+        $passportCopyName = null;
         if ($request->hasFile('passport_copy')) {
-            $passportCopyPath = $request->file('passport_copy')->store('uploads/visa_passports', 'public');
+            $upload = $request->file('passport_copy');
+            $passportCopyPath = $vault->storeFile($upload);
+            $passportCopyMime = $upload->getMimeType();
+            $passportCopyName = $upload->getClientOriginalName();
         }
 
         $application = VisaApplication::create([
@@ -47,6 +57,8 @@ class VisaApplicationController extends Controller
             'visa_type' => $data['visa_type'],
             'previous_visa' => $data['previous_visa'] ?? false,
             'passport_copy_path' => $passportCopyPath,
+            'passport_copy_mime' => $passportCopyMime,
+            'passport_copy_name' => $passportCopyName,
             'notes' => $data['notes'] ?? null,
         ]);
 
@@ -65,7 +77,7 @@ class VisaApplicationController extends Controller
 
         return response()->json([
             'message' => 'Votre demande de visa a été envoyée avec succès.',
-            'data' => $application,
+            'data' => ['id' => $application->id],
         ], 201);
     }
 }

@@ -315,7 +315,7 @@ export default function TourDetail() {
                                         : tour.name
                                 }
                                 favoriteItem={{
-                                    id: `tour-${tour.slug}`,
+                                    id: tour.slug,
                                     type: 'tour',
                                     name:
                                         typeof tour.name === 'object'

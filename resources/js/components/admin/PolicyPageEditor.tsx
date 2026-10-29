@@ -2,10 +2,6 @@ import { Loader2, Save } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
-import {
-    ContentLangSwitch,
-    type ContentLang,
-} from '@/components/admin/ContentLangSwitch';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -40,6 +36,9 @@ interface PolicyPageEditorProps {
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
+/** The site publishes legal content in French only for now. */
+const CONTENT_LANG = 'fr';
+
 /**
  * Shared editor for the single-page policies (privacy, purchase). Saves with
  * `contentPatch` so only this page's key is written server-side.
@@ -57,8 +56,7 @@ export function PolicyPageEditor({
         body: { format: 'markdown', content: { en: '', fr: '', ar: '' } },
     };
     const [data, setData] = useState<PolicyData>(empty);
-    const [preview, setPreview] = useState<Record<string, boolean>>({});
-    const [activeLang, setActiveLang] = useState<ContentLang>('fr');
+    const [preview, setPreview] = useState(false);
     const [status, setStatus] = useState<SaveStatus>('idle');
     const autosaveTimerRef = useRef<number | null>(null);
     const lastSavedRef = useRef<string>('');
@@ -126,10 +124,13 @@ export function PolicyPageEditor({
         }
     };
 
-    const setBody = (lang: ContentLang, value: string) =>
+    const setBody = (value: string) =>
         setData((p) => ({
             ...p,
-            body: { ...p.body, content: { ...p.body.content, [lang]: value } },
+            body: {
+                ...p.body,
+                content: { ...p.body.content, [CONTENT_LANG]: value },
+            },
         }));
 
     if (loading) {
@@ -151,15 +152,7 @@ export function PolicyPageEditor({
             }
         >
             <Card className="space-y-4 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <ContentLangSwitch
-                        value={activeLang}
-                        onChange={setActiveLang}
-                        filled={{
-                            fr: Boolean(data.body.content.fr?.trim()),
-                            en: Boolean(data.body.content.en?.trim()),
-                        }}
-                    />
+                <div className="flex flex-wrap items-center justify-end gap-3">
                     <div className="flex items-center gap-3">
                         <Label className="text-xs">
                             {t('admin.settings.body_format')}
@@ -193,14 +186,17 @@ export function PolicyPageEditor({
 
                 <div>
                     <Label className="text-xs">
-                        {t('admin.settings.title')} ({activeLang.toUpperCase()})
+                        {t('admin.settings.title')}
                     </Label>
                     <Input
-                        value={data.title[activeLang] ?? ''}
+                        value={data.title[CONTENT_LANG] ?? ''}
                         onChange={(e) =>
                             setData((p) => ({
                                 ...p,
-                                title: { ...p.title, [activeLang]: e.target.value },
+                                title: {
+                                    ...p.title,
+                                    [CONTENT_LANG]: e.target.value,
+                                },
                             }))
                         }
                     />
@@ -210,50 +206,42 @@ export function PolicyPageEditor({
                     <div>
                         <div className="flex items-center justify-between">
                             <Label className="text-xs">
-                                {t('admin.settings.body')} (
-                                {activeLang.toUpperCase()})
+                                {t('admin.settings.body')}
                             </Label>
                             <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() =>
-                                    setPreview((p) => ({
-                                        ...p,
-                                        [activeLang]: !p[activeLang],
-                                    }))
-                                }
+                                onClick={() => setPreview((p) => !p)}
                             >
-                                {preview[activeLang]
+                                {preview
                                     ? t('admin.settings.edit')
                                     : t('admin.settings.preview')}
                             </Button>
                         </div>
-                        {preview[activeLang] ? (
+                        {preview ? (
                             <div className="mt-2 rounded-md border bg-background p-3">
                                 <MarkdownRenderer
-                                    content={data.body.content[activeLang]}
+                                    content={data.body.content[CONTENT_LANG]}
                                 />
                             </div>
                         ) : (
                             <Textarea
                                 className="mt-2 font-mono text-sm"
                                 rows={24}
-                                value={data.body.content[activeLang] ?? ''}
-                                onChange={(e) =>
-                                    setBody(activeLang, e.target.value)
-                                }
+                                value={data.body.content[CONTENT_LANG] ?? ''}
+                                onChange={(e) => setBody(e.target.value)}
                             />
                         )}
                     </div>
                 ) : (
                     <div>
                         <Label className="text-xs">
-                            {t('admin.settings.body')} ({activeLang.toUpperCase()})
+                            {t('admin.settings.body')}
                         </Label>
                         <RichTextEditor
-                            key={activeLang}
-                            value={data.body.content[activeLang] ?? ''}
-                            onChange={(v) => setBody(activeLang, v)}
+                            key={CONTENT_LANG}
+                            value={data.body.content[CONTENT_LANG] ?? ''}
+                            onChange={setBody}
                         />
                     </div>
                 )}

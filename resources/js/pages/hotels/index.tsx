@@ -1184,7 +1184,7 @@ export default function Hotels() {
                                                             )}
 
                                                             <FavoriteButton
-                                                                className="absolute left-4 top-4"
+                                                                className="absolute start-4 top-4"
                                                                 item={{
                                                                     id: hotel.slug,
                                                                     type: 'hotel',

@@ -104,8 +104,8 @@ class ManualHotelTest extends TestCase
 
         $response = $this->actingAs($this->client)
             ->postJson('/api/hotels/search', [
-                'check_in' => '2026-09-01',
-                'check_out' => '2026-09-08',
+                'check_in' => '2027-09-01',
+                'check_out' => '2027-09-08',
                 'hotel_slugs' => ['maison-de-la-plage'],
             ])
             ->assertOk();
@@ -145,8 +145,8 @@ class ManualHotelTest extends TestCase
             ->postJson('/api/bookings', [
                 'type' => 'hotel',
                 'item_slug' => 'maison-de-la-plage',
-                'start_date' => '2026-09-01',
-                'end_date' => '2026-09-05',
+                'start_date' => '2027-09-01',
+                'end_date' => '2027-09-05',
                 'client' => [
                     'name' => 'John Doe',
                     'email' => 'john@example.com',
@@ -205,8 +205,8 @@ class ManualHotelTest extends TestCase
             ->postJson('/api/bookings', [
                 'type' => 'hotel',
                 'item_slug' => 'maison-de-la-plage',
-                'start_date' => '2026-09-01',
-                'end_date' => '2026-09-05',
+                'start_date' => '2027-09-01',
+                'end_date' => '2027-09-05',
                 'client' => [
                     'name' => 'John Doe',
                     'email' => 'john@example.com',

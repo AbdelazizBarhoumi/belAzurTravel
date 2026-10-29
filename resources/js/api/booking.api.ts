@@ -218,6 +218,45 @@ export async function getClientDashboard() {
     return apiFetch<ClientDashboardPayload>('/api/client/dashboard');
 }
 
+export async function getClientBookings() {
+    return apiFetch<ClientBookingRow[]>('/api/client/bookings');
+}
+
+export interface ClientSupportThread {
+    id: number;
+    subject: Record<string, string>;
+    message: Record<string, string>;
+    status: string;
+    replies: Array<{
+        author?: string;
+        message: string;
+        created_at?: string;
+    }>;
+    created_at: string;
+}
+
+export async function getClientSupport() {
+    return apiFetch<ClientSupportThread[]>('/api/client/support');
+}
+
+export async function updateClientPassword(payload: {
+    current_password: string;
+    password: string;
+    password_confirmation: string;
+}) {
+    return apiFetch<{ message: string }>('/api/client/password', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+    });
+}
+
+export async function deleteClientAccount(password: string) {
+    return apiFetch<{ message: string }>('/api/client/account', {
+        method: 'DELETE',
+        body: JSON.stringify({ password }),
+    });
+}
+
 export async function getClientPayments() {
     return apiFetch<
         Array<{

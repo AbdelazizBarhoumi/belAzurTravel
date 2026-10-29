@@ -7,23 +7,20 @@ use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BookingAudit;
-use App\Models\Car;
-use App\Models\Destination;
-use App\Models\Event;
-use App\Models\Flight;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Models\Promo;
 use App\Models\SiteSetting;
-use App\Models\Tour;
-use App\Models\Travel;
 use App\Models\User;
 use App\Notifications\BookingActivityNotification;
 use App\Notifications\BookingStatusNotification;
+use App\Security\PassportVault;
 use App\Services\OsTravel\OsTravelBookingService;
+use App\Support\Bookables;
 use App\Support\CommercialMail;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +46,7 @@ class BookingController extends Controller
 
         $user = $request->user();
         abort_unless(
-            $user && ($booking->user_id === $user->id || $user->role === 'admin'),
+            $user && ((int) $booking->user_id === (int) $user->id || $user->can('admin')),
             403
         );
 
@@ -62,8 +59,8 @@ class BookingController extends Controller
             'type' => ['required', 'in:destination,hotel,tour,flight,car,travel,event'],
             'item_slug' => ['nullable', 'string', 'max:255', 'required_without:item_id'],
             'item_id' => ['nullable', 'string', 'max:255', 'required_without:item_slug'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['nullable', 'date', 'after_or_equal:today', 'required_if:type,car', 'required_with:end_date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date', 'required_if:type,car'],
             'client.name' => ['required', 'string', 'max:255'],
             'client.email' => ['required', 'email', 'max:255'],
             'client.phone' => ['nullable', 'string', 'max:64'],
@@ -89,6 +86,12 @@ class BookingController extends Controller
             'details.room_size' => ['nullable', 'numeric'],
             'details.room_capacity' => ['nullable', 'integer'],
             'details.room_features' => ['nullable', 'array'],
+            'details.participants' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'details.passengers' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'details.cabin_class' => ['nullable', 'string', 'max:32'],
+            'guests.*.name' => ['nullable', 'string', 'max:255'],
+            'guests.*.passport_number' => ['nullable', 'string', 'max:64'],
+            'guests.*.passport_expiry' => ['nullable', 'date'],
             // OS-TRAVEL live-search context captured during Phase 9.
             'provider.token' => ['nullable', 'string', 'max:2048'],
             'provider.source' => ['nullable', 'string', 'max:255'],
@@ -132,6 +135,13 @@ class BookingController extends Controller
             }
         }
 
+        // Travellers' passport details are encrypted at rest with PASSPORT_KEY;
+        // refuse rather than store them in clear when the key is missing.
+        $hasPassportData = collect($data['guests'] ?? [])->contains(
+            fn ($guest) => is_array($guest) && (! empty($guest['passport_number']) || ! empty($guest['passport_expiry'])),
+        );
+        abort_if($hasPassportData && ! app(PassportVault::class)->isConfigured(), 503, __('messages.passport_storage_unavailable'));
+
         if (! empty($data['promo_code'])) {
             $promo = Promo::where('code', $data['promo_code'])->first();
             if (! $promo) {
@@ -154,7 +164,13 @@ class BookingController extends Controller
             }
         }
 
-        $this->findBookable($data['type'], $data['item_slug'] ?? $data['item_id']);
+        $bookable = $this->findBookable($data['type'], $data['item_slug'] ?? $data['item_id']);
+
+        // Events run on their own date; the client does not pick one.
+        if ($data['type'] === 'event' && empty($data['start_date']) && $bookable->date_from) {
+            $data['start_date'] = Carbon::parse($bookable->date_from)->toDateString();
+            $data['end_date'] = $bookable->date_to ? Carbon::parse($bookable->date_to)->toDateString() : null;
+        }
 
         // Every reservation lands `pending` — no type auto-confirms anymore.
         // OS-TRAVEL hotels: PreBook to verify availability + final price, then
@@ -211,7 +227,7 @@ class BookingController extends Controller
                 ];
                 $prebookTotal = $prebook['total'] > 0
                     ? (int) round($prebook['total'] * (1 + ($hotel->markup_percentage ? (float) $hotel->markup_percentage : 0) / 100))
-                    : (int) $data['amount'];
+                    : null;
             }
         }
 
@@ -233,7 +249,7 @@ class BookingController extends Controller
             'guests' => $data['guests'] ?? null,
             'promo_code' => $data['promo_code'] ?? null,
             'notes' => $data['notes'] ?? null,
-            'total_amount' => $prebookTotal ?? (int) $data['amount'],
+            'total_amount' => $prebookTotal ?? $this->catalogTotal($bookable, $data),
             'status' => BookingStatus::Pending->value,
             'expires_at' => now()->addHours($expiryHours),
             'is_request' => ! empty($data['is_request']),
@@ -253,6 +269,8 @@ class BookingController extends Controller
         );
 
         $this->notifyOperations($booking, 'booking.submitted');
+        // Acknowledge the request to the client ("request received" email).
+        $this->notifyClient($booking);
 
         return response()->json($this->payload($booking->refresh()), 201);
     }
@@ -261,7 +279,7 @@ class BookingController extends Controller
     {
         $booking = Booking::query()->findOrFail($id);
 
-        abort_unless($booking->user_id === $request->user()->id || $request->user()->can('admin'), 403);
+        abort_unless((int) $booking->user_id === (int) $request->user()->id || $request->user()->can('admin'), 403);
         abort_if(
             $request->user()->role === 'client'
             && $booking->start_date
@@ -275,6 +293,12 @@ class BookingController extends Controller
         if ($booking->status === 'Cancelled') {
             return response()->json($this->payload($booking));
         }
+
+        abort_unless(
+            $booking->statusEnum()->canTransitionTo(BookingStatus::Cancelled),
+            422,
+            __('messages.booking_not_cancellable')
+        );
 
         $reason = $request->input('reason');
 
@@ -328,7 +352,11 @@ class BookingController extends Controller
             ]));
         }
 
-        $booking->transitionTo(BookingStatus::Cancelled, $request->user(), $reason);
+        abort_unless(
+            $booking->transitionTo(BookingStatus::Cancelled, $request->user(), $reason),
+            422,
+            __('messages.booking_not_cancellable')
+        );
 
         $this->notifyOperations($booking->refresh(), 'booking.cancelled');
         $this->notifyClient($booking);
@@ -465,7 +493,11 @@ class BookingController extends Controller
 
         // Provider-backed bookings cancelled by an admin stay local: the
         // reservation itself is not re-sent to the provider (ops handles it).
-        $booking->transitionTo(BookingStatus::Cancelled, $request->user(), $reason);
+        abort_unless(
+            $booking->transitionTo(BookingStatus::Cancelled, $request->user(), $reason),
+            422,
+            __('messages.booking_not_cancellable')
+        );
 
         $this->notifyOperations($booking->refresh(), 'booking.cancelled');
         $this->notifyClient($booking);
@@ -473,20 +505,41 @@ class BookingController extends Controller
         return response()->json($this->payload($booking->refresh()));
     }
 
-    private function findBookable(string $type, ?string $identifier): void
+    private function findBookable(string $type, ?string $identifier): Model
     {
-        $query = match ($type) {
-            'destination' => Destination::query()->where('slug', $identifier),
-            'hotel' => Hotel::query()->where(fn (Builder $query) => $query->where('slug', $identifier)->orWhere('code', $identifier)),
-            'tour' => Tour::query()->where('slug', $identifier),
-            'flight' => Flight::query()->where('code', $identifier),
-            'car' => Car::query()->where(fn (Builder $query) => $query->where('slug', $identifier)->orWhere('id', $identifier)),
-            'travel' => Travel::query()->where('slug', $identifier),
-            'event' => Event::query()->where('slug', $identifier),
-            default => null,
-        };
+        $item = Bookables::find($type, $identifier);
+        abort_unless($item !== null, 422, __('messages.selected_item_missing'));
 
-        abort_unless($query?->exists(), 422, __('messages.selected_item_missing'));
+        return $item;
+    }
+
+    /**
+     * Price a booking from the catalogue — never from the client-sent amount.
+     * Hotels without a live offer are priced per room/boarding by the detail
+     * page; that estimate is kept and checked by an admin before approval.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function catalogTotal(Model $item, array $data): int
+    {
+        $unit = (float) ($item->price ?? 0);
+
+        if ($unit <= 0 && empty($data['is_request']) && $data['type'] !== 'hotel') {
+            throw ValidationException::withMessages(['amount' => __('messages.booking_price_unavailable')]);
+        }
+
+        $days = 1;
+        if (! empty($data['start_date']) && ! empty($data['end_date'])) {
+            $days = max(1, Carbon::parse($data['start_date'])->diffInDays(Carbon::parse($data['end_date'])));
+        }
+
+        return (int) round(match ($data['type']) {
+            'tour', 'travel', 'event', 'destination' => $unit * (int) data_get($data, 'details.participants', 1),
+            'flight' => $unit * (int) data_get($data, 'details.passengers', 1),
+            'car' => $unit * $days,
+            'hotel' => (float) $data['amount'],
+            default => $unit,
+        });
     }
 
     /**
@@ -537,7 +590,7 @@ class BookingController extends Controller
 
         $user = User::query()->find($booking->user_id);
         if ($user) {
-            $notification = new BookingStatusNotification($booking);
+            $notification = new BookingStatusNotification($booking, $booking->status);
             $user->notify($notification);
         }
     }
@@ -572,7 +625,9 @@ class BookingController extends Controller
             'is_request' => (bool) $booking->is_request,
             'provider_booking_id' => $booking->provider_booking_id,
             'provider_booking_reference' => $booking->provider_booking_reference,
-            'provider_prebook' => $booking->provider_payload['prebook'] ?? null,
+            'provider_prebook' => request()->user()?->can('admin')
+                ? ($booking->provider_payload['prebook'] ?? null)
+                : $booking->clientPrebook(),
             'can_cancel' => in_array($booking->status, ['Pending', 'Approved', 'Confirmed'], true)
                 && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay())),
             'details' => $booking->details,

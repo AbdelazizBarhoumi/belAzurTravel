@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\AdminTeamController;
 use App\Http\Controllers\Api\AdminTourController;
 use App\Http\Controllers\Api\AdminTravelController;
 use App\Http\Controllers\Api\AdminUserController;
+use App\Http\Controllers\Api\AdminVisaApplicationController;
 use App\Http\Controllers\Api\AdminVisaController;
 use App\Http\Controllers\Api\AuthUserController;
 use App\Http\Controllers\Api\BlogPostController;
@@ -30,6 +31,7 @@ use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\DealController;
 use App\Http\Controllers\Api\DestinationController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\FlightController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\HotelController;
@@ -53,10 +55,10 @@ Route::get('/site-settings', [SiteSettingsController::class, 'show']);
 Route::middleware(['auth', 'role:superadmin'])->put('/site-settings', [SiteSettingsController::class, 'update']);
 Route::get('/auth/user', [AuthUserController::class, 'show']);
 
-Route::post('/interactions/notify', [InteractionController::class, 'notify']);
+Route::post('/interactions/notify', [InteractionController::class, 'notify'])->middleware('throttle:forms');
 
 Route::get('/visas', [VisaController::class, 'index']);
-Route::post('/visa-applications', [VisaApplicationController::class, 'store']);
+Route::post('/visa-applications', [VisaApplicationController::class, 'store'])->middleware('throttle:forms');
 Route::get('/categories', [AdminCategoryController::class, 'index']);
 Route::get('/categories/types', [AdminCategoryController::class, 'typesByEntity']);
 Route::get('/gallery', [GalleryController::class, 'index'])
@@ -76,7 +78,7 @@ Route::get('tours/{slug}', [TourController::class, 'show'])->middleware(['check-
 
 Route::get('travels', [TravelController::class, 'index'])->middleware(['check-nav-page:travels']);
 Route::get('travels/{slug}', [TravelController::class, 'show'])->middleware(['check-nav-page:travels']);
-Route::post('travel-request', [TravelRequestController::class, 'store']);
+Route::post('travel-request', [TravelRequestController::class, 'store'])->middleware('throttle:forms');
 
 Route::get('cars', [CarController::class, 'index'])->middleware(['check-nav-page:cars']);
 Route::get('cars/{slug}', [CarController::class, 'show'])->middleware(['check-nav-page:cars']);
@@ -101,7 +103,7 @@ Route::get('blog-posts', [BlogPostController::class, 'index'])->middleware(['che
 Route::get('blog-posts/{slug}', [BlogPostController::class, 'show'])->middleware(['check-nav-page:blog-posts']);
 
 // Authenticated endpoints (booking creation, cancellation for owner)
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
@@ -109,7 +111,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
-    Route::post('/bookings', [BookingController::class, 'store']);
+    Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:forms');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
     Route::post('/bookings/{id}/pay', [PaymentController::class, 'initiate']);
@@ -119,14 +121,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/client/bookings', [ClientController::class, 'bookings']);
     Route::get('/client/payments', [ClientController::class, 'payments']);
     Route::get('/client/support', [ClientController::class, 'support']);
-    Route::post('/client/support', [ClientController::class, 'createSupport']);
+    Route::post('/client/support', [ClientController::class, 'createSupport'])->middleware('throttle:forms');
     Route::put('/client/profile', [ClientController::class, 'updateProfile']);
+
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/favorites', [FavoriteController::class, 'store'])->middleware('throttle:60,1');
+    Route::post('/favorites/sync', [FavoriteController::class, 'sync'])->middleware('throttle:10,1');
+    Route::delete('/favorites/{type}/{key}', [FavoriteController::class, 'destroy'])->where('key', '.*');
+    Route::put('/client/password', [ClientController::class, 'updatePassword'])->middleware('throttle:6,1');
+    Route::delete('/client/account', [ClientController::class, 'deleteAccount'])->middleware('throttle:6,1');
     Route::patch('/user/language', [ClientController::class, 'updateLanguage']);
 
     // Complaints & Refunds
     Route::get('/client/complaints', [ComplaintController::class, 'index']);
     Route::get('/client/complaints/{id}', [ComplaintController::class, 'show']);
-    Route::post('/client/complaints', [ComplaintController::class, 'store']);
+    Route::post('/client/complaints', [ComplaintController::class, 'store'])->middleware('throttle:forms');
     Route::post('/client/complaints/{id}/reply', [ComplaintController::class, 'reply']);
 
     // Assistant API surface disabled for now.
@@ -265,6 +274,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/visas/{id}', [AdminVisaController::class, 'show']);
         Route::put('/admin/visas/{id}', [AdminVisaController::class, 'update']);
         Route::delete('/admin/visas/{id}', [AdminVisaController::class, 'destroy']);
+
+        Route::get('/admin/visa-applications', [AdminVisaApplicationController::class, 'index']);
+        Route::get('/admin/visa-applications/{id}', [AdminVisaApplicationController::class, 'show']);
+        Route::put('/admin/visa-applications/{id}', [AdminVisaApplicationController::class, 'update']);
+        Route::get('/admin/visa-applications/{id}/passport', [AdminVisaApplicationController::class, 'passport']);
 
         Route::get('/admin/partners', [AdminPartnerController::class, 'index']);
         Route::post('/admin/partners', [AdminPartnerController::class, 'store']);

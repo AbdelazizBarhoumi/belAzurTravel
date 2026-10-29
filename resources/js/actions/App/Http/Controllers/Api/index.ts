@@ -24,6 +24,7 @@ import NotificationController from './NotificationController'
 import BookingController from './BookingController'
 import PaymentController from './PaymentController'
 import ClientController from './ClientController'
+import FavoriteController from './FavoriteController'
 import ComplaintController from './ComplaintController'
 import AdminDestinationController from './AdminDestinationController'
 import AdminHotelController from './AdminHotelController'
@@ -43,6 +44,7 @@ import AdminSupportInquiryController from './AdminSupportInquiryController'
 import AdminCategoryTypeController from './AdminCategoryTypeController'
 import AdminTeamController from './AdminTeamController'
 import AdminVisaController from './AdminVisaController'
+import AdminVisaApplicationController from './AdminVisaApplicationController'
 import AdminPartnerController from './AdminPartnerController'
 const Api = {
     SiteSettingsController: Object.assign(SiteSettingsController, SiteSettingsController),
@@ -71,6 +73,7 @@ NotificationController: Object.assign(NotificationController, NotificationContro
 BookingController: Object.assign(BookingController, BookingController),
 PaymentController: Object.assign(PaymentController, PaymentController),
 ClientController: Object.assign(ClientController, ClientController),
+FavoriteController: Object.assign(FavoriteController, FavoriteController),
 ComplaintController: Object.assign(ComplaintController, ComplaintController),
 AdminDestinationController: Object.assign(AdminDestinationController, AdminDestinationController),
 AdminHotelController: Object.assign(AdminHotelController, AdminHotelController),
@@ -90,6 +93,7 @@ AdminSupportInquiryController: Object.assign(AdminSupportInquiryController, Admi
 AdminCategoryTypeController: Object.assign(AdminCategoryTypeController, AdminCategoryTypeController),
 AdminTeamController: Object.assign(AdminTeamController, AdminTeamController),
 AdminVisaController: Object.assign(AdminVisaController, AdminVisaController),
+AdminVisaApplicationController: Object.assign(AdminVisaApplicationController, AdminVisaApplicationController),
 AdminPartnerController: Object.assign(AdminPartnerController, AdminPartnerController),
 }
 

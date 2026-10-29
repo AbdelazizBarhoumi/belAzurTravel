@@ -74,8 +74,8 @@ class BookingOsTravelFlowTest extends TestCase
         return array_merge([
             'type' => 'hotel',
             'item_slug' => 'cap-bon-kelibia',
-            'start_date' => '2026-09-01',
-            'end_date' => '2026-09-05',
+            'start_date' => '2027-09-01',
+            'end_date' => '2027-09-05',
             'client' => [
                 'name' => 'John Doe',
                 'email' => 'john@example.com',
@@ -117,7 +117,8 @@ class BookingOsTravelFlowTest extends TestCase
 
         $this->assertSame('Pending', $response->json('status'));
         $this->assertSame(1113, $response->json('total_amount'));
-        $this->assertSame(927.52, $response->json('provider_prebook.total'));
+        // The supplier's net price stays server-side; clients see the marked-up total.
+        $this->assertSame(1113, $response->json('provider_prebook.total'));
         $this->assertSame('TND', $response->json('provider_prebook.currency'));
         $this->assertNull($response->json('provider_booking_id'));
 
@@ -168,12 +169,12 @@ class BookingOsTravelFlowTest extends TestCase
             ->postJson('/api/bookings', $this->hotelBookingPayload([
                 'provider' => array_merge($this->hotelBookingPayload()['provider'], [
                     'search' => [
-                        'check_in' => '2026-09-01',
-                        'check_out' => '2026-09-05',
+                        'check_in' => '2027-09-01',
+                        'check_out' => '2027-09-05',
                     ],
                 ]),
-                'start_date' => '2026-10-01',
-                'end_date' => '2026-10-05',
+                'start_date' => '2027-10-01',
+                'end_date' => '2027-10-05',
             ]))
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['start_date', 'end_date']);
@@ -183,8 +184,8 @@ class BookingOsTravelFlowTest extends TestCase
             ->postJson('/api/bookings', $this->hotelBookingPayload([
                 'provider' => array_merge($this->hotelBookingPayload()['provider'], [
                     'search' => [
-                        'check_in' => '2026-09-01',
-                        'check_out' => '2026-09-05',
+                        'check_in' => '2027-09-01',
+                        'check_out' => '2027-09-05',
                     ],
                 ]),
             ]))

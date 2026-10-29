@@ -61,6 +61,14 @@ export default function EventDetail() {
                                 : (event.gallery ?? [])
                         }
                         hotelName={localizeText(event.title, lang)}
+                        favoriteItem={{
+                            id: event.slug,
+                            type: 'event',
+                            name: localizeText(event.title, lang),
+                            image: event.image ?? event.gallery?.[0] ?? '',
+                            price: event.price,
+                            location: localizeText(event.location, lang),
+                        }}
                     />
 
                     <div className="mt-8 lg:hidden">

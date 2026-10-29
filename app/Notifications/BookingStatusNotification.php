@@ -14,11 +14,19 @@ class BookingStatusNotification extends Notification implements ShouldQueue
     use NotifiesByMail;
     use Queueable;
 
-    public function __construct(private readonly Booking $booking) {}
+    /** Status at the moment of the event — the queued job may run later. */
+    private readonly string $status;
+
+    public bool $deleteWhenMissingModels = true;
+
+    public function __construct(private readonly Booking $booking, ?string $status = null)
+    {
+        $this->status = $status ?? (string) $booking->status;
+    }
 
     public function toDatabase(object $notifiable): array
     {
-        $status = $this->booking->status;
+        $status = $this->status;
 
         return [
             'type' => 'booking.status_changed',
@@ -32,12 +40,13 @@ class BookingStatusNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $status = $this->booking->status;
+        $status = $this->status;
         $locale = $notifiable->preferred_language ?? app()->getLocale();
 
         $translate = fn (string $path, array $replace = []) => __("emails.{$path}", $replace, $locale);
 
         $group = match ($status) {
+            'Pending' => 'booking.received',
             'Approved' => 'booking.approved_pending',
             'Rejected' => 'booking.rejected',
             'Expired' => 'booking.expired',
@@ -70,7 +79,7 @@ class BookingStatusNotification extends Notification implements ShouldQueue
             'statusLabel' => $translate('booking.labels.status'),
             'providerRefLabel' => $translate('booking.labels.provider_ref'),
             'actionText' => $translate('action.view_booking'),
-            'actionUrl' => config('app.url').'/client/dashboard',
+            'actionUrl' => config('app.url').'/client/bookings/'.$this->booking->id,
             'closingLine' => $translate('footer_automatic'),
         ];
 

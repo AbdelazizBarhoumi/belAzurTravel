@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Responses\LoginResponse;
+use App\Security\PassportVault;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Queue\Events\JobFailed;
@@ -23,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+        $this->app->singleton(PassportVault::class);
     }
 
     /**
@@ -32,7 +34,8 @@ class AppServiceProvider extends ServiceProvider
     {
         // model strict
         Model::shouldBeStrict();
-        Gate::define('admin', fn ($user): bool => $user->role === 'admin' && $user->active);
+        // Mirrors RoleMiddleware levels: superadmins and owners are admins too.
+        Gate::define('admin', fn ($user): bool => in_array($user->role, ['admin', 'superadmin', 'owner'], true) && $user->active);
         Gate::define('assistant', fn ($user): bool => false);
         $this->configureDefaults();
         $this->retryFailedDeferredJobs();

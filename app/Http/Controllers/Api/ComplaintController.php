@@ -111,6 +111,9 @@ class ComplaintController extends Controller
 
     private function payload(Complaint $complaint): array
     {
+        // Models are strict (no lazy loading): load what the payload reads.
+        $complaint->loadMissing(['booking', 'replies']);
+
         return [
             'id' => $complaint->id,
             'type' => $complaint->type,

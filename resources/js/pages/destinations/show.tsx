@@ -91,7 +91,7 @@ export default function DestinationDetail() {
                         })()}
                         hotelName={localize(destination.name, lang)}
                         favoriteItem={{
-                            id: `dest-${destination.slug}`,
+                            id: destination.slug,
                             type: 'destination',
                             name: localize(destination.name, lang),
                             image: destination.image,

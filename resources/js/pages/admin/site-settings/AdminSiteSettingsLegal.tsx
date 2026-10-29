@@ -7,10 +7,6 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
-import {
-    ContentLangSwitch,
-    type ContentLang,
-} from '@/components/admin/ContentLangSwitch';
 import { SaveActions } from '@/components/admin/PolicyPageEditor';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -36,6 +32,9 @@ interface LegalSectionDraft {
     body: { format: LegalBodyFormat; content: Record<string, string> };
 }
 
+/** The site publishes legal content in French only for now. */
+const CONTENT_LANG = 'fr';
+
 export default function AdminSiteSettingsLegal() {
     const { settings, loading } = useSiteSettings();
     const { t } = useLanguage();
@@ -43,9 +42,6 @@ export default function AdminSiteSettingsLegal() {
     const [markdownPreview, setMarkdownPreview] = useState<
         Record<string, boolean>
     >({});
-    const [langTabs, setLangTabs] = useState<Record<number, ContentLang>>(
-        {},
-    );
     const [autosaveStatus, setAutosaveStatus] = useState<
         'idle' | 'saving' | 'saved' | 'error'
     >('idle');
@@ -145,8 +141,6 @@ export default function AdminSiteSettingsLegal() {
     const removeSection = (idx: number) =>
         setSections((p) => p.filter((_, i) => i !== idx));
 
-    const getActiveLang = (idx: number): ContentLang => langTabs[idx] ?? 'fr';
-
     const moveSection = (idx: number, dir: number) => {
         const copy = [...sections];
         const target = idx + dir;
@@ -191,40 +185,20 @@ export default function AdminSiteSettingsLegal() {
                     <Card key={idx} className="p-4">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                                <ContentLangSwitch
-                                    className="mb-3"
-                                    value={getActiveLang(idx)}
-                                    onChange={(lang) =>
-                                        setLangTabs((p) => ({
-                                            ...p,
-                                            [idx]: lang,
-                                        }))
-                                    }
-                                    filled={{
-                                        fr: Boolean(
-                                            sec.body.content.fr?.trim(),
-                                        ),
-                                        en: Boolean(
-                                            sec.body.content.en?.trim(),
-                                        ),
-                                    }}
-                                />
                                 <div className="grid grid-cols-1 gap-2">
                                     <div>
                                         <Label className="text-xs">
-                                            {t('admin.settings.title_fr')} (
-                                            {getActiveLang(idx).toUpperCase()})
+                                            {t('admin.settings.title_fr')}
                                         </Label>
                                         <Input
                                             value={
-                                                sec.title[getActiveLang(idx)] ??
-                                                ''
+                                                sec.title[CONTENT_LANG] ?? ''
                                             }
                                             onChange={(e) =>
                                                 updateSection(idx, {
                                                     title: {
                                                         ...sec.title,
-                                                        [getActiveLang(idx)]:
+                                                        [CONTENT_LANG]:
                                                             e.target.value,
                                                     },
                                                 })
@@ -274,30 +248,23 @@ export default function AdminSiteSettingsLegal() {
                                                 onClick={() =>
                                                     setMarkdownPreview((p) => ({
                                                         ...p,
-                                                        [`${idx}-${getActiveLang(idx)}`]:
-                                                            !p[
-                                                                `${idx}-${getActiveLang(idx)}`
-                                                            ],
+                                                        [idx]: !p[idx],
                                                     }))
                                                 }
                                             >
-                                                {markdownPreview[
-                                                    `${idx}-${getActiveLang(idx)}`
-                                                ]
+                                                {markdownPreview[idx]
                                                     ? t('admin.settings.edit')
                                                     : t(
                                                           'admin.settings.preview',
                                                       )}
                                             </Button>
                                         </div>
-                                        {markdownPreview[
-                                            `${idx}-${getActiveLang(idx)}`
-                                        ] ? (
+                                        {markdownPreview[idx] ? (
                                             <div className="rounded-md border bg-background p-3">
                                                 <MarkdownRenderer
                                                     content={
                                                         sec.body.content[
-                                                            getActiveLang(idx)
+                                                            CONTENT_LANG
                                                         ]
                                                     }
                                                 />
@@ -306,7 +273,7 @@ export default function AdminSiteSettingsLegal() {
                                             <Textarea
                                                 value={
                                                     sec.body.content[
-                                                        getActiveLang(idx)
+                                                        CONTENT_LANG
                                                     ]
                                                 }
                                                 onChange={(e) =>
@@ -316,9 +283,7 @@ export default function AdminSiteSettingsLegal() {
                                                             content: {
                                                                 ...sec.body
                                                                     .content,
-                                                                [getActiveLang(
-                                                                    idx,
-                                                                )]:
+                                                                [CONTENT_LANG]:
                                                                     e.target
                                                                         .value,
                                                             },
@@ -334,11 +299,9 @@ export default function AdminSiteSettingsLegal() {
                                             {t('admin.settings.body')}
                                         </Label>
                                         <RichTextEditor
-                                            key={`${idx}-${getActiveLang(idx)}`}
+                                            key={idx}
                                             value={
-                                                sec.body.content[
-                                                    getActiveLang(idx)
-                                                ]
+                                                sec.body.content[CONTENT_LANG]
                                             }
                                             onChange={(v) =>
                                                 updateSection(idx, {
@@ -346,9 +309,7 @@ export default function AdminSiteSettingsLegal() {
                                                         ...sec.body,
                                                         content: {
                                                             ...sec.body.content,
-                                                            [getActiveLang(
-                                                                idx,
-                                                            )]: v,
+                                                            [CONTENT_LANG]: v,
                                                         },
                                                     },
                                                 })

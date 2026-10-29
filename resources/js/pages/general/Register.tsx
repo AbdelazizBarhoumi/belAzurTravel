@@ -13,6 +13,7 @@ const Register = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPass, setShowPass] = useState(false);
@@ -20,6 +21,10 @@ const Register = () => {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (password !== passwordConfirmation) {
+            setErrors({ password_confirmation: [t('auth.passwordMismatch')] });
+            return;
+        }
         setErrors({});
         setIsSubmitting(true);
 
@@ -34,7 +39,7 @@ const Register = () => {
                     name,
                     email,
                     password,
-                    password_confirmation: password, // Fortify usually requires this
+                    password_confirmation: passwordConfirmation,
                 }),
             });
 
@@ -45,6 +50,7 @@ const Register = () => {
                 if (res.status === 422) {
                     setErrors(errorData.errors || {});
                     setPassword('');
+                    setPasswordConfirmation('');
                     toast.error(errorData.message || t('register.failed'));
                 } else if (res.status === 419) {
                     toast.error(
@@ -208,6 +214,38 @@ const Register = () => {
                             {errors.password && (
                                 <p className="text-xs font-medium text-destructive">
                                     {errors.password[0]}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <input
+                                    type={showPass ? 'text' : 'password'}
+                                    placeholder={t('auth.confirmPassword')}
+                                    autoComplete="new-password"
+                                    value={passwordConfirmation}
+                                    onChange={(e) => {
+                                        setPasswordConfirmation(e.target.value);
+                                        if (errors.password_confirmation) {
+                                            const newErrors = { ...errors };
+                                            delete newErrors.password_confirmation;
+                                            setErrors(newErrors);
+                                        }
+                                    }}
+                                    className={`w-full rounded-2xl border bg-background py-3 pl-11 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                                        errors.password_confirmation
+                                            ? 'border-destructive'
+                                            : 'border-border'
+                                    }`}
+                                    required
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+                            {errors.password_confirmation && (
+                                <p className="text-xs font-medium text-destructive">
+                                    {errors.password_confirmation[0]}
                                 </p>
                             )}
                         </div>

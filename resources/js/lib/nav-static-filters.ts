@@ -39,15 +39,34 @@ export interface StaticFilterGroup {
 
 /* ─── Star SVG icons ─── */
 
-const STAR_FILLED_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
-const STAR_EMPTY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+const STAR_PATH =
+    'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z';
 
+/**
+ * Build a single self-contained SVG containing `total` stars.
+ *
+ * Returning one SVG (instead of a wrapper containing several 16×16 SVGs) keeps
+ * the icon's aspect ratio intact, so consumers can size it by height only and
+ * the full row of stars always fits inside the dropdown item instead of
+ * overflowing the menu.
+ */
 function starSvg(filled: number, total: number): string {
-    let icons = '';
+    const GAP = 2;
+    const SIZE = 24;
+    const width = total * SIZE + (total - 1) * GAP;
+
+    let paths = '';
     for (let i = 0; i < total; i++) {
-        icons += i < filled ? STAR_FILLED_SVG : STAR_EMPTY_SVG;
+        const x = i * (SIZE + GAP);
+        const isFilled = i < filled;
+        const fill = isFilled ? 'currentColor' : 'none';
+        const stroke = isFilled
+            ? ''
+            : ' stroke="currentColor" stroke-width="2" stroke-linejoin="round"';
+        paths += `<g transform="translate(${x} 0)"><path d="${STAR_PATH}" fill="${fill}"${stroke}/></g>`;
     }
-    return `<span style="display:inline-flex;gap:1px;align-items:center">${icons}</span>`;
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${SIZE}" width="${width}" height="${SIZE}" aria-hidden="true" focusable="false">${paths}</svg>`;
 }
 
 /* ─── Filter definitions per page ─── */
@@ -282,46 +301,306 @@ export const STATIC_FILTERS_BY_PAGE: Record<string, StaticFilterGroup[]> = {
         },
         {
             key: 'pricing_type',
-            label: { en: 'Pricing Type', fr: 'Formule repas', ar: 'نوع التسعير' },
+            label: {
+                en: 'Pricing Type',
+                fr: 'Formule repas',
+                ar: 'نوع التسعير',
+            },
             options: [
-                { key: 'all-inclusive', label: { en: 'All Inclusive', fr: 'Tout inclus', ar: 'شامل كل شيء' }, href: 'pricing_type=all-inclusive', provider_id: 6 },
-                { key: 'half-board', label: { en: 'Half Board', fr: 'Demi pension', ar: 'إجازة نصف' }, href: 'pricing_type=half-board', provider_id: 19 },
-                { key: 'bed-breakfast', label: { en: 'Bed & Breakfast', fr: 'Petit déjeuner inclus', ar: 'فطور' }, href: 'pricing_type=bed-breakfast', provider_id: 17 },
-                { key: 'room-only', label: { en: 'Room Only', fr: 'Chambre seulement', ar: 'غرفة فقط' }, href: 'pricing_type=room-only', provider_id: 3 },
-                { key: 'soft-all-inclusive', label: { en: 'Soft All Inclusive', fr: 'Soft All Inclusive', ar: 'شامل كل شيء بارد' }, href: 'pricing_type=soft-all-inclusive' },
-                { key: 'ultra-all-inclusive', label: { en: 'Ultra All Inclusive', fr: 'Ultra All Inclusive', ar: 'شامل كل شيء ultra' }, href: 'pricing_type=ultra-all-inclusive' },
-                { key: 'ultra-all-inclusive-soft', label: { en: 'Ultra All Inclusive Soft', fr: 'Ultra All Inclusive Soft', ar: 'شامل كل شيء ultra بارد' }, href: 'pricing_type=ultra-all-inclusive-soft' },
-                { key: 'full-board', label: { en: 'Full Board', fr: 'Pension Complète', ar: 'إقامة كاملة' }, href: 'pricing_type=full-board' },
-                { key: 'full-board-plus', label: { en: 'Full Board Plus', fr: 'Pension Complète +', ar: 'إقامة كاملة +' }, href: 'pricing_type=full-board-plus' },
-                { key: 'half-board-plus', label: { en: 'Half Board Plus', fr: 'Demi Pension +', ar: 'نصف إقامة +' }, href: 'pricing_type=half-board-plus' },
-                { key: 'entry-only', label: { en: 'Entry Only', fr: 'Entrée Simple', ar: 'دخول فقط' }, href: 'pricing_type=entry-only' },
-                { key: 'day-use', label: { en: 'Day Use', fr: 'Day Use', ar: 'استخدام نهاري' }, href: 'pricing_type=day-use' },
-                { key: 'ultra-ai-soft-drink', label: { en: 'Ultra AI Soft Drink', fr: 'Ultra AI Soft Drink', ar: 'شامل كل شيء ultra مشروبات باردة' }, href: 'pricing_type=ultra-ai-soft-drink' },
+                {
+                    key: 'all-inclusive',
+                    label: {
+                        en: 'All Inclusive',
+                        fr: 'Tout inclus',
+                        ar: 'شامل كل شيء',
+                    },
+                    href: 'pricing_type=all-inclusive',
+                    provider_id: 6,
+                },
+                {
+                    key: 'half-board',
+                    label: {
+                        en: 'Half Board',
+                        fr: 'Demi pension',
+                        ar: 'إجازة نصف',
+                    },
+                    href: 'pricing_type=half-board',
+                    provider_id: 19,
+                },
+                {
+                    key: 'bed-breakfast',
+                    label: {
+                        en: 'Bed & Breakfast',
+                        fr: 'Petit déjeuner inclus',
+                        ar: 'فطور',
+                    },
+                    href: 'pricing_type=bed-breakfast',
+                    provider_id: 17,
+                },
+                {
+                    key: 'room-only',
+                    label: {
+                        en: 'Room Only',
+                        fr: 'Chambre seulement',
+                        ar: 'غرفة فقط',
+                    },
+                    href: 'pricing_type=room-only',
+                    provider_id: 3,
+                },
+                {
+                    key: 'soft-all-inclusive',
+                    label: {
+                        en: 'Soft All Inclusive',
+                        fr: 'Soft All Inclusive',
+                        ar: 'شامل كل شيء بارد',
+                    },
+                    href: 'pricing_type=soft-all-inclusive',
+                },
+                {
+                    key: 'ultra-all-inclusive',
+                    label: {
+                        en: 'Ultra All Inclusive',
+                        fr: 'Ultra All Inclusive',
+                        ar: 'شامل كل شيء ultra',
+                    },
+                    href: 'pricing_type=ultra-all-inclusive',
+                },
+                {
+                    key: 'ultra-all-inclusive-soft',
+                    label: {
+                        en: 'Ultra All Inclusive Soft',
+                        fr: 'Ultra All Inclusive Soft',
+                        ar: 'شامل كل شيء ultra بارد',
+                    },
+                    href: 'pricing_type=ultra-all-inclusive-soft',
+                },
+                {
+                    key: 'full-board',
+                    label: {
+                        en: 'Full Board',
+                        fr: 'Pension Complète',
+                        ar: 'إقامة كاملة',
+                    },
+                    href: 'pricing_type=full-board',
+                },
+                {
+                    key: 'full-board-plus',
+                    label: {
+                        en: 'Full Board Plus',
+                        fr: 'Pension Complète +',
+                        ar: 'إقامة كاملة +',
+                    },
+                    href: 'pricing_type=full-board-plus',
+                },
+                {
+                    key: 'half-board-plus',
+                    label: {
+                        en: 'Half Board Plus',
+                        fr: 'Demi Pension +',
+                        ar: 'نصف إقامة +',
+                    },
+                    href: 'pricing_type=half-board-plus',
+                },
+                {
+                    key: 'entry-only',
+                    label: {
+                        en: 'Entry Only',
+                        fr: 'Entrée Simple',
+                        ar: 'دخول فقط',
+                    },
+                    href: 'pricing_type=entry-only',
+                },
+                {
+                    key: 'day-use',
+                    label: {
+                        en: 'Day Use',
+                        fr: 'Day Use',
+                        ar: 'استخدام نهاري',
+                    },
+                    href: 'pricing_type=day-use',
+                },
+                {
+                    key: 'ultra-ai-soft-drink',
+                    label: {
+                        en: 'Ultra AI Soft Drink',
+                        fr: 'Ultra AI Soft Drink',
+                        ar: 'شامل كل شيء ultra مشروبات باردة',
+                    },
+                    href: 'pricing_type=ultra-ai-soft-drink',
+                },
             ],
         },
         {
             key: 'features',
-            label: { en: 'Features', fr: 'Équipements & Ambiance', ar: 'الميزات' },
+            label: {
+                en: 'Features',
+                fr: 'Équipements & Ambiance',
+                ar: 'الميزات',
+            },
             options: [
-                { key: 'pied-dans-leau', label: { en: 'Pieds dans l\'eau', fr: 'Pieds dans l\'eau', ar: 'أقدام في الماء' }, href: 'features=pied-dans-leau' },
-                { key: 'animation', label: { en: 'Animation', fr: 'Animation', ar: 'ترفيه' }, href: 'features=animation' },
-                { key: 'couple-famille', label: { en: 'Couple & Family Only', fr: 'Couple & Famille seulement', ar: 'أزواج وعائلات فقط' }, href: 'features=couple-famille' },
-                { key: 'bon-rapport', label: { en: 'Good Value', fr: 'Bon rapport qualité prix', ar: 'قيمة جيدة' }, href: 'features=bon-rapport' },
-                { key: 'burkini-autorise', label: { en: 'Burkini Allowed', fr: 'Burkini autorisé', ar: 'بركيني مسموح' }, href: 'features=burkini-autorise' },
-                { key: 'wifi-gratuit', label: { en: 'Free WiFi', fr: 'Wifi gratuit', ar: 'واي فاي مجاني' }, href: 'features=wifi-gratuit' },
-                { key: 'burkini-non-autorise', label: { en: 'Burkini Not Allowed', fr: 'Burkini non autorisé', ar: 'بركيني غير مسموح' }, href: 'features=burkini-non-autorise' },
-                { key: 'toboggan', label: { en: 'Water Slides', fr: 'Toboggans', ar: 'زلاقات مائية' }, href: 'features=toboggan' },
-                { key: 'luxe-calme', label: { en: 'Luxury & Quiet', fr: 'Luxe et calme', ar: 'فخامة وهدوء' }, href: 'features=luxe-calme' },
-                { key: 'vue-ville', label: { en: 'City View', fr: 'Vue sur la ville', ar: 'إطلالة على المدينة' }, href: 'features=vue-ville' },
-                { key: 'aire-jeux', label: { en: 'Kids Playground', fr: 'Aire de jeux pour enfants', ar: 'ملعب أطفال' }, href: 'features=aire-jeux' },
-                { key: 'plage-privee', label: { en: 'Private Beach', fr: 'Plage privée', ar: 'شاطئ خاص' }, href: 'features=plage-privee' },
-                { key: 'en-face-mer', label: { en: 'Seafront', fr: 'En face de la mer', ar: 'أمام البحر' }, href: 'features=en-face-mer' },
-                { key: 'centre-thalasso', label: { en: 'Thalassotherapy', fr: 'Centre Thalasso', ar: 'مركز تالاسو' }, href: 'features=centre-thalasso' },
-                { key: 'terrain-football', label: { en: 'Football Field', fr: 'Terrain de football', ar: 'ملعب كرة قدم' }, href: 'features=terrain-football' },
-                { key: 'emplacement', label: { en: 'Great Location', fr: 'Emplacement stratégique', ar: 'موقع استراتيجي' }, href: 'features=emplacement' },
-                { key: 'court-tennis', label: { en: 'Tennis Court', fr: 'Court de tennis', ar: 'ملعب تنس' }, href: 'features=court-tennis' },
-                { key: 'congress', label: { en: 'Conference Center', fr: 'Congress center', ar: 'مركز مؤتمرات' }, href: 'features=congress' },
-                { key: 'padel', label: { en: 'Padel', fr: 'Padel', ar: 'بادل' }, href: 'features=padel' },
+                {
+                    key: 'pied-dans-leau',
+                    label: {
+                        en: "Pieds dans l'eau",
+                        fr: "Pieds dans l'eau",
+                        ar: 'أقدام في الماء',
+                    },
+                    href: 'features=pied-dans-leau',
+                },
+                {
+                    key: 'animation',
+                    label: { en: 'Animation', fr: 'Animation', ar: 'ترفيه' },
+                    href: 'features=animation',
+                },
+                {
+                    key: 'couple-famille',
+                    label: {
+                        en: 'Couple & Family Only',
+                        fr: 'Couple & Famille seulement',
+                        ar: 'أزواج وعائلات فقط',
+                    },
+                    href: 'features=couple-famille',
+                },
+                {
+                    key: 'bon-rapport',
+                    label: {
+                        en: 'Good Value',
+                        fr: 'Bon rapport qualité prix',
+                        ar: 'قيمة جيدة',
+                    },
+                    href: 'features=bon-rapport',
+                },
+                {
+                    key: 'burkini-autorise',
+                    label: {
+                        en: 'Burkini Allowed',
+                        fr: 'Burkini autorisé',
+                        ar: 'بركيني مسموح',
+                    },
+                    href: 'features=burkini-autorise',
+                },
+                {
+                    key: 'wifi-gratuit',
+                    label: {
+                        en: 'Free WiFi',
+                        fr: 'Wifi gratuit',
+                        ar: 'واي فاي مجاني',
+                    },
+                    href: 'features=wifi-gratuit',
+                },
+                {
+                    key: 'burkini-non-autorise',
+                    label: {
+                        en: 'Burkini Not Allowed',
+                        fr: 'Burkini non autorisé',
+                        ar: 'بركيني غير مسموح',
+                    },
+                    href: 'features=burkini-non-autorise',
+                },
+                {
+                    key: 'toboggan',
+                    label: {
+                        en: 'Water Slides',
+                        fr: 'Toboggans',
+                        ar: 'زلاقات مائية',
+                    },
+                    href: 'features=toboggan',
+                },
+                {
+                    key: 'luxe-calme',
+                    label: {
+                        en: 'Luxury & Quiet',
+                        fr: 'Luxe et calme',
+                        ar: 'فخامة وهدوء',
+                    },
+                    href: 'features=luxe-calme',
+                },
+                {
+                    key: 'vue-ville',
+                    label: {
+                        en: 'City View',
+                        fr: 'Vue sur la ville',
+                        ar: 'إطلالة على المدينة',
+                    },
+                    href: 'features=vue-ville',
+                },
+                {
+                    key: 'aire-jeux',
+                    label: {
+                        en: 'Kids Playground',
+                        fr: 'Aire de jeux pour enfants',
+                        ar: 'ملعب أطفال',
+                    },
+                    href: 'features=aire-jeux',
+                },
+                {
+                    key: 'plage-privee',
+                    label: {
+                        en: 'Private Beach',
+                        fr: 'Plage privée',
+                        ar: 'شاطئ خاص',
+                    },
+                    href: 'features=plage-privee',
+                },
+                {
+                    key: 'en-face-mer',
+                    label: {
+                        en: 'Seafront',
+                        fr: 'En face de la mer',
+                        ar: 'أمام البحر',
+                    },
+                    href: 'features=en-face-mer',
+                },
+                {
+                    key: 'centre-thalasso',
+                    label: {
+                        en: 'Thalassotherapy',
+                        fr: 'Centre Thalasso',
+                        ar: 'مركز تالاسو',
+                    },
+                    href: 'features=centre-thalasso',
+                },
+                {
+                    key: 'terrain-football',
+                    label: {
+                        en: 'Football Field',
+                        fr: 'Terrain de football',
+                        ar: 'ملعب كرة قدم',
+                    },
+                    href: 'features=terrain-football',
+                },
+                {
+                    key: 'emplacement',
+                    label: {
+                        en: 'Great Location',
+                        fr: 'Emplacement stratégique',
+                        ar: 'موقع استراتيجي',
+                    },
+                    href: 'features=emplacement',
+                },
+                {
+                    key: 'court-tennis',
+                    label: {
+                        en: 'Tennis Court',
+                        fr: 'Court de tennis',
+                        ar: 'ملعب تنس',
+                    },
+                    href: 'features=court-tennis',
+                },
+                {
+                    key: 'congress',
+                    label: {
+                        en: 'Conference Center',
+                        fr: 'Congress center',
+                        ar: 'مركز مؤتمرات',
+                    },
+                    href: 'features=congress',
+                },
+                {
+                    key: 'padel',
+                    label: { en: 'Padel', fr: 'Padel', ar: 'بادل' },
+                    href: 'features=padel',
+                },
             ],
         },
     ],

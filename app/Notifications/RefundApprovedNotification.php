@@ -15,6 +15,8 @@ class RefundApprovedNotification extends Notification implements ShouldQueue
     use NotifiesByMail;
     use Queueable;
 
+    public bool $deleteWhenMissingModels = true;
+
     public function __construct(
         private readonly Complaint $complaint,
         private readonly Booking $booking,
@@ -28,7 +30,7 @@ class RefundApprovedNotification extends Notification implements ShouldQueue
             'complaint_id' => $this->complaint->id,
             'booking_id' => $this->booking->id,
             'refund_amount' => $this->complaint->refund_amount,
-            'url' => '/client/complaints',
+            'url' => '/client/refunds',
             'fr' => "Remboursement de {$this->complaint->refund_amount} TND approuvé pour la réservation #{$this->booking->booking_ref}",
             'ar' => "تم الموافقة على استرداد {$this->complaint->refund_amount} د.ت للحجز #{$this->booking->booking_ref}",
             'en' => "Refund of {$this->complaint->refund_amount} TND approved for booking #{$this->booking->booking_ref}",
@@ -50,7 +52,7 @@ class RefundApprovedNotification extends Notification implements ShouldQueue
                 'statusLabel' => 'Status',
                 'refundAmountLabel' => 'Refund Amount',
                 'actionText' => 'View Details',
-                'actionUrl' => config('app.url').'/client/complaints',
+                'actionUrl' => config('app.url').'/client/refunds',
                 'closingLine' => 'If you have any questions about your refund, please contact our support team.',
             ]);
     }

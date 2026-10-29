@@ -15,10 +15,19 @@ class SupportReplyNotification extends Notification implements ShouldQueue
     use NotifiesByMail;
     use Queueable;
 
+    public bool $deleteWhenMissingModels = true;
+
+    /** The reply this notification is about, captured before queueing. */
+    private readonly string $replyMessage;
+
     public function __construct(
         private readonly SupportInquiry $inquiry,
         private readonly User $author
-    ) {}
+    ) {
+        $replies = $inquiry->replies ?? [];
+        $lastReply = ! empty($replies) ? end($replies) : [];
+        $this->replyMessage = (string) ($lastReply['message'] ?? '');
+    }
 
     public function toDatabase(object $notifiable): array
     {
@@ -27,7 +36,7 @@ class SupportReplyNotification extends Notification implements ShouldQueue
         return [
             'type' => 'message.reply',
             'inquiry_id' => $this->inquiry->id,
-            'url' => '/client/dashboard', // Client dashboard has a support tab
+            'url' => '/client/support',
             'fr' => "Nouveau message de {$authorName} concernant votre demande",
             'ar' => "رسالة جديدة من {$authorName} بخصوص طلبك",
             'en' => "New message from {$authorName} regarding your inquiry",
@@ -40,9 +49,7 @@ class SupportReplyNotification extends Notification implements ShouldQueue
 
         $translate = fn (string $path, array $replace = []) => __("emails.{$path}", $replace, $locale);
 
-        $replies = $this->inquiry->replies ?? [];
-        $lastReply = ! empty($replies) ? end($replies) : [];
-        $replyMessage = $lastReply['message'] ?? '';
+        $replyMessage = $this->replyMessage;
         $inquirySubject = $this->localized($this->inquiry->subject, $locale);
 
         $subject = $translate('support.reply.subject');

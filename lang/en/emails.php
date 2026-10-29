@@ -34,6 +34,12 @@ return [
             'intro' => 'Great news! Your booking #:id has been confirmed.',
             'next_steps' => 'You will receive your travel documents shortly. If you have any questions, do not hesitate to contact us.',
         ],
+        'received' => [
+            'subject' => 'Booking request #:id received',
+            'greeting' => 'We have received your request',
+            'intro' => 'Thank you! Your booking request #:id has been received and is being reviewed by our team.',
+            'next_steps' => 'We usually answer within 24 hours. No payment is taken until your booking is confirmed.',
+        ],
         'approved_pending' => [
             'subject' => 'Booking #:id Approved',
             'greeting' => 'Your Booking is Approved',

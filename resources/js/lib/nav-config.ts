@@ -219,6 +219,45 @@ export const DEFAULT_FOOTER_COLUMNS: {
     },
 ];
 
+/**
+ * Hotels header menu: only star ratings and accommodation types, each as its
+ * own sub-menu. Mirrored by the migration that updates stored nav settings.
+ */
+export const HOTELS_MENU_ITEMS: DropdownItemConfig[] = [
+    {
+        label: { en: 'Stars', fr: 'Étoiles', ar: 'النجوم' },
+        mode: 'filter',
+        value: '',
+        children: [
+            {
+                label: { en: 'Stars', fr: 'Étoiles', ar: 'النجوم' },
+                mode: 'categories',
+                value: 'static:stars',
+            },
+        ],
+    },
+    {
+        label: {
+            en: 'Accommodation type',
+            fr: "Type d'hébergement",
+            ar: 'نوع الإقامة',
+        },
+        mode: 'filter',
+        value: '',
+        children: [
+            {
+                label: {
+                    en: 'Accommodation type',
+                    fr: "Type d'hébergement",
+                    ar: 'نوع الإقامة',
+                },
+                mode: 'categories',
+                value: 'static:accommodation_type',
+            },
+        ],
+    },
+];
+
 export const DEFAULT_NAV_SETTINGS: NavSettings = {
     header: AVAILABLE_PAGES.map((p) => ({
         pageKey: p.key,
@@ -256,28 +295,31 @@ export const DEFAULT_NAV_SETTINGS: NavSettings = {
                 ].includes(p.key)
               ? 'more'
               : 'top',
-        items: [
-            'destinations',
-            'hotels',
-            'tours',
-            'travels',
-            'deals',
-            'blog',
-            'cars',
-            'events',
-        ].includes(p.key)
-            ? [
-                  {
-                      label: {
-                          en: 'Categories',
-                          fr: 'Categories',
-                          ar: 'Categories',
-                      },
-                      mode: 'categories',
-                      value: '',
-                  },
-              ]
-            : [],
+        items:
+            p.key === 'hotels'
+                ? HOTELS_MENU_ITEMS
+                : [
+                        'destinations',
+                        'hotels',
+                        'tours',
+                        'travels',
+                        'deals',
+                        'blog',
+                        'cars',
+                        'events',
+                    ].includes(p.key)
+                  ? [
+                        {
+                            label: {
+                                en: 'Categories',
+                                fr: 'Categories',
+                                ar: 'Categories',
+                            },
+                            mode: 'categories',
+                            value: '',
+                        },
+                    ]
+                  : [],
     })),
     footer: DEFAULT_FOOTER_COLUMNS.map((c) => ({
         title: c.title,
@@ -295,6 +337,10 @@ export function buildItemHref(
     const effectivePageKey = item.pageKey ?? pageKey;
     const page = getPage(effectivePageKey);
     if (!page) return '#';
+    // A grouping item (sub-menu parent) links to the page itself.
+    if (item.mode === 'filter' && !item.value) {
+        return page.href;
+    }
     if (item.mode === 'search') {
         const query = item.label[lang] ?? item.label.en ?? '';
         return `${page.href}?q=${encodeURIComponent(query)}`;

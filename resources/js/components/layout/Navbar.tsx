@@ -93,16 +93,16 @@ function DropdownItemContent({
     if (mode === 'svg' && item.svg) {
         return (
             <span
-                className="inline-flex h-4 w-4 shrink-0 items-center [&>svg]:h-4 [&>svg]:w-4"
+                className="inline-flex shrink-0 items-center [&>svg]:h-4 [&>svg]:w-auto [&>svg]:max-w-full"
                 dangerouslySetInnerHTML={{ __html: item.svg }}
             />
         );
     }
     if (mode === 'both' && item.svg) {
         return (
-            <span className="flex items-center gap-1.5">
+            <span className="flex min-w-0 items-center gap-1.5">
                 <span
-                    className="inline-flex h-4 w-4 shrink-0 items-center [&>svg]:h-4 [&>svg]:w-4"
+                    className="inline-flex shrink-0 items-center [&>svg]:h-4 [&>svg]:w-auto [&>svg]:max-w-full"
                     dangerouslySetInnerHTML={{ __html: item.svg }}
                 />
                 {label}
@@ -110,6 +110,15 @@ function DropdownItemContent({
         );
     }
     return <>{label}</>;
+}
+
+/** True when a menu (or any of its sub-menus) is built from category groups. */
+function hasCategoryItems(items: DropdownItemConfig[]): boolean {
+    return items.some(
+        (item) =>
+            item.mode === 'categories' ||
+            (item.children ? hasCategoryItems(item.children) : false),
+    );
 }
 
 /** Resolve categories dropdown items based on the selected value.
@@ -214,7 +223,7 @@ function DesktopFlyoutItems({
 
     return (
         <ul
-            className="space-y-1 rounded-lg border border-border bg-card p-2"
+            className="min-w-44 space-y-1 rounded-lg border border-border bg-card p-2"
             style={
                 colCount > 1
                     ? { columnCount: colCount, minWidth: `${colCount * 14}rem` }
@@ -223,8 +232,7 @@ function DesktopFlyoutItems({
         >
             {items.map((item, idx) => {
                 const itemPath = `${entry.pageKey}:${idx}`;
-                const hasChildren =
-                    item.children && item.children.length > 0;
+                const hasChildren = item.children && item.children.length > 0;
                 const isActive = hoveredPath?.startsWith(itemPath);
 
                 return (
@@ -249,7 +257,7 @@ function DesktopFlyoutItems({
                                 item,
                                 lang as 'en' | 'fr' | 'ar',
                             )}
-                            className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className="flex items-center justify-between whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                         >
                             <DropdownItemContent
                                 item={item}
@@ -428,7 +436,8 @@ function DesktopGroupDropdown({
         for (const v of [...coveredValues]) {
             if (v.startsWith('static:')) coveredValues.add(v.slice(7));
         }
-        if (!coveredValues.has('')) {
+        // Menus built from category groups show exactly those groups.
+        if (!coveredValues.has('') && !hasCategoryItems(items)) {
             for (const ct of categoryTypes) {
                 if (coveredValues.has(ct.key)) continue;
                 if (ct.values && ct.values.length > 0) {
@@ -519,7 +528,7 @@ function DesktopGroupDropdown({
                                         {groupPage.linkSelf ? (
                                             <Link
                                                 to={page.href}
-                                                className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                className="flex items-center justify-between whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                             >
                                                 <span>
                                                     {groupPage.label?.[lang] ||
@@ -578,7 +587,7 @@ function DesktopGroupDropdown({
                                 >
                                     <Link
                                         to={page.href}
-                                        className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                        className="block whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                     >
                                         {groupPage.label?.[lang] ||
                                             groupPage.label?.en ||
@@ -625,7 +634,7 @@ function DesktopGroupDropdown({
                                                 resolved,
                                                 lang as 'en' | 'fr' | 'ar',
                                             )}
-                                            className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                            className="flex items-center justify-between whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                         >
                                             <DropdownItemContent
                                                 item={resolved}
@@ -786,7 +795,7 @@ function DesktopGroupDropdown({
                                                                                 to={
                                                                                     page.href
                                                                                 }
-                                                                                className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                                className="flex items-center justify-between whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                                             >
                                                                                 <span>
                                                                                     {groupPage
@@ -876,7 +885,7 @@ function DesktopGroupDropdown({
                                                                         to={
                                                                             page.href
                                                                         }
-                                                                        className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                                        className="block whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                                     >
                                                                         {groupPage
                                                                             .label?.[
@@ -962,7 +971,8 @@ function MobileGroupSection({
         for (const v of [...coveredValues]) {
             if (v.startsWith('static:')) coveredValues.add(v.slice(7));
         }
-        if (!coveredValues.has('')) {
+        // Menus built from category groups show exactly those groups.
+        if (!coveredValues.has('') && !hasCategoryItems(items)) {
             for (const ct of categoryTypes) {
                 if (coveredValues.has(ct.key)) continue;
                 if (ct.values && ct.values.length > 0) {
@@ -1394,7 +1404,8 @@ export function Navbar() {
         for (const v of [...coveredValues]) {
             if (v.startsWith('static:')) coveredValues.add(v.slice(7));
         }
-        if (!coveredValues.has('')) {
+        // Menus built from category groups show exactly those groups.
+        if (!coveredValues.has('') && !hasCategoryItems(entry.items)) {
             for (const ct of categoryTypes) {
                 if (coveredValues.has(ct.key)) continue;
                 if (ct.values && ct.values.length > 0) {
@@ -1767,7 +1778,7 @@ export function Navbar() {
                                                     ) : (
                                                         <Link
                                                             to={page.href}
-                                                            className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                                                            className="block whitespace-nowrap rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                         >
                                                             {resolvePageName(
                                                                 entry,

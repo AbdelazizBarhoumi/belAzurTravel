@@ -41,7 +41,7 @@ class ReservationReliabilityTest extends TestCase
 
         Travel::query()->create([
             'slug' => 'istanbul-week', 'name' => ['fr' => 'Istanbul'], 'description' => ['fr' => '-'],
-            'location' => ['fr' => 'Istanbul'], 'image' => '/img.jpg',
+            'location' => ['fr' => 'Istanbul'], 'image' => '/img.jpg', 'price' => 800,
         ]);
         Event::factory()->create(['slug' => 'festival-carthage']);
         Car::factory()->create(['slug' => 'clio-5']);

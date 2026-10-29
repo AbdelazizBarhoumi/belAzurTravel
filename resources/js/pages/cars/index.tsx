@@ -9,6 +9,7 @@ import { RequestThingEmptyState } from '@/components/lists/RequestThingEmptyStat
 import { Breadcrumb } from '@/components/nav/Breadcrumb';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import {
     Select,
     SelectContent,
@@ -413,7 +414,7 @@ function CarsContent() {
                                                 transition={{ delay: i * 0.08 }}
                                                 className="card-elevated overflow-hidden rounded-2xl bg-card"
                                             >
-                                                <div className="h-44 overflow-hidden">
+                                                <div className="relative h-44 overflow-hidden">
                                                     <img
                                                         src={c.image}
                                                         alt={localizeText(
@@ -422,6 +423,19 @@ function CarsContent() {
                                                         )}
                                                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                                         loading="lazy"
+                                                    />
+                                                    <FavoriteButton
+                                                        className="absolute end-3 top-3"
+                                                        item={{
+                                                            id: c.slug,
+                                                            type: 'car',
+                                                            name: localizeText(
+                                                                c.name,
+                                                                lang,
+                                                            ),
+                                                            image: c.image,
+                                                            price: c.price,
+                                                        }}
                                                     />
                                                 </div>
                                                 <div className="p-5">
