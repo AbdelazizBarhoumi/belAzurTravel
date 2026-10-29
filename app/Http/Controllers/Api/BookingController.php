@@ -17,6 +17,7 @@ use App\Notifications\BookingStatusNotification;
 use App\Security\PassportVault;
 use App\Services\OsTravel\OsTravelBookingService;
 use App\Support\Bookables;
+use App\Support\ClientContact;
 use App\Support\CommercialMail;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -50,7 +51,13 @@ class BookingController extends Controller
             403
         );
 
-        return response()->json($this->payload($booking));
+        $payload = $this->payload($booking);
+
+        if ($user->can('admin')) {
+            $payload['client_contact'] = ClientContact::resolve($booking->user, $booking->client);
+        }
+
+        return response()->json($payload);
     }
 
     public function store(Request $request): JsonResponse

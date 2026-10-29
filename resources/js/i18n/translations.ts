@@ -8447,6 +8447,21 @@ translations['admin.notes'] = {
     ar: 'ملاحظات',
     en: 'Notes',
 };
+translations['admin.clientContact'] = {
+    fr: 'Contact client',
+    ar: 'بيانات الاتصال بالعميل',
+    en: 'Client contact',
+};
+translations['admin.memberSince'] = {
+    fr: 'Client depuis',
+    ar: 'عميل منذ',
+    en: 'Client since',
+};
+translations['admin.notProvided'] = {
+    fr: 'Non renseigné',
+    ar: 'غير متوفر',
+    en: 'Not provided',
+};
 translations['admin.queue.approve'] = {
     fr: 'Approuver',
     ar: 'موافقة',
@@ -8965,4 +8980,59 @@ translations['favorites.type.flight'] = {
     fr: 'Vol',
     ar: 'رحلة جوية',
     en: 'Flight',
+};
+translations['whatsapp.msg.greeting'] = {
+    fr: 'Bonjour, je souhaite avoir plus d’informations.',
+    ar: 'مرحبًا، أرغب في الحصول على مزيد من المعلومات.',
+    en: 'Hello, I would like more information.',
+};
+translations['whatsapp.msg.interestedIn'] = {
+    fr: 'Bonjour, je suis intéressé(e) par',
+    ar: 'مرحبًا، أنا مهتم(ة) بـ',
+    en: 'Hello, I am interested in',
+};
+translations['whatsapp.msg.dates'] = {
+    fr: 'Dates',
+    ar: 'التواريخ',
+    en: 'Dates',
+};
+translations['whatsapp.msg.travelers'] = {
+    fr: 'Voyageurs',
+    ar: 'المسافرون',
+    en: 'Travelers',
+};
+translations['whatsapp.msg.adults'] = {
+    fr: 'adulte(s)',
+    ar: 'بالغ(ين)',
+    en: 'adult(s)',
+};
+translations['whatsapp.msg.children'] = {
+    fr: 'enfant(s)',
+    ar: 'طفل/أطفال',
+    en: 'child(ren)',
+};
+translations['whatsapp.msg.option'] = {
+    fr: 'Choix',
+    ar: 'الاختيار',
+    en: 'Selection',
+};
+translations['whatsapp.msg.price'] = {
+    fr: 'Prix indiqué',
+    ar: 'السعر المعروض',
+    en: 'Listed price',
+};
+translations['whatsapp.msg.closing'] = {
+    fr: 'Pouvez-vous me confirmer la disponibilité ? Merci.',
+    ar: 'هل يمكنكم تأكيد التوفر؟ شكرًا.',
+    en: 'Could you confirm availability? Thank you.',
+};
+translations['whatsapp.msg.customTrip'] = {
+    fr: 'Bonjour, je souhaite organiser un voyage sur mesure.',
+    ar: 'مرحبًا، أرغب في تنظيم رحلة حسب الطلب.',
+    en: 'Hello, I would like to plan a custom trip.',
+};
+translations['whatsapp.msg.visa'] = {
+    fr: 'Bonjour, j’ai besoin d’aide pour une demande de visa',
+    ar: 'مرحبًا، أحتاج إلى مساعدة في طلب تأشيرة',
+    en: 'Hello, I need help with a visa application',
 };

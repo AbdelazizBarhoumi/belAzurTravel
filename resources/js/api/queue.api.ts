@@ -1,5 +1,16 @@
 import { apiFetch } from './http';
 
+/** Contact details resolved server-side for a client (snapshot + account). */
+export interface QueueClientContact {
+    id?: number | null;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    role?: string | null;
+    active?: boolean | null;
+    member_since?: string | null;
+}
+
 export interface QueueAudit {
     id: number;
     action: string;
@@ -25,6 +36,7 @@ export interface QueueBooking {
         email?: string;
         phone?: string;
     } | null;
+    client_contact?: QueueClientContact | null;
     total_amount: number;
     status: 'Pending' | 'Approved';
     created_at: string;
@@ -81,7 +93,7 @@ export interface QueueComplaint {
         start_date?: string | null;
         end_date?: string | null;
     } | null;
-    user?: { id: number; name: string; email: string } | null;
+    user?: QueueClientContact | null;
     refund_amount: number | null;
     status: 'pending' | 'in_review' | 'resolved' | 'rejected' | 'refunded';
     priority: 'low' | 'medium' | 'high';
@@ -101,6 +113,7 @@ export interface QueueSupportInquiry {
     id: number;
     user_id: number | null;
     client?: { name?: string; email?: string } | null;
+    client_contact?: QueueClientContact | null;
     subject: Record<string, string> | string;
     message: Record<string, string> | string;
     status: 'new' | 'in-progress' | 'resolved';

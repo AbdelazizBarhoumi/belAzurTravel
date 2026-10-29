@@ -5,8 +5,10 @@ import { notifyInteraction } from '@/api/interactions.api';
 import { BookingDialog } from '@/components/forms/BookingDialog';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { bookingDraftKey, claimBookingReopen } from '@/lib/bookingDraft';
 import { formatPrice } from '@/lib/utils';
+import { buildItemMessage, buildWhatsAppUrl } from '@/lib/whatsapp';
 
 type DetailItem = {
     label: string;
@@ -87,6 +89,7 @@ export function StickyBookingCard({
     cabinClass,
 }: StickyBookingCardProps) {
     const { t } = useLanguage();
+    const { settings } = useSiteSettings();
     const [bookingOpen, setBookingOpen] = useState(false);
 
     // Back from the login redirect: reopen the dialog with the saved form.
@@ -117,16 +120,22 @@ export function StickyBookingCard({
             return;
         }
 
-        const messageParts = [title, displayLocation, description].filter(
-            Boolean,
-        );
-        if (messageParts.length > 0) {
-            const message = encodeURIComponent(messageParts.join(' - '));
-            window.open(`https://wa.me/?text=${message}`, '_blank');
+        const agencyPhone = settings.whatsapp || settings.phone;
+        if (!agencyPhone) {
+            window.open('/contact', '_self');
             return;
         }
 
-        window.open('/contact', '_self');
+        const message = buildItemMessage(t, {
+            type: entityType,
+            title,
+            location: displayLocation,
+            adults: passengers,
+            option: cabinClass ?? type,
+            price: displayPrice,
+            currency,
+        });
+        window.open(buildWhatsAppUrl(agencyPhone, message), '_blank');
     };
 
     const handleBookClick = () => {

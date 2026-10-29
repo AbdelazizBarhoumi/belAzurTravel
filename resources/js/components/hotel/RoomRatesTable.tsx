@@ -7,6 +7,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn, formatPrice, roomPromo } from '@/lib/utils';
 
@@ -52,6 +53,8 @@ interface RoomRatesTableProps {
     requestMode?: boolean;
     /** Change this value to reset the internal selection (e.g. when new search results arrive). */
     resetKey?: string | number;
+    /** Builds the WhatsApp message for the selected rate; omit to hide the button. */
+    whatsAppMessage?: (room: RateRoom | undefined, total: number) => string;
 }
 
 // One physical room, with every boarding/rate plan offered for it nested
@@ -130,6 +133,7 @@ export function RoomRatesTable({
     onSelect,
     requestMode = false,
     resetKey,
+    whatsAppMessage,
 }: RoomRatesTableProps) {
     const { t, lang } = useLanguage();
     const groups = useMemo(() => groupByRoomType(rooms), [rooms]);
@@ -507,17 +511,29 @@ export function RoomRatesTable({
                             </p>
                         )}
                     </div>
-                    <Button
-                        size="lg"
-                        data-testid="reserve-rate"
-                        className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                        disabled={!active || bookDisabled}
-                        onClick={() => active && onReserve(active)}
-                    >
-                        {requestMode
-                            ? t('hotelDetail.requestBooking')
-                            : t('hotelDetail.reserve')}
-                    </Button>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        {whatsAppMessage && (
+                            <WhatsAppButton
+                                message={whatsAppMessage(
+                                    active,
+                                    activeTotalPromo
+                                        ? activeTotalPromo.discounted
+                                        : activeTotal,
+                                )}
+                            />
+                        )}
+                        <Button
+                            size="lg"
+                            data-testid="reserve-rate"
+                            className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                            disabled={!active || bookDisabled}
+                            onClick={() => active && onReserve(active)}
+                        >
+                            {requestMode
+                                ? t('hotelDetail.requestBooking')
+                                : t('hotelDetail.reserve')}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

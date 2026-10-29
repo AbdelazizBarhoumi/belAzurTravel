@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Api\AdminQueueController::index
- * @see app/Http/Controllers/Api/AdminQueueController.php:26
+ * @see app/Http/Controllers/Api/AdminQueueController.php:27
  * @route '/api/admin/queue'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminQueueController::index
- * @see app/Http/Controllers/Api/AdminQueueController.php:26
+ * @see app/Http/Controllers/Api/AdminQueueController.php:27
  * @route '/api/admin/queue'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminQueueController::index
- * @see app/Http/Controllers/Api/AdminQueueController.php:26
+ * @see app/Http/Controllers/Api/AdminQueueController.php:27
  * @route '/api/admin/queue'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\AdminQueueController::index
- * @see app/Http/Controllers/Api/AdminQueueController.php:26
+ * @see app/Http/Controllers/Api/AdminQueueController.php:27
  * @route '/api/admin/queue'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminQueueController::index
- * @see app/Http/Controllers/Api/AdminQueueController.php:26
+ * @see app/Http/Controllers/Api/AdminQueueController.php:27
  * @route '/api/admin/queue'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminQueueController::index
- * @see app/Http/Controllers/Api/AdminQueueController.php:26
+ * @see app/Http/Controllers/Api/AdminQueueController.php:27
  * @route '/api/admin/queue'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\AdminQueueController::index
- * @see app/Http/Controllers/Api/AdminQueueController.php:26
+ * @see app/Http/Controllers/Api/AdminQueueController.php:27
  * @route '/api/admin/queue'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Api\AdminQueueController::counts
- * @see app/Http/Controllers/Api/AdminQueueController.php:21
+ * @see app/Http/Controllers/Api/AdminQueueController.php:22
  * @route '/api/admin/queue/counts'
  */
 export const counts = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ counts.definition = {
 
 /**
 * @see \App\Http\Controllers\Api\AdminQueueController::counts
- * @see app/Http/Controllers/Api/AdminQueueController.php:21
+ * @see app/Http/Controllers/Api/AdminQueueController.php:22
  * @route '/api/admin/queue/counts'
  */
 counts.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ counts.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Api\AdminQueueController::counts
- * @see app/Http/Controllers/Api/AdminQueueController.php:21
+ * @see app/Http/Controllers/Api/AdminQueueController.php:22
  * @route '/api/admin/queue/counts'
  */
 counts.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ counts.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Api\AdminQueueController::counts
- * @see app/Http/Controllers/Api/AdminQueueController.php:21
+ * @see app/Http/Controllers/Api/AdminQueueController.php:22
  * @route '/api/admin/queue/counts'
  */
 counts.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ counts.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Api\AdminQueueController::counts
- * @see app/Http/Controllers/Api/AdminQueueController.php:21
+ * @see app/Http/Controllers/Api/AdminQueueController.php:22
  * @route '/api/admin/queue/counts'
  */
     const countsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ counts.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Api\AdminQueueController::counts
- * @see app/Http/Controllers/Api/AdminQueueController.php:21
+ * @see app/Http/Controllers/Api/AdminQueueController.php:22
  * @route '/api/admin/queue/counts'
  */
         countsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ counts.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Api\AdminQueueController::counts
- * @see app/Http/Controllers/Api/AdminQueueController.php:21
+ * @see app/Http/Controllers/Api/AdminQueueController.php:22
  * @route '/api/admin/queue/counts'
  */
         countsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

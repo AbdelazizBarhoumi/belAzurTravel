@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SupportInquiry extends Model
 {
@@ -15,4 +16,9 @@ class SupportInquiry extends Model
         'replies' => 'array',
         'resolved_at' => 'datetime',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -30,6 +30,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthUser } from '@/hooks/useAuthUser';
 import { api } from '@/hooks/useBooking';
@@ -39,6 +40,7 @@ import {
     takeBookingDraft,
 } from '@/lib/bookingDraft';
 import { formatPrice, toLocalISODate } from '@/lib/utils';
+import { buildItemMessage } from '@/lib/whatsapp';
 
 type Civility = 'Mr' | 'Mrs' | 'Ms';
 
@@ -1132,7 +1134,30 @@ export function BookingDialog({
                                         }
                                     />
                                 </div>
-                                <DialogFooter>
+                                <DialogFooter className="gap-2">
+                                    <WhatsAppButton
+                                        size="default"
+                                        message={buildItemMessage(t, {
+                                            type,
+                                            title: itemName,
+                                            from: effectiveStartDate,
+                                            to: effectiveEndDate,
+                                            adults:
+                                                adultCount ||
+                                                passengers ||
+                                                (perPerson
+                                                    ? participants
+                                                    : undefined),
+                                            children: childCount,
+                                            option:
+                                                [roomName, boardingName]
+                                                    .filter(Boolean)
+                                                    .join(' – ') ||
+                                                cabinClass,
+                                            price: estimatedTotal,
+                                            currency,
+                                        })}
+                                    />
                                     <Button
                                         type="submit"
                                         disabled={mutation.isPending}

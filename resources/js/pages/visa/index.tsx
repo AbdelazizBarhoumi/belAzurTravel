@@ -27,6 +27,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { toast } from '@/hooks/use-toast';
@@ -580,6 +581,14 @@ export default function Visa() {
                                 t('visa.submit')
                             )}
                         </Button>
+                        <WhatsAppButton
+                            className="w-full"
+                            message={`${t('whatsapp.msg.visa')}${
+                                selected
+                                    ? ` (${localizeText(selected.name, lang)})`
+                                    : ''
+                            }.\n${window.location.href}`}
+                        />
                     </form>
                 </div>
             </PageShell>

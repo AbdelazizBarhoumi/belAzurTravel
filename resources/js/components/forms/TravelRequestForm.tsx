@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function TravelRequestForm() {
@@ -318,7 +319,12 @@ export function TravelRequestForm() {
                             )}
                         />
 
-                        <div className="flex justify-end">
+                        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                            <WhatsAppButton
+                                size="default"
+                                className="rounded-full px-6"
+                                message={t('whatsapp.msg.customTrip')}
+                            />
                             <Button
                                 type="submit"
                                 disabled={submitting}

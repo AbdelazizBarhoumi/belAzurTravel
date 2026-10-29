@@ -33,6 +33,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
+import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import {
@@ -48,6 +49,7 @@ import {
     roomPromo,
     toLocalISODate,
 } from '@/lib/utils';
+import { buildItemMessage } from '@/lib/whatsapp';
 
 const tomorrowDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -507,6 +509,21 @@ export default function HotelDetail() {
     const handleReserve = (room: RateRoom) => {
         setSelectedRoom(room);
     };
+    const whatsAppMessage = (room?: RateRoom, total?: number) =>
+        buildItemMessage(t, {
+            type: 'hotel',
+            title,
+            location,
+            from: dateRange?.from,
+            to: dateRange?.to,
+            adults: occupancy.adults,
+            children: occupancy.childAges.length,
+            option: room
+                ? [room.name, room.boardingName].filter(Boolean).join(' – ')
+                : undefined,
+            price: total,
+            currency,
+        });
 
     // The sidebar search hands the selected destination, dates and guest
     // count over to the hotels listing, which reads them from the URL.
@@ -815,6 +832,7 @@ export default function HotelDetail() {
                                         resetKey={
                                             effectiveHotel?.id ?? 'static'
                                         }
+                                        whatsAppMessage={whatsAppMessage}
                                     />
                                 </motion.div>
                             ) : (
@@ -851,16 +869,23 @@ export default function HotelDetail() {
                                                         ` · ${t('hotelDetail.minimumNights')} ${unavailableHotel.min_nights}`}
                                                 </p>
                                             )}
-                                            <Button
-                                                className="mt-4 bg-amber-600 text-white hover:bg-amber-700"
-                                                onClick={() => {
-                                                    setRequestMode(true);
-                                                }}
-                                            >
-                                                {t(
-                                                    'hotelDetail.requestBooking',
-                                                ) || 'Request Booking'}
-                                            </Button>
+                                            <div className="mt-4 flex flex-wrap gap-2">
+                                                <Button
+                                                    className="bg-amber-600 text-white hover:bg-amber-700"
+                                                    onClick={() => {
+                                                        setRequestMode(true);
+                                                    }}
+                                                >
+                                                    {t(
+                                                        'hotelDetail.requestBooking',
+                                                    ) || 'Request Booking'}
+                                                </Button>
+                                                <WhatsAppButton
+                                                    size="default"
+                                                    className="bg-white"
+                                                    message={whatsAppMessage()}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -882,6 +907,7 @@ export default function HotelDetail() {
                                     onReserve={handleReserve}
                                     onSelect={(room) => setActiveRate(room)}
                                     resetKey={effectiveHotel?.id ?? 'static'}
+                                    whatsAppMessage={whatsAppMessage}
                                 />
                             </motion.div>
                         ) : null}

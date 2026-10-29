@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Complaint;
 use App\Models\SupportInquiry;
+use App\Support\ClientContact;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -88,7 +89,7 @@ class AdminQueueController extends Controller
     {
         return Booking::query()
             ->whereIn('status', ['Pending', 'Approved'])
-            ->with('audits.actor')
+            ->with('audits.actor', 'user')
             ->get()
             ->sortBy([
                 fn (Booking $booking) => $booking->status === 'Pending' ? 0 : 1,
@@ -104,6 +105,7 @@ class AdminQueueController extends Controller
                 'start_date' => $this->dateString($booking->start_date),
                 'end_date' => $this->dateString($booking->end_date),
                 'client' => $booking->client,
+                'client_contact' => ClientContact::resolve($booking->user, $booking->client),
                 'total_amount' => $booking->total_amount,
                 'status' => $booking->status,
                 'created_at' => $booking->created_at?->toJSON(),
@@ -163,11 +165,9 @@ class AdminQueueController extends Controller
                     'start_date' => $this->dateString($complaint->booking->start_date),
                     'end_date' => $this->dateString($complaint->booking->end_date),
                 ] : null,
-                'user' => $complaint->user ? [
-                    'id' => $complaint->user->id,
-                    'name' => $complaint->user->name,
-                    'email' => $complaint->user->email,
-                ] : null,
+                'user' => $complaint->user
+                    ? ClientContact::resolve($complaint->user)
+                    : null,
                 'refund_amount' => $complaint->refund_amount,
                 'status' => $complaint->status,
                 'priority' => $complaint->priority,
@@ -190,6 +190,7 @@ class AdminQueueController extends Controller
     {
         return SupportInquiry::query()
             ->whereIn('status', ['new', 'in-progress'])
+            ->with('user')
             ->get()
             ->sortBy([
                 fn (SupportInquiry $inquiry) => $this->priorityRank($inquiry->priority),
@@ -200,6 +201,7 @@ class AdminQueueController extends Controller
                 'id' => $inquiry->id,
                 'user_id' => $inquiry->user_id,
                 'client' => $inquiry->client,
+                'client_contact' => ClientContact::resolve($inquiry->user, $inquiry->client),
                 'subject' => $inquiry->subject,
                 'message' => $inquiry->message,
                 'status' => $inquiry->status,

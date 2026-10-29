@@ -149,6 +149,16 @@ export interface BookingDetailRow extends ClientBookingRow {
         email?: string;
         phone?: string;
     };
+    /** Resolved client contact — only present for admins. */
+    client_contact?: {
+        id?: number | null;
+        name?: string | null;
+        email?: string | null;
+        phone?: string | null;
+        role?: string | null;
+        active?: boolean | null;
+        member_since?: string | null;
+    } | null;
     guests?: Array<{ name?: string }> | null;
     notes?: string | null;
     promo_code?: string | null;

@@ -29,6 +29,7 @@ import {
     replyToSupportInquiry,
     updateSupportInquiry,
     type AdminQueuePayload,
+    type QueueClientContact,
     type QueueSection,
     type QueueSupportInquiry,
 } from '@/api/queue.api';
@@ -110,6 +111,64 @@ function localize(
     if (!value) return '';
     if (typeof value === 'string') return value;
     return value[lang] || value.en || value.fr || value.ar || '';
+}
+
+/**
+ * Client contact card: name, clickable email/phone and account metadata.
+ * `contact` is the server-resolved record; `fallback` is the raw snapshot
+ * stored on the booking/inquiry when the server payload predates it.
+ */
+function ClientContactBlock({
+    contact,
+    fallback,
+}: {
+    contact?: QueueClientContact | null;
+    fallback?: { name?: string; email?: string; phone?: string } | null;
+}) {
+    const { t } = useLanguage();
+    const name = contact?.name ?? fallback?.name;
+    const email = contact?.email ?? fallback?.email;
+    const phone = contact?.phone ?? fallback?.phone;
+    const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, '')}` : null;
+    const meta = [
+        contact?.role ? `${t('admin.role')}: ${contact.role}` : null,
+        contact?.member_since
+            ? `${t('admin.memberSince')}: ${new Date(
+                  contact.member_since,
+              ).toLocaleDateString()}`
+            : null,
+    ].filter(Boolean);
+
+    return (
+        <div className="mt-3 rounded-2xl border border-border bg-muted/20 p-3 text-sm">
+            <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">
+                {t('admin.clientContact')}
+            </p>
+            <p className="font-medium text-foreground">{name || '—'}</p>
+            <div className="mt-0.5 flex flex-col gap-0.5 text-muted-foreground">
+                {email && (
+                    <a
+                        href={`mailto:${email}`}
+                        className="truncate hover:text-primary"
+                    >
+                        {email}
+                    </a>
+                )}
+                {phone && telHref ? (
+                    <a href={telHref} className="hover:text-primary">
+                        {phone}
+                    </a>
+                ) : (
+                    <span>{t('admin.notProvided')}</span>
+                )}
+            </div>
+            {meta.length > 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                    {meta.join(' · ')}
+                </p>
+            )}
+        </div>
+    );
 }
 
 function CloudIcon() {
@@ -489,7 +548,9 @@ const AdminQueue = () => {
                             <SheetTitle>
                                 {detail.kind === 'booking' && (
                                     <>
-                                        {t('admin.booking')} #{detail.item.id}
+                                        {t('admin.booking')} #
+                                        {detail.item.booking_ref ??
+                                            detail.item.id}
                                     </>
                                 )}
                                 {detail.kind === 'complaint' && (
@@ -1030,16 +1091,6 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                         <p className="text-lg font-bold text-foreground">
                             {b.client?.name ?? 'Guest'}
                         </p>
-                        {(b as any).client?.email && (
-                            <p className="text-sm text-muted-foreground">
-                                {(b as any).client.email}
-                            </p>
-                        )}
-                        {(b as any).client?.phone && (
-                            <p className="text-sm text-muted-foreground">
-                                {(b as any).client.phone}
-                            </p>
-                        )}
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
                         <span
@@ -1057,6 +1108,11 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                         )}
                     </div>
                 </div>
+
+                <ClientContactBlock
+                    contact={(b as any).client_contact}
+                    fallback={b.client}
+                />
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -1079,7 +1135,7 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                                 {t('admin.dateRange')}
                             </p>
                             <p className="font-medium">
-                                {b.start_date} \u2192 {b.end_date ?? '\u2026'}
+                                {b.start_date} → {b.end_date ?? '…'}
                             </p>
                         </div>
                     )}
@@ -1305,7 +1361,7 @@ function BookingDetailView({ booking }: { booking: AdminBookingRow }) {
                                     </p>
                                     {audit.notes && (
                                         <p className="mt-0.5 text-xs italic text-muted-foreground">
-                                            \u201c{audit.notes}\u201d
+                                            “{audit.notes}”
                                         </p>
                                     )}
                                 </li>
@@ -1388,6 +1444,8 @@ function ComplaintDetail({
                 <p className="mt-3 text-sm text-foreground">
                     {localize(lang, complaint.description)}
                 </p>
+
+                <ClientContactBlock contact={complaint.user} />
 
                 {complaint.booking && (
                     <div className="mt-3 rounded-2xl border border-border bg-muted/20 p-3 text-sm">
@@ -1569,6 +1627,11 @@ function SupportDetail({
                 <p className="mt-3 text-sm text-foreground">
                     {localize(lang, inquiry.message)}
                 </p>
+
+                <ClientContactBlock
+                    contact={inquiry.client_contact}
+                    fallback={inquiry.client}
+                />
 
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
                     <label className="text-muted-foreground">

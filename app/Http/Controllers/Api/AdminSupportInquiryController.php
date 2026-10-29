@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SupportInquiry;
 use App\Models\User;
 use App\Notifications\SupportReplyNotification;
+use App\Support\ClientContact;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,7 @@ class AdminSupportInquiryController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = SupportInquiry::query()->latest();
+        $query = SupportInquiry::query()->latest()->with('user');
 
         if ($request->has('status')) {
             $query->where('status', $request->input('status'));
@@ -76,6 +77,7 @@ class AdminSupportInquiryController extends Controller
             'id' => $inquiry->id,
             'user_id' => $inquiry->user_id,
             'client' => $inquiry->client,
+            'client_contact' => ClientContact::resolve($inquiry->user, $inquiry->client),
             'subject' => $inquiry->subject,
             'message' => $inquiry->message,
             'status' => $inquiry->status,
