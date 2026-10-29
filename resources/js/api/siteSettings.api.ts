@@ -81,6 +81,8 @@ interface SiteSettingsContent {
 export interface SiteSettings {
     companyName: string;
     email: string;
+    /** Inbox for visa applications, new bookings and travel requests. */
+    commercialEmail?: string | null;
     phone: string;
     phone2: string;
     whatsapp: string;

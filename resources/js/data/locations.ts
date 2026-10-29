@@ -3,9 +3,12 @@
  * the system. Replaces the `country-state-city` and `i18n-iso-countries`
  * packages. Every name is mapped in the 3 languages (en/fr/ar).
  *
- * The list starts from the OS-TRAVEL catalog (Tunisia, Turkey, Algeria and
- * their synced cities) plus the popular destinations the site sells.
+ * Countries cover the whole world (see `countries.json`); cities start from
+ * the OS-TRAVEL catalog (Tunisia, Turkey, Algeria) plus popular destinations.
  */
+
+import countriesData from './countries.json';
+import tunisiaTowns from './tunisiaCities.json';
 
 export interface LocalizedName {
     en: string;
@@ -25,6 +28,8 @@ export interface CityItem {
     countryCode: string;
     /** OS-TRAVEL provider id (present only for the provider's cities). */
     ostravelId?: number;
+    /** Tunisian governorate key (see `TN_GOVERNORATES`). */
+    region?: string;
 }
 
 const n = (en: string, fr: string, ar: string): LocalizedName => ({
@@ -33,55 +38,35 @@ const n = (en: string, fr: string, ar: string): LocalizedName => ({
     ar,
 });
 
-export const COUNTRIES: CountryItem[] = [
-    { code: 'TN', name: n('Tunisia', 'Tunisie', 'تونس'), ostravelId: 219 },
-    { code: 'TR', name: n('Turkey', 'Turquie', 'تركيا'), ostravelId: 220 },
-    { code: 'DZ', name: n('Algeria', 'Algérie', 'الجزائر'), ostravelId: 5 },
-    { code: 'FR', name: n('France', 'France', 'فرنسا') },
-    { code: 'IT', name: n('Italy', 'Italie', 'إيطاليا') },
-    { code: 'ES', name: n('Spain', 'Espagne', 'إسبانيا') },
-    { code: 'MA', name: n('Morocco', 'Maroc', 'المغرب') },
-    {
-        code: 'AE',
-        name: n(
-            'United Arab Emirates',
-            'Émirats Arabes Unis',
-            'الإمارات العربية المتحدة',
-        ),
-    },
-    { code: 'EG', name: n('Egypt', 'Égypte', 'مصر') },
-    { code: 'ID', name: n('Indonesia', 'Indonésie', 'إندونيسيا') },
-    { code: 'TH', name: n('Thailand', 'Thaïlande', 'تايلاند') },
-    { code: 'DE', name: n('Germany', 'Allemagne', 'ألمانيا') },
-    { code: 'GB', name: n('United Kingdom', 'Royaume-Uni', 'المملكة المتحدة') },
-    { code: 'US', name: n('United States', 'États-Unis', 'الولايات المتحدة') },
-    { code: 'CA', name: n('Canada', 'Canada', 'كندا') },
-    { code: 'JP', name: n('Japan', 'Japon', 'اليابان') },
-    { code: 'CN', name: n('China', 'Chine', 'الصين') },
-    {
-        code: 'SA',
-        name: n('Saudi Arabia', 'Arabie Saoudite', 'المملكة العربية السعودية'),
-    },
-    { code: 'MY', name: n('Malaysia', 'Malaisie', 'ماليزيا') },
-    { code: 'AU', name: n('Australia', 'Australie', 'أستراليا') },
-    { code: 'ZA', name: n('South Africa', 'Afrique du Sud', 'جنوب أفريقيا') },
-    { code: 'IN', name: n('India', 'Inde', 'الهند') },
-    { code: 'KR', name: n('South Korea', 'Corée du Sud', 'كوريا الجنوبية') },
-    { code: 'BR', name: n('Brazil', 'Brésil', 'البرازيل') },
-    { code: 'TZ', name: n('Tanzania', 'Tanzanie', 'تنزانيا') },
-    { code: 'MU', name: n('Mauritius', 'Île Maurice', 'موريشيوس') },
-    { code: 'RE', name: n('Réunion', 'La Réunion', 'ريونيون') },
-    { code: 'GR', name: n('Greece', 'Grèce', 'اليونان') },
-    { code: 'CZ', name: n('Czech Republic', 'République tchèque', 'التشيك') },
-    { code: 'NL', name: n('Netherlands', 'Pays-Bas', 'هولندا') },
-    { code: 'PT', name: n('Portugal', 'Portugal', 'البرتغال') },
-    { code: 'AT', name: n('Austria', 'Autriche', 'النمسا') },
-    { code: 'MV', name: n('Maldives', 'Maldives', 'المالديف') },
-    { code: 'SG', name: n('Singapore', 'Singapour', 'سنغافورة') },
-    { code: 'MX', name: n('Mexico', 'Mexique', 'المكسيك') },
-];
+/**
+ * Every ISO-3166 country (250) with en/fr/ar names, generated once from the
+ * i18n-iso-countries dataset; hand-curated names and OS-TRAVEL ids were kept.
+ * Shared with the backend (`App\Support\CountryNames`).
+ */
+export const COUNTRIES: CountryItem[] = (
+    countriesData as Array<{
+        code: string;
+        en: string;
+        fr: string;
+        ar: string;
+        ostravelId?: number;
+    }>
+)
+    .map(({ code, en, fr, ar, ostravelId }) => ({
+        code,
+        name: n(en, fr, ar),
+        ...(ostravelId != null ? { ostravelId } : {}),
+    }))
+    // Tunisia (home market) first, then alphabetical.
+    .sort((a, b) =>
+        a.code === 'TN'
+            ? -1
+            : b.code === 'TN'
+              ? 1
+              : a.name.fr.localeCompare(b.name.fr, 'fr'),
+    );
 
-export const CITIES: CityItem[] = [
+const BASE_CITIES: CityItem[] = [
     // Tunisia
     { name: n('Tunis', 'Tunis', 'تونس'), countryCode: 'TN', ostravelId: 32 },
     { name: n('Sousse', 'Sousse', 'سوسة'), countryCode: 'TN', ostravelId: 34 },
@@ -290,6 +275,94 @@ export const CITIES: CityItem[] = [
     { name: n('Singapore', 'Singapour', 'سنغافورة'), countryCode: 'SG' },
     // Mexico
     { name: n('Cancun', 'Cancún', 'كانكون'), countryCode: 'MX' },
+];
+
+/** The 24 Tunisian governorates, used to group the Tunisian cities. */
+export const TN_GOVERNORATES: Record<string, LocalizedName> = {
+    tunis: n('Tunis', 'Tunis', 'تونس'),
+    ariana: n('Ariana', 'Ariana', 'أريانة'),
+    'ben-arous': n('Ben Arous', 'Ben Arous', 'بن عروس'),
+    manouba: n('Manouba', 'La Manouba', 'منوبة'),
+    nabeul: n('Nabeul', 'Nabeul', 'نابل'),
+    zaghouan: n('Zaghouan', 'Zaghouan', 'زغوان'),
+    bizerte: n('Bizerte', 'Bizerte', 'بنزرت'),
+    beja: n('Beja', 'Béja', 'باجة'),
+    jendouba: n('Jendouba', 'Jendouba', 'جندوبة'),
+    kef: n('Kef', 'Le Kef', 'الكاف'),
+    siliana: n('Siliana', 'Siliana', 'سليانة'),
+    sousse: n('Sousse', 'Sousse', 'سوسة'),
+    monastir: n('Monastir', 'Monastir', 'المنستير'),
+    mahdia: n('Mahdia', 'Mahdia', 'المهدية'),
+    sfax: n('Sfax', 'Sfax', 'صفاقس'),
+    kairouan: n('Kairouan', 'Kairouan', 'القيروان'),
+    kasserine: n('Kasserine', 'Kasserine', 'القصرين'),
+    'sidi-bouzid': n('Sidi Bouzid', 'Sidi Bouzid', 'سيدي بوزيد'),
+    gabes: n('Gabes', 'Gabès', 'قابس'),
+    medenine: n('Medenine', 'Médenine', 'مدنين'),
+    tataouine: n('Tataouine', 'Tataouine', 'تطاوين'),
+    gafsa: n('Gafsa', 'Gafsa', 'قفصة'),
+    tozeur: n('Tozeur', 'Tozeur', 'توزر'),
+    kebili: n('Kebili', 'Kébili', 'قبلي'),
+};
+
+// Governorate of each hand-curated Tunisian city (keyed by English name).
+const CURATED_TN_REGIONS: Record<string, string> = {
+    Tunis: 'tunis',
+    Gammarth: 'tunis',
+    Sousse: 'sousse',
+    Sfax: 'sfax',
+    Kerkennah: 'sfax',
+    Djerba: 'medenine',
+    Mednenine: 'medenine',
+    Zarzis: 'medenine',
+    Tozeur: 'tozeur',
+    Nefta: 'tozeur',
+    Gabes: 'gabes',
+    Matmata: 'gabes',
+    Hammamet: 'nabeul',
+    'Yasmine Hammamet': 'nabeul',
+    Nabeul: 'nabeul',
+    Kelibia: 'nabeul',
+    Korba: 'nabeul',
+    Korbous: 'nabeul',
+    Monastir: 'monastir',
+    Mahdia: 'mahdia',
+    'El Jem': 'mahdia',
+    Kairouan: 'kairouan',
+    Bizerte: 'bizerte',
+    'Ain Drahem': 'jendouba',
+    Tabarka: 'jendouba',
+    'Béja': 'beja',
+    Nefza: 'beja',
+    'Téboursouk': 'beja',
+    Douz: 'kebili',
+    Kebili: 'kebili',
+    'Ksar Ghilane': 'kebili',
+    Gafsa: 'gafsa',
+    'Le Kef': 'kef',
+    Sbeitla: 'kasserine',
+    'Sidi Bouzid': 'sidi-bouzid',
+    Tataouine: 'tataouine',
+    Zaghouan: 'zaghouan',
+};
+
+/**
+ * All cities: the curated list (provider ids kept) plus every other Tunisian
+ * town with more than 1,000 inhabitants (GeoNames), grouped by governorate.
+ */
+export const CITIES: CityItem[] = [
+    ...BASE_CITIES.map((city) =>
+        city.countryCode === 'TN' && CURATED_TN_REGIONS[city.name.en]
+            ? { ...city, region: CURATED_TN_REGIONS[city.name.en] }
+            : city,
+    ),
+    ...(
+        tunisiaTowns as Array<{ en: string; fr: string; ar: string; gov: string }>
+    ).map(({ en, fr, ar, gov }) => ({
+        name: n(en, fr, ar),
+        countryCode: 'TN',
+        region: gov,
+    })),
 ];
 
 export function getCountries(): CountryItem[] {

@@ -9,6 +9,7 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import { Flag } from '@/components/ui/Flag';
 import {
     Popover,
     PopoverContent,
@@ -21,8 +22,13 @@ import {
     getCitiesByCountry,
     type LocalizedName,
 } from '@/data/locations';
+import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
-import { cn } from '@/lib/utils';
+import { cn, matchesSearch } from '@/lib/utils';
+
+// Accent/case-insensitive matching over every name packed into an item value.
+const filterLocations = (itemValue: string, search: string) =>
+    matchesSearch(search, itemValue) ? 1 : 0;
 
 interface LocationSelectProps {
     value: string;
@@ -41,6 +47,7 @@ export function LocationSelect({
     className,
     countryOnly = false,
 }: LocationSelectProps) {
+    const { t: translate } = useLanguage();
     const [open, setOpen] = useState(false);
     const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
     const cities = useMemo(
@@ -55,6 +62,7 @@ export function LocationSelect({
             code: c.code,
             nameEn: c.name.en,
             nameDisplay: t(c.name, lang),
+            keywords: `${c.name.fr} ${c.name.en} ${c.name.ar} ${c.code}`,
         }));
     }, [lang]);
 
@@ -65,6 +73,7 @@ export function LocationSelect({
         return cities.map((city) => ({
             nameEn: city.name.en,
             nameDisplay: `${t(city.name, lang)}, ${countryDisplay}`,
+            keywords: `${city.name.fr} ${city.name.en} ${city.name.ar}`,
             countryCode: selectedCountryCode,
         }));
     }, [cities, selectedCountryCode, lang]);
@@ -110,16 +119,16 @@ export function LocationSelect({
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                <Command>
-                    <CommandInput placeholder="Search countries and cities..." />
+                <Command filter={filterLocations}>
+                    <CommandInput placeholder={placeholder} />
                     <CommandList>
-                        <CommandEmpty>No location found.</CommandEmpty>
+                        <CommandEmpty>{translate('location.noResult')}</CommandEmpty>
                         {!selectedCountryCode ? (
-                            <CommandGroup heading="Countries">
+                            <CommandGroup heading={translate('location.countries')}>
                                 {allLocations.map((loc) => (
                                     <CommandItem
                                         key={loc.code}
-                                        value={loc.nameDisplay}
+                                        value={loc.keywords}
                                         onSelect={() => {
                                             if (countryOnly) {
                                                 onChange(loc.nameEn);
@@ -135,17 +144,18 @@ export function LocationSelect({
                                                 value === loc.nameEn ? 'opacity-100' : 'opacity-0',
                                             )}
                                         />
+                                        <Flag code={loc.code} className="me-2" />
                                         {loc.nameDisplay}
                                     </CommandItem>
                                 ))}
                             </CommandGroup>
                         ) : (
                             <>
-                                <CommandGroup heading="Cities">
-                                    {cityItems.map((loc) => (
+                                <CommandGroup heading={translate('location.cities')}>
+                                    {cityItems.map((loc, index) => (
                                         <CommandItem
-                                            key={loc.nameEn}
-                                            value={loc.nameDisplay}
+                                            key={`${loc.nameEn}-${index}`}
+                                            value={`${loc.keywords} ${index}`}
                                             onSelect={() => {
                                                 onChange(loc.nameEn);
                                                 setOpen(false);

@@ -30,6 +30,7 @@ class SiteSetting extends Model
         'booking_expiry_hours',
         'trip_reminder_days',
         'digest_time',
+        'commercial_email',
     ];
 
     protected $casts = [

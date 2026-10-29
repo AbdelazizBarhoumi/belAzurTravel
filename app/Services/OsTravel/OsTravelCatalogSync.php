@@ -179,7 +179,13 @@ class OsTravelCatalogSync
     {
         $this->cityIds = [];
 
-        foreach ($countryIds as $countryId) {
+        foreach ($countryIds as $index => $countryId) {
+            // The provider allows 5 ListCity calls per minute per account.
+            if ($index > 0 && $index % 5 === 0) {
+                $this->note('ListCity rate limit: pausing 61s');
+                sleep(61);
+            }
+
             $this->note("calling ListCity for country={$countryId}");
             $data = $this->client->listCities($countryId);
 

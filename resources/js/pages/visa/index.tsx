@@ -15,6 +15,7 @@ import { PageShell } from '@/components/layout/PageShell';
 import { PageHeroCarousel } from '@/components/sections/PageHeroCarousel';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Flag } from '@/components/ui/Flag';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -30,6 +31,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
 import { toast } from '@/hooks/use-toast';
 import { useVisas } from '@/hooks/usePublicData';
+import { matchesSearch } from '@/lib/utils';
 
 interface Country {
     id: number;
@@ -121,9 +123,7 @@ export default function Visa() {
     const filtered = useMemo(
         () =>
             countries.filter((c) =>
-                localizeText(c.name, lang)
-                    .toLowerCase()
-                    .includes(query.toLowerCase()),
+                matchesSearch(query, c.name?.fr, c.name?.en, c.name?.ar, c.code),
             ),
         [query, countries, lang],
     );
@@ -199,7 +199,10 @@ export default function Visa() {
                     <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                         <CheckCircle2 className="h-8 w-8 text-primary" />
                     </div>
-                    <p className="mb-2 text-6xl">{selected.flag}</p>
+                    <Flag
+                        code={selected.code}
+                        className="mb-3 !w-16 text-5xl"
+                    />
                     <h3 className="mb-2 font-serif text-2xl font-bold text-foreground">
                         {t('visa.forCountry').replace(
                             '{name}',
@@ -239,7 +242,7 @@ export default function Visa() {
     if (selected) {
         return (
             <PageShell
-                title={`${t('visa.forCountry').replace('{name}', localizeText(selected.name, lang))} ${selected.flag}`}
+                title={t('visa.forCountry').replace('{name}', localizeText(selected.name, lang))}
                 subtitle={`${t('visa.processingLabel')} : ${localizeText(selected.processing, lang)} · ${t('common.from')} ${selected.price} ${t('visa.currency')}`}
             >
                 <div className="mx-auto max-w-2xl">
@@ -260,7 +263,7 @@ export default function Visa() {
                     >
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <Label>{t('visa.firstName')} *</Label>
+                                <Label>{t('visa.firstName')}</Label>
                                 <Input
                                     value={form.firstName}
                                     onChange={(e) =>
@@ -278,7 +281,7 @@ export default function Visa() {
                                 )}
                             </div>
                             <div>
-                                <Label>{t('visa.lastName')} *</Label>
+                                <Label>{t('visa.lastName')}</Label>
                                 <Input
                                     value={form.lastName}
                                     onChange={(e) =>
@@ -296,7 +299,7 @@ export default function Visa() {
                                 )}
                             </div>
                             <div>
-                                <Label>{t('visa.email')} *</Label>
+                                <Label>{t('visa.email')}</Label>
                                 <Input
                                     type="email"
                                     value={form.email}
@@ -315,7 +318,7 @@ export default function Visa() {
                                 )}
                             </div>
                             <div>
-                                <Label>{t('visa.phone')} *</Label>
+                                <Label>{t('visa.phone')}</Label>
                                 <Input
                                     value={form.phone}
                                     onChange={(e) =>
@@ -333,7 +336,7 @@ export default function Visa() {
                                 )}
                             </div>
                             <div>
-                                <Label>{t('visa.passport')} *</Label>
+                                <Label>{t('visa.passport')}</Label>
                                 <Input
                                     value={form.passport}
                                     onChange={(e) =>
@@ -351,7 +354,7 @@ export default function Visa() {
                                 )}
                             </div>
                             <div>
-                                <Label>{t('visa.birthDate')} *</Label>
+                                <Label>{t('visa.birthDate')}</Label>
                                 <Input
                                     type="date"
                                     value={form.birthDate}
@@ -369,7 +372,7 @@ export default function Visa() {
                                 )}
                             </div>
                             <div>
-                                <Label>{t('visa.travelDate')} *</Label>
+                                <Label>{t('visa.travelDate')}</Label>
                                 <Input
                                     type="date"
                                     value={form.travelDate}
@@ -387,7 +390,7 @@ export default function Visa() {
                                 )}
                             </div>
                             <div>
-                                <Label>{t('visa.visaType')} *</Label>
+                                <Label>{t('visa.visaType')}</Label>
                                 <Select
                                     value={form.visaType}
                                     onValueChange={(v) =>
@@ -479,7 +482,7 @@ export default function Visa() {
                             {/* Previous visa question */}
                             <div className="md:col-span-2">
                                 <Label>
-                                    {t('visa.previousVisaQuestion')} *
+                                    {t('visa.previousVisaQuestion')}
                                 </Label>
                                 <RadioGroup
                                     value={form.previousVisa ? 'yes' : 'no'}
@@ -552,7 +555,7 @@ export default function Visa() {
                                         htmlFor="confirmData"
                                         className="cursor-pointer text-sm font-normal leading-relaxed text-muted-foreground"
                                     >
-                                        {t('visa.confirmData')} *
+                                        {t('visa.confirmData')}
                                     </Label>
                                 </div>
                                 {errors.confirmData && (
@@ -609,7 +612,7 @@ export default function Visa() {
                                 onClick={() => setSelected(c)}
                                 className="card-elevated group rounded-2xl border border-transparent bg-card p-5 text-start transition-all hover:border-primary"
                             >
-                                <p className="mb-3 text-5xl">{c.flag}</p>
+                                <Flag code={c.code} className="mb-3 !w-14 text-4xl" />
                                 <h3 className="font-serif text-lg font-bold text-foreground transition-colors group-hover:text-primary">
                                     {localizeText(c.name, lang)}
                                 </h3>

@@ -382,10 +382,8 @@ export default function TourDetail() {
                         maxGroup={tour.maxGroup}
                         rating={tour.rating}
                         primaryButtonLabel={t('tours.bookTour')}
-                        onBook={() => {
-                            // simple reservation flow: scroll to booking or open modal
-                            alert(t('tourDetail.bookingFlow'));
-                        }}
+                        entityType="tour"
+                        itemSlug={tour.slug}
                     />
                 </aside>
             </motion.div>

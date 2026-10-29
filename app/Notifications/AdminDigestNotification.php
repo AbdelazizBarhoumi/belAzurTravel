@@ -4,10 +4,11 @@ namespace App\Notifications;
 
 use App\Notifications\Concerns\NotifiesByMail;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AdminDigestNotification extends Notification
+class AdminDigestNotification extends Notification implements ShouldQueue
 {
     use NotifiesByMail;
     use Queueable;

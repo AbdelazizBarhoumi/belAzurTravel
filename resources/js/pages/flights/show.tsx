@@ -280,11 +280,8 @@ export default function FlightDetail() {
                                     primaryButtonLabel={t(
                                         'flightDetail.bookFlight',
                                     )}
-                                    onBook={() =>
-                                        window.alert(
-                                            t('flightDetail.bookingFlow'),
-                                        )
-                                    }
+                                    entityType="flight"
+                                    itemId={String(flight.id)}
                                 />
                             </div>
                         </div>

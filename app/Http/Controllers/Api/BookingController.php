@@ -9,18 +9,23 @@ use App\Models\Booking;
 use App\Models\BookingAudit;
 use App\Models\Car;
 use App\Models\Destination;
+use App\Models\Event;
 use App\Models\Flight;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;
 use App\Models\Promo;
 use App\Models\SiteSetting;
 use App\Models\Tour;
+use App\Models\Travel;
 use App\Models\User;
 use App\Notifications\BookingActivityNotification;
 use App\Notifications\BookingStatusNotification;
 use App\Services\OsTravel\OsTravelBookingService;
+use App\Support\CommercialMail;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -54,7 +59,7 @@ class BookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'type' => ['required', 'in:destination,hotel,tour,flight,car'],
+            'type' => ['required', 'in:destination,hotel,tour,flight,car,travel,event'],
             'item_slug' => ['nullable', 'string', 'max:255', 'required_without:item_id'],
             'item_id' => ['nullable', 'string', 'max:255', 'required_without:item_slug'],
             'start_date' => ['nullable', 'date'],
@@ -181,18 +186,18 @@ class BookingController extends Controller
                     throw ValidationException::withMessages(['provider' => __('messages.hotel_not_available')]);
                 }
 
-                $hotelBooking = $this->osTravelBookingService->buildHotelBooking([
-                    'city' => $staged->city_external_id,
-                    'hotel' => $staged->external_id,
-                    'check_in' => $data['start_date'],
-                    'check_out' => $data['end_date'],
-                    'source' => $data['provider']['source'],
-                    'token' => $data['provider']['token'],
-                    'rooms' => $data['provider']['rooms'] ?? [],
-                    'options' => $data['provider']['options'] ?? [],
-                ], $data['provider']['pax'] ?? []);
-
                 try {
+                    $hotelBooking = $this->osTravelBookingService->buildHotelBooking([
+                        'city' => $staged->city_external_id,
+                        'hotel' => $staged->external_id,
+                        'check_in' => $data['start_date'] ?? null,
+                        'check_out' => $data['end_date'] ?? null,
+                        'source' => data_get($data, 'provider.source'),
+                        'token' => $data['provider']['token'],
+                        'rooms' => data_get($data, 'provider.rooms', []),
+                        'options' => $request->input('provider.options', []),
+                    ], data_get($data, 'provider.pax', []));
+
                     $prebook = $this->osTravelBookingService->preBook($hotelBooking);
                 } catch (Throwable $e) {
                     throw ValidationException::withMessages([
@@ -212,9 +217,7 @@ class BookingController extends Controller
 
         $expiryHours = (int) (SiteSetting::first()?->booking_expiry_hours ?? 72);
 
-        $nextRef = (int) (DB::table('bookings')->max('booking_ref') ?? 0) + 1;
-
-        $booking = Booking::create([
+        $attributes = [
             'user_id' => $request->user()->id,
             'type' => $data['type'],
             'item_slug' => $data['item_slug'] ?? null,
@@ -236,8 +239,9 @@ class BookingController extends Controller
             'is_request' => ! empty($data['is_request']),
             'provider_payload' => $providerContext,
             'details' => $data['details'] ?? null,
-            'booking_ref' => $nextRef,
-        ]);
+        ];
+
+        $booking = $this->createWithNextRef($attributes);
 
         BookingAudit::log(
             booking: $booking,
@@ -476,11 +480,36 @@ class BookingController extends Controller
             'hotel' => Hotel::query()->where(fn (Builder $query) => $query->where('slug', $identifier)->orWhere('code', $identifier)),
             'tour' => Tour::query()->where('slug', $identifier),
             'flight' => Flight::query()->where('code', $identifier),
-            'car' => Car::query()->where('slug', $identifier),
+            'car' => Car::query()->where(fn (Builder $query) => $query->where('slug', $identifier)->orWhere('id', $identifier)),
+            'travel' => Travel::query()->where('slug', $identifier),
+            'event' => Event::query()->where('slug', $identifier),
             default => null,
         };
 
         abort_unless($query?->exists(), 422, __('messages.selected_item_missing'));
+    }
+
+    /**
+     * Allocate the sequential public reference under a row lock so two
+     * concurrent submissions cannot collide on the unique `booking_ref`.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function createWithNextRef(array $attributes): Booking
+    {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return DB::transaction(function () use ($attributes): Booking {
+                    $last = DB::table('bookings')->lockForUpdate()->max('booking_ref');
+
+                    return Booking::create($attributes + ['booking_ref' => (int) ($last ?? 0) + 1]);
+                });
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= 3) {
+                    throw $e;
+                }
+            }
+        }
     }
 
     private function notifyOperations(Booking $booking, string $type): void
@@ -493,6 +522,11 @@ class BookingController extends Controller
                 $notification = new BookingActivityNotification($booking, $type);
                 $recipient->notify($notification);
             });
+
+        // The commercial team gets an email for every new reservation.
+        if ($type === 'booking.submitted') {
+            CommercialMail::notify(new BookingActivityNotification($booking, $type));
+        }
     }
 
     private function notifyClient(Booking $booking): void

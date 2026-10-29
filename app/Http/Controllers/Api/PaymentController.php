@@ -43,6 +43,8 @@ class PaymentController extends Controller
             'This booking cannot be paid for.',
         );
 
+        $this->ensureOnlinePaymentEnabled();
+
         abort_if(
             $booking->payment()->where('status', 'paid')->exists(),
             422,
@@ -195,6 +197,16 @@ class PaymentController extends Controller
         }
     }
 
+    private function ensureOnlinePaymentEnabled(): void
+    {
+        if (! config('payment.online_enabled')) {
+            abort(response()->json([
+                'code' => 'payment_unavailable',
+                'message' => __('messages.payment_unavailable'),
+            ], 503));
+        }
+    }
+
     /**
      * Retry payment for a pending booking.
      */
@@ -212,6 +224,8 @@ class PaymentController extends Controller
             422,
             'This booking cannot be paid for.',
         );
+
+        $this->ensureOnlinePaymentEnabled();
 
         // Delete old failed payment record if exists
         Payment::where('booking_id', $booking->id)

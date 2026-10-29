@@ -87,7 +87,8 @@ export default function EventDetail() {
                             ]}
                             priceLabel="Package from"
                             primaryButtonLabel="Reserve a spot"
-                            onBook={() => window.open('/contact', '_self')}
+                            entityType="event"
+                            itemSlug={event.slug}
                         />
                     </div>
 
@@ -172,7 +173,7 @@ export default function EventDetail() {
                         price={event.price}
                         currency="TND"
                         title={localizeText(event.title, lang)}
-                        entityType="tour"
+                        entityType="event"
                         itemSlug={event.slug}
                         details={[
                             {

@@ -28,6 +28,7 @@ class SiteSettingsController extends Controller
                 return [
                     'companyName' => null,
                     'email' => null,
+                    'commercialEmail' => null,
                     'phone' => null,
                     'phone2' => null,
                     'whatsapp' => null,
@@ -52,6 +53,7 @@ class SiteSettingsController extends Controller
             $result = [
                 'companyName' => $row->company_name,
                 'email' => $row->email,
+                'commercialEmail' => $row->commercial_email,
                 'phone' => $row->phone,
                 'phone2' => $row->phone2,
                 'whatsapp' => $row->whatsapp,
@@ -247,6 +249,7 @@ class SiteSettingsController extends Controller
             // Allow partial updates (e.g. admin nav settings page only sends content)
             'companyName' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
+            'commercialEmail' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:64'],
             'phone2' => ['nullable', 'string', 'max:64'],
             'whatsapp' => ['nullable', 'string', 'max:64'],
@@ -263,6 +266,9 @@ class SiteSettingsController extends Controller
             'hours.*.ranges.*' => ['nullable', 'string', 'max:255'],
             'hours.*.value' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'array'],
+            'contentPatch' => ['nullable', 'array'],
+            'contentPatch.privacy_policy' => ['sometimes', 'array'],
+            'contentPatch.purchase_policy' => ['sometimes', 'array'],
             'navLinks' => ['nullable', 'array'],
             'video' => ['nullable', 'file', 'mimes:mp4,webm,mov', 'max:51200'],
         ]);
@@ -282,6 +288,13 @@ class SiteSettingsController extends Controller
 
             // Use provided content or start with existing
             $content = $data['content'] ?? ($row?->content ?? []);
+
+            // Partial update of top-level content keys (e.g. one policy page)
+            // against the stored row, so editors never overwrite each other
+            // with a stale copy of the whole `content` object.
+            if (! empty($data['contentPatch'])) {
+                $content = array_replace($content, $data['contentPatch']);
+            }
             $content = $this->sanitizeNavSettings($content);
 
             if (isset($data['navLinks']) && is_array($data['navLinks'])) {
@@ -386,6 +399,9 @@ class SiteSettingsController extends Controller
             $updateData = [
                 'company_name' => $data['companyName'] ?? ($row?->company_name ?? $defaults['company_name']),
                 'email' => $data['email'] ?? ($row?->email ?? $defaults['email']),
+                'commercial_email' => array_key_exists('commercialEmail', $data)
+                    ? $data['commercialEmail']
+                    : $row?->commercial_email,
                 'phone' => $data['phone'] ?? ($row?->phone ?? $defaults['phone']),
                 'phone2' => $data['phone2'] ?? ($row?->phone2 ?? $defaults['phone2']),
                 'whatsapp' => $data['whatsapp'] ?? ($row?->whatsapp ?? $defaults['whatsapp']),

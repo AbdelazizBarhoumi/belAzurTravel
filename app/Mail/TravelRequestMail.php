@@ -4,18 +4,22 @@ namespace App\Mail;
 
 use App\Models\TravelRequest;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class TravelRequestMail extends Mailable
+class TravelRequestMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public function __construct(
         public TravelRequest $travelRequest,
-    ) {}
+    ) {
+        // Sent right after the response; retried from the database queue.
+        $this->onConnection('deferred');
+    }
 
     public function envelope(): Envelope
     {
@@ -33,7 +37,15 @@ class TravelRequestMail extends Mailable
 
     private function buildHtml(): string
     {
-        $r = $this->travelRequest;
+        // Escape every user-supplied value before it goes into the HTML body.
+        $r = (object) array_map(
+            fn ($value) => e((string) $value),
+            $this->travelRequest->only([
+                'committee_name', 'member_count', 'civility', 'first_name',
+                'last_name', 'phone', 'email', 'message',
+            ]),
+        );
+        $r->message = nl2br($r->message);
 
         return <<<HTML
         <!DOCTYPE html>

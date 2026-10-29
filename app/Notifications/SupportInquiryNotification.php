@@ -5,10 +5,11 @@ namespace App\Notifications;
 use App\Models\SupportInquiry;
 use App\Notifications\Concerns\NotifiesByMail;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupportInquiryNotification extends Notification
+class SupportInquiryNotification extends Notification implements ShouldQueue
 {
     use NotifiesByMail;
     use Queueable;

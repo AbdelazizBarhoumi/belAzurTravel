@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\BrowserLogController;
 use App\Http\Middleware\EnforceNavSettings;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/browser-log', [BrowserLogController::class, 'store']);
@@ -41,28 +40,3 @@ Route::view('/{any}', 'app')
     ->where('any', '.*')
     ->middleware(EnforceNavSettings::class);
 
-Route::get('/run-migrate', function () {
-
-    try {
-        $exitCode = Artisan::call('migrate', [
-            '--seed' => true,
-        ]);
-
-        $output = Artisan::output();
-
-        return response()->json([
-            'status' => $exitCode === 0 ? 'success' : 'failed',
-            'exit_code' => $exitCode,
-            'output' => $output,
-        ]);
-
-    } catch (Throwable $e) {
-
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-        ], 500);
-    }
-});

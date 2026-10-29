@@ -45,7 +45,7 @@ return [
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            'timeout' => (int) env('MAIL_TIMEOUT', 15),
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
@@ -114,5 +114,9 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'noreply@belazurtravel.com'),
         'name' => env('MAIL_FROM_NAME', 'Bel Azur Travel'),
     ],
+
+    // Inbox of the commercial team (visa applications, new bookings, travel
+    // requests). Overridable from Admin → Company (site_settings.commercial_email).
+    'commercial_address' => env('MAIL_COMMERCIAL_ADDRESS', 'commercial@belazurtravel.com'),
 
 ];

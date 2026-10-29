@@ -110,7 +110,7 @@ export function PassengerCabinPicker({
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className={cn('w-80 space-y-4', isRtl && 'text-right')}
+                className={cn('w-[min(20rem,calc(100vw-2rem))] space-y-4', isRtl && 'text-right')}
                 align={isRtl ? 'end' : 'start'}
             >
                 <Counter

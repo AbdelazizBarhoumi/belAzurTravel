@@ -18,6 +18,7 @@ export default function AdminSiteSettingsCompany() {
     const [plusCode, setPlusCode] = useState('');
     const [year, setYear] = useState<number>(new Date().getFullYear());
     const [email, setEmail] = useState('');
+    const [commercialEmail, setCommercialEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [phone2, setPhone2] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
@@ -29,6 +30,7 @@ export default function AdminSiteSettingsCompany() {
         setPlusCode(settings.plusCode || '');
         setYear(settings.year || new Date().getFullYear());
         setEmail(settings.email || '');
+        setCommercialEmail(settings.commercialEmail || '');
         setPhone(settings.phone || '');
         setPhone2(settings.phone2 || '');
         setWhatsapp(settings.whatsapp || '');
@@ -61,6 +63,7 @@ export default function AdminSiteSettingsCompany() {
                 body: JSON.stringify({
                     companyName: companyName.trim(),
                     email: email.trim(),
+                    commercialEmail: commercialEmail.trim() || null,
                     phone: phone.trim(),
                     phone2: phone2.trim(),
                     whatsapp: whatsapp.trim(),
@@ -153,6 +156,18 @@ export default function AdminSiteSettingsCompany() {
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder={t('admin.settings.placeholder.email')}
                         />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>{t('admin.settings.commercialEmail')}</Label>
+                        <Input
+                            type="email"
+                            value={commercialEmail}
+                            onChange={(e) => setCommercialEmail(e.target.value)}
+                            placeholder="commercial@belazurtravel.com"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            {t('admin.settings.commercialEmailHint')}
+                        </p>
                     </div>
                     <div className="space-y-2">
                         <Label>{t('admin.settings.phone')}</Label>

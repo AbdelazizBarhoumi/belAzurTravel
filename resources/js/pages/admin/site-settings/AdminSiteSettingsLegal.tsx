@@ -1,29 +1,17 @@
-import type { DragEndEvent } from '@dnd-kit/core';
-import {
-    DndContext,
-    closestCenter,
-    PointerSensor,
-    useSensor,
-    useSensors,
-} from '@dnd-kit/core';
-import {
-    SortableContext,
-    verticalListSortingStrategy,
-    useSortable,
-    arrayMove,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import {
     Plus,
     Trash2,
-    Save,
-    GripVertical,
     ArrowUp,
     ArrowDown,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/api/http';
+import {
+    ContentLangSwitch,
+    type ContentLang,
+} from '@/components/admin/ContentLangSwitch';
+import { SaveActions } from '@/components/admin/PolicyPageEditor';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -55,18 +43,15 @@ export default function AdminSiteSettingsLegal() {
     const [markdownPreview, setMarkdownPreview] = useState<
         Record<string, boolean>
     >({});
-    const [langTabs, setLangTabs] = useState<
-        Record<number, 'en' | 'fr' | 'ar'>
-    >({});
+    const [langTabs, setLangTabs] = useState<Record<number, ContentLang>>(
+        {},
+    );
     const [autosaveStatus, setAutosaveStatus] = useState<
         'idle' | 'saving' | 'saved' | 'error'
     >('idle');
     const autosaveTimerRef = useRef<number | null>(null);
     const lastSavedRef = useRef<string>('');
     const autosaveReadyRef = useRef(false);
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    );
 
     useEffect(() => {
         setSections(
@@ -82,8 +67,8 @@ export default function AdminSiteSettingsLegal() {
             })) ?? [],
         );
         lastSavedRef.current = snapshot;
-        autosaveReadyRef.current = true;
-    }, [settings]);
+        autosaveReadyRef.current = !loading;
+    }, [settings, loading]);
 
     useEffect(() => {
         if (!autosaveReadyRef.current) return;
@@ -94,11 +79,7 @@ export default function AdminSiteSettingsLegal() {
             window.clearTimeout(autosaveTimerRef.current);
         autosaveTimerRef.current = window.setTimeout(async () => {
             try {
-                await apiFetch('/api/site-settings', {
-                    method: 'PUT',
-                    body: JSON.stringify({ legalSections: buildPayload() }),
-                });
-                lastSavedRef.current = JSON.stringify(buildPayload());
+                await persist();
                 setAutosaveStatus('saved');
                 window.setTimeout(() => setAutosaveStatus('idle'), 2000);
             } catch {
@@ -116,6 +97,31 @@ export default function AdminSiteSettingsLegal() {
             title: s.title,
             body: { format: s.body.format, content: s.body.content },
         }));
+
+    const persist = async () => {
+        const payload = buildPayload();
+        await apiFetch('/api/site-settings', {
+            method: 'PUT',
+            body: JSON.stringify({ legalSections: payload }),
+        });
+        lastSavedRef.current = JSON.stringify(payload);
+    };
+
+    const save = async () => {
+        if (autosaveTimerRef.current)
+            window.clearTimeout(autosaveTimerRef.current);
+        setAutosaveStatus('saving');
+        try {
+            await persist();
+            window.dispatchEvent(new CustomEvent('site-settings-updated'));
+            setAutosaveStatus('saved');
+            window.setTimeout(() => setAutosaveStatus('idle'), 2000);
+            toast.success(t('admin.settings.saveSuccess'));
+        } catch {
+            setAutosaveStatus('error');
+            toast.error(t('admin.settings.saveError'));
+        }
+    };
 
     const addSection = () => {
         setSections((p) => [
@@ -139,7 +145,7 @@ export default function AdminSiteSettingsLegal() {
     const removeSection = (idx: number) =>
         setSections((p) => p.filter((_, i) => i !== idx));
 
-    const getActiveLang = (idx: number) => langTabs[idx] ?? 'fr';
+    const getActiveLang = (idx: number): ContentLang => langTabs[idx] ?? 'fr';
 
     const moveSection = (idx: number, dir: number) => {
         const copy = [...sections];
@@ -167,21 +173,12 @@ export default function AdminSiteSettingsLegal() {
             title={t('admin.settings.legalSectionsTitle')}
             subtitle={t('admin.settings.legalSectionsDescription')}
             actions={
-                <div className="flex items-center gap-3">
-                    {autosaveStatus !== 'idle' && (
-                        <span className="text-xs text-muted-foreground">
-                            {autosaveStatus === 'saving'
-                                ? 'Autosaving...'
-                                : autosaveStatus === 'saved'
-                                  ? 'Saved'
-                                  : 'Autosave failed'}
-                        </span>
-                    )}
+                <SaveActions status={autosaveStatus} onSave={save} t={t}>
                     <Button size="sm" variant="outline" onClick={addSection}>
                         <Plus className="mr-1 h-4 w-4" />{' '}
                         {t('admin.settings.add_section')}
                     </Button>
-                </div>
+                </SaveActions>
             }
         >
             <div className="grid gap-4">
@@ -194,18 +191,41 @@ export default function AdminSiteSettingsLegal() {
                     <Card key={idx} className="p-4">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
+                                <ContentLangSwitch
+                                    className="mb-3"
+                                    value={getActiveLang(idx)}
+                                    onChange={(lang) =>
+                                        setLangTabs((p) => ({
+                                            ...p,
+                                            [idx]: lang,
+                                        }))
+                                    }
+                                    filled={{
+                                        fr: Boolean(
+                                            sec.body.content.fr?.trim(),
+                                        ),
+                                        en: Boolean(
+                                            sec.body.content.en?.trim(),
+                                        ),
+                                    }}
+                                />
                                 <div className="grid grid-cols-1 gap-2">
                                     <div>
                                         <Label className="text-xs">
-                                            {t('admin.settings.title_fr')}
+                                            {t('admin.settings.title_fr')} (
+                                            {getActiveLang(idx).toUpperCase()})
                                         </Label>
                                         <Input
-                                            value={sec.title.fr}
+                                            value={
+                                                sec.title[getActiveLang(idx)] ??
+                                                ''
+                                            }
                                             onChange={(e) =>
                                                 updateSection(idx, {
                                                     title: {
                                                         ...sec.title,
-                                                        fr: e.target.value,
+                                                        [getActiveLang(idx)]:
+                                                            e.target.value,
                                                     },
                                                 })
                                             }
@@ -314,6 +334,7 @@ export default function AdminSiteSettingsLegal() {
                                             {t('admin.settings.body')}
                                         </Label>
                                         <RichTextEditor
+                                            key={`${idx}-${getActiveLang(idx)}`}
                                             value={
                                                 sec.body.content[
                                                     getActiveLang(idx)

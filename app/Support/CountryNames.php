@@ -3,52 +3,37 @@
 namespace App\Support;
 
 /**
- * Canonical 3-language country names, kept in sync with the hardcoded
- * `resources/js/data/locations.ts` list. Used to normalize country fields that
- * the provider writes with a single name repeated across every language slot
+ * Canonical 3-language country names, read from the same
+ * `resources/js/data/countries.json` list as the frontend. Used to normalize
+ * country fields that the provider writes with a single name repeated across every language slot
  * (e.g. `{en: 'Tunisie', fr: 'Tunisie', ar: 'Tunisie'}`) back to the canonical
  * localized form (`{en: 'Tunisia', fr: 'Tunisie', ar: 'تونس'}`).
  */
 class CountryNames
 {
-    /** @var array<string, array{en: string, fr: string, ar: string}> keyed by ISO-2 code */
-    private const COUNTRIES = [
-        'TN' => ['en' => 'Tunisia', 'fr' => 'Tunisie', 'ar' => 'تونس'],
-        'TR' => ['en' => 'Turkey', 'fr' => 'Turquie', 'ar' => 'تركيا'],
-        'DZ' => ['en' => 'Algeria', 'fr' => 'Algérie', 'ar' => 'الجزائر'],
-        'FR' => ['en' => 'France', 'fr' => 'France', 'ar' => 'فرنسا'],
-        'IT' => ['en' => 'Italy', 'fr' => 'Italie', 'ar' => 'إيطاليا'],
-        'ES' => ['en' => 'Spain', 'fr' => 'Espagne', 'ar' => 'إسبانيا'],
-        'MA' => ['en' => 'Morocco', 'fr' => 'Maroc', 'ar' => 'المغرب'],
-        'AE' => ['en' => 'United Arab Emirates', 'fr' => 'Émirats Arabes Unis', 'ar' => 'الإمارات العربية المتحدة'],
-        'EG' => ['en' => 'Egypt', 'fr' => 'Égypte', 'ar' => 'مصر'],
-        'ID' => ['en' => 'Indonesia', 'fr' => 'Indonésie', 'ar' => 'إندونيسيا'],
-        'TH' => ['en' => 'Thailand', 'fr' => 'Thaïlande', 'ar' => 'تايلاند'],
-        'DE' => ['en' => 'Germany', 'fr' => 'Allemagne', 'ar' => 'ألمانيا'],
-        'GB' => ['en' => 'United Kingdom', 'fr' => 'Royaume-Uni', 'ar' => 'المملكة المتحدة'],
-        'US' => ['en' => 'United States', 'fr' => 'États-Unis', 'ar' => 'الولايات المتحدة'],
-        'CA' => ['en' => 'Canada', 'fr' => 'Canada', 'ar' => 'كندا'],
-        'JP' => ['en' => 'Japan', 'fr' => 'Japon', 'ar' => 'اليابان'],
-        'CN' => ['en' => 'China', 'fr' => 'Chine', 'ar' => 'الصين'],
-        'SA' => ['en' => 'Saudi Arabia', 'fr' => 'Arabie Saoudite', 'ar' => 'المملكة العربية السعودية'],
-        'MY' => ['en' => 'Malaysia', 'fr' => 'Malaisie', 'ar' => 'ماليزيا'],
-        'AU' => ['en' => 'Australia', 'fr' => 'Australie', 'ar' => 'أستراليا'],
-        'ZA' => ['en' => 'South Africa', 'fr' => 'Afrique du Sud', 'ar' => 'جنوب أفريقيا'],
-        'IN' => ['en' => 'India', 'fr' => 'Inde', 'ar' => 'الهند'],
-        'KR' => ['en' => 'South Korea', 'fr' => 'Corée du Sud', 'ar' => 'كوريا الجنوبية'],
-        'BR' => ['en' => 'Brazil', 'fr' => 'Brésil', 'ar' => 'البرازيل'],
-        'TZ' => ['en' => 'Tanzania', 'fr' => 'Tanzanie', 'ar' => 'تنزانيا'],
-        'MU' => ['en' => 'Mauritius', 'fr' => 'Île Maurice', 'ar' => 'موريشيوس'],
-        'RE' => ['en' => 'Réunion', 'fr' => 'La Réunion', 'ar' => 'ريونيون'],
-        'GR' => ['en' => 'Greece', 'fr' => 'Grèce', 'ar' => 'اليونان'],
-        'CZ' => ['en' => 'Czech Republic', 'fr' => 'République tchèque', 'ar' => 'التشيك'],
-        'NL' => ['en' => 'Netherlands', 'fr' => 'Pays-Bas', 'ar' => 'هولندا'],
-        'PT' => ['en' => 'Portugal', 'fr' => 'Portugal', 'ar' => 'البرتغال'],
-        'AT' => ['en' => 'Austria', 'fr' => 'Autriche', 'ar' => 'النمسا'],
-        'MV' => ['en' => 'Maldives', 'fr' => 'Maldives', 'ar' => 'المالديف'],
-        'SG' => ['en' => 'Singapore', 'fr' => 'Singapour', 'ar' => 'سنغافورة'],
-        'MX' => ['en' => 'Mexico', 'fr' => 'Mexique', 'ar' => 'المكسيك'],
-    ];
+    /** @var array<string, array{en: string, fr: string, ar: string}>|null keyed by ISO-2 code */
+    private static ?array $countries = null;
+
+    /**
+     * Every ISO-3166 country, read from the list shared with the frontend.
+     *
+     * @return array<string, array{en: string, fr: string, ar: string}>
+     */
+    public static function all(): array
+    {
+        if (self::$countries !== null) {
+            return self::$countries;
+        }
+
+        $rows = json_decode((string) file_get_contents(resource_path('js/data/countries.json')), true) ?: [];
+
+        $countries = [];
+        foreach ($rows as $row) {
+            $countries[$row['code']] = ['en' => $row['en'], 'fr' => $row['fr'], 'ar' => $row['ar']];
+        }
+
+        return self::$countries = $countries;
+    }
 
     /** @var array<string, string> normalized name variant -> ISO-2 code */
     private static ?array $aliasIndex = null;
@@ -60,7 +45,7 @@ class CountryNames
         }
 
         $index = [];
-        foreach (self::COUNTRIES as $code => $names) {
+        foreach (self::all() as $code => $names) {
             foreach ($names as $name) {
                 if ($name !== '') {
                     $index[self::key($name)] = $code;
@@ -84,6 +69,9 @@ class CountryNames
             'Emirats Arabes Unis' => 'AE',
             'République Tchèque' => 'CZ',
             'Arabie Saoudite' => 'SA',
+            'Czech Republic' => 'CZ',
+            'République tchèque' => 'CZ',
+            'Turquie' => 'TR',
         ];
     }
 
@@ -104,7 +92,7 @@ class CountryNames
     {
         $code = self::index()[self::key($name)] ?? null;
 
-        return $code !== null ? self::COUNTRIES[$code] : null;
+        return $code !== null ? self::all()[$code] : null;
     }
 
     /**

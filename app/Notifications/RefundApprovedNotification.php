@@ -4,12 +4,15 @@ namespace App\Notifications;
 
 use App\Models\Booking;
 use App\Models\Complaint;
+use App\Notifications\Concerns\NotifiesByMail;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RefundApprovedNotification extends Notification
+class RefundApprovedNotification extends Notification implements ShouldQueue
 {
+    use NotifiesByMail;
     use Queueable;
 
     public function __construct(
@@ -17,22 +20,6 @@ class RefundApprovedNotification extends Notification
         private readonly Booking $booking,
     ) {}
 
-    public function via(object $notifiable): array
-    {
-        $channels = ['database'];
-        if ($this->isMailConfigured()) {
-            $channels[] = 'mail';
-        }
-
-        return $channels;
-    }
-
-    private function isMailConfigured(): bool
-    {
-        return config('mail.default') !== 'log'
-            && ! empty(config('mail.mailers.smtp.host'))
-            && config('mail.mailers.smtp.host') !== '127.0.0.1';
-    }
 
     public function toDatabase(object $notifiable): array
     {

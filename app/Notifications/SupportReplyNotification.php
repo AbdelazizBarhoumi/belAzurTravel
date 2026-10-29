@@ -6,10 +6,11 @@ use App\Models\SupportInquiry;
 use App\Models\User;
 use App\Notifications\Concerns\NotifiesByMail;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SupportReplyNotification extends Notification
+class SupportReplyNotification extends Notification implements ShouldQueue
 {
     use NotifiesByMail;
     use Queueable;

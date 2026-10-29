@@ -1,5 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { MapPin, Search } from 'lucide-react';
+import {
+    BedDouble,
+    Compass,
+    Globe2,
+    MapPin,
+    Plane,
+    Search,
+    type LucideIcon,
+} from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
@@ -185,6 +193,13 @@ const DEFAULT_FORM_STATE: Record<SearchTab, SearchFormValues> = {
 
 const MotionTabsTrigger = motion.create(TabsTrigger);
 
+const TAB_ICONS: Record<SearchTab, LucideIcon> = {
+    hotels: BedDouble,
+    tours: Compass,
+    flights: Plane,
+    travels: Globe2,
+};
+
 const SEARCH_TARGETS: Record<SearchTab, string> = {
     hotels: '/hotels',
     tours: '/tours',
@@ -204,7 +219,7 @@ interface ActiveSearchFormProps {
 
 function SearchFieldLabel({ children }: { children: string }) {
     return (
-        <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground sm:text-xs sm:tracking-[0.2em]">
             {children}
         </span>
     );
@@ -267,7 +282,7 @@ function SearchButton({ label }: { label: string }) {
             type="submit"
             size="lg"
             className={cn(
-                'h-12 w-full rounded-2xl bg-primary px-8 text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90 xl:w-auto',
+                'h-12 w-full rounded-2xl bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90 sm:text-sm xl:w-auto',
                 isRtl && 'flex-row-reverse',
             )}
         >
@@ -338,7 +353,7 @@ function ActiveSearchForm({
                               value={values.hotelName}
                               onChange={(e) => onHotelNameChange(e.target.value)}
                               placeholder={t('search.placeholders.hotelName')}
-                              className="border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:outline-none"
+                              className="h-full w-full min-w-0 flex-1 truncate border-0 bg-transparent px-0 text-sm shadow-none ring-0 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0"
                           />
                       </div>
                   </label>,
@@ -349,11 +364,13 @@ function ActiveSearchForm({
             value={values.dateRange}
             onChange={onDateRangeChange}
             fromDate={tomorrow}
+            className="h-12 w-full gap-3 px-4 sm:h-12"
         />,
         <OccupancyPicker
             key="guests"
             value={values.occupancy}
             onChange={onOccupancyChange}
+            className="h-12 w-full px-4 sm:h-12"
         />,
     ];
 
@@ -376,7 +393,12 @@ function ActiveSearchForm({
                     values={values}
                     onChange={onExtraChange}
                 />
-                <div className={cn('xl:col-start-3 justify-self-end', isRtl && 'xl:justify-self-start')}>
+                <div
+                    className={cn(
+                        'mt-1 w-full xl:col-start-3 xl:mt-0 xl:w-auto xl:justify-self-end',
+                        isRtl && 'xl:justify-self-start',
+                    )}
+                >
                     <SearchButton label={t(config.buttonKey)} />
                 </div>
             </div>
@@ -562,7 +584,7 @@ export function SearchWidget({ className }: SearchWidgetProps) {
         <div
             dir={dir}
             className={cn(
-                'glass rounded-[2rem] p-4 shadow-2xl shadow-black/10 backdrop-blur-xl md:p-5',
+                'glass rounded-3xl p-3 shadow-2xl shadow-black/10 backdrop-blur-xl sm:p-4 md:rounded-[2rem] md:p-5',
                 className,
             )}
         >
@@ -572,11 +594,18 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                     onValueChange={handleTabChange}
                     className="w-full"
                 >
-                    <TabsList className="grid h-auto w-full grid-cols-4 rounded-[1.25rem] bg-background/40 p-1 text-foreground/80">
+                    <TabsList className="flex h-auto w-full snap-x snap-mandatory justify-start gap-1 overflow-x-auto rounded-[1.25rem] bg-background/40 p-1 text-foreground/80 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {orderedTabs.map((tab) => (
                             <MotionTabsTrigger
                                 key={tab}
                                 value={tab}
+                                onFocus={(e) =>
+                                    e.currentTarget.scrollIntoView({
+                                        block: 'nearest',
+                                        inline: 'nearest',
+                                        behavior: 'smooth',
+                                    })
+                                }
                                 whileHover={{ y: -1 }}
                                 whileTap={{ scale: 0.98 }}
                                 transition={{
@@ -584,7 +613,7 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                                     stiffness: 500,
                                     damping: 35,
                                 }}
-                                className="relative overflow-hidden rounded-[1rem] px-4 py-3 text-sm font-semibold text-foreground/70 data-[state=active]:text-foreground"
+                                className="relative min-w-max shrink-0 snap-start overflow-hidden rounded-[1rem] px-3.5 py-2.5 text-sm font-semibold text-foreground/70 data-[state=active]:text-foreground md:px-4 md:py-3 xl:flex-1"
                             >
                                 {activeTab === tab && (
                                     <motion.span
@@ -597,14 +626,27 @@ export function SearchWidget({ className }: SearchWidgetProps) {
                                         }}
                                     />
                                 )}
-                                <span className="relative z-10">
+                                <span className="relative z-10 flex items-center gap-2 whitespace-nowrap">
+                                    {(() => {
+                                        const Icon = TAB_ICONS[tab];
+                                        return (
+                                            <Icon
+                                                className={cn(
+                                                    'h-4 w-4 shrink-0',
+                                                    activeTab === tab
+                                                        ? 'text-primary'
+                                                        : 'text-foreground/50',
+                                                )}
+                                            />
+                                        );
+                                    })()}
                                     {t(SEARCH_TABS[tab].titleKey)}
                                 </span>
                             </MotionTabsTrigger>
                         ))}
                     </TabsList>
 
-                    <div className="mt-4">
+                    <div className="mt-3 md:mt-4">
                         <AnimatePresence mode="wait" initial={false}>
                             <motion.div
                                 key={activeTab}

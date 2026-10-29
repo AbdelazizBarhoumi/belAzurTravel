@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\TravelRequestMail;
 use App\Models\TravelRequest;
+use App\Support\CommercialMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -35,11 +36,11 @@ class TravelRequestController extends Controller
             'status' => 'pending',
         ]);
 
-        // Send notification email to admin
+        // Notify the commercial team (queued; never fails the request)
         try {
-            Mail::to(config('mail.admin_address', config('mail.from.address')))
+            Mail::to(CommercialMail::address())
                 ->send(new TravelRequestMail($travelRequest));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Log the error but don't fail the request
             \Log::error('Failed to send travel request notification email: ' . $e->getMessage());
         }

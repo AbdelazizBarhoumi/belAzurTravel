@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Heart, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { PageShell } from '@/components/layout/PageShell';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
@@ -8,6 +9,27 @@ import { useFavorites } from '@/contexts/FavoritesContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useViewMode } from '@/hooks/useViewMode';
 import { formatPrice, cn } from '@/lib/utils';
+import type { FavoriteItem } from '@/contexts/FavoritesContext';
+
+// Favorite ids are only guaranteed to be slugs for hotels; every other type
+// sends the visitor to its catalog to pick the item and book from there.
+const CATALOG_PATHS: Partial<Record<FavoriteItem['type'], string>> = {
+    destination: '/destinations',
+    tour: '/tours',
+    travel: '/travels',
+    car: '/cars',
+    flight: '/flights',
+    event: '/events',
+    deal: '/deals',
+    promo: '/deals',
+};
+
+function favoriteBookingPath(item: FavoriteItem): string {
+    if (item.type === 'hotel') {
+        return `/hotels/${encodeURIComponent(item.id)}`;
+    }
+    return CATALOG_PATHS[item.type] ?? '/';
+}
 
 const Favorites = () => {
     const { favorites } = useFavorites();
@@ -89,10 +111,13 @@ const Favorites = () => {
                                         <span />
                                     )}
                                     <Button
+                                        asChild
                                         size="sm"
                                         className="bg-primary text-xs text-primary-foreground"
                                     >
-                                        {t('common.book')}
+                                        <Link to={favoriteBookingPath(f)}>
+                                            {t('common.book')}
+                                        </Link>
                                     </Button>
                                 </div>
                             </div>

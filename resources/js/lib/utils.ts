@@ -145,3 +145,22 @@ export const roomPromo = (
         percent,
     };
 };
+
+// Fold a string for search: case-, accent- and Arabic-diacritic-insensitive,
+// so "gabes" matches "Gabès" and "صفاقس" matches with or without harakat.
+export const foldSearch = (value: string | null | undefined): string =>
+    (value ?? '')
+        .normalize('NFD')
+        .replace(/[̀-ًͯ-ٰٟ]/g, '')
+        .replace(/[آأإ]/g, 'ا')
+        .toLowerCase()
+        .trim();
+
+export const matchesSearch = (
+    query: string,
+    ...candidates: Array<string | null | undefined>
+): boolean => {
+    const needle = foldSearch(query);
+    if (!needle) return true;
+    return candidates.some((candidate) => foldSearch(candidate).includes(needle));
+};

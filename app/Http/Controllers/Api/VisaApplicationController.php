@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\VisaApplication;
+use App\Notifications\VisaApplicationNotification;
+use App\Support\CommercialMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 class VisaApplicationController extends Controller
 {
@@ -45,6 +49,19 @@ class VisaApplicationController extends Controller
             'passport_copy_path' => $passportCopyPath,
             'notes' => $data['notes'] ?? null,
         ]);
+
+        // The commercial team gets the full file; the applicant a receipt.
+        CommercialMail::notify(new VisaApplicationNotification($application));
+
+        try {
+            Notification::route('mail', $application->email)->notify(new VisaApplicationNotification(
+                $application,
+                VisaApplicationNotification::FOR_APPLICANT,
+                in_array(app()->getLocale(), ['fr', 'en'], true) ? app()->getLocale() : 'fr',
+            ));
+        } catch (Throwable $e) {
+            report($e);
+        }
 
         return response()->json([
             'message' => 'Votre demande de visa a été envoyée avec succès.',

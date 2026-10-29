@@ -12,7 +12,23 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, TwoFactorAuthenticatable;
+    use Notifiable {
+        notify as protected notifyUnguarded;
+    }
+
+    /**
+     * Send a notification without ever failing the caller: a broken mail
+     * transport must not turn a booking or support request into a 500.
+     */
+    public function notify($instance): void
+    {
+        try {
+            $this->notifyUnguarded($instance);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
 
     /**
      * Determine if the user has verified their email address.

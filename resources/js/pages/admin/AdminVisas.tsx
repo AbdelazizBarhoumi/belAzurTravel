@@ -30,10 +30,10 @@ import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAdminGuard } from '@/hooks/useAdminGuard';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
-import { cn } from '@/lib/utils';
+import { cn, matchesSearch } from '@/lib/utils';
+import { Flag } from '@/components/ui/Flag';
 import { LocationSelect } from '@/components/ui/LocationSelect';
 import { findCountryByCodeOrEnglishName } from '@/data/locations';
-import { countryCodeToFlag } from '@/lib/flagEmoji';
 
 type VisaLang = 'en' | 'fr' | 'ar';
 
@@ -134,6 +134,21 @@ const AdminVisas = () => {
         queryKey: ['admin', 'visas'],
         queryFn: () => listAdminEntities<AdminVisa>('visas'),
     });
+
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState<
+        'all' | 'active' | 'inactive'
+    >('all');
+    const shownVisas = useMemo(
+        () =>
+            visas.filter(
+                (v) =>
+                    (statusFilter === 'all' ||
+                        v.is_active === (statusFilter === 'active')) &&
+                    matchesSearch(search, v.name_fr, v.name_en, v.name_ar, v.code),
+            ),
+        [visas, search, statusFilter],
+    );
 
     const saveMutation = useMutation({
         mutationFn: (item: AdminVisa) => saveAdminEntity('visas', item),
@@ -245,20 +260,22 @@ const AdminVisas = () => {
                                 {t('admin.visaForm.country')}
                             </Label>
                             <LocationSelect
-                                value={String(values.code ?? '')}
+                                value={
+                                    findCountryByCodeOrEnglishName(
+                                        String(values.code ?? ''),
+                                    )?.name.en ?? String(values.code ?? '')
+                                }
                                 onChange={(val) => {
-                                    setField('code', val);
-                                    // LocationSelect passes the English country name;
-                                    // look up its ISO code to generate the flag emoji
+                                    // LocationSelect passes the English country
+                                    // name; store its ISO code + all its names.
                                     const match =
                                         findCountryByCodeOrEnglishName(val);
-                                    setField(
-                                        'flag',
-                                        countryCodeToFlag(match?.code ?? val),
-                                    );
-                                    setField('name_en', val);
-                                    setField('name_fr', val);
-                                    setField('name_ar', val);
+                                    if (!match) return;
+                                    setField('code', match.code);
+                                    setField('flag', match.code);
+                                    setField('name_en', match.name.en);
+                                    setField('name_fr', match.name.fr);
+                                    setField('name_ar', match.name.ar);
                                 }}
                                 lang={lang}
                                 placeholder={t('admin.visaForm.selectCountry')}
@@ -283,9 +300,10 @@ const AdminVisas = () => {
                                 {t('admin.visaForm.flag')}
                             </Label>
                             <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
-                                <span className="text-2xl">
-                                    {String(values.flag ?? '')}
-                                </span>
+                                <Flag
+                                    code={String(values.code ?? '')}
+                                    className="text-2xl"
+                                />
                                 <span className="text-xs text-muted-foreground">
                                     {values.code
                                         ? `${values.code}`
@@ -509,6 +527,39 @@ const AdminVisas = () => {
                 />
             </div>
 
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={t('admin.visaSearchPlaceholder')}
+                    className="sm:max-w-xs"
+                />
+                <div className="inline-flex rounded-md border bg-muted/40 p-0.5">
+                    {(['all', 'active', 'inactive'] as const).map((value) => (
+                        <button
+                            key={value}
+                            type="button"
+                            onClick={() => setStatusFilter(value)}
+                            className={cn(
+                                'rounded px-3 py-1 text-xs font-medium transition-colors',
+                                statusFilter === value
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground',
+                            )}
+                        >
+                            {t(`admin.visaFilter.${value}`)} (
+                            {value === 'all'
+                                ? visas.length
+                                : visas.filter(
+                                      (v) =>
+                                          v.is_active === (value === 'active'),
+                                  ).length}
+                            )
+                        </button>
+                    ))}
+                </div>
+            </div>
+
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="overflow-x-auto">
                     <table className="w-full">
@@ -539,13 +590,13 @@ const AdminVisas = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {visas.map((v) => (
+                            {shownVisas.map((v) => (
                                 <tr
                                     key={v.id}
                                     className="border-b border-border last:border-0 hover:bg-muted/20"
                                 >
                                     <td className="px-4 py-3 text-center text-2xl">
-                                        {v.flag}
+                                        <Flag code={v.code} title={v.name_fr} />
                                     </td>
                                     <td
                                         className={cn(
@@ -557,7 +608,9 @@ const AdminVisas = () => {
                                     >
                                         <div>
                                             <span>
-                                                {v[`${lang}_en`] || v.name}
+                                                {v[`name_${lang}`] ||
+                                                    v.name_fr ||
+                                                    v.name}
                                             </span>
                                             <span className="ml-2 text-xs text-muted-foreground">
                                                 ({v.code})
@@ -565,25 +618,28 @@ const AdminVisas = () => {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm text-muted-foreground">
-                                        {v[`${lang}_processing`] ||
+                                        {v[`processing_${lang}`] ||
                                             v.processing}
                                     </td>
                                     <td className="px-4 py-3 text-center text-sm font-bold text-secondary">
                                         {v.price} DT
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span
-                                            className={cn(
-                                                'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                        <Switch
+                                            checked={v.is_active}
+                                            disabled={saveMutation.isPending}
+                                            aria-label={
                                                 v.is_active
-                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                    : 'bg-muted text-muted-foreground',
-                                            )}
-                                        >
-                                            {v.is_active
-                                                ? t('admin.visaForm.active')
-                                                : t('admin.visaForm.inactive')}
-                                        </span>
+                                                    ? t('admin.visaForm.active')
+                                                    : t('admin.visaForm.inactive')
+                                            }
+                                            onCheckedChange={(checked) =>
+                                                saveMutation.mutate({
+                                                    ...v,
+                                                    is_active: checked,
+                                                })
+                                            }
+                                        />
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center justify-center gap-2">

@@ -80,7 +80,8 @@ export default function CarDetail() {
                                 },
                             ]}
                             primaryButtonLabel={t('cars.rentNow')}
-                            onBook={() => window.open('/contact', '_self')}
+                            entityType="car"
+                            itemSlug={car.slug}
                         />
                     </div>
 
@@ -143,7 +144,7 @@ export default function CarDetail() {
                         title={localizeText(car.name, lang)}
                         description={localizeText(car.description, lang)}
                         entityType="car"
-                        itemId={String(car.id)}
+                        itemSlug={car.slug}
                         detailsLayout="grid3"
                         details={[
                             {

@@ -172,12 +172,8 @@ export default function DestinationDetail() {
                             priceLabel={t('destinationDetail.startingFrom')}
                             rating={destination.rating}
                             primaryButtonLabel={t('destinationDetail.planTrip')}
-                            onBook={() =>
-                                window.open(
-                                    `/contact?destination=${destination.slug}`,
-                                    '_self',
-                                )
-                            }
+                            entityType="destination"
+                            itemSlug={destination.slug}
                         />
                     </div>
 

@@ -28,7 +28,7 @@ interface StickyBookingCardProps {
     description?: string;
 
     // Entity info for Booking
-    entityType?: 'destination' | 'hotel' | 'tour' | 'flight' | 'car' | 'travel';
+    entityType?: 'destination' | 'hotel' | 'tour' | 'flight' | 'car' | 'travel' | 'event';
     itemSlug?: string;
     itemId?: string;
 

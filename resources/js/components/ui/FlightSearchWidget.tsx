@@ -209,7 +209,7 @@ export function FlightSearchWidget({
                 'flex flex-wrap items-end gap-3',
                 isRtl && 'flex-row-reverse',
             )}>
-                <div className="flex gap-2">
+                <div className="-mx-1 flex w-full gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:w-auto sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
                     {TRIP_TYPES.map((tt) => (
                         <Button
                             key={tt.value}
@@ -217,7 +217,7 @@ export function FlightSearchWidget({
                             variant={tripType === tt.value ? 'default' : 'outline'}
                             size="sm"
                             className={cn(
-                                'rounded-full text-xs',
+                                'shrink-0 rounded-full text-xs',
                                 tripType === tt.value && 'shadow-md',
                             )}
                             onClick={() => handleTripTypeChange(tt.value)}
@@ -227,14 +227,16 @@ export function FlightSearchWidget({
                     ))}
                 </div>
 
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:gap-3">
                 <PassengerCabinPicker
                     value={passengers}
                     onChange={setPassengers}
                     compact
+                    className="w-full min-w-0 sm:w-auto"
                 />
 
                 <Select value={flexibility} onValueChange={(v) => setFlexibility(v as Flexibility)}>
-                    <SelectTrigger className="h-10 w-36 rounded-2xl border-border/70 bg-background/80 text-xs shadow-sm backdrop-blur-sm">
+                    <SelectTrigger className="h-10 w-full rounded-2xl border-border/70 bg-background/80 text-xs shadow-sm backdrop-blur-sm sm:w-36">
                         <SelectValue placeholder={t('search.fields.flexibility')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -245,6 +247,7 @@ export function FlightSearchWidget({
                         ))}
                     </SelectContent>
                 </Select>
+                </div>
             </div>
 
             {/* Row 2: Segments */}
@@ -253,8 +256,9 @@ export function FlightSearchWidget({
                     <div
                         key={index}
                         className={cn(
-                            'flex flex-wrap items-end gap-2',
-                            isRtl && 'flex-row-reverse',
+                            'flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end',
+                            isRtl && 'sm:flex-row-reverse',
+                            index > 0 && 'border-t border-border/50 pt-3 sm:border-0 sm:pt-0',
                         )}
                     >
                         <AirportAutocomplete
@@ -262,18 +266,19 @@ export function FlightSearchWidget({
                             onChange={(iata) => updateSegment(index, 'from', iata)}
                             label={index === 0 ? t('search.fields.departure') : ''}
                             placeholder={t('search.placeholders.departure')}
-                            className="flex-1 min-w-[180px]"
+                            className="w-full sm:w-auto sm:min-w-[180px] sm:flex-1"
                         />
 
                         {index === 0 && !showMultiCity && (
                             <Button
                                 type="button"
-                                variant="ghost"
+                                variant="outline"
                                 size="icon"
-                                className="mb-1 h-10 w-10 shrink-0 rounded-full"
+                                aria-label={t('search.actions.swap')}
+                                className="-my-3 h-9 w-9 shrink-0 self-center rounded-full bg-background shadow-sm sm:my-0 sm:mb-1 sm:h-10 sm:w-10 sm:self-end sm:border-0 sm:bg-transparent sm:shadow-none"
                                 onClick={swapFromTo}
                             >
-                                <ArrowLeftRight className="h-4 w-4" />
+                                <ArrowLeftRight className="h-4 w-4 rotate-90 sm:rotate-0" />
                             </Button>
                         )}
 
@@ -282,21 +287,22 @@ export function FlightSearchWidget({
                             onChange={(iata) => updateSegment(index, 'to', iata)}
                             label={index === 0 ? t('search.fields.destination') : ''}
                             placeholder={t('search.placeholders.destination')}
-                            className="flex-1 min-w-[180px]"
+                            className="w-full sm:w-auto sm:min-w-[180px] sm:flex-1"
                         />
 
-                        <div className={cn('flex flex-col gap-2', index === 0 && 'min-w-[150px]')}>
+                        <div className={cn('flex w-full flex-col gap-2 sm:w-auto', index === 0 && 'sm:min-w-[150px]')}>
                             {index === 0 ? (
                                 <span className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
                                     {t('label.departureDate')}
                                 </span>
                             ) : (
-                                <span className="h-[18px]" />
+                                <span className="hidden h-[18px] sm:block" />
                             )}
                             <DateRangePicker
                                 value={{ from: segment.date, to: segment.date }}
                                 onChange={(range) => updateSegment(index, 'date', range?.from)}
                                 fromDate={tomorrow}
+                                className="h-12 w-full sm:h-12"
                             />
                         </div>
 
@@ -305,7 +311,7 @@ export function FlightSearchWidget({
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="mb-1 h-10 w-10 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
+                                className="h-10 w-10 shrink-0 self-end rounded-full text-muted-foreground hover:text-destructive sm:mb-1"
                                 onClick={() => removeSegment(index)}
                             >
                                 <X className="h-4 w-4" />
@@ -333,7 +339,7 @@ export function FlightSearchWidget({
                 'flex flex-wrap items-center justify-between gap-3',
                 isRtl && 'flex-row-reverse',
             )}>
-                <div className={cn('flex items-center gap-4', isRtl && 'flex-row-reverse')}>
+                <div className={cn('flex w-full flex-wrap items-center gap-x-4 gap-y-2 sm:w-auto', isRtl && 'flex-row-reverse')}>
                     <div className="flex items-center gap-2">
                         <Switch
                             checked={directOnly}
@@ -360,7 +366,7 @@ export function FlightSearchWidget({
                     size="lg"
                     onClick={handleSearch}
                     className={cn(
-                        'h-12 rounded-2xl bg-primary px-8 text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90',
+                        'h-12 w-full rounded-2xl bg-primary px-8 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90 sm:w-auto sm:text-sm',
                         isRtl && 'flex-row-reverse',
                     )}
                 >

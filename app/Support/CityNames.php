@@ -4,7 +4,7 @@ namespace App\Support;
 
 /**
  * Canonical 3-language city names, kept in sync with the hardcoded
- * `resources/js/data/locations.ts` list. Used to normalize provider-written
+ * `resources/js/data/locations.ts` list (plus the shared Tunisian towns). Used to normalize provider-written
  * city fields that repeat a single name across every language slot (e.g.
  * `{en: 'Kelibia', fr: 'Kelibia', ar: 'Kelibia'}`) back to the canonical
  * localized form (`{en: 'Kelibia', fr: 'Kélibia', ar: 'قليبية'}`).
@@ -123,6 +123,31 @@ class CityNames
     /** @var array<string, string> normalized name variant -> English key */
     private static ?array $aliasIndex = null;
 
+    /** @var array<string, array{en: string, fr: string, ar: string}>|null */
+    private static ?array $all = null;
+
+    /**
+     * Curated cities plus every Tunisian town shared with the frontend
+     * (`resources/js/data/tunisiaCities.json`). Curated entries win.
+     *
+     * @return array<string, array{en: string, fr: string, ar: string}>
+     */
+    public static function all(): array
+    {
+        if (self::$all !== null) {
+            return self::$all;
+        }
+
+        $towns = json_decode((string) file_get_contents(resource_path('js/data/tunisiaCities.json')), true) ?: [];
+
+        $all = self::CITIES;
+        foreach ($towns as $town) {
+            $all[$town['en']] ??= ['en' => $town['en'], 'fr' => $town['fr'], 'ar' => $town['ar']];
+        }
+
+        return self::$all = $all;
+    }
+
     private static function index(): array
     {
         if (self::$aliasIndex !== null) {
@@ -130,7 +155,8 @@ class CityNames
         }
 
         $index = [];
-        foreach (self::CITIES as $key => $names) {
+        // Reversed so curated names (listed first) win over generated towns.
+        foreach (array_reverse(self::all(), true) as $key => $names) {
             foreach ($names as $name) {
                 if ($name !== '') {
                     $index[CountryNames::key($name)] = $key;
@@ -151,7 +177,7 @@ class CityNames
     {
         $key = self::index()[CountryNames::key($name)] ?? null;
 
-        return $key !== null ? self::CITIES[$key] : null;
+        return $key !== null ? self::all()[$key] : null;
     }
 
     /**

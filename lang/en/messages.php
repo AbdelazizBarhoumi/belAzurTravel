@@ -19,6 +19,7 @@ return [
     'booking_cancel_failed' => 'The cancellation could not be completed. Please contact support.',
     'booking_offer_expired' => 'This offer has expired. Please ask the client to re-search for updated availability and prices.',
     'booking_confirm_failed' => 'We could not confirm this reservation with the provider. Please try again.',
+    'payment_unavailable' => 'Online payment is not available yet. Your booking has been received and our team will contact you to confirm it and arrange payment.',
     'promo_invalid' => 'Invalid promo code.',
     'promo_inactive' => 'This promo code is inactive.',
     'promo_not_applicable' => 'This promo is not applicable to this category.',

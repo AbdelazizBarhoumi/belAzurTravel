@@ -1,0 +1,1538 @@
+[
+ {
+  "en": "La Soukra",
+  "fr": "La Soukra",
+  "ar": "سكرة",
+  "gov": "ariana"
+ },
+ {
+  "en": "Sakiet ed Daier",
+  "fr": "Sakiet ed Daier",
+  "ar": "Sakiet ed Daier",
+  "gov": "sfax"
+ },
+ {
+  "en": "El Mourouj",
+  "fr": "El Mourouj",
+  "ar": "El Mourouj",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "Ariana",
+  "fr": "Ariana",
+  "ar": "أريانة",
+  "gov": "ariana"
+ },
+ {
+  "en": "Sejoumi",
+  "fr": "Sejoumi",
+  "ar": "Sejoumi",
+  "gov": "tunis"
+ },
+ {
+  "en": "Sakiet ez Zit",
+  "fr": "Sakiet ez Zit",
+  "ar": "Sakiet ez Zit",
+  "gov": "sfax"
+ },
+ {
+  "en": "La Gazelle",
+  "fr": "La Gazelle",
+  "ar": "La Gazelle",
+  "gov": "ariana"
+ },
+ {
+  "en": "La Marsa",
+  "fr": "La Marsa",
+  "ar": "La Marsa",
+  "gov": "tunis"
+ },
+ {
+  "en": "Masakin",
+  "fr": "M'saken",
+  "ar": "مساكن",
+  "gov": "sousse"
+ },
+ {
+  "en": "Houmt Souk",
+  "fr": "Houmt Souk",
+  "ar": "حومة السوق",
+  "gov": "medenine"
+ },
+ {
+  "en": "Ben Arous",
+  "fr": "Ben Arous",
+  "ar": "بن عروس",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "Le Kram",
+  "fr": "Le Kram",
+  "ar": "Le Kram",
+  "gov": "tunis"
+ },
+ {
+  "en": "Ben Gardane",
+  "fr": "Ben Guerdane",
+  "ar": "بن قردان",
+  "gov": "medenine"
+ },
+ {
+  "en": "Kasserine",
+  "fr": "Kasserine",
+  "ar": "القصرين",
+  "gov": "kasserine"
+ },
+ {
+  "en": "Ettadhamen",
+  "fr": "Ettadhamen",
+  "ar": "Ettadhamen",
+  "gov": "ariana"
+ },
+ {
+  "en": "Douar Hicher",
+  "fr": "Douar Hicher",
+  "ar": "Douar Hicher",
+  "gov": "manouba"
+ },
+ {
+  "en": "Feriana",
+  "fr": "Feriana",
+  "ar": "فريانة",
+  "gov": "kasserine"
+ },
+ {
+  "en": "Radès",
+  "fr": "Radès",
+  "ar": "رادس",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "Le Bardo",
+  "fr": "Le Bardo",
+  "ar": "باردو",
+  "gov": "tunis"
+ },
+ {
+  "en": "La Mohammedia",
+  "fr": "La Mohammedia",
+  "ar": "La Mohammedia",
+  "gov": "tunis"
+ },
+ {
+  "en": "Oued Lill",
+  "fr": "Oued Lill",
+  "ar": "Oued Lill",
+  "gov": "manouba"
+ },
+ {
+  "en": "Skanes",
+  "fr": "Skanes",
+  "ar": "Skanes",
+  "gov": "monastir"
+ },
+ {
+  "en": "El Mgarsa",
+  "fr": "El Mgarsa",
+  "ar": "El Mgarsa",
+  "gov": "medenine"
+ },
+ {
+  "en": "Kelaa Kebira",
+  "fr": "Kelaa Kebira",
+  "ar": "Kelaa Kebira",
+  "gov": "sousse"
+ },
+ {
+  "en": "Moknine",
+  "fr": "Moknine",
+  "ar": "Moknine",
+  "gov": "monastir"
+ },
+ {
+  "en": "Douane",
+  "fr": "Douane",
+  "ar": "Douane",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Menzel Bourguiba",
+  "fr": "Menzel Bourguiba",
+  "ar": "منزل بورقيبة",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Mnihla",
+  "fr": "Mnihla",
+  "ar": "Mnihla",
+  "gov": "ariana"
+ },
+ {
+  "en": "Ksar Hellal",
+  "fr": "Ksar Hellal",
+  "ar": "Ksar Hellal",
+  "gov": "monastir"
+ },
+ {
+  "en": "Djemmal",
+  "fr": "Djemmal",
+  "ar": "جمال",
+  "gov": "monastir"
+ },
+ {
+  "en": "Jendouba",
+  "fr": "Jendouba",
+  "ar": "جندوبة",
+  "gov": "jendouba"
+ },
+ {
+  "en": "El Hamma",
+  "fr": "El Hamma",
+  "ar": "الحامة",
+  "gov": "gabes"
+ },
+ {
+  "en": "La Goulette",
+  "fr": "La Goulette",
+  "ar": "حلق الوادي",
+  "gov": "tunis"
+ },
+ {
+  "en": "Fouchana",
+  "fr": "Fouchana",
+  "ar": "Fouchana",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "Soliman",
+  "fr": "Soliman",
+  "ar": "Soliman",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Jedeïda",
+  "fr": "Jedeïda",
+  "ar": "Jedeïda",
+  "gov": "manouba"
+ },
+ {
+  "en": "Zouila",
+  "fr": "Zouila",
+  "ar": "Zouila",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Kalaa Srira",
+  "fr": "Kalaa Srira",
+  "ar": "Kalaa Srira",
+  "gov": "sousse"
+ },
+ {
+  "en": "Hammam-Lif",
+  "fr": "Hammam-Lif",
+  "ar": "حمام الأنف",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "El Ain",
+  "fr": "El Ain",
+  "ar": "El Ain",
+  "gov": "sfax"
+ },
+ {
+  "en": "Hammam Sousse",
+  "fr": "Hammam Sousse",
+  "ar": "Hammam Sousse",
+  "gov": "sousse"
+ },
+ {
+  "en": "Dar Chabanne",
+  "fr": "Dar Chabanne",
+  "ar": "Dar Chabanne",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Teboulba",
+  "fr": "Teboulba",
+  "ar": "ريج",
+  "gov": "monastir"
+ },
+ {
+  "en": "Gremda",
+  "fr": "Gremda",
+  "ar": "Gremda",
+  "gov": "sfax"
+ },
+ {
+  "en": "Boumhel El Bassatine",
+  "fr": "Boumhel El Bassatine",
+  "ar": "Boumhel El Bassatine",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "Metlaoui",
+  "fr": "Metlaoui",
+  "ar": "متلوي",
+  "gov": "gafsa"
+ },
+ {
+  "en": "Menzel Temime",
+  "fr": "Menzel Temime",
+  "ar": "Menzel Temime",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Ksour Essaf",
+  "fr": "Ksour Essaf",
+  "ar": "قصور الساف",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Ez Zahra",
+  "fr": "Ez Zahra",
+  "ar": "Ez Zahra",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "El Ksar",
+  "fr": "El Ksar",
+  "ar": "El Ksar",
+  "gov": "gafsa"
+ },
+ {
+  "en": "La Sebala du Mornag",
+  "fr": "La Sebala du Mornag",
+  "ar": "La Sebala du Mornag",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "Sidi Abid",
+  "fr": "Sidi Abid",
+  "ar": "Sidi Abid",
+  "gov": "sfax"
+ },
+ {
+  "en": "Mateur",
+  "fr": "Mateur",
+  "ar": "Mateur",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Manouba",
+  "fr": "Manouba",
+  "ar": "منوبة",
+  "gov": "manouba"
+ },
+ {
+  "en": "Midoun",
+  "fr": "Midoun",
+  "ar": "Midoun",
+  "gov": "medenine"
+ },
+ {
+  "en": "Borj Cedria",
+  "fr": "Borj Cedria",
+  "ar": "Borj Cedria",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "Rass el Djebel",
+  "fr": "Rass el Djebel",
+  "ar": "Rass el Djebel",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Siliana",
+  "fr": "Siliana",
+  "ar": "سليانة",
+  "gov": "siliana"
+ },
+ {
+  "en": "Dahmani",
+  "fr": "Dahmani",
+  "ar": "الدهماني",
+  "gov": "kef"
+ },
+ {
+  "en": "Tebourba",
+  "fr": "Tebourba",
+  "ar": "طبربة",
+  "gov": "manouba"
+ },
+ {
+  "en": "Rhennouch",
+  "fr": "Rhennouch",
+  "ar": "غنوش",
+  "gov": "gabes"
+ },
+ {
+  "en": "Grombalia",
+  "fr": "Grombalia",
+  "ar": "Grombalia",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Akouda",
+  "fr": "Akouda",
+  "ar": "Akouda",
+  "gov": "sousse"
+ },
+ {
+  "en": "Redeyef",
+  "fr": "Ar Rudayyif",
+  "ar": "الرّدَيِّف",
+  "gov": "gafsa"
+ },
+ {
+  "en": "Den Den",
+  "fr": "Den Den",
+  "ar": "Den Den",
+  "gov": "manouba"
+ },
+ {
+  "en": "Dar el Haj Taïeb",
+  "fr": "Dar el Haj Taïeb",
+  "ar": "Dar el Haj Taïeb",
+  "gov": "sfax"
+ },
+ {
+  "en": "Mégrine",
+  "fr": "Mégrine",
+  "ar": "Mégrine",
+  "gov": "tunis"
+ },
+ {
+  "en": "El Fahs",
+  "fr": "El Fahs",
+  "ar": "الفحص",
+  "gov": "zaghouan"
+ },
+ {
+  "en": "Ajim",
+  "fr": "Ajim",
+  "ar": "أجيم",
+  "gov": "medenine"
+ },
+ {
+  "en": "Carthage",
+  "fr": "Carthage",
+  "ar": "Carthage",
+  "gov": "tunis"
+ },
+ {
+  "en": "Takelsa",
+  "fr": "Takelsa",
+  "ar": "Takelsa",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Medjez el Bab",
+  "fr": "Medjez el Bab",
+  "ar": "Medjez el Bab",
+  "gov": "beja"
+ },
+ {
+  "en": "Ouerdanine",
+  "fr": "Ouerdanine",
+  "ar": "Ouerdanine",
+  "gov": "monastir"
+ },
+ {
+  "en": "La Mornaghia",
+  "fr": "La Mornaghia",
+  "ar": "La Mornaghia",
+  "gov": "manouba"
+ },
+ {
+  "en": "Menzel Jemil",
+  "fr": "Menzel Jemil",
+  "ar": "منزل جميل",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Chebba",
+  "fr": "Chebba",
+  "ar": "Chebba",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Beni Khiar",
+  "fr": "Beni Khiar",
+  "ar": "Beni Khiar",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Sahline",
+  "fr": "Sahline",
+  "ar": "Sahline",
+  "gov": "monastir"
+ },
+ {
+  "en": "Moularès",
+  "fr": "Moularès",
+  "ar": "Moularès",
+  "gov": "gafsa"
+ },
+ {
+  "en": "Tinja",
+  "fr": "Tinja",
+  "ar": "Tinja",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Tabursuq",
+  "fr": "Tabursuq",
+  "ar": "تبرسق",
+  "gov": "beja"
+ },
+ {
+  "en": "Zaouiet Sousse",
+  "fr": "Zaouiet Sousse",
+  "ar": "Zaouiet Sousse",
+  "gov": "sousse"
+ },
+ {
+  "en": "Métouia",
+  "fr": "Métouia",
+  "ar": "Métouia",
+  "gov": "gabes"
+ },
+ {
+  "en": "Bekalta",
+  "fr": "Bekalta",
+  "ar": "البقالطة",
+  "gov": "monastir"
+ },
+ {
+  "en": "Ghardimaou",
+  "fr": "Ghardimaou",
+  "ar": "غار الدماء",
+  "gov": "jendouba"
+ },
+ {
+  "en": "Tajerouine",
+  "fr": "Tajerouine",
+  "ar": "Tajerouine",
+  "gov": "kef"
+ },
+ {
+  "en": "Menzel Abderhaman",
+  "fr": "Menzel Abderhaman",
+  "ar": "منزل عبد الرحمان",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Maatmeur",
+  "fr": "Maatmeur",
+  "ar": "Maatmeur",
+  "gov": "monastir"
+ },
+ {
+  "en": "Douar Tindja",
+  "fr": "Douar Tindja",
+  "ar": "Douar Tindja",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Menzel Bou Zelfa",
+  "fr": "Menzel Bou Zelfa",
+  "ar": "منزل بوزلفة",
+  "gov": "nabeul"
+ },
+ {
+  "en": "El Alia",
+  "fr": "El Alia",
+  "ar": "El Alia",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Ouardenine",
+  "fr": "Ouardenine",
+  "ar": "Ouardenine",
+  "gov": "monastir"
+ },
+ {
+  "en": "Thala",
+  "fr": "Thala",
+  "ar": "Thala",
+  "gov": "kasserine"
+ },
+ {
+  "en": "Galaat el Andeless",
+  "fr": "Galaat el Andeless",
+  "ar": "Galaat el Andeless",
+  "gov": "ariana"
+ },
+ {
+  "en": "Mareth",
+  "fr": "Mareth",
+  "ar": "مارث",
+  "gov": "gabes"
+ },
+ {
+  "en": "Ezzouhour",
+  "fr": "Ezzouhour",
+  "ar": "Ezzouhour",
+  "gov": "sousse"
+ },
+ {
+  "en": "Chenini Nahal",
+  "fr": "Chenini Nahal",
+  "ar": "Chenini Nahal",
+  "gov": "gabes"
+ },
+ {
+  "en": "Teboulbou",
+  "fr": "Teboulbou",
+  "ar": "Teboulbou",
+  "gov": "gabes"
+ },
+ {
+  "en": "Zeramedine",
+  "fr": "Zéramdine",
+  "ar": "زرمدين",
+  "gov": "monastir"
+ },
+ {
+  "en": "Bembla et Mnara",
+  "fr": "Bembla et Mnara",
+  "ar": "Bembla et Mnara",
+  "gov": "monastir"
+ },
+ {
+  "en": "Mahires",
+  "fr": "Mahires",
+  "ar": "المحرس",
+  "gov": "sfax"
+ },
+ {
+  "en": "Kellabine",
+  "fr": "Kellabine",
+  "ar": "الكلابين",
+  "gov": "sfax"
+ },
+ {
+  "en": "Beni Khalled",
+  "fr": "Beni Khalled",
+  "ar": "Beni Khalled",
+  "gov": "nabeul"
+ },
+ {
+  "en": "El Maknassi",
+  "fr": "El Maknassi",
+  "ar": "El Maknassi",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "Bou Salem",
+  "fr": "Bou Salem",
+  "ar": "بوسالم",
+  "gov": "jendouba"
+ },
+ {
+  "en": "Ksibet el Mediouni",
+  "fr": "Ksibet el Mediouni",
+  "ar": "قصيبة المديوني",
+  "gov": "monastir"
+ },
+ {
+  "en": "Erriadh",
+  "fr": "Erriadh",
+  "ar": "Erriadh",
+  "gov": "medenine"
+ },
+ {
+  "en": "Bennane Bodheur",
+  "fr": "Bennane Bodheur",
+  "ar": "Bennane Bodheur",
+  "gov": "monastir"
+ },
+ {
+  "en": "El Guetar",
+  "fr": "El Guetar",
+  "ar": "El Guetar",
+  "gov": "gafsa"
+ },
+ {
+  "en": "Messadine",
+  "fr": "Messadine",
+  "ar": "Messadine",
+  "gov": "sousse"
+ },
+ {
+  "en": "Seïada",
+  "fr": "Sayada",
+  "ar": "صيادة",
+  "gov": "monastir"
+ },
+ {
+  "en": "Maktar",
+  "fr": "Maktar",
+  "ar": "مكثر",
+  "gov": "siliana"
+ },
+ {
+  "en": "Testour",
+  "fr": "Testour",
+  "ar": "تستور",
+  "gov": "beja"
+ },
+ {
+  "en": "Souk Lahad",
+  "fr": "Souk Lahad",
+  "ar": "Souk Lahad",
+  "gov": "kebili"
+ },
+ {
+  "en": "Bou Arada",
+  "fr": "Bou Arada",
+  "ar": "Bou Arada",
+  "gov": "siliana"
+ },
+ {
+  "en": "Menzel Hayet",
+  "fr": "Menzel Hayet",
+  "ar": "Menzel Hayet",
+  "gov": "monastir"
+ },
+ {
+  "en": "Khunays",
+  "fr": "Khunays",
+  "ar": "Khunays",
+  "gov": "monastir"
+ },
+ {
+  "en": "M'dhilla",
+  "fr": "M'dhilla",
+  "ar": "M'dhilla",
+  "gov": "gafsa"
+ },
+ {
+  "en": "Banbalah",
+  "fr": "Banbalah",
+  "ar": "Banbalah",
+  "gov": "monastir"
+ },
+ {
+  "en": "Bou Arkoub",
+  "fr": "Bou Arkoub",
+  "ar": "Bou Arkoub",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Bou Chemma",
+  "fr": "Bou Chemma",
+  "ar": "Bou Chemma",
+  "gov": "gabes"
+ },
+ {
+  "en": "As Sars",
+  "fr": "As Sars",
+  "ar": "As Sars",
+  "gov": "kef"
+ },
+ {
+  "en": "Skhira",
+  "fr": "Skhira",
+  "ar": "الصخيرة",
+  "gov": "sfax"
+ },
+ {
+  "en": "Zriba-Village",
+  "fr": "Zriba-Village",
+  "ar": "Zriba-Village",
+  "gov": "zaghouan"
+ },
+ {
+  "en": "Menzel Ennour",
+  "fr": "Menzel Ennour",
+  "ar": "Menzel Ennour",
+  "gov": "monastir"
+ },
+ {
+  "en": "Agareb",
+  "fr": "Agareb",
+  "ar": "Agareb",
+  "gov": "sfax"
+ },
+ {
+  "en": "Er Regueb",
+  "fr": "Er Regueb",
+  "ar": "Er Regueb",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "Rejiche",
+  "fr": "Rejiche",
+  "ar": "Rejiche",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Sidi Tabet",
+  "fr": "Sidi Tabet",
+  "ar": "Sidi Tabet",
+  "gov": "ariana"
+ },
+ {
+  "en": "Ksiba",
+  "fr": "Ksiba",
+  "ar": "Ksiba",
+  "gov": "sousse"
+ },
+ {
+  "en": "Enfidha",
+  "fr": "Enfida",
+  "ar": "النفيضة",
+  "gov": "sousse"
+ },
+ {
+  "en": "Hajeb el Aïoun",
+  "fr": "Hajeb el Aïoun",
+  "ar": "Hajeb el Aïoun",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Rhar el Melah",
+  "fr": "Rhar el Melah",
+  "ar": "رأس زبيب",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Sidi Bou Ali",
+  "fr": "Sidi Bou Ali",
+  "ar": "Sidi Bou Ali",
+  "gov": "sousse"
+ },
+ {
+  "en": "Gafour",
+  "fr": "Gafour",
+  "ar": "قعفور",
+  "gov": "siliana"
+ },
+ {
+  "en": "Wadhraf",
+  "fr": "Wadhraf",
+  "ar": "Wadhraf",
+  "gov": "gabes"
+ },
+ {
+  "en": "Bou Ficha",
+  "fr": "Bou Ficha",
+  "ar": "Bou Ficha",
+  "gov": "sousse"
+ },
+ {
+  "en": "Al Matlin",
+  "fr": "Al Matlin",
+  "ar": "Al Matlin",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Rafraf",
+  "fr": "Rafraf",
+  "ar": "Rafraf",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Jerissa",
+  "fr": "Jerissa",
+  "ar": "Jerissa",
+  "gov": "kef"
+ },
+ {
+  "en": "Aïne Draham",
+  "fr": "Aïne Draham",
+  "ar": "عين دراهم",
+  "gov": "jendouba"
+ },
+ {
+  "en": "Ghomrassen",
+  "fr": "Ghomrassen",
+  "ar": "Ghomrassen",
+  "gov": "tataouine"
+ },
+ {
+  "en": "As Sanad",
+  "fr": "As Sanad",
+  "ar": "السند",
+  "gov": "gafsa"
+ },
+ {
+  "en": "El Haouaria",
+  "fr": "El Haouaria",
+  "ar": "El Haouaria",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Tazarka",
+  "fr": "Tazarka",
+  "ar": "Tazarka",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Ben Aoun",
+  "fr": "Ben Aoun",
+  "ar": "Ben Aoun",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "Hammam el Rhezez",
+  "fr": "Hammam el Rhezez",
+  "ar": "Hammam el Rhezez",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Ousseltia",
+  "fr": "Ousseltia",
+  "ar": "Ousseltia",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Beni Hassane",
+  "fr": "Beni Hassane",
+  "ar": "Beni Hassane",
+  "gov": "monastir"
+ },
+ {
+  "en": "Haffouz",
+  "fr": "Haffouz",
+  "ar": "Haffouz",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Khledia",
+  "fr": "Khledia",
+  "ar": "Khledia",
+  "gov": "ben-arous"
+ },
+ {
+  "en": "Sidi Ameur",
+  "fr": "Sidi Ameur",
+  "ar": "Sidi Ameur",
+  "gov": "monastir"
+ },
+ {
+  "en": "Menzel Kamel",
+  "fr": "Menzel Kamel",
+  "ar": "Menzel Kamel",
+  "gov": "monastir"
+ },
+ {
+  "en": "Maagoula",
+  "fr": "Maagoula",
+  "ar": "Maagoula",
+  "gov": "beja"
+ },
+ {
+  "en": "Bir M'cherga",
+  "fr": "Bir M'cherga",
+  "ar": "بئر مشارڨة",
+  "gov": "zaghouan"
+ },
+ {
+  "en": "Kalaat es Senam",
+  "fr": "Kalaat es Senam",
+  "ar": "Kalaat es Senam",
+  "gov": "kef"
+ },
+ {
+  "en": "Degache",
+  "fr": "Degache",
+  "ar": "Degache",
+  "gov": "tozeur"
+ },
+ {
+  "en": "Amiret Hajjaj",
+  "fr": "Amiret Hajjaj",
+  "ar": "Amiret Hajjaj",
+  "gov": "monastir"
+ },
+ {
+  "en": "El Maamoura",
+  "fr": "El Maamoura",
+  "ar": "El Maamoura",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Sbikha",
+  "fr": "Sbikha",
+  "ar": "Sbikha",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Ksar el Ababsa",
+  "fr": "Ksar el Ababsa",
+  "ar": "Ksar el Ababsa",
+  "gov": "tataouine"
+ },
+ {
+  "en": "El Golaa",
+  "fr": "El Golaa",
+  "ar": "El Golaa",
+  "gov": "kebili"
+ },
+ {
+  "en": "Zaouiat Djedidi",
+  "fr": "Zaouiat Djedidi",
+  "ar": "Zaouiat Djedidi",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Le Krib",
+  "fr": "Le Krib",
+  "ar": "Le Krib",
+  "gov": "siliana"
+ },
+ {
+  "en": "Sidi Amor Bou Hajela",
+  "fr": "Sidi Amor Bou Hajela",
+  "ar": "Sidi Amor Bou Hajela",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Dar Ouled Khalifa",
+  "fr": "Dar Ouled Khalifa",
+  "ar": "Dar Ouled Khalifa",
+  "gov": "kasserine"
+ },
+ {
+  "en": "Sidi Alouane",
+  "fr": "Sidi Alouane",
+  "ar": "Sidi Alouane",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Hencha",
+  "fr": "Hencha",
+  "ar": "Hencha",
+  "gov": "sfax"
+ },
+ {
+  "en": "Djebibina",
+  "fr": "Djebibina",
+  "ar": "Djebibina",
+  "gov": "zaghouan"
+ },
+ {
+  "en": "Nouvelle Matmata",
+  "fr": "Nouvelle Matmata",
+  "ar": "Nouvelle Matmata",
+  "gov": "gabes"
+ },
+ {
+  "en": "Kerker",
+  "fr": "Kerker",
+  "ar": "Kerker",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Hergla",
+  "fr": "Harqalah",
+  "ar": "هرقلة",
+  "gov": "sousse"
+ },
+ {
+  "en": "El Bahira",
+  "fr": "El Bahira",
+  "ar": "El Bahira",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Mezzouna",
+  "fr": "Mezzouna",
+  "ar": "المزونة",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "Djebel Abiod",
+  "fr": "Djebel Abiod",
+  "ar": "Djebel Abiod",
+  "gov": "beja"
+ },
+ {
+  "en": "Touza",
+  "fr": "Touza",
+  "ar": "Touza",
+  "gov": "monastir"
+ },
+ {
+  "en": "Jemna",
+  "fr": "Jemna",
+  "ar": "Jemna",
+  "gov": "kebili"
+ },
+ {
+  "en": "Djebeniana",
+  "fr": "Djebeniana",
+  "ar": "Djebeniana",
+  "gov": "sfax"
+ },
+ {
+  "en": "Menzel Bouzaiane",
+  "fr": "Menzel Bouzaiane",
+  "ar": "Menzel Bouzaiane",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "Es Somaa",
+  "fr": "Es Somaa",
+  "ar": "Es Somaa",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Melloulèche",
+  "fr": "Melloulèche",
+  "ar": "ملولش",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Thelepte",
+  "fr": "Thelepte",
+  "ar": "تلابت",
+  "gov": "kasserine"
+ },
+ {
+  "en": "Zaouiet Kountech",
+  "fr": "Zaouiet Kountech",
+  "ar": "Zaouiet Kountech",
+  "gov": "monastir"
+ },
+ {
+  "en": "Borj el Amri",
+  "fr": "Borj el Amri",
+  "ar": "Borj el Amri",
+  "gov": "manouba"
+ },
+ {
+  "en": "Sbiba",
+  "fr": "Sbiba",
+  "ar": "Sbiba",
+  "gov": "kasserine"
+ },
+ {
+  "en": "Bir el Hafey",
+  "fr": "Bir el Hafey",
+  "ar": "Bir el Hafey",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "Borj Mejen Bel Abbès",
+  "fr": "Borj Mejen Bel Abbès",
+  "ar": "Borj Mejen Bel Abbès",
+  "gov": "kasserine"
+ },
+ {
+  "en": "El-Hamma-Djerid",
+  "fr": "El-Hamma-Djerid",
+  "ar": "El-Hamma-Djerid",
+  "gov": "tozeur"
+ },
+ {
+  "en": "El Battan",
+  "fr": "El Battan",
+  "ar": "El Battan",
+  "gov": "manouba"
+ },
+ {
+  "en": "Sakiet Sidi Youssef",
+  "fr": "Sakiet Sidi Youssef",
+  "ar": "Sakiet Sidi Youssef",
+  "gov": "kef"
+ },
+ {
+  "en": "Remada",
+  "fr": "Remada",
+  "ar": "Remada",
+  "gov": "tataouine"
+ },
+ {
+  "en": "Amiret Touazra",
+  "fr": "Amiret Touazra",
+  "ar": "Amiret Touazra",
+  "gov": "monastir"
+ },
+ {
+  "en": "Bou Hadjar",
+  "fr": "Bou Hadjar",
+  "ar": "Bou Hadjar",
+  "gov": "monastir"
+ },
+ {
+  "en": "Port El Kantaoui",
+  "fr": "Port El-Kantaoui",
+  "ar": "مرسى القنطاوي",
+  "gov": "sousse"
+ },
+ {
+  "en": "Jilma",
+  "fr": "Jilma",
+  "ar": "Jilma",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "Lemta",
+  "fr": "Lemta",
+  "ar": "Lemta",
+  "gov": "monastir"
+ },
+ {
+  "en": "Sejenane",
+  "fr": "Sejenane",
+  "ar": "سجنان",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Chorbane",
+  "fr": "Chorbane",
+  "ar": "Chorbane",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Zarat",
+  "fr": "Zarat",
+  "ar": "الزرات",
+  "gov": "gabes"
+ },
+ {
+  "en": "El Ksour",
+  "fr": "El Ksour",
+  "ar": "القصور",
+  "gov": "kef"
+ },
+ {
+  "en": "Menzel Heurr",
+  "fr": "Menzel Heurr",
+  "ar": "Menzel Heurr",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Souassi",
+  "fr": "Souassi",
+  "ar": "Souassi",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Zaouiet Medien",
+  "fr": "Zaouiet Medien",
+  "ar": "Zaouiet Medien",
+  "gov": "beja"
+ },
+ {
+  "en": "Cheylus",
+  "fr": "Cheylus",
+  "ar": "Cheylus",
+  "gov": "zaghouan"
+ },
+ {
+  "en": "Amiret El Fhoul",
+  "fr": "Amiret El Fhoul",
+  "ar": "Amiret El Fhoul",
+  "gov": "monastir"
+ },
+ {
+  "en": "Aousja",
+  "fr": "Aousja",
+  "ar": "Aousja",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Chehimet Nord",
+  "fr": "Chehimet Nord",
+  "ar": "Chehimet Nord",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Dar Ali Ben Hassene",
+  "fr": "Dar Ali Ben Hassene",
+  "ar": "Dar Ali Ben Hassene",
+  "gov": "monastir"
+ },
+ {
+  "en": "Zaouiet Azmour",
+  "fr": "Zaouiet Azmour",
+  "ar": "Zaouiet Azmour",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Nasrallah",
+  "fr": "Nasrallah",
+  "ar": "Nasrallah",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Sidi Bou Said",
+  "fr": "Sidi Bou Said",
+  "ar": "سيدي بو سعيد",
+  "gov": "tunis"
+ },
+ {
+  "en": "Robâa Ouled Yahia",
+  "fr": "Robâa Ouled Yahia",
+  "ar": "Robâa Ouled Yahia",
+  "gov": "siliana"
+ },
+ {
+  "en": "Bir Ali Ben Khalifa",
+  "fr": "Bir Ali Ben Khalifa",
+  "ar": "Bir Ali Ben Khalifa",
+  "gov": "sfax"
+ },
+ {
+  "en": "El Masdour",
+  "fr": "El Masdour",
+  "ar": "El Masdour",
+  "gov": "monastir"
+ },
+ {
+  "en": "Rouhia",
+  "fr": "Rouhia",
+  "ar": "Rouhia",
+  "gov": "siliana"
+ },
+ {
+  "en": "Fernana",
+  "fr": "Fernana",
+  "ar": "فرنانة",
+  "gov": "jendouba"
+ },
+ {
+  "en": "Hennchir Ksar Rhaleb",
+  "fr": "Hennchir Ksar Rhaleb",
+  "ar": "Hennchir Ksar Rhaleb",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Sidi Ben Nour",
+  "fr": "Sidi Ben Nour",
+  "ar": "Sidi Ben Nour",
+  "gov": "monastir"
+ },
+ {
+  "en": "Hamadet el Kebalou",
+  "fr": "Hamadet el Kebalou",
+  "ar": "Hamadet el Kebalou",
+  "gov": "monastir"
+ },
+ {
+  "en": "Jedelienne",
+  "fr": "Jedelienne",
+  "ar": "Jedelienne",
+  "gov": "kasserine"
+ },
+ {
+  "en": "Bou Merdès",
+  "fr": "Bou Merdès",
+  "ar": "Bou Merdès",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Dehiba",
+  "fr": "Dehiba",
+  "ar": "Dehiba",
+  "gov": "tataouine"
+ },
+ {
+  "en": "Rohia",
+  "fr": "Rohia",
+  "ar": "Rohia",
+  "gov": "kasserine"
+ },
+ {
+  "en": "El Mida",
+  "fr": "El Mida",
+  "ar": "El Mida",
+  "gov": "nabeul"
+ },
+ {
+  "en": "Goubellat",
+  "fr": "Goubellat",
+  "ar": "Goubellat",
+  "gov": "beja"
+ },
+ {
+  "en": "Menzel M'heri",
+  "fr": "Menzel M'heri",
+  "ar": "Menzel M'heri",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Kondhar",
+  "fr": "Kondhar",
+  "ar": "Kondhar",
+  "gov": "sousse"
+ },
+ {
+  "en": "Zahanah",
+  "fr": "Zahanah",
+  "ar": "Zahanah",
+  "gov": "bizerte"
+ },
+ {
+  "en": "Menzel Fersi",
+  "fr": "Menzel Fersi",
+  "ar": "Menzel Fersi",
+  "gov": "monastir"
+ },
+ {
+  "en": "Nibbar",
+  "fr": "Nibbar",
+  "ar": "نبر",
+  "gov": "kef"
+ },
+ {
+  "en": "Salakta",
+  "fr": "Salakta",
+  "ar": "سلقطة",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Haïdra",
+  "fr": "Haïdra",
+  "ar": "حيدرة",
+  "gov": "kasserine"
+ },
+ {
+  "en": "El Amra",
+  "fr": "El Amra",
+  "ar": "El Amra",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "El Ala",
+  "fr": "El Ala",
+  "ar": "El Ala",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Sidi Bou Rouis",
+  "fr": "Sidi Bou Rouis",
+  "ar": "Sidi Bou Rouis",
+  "gov": "siliana"
+ },
+ {
+  "en": "Ghraiba",
+  "fr": "Ghraiba",
+  "ar": "الغريبة",
+  "gov": "sfax"
+ },
+ {
+  "en": "El Borma",
+  "fr": "El Borma",
+  "ar": "El Borma",
+  "gov": "tataouine"
+ },
+ {
+  "en": "Hebira",
+  "fr": "Hebira",
+  "ar": "Hebira",
+  "gov": "mahdia"
+ },
+ {
+  "en": "Beni Kheddache",
+  "fr": "Beni Kheddache",
+  "ar": "بني خداش",
+  "gov": "medenine"
+ },
+ {
+  "en": "Dar Haj Ahmed Ben Ameur",
+  "fr": "Dar Haj Ahmed Ben Ameur",
+  "ar": "Dar Haj Ahmed Ben Ameur",
+  "gov": "kairouan"
+ },
+ {
+  "en": "El Aroussa",
+  "fr": "El Aroussa",
+  "ar": "El Aroussa",
+  "gov": "siliana"
+ },
+ {
+  "en": "Menzel Salem",
+  "fr": "Menzel Salem",
+  "ar": "Menzel Salem",
+  "gov": "kef"
+ },
+ {
+  "en": "Sidi el Hani",
+  "fr": "Sidi el Hani",
+  "ar": "سيدي الهاني",
+  "gov": "sousse"
+ },
+ {
+  "en": "Tamerza",
+  "fr": "Tamaghzah",
+  "ar": "تمغزة",
+  "gov": "tozeur"
+ },
+ {
+  "en": "Kesra",
+  "fr": "Kesra",
+  "ar": "كسرى",
+  "gov": "siliana"
+ },
+ {
+  "en": "Bou Attouche",
+  "fr": "Bou Attouche",
+  "ar": "Bou Attouche",
+  "gov": "gabes"
+ },
+ {
+  "en": "Kalaat Khasba",
+  "fr": "Kalaat Khasba",
+  "ar": "القلعة الخصباء",
+  "gov": "kef"
+ },
+ {
+  "en": "El Abadlia",
+  "fr": "El Abadlia",
+  "ar": "El Abadlia",
+  "gov": "sidi-bouzid"
+ },
+ {
+  "en": "Wadi Maliz",
+  "fr": "Wadi Maliz",
+  "ar": "وادي مليز",
+  "gov": "jendouba"
+ },
+ {
+  "en": "Menzel Chaker",
+  "fr": "Menzel Chaker",
+  "ar": "Menzel Chaker",
+  "gov": "sfax"
+ },
+ {
+  "en": "Touiref",
+  "fr": "Touiref",
+  "ar": "Touiref",
+  "gov": "kef"
+ },
+ {
+  "en": "Chebika",
+  "fr": "Chebika",
+  "ar": "الشبيكة",
+  "gov": "tozeur"
+ },
+ {
+  "en": "Ain Jaloulah",
+  "fr": "Ain Jaloulah",
+  "ar": "Ain Jaloulah",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Ailet Jridani",
+  "fr": "Ailet Jridani",
+  "ar": "Ailet Jridani",
+  "gov": "kairouan"
+ },
+ {
+  "en": "Zaafrane",
+  "fr": "Zaafrane",
+  "ar": "زعفران",
+  "gov": "kebili"
+ },
+ {
+  "en": "Ben Metir",
+  "fr": "Ben Metir",
+  "ar": "Ben Metir",
+  "gov": "jendouba"
+ }
+]

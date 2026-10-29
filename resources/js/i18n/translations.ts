@@ -5760,6 +5760,16 @@ translations['admin.settings.email'] = {
     ar: 'البريد الإلكتروني',
     en: 'Email',
 };
+translations['admin.settings.commercialEmail'] = {
+    fr: 'E-mail commercial',
+    ar: 'البريد الإلكتروني التجاري',
+    en: 'Commercial email',
+};
+translations['admin.settings.commercialEmailHint'] = {
+    fr: 'Reçoit les demandes de visa, les nouvelles réservations et les demandes de voyage. Laissez vide pour utiliser commercial@belazurtravel.com.',
+    ar: 'يستقبل طلبات التأشيرة والحجوزات الجديدة وطلبات الرحلات. اتركه فارغًا لاستخدام commercial@belazurtravel.com.',
+    en: 'Receives visa applications, new bookings and travel requests. Leave empty to use commercial@belazurtravel.com.',
+};
 translations['admin.settings.phone'] = {
     fr: 'Téléphone',
     ar: 'الهاتف',
@@ -6076,6 +6086,75 @@ translations['admin.settings.title_en'] = {
     fr: 'Titre',
     ar: 'العنوان',
     en: 'Title',
+};
+translations['admin.visaSearchPlaceholder'] = {
+    fr: 'Rechercher un pays…',
+    ar: 'ابحث عن دولة…',
+    en: 'Search a country…',
+};
+translations['admin.visaFilter.all'] = { fr: 'Tous', ar: 'الكل', en: 'All' };
+translations['admin.visaFilter.active'] = { fr: 'Actifs', ar: 'مفعّلة', en: 'Active' };
+translations['admin.visaFilter.inactive'] = {
+    fr: 'Inactifs',
+    ar: 'غير مفعّلة',
+    en: 'Inactive',
+};
+translations['search.actions.swap'] = {
+    fr: 'Inverser départ et destination',
+    ar: 'تبديل المغادرة والوجهة',
+    en: 'Swap departure and destination',
+};
+translations['search.citySearchPlaceholder'] = {
+    fr: 'Tapez une ville…',
+    ar: 'اكتب اسم مدينة…',
+    en: 'Type a city…',
+};
+translations['search.cityPopular'] = {
+    fr: 'Destinations populaires',
+    ar: 'الوجهات الأكثر طلبًا',
+    en: 'Popular destinations',
+};
+translations['search.cityUseTyped'] = {
+    fr: 'Rechercher « {query} »',
+    ar: 'ابحث عن « {query} »',
+    en: 'Search for "{query}"',
+};
+translations['search.cityTypeHint'] = {
+    fr: 'Tapez pour rechercher parmi {count} villes.',
+    ar: 'اكتب للبحث بين {count} مدينة.',
+    en: 'Type to search {count} cities.',
+};
+translations['search.cityNoResult'] = {
+    fr: 'Aucune ville trouvée.',
+    ar: 'لم يتم العثور على أي مدينة.',
+    en: 'No city found.',
+};
+translations['location.countries'] = { fr: 'Pays', ar: 'الدول', en: 'Countries' };
+translations['location.cities'] = { fr: 'Villes', ar: 'المدن', en: 'Cities' };
+translations['location.noResult'] = {
+    fr: 'Aucun lieu trouvé.',
+    ar: 'لم يتم العثور على أي مكان.',
+    en: 'No location found.',
+};
+translations['admin.settings.autosaving'] = {
+    fr: 'Enregistrement automatique…',
+    ar: 'جارٍ الحفظ التلقائي…',
+    en: 'Autosaving…',
+};
+translations['admin.settings.saved'] = {
+    fr: 'Enregistré',
+    ar: 'تم الحفظ',
+    en: 'Saved',
+};
+translations['admin.settings.privacyPolicyDescription'] = {
+    fr: 'Contenu de la page « Politique de confidentialité »',
+    ar: 'محتوى صفحة سياسة الخصوصية',
+    en: 'Content of the Privacy Policy page',
+};
+translations['admin.settings.purchasePolicyDescription'] = {
+    fr: 'Contenu de la page « Conditions générales de vente »',
+    ar: 'محتوى صفحة سياسة الشراء',
+    en: 'Content of the Purchase Policy page',
 };
 translations['admin.settings.title_fr'] = {
     fr: 'Titre',

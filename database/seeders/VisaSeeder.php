@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Visa;
+use App\Support\CountryNames;
 use Illuminate\Database\Seeder;
 
 class VisaSeeder extends Seeder
@@ -102,11 +103,28 @@ class VisaSeeder extends Seeder
             ],
         ];
 
+        // Popular destinations: active with an indicative price. Flags are
+        // stored as ISO codes and rendered as images by the frontend. Rows
+        // that already exist keep the admin's price and status.
         foreach ($countries as $country) {
-            Visa::updateOrCreate(
+            Visa::query()->firstOrCreate(
                 ['code' => $country['code']],
-                $country,
+                ['flag' => $country['code']] + $country,
             );
+        }
+
+        // Every other country is available to the admin, inactive until a
+        // price and processing time are set. Existing rows are never touched.
+        $sortOrder = 100;
+        foreach (CountryNames::all() as $code => $names) {
+            Visa::query()->firstOrCreate(['code' => $code], [
+                'flag' => $code,
+                'name' => $names,
+                'processing' => ['en' => 'On request', 'fr' => 'Sur demande', 'ar' => 'حسب الطلب'],
+                'price' => 0,
+                'is_active' => false,
+                'sort_order' => $sortOrder++,
+            ]);
         }
     }
 }

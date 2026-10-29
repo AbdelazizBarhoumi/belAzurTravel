@@ -50,7 +50,7 @@ interface GuestRow {
 interface BookingDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    type: 'destination' | 'hotel' | 'tour' | 'flight' | 'car' | 'travel';
+    type: 'destination' | 'hotel' | 'tour' | 'flight' | 'car' | 'travel' | 'event';
     itemSlug?: string;
     itemId?: string;
     itemName: string;
@@ -171,8 +171,8 @@ export function BookingDialog({
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [startDate] = useState<Date | undefined>(undefined);
-    const [endDate] = useState<Date | undefined>(undefined);
+    const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+    const [endDate, setEndDate] = useState<Date | undefined>(undefined);
     const [notes, setNotes] = useState('');
     const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([]);
     const [guests, setGuests] = useState<GuestRow[]>([]);
@@ -216,6 +216,13 @@ export function BookingDialog({
                 : endDate,
         [lockDates, provider?.checkOut, endDate],
     );
+
+    // Free-date bookings (everything except live hotel offers and flights,
+    // which carry their own dates) ask the client for the travel window.
+    const askDates = !lockDates && type !== 'flight';
+    const todayISO = toLocalISODate(new Date()) ?? '';
+    const parseISODate = (value: string) =>
+        value ? new Date(`${value}T00:00:00`) : undefined;
 
     const adultCount = hasProviderOffer
         ? Math.max(1, provider?.adults ?? 1)
@@ -313,9 +320,12 @@ export function BookingDialog({
                 currency: data.provider_prebook?.currency ?? currency,
             });
         },
-        onError: () => {
+        onError: (error: Error & { status?: number }) => {
+            // Validation (422) messages are actionable — show them as-is.
+            const fallback =
+                t('booking.error') || 'Failed to submit booking request.';
             toast.error(
-                t('booking.error') || 'Failed to submit booking request.',
+                error.status === 422 && error.message ? error.message : fallback,
             );
         },
     });
@@ -676,6 +686,66 @@ export function BookingDialog({
                                         />
                                     </div>
                                 </div>
+
+                                {askDates && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="start_date">
+                                                {t('label.startDate') ||
+                                                    'Start date'}
+                                            </Label>
+                                            <Input
+                                                id="start_date"
+                                                type="date"
+                                                min={todayISO}
+                                                value={
+                                                    toLocalISODate(startDate) ??
+                                                    ''
+                                                }
+                                                onChange={(e) => {
+                                                    const next = parseISODate(
+                                                        e.target.value,
+                                                    );
+                                                    setStartDate(next);
+                                                    if (
+                                                        next &&
+                                                        endDate &&
+                                                        endDate < next
+                                                    ) {
+                                                        setEndDate(undefined);
+                                                    }
+                                                }}
+                                                required={type === 'car'}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="end_date">
+                                                {t('label.endDate') ||
+                                                    'End date'}
+                                            </Label>
+                                            <Input
+                                                id="end_date"
+                                                type="date"
+                                                min={
+                                                    toLocalISODate(startDate) ??
+                                                    todayISO
+                                                }
+                                                value={
+                                                    toLocalISODate(endDate) ??
+                                                    ''
+                                                }
+                                                onChange={(e) =>
+                                                    setEndDate(
+                                                        parseISODate(
+                                                            e.target.value,
+                                                        ),
+                                                    )
+                                                }
+                                                required={type === 'car'}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 {hasProviderOffer && guests.length > 0 && (
                                     <div className="space-y-4">

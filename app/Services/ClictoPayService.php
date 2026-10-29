@@ -18,10 +18,10 @@ class ClictoPayService
 
     public function __construct()
     {
-        $this->username = config('payment.clictopay.username', '');
-        $this->password = config('payment.clictopay.password', '');
-        $this->baseUrl = config('payment.clictopay.base_url', 'https://test.clictopay.com/payment/rest');
-        $this->currency = config('payment.clictopay.currency', 788);
+        $this->username = (string) config('payment.clictopay.username');
+        $this->password = (string) config('payment.clictopay.password');
+        $this->baseUrl = (string) (config('payment.clictopay.base_url') ?: 'https://test.clictopay.com/payment/rest');
+        $this->currency = (int) config('payment.clictopay.currency', 788);
     }
 
     /**

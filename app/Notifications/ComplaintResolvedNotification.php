@@ -3,12 +3,15 @@
 namespace App\Notifications;
 
 use App\Models\Complaint;
+use App\Notifications\Concerns\NotifiesByMail;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ComplaintResolvedNotification extends Notification
+class ComplaintResolvedNotification extends Notification implements ShouldQueue
 {
+    use NotifiesByMail;
     use Queueable;
 
     public function __construct(
@@ -16,22 +19,6 @@ class ComplaintResolvedNotification extends Notification
         private readonly string $resolution,
     ) {}
 
-    public function via(object $notifiable): array
-    {
-        $channels = ['database'];
-        if ($this->isMailConfigured()) {
-            $channels[] = 'mail';
-        }
-
-        return $channels;
-    }
-
-    private function isMailConfigured(): bool
-    {
-        return config('mail.default') !== 'log'
-            && ! empty(config('mail.mailers.smtp.host'))
-            && config('mail.mailers.smtp.host') !== '127.0.0.1';
-    }
 
     public function toDatabase(object $notifiable): array
     {
