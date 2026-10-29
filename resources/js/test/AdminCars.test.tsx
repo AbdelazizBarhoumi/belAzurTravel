@@ -94,13 +94,13 @@ describe('AdminCars', () => {
     it('opens the add dialog with a shared category selector', async () => {
         renderPage();
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
 
         const dialog = await screen.findByRole('dialog');
         const categorySelect = await within(dialog).findByRole('combobox');
 
         expect(categorySelect).toBeInTheDocument();
-        expect(categorySelect).toHaveTextContent('Select');
+        expect(categorySelect).toHaveTextContent('Sélectionner');
     });
 
     it('preselects and localizes the saved category while editing', async () => {
@@ -139,7 +139,7 @@ describe('AdminCars', () => {
         renderPage();
 
         await screen.findByText('Tesla Model 3');
-        fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+        fireEvent.click(screen.getByRole('button', { name: /modifier/i }));
 
         const dialog = await screen.findByRole('dialog');
         const categorySelect = within(dialog).getByRole('combobox');

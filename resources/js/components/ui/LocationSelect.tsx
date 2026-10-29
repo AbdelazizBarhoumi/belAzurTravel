@@ -15,6 +15,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
     COUNTRIES,
     findCityByEnglishName,
@@ -22,7 +23,6 @@ import {
     getCitiesByCountry,
     type LocalizedName,
 } from '@/data/locations';
-import { useLanguage } from '@/contexts/LanguageContext';
 import type { Lang } from '@/i18n/translations';
 import { cn, matchesSearch } from '@/lib/utils';
 

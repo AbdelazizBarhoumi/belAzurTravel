@@ -102,15 +102,24 @@ class OsTravelBookingService
 
         $state = $data['State'] ?? 'OnRequest';
         $status = $this->mapStatus($state);
+        $providerId = isset($data['Id']) && $data['Id'] !== null
+            ? (string) $data['Id']
+            : null;
 
+        // Merge, never replace: the stored `request`/`prebook` context is what
+        // a later re-confirm or cancellation has to replay. Losing it leaves
+        // the booking with only a provider id and no way to rebuild the call.
         $booking->update([
-            'provider_booking_id' => (string) ($data['Id'] ?? ''),
+            'provider_booking_id' => $providerId,
             'provider_booking_reference' => $data['Voucher']['Num'] ?? null,
-            'provider_payload' => $response,
+            'provider_payload' => array_merge(
+                is_array($booking->provider_payload) ? $booking->provider_payload : [],
+                $response,
+            ),
         ]);
 
         return [
-            'id' => (string) ($data['Id'] ?? ''),
+            'id' => $providerId,
             'reference' => $data['Voucher']['Num'] ?? null,
             'status' => $status,
             'breakdown' => $this->normalizeCreation($data)['breakdown'],
@@ -149,10 +158,23 @@ class OsTravelBookingService
         $response = $this->client->bookingCancellation($bookingContext);
         $data = $response['BookingCancellation'] ?? [];
 
-        $status = $this->mapCancellationStatus($data['State'] ?? 'Cancelled');
+        $state = $data['State'] ?? 'Cancelled';
 
+        // A refused cancellation must never downgrade a live booking, so the
+        // fallback is the booking's current local status rather than a guess.
+        $status = match ($state) {
+            'Cancelled' => 'Cancelled',
+            'OnRequest' => 'Pending',
+            default => $booking->status,
+        };
+
+        // Merge (see confirm()): the prebook/request context survives the
+        // cancellation round-trip and stays available to ops and the voucher.
         $booking->update([
-            'provider_payload' => $response,
+            'provider_payload' => array_merge(
+                is_array($booking->provider_payload) ? $booking->provider_payload : [],
+                $response,
+            ),
             'status' => $status,
             'cancelled_at' => $status === 'Cancelled' ? now() : null,
         ]);

@@ -82,8 +82,8 @@ class OsTravelGoLiveFlowTest extends TestCase
 
         // 4. live search (dates): one batched HotelSearch; live markup prices + tokens.
         $search = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
         ])->assertOk();
 
         $live = collect($search->json('data'))->firstWhere('slug', $hotel->slug);
@@ -108,8 +108,8 @@ class OsTravelGoLiveFlowTest extends TestCase
             ->postJson('/api/bookings', [
                 'type' => 'hotel',
                 'item_slug' => $hotel->slug,
-                'start_date' => '2026-09-01',
-                'end_date' => '2026-09-05',
+                'start_date' => now()->addDays(10)->toDateString(),
+                'end_date' => now()->addDays(14)->toDateString(),
                 'client' => ['name' => 'John Doe', 'email' => 'john@example.com', 'phone' => '123456789'],
                 'amount' => 1113,
                 'provider' => [
@@ -132,7 +132,8 @@ class OsTravelGoLiveFlowTest extends TestCase
 
         $this->assertSame('Pending', $prebooked['status']);
         $this->assertSame(1113, $prebooked['total_amount']);
-        $this->assertSame(927.52, $prebooked['provider_prebook']['total']);
+        // The supplier's net price stays server-side; clients see the marked-up total.
+        $this->assertSame(1113, $prebooked['provider_prebook']['total']);
         $this->assertNull($prebooked['provider_booking_id']);
 
         // 6. pay -> callback confirms -> provider id persisted + listed.
@@ -350,8 +351,8 @@ class OsTravelGoLiveFlowTest extends TestCase
         // (the provider hotel's live search is covered separately above).
         Http::fake();
         $search = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-05',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(14)->toDateString(),
             'hotel_slugs' => ['maison-instant', 'maison-request'],
         ])->assertOk()->json('data');
 
@@ -370,8 +371,8 @@ class OsTravelGoLiveFlowTest extends TestCase
             ->postJson('/api/bookings', [
                 'type' => 'hotel',
                 'item_slug' => 'maison-instant',
-                'start_date' => '2026-09-01',
-                'end_date' => '2026-09-05',
+                'start_date' => now()->addDays(10)->toDateString(),
+                'end_date' => now()->addDays(14)->toDateString(),
                 'client' => ['name' => 'John Doe', 'email' => 'john@example.com', 'phone' => '123456789'],
                 'amount' => 480,
             ])
@@ -383,8 +384,8 @@ class OsTravelGoLiveFlowTest extends TestCase
             ->postJson('/api/bookings', [
                 'type' => 'hotel',
                 'item_slug' => 'maison-request',
-                'start_date' => '2026-09-01',
-                'end_date' => '2026-09-05',
+                'start_date' => now()->addDays(10)->toDateString(),
+                'end_date' => now()->addDays(14)->toDateString(),
                 'client' => ['name' => 'Jane Roe', 'email' => 'jane@example.com', 'phone' => '123456789'],
                 'amount' => 480,
             ])

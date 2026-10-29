@@ -99,6 +99,7 @@ class AdminQueueController extends Controller
             ->values()
             ->map(fn (Booking $booking) => [
                 'id' => $booking->id,
+                'booking_ref' => $booking->booking_ref,
                 'user_id' => $booking->user_id,
                 'type' => $booking->type,
                 'items' => $booking->items ?? [],
@@ -112,6 +113,7 @@ class AdminQueueController extends Controller
                 'expires_at' => $booking->expires_at?->toJSON(),
                 'reject_reason' => $booking->reject_reason,
                 'cancel_reason' => $booking->cancel_reason,
+                'details' => $booking->details,
                 'is_request' => (bool) $booking->is_request,
                 'provider_booking_id' => $booking->provider_booking_id,
                 'provider_booking_reference' => $booking->provider_booking_reference,

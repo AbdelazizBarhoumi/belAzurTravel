@@ -3,6 +3,7 @@
 namespace App\Services\OsTravel;
 
 use App\Models\CategoryType;
+use App\Models\CategoryValue;
 use App\Models\EntityCategoryAssignment;
 use App\Models\Hotel;
 use App\Models\OsTravelHotel;

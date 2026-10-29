@@ -49,7 +49,6 @@ import { localizeText } from '@/data';
 import { PROVIDER_CATEGORY_MAP } from '@/data/hotelFilters';
 import { useCountryByCode } from '@/hooks/useCountries';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
-import { getStaticFilterGroup } from '@/lib/nav-static-filters';
 import {
     useHotels,
     useHotelSearchInfinite,
@@ -62,6 +61,7 @@ import type { Lang } from '@/i18n/translations';
 
 import { getHotelCategoryLabels } from '@/lib/categoryLabels';
 import { matchesSearchText } from '@/lib/listFilters';
+import { getStaticFilterGroup } from '@/lib/nav-static-filters';
 import {
     cn,
     earliestCheckIn,
@@ -302,6 +302,10 @@ export default function Hotels() {
         categoryTypeFilters,
     ).some((v) => v.length > 0);
 
+    const dateRangeFromTime = dateRange?.from?.getTime();
+    const dateRangeToTime = dateRange?.to?.getTime();
+    const occupancyChildAgesKey = occupancy.childAges.join(',');
+
     // Sync active filters back to the URL so users can bookmark/share.
     useEffect(() => {
         // Start with current URL params so filter params (stars, category_*, etc.)
@@ -331,10 +335,10 @@ export default function Hotels() {
     }, [
         searchQuery,
         sort,
-        dateRange?.from?.getTime(),
-        dateRange?.to?.getTime(),
+        dateRangeFromTime,
+        dateRangeToTime,
         occupancy.adults,
-        occupancy.childAges.join(','),
+        occupancyChildAgesKey,
     ]);
 
     // Phase E: once a full date range (+ occupancy) is chosen, the list is
@@ -554,7 +558,6 @@ export default function Hotels() {
         occupancy.adults,
         occupancy.childAges,
         categoryTypeFilters,
-        categoryTypes,
     ]);
 
     // Rapid filter interactions must not each fire an expensive search; batch

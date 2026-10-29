@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Briefcase, Clock, Plane, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Briefcase, Clock, Plane } from 'lucide-react';
 import { useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { StickyBookingCard } from '@/components/cards/StickyBookingCard';
 import { Breadcrumb } from '@/components/nav/Breadcrumb';

@@ -4,7 +4,7 @@ interface LangBadgeProps {
     lang: Lang;
 }
 
-export function LangBadge({ lang }: LangBadgeProps) {
+export function LangBadge({ lang: _lang }: LangBadgeProps) {
     return null;
 }
 

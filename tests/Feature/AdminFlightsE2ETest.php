@@ -33,9 +33,7 @@ class AdminFlightsE2ETest extends TestCase
             'airline_fr' => 'Compagnie Test',
             'airline_ar' => 'خطوط الاختبار',
             'from' => 'NYC',
-            'to_en' => 'Paris',
-            'to_fr' => 'Paris',
-            'to_ar' => 'باريس',
+            'to' => 'CDG',
             'duration_en' => '7h 30m',
             'duration_fr' => '7h 30m',
             'duration_ar' => '٧ ساعات و ٣٠ دقيقة',
@@ -86,8 +84,7 @@ class AdminFlightsE2ETest extends TestCase
         $this->assertEquals($payload['airline_fr'], $dbFlight->airline['fr']);
         $this->assertEquals($payload['airline_ar'], $dbFlight->airline['ar']);
 
-        $this->assertEquals($payload['to_en'], $dbFlight->to['en']);
-        $this->assertEquals($payload['to_fr'], $dbFlight->to['fr']);
+        $this->assertEquals($payload['to'], $dbFlight->to);
 
         // Verify details fields
         $this->assertEquals($payload['date'], $dbFlight->details['date']);
@@ -104,8 +101,7 @@ class AdminFlightsE2ETest extends TestCase
             ->assertJsonPath('data.code', $payload['code'])
             ->assertJsonPath('data.airline.en', $payload['airline_en'])
             ->assertJsonPath('data.airline.fr', $payload['airline_fr'])
-            ->assertJsonPath('data.to.en', $payload['to_en'])
-            ->assertJsonPath('data.to.fr', $payload['to_fr'])
+            ->assertJsonPath('data.to', $payload['to'])
             ->assertJsonPath('data.price', $payload['price'])
             ->assertJsonPath('data.details.date', $payload['date'])
             ->assertJsonPath('data.details.seats', $payload['seats'])
@@ -138,7 +134,7 @@ class AdminFlightsE2ETest extends TestCase
             'code' => 'update-test-'.time(),
             'airline' => ['en' => 'Original Airline', 'fr' => 'Compagnie Originale', 'ar' => 'شركة أصلية'],
             'from' => 'NYC',
-            'to' => ['en' => 'London', 'fr' => 'Londres', 'ar' => 'لندن'],
+            'to' => 'LHR',
             'duration' => ['en' => '6h', 'fr' => '6h', 'ar' => '٦ ساعات'],
             'price' => 500,
             'stops' => ['en' => 'Direct', 'fr' => 'Direct', 'ar' => 'مباشر'],
@@ -161,9 +157,7 @@ class AdminFlightsE2ETest extends TestCase
             'airline_fr' => 'Compagnie Mise à Jour',
             'airline_ar' => 'شركة محدثة',
             'from' => 'LAX',
-            'to_en' => 'Tokyo',
-            'to_fr' => 'Tokyo',
-            'to_ar' => 'طوكيو',
+            'to' => 'HND',
             'duration_en' => '11h 30m',
             'duration_fr' => '11h 30m',
             'duration_ar' => '١١ ساعة و٣٠ دقيقة',
@@ -228,7 +222,7 @@ class AdminFlightsE2ETest extends TestCase
             'code' => 'nested-update-'.time(),
             'airline' => ['en' => 'Original Airline', 'fr' => 'Compagnie Originale', 'ar' => 'شركة أصلية'],
             'from' => 'PAR',
-            'to' => ['en' => 'Rome', 'fr' => 'Rome', 'ar' => 'روما'],
+            'to' => 'FCO',
             'duration' => ['en' => '2h', 'fr' => '2h', 'ar' => 'ساعتان'],
             'price' => 320,
             'stops' => ['en' => 'Direct', 'fr' => 'Direct', 'ar' => 'مباشر'],
@@ -255,14 +249,7 @@ class AdminFlightsE2ETest extends TestCase
             'airline_fr' => 'Compagnie Mise à Jour',
             'airline_ar' => 'شركة محدثة',
             'from' => 'LHR',
-            'to' => [
-                'en' => 'Berlin',
-                'fr' => 'Berlin',
-                'ar' => 'برلين',
-            ],
-            'to_en' => 'Berlin',
-            'to_fr' => 'Berlin',
-            'to_ar' => 'برلين',
+            'to' => 'BER',
             'duration' => [
                 'en' => '2h 15m',
                 'fr' => '2h 15m',
@@ -323,7 +310,7 @@ class AdminFlightsE2ETest extends TestCase
             ->assertOk();
 
         $response->assertJsonPath('data.airline.en', 'Updated Airline');
-        $response->assertJsonPath('data.to.en', 'Berlin');
+        $response->assertJsonPath('data.to', 'BER');
         $response->assertJsonPath('data.details.cabin.en', 'Business');
 
         $this->assertDatabaseHas('flights', [
@@ -337,7 +324,7 @@ class AdminFlightsE2ETest extends TestCase
 
         $updated = Flight::findOrFail($flight->id);
         $this->assertEquals('Updated Airline', $updated->airline['en']);
-        $this->assertEquals('Berlin', $updated->to['en']);
+        $this->assertEquals('BER', $updated->to);
         $this->assertEquals('Business', $updated->details['cabin']['en']);
         $this->assertEquals('Boeing 737', $updated->details['aircraft']['en']);
         $this->assertEquals('Refundable', $updated->details['refund']['en']);
@@ -352,7 +339,7 @@ class AdminFlightsE2ETest extends TestCase
             'code' => 'delete-test-'.time(),
             'airline' => ['en' => 'Test', 'fr' => 'Test', 'ar' => 'اختبار'],
             'from' => 'NYC',
-            'to' => ['en' => 'Paris', 'fr' => 'Paris', 'ar' => 'باريس'],
+            'to' => 'CDG',
             'duration' => ['en' => '7h', 'fr' => '7h', 'ar' => '٧ ساعات'],
             'price' => 700,
             'stops' => ['en' => 'Direct', 'fr' => 'Direct', 'ar' => 'مباشر'],
@@ -392,7 +379,7 @@ class AdminFlightsE2ETest extends TestCase
             ->postJson('/api/admin/flights', [
                 'airline_en' => 'Test',
                 'from' => 'NYC',
-                'to_en' => 'Paris',
+                'to' => 'CDG',
                 'price' => -100,
             ])
             ->assertStatus(422);
@@ -402,7 +389,7 @@ class AdminFlightsE2ETest extends TestCase
             ->postJson('/api/admin/flights', [
                 'airline_en' => 'Test',
                 'from' => 'NYC',
-                'to_en' => 'Paris',
+                'to' => 'CDG',
                 'price' => 500,
                 'seats' => -50,
             ])
@@ -434,7 +421,7 @@ class AdminFlightsE2ETest extends TestCase
             'code' => 'list-test-1-'.time(),
             'airline' => ['en' => 'Airline 1', 'fr' => 'Compagnie 1', 'ar' => 'خطوط 1'],
             'from' => 'NYC',
-            'to' => ['en' => 'Paris', 'fr' => 'Paris', 'ar' => 'باريس'],
+            'to' => 'CDG',
             'duration' => ['en' => '7h', 'fr' => '7h', 'ar' => '٧ ساعات'],
             'price' => 600,
             'stops' => ['en' => 'Direct', 'fr' => 'Direct', 'ar' => 'مباشر'],

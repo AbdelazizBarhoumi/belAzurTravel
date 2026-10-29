@@ -29,67 +29,66 @@ vi.mock('@/components/layout/AdminLayout', () => ({
     ),
 }));
 
-const mockBookings = [
-    {
+const mockBooking = {
+    id: '550e8400-e29b-41d4-a716-446655440055',
+    booking_ref: 55,
+    user_id: 3,
+    type: 'hotel',
+    items: [],
+    start_date: '2026-09-15',
+    end_date: '2026-09-20',
+    client: { name: 'Sofia Ben Ali' },
+    total_amount: 850,
+    status: 'Pending',
+    created_at: new Date().toISOString(),
+    is_provider: false,
+    audits: [],
+};
+
+const mockComplaint = {
+    id: 21,
+    type: 'complaint',
+    subject: { en: 'Noise at night', fr: 'Bruit la nuit' },
+    description: { en: 'Loud music after midnight.' },
+    booking_id: '550e8400-e29b-41d4-a716-446655440055',
+    booking: {
         id: '550e8400-e29b-41d4-a716-446655440055',
         booking_ref: 55,
-        user_id: 3,
         type: 'hotel',
-        items: [],
-        start_date: '2026-09-15',
-        end_date: '2026-09-20',
-        client: { name: 'Sofia Ben Ali' },
         total_amount: 850,
         status: 'Pending',
-        created_at: new Date().toISOString(),
     },
-];
+    user: { id: 3, name: 'Sofia Ben Ali', email: 'sofia@example.com' },
+    refund_amount: null,
+    status: 'pending',
+    priority: 'high',
+    admin_reply: null,
+    created_at: new Date().toISOString(),
+    replies: [],
+};
 
-const mockComplaints = [
-    {
-        id: 21,
-        type: 'complaint',
-        subject: { en: 'Noise at night', fr: 'Bruit la nuit' },
-        description: { en: 'Loud music after midnight.' },
-        booking_id: '550e8400-e29b-41d4-a716-446655440055',
-        booking: {
-            id: '550e8400-e29b-41d4-a716-446655440055',
-            booking_ref: 55,
-            type: 'hotel',
-            total_amount: 850,
-            status: 'Pending',
-        },
-        status: 'pending',
-        priority: 'high',
-        created_at: new Date().toISOString(),
-        replies: [],
+const queuePayload = {
+    counts: {
+        bookings: 1,
+        complaints: 1,
+        refund_requests: 0,
+        support: 0,
+        total: 2,
     },
-];
+    bookings: [mockBooking],
+    complaints: [mockComplaint],
+    refund_requests: [],
+    support: [],
+};
 
 describe('AdminQueue', () => {
     beforeEach(() => {
-        localStorage.setItem('lang', 'en');
         vi.mocked(apiFetch).mockImplementation(async (url: string) => {
             if (url === '/api/admin/queue') {
-                return {
-                    counts: {
-                        bookings: 0,
-                        complaints: 0,
-                        refund_requests: 0,
-                        support: 0,
-                        total: 0,
-                    },
-                    bookings: [],
-                    complaints: [],
-                    refund_requests: [],
-                    support: [],
-                } as never;
+                return queuePayload as never;
             }
-            if (url === '/api/admin/bookings') {
-                return mockBookings as never;
-            }
-            if (url.startsWith('/api/admin/complaints')) {
-                return mockComplaints as never;
+            if (url.startsWith('/api/bookings/')) {
+                return { ...mockBooking, audits: [] } as never;
             }
             return {} as never;
         });
@@ -113,39 +112,67 @@ describe('AdminQueue', () => {
         );
     };
 
-    it('renders the section tabs with counts', async () => {
+    it('renders the section tabs from the queue payload', async () => {
         renderQueue();
 
-        expect(await screen.findByText('Bookings')).toBeInTheDocument();
-        expect(screen.getByText('Complaints')).toBeInTheDocument();
-        expect(screen.getByText('Refunds')).toBeInTheDocument();
-        expect(screen.getByText('Support')).toBeInTheDocument();
+        expect(
+            await screen.findByRole('button', { name: /Réservations/ }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: /Réclamations/ }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: /Remboursements/ }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: /Support/ }),
+        ).toBeInTheDocument();
     });
 
-    it('lists bookings with client name and status', async () => {
+    it('lists actionable bookings with client name and status', async () => {
         renderQueue();
 
         expect(await screen.findByText('Sofia Ben Ali')).toBeInTheDocument();
-        expect(screen.getByText('Pending')).toBeInTheDocument();
+        expect(screen.getByText('En attente')).toBeInTheDocument();
     });
 
     it('switches to the complaints section', async () => {
         renderQueue();
 
         await screen.findByText('Sofia Ben Ali');
-        fireEvent.click(screen.getByText('Complaints'));
+        fireEvent.click(screen.getByRole('button', { name: /Réclamations/ }));
 
-        expect(await screen.findByText('Noise at night')).toBeInTheDocument();
+        expect(await screen.findByText('Bruit la nuit')).toBeInTheDocument();
+    });
+
+    it('opens the tab requested in the URL', async () => {
+        const queryClient = new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+        });
+
+        render(
+            <QueryClientProvider client={queryClient}>
+                <LanguageProvider>
+                    <MemoryRouter
+                        initialEntries={['/admin/queue?tab=complaints']}
+                    >
+                        <AdminQueue />
+                    </MemoryRouter>
+                </LanguageProvider>
+            </QueryClientProvider>,
+        );
+
+        expect(await screen.findByText('Bruit la nuit')).toBeInTheDocument();
     });
 
     it('shows the empty state when a section has no items', async () => {
         renderQueue();
 
         await screen.findByText('Sofia Ben Ali');
-        fireEvent.click(screen.getByText('Support'));
+        fireEvent.click(screen.getByRole('button', { name: /Support/ }));
 
         expect(
-            await screen.findByText('Nothing to handle here.'),
+            await screen.findByText('Rien à traiter ici.'),
         ).toBeInTheDocument();
     });
 });

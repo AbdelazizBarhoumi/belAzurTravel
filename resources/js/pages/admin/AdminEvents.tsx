@@ -55,7 +55,7 @@ export default function AdminEvents() {
     const { data: categoryTypes = [] } = useCategoryTypes('events');
     const [catManagerOpen, setCatManagerOpen] = useState(false);
     const [open, setOpen] = useState(false);
-    const [modalLang, setModalLang] = useState<Lang>('en');
+    const [modalLang, setModalLang] = useState<Lang>('fr');
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -288,7 +288,7 @@ export default function AdminEvents() {
                                         key: v.key,
                                         label: v.name[activeLang] || v.name.en,
                                     }))}
-                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`]  as string[] : []}
                                     onChange={(val) => setField(`category_${catType.key}`, val)}
                                     placeholder={t('actions.select')}
                                 />

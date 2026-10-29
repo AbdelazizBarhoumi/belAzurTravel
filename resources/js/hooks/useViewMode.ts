@@ -8,7 +8,9 @@ function getStoredViewMode(): ViewMode {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored === 'grid' || stored === 'list') return stored;
-    } catch {}
+    } catch {
+        // Ignore storage access errors (e.g. private mode).
+    }
     return 'grid';
 }
 
@@ -19,7 +21,9 @@ export function useViewMode(): [ViewMode, (mode: ViewMode) => void] {
         setViewModeState(mode);
         try {
             localStorage.setItem(STORAGE_KEY, mode);
-        } catch {}
+        } catch {
+            // Ignore storage access errors (e.g. private mode).
+        }
     }, []);
 
     return [viewMode, setViewMode];

@@ -6,7 +6,7 @@ export interface AdminBookingRow {
     user_id: number | null;
     type: string;
     items: unknown[];
-    client?: { name?: string };
+    client?: { name?: string } | null;
     start_date?: string | null;
     end_date?: string | null;
     created_at: string;
@@ -310,13 +310,13 @@ export async function updateClientLanguage(language: string) {
 }
 
 export async function approveBooking(id: string) {
-    return apiFetch(`/api/admin/bookings/${id}/approve`, {
+    return apiFetch<{ status: string }>(`/api/admin/bookings/${id}/approve`, {
         method: 'POST',
     });
 }
 
 export async function rejectBooking(id: string, reason: string) {
-    return apiFetch(`/api/admin/bookings/${id}/reject`, {
+    return apiFetch<{ status: string }>(`/api/admin/bookings/${id}/reject`, {
         method: 'POST',
         body: JSON.stringify({ reason }),
     });
@@ -329,7 +329,7 @@ export async function cancelBooking(id: string) {
 }
 
 export async function adminCancelBooking(id: string) {
-    return apiFetch(`/api/admin/bookings/${id}/cancel`, {
+    return apiFetch<{ status: string }>(`/api/admin/bookings/${id}/cancel`, {
         method: 'POST',
     });
 }

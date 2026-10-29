@@ -183,4 +183,36 @@ class ScheduledJobsTest extends TestCase
     {
         $this->artisan('schedule:list')->assertSuccessful();
     }
+
+    public function test_complete_command_closes_confirmed_trips_only(): void
+    {
+        Notification::fake();
+
+        $client = $this->client();
+
+        $ended = $this->confirmedBooking($client, now()->subDays(10)->toDateString());
+        $ended->update(['end_date' => now()->subDay()->toDateString()]);
+
+        $future = $this->confirmedBooking($client, now()->addDays(10)->toDateString());
+
+        $pending = $this->confirmedBooking($client, now()->subDays(10)->toDateString());
+        $pending->update(['end_date' => now()->subDay()->toDateString(), 'status' => 'Pending']);
+
+        $singleDay = $this->confirmedBooking($client, now()->subDays(3)->toDateString());
+        $singleDay->update(['end_date' => null]);
+
+        $this->artisan('bookings:complete')->assertSuccessful();
+
+        $this->assertSame('Completed', $ended->refresh()->status);
+        $this->assertSame('Completed', $singleDay->refresh()->status);
+        $this->assertSame('Confirmed', $future->refresh()->status);
+        $this->assertSame('Pending', $pending->refresh()->status);
+
+        $this->assertDatabaseHas('booking_audits', [
+            'booking_id' => $ended->id,
+            'action' => 'completed',
+            'from_status' => 'Confirmed',
+            'to_status' => 'Completed',
+        ]);
+    }
 }

@@ -72,11 +72,11 @@ class HotelSearchPublicFlowTest extends TestCase
     {
         $this->postJson('/api/hotels/search', [])->assertUnprocessable();
         $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
+            'check_in' => now()->addDays(10)->toDateString(),
         ])->assertUnprocessable();
         $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-08',
-            'check_out' => '2026-09-01',
+            'check_in' => now()->addDays(17)->toDateString(),
+            'check_out' => now()->addDays(10)->toDateString(),
         ])->assertUnprocessable();
     }
 
@@ -89,8 +89,8 @@ class HotelSearchPublicFlowTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
             'hotel_slugs' => ['cap-bon-kelibia'],
         ])->assertOk();
 
@@ -112,8 +112,8 @@ class HotelSearchPublicFlowTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
             'hotel_slugs' => ['cap-bon-kelibia'],
         ])->assertOk();
 
@@ -131,8 +131,8 @@ class HotelSearchPublicFlowTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
         ])->assertOk();
 
         // `OnlyAvailable` defaults to true: the provider-returned but
@@ -150,8 +150,8 @@ class HotelSearchPublicFlowTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
         ])->assertOk();
 
         $this->assertStringNotContainsString('XMLBEL', $response->content());

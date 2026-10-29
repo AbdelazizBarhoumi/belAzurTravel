@@ -11,7 +11,7 @@ const mockFlight = {
     code: 'emirates-nyc-dxb',
     airline: { en: 'Emirates', fr: 'Emirates', ar: 'طيران الإمارات' },
     from: 'NYC',
-    to: { en: 'Dubai', fr: 'Dubaï', ar: 'دبي' },
+    to: 'DXB',
     departure: '10:00',
     arrival: '16:00',
     duration: { en: '14h', fr: '14h', ar: '١٤ ساعة' },
@@ -85,7 +85,7 @@ describe('FlightDetail page', () => {
         const cabinElements = screen.getAllByText(/Cabin/i);
         expect(cabinElements.length).toBeGreaterThan(0);
 
-        const baggageElements = screen.getAllByText(/Baggage/i);
+        const baggageElements = screen.getAllByText(/Bagages/i);
         expect(baggageElements.length).toBeGreaterThan(0);
 
         const acElements = screen.getAllByText(/Aircraft/i);

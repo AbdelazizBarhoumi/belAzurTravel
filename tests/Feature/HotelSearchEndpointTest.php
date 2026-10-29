@@ -71,16 +71,16 @@ class HotelSearchEndpointTest extends TestCase
     public function test_search_rejects_stays_longer_than_30_nights(): void
     {
         $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-10-15',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(60)->toDateString(),
         ])->assertUnprocessable()->assertJsonValidationErrors(['check_out']);
     }
 
     public function test_search_validates_filters(): void
     {
         $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
             'stars' => 6,
             'sort' => 'bogus',
             'per_page' => 200,
@@ -109,8 +109,8 @@ class HotelSearchEndpointTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
             'per_page' => 1,
             'page' => 2,
             'sort' => 'price_asc',
@@ -141,8 +141,8 @@ class HotelSearchEndpointTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
             'city_id' => '12',
             'boarding_ids' => [5],
         ])->assertOk();
@@ -162,8 +162,8 @@ class HotelSearchEndpointTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/hotels/search', [
-            'check_in' => '2026-09-01',
-            'check_out' => '2026-09-08',
+            'check_in' => now()->addDays(10)->toDateString(),
+            'check_out' => now()->addDays(17)->toDateString(),
             'only_available' => false,
             'sort' => 'price_asc',
         ])->assertOk();

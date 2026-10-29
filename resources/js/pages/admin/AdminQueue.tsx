@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -12,17 +12,14 @@ import {
     Send,
 } from 'lucide-react';
 import {
-    getAdminBookings,
     getBooking,
     type AdminBookingRow,
     type BookingDetailRow,
 } from '@/api/booking.api';
 import {
-    getAdminComplaints,
     replyToComplaint,
     resolveComplaint,
     updateAdminComplaint,
-    type Complaint,
 } from '@/api/complaint.api';
 import {
     getAdminQueue,
@@ -30,6 +27,7 @@ import {
     updateSupportInquiry,
     type AdminQueuePayload,
     type QueueClientContact,
+    type QueueComplaint,
     type QueueSection,
     type QueueSupportInquiry,
 } from '@/api/queue.api';
@@ -94,7 +92,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
 
 type Detail =
     | { kind: 'booking'; item: AdminBookingRow }
-    | { kind: 'complaint'; item: Complaint }
+    | { kind: 'complaint'; item: QueueComplaint }
     | { kind: 'support'; item: QueueSupportInquiry };
 
 const SECTIONS: Array<{ key: QueueSection; labelKey: string }> = [
@@ -103,6 +101,8 @@ const SECTIONS: Array<{ key: QueueSection; labelKey: string }> = [
     { key: 'refund_requests', labelKey: 'admin.queue.tab.refunds' },
     { key: 'support', labelKey: 'admin.queue.tab.support' },
 ];
+
+const QUEUE_SECTIONS: QueueSection[] = SECTIONS.map((section) => section.key);
 
 function localize(
     lang: string,
@@ -228,13 +228,7 @@ const AdminQueue = () => {
     const isRtl = dir === 'rtl';
 
     const [searchParams, setSearchParams] = useSearchParams();
-    const validTabs: QueueSection[] = [
-        'bookings',
-        'complaints',
-        'refund_requests',
-        'support',
-    ];
-    const initialTab = validTabs.includes(
+    const initialTab = QUEUE_SECTIONS.includes(
         searchParams.get('tab') as QueueSection,
     )
         ? (searchParams.get('tab') as QueueSection)
@@ -262,38 +256,39 @@ const AdminQueue = () => {
         refetchInterval: 30_000,
     });
 
-    const { data: allBookings = [], isLoading: bookingsLoading } = useQuery<
-        AdminBookingRow[]
-    >({
-        queryKey: ['admin-bookings'],
-        queryFn: getAdminBookings,
-        staleTime: 60_000,
-    });
+    // The queue endpoint is the single source of truth: it only returns items
+    // that still need a decision, and its counts match the sidebar badge.
+    const queueBookings = data?.bookings ?? [];
+    const queueComplaints = data?.complaints ?? [];
+    const queueRefundRequests = data?.refund_requests ?? [];
 
-    const { data: allComplaints = [], isLoading: complaintsLoading } = useQuery<
-        Complaint[]
-    >({
-        queryKey: [
-            'admin-complaints',
-            complaintTypeFilter,
-            complaintStatusFilter,
-        ],
-        queryFn: () =>
-            getAdminComplaints({
-                type: complaintTypeFilter || undefined,
-                status: complaintStatusFilter || undefined,
-            }),
-    });
+    const filteredComplaints = queueComplaints.filter(
+        (c) =>
+            (!complaintTypeFilter || c.type === complaintTypeFilter) &&
+            (!complaintStatusFilter || c.status === complaintStatusFilter),
+    );
+    const filteredRefundRequests = queueRefundRequests.filter(
+        (c) => !complaintStatusFilter || c.status === complaintStatusFilter,
+    );
+
+    // Keep the visible tab in step with the URL so notification deep links work
+    // even when the admin is already on /admin/queue.
+    useEffect(() => {
+        const tab = searchParams.get('tab') as QueueSection | null;
+        if (tab && QUEUE_SECTIONS.includes(tab) && tab !== activeTab) {
+            setActiveTab(tab);
+        }
+    }, [searchParams, activeTab]);
 
     const refresh = () => {
-        queryClient.invalidateQueries({
-            queryKey: [
-                'admin-queue',
-                'admin-queue-counts',
-                'admin-bookings',
-                'admin-complaints',
-            ],
-        });
+        for (const queryKey of [
+            ['admin-queue'],
+            ['admin-queue-counts'],
+            ['admin-bookings'],
+            ['admin-complaints'],
+        ]) {
+            queryClient.invalidateQueries({ queryKey });
+        }
     };
 
     const bookingStatusMutation = useMutation({
@@ -310,16 +305,18 @@ const AdminQueue = () => {
                 return api.rejectBooking(id, reason.trim());
             }
             if (status === 'Cancelled') return api.adminCancelBooking(id);
-            return Promise.resolve();
+            return Promise.resolve({ status });
         },
-        onSuccess: (_data, variables) => {
-            queryClient.invalidateQueries({
-                queryKey: ['admin-bookings', 'admin-queue'],
-            });
+        onSuccess: (updated) => {
+            refresh();
+            // Report the status the server actually landed on — approval may
+            // stop at Approved when the supplier answers OnRequest.
+            const actual =
+                (updated as { status?: string } | undefined)?.status ??
+                'Pending';
             toast.success(
                 `${t('admin.booking')} → ${
-                    bookingStatusLabels[variables.status]?.[lang] ??
-                    variables.status
+                    bookingStatusLabels[actual]?.[lang] ?? actual
                 }`,
             );
         },
@@ -404,15 +401,7 @@ const AdminQueue = () => {
     });
 
     const counts = data?.counts;
-    const countFor = (section: QueueSection) => {
-        if (section === 'bookings') return allBookings.length;
-        if (section === 'complaints')
-            return allComplaints.filter((c) => c.type === 'complaint').length;
-        if (section === 'refund_requests')
-            return allComplaints.filter((c) => c.type === 'refund_request')
-                .length;
-        return counts?.[section] ?? 0;
-    };
+    const countFor = (section: QueueSection) => counts?.[section] ?? 0;
 
     const openDetail = (kind: Detail['kind'], item: Detail['item']) =>
         setDetail({ kind, item } as Detail);
@@ -476,8 +465,8 @@ const AdminQueue = () => {
                     <>
                         {activeTab === 'bookings' && (
                             <BookingsTable
-                                bookings={allBookings}
-                                loading={bookingsLoading}
+                                bookings={queueBookings}
+                                loading={isLoading}
                                 onOpen={(item) => openDetail('booking', item)}
                                 onStatusChange={(id, status) =>
                                     bookingStatusMutation.mutate({ id, status })
@@ -487,10 +476,8 @@ const AdminQueue = () => {
                         )}
                         {activeTab === 'complaints' && (
                             <ComplaintsTable
-                                items={allComplaints.filter(
-                                    (c) => c.type === 'complaint',
-                                )}
-                                loading={complaintsLoading}
+                                items={filteredComplaints}
+                                loading={isLoading}
                                 typeFilter={complaintTypeFilter}
                                 statusFilter={complaintStatusFilter}
                                 onTypeFilterChange={setComplaintTypeFilter}
@@ -506,10 +493,8 @@ const AdminQueue = () => {
                         )}
                         {activeTab === 'refund_requests' && (
                             <ComplaintsTable
-                                items={allComplaints.filter(
-                                    (c) => c.type === 'refund_request',
-                                )}
-                                loading={complaintsLoading}
+                                items={filteredRefundRequests}
+                                loading={isLoading}
                                 typeFilter="refund_request"
                                 statusFilter={complaintStatusFilter}
                                 onTypeFilterChange={() => {}}
@@ -807,13 +792,13 @@ function ComplaintsTable({
     onOpen,
     onStatusChange,
 }: {
-    items: Complaint[];
+    items: QueueComplaint[];
     loading: boolean;
     typeFilter: string;
     statusFilter: string;
     onTypeFilterChange: (value: string) => void;
     onStatusFilterChange: (value: string) => void;
-    onOpen: (item: Complaint) => void;
+    onOpen: (item: QueueComplaint) => void;
     onStatusChange: (id: number, status: string) => void;
 }) {
     const { t, lang } = useLanguage();
@@ -1396,7 +1381,7 @@ function ComplaintDetail({
     onMarkRefunded,
     busy,
 }: {
-    complaint: Complaint;
+    complaint: QueueComplaint;
     draft: string;
     onDraftChange: (value: string) => void;
     onReply: () => void;

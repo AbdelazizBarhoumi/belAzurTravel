@@ -28,7 +28,7 @@ class BookingActivityNotification extends Notification implements ShouldQueue
         return [
             'type' => $this->activityType,
             'booking_id' => $this->booking->id,
-            'url' => '/admin/bookings/'.$this->booking->id,
+            'url' => '/admin/queue?tab=bookings',
             'fr' => $this->message($client, 'fr'),
             'ar' => $this->message($client, 'ar'),
             'en' => $this->message($client, 'en'),
@@ -77,7 +77,7 @@ class BookingActivityNotification extends Notification implements ShouldQueue
             'statusLabel' => $translate('admin_booking.labels.status'),
             'providerRefLabel' => $translate('booking.labels.provider_ref'),
             'actionText' => $translate('action.view_booking'),
-            'actionUrl' => config('app.url').'/admin/bookings',
+            'actionUrl' => config('app.url').'/admin/queue?tab=bookings',
             'closingLine' => $translate('footer_automatic'),
         ];
 

@@ -85,11 +85,11 @@ describe('Admin destinations editor', () => {
     it('shows upload-based media controls in the add dialog', async () => {
         renderAdminDestinationsPage();
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
 
         const dialog = await screen.findByRole('dialog');
         expect(within(dialog).getByText('Image')).toBeInTheDocument();
-        expect(within(dialog).getByText('Gallery')).toBeInTheDocument();
+        expect(within(dialog).getByText('Galerie')).toBeInTheDocument();
     });
 
     it('preselects the existing category when editing a destination', async () => {
@@ -119,15 +119,15 @@ describe('Admin destinations editor', () => {
 
         renderAdminDestinationsPage();
 
-        fireEvent.click(await screen.findByRole('button', { name: /edit/i }));
+        fireEvent.click(await screen.findByRole('button', { name: /modifier/i }));
 
         const dialog = await screen.findByRole('dialog');
         await waitFor(() => {
             const categorySelect = within(dialog)
                 .getAllByRole('combobox')
-                .find((box) => box.textContent?.includes('Beach'));
+                .find((box) => box.textContent?.includes('Plage'));
             expect(categorySelect).toBeTruthy();
-            expect(categorySelect).toHaveTextContent('Beach');
+            expect(categorySelect).toHaveTextContent('Plage');
         });
     });
 
@@ -157,15 +157,15 @@ describe('Admin destinations editor', () => {
 
         renderAdminDestinationsPage();
 
-        fireEvent.click(await screen.findByRole('button', { name: /edit/i }));
+        fireEvent.click(await screen.findByRole('button', { name: /modifier/i }));
 
         const dialog = await screen.findByRole('dialog');
         await waitFor(() => {
             const categorySelect = within(dialog)
                 .getAllByRole('combobox')
-                .find((box) => box.textContent?.includes('Beach'));
+                .find((box) => box.textContent?.includes('Plage'));
             expect(categorySelect).toBeTruthy();
-            expect(categorySelect).toHaveTextContent('Beach');
+            expect(categorySelect).toHaveTextContent('Plage');
         });
     });
 
@@ -202,7 +202,7 @@ describe('Admin destinations editor', () => {
 
         renderAdminDestinationsPage();
 
-        fireEvent.click(await screen.findByRole('button', { name: /edit/i }));
+        fireEvent.click(await screen.findByRole('button', { name: /modifier/i }));
 
         const dialog = await screen.findByRole('dialog');
         const form = dialog.querySelector('form');
@@ -239,7 +239,7 @@ describe('Admin destinations editor', () => {
 
         renderAdminDestinationsPage();
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
         await screen.findByRole('dialog');
 
         fireEvent.change(screen.getByLabelText(/Name/i), {

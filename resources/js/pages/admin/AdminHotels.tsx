@@ -304,7 +304,7 @@ const AdminHotels = () => {
         },
     });
 
-    const [modalLang, setModalLang] = useState<Lang>('en');
+    const [modalLang, setModalLang] = useState<Lang>('fr');
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
@@ -573,7 +573,7 @@ const AdminHotels = () => {
                                             key: v.key,
                                             label: v.name[activeLang] || v.name.en,
                                         }))}
-                                        value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                        value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`]  as string[] : []}
                                         onChange={(val) => {
                                             setField(`category_${catType.key}`, val);
                                         }}
@@ -876,6 +876,7 @@ const AdminHotels = () => {
                             }
                             schema={amenitySchema(t)}
                             activeLang={activeLang}
+                            addButtonLabel={t('admin.hotelForm.addAmenity')}
                             itemLabel={(item, index) =>
                                 (
                                     item.name as
@@ -917,8 +918,7 @@ const AdminHotels = () => {
     const validate = (values: HotelFormValues): Record<string, string> => {
         const errs: Record<string, string> = {};
 
-        // Basic required checks
-        if (!values.name_en) errs.name_en = t('admin.required');
+        // Basic required checks (the editor is French-only)
         if (!values.name_fr) errs.name_fr = t('admin.required');
 
         if (!values.location) errs.location = t('admin.required');

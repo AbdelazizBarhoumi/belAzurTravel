@@ -65,50 +65,34 @@ describe('AdminTours', () => {
     it('shows upload-driven media fields in the add dialog', async () => {
         renderComponent(<AdminTours />);
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
 
         const dialog = await screen.findByRole('dialog');
         expect(dialog).toBeInTheDocument();
         expect(
-            within(dialog).getByText(/main image and gallery\./i),
+            within(dialog).getByText(/images principales et galerie\./i),
         ).toBeInTheDocument();
     });
 
-    it('keeps the tour page language independent from the dialog toggle', async () => {
+    it('renders a French-only dialog without a language toggle', async () => {
         renderComponent(<AdminTours />);
 
         const heading = screen
             .getAllByRole('heading', { level: 1 })
-            .find((node) =>
-                /Tours|Circuit & Excursions/.test(node.textContent ?? ''),
-            );
+            .find((node) => /Circuit & Excursions/.test(node.textContent ?? ''));
 
         expect(heading).toBeDefined();
+        expect(heading?.textContent).toContain('Circuit & Excursions');
 
-        const initialHeading = heading?.textContent ?? 'Tours';
-        const targetButton = initialHeading === 'Tours' ? 'FR' : 'EN';
-        const expectedHeading =
-            initialHeading === 'Tours' ? 'Circuit & Excursions' : 'Tours';
-
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
         const dialog = await screen.findByRole('dialog');
 
-        fireEvent.click(
-            within(dialog).getByRole('button', { name: targetButton }),
-        );
-
         expect(within(dialog).queryByLabelText(/slug/i)).toBeNull();
+        expect(
+            within(dialog).queryByRole('button', { name: /^(fr|en|ar)$/i }),
+        ).toBeNull();
 
-        await waitFor(() => {
-            expect(heading).toBeInTheDocument();
-            expect(
-                screen.getByRole('button', { name: targetButton }),
-            ).toHaveClass('bg-primary');
-        });
-
-        expect(screen.queryByRole('heading', { name: expectedHeading })).toBe(
-            null,
-        );
+        expect(heading).toBeInTheDocument();
     });
 
     it('shows existing gallery images when editing a tour with images payload', async () => {
@@ -156,7 +140,7 @@ describe('AdminTours', () => {
             '/storage/uploads/tours/gallery-1.jpg',
         );
 
-        fireEvent.click(within(dialog).getByRole('button', { name: /save/i }));
+        fireEvent.click(within(dialog).getByRole('button', { name: /enregistrer/i }));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();
@@ -221,7 +205,7 @@ describe('AdminTours', () => {
             }),
         );
 
-        fireEvent.click(within(dialog).getByRole('button', { name: /save/i }));
+        fireEvent.click(within(dialog).getByRole('button', { name: /enregistrer/i }));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();
@@ -242,7 +226,7 @@ describe('AdminTours', () => {
 
         renderComponent(<AdminTours />);
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
         await screen.findByRole('dialog');
 
         fireEvent.change(screen.getByLabelText(/Name \(EN\)/i), {
@@ -294,7 +278,7 @@ describe('AdminTours', () => {
             ).toBe(1);
         });
 
-        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        fireEvent.click(screen.getByRole('button', { name: /enregistrer/i }));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();

@@ -96,7 +96,7 @@ class BookingApprovalFlowTest extends TestCase
             'code' => 'TU712',
             'airline' => ['en' => 'Tunisair', 'fr' => 'Tunisair', 'ar' => 'تونيستار'],
             'from' => 'TUN',
-            'to' => ['en' => 'Jeddah', 'fr' => 'Djeddah', 'ar' => 'جدة'],
+            'to' => 'Jeddah',
             'duration' => ['en' => '4h', 'fr' => '4h', 'ar' => '٤ ساعات'],
             'stops' => [],
             'departure' => '10:00',
@@ -117,8 +117,8 @@ class BookingApprovalFlowTest extends TestCase
                 ->postJson('/api/bookings', [
                     'type' => $type,
                     'item_slug' => $identifier,
-                    'start_date' => '2026-10-01',
-                    'end_date' => '2026-10-03',
+                    'start_date' => now()->addDays(10)->toDateString(),
+                    'end_date' => now()->addDays(12)->toDateString(),
                     'client' => ['name' => 'John Doe', 'email' => 'john@example.com'],
                     'amount' => 500,
                 ])
@@ -306,6 +306,38 @@ class BookingApprovalFlowTest extends TestCase
             $this->admin,
             BookingActivityNotification::class,
             fn ($n) => $n->toDatabase($this->admin)['type'] === 'booking.approved'
+        );
+    }
+
+    public function test_reapproving_an_on_request_provider_booking_finalizes_it_locally(): void
+    {
+        Notification::fake();
+        Http::fake();
+
+        $booking = $this->providerBooking([
+            'status' => 'Approved',
+            'provider_booking_id' => '98765',
+            'provider_booking_reference' => 'VOUCH-98765',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->postJson("/api/admin/bookings/{$booking->id}/approve")
+            ->assertOk();
+
+        $this->assertSame('Confirmed', $response->json('status'));
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'Confirmed']);
+
+        // The supplier already owns the reservation — no second API call.
+        Http::assertNothingSent();
+
+        $this->assertSame(
+            'Confirmed',
+            BookingAudit::query()
+                ->where('booking_id', $booking->id)
+                ->orderByDesc('id')
+                ->first()
+                ->to_status
+                ->value
         );
     }
 

@@ -129,6 +129,48 @@ class BookingOsTravelFlowTest extends TestCase
         ]);
     }
 
+    public function test_provider_hotel_always_prebooks_even_when_flagged_as_request(): void
+    {
+        $this->publishedHotel();
+
+        Http::fake([
+            'https://admin.mygo.co/api/hotel/BookingCreation' => Http::response($this->osTravelFixture('booking_creation_prebook')),
+        ]);
+
+        $response = $this->actingAs($this->client)
+            ->postJson('/api/bookings', $this->hotelBookingPayload([
+                'is_request' => true,
+                // A client-chosen price must never win over the prebook total.
+                'amount' => 1,
+            ]))
+            ->assertStatus(201);
+
+        $this->assertSame('Pending', $response->json('status'));
+        $this->assertSame(1113, $response->json('total_amount'));
+        Http::assertSentCount(1);
+
+        $booking = Booking::query()->find($response->json('id'));
+        $this->assertNotNull($booking->provider_payload['prebook'] ?? null);
+    }
+
+    public function test_provider_hotel_without_token_is_rejected_without_calling_supplier(): void
+    {
+        $this->publishedHotel();
+
+        Http::fake();
+
+        $payload = $this->hotelBookingPayload(['amount' => 1]);
+        unset($payload['provider']['token']);
+
+        $this->actingAs($this->client)
+            ->postJson('/api/bookings', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('provider');
+
+        Http::assertNothingSent();
+        $this->assertDatabaseCount('bookings', 0);
+    }
+
     public function test_hotel_booking_rejects_unknown_or_unpublished_hotel(): void
     {
         Http::fake([

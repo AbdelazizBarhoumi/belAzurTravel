@@ -4,7 +4,7 @@ import type { LandingSectionConfig } from '@/api/siteSettings.api';
 import { HorizontalDeals } from '@/components/sections/HorizontalDeals';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { localizeText } from '@/data';
-import { getAirportDisplayName, getCityNameByIata } from '@/data/airports';
+import { getCityNameByIata } from '@/data/airports';
 import { useFlights } from '@/hooks/usePublicData';
 
 interface Props {

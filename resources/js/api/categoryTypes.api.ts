@@ -34,9 +34,15 @@ export async function fetchCategoryTypes(
     return res.data;
 }
 
+export interface CategoryTypeLabelInput {
+    en: string | null;
+    fr: string;
+    ar: string | null;
+}
+
 export async function createCategoryType(data: {
     entity_type: string;
-    label: { en: string; fr: string; ar: string };
+    label: CategoryTypeLabelInput;
     sort_order?: number;
     filter_style?: FilterStyle;
     multi?: boolean;
@@ -54,7 +60,7 @@ export async function createCategoryType(data: {
 export async function updateCategoryType(
     id: number,
     data: {
-        label: { en: string; fr: string; ar: string };
+        label: CategoryTypeLabelInput;
         sort_order?: number;
         filter_style?: FilterStyle;
         multi?: boolean;

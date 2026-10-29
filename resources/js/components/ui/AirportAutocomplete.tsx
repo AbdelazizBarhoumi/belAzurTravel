@@ -44,10 +44,9 @@ export function AirportAutocomplete({
         : AIRPORTS;
 
     useEffect(() => {
-        if (open) {
-            setSearch('');
-            setTimeout(() => inputRef.current?.focus(), 50);
-        }
+        if (!open) return;
+        const timer = setTimeout(() => inputRef.current?.focus(), 50);
+        return () => clearTimeout(timer);
     }, [open]);
 
     useEffect(() => {
@@ -71,7 +70,10 @@ export function AirportAutocomplete({
             <button
                 type="button"
                 disabled={disabled}
-                onClick={() => setOpen(!open)}
+                onClick={() => {
+                    setSearch('');
+                    setOpen(!open);
+                }}
                 className={cn(
                     'flex h-12 w-full items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 text-left text-sm shadow-sm backdrop-blur-sm transition-colors',
                     'hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20',

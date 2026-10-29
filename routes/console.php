@@ -43,6 +43,13 @@ Schedule::command('bookings:expire')
     ->withoutOverlapping()
     ->onOneServer();
 
+// Close trips that ended: Confirmed → Completed once per day.
+Schedule::command('bookings:complete')
+    ->everyMinute()
+    ->when(ScheduleWindow::daily('bookings:complete', '04:00'))
+    ->withoutOverlapping()
+    ->onOneServer();
+
 Schedule::command('send:trip-reminders')
     ->everyMinute()
     ->when(ScheduleWindow::daily('send:trip-reminders', '09:00'))

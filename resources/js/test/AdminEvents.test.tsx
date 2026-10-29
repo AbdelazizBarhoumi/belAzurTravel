@@ -132,11 +132,11 @@ describe('AdminEvents', () => {
             await screen.findByRole('columnheader', { name: 'Image' }),
         ).toBeInTheDocument();
         expect(
-            await screen.findByRole('columnheader', { name: 'Category' }),
+            await screen.findByRole('columnheader', { name: 'Catégorie' }),
         ).toBeInTheDocument();
         expect(
             await screen.findByRole('img', {
-                name: 'Cherry Blossom Festival',
+                name: 'Festival des fleurs de cerisier',
             }),
         ).toHaveAttribute('src', '/images/event.jpg');
 
@@ -144,18 +144,18 @@ describe('AdminEvents', () => {
         expect(await screen.findByText('cultural')).toBeInTheDocument();
 
         // The header action uses the real translation for "Add".
-        fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
 
-        expect(screen.getAllByText('Category').length).toBeGreaterThan(0);
-        expect(await screen.findByText('About')).toBeInTheDocument();
-        expect(await screen.findByText('Attendees')).toBeInTheDocument();
+        expect(screen.getAllByText('Catégorie').length).toBeGreaterThan(0);
+        expect(await screen.findByText('À propos')).toBeInTheDocument();
+        expect(await screen.findByText('Participants')).toBeInTheDocument();
     });
 
     it('does not send an empty gallery_files field when editing with a new main image', async () => {
         const { container } = renderPage();
 
         await screen.findByRole('img', {
-            name: 'Cherry Blossom Festival',
+            name: 'Festival des fleurs de cerisier',
         });
 
         const editButton = container.querySelector('tbody button');
@@ -163,7 +163,7 @@ describe('AdminEvents', () => {
 
         fireEvent.click(editButton as HTMLElement);
 
-        await screen.findByRole('button', { name: /save/i });
+        await screen.findByRole('button', { name: /enregistrer/i });
 
         const mainImageInput = screen.getByLabelText(
             'Mock main image',
@@ -177,7 +177,7 @@ describe('AdminEvents', () => {
             target: { files: [newMainImage] },
         });
 
-        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        fireEvent.click(screen.getByRole('button', { name: /enregistrer/i }));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalledTimes(1);

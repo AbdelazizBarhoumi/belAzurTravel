@@ -58,7 +58,7 @@ export default function AdminDeals() {
     const isCodeEnabled =
         siteSettings?.config?.navigation?.enabled_dropdowns?.includes('deals');
     const [open, setOpen] = useState(false);
-    const [modalLang, setModalLang] = useState<Lang>('en');
+    const [modalLang, setModalLang] = useState<Lang>('fr');
     const [catManagerOpen, setCatManagerOpen] = useState(false);
     const [editing, setEditing] = useState<AdminRow | null>(null);
     const [pendingDelete, setPendingDelete] = useState<AdminRow | null>(null);
@@ -315,7 +315,7 @@ export default function AdminDeals() {
                                         key: v.key,
                                         label: v.name[activeLang] || v.name.en,
                                     }))}
-                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`]  as string[] : []}
                                     onChange={(val) => setField(`category_${catType.key}`, val)}
                                     placeholder={t('actions.select')}
                                 />

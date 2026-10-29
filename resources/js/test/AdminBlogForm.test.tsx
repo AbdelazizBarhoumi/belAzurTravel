@@ -106,10 +106,10 @@ describe('Admin blog editor', () => {
     it('shows the main image upload control in the add dialog', async () => {
         renderAdminBlogPage();
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
 
         expect(await screen.findByRole('dialog')).toBeInTheDocument();
-        expect(screen.getByLabelText('Main image')).toBeInTheDocument();
+        expect(screen.getByLabelText('Image principale')).toBeInTheDocument();
         await waitFor(() => {
             expect(screen.getByRole('combobox')).toBeInTheDocument();
         });
@@ -140,7 +140,7 @@ describe('Admin blog editor', () => {
         expect(
             await screen.findByAltText('Spring Updates'),
         ).toBeInTheDocument();
-        expect(screen.getByText('Travel')).toBeInTheDocument();
+        expect(screen.getByText('Voyage')).toBeInTheDocument();
     });
 
     it('formats blog dates in the table instead of showing raw ISO timestamps', async () => {
@@ -165,7 +165,7 @@ describe('Admin blog editor', () => {
 
         renderAdminBlogPage();
 
-        expect(await screen.findByText('May 20, 2026')).toBeInTheDocument();
+        expect(await screen.findByText('20 mai 2026')).toBeInTheDocument();
         expect(
             screen.queryByText('2026-05-20T00:00:00.000000Z'),
         ).not.toBeInTheDocument();
@@ -174,7 +174,7 @@ describe('Admin blog editor', () => {
     it.skip('submits an uploaded blog image', async () => {
         renderAdminBlogPage();
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
         await screen.findByRole('dialog');
 
         fireEvent.change(screen.getByLabelText(/Title \(EN\)/i), {
@@ -202,13 +202,13 @@ describe('Admin blog editor', () => {
         const imageFile = new File(['blog-image'], 'blog.jpg', {
             type: 'image/jpeg',
         });
-        fireEvent.change(screen.getByLabelText('Main image'), {
+        fireEvent.change(screen.getByLabelText('Image principale'), {
             target: { files: [imageFile] },
         });
 
         await waitFor(() => {
             expect(
-                (screen.getByLabelText('Main image') as HTMLInputElement).files
+                (screen.getByLabelText('Image principale') as HTMLInputElement).files
                     ?.length,
             ).toBe(1);
         });

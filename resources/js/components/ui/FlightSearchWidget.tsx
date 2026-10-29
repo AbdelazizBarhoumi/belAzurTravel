@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Minus, Plus, Plane, PlaneTakeoff, Search, X } from 'lucide-react';
+import { ArrowLeftRight, Plus, Search, X } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AirportAutocomplete } from '@/components/ui/AirportAutocomplete';
@@ -39,7 +39,6 @@ interface FlightSearchFormState {
 
 interface FlightSearchWidgetProps {
     className?: string;
-    compact?: boolean;
     initialValues?: Partial<FlightSearchFormState>;
     onSearch?: (params: URLSearchParams) => void;
 }
@@ -61,7 +60,6 @@ const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
 export function FlightSearchWidget({
     className,
-    compact = false,
     initialValues,
     onSearch,
 }: FlightSearchWidgetProps) {
@@ -199,7 +197,6 @@ export function FlightSearchWidget({
         [],
     );
 
-    const showRoundTrip = tripType === 'round-trip';
     const showMultiCity = tripType === 'multi-city';
 
     return (

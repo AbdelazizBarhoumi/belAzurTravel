@@ -36,7 +36,6 @@ import {
     getClientDashboard,
     getClientPayments,
     getClientSupport,
-    updateClientLanguage,
     updateClientPassword,
     updateClientProfile,
     type ClientBookingRow,
@@ -152,7 +151,7 @@ const ClientDashboard = () => {
         }
     }, [user]);
 
-    const { lang, t, dir, setLang } = useLanguage();
+    const { lang, t, dir } = useLanguage();
     const queryClient = useQueryClient();
     const { favorites, remove: removeFavorite } = useFavorites();
     const isRtl = dir === 'rtl';
@@ -307,15 +306,6 @@ const ClientDashboard = () => {
         mutationFn: () => deleteClientAccount(deletePassword),
         onSuccess: () => {
             window.location.href = '/';
-        },
-        onError: showError,
-    });
-
-    const langMutation = useMutation({
-        mutationFn: (newLang: string) => updateClientLanguage(newLang),
-        onSuccess: (_, newLang) => {
-            setLang(newLang as Lang);
-            toast.success(t('client.languageUpdated') || 'Language updated.');
         },
         onError: showError,
     });

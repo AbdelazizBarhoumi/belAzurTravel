@@ -100,45 +100,27 @@ describe('Admin deals editor', () => {
 
         renderAdminDealsPage();
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
         await screen.findByRole('dialog');
 
-        fireEvent.change(screen.getByLabelText(/Title/i), {
-            target: { value: 'Summer Deal' },
-        });
-        fireEvent.change(screen.getByLabelText(/Description/i), {
-            target: { value: 'English description' },
-        });
-        fireEvent.change(screen.getByLabelText(/Discount/i), {
-            target: { value: '20%' },
-        });
-        fireEvent.change(screen.getByLabelText(/Expires/i), {
-            target: { value: '2026-06-30' },
-        });
-
-        fireEvent.click(screen.getByRole('combobox'));
-        fireEvent.click(await screen.findByRole('option', { name: 'Summer' }));
-
-        fireEvent.click(screen.getByRole('button', { name: 'FR' }));
-        fireEvent.change(screen.getByLabelText(/Title/i), {
+        fireEvent.change(screen.getByLabelText(/Titre/i), {
             target: { value: 'Offre d’été' },
         });
         fireEvent.change(screen.getByLabelText(/Description/i), {
             target: { value: 'Description française' },
         });
-
-        fireEvent.click(screen.getByRole('button', { name: 'AR' }));
-        fireEvent.change(screen.getByLabelText(/Title/i), {
-            target: { value: 'عرض الصيف' },
+        fireEvent.change(screen.getByLabelText(/Remise/i), {
+            target: { value: '20' },
         });
-        fireEvent.change(screen.getByLabelText(/Description/i), {
-            target: { value: 'وصف عربي' },
+        fireEvent.change(screen.getByLabelText(/Expiration/i), {
+            target: { value: '2026-06-30' },
         });
 
-        fireEvent.click(screen.getByRole('button', { name: 'EN' }));
+        fireEvent.click(screen.getByRole('combobox'));
+        fireEvent.click(await screen.findByRole('option', { name: 'Été' }));
 
         const dialog = await screen.findByRole('dialog');
-        fireEvent.click(within(dialog).getByText(/Save/i));
+        fireEvent.click(within(dialog).getByText(/Enregistrer/i));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();
@@ -149,13 +131,9 @@ describe('Admin deals editor', () => {
         expect(entityType).toBe('deals');
         expect(payload).toEqual(
             expect.objectContaining({
-                title_en: 'Summer Deal',
                 title_fr: 'Offre d’été',
-                title_ar: 'عرض الصيف',
-                description_en: 'English description',
                 description_fr: 'Description française',
-                description_ar: 'وصف عربي',
-                discount_en: '20%',
+                discount_en: '20',
                 expires_en: '2026-06-30',
                 category_key: 'summer',
                 category: 'summer',
@@ -188,12 +166,12 @@ describe('Admin deals editor', () => {
 
         renderAdminDealsPage();
 
-        fireEvent.click(await screen.findByRole('button', { name: /edit/i }));
+        fireEvent.click(await screen.findByRole('button', { name: /modifier/i }));
         await screen.findByRole('dialog');
 
-        expect(screen.getByRole('combobox')).toHaveTextContent('Summer');
+        expect(screen.getByRole('combobox')).toHaveTextContent('Été');
 
-        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        fireEvent.click(screen.getByRole('button', { name: /enregistrer/i }));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();

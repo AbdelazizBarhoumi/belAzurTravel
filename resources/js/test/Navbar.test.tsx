@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -153,6 +154,24 @@ vi.mock('@/hooks/useSiteSettings', () => ({
     useSiteSettings: () => mockUseSiteSettings(),
 }));
 
+function renderNavbar() {
+    const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+    });
+
+    return render(
+        <QueryClientProvider client={queryClient}>
+            <LanguageProvider>
+                <FavoritesProvider>
+                    <MemoryRouter>
+                        <Navbar />
+                    </MemoryRouter>
+                </FavoritesProvider>
+            </LanguageProvider>
+        </QueryClientProvider>,
+    );
+}
+
 describe('Navbar', () => {
     beforeEach(() => {
         document.documentElement.innerHTML = '';
@@ -161,15 +180,7 @@ describe('Navbar', () => {
     });
 
     it('renders top nav entries when enabled', async () => {
-        render(
-            <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>
-                        <Navbar />
-                    </MemoryRouter>
-                </FavoritesProvider>
-            </LanguageProvider>,
-        );
+        renderNavbar();
 
         await waitFor(() =>
             expect(document.querySelector('a[href="/tours"]')).toBeTruthy(),
@@ -241,15 +252,7 @@ describe('Navbar', () => {
             loading: false,
         });
 
-        render(
-            <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>
-                        <Navbar />
-                    </MemoryRouter>
-                </FavoritesProvider>
-            </LanguageProvider>,
-        );
+        renderNavbar();
 
         const button = await waitFor(() =>
             Array.from(document.querySelectorAll('button')).find((b) =>
@@ -323,15 +326,7 @@ describe('Navbar', () => {
             loading: false,
         });
 
-        render(
-            <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>
-                        <Navbar />
-                    </MemoryRouter>
-                </FavoritesProvider>
-            </LanguageProvider>,
-        );
+        renderNavbar();
 
         const button = await waitFor(() =>
             Array.from(document.querySelectorAll('button')).find((b) =>
@@ -397,15 +392,7 @@ describe('Navbar', () => {
             ]),
         );
 
-        render(
-            <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>
-                        <Navbar />
-                    </MemoryRouter>
-                </FavoritesProvider>
-            </LanguageProvider>,
-        );
+        renderNavbar();
 
         const hoverTrigger = (text: string) => {
             const trigger = Array.from(
@@ -466,32 +453,23 @@ describe('Navbar', () => {
             ]),
         );
 
-        render(
-            <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>
-                        <Navbar />
-                    </MemoryRouter>
-                </FavoritesProvider>
-            </LanguageProvider>,
-        );
+        renderNavbar();
 
         await waitFor(() => {
             const trigger = Array.from(
                 document.querySelectorAll('a, button'),
-            ).find((el) => el.textContent?.trim() === 'الجولات');
+            ).find((el) => el.textContent?.trim() === 'Circuit & Excursions');
             if (trigger) fireEvent.mouseEnter(trigger);
         });
 
         await waitFor(() => {
             const link = Array.from(document.querySelectorAll('a')).find(
                 (anchor) =>
-                    anchor.getAttribute('href') ===
-                    '/tours?q=%D8%B5%D9%8A%D9%81',
+                    anchor.getAttribute('href') === '/tours?q=%C3%89t%C3%A9',
             );
             expect(link).toBeTruthy();
             expect(link?.getAttribute('href')).toBe(
-                '/tours?q=%D8%B5%D9%8A%D9%81',
+                '/tours?q=%C3%89t%C3%A9',
             );
         });
     });
@@ -518,15 +496,7 @@ describe('Navbar', () => {
             ]),
         );
 
-        render(
-            <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>
-                        <Navbar />
-                    </MemoryRouter>
-                </FavoritesProvider>
-            </LanguageProvider>,
-        );
+        renderNavbar();
 
         await waitFor(() => {
             const trigger = Array.from(
@@ -547,15 +517,7 @@ describe('Navbar', () => {
     });
 
     it('always renders the favorites heart button', async () => {
-        render(
-            <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>
-                        <Navbar />
-                    </MemoryRouter>
-                </FavoritesProvider>
-            </LanguageProvider>,
-        );
+        renderNavbar();
 
         await waitFor(() =>
             expect(document.querySelector('a[href="/favorites"]')).toBeTruthy(),
@@ -592,15 +554,7 @@ describe('Navbar', () => {
             ]),
         );
 
-        render(
-            <LanguageProvider>
-                <FavoritesProvider>
-                    <MemoryRouter>
-                        <Navbar />
-                    </MemoryRouter>
-                </FavoritesProvider>
-            </LanguageProvider>,
-        );
+        renderNavbar();
 
         await waitFor(() =>
             expect(document.querySelector('a[href="/tours"]')).toBeNull(),

@@ -19,9 +19,15 @@ export async function fetchCategories(type?: string): Promise<Category[]> {
     return res.data;
 }
 
+export interface CategoryNameInput {
+    en: string | null;
+    fr: string;
+    ar: string | null;
+}
+
 export async function createCategory(data: {
     entity_type: string;
-    name: Category['name'];
+    name: CategoryNameInput;
 }): Promise<Category> {
     const res = await apiFetch<{ data: Category }>('/api/admin/categories', {
         method: 'POST',
@@ -32,7 +38,7 @@ export async function createCategory(data: {
 
 export async function updateCategory(
     id: number,
-    name: Category['name'],
+    name: CategoryNameInput,
 ): Promise<Category> {
     const res = await apiFetch<{ data: Category }>(
         `/api/admin/categories/${id}`,

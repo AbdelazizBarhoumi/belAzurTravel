@@ -758,7 +758,7 @@ const AdminTours = () => {
                                         key: v.key,
                                         label: v.name[activeLang] || v.name.en,
                                     }))}
-                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`] : []}
+                                    value={Array.isArray(values[`category_${catType.key}`]) ? values[`category_${catType.key}`]  as string[] : []}
                                     onChange={(val) => setField(`category_${catType.key}`, val)}
                                     placeholder={t('actions.select')}
                                 />

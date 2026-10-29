@@ -113,30 +113,32 @@ describe('AdminHotels', () => {
     });
 
     it('opens a sectioned hotel dialog with a shared category selector', async () => {
-        localStorage.setItem('lang', 'en');
         renderPage();
 
-        fireEvent.click(screen.getByRole('button', { name: /^add$/i }));
+        fireEvent.click(screen.getByRole('button', { name: /^ajouter$/i }));
 
-        expect(await screen.findByText('Hotel details')).toBeInTheDocument();
         expect(
-            screen.getAllByRole('button', { name: 'EN' }).length,
-        ).toBeGreaterThan(0);
-        expect(
-            screen.getAllByRole('button', { name: 'FR' }).length,
-        ).toBeGreaterThan(0);
-        expect(
-            screen.getAllByRole('button', { name: 'AR' }).length,
-        ).toBeGreaterThan(0);
-        expect(screen.getAllByText('Name').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Location').length).toBeGreaterThan(0);
+            await screen.findByText("Détails de l’hôtel"),
+        ).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'EN' })).toBeNull();
+        expect(screen.queryByRole('button', { name: 'AR' })).toBeNull();
+        expect(screen.getAllByText('Nom').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Localisation').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Description').length).toBeGreaterThan(0);
-        expect(screen.getByText('Pricing and structure')).toBeInTheDocument();
-        expect(screen.getByText('Media')).toBeInTheDocument();
-        expect(screen.getByText('Hotel Amenities')).toBeInTheDocument();
-        expect(screen.getByText('Hotel Rooms')).toBeInTheDocument();
-        fireEvent.click(screen.getByRole('button', { name: /add item/i }));
-        fireEvent.click(screen.getByRole('button', { name: /add room/i }));
+        expect(
+            screen.getByText('Tarification et structure'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Médias')).toBeInTheDocument();
+        expect(
+            screen.getByText("Équipements de l’hôtel"),
+        ).toBeInTheDocument();
+        expect(screen.getByText("Chambres de l’hôtel")).toBeInTheDocument();
+        fireEvent.click(
+            screen.getByRole('button', { name: /ajouter un équipement/i }),
+        );
+        fireEvent.click(
+            screen.getByRole('button', { name: /ajouter une chambre/i }),
+        );
 
         const dialogs = screen.getAllByRole('dialog');
         const dialog =
@@ -150,15 +152,13 @@ describe('AdminHotels', () => {
             0,
         );
 
-        fireEvent.click(screen.getByRole('button', { name: /^fr$/i }));
-
-        expect(screen.getByText('Amenity Name')).toBeInTheDocument();
-        expect(screen.getByText('Room Name')).toBeInTheDocument();
-        expect(screen.getByText('Capacity')).toBeInTheDocument();
-        expect(screen.getByText('Size (sqm)')).toBeInTheDocument();
-        expect(screen.getAllByText('Stars').length).toBeGreaterThan(0);
+        expect(screen.getByText("Nom de l’équipement")).toBeInTheDocument();
+        expect(screen.getByText('Nom de la chambre')).toBeInTheDocument();
+        expect(screen.getByText('Capacité')).toBeInTheDocument();
+        expect(screen.getByText('Taille (m²)')).toBeInTheDocument();
+        expect(screen.getAllByText('Étoiles').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Image').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Gallery').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Galerie').length).toBeGreaterThan(0);
     });
 
     it('prefills the saved category when reopening an existing hotel', async () => {
@@ -205,11 +205,13 @@ describe('AdminHotels', () => {
         await screen.findByText('Sunset Paradise Resort');
         await waitFor(() => {
             expect(
-                screen.getAllByRole('button', { name: /edit/i }).length,
+                screen.getAllByRole('button', { name: /modifier/i }).length,
             ).toBeGreaterThan(0);
         });
 
-        fireEvent.click(screen.getAllByRole('button', { name: /edit/i })[0]);
+        fireEvent.click(
+            screen.getAllByRole('button', { name: /modifier/i })[0],
+        );
 
         const dialogs = await screen.findAllByRole('dialog');
         const dialog =
@@ -220,13 +222,15 @@ describe('AdminHotels', () => {
             ) || dialogs[0];
         expect(dialog).not.toBeNull();
 
-        expect(within(dialog).getAllByText('Beach').length).toBeGreaterThan(0);
+        expect(within(dialog).getAllByText('Plage').length).toBeGreaterThan(0);
     });
 
     it('keeps invalid submissions open and clears validation state on close', async () => {
         renderPage();
 
-        fireEvent.click(screen.getAllByRole('button', { name: /^add$/i })[0]);
+        fireEvent.click(
+            screen.getAllByRole('button', { name: /^ajouter$/i })[0],
+        );
 
         expect(screen.getAllByRole('dialog').length).toBeGreaterThan(0);
 
@@ -237,14 +241,16 @@ describe('AdminHotels', () => {
                     'pointer-events: auto',
                 ),
             ) || dialogs[0];
-        const nameInput = dialog.querySelector('#name_en');
+        const nameInput = dialog.querySelector('#name_fr');
         expect(nameInput).not.toBeNull();
 
         fireEvent.change(nameInput as HTMLInputElement, {
             target: { value: 'Harbor Hotel' },
         });
 
-        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        fireEvent.click(
+            screen.getByRole('button', { name: /enregistrer/i }),
+        );
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledTimes(1);
@@ -253,46 +259,19 @@ describe('AdminHotels', () => {
         expect(adminApi.saveAdminEntity).not.toHaveBeenCalled();
         expect(screen.getAllByRole('dialog').length).toBeGreaterThan(0);
         expect((nameInput as HTMLInputElement).value).toBe('Harbor Hotel');
-        // language toggle exists in dialog (scoped check)
-        expect(
-            within(dialog).getByRole('button', { name: /FR/i }),
-        ).toBeTruthy();
+        // the French-only dialog has no language toggle
+        expect(within(dialog).queryByRole('button', { name: 'EN' })).toBeNull();
+        expect(within(dialog).queryByRole('button', { name: 'AR' })).toBeNull();
 
-        fireEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
-    });
-
-    it('updates the dialog language toggle state', async () => {
-        localStorage.setItem('lang', 'en');
-        renderPage();
-
-        const heading = screen
-            .getAllByRole('heading', { level: 1 })
-            .find((node) => /Hotels|Hôtels/.test(node.textContent ?? ''));
-
-        expect(heading).toBeDefined();
-
-        const initialHeading = heading?.textContent ?? 'Hotels';
-        const targetButton = initialHeading === 'Hotels' ? 'FR' : 'EN';
-        const _expectedHeading =
-            initialHeading === 'Hotels' ? 'Hôtels' : 'Hotels';
-
-        fireEvent.click(screen.getAllByRole('button', { name: /^add$/i })[0]);
-        expect(screen.getAllByRole('dialog').length).toBeGreaterThan(0);
-
-        fireEvent.click(screen.getByRole('button', { name: targetButton }));
-
-        await waitFor(() => {
-            expect(heading).toHaveTextContent(initialHeading);
-            expect(
-                screen.getByRole('button', { name: targetButton }),
-            ).toHaveClass('bg-primary');
-        });
+        fireEvent.click(screen.getByRole('button', { name: /^annuler$/i }));
     });
 
     it('drops blank room drafts before saving a hotel', async () => {
         renderPage();
 
-        fireEvent.click(screen.getAllByRole('button', { name: /^add$/i })[0]);
+        fireEvent.click(
+            screen.getAllByRole('button', { name: /^ajouter$/i })[0],
+        );
 
         const dialogs = await screen.findAllByRole('dialog');
         const dialog =
@@ -310,41 +289,8 @@ describe('AdminHotels', () => {
             });
         };
 
-        const fillLanguage = async (
-            lang: 'en' | 'fr' | 'ar',
-            values: Record<string, string>,
-        ) => {
-            fireEvent.click(
-                within(dialog).getByRole('button', {
-                    name: new RegExp(`^${lang}$`, 'i'),
-                }),
-            );
-
-            await waitFor(() => {
-                expect(
-                    within(dialog).getByRole('button', {
-                        name: new RegExp(`^${lang}$`, 'i'),
-                    }),
-                ).toHaveClass('bg-primary');
-            });
-
-            Object.entries(values).forEach(([field, value]) => {
-                fill(`${field}_${lang}`, value);
-            });
-        };
-
-        await fillLanguage('ar', {
-            name: 'Harbor Hotel',
-            description: 'Demo hotel',
-        });
-        await fillLanguage('fr', {
-            name: 'Harbor Hotel',
-            description: 'Demo hotel',
-        });
-        await fillLanguage('en', {
-            name: 'Harbor Hotel',
-            description: 'Demo hotel',
-        });
+        fill('name_fr', 'Harbor Hotel');
+        fill('description_fr', 'Demo hotel');
         fill('price', '200');
 
         // Location is a combobox backed by Radix Popover + Command.
@@ -358,23 +304,27 @@ describe('AdminHotels', () => {
         });
         fireEvent.click(countryOption);
         const cityOption = await screen.findByRole('option', {
-            name: 'Lisbon, Portugal',
+            name: 'Lisbonne, Portugal',
         });
         fireEvent.click(cityOption);
 
-        // Category is a Radix Select; pick "Beach" to satisfy validation.
+        // Category is a Radix Select; pick "Plage" to satisfy validation.
         const categoryTrigger = within(dialog)
             .getAllByRole('combobox')
-            .find((el) => (el.textContent ?? '').includes('Select'));
+            .find((el) => (el.textContent ?? '').includes('Sélectionner'));
         expect(categoryTrigger).toBeDefined();
         fireEvent.click(categoryTrigger as HTMLElement);
         const beachOption = await screen.findByRole('option', {
-            name: 'Beach',
+            name: 'Plage',
         });
         fireEvent.click(beachOption);
 
-        fireEvent.click(screen.getByRole('button', { name: /add room/i }));
-        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        fireEvent.click(
+            screen.getByRole('button', { name: /ajouter une chambre/i }),
+        );
+        fireEvent.click(
+            screen.getByRole('button', { name: /enregistrer/i }),
+        );
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalledTimes(1);

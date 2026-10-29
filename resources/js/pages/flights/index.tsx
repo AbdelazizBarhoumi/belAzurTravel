@@ -47,7 +47,6 @@ function FlightsContent() {
     const initialToDate = params.get('returnDate') || params.get('to') || '';
     const initialDirectOnly = params.get('directOnly') === '1';
     const initialBaggageIncluded = params.get('baggageIncluded') === '1';
-    const initialFlexibility = (params.get('flexibility') || 'exact') as 'exact' | '±1' | '±2' | '±3';
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [selectedAirline, setSelectedAirline] = useState(initialAirline);
     const [selectedStops, setSelectedStops] = useState(ALL);
@@ -62,7 +61,6 @@ function FlightsContent() {
     const [toDate, setToDate] = useState(initialToDate);
     const [directOnly, setDirectOnly] = useState(initialDirectOnly);
     const [baggageIncluded, setBaggageIncluded] = useState(initialBaggageIncluded);
-    const [flexibility, setFlexibility] = useState(initialFlexibility);
 
     const airlineOptions = useMemo(
         () =>

@@ -109,7 +109,7 @@ describe('BookingDialog passenger form', () => {
 
         // 2 adults + 1 child = 3 numbered passenger rows.
         expect(
-            await screen.findAllByText(/Passager\s+\d|Passenger\s+\d/),
+            await screen.findAllByText(/Invité\s+\d|Guest\s+\d/),
         ).toHaveLength(3);
         expect(screen.getAllByLabelText(/Prénom|First name/).length).toBe(3);
 

@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\BookingAction;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\BookingAudit;
 use App\Models\Payment;
 use App\Models\User;
 use App\Notifications\BookingActivityNotification;
@@ -38,7 +36,7 @@ class PaymentController extends Controller
         );
 
         abort_if(
-            $booking->status !== 'Pending',
+            ! in_array($booking->status, ['Pending', 'Approved'], true),
             422,
             'This booking cannot be paid for.',
         );
@@ -108,9 +106,11 @@ class PaymentController extends Controller
             }
 
             if ($verification['status'] === 'completed') {
-                // AMOUNT VERIFICATION: Ensure paid amount matches booking amount
-                $paidAmount = $verification['amount'];
-                $expectedAmount = $booking->total_amount;
+                // AMOUNT VERIFICATION: Ensure paid amount matches booking amount.
+                // Compare in cents — the gateway returns a float and the column
+                // is an integer, so a strict `!==` would flag every payment.
+                $paidAmount = (int) round(((float) $verification['amount']) * 100);
+                $expectedAmount = (int) round(((float) $booking->total_amount) * 100);
 
                 if ($paidAmount !== $expectedAmount) {
                     Log::warning('ClictoPay callback: amount mismatch', [
@@ -131,19 +131,24 @@ class PaymentController extends Controller
                     'reference' => $orderId,
                 ]);
 
-                $booking->update([
-                    'status' => 'Confirmed',
-                    'confirmed_at' => now(),
-                    'cancelled_at' => null,
-                ]);
+                // Payment successful — drive the state machine so the audit
+                // records the real `from` status (Pending → Approved →
+                // Confirmed) instead of a bogus Confirmed → Confirmed entry.
+                if ($booking->statusEnum() === BookingStatus::Pending) {
+                    $booking->transitionTo(
+                        BookingStatus::Approved,
+                        notes: 'Payment received via gateway',
+                    );
+                    $booking->refresh();
+                }
 
-                BookingAudit::log(
-                    booking: $booking,
-                    action: BookingAction::Confirmed,
-                    from: $booking->statusEnum(),
-                    to: BookingStatus::Confirmed,
-                    notes: 'Payment confirmed via gateway',
-                );
+                if ($booking->statusEnum() === BookingStatus::Approved) {
+                    $booking->transitionTo(
+                        BookingStatus::Confirmed,
+                        notes: 'Payment confirmed via gateway',
+                    );
+                    $booking->refresh();
+                }
 
                 // OS-TRAVEL hotel: Confirm the reservation with the provider
                 // now that payment succeeded, using the stored Phase 9 context.
@@ -220,7 +225,7 @@ class PaymentController extends Controller
         );
 
         abort_if(
-            $booking->status !== 'Pending',
+            ! in_array($booking->status, ['Pending', 'Approved'], true),
             422,
             'This booking cannot be paid for.',
         );

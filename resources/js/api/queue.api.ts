@@ -1,3 +1,4 @@
+import type { AdminBookingRow } from './booking.api';
 import { apiFetch } from './http';
 
 /** Contact details resolved server-side for a client (snapshot + account). */
@@ -23,26 +24,16 @@ export interface QueueAudit {
     created_at: string;
 }
 
-export interface QueueBooking {
-    id: string;
-    booking_ref: number;
-    user_id: number | null;
-    type: string;
-    items: unknown[];
-    start_date?: string | null;
-    end_date?: string | null;
+export interface QueueBooking
+    extends Omit<AdminBookingRow, 'client' | 'status'> {
     client?: {
         name?: string;
         email?: string;
         phone?: string;
     } | null;
     client_contact?: QueueClientContact | null;
-    total_amount: number;
+    /** The queue only ever contains items that still need a decision. */
     status: 'Pending' | 'Approved';
-    created_at: string;
-    expires_at?: string | null;
-    reject_reason?: string | null;
-    cancel_reason?: string | null;
     provider_booking_id?: string | null;
     provider_booking_reference?: string | null;
     provider_prebook?: {

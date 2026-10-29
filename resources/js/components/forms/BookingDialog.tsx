@@ -702,6 +702,13 @@ export function BookingDialog({
                                 </div>
                             </div>
 
+                            {lockDates && (
+                                <p className="text-xs text-muted-foreground">
+                                    {t('booking.datesLocked') ||
+                                        'Dates locked to the searched offer'}
+                                </p>
+                            )}
+
                             {isRequest && (
                                 <div className="rounded-2xl border border-amber-300/50 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                                     {t('booking.requestNotice') ||

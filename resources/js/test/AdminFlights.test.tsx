@@ -61,24 +61,24 @@ describe('AdminFlights page', () => {
     it('exposes full flight sections in the add dialog', async () => {
         renderAdminFlights();
 
-        fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }));
 
         expect(
             (
                 await screen.findAllByText(
                     (content) =>
-                        content.includes('Airline') ||
+                        content.includes('Compagnie') ||
                         content.includes('Compagnie'),
                 )
             ).length,
         ).toBeGreaterThan(0);
-        expect(screen.getByText('Route and airline')).toBeInTheDocument();
-        expect(screen.getByText('Schedule')).toBeInTheDocument();
+        expect(screen.getByText('Itinéraire et compagnie aérienne')).toBeInTheDocument();
+        expect(screen.getByText('Programme')).toBeInTheDocument();
         expect(
-            screen.getByText('Cabin and service details'),
+            screen.getByText('Détails de la cabine et des services'),
         ).toBeInTheDocument();
         expect(
-            screen.getAllByText((content) => content.includes('Airline'))
+            screen.getAllByText((content) => content.includes('Compagnie'))
                 .length,
         ).toBeGreaterThan(0);
         expect(
@@ -86,29 +86,29 @@ describe('AdminFlights page', () => {
                 .length,
         ).toBeGreaterThan(0);
         expect(
-            screen.getAllByText((content) => content.includes('Duration'))
+            screen.getAllByText((content) => content.includes('Durée'))
                 .length,
         ).toBeGreaterThan(0);
         expect(
-            screen.getAllByText((content) => content.includes('Stops')).length,
+            screen.getAllByText((content) => content.includes('Escales')).length,
         ).toBeGreaterThan(0);
-        expect(screen.getByText('Departure time')).toBeInTheDocument();
-        expect(screen.getByText('Arrival time')).toBeInTheDocument();
-        expect(screen.getByText('Travel date')).toBeInTheDocument();
-        expect(screen.getByText('Seats')).toBeInTheDocument();
+        expect(screen.getByText('Heure de départ')).toBeInTheDocument();
+        expect(screen.getByText("Heure d'arrivée")).toBeInTheDocument();
+        expect(screen.getByText('Date du voyage')).toBeInTheDocument();
+        expect(screen.getByText('Sièges')).toBeInTheDocument();
         expect(
-            screen.getAllByText((content) => content.includes('Cabin')).length,
+            screen.getAllByText((content) => content.includes('Cabine')).length,
         ).toBeGreaterThan(0);
         expect(
-            screen.getAllByText((content) => content.includes('Aircraft'))
+            screen.getAllByText((content) => content.includes('Avion'))
                 .length,
         ).toBeGreaterThan(0);
         expect(
-            screen.getAllByText((content) => content.includes('Baggage'))
+            screen.getAllByText((content) => content.includes('Bagages'))
                 .length,
         ).toBeGreaterThan(0);
         expect(
-            screen.getAllByText((content) => content.includes('Refund')).length,
+            screen.getAllByText((content) => content.includes('Remboursement')).length,
         ).toBeGreaterThan(0);
     });
 
@@ -130,11 +130,7 @@ describe('AdminFlights page', () => {
                 to_en: 'Paris',
                 to_fr: 'Paris',
                 to_ar: 'باريس',
-                to: {
-                    en: 'Paris',
-                    fr: 'Paris',
-                    ar: 'باريس',
-                },
+                to: 'CDG',
                 duration_en: '7h 30m',
                 duration_fr: '7h 30m',
                 duration_ar: '٧ ساعات و ٣٠ دقيقة',
@@ -213,7 +209,7 @@ describe('AdminFlights page', () => {
         fireEvent.click(within(row as HTMLElement).getAllByRole('button')[0]);
         await screen.findByRole('dialog');
 
-        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        fireEvent.click(screen.getByRole('button', { name: /enregistrer/i }));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();
@@ -247,11 +243,7 @@ describe('AdminFlights page', () => {
                 to_en: 'Dubai',
                 to_fr: 'Dubaï',
                 to_ar: 'دبي',
-                to: {
-                    en: 'Dubai',
-                    fr: 'Dubaï',
-                    ar: 'دبي',
-                },
+                to: 'DXB',
                 duration_en: '6h 15m',
                 duration_fr: '6h 15m',
                 duration_ar: '٦ ساعات و ١٥ دقيقة',
@@ -330,7 +322,7 @@ describe('AdminFlights page', () => {
         fireEvent.click(within(row as HTMLElement).getAllByRole('button')[0]);
         await screen.findByRole('dialog');
 
-        fireEvent.click(screen.getByRole('button', { name: /save/i }));
+        fireEvent.click(screen.getByRole('button', { name: /enregistrer/i }));
 
         await waitFor(() => {
             expect(adminApi.saveAdminEntity).toHaveBeenCalled();
@@ -343,6 +335,7 @@ describe('AdminFlights page', () => {
             expect.objectContaining({
                 airline_en: 'Airline Two',
                 to_en: 'Dubai',
+                to: 'DXB',
                 duration_en: '6h 15m',
                 stops_en: 'Nonstop',
                 cabin_en: 'Economy+',
@@ -353,7 +346,6 @@ describe('AdminFlights page', () => {
         );
 
         expect(payload).not.toHaveProperty('airline');
-        expect(payload).not.toHaveProperty('to');
         expect(payload).not.toHaveProperty('duration');
         expect(payload).not.toHaveProperty('stops');
         expect(payload).not.toHaveProperty('cabin');

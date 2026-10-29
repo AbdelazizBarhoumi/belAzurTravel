@@ -186,20 +186,27 @@ class BookingController extends Controller
         // `request` modes wait for an admin to approve.
         $providerContext = null;
         $prebookTotal = null;
+        $prebookOnRequest = false;
 
-        if ($data['type'] === 'hotel' && empty($data['is_request'])) {
+        if ($data['type'] === 'hotel') {
             $hotel = Hotel::query()
                 ->where(fn (Builder $query) => $query
                     ->where('slug', $data['item_slug'] ?? '')
                     ->orWhere('code', $data['item_id'] ?? ''))
                 ->first();
 
-            // A provider-backed hotel uses the OS-TRAVEL flow (even when the
-            // `source` column was never set). Only genuinely manual hotels —
-            // no published staging row — skip the provider entirely.
-            if ($hotel !== null && ! $hotel->isProviderLinked()) {
-                // Manual hotel: nothing to prebook; stays pending for approval.
-            } elseif ($hotel !== null && ! empty($data['provider']['token'])) {
+            // A provider-backed hotel must always go through OS-TRAVEL — a
+            // client-sent `amount` or `is_request` flag can never bypass the
+            // supplier and have the reservation confirmed at a made-up price.
+            // Only genuinely manual hotels (no published staging row) are
+            // priced locally and confirmed by an admin.
+            if ($hotel !== null && $hotel->isProviderLinked()) {
+                if (empty($data['provider']['token'])) {
+                    throw ValidationException::withMessages([
+                        'provider' => __('messages.hotel_not_available'),
+                    ]);
+                }
+
                 $staged = OsTravelHotel::query()
                     ->whereNotNull('hotel_id')
                     ->where('hotel_id', $hotel->id)
@@ -228,13 +235,20 @@ class BookingController extends Controller
                     ]);
                 }
 
+                if (($prebook['total'] ?? 0) <= 0) {
+                    throw ValidationException::withMessages([
+                        'provider' => __('messages.booking_prebook_failed'),
+                    ]);
+                }
+
                 $providerContext = [
                     'request' => $hotelBooking,
                     'prebook' => $prebook,
                 ];
-                $prebookTotal = $prebook['total'] > 0
-                    ? (int) round($prebook['total'] * (1 + ($hotel->markup_percentage ? (float) $hotel->markup_percentage : 0) / 100))
-                    : null;
+                $prebookTotal = (int) round(
+                    $prebook['total'] * (1 + ($hotel->markup_percentage ? (float) $hotel->markup_percentage : 0) / 100)
+                );
+                $prebookOnRequest = (bool) ($prebook['breakdown']['on_request'] ?? false);
             }
         }
 
@@ -259,7 +273,9 @@ class BookingController extends Controller
             'total_amount' => $prebookTotal ?? $this->catalogTotal($bookable, $data),
             'status' => BookingStatus::Pending->value,
             'expires_at' => now()->addHours($expiryHours),
-            'is_request' => ! empty($data['is_request']),
+            // `is_request` is the client's "quote me" intent for manual items,
+            // or the supplier's OnRequest answer for provider hotels.
+            'is_request' => ! empty($data['is_request']) || $prebookOnRequest,
             'provider_payload' => $providerContext,
             'details' => $data['details'] ?? null,
         ];
@@ -392,25 +408,40 @@ class BookingController extends Controller
         if ($isProviderBooking) {
             $hotelBooking = $this->osTravelBookingService->providerContextFromPayload($booking);
 
+            // The supplier already holds this reservation (typically an
+            // OnRequest that was accepted out-of-band). Finalize locally
+            // instead of re-calling confirm(), which would be a no-op.
+            if ($booking->provider_booking_id) {
+                if ($booking->statusEnum() === BookingStatus::Pending) {
+                    $booking->transitionTo(BookingStatus::Approved, $actor, 'Approved');
+                    $booking->refresh();
+                }
+
+                $booking->transitionTo(BookingStatus::Confirmed, $actor, 'Provider reservation finalized');
+
+                $this->notifyOperations($booking->refresh(), 'booking.confirmed');
+                $this->notifyClient($booking);
+
+                return response()->json($this->payload($booking->refresh()));
+            }
+
             // Re-verify the offer token before confirming; a stale token means
             // the client must re-search.
-            if (! $booking->provider_booking_id) {
-                try {
-                    $this->osTravelBookingService->preBook($hotelBooking);
-                } catch (Throwable $e) {
-                    BookingAudit::log(
-                        booking: $booking,
-                        action: BookingAction::Updated,
-                        from: $booking->statusEnum(),
-                        to: $booking->statusEnum(),
-                        actor: $actor,
-                        notes: 'Provider prebook failed — offer expired, client must re-search.',
-                    );
+            try {
+                $this->osTravelBookingService->preBook($hotelBooking);
+            } catch (Throwable $e) {
+                BookingAudit::log(
+                    booking: $booking,
+                    action: BookingAction::Updated,
+                    from: $booking->statusEnum(),
+                    to: $booking->statusEnum(),
+                    actor: $actor,
+                    notes: 'Provider prebook failed — offer expired, client must re-search.',
+                );
 
-                    throw ValidationException::withMessages([
-                        'provider' => __('messages.booking_offer_expired'),
-                    ]);
-                }
+                throw ValidationException::withMessages([
+                    'provider' => __('messages.booking_offer_expired'),
+                ]);
             }
 
             try {
@@ -424,6 +455,8 @@ class BookingController extends Controller
             $booking->refresh();
 
             if ($result['status'] === 'Confirmed') {
+                $this->syncProviderTotal($booking, (float) ($result['breakdown']['total'] ?? 0));
+
                 $from = $booking->statusEnum();
                 if ($from === BookingStatus::Pending) {
                     $booking->transitionTo(BookingStatus::Approved, $actor, 'Approved');
@@ -518,6 +551,30 @@ class BookingController extends Controller
         abort_unless($item !== null, 422, __('messages.selected_item_missing'));
 
         return $item;
+    }
+
+    /**
+     * Align the stored total with the provider's confirmed price (plus the
+     * hotel markup) so the client is charged what the supplier actually
+     * confirmed, not the prebook estimate.
+     */
+    private function syncProviderTotal(Booking $booking, float $confirmedTotal): void
+    {
+        if ($confirmedTotal <= 0) {
+            return;
+        }
+
+        $markup = 0.0;
+        if ($booking->item_slug) {
+            $hotel = Hotel::query()->where('slug', $booking->item_slug)->first();
+            $markup = $hotel?->markup_percentage ? (float) $hotel->markup_percentage : 0.0;
+        }
+
+        $expected = (int) round($confirmedTotal * (1 + $markup / 100));
+
+        if ($expected > 0 && $expected !== (int) $booking->total_amount) {
+            $booking->update(['total_amount' => $expected]);
+        }
     }
 
     /**
@@ -638,6 +695,26 @@ class BookingController extends Controller
             'can_cancel' => in_array($booking->status, ['Pending', 'Approved', 'Confirmed'], true)
                 && (! $booking->start_date || now()->lt(Carbon::parse($booking->start_date)->subDay())),
             'details' => $booking->details,
+            // The admin drawer's timeline; clients never see the audit trail.
+            'audits' => request()->user()?->can('admin')
+                ? $booking->audits()
+                    ->with('actor')
+                    ->orderBy('id')
+                    ->get()
+                    ->map(fn (BookingAudit $audit) => [
+                        'id' => $audit->id,
+                        'action' => $audit->action,
+                        'actor_id' => $audit->actor_id,
+                        'actor_role' => $audit->actor_role,
+                        'actor_name' => $audit->actor?->name,
+                        'from_status' => $audit->from_status?->value,
+                        'to_status' => $audit->to_status?->value,
+                        'notes' => $audit->notes,
+                        'created_at' => $audit->created_at?->toJSON(),
+                    ])
+                    ->values()
+                    ->all()
+                : null,
         ];
     }
 

@@ -38,7 +38,6 @@ import {
     type DropdownItemConfig,
     type HeaderEntry,
     type NavGroup,
-    type NavLink,
     getPage,
     buildItemHref,
     buildNavLinkHref,

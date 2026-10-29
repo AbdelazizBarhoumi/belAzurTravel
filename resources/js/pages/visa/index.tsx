@@ -126,7 +126,7 @@ export default function Visa() {
             countries.filter((c) =>
                 matchesSearch(query, c.name?.fr, c.name?.en, c.name?.ar, c.code),
             ),
-        [query, countries, lang],
+        [query, countries],
     );
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

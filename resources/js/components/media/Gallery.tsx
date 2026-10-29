@@ -124,7 +124,6 @@ export function Gallery({ images, hotelName, favoriteItem }: GalleryProps) {
                 {/* Thumbnails column - right side */}
                 <div className="hidden h-full gap-4 md:col-span-1 md:grid md:grid-rows-2">
                     {visibleThumbnails.slice(0, 2).map((image, index) => {
-                        const active = index === selectedIndex;
                         const isOverflowTile = index === 1 && overflowCount > 0;
                         return (
                             <motion.button
